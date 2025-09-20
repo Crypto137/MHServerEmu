@@ -8,6 +8,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Communities;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Social
 {
@@ -73,6 +74,9 @@ namespace MHServerEmu.Games.Social
                     break;
 
                 case ChatRoomTypes.CHAT_ROOM_TYPE_PARTY:
+                    SendChatToParty(player, chat);
+                    break;
+
                 case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_FACTION:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER:
@@ -217,6 +221,20 @@ namespace MHServerEmu.Games.Social
             List<ulong> playerFilter = new();
             foreach (Player regionPlayer in new PlayerIterator(region))
                 playerFilter.Add(regionPlayer.DatabaseUniqueId);
+
+            SendChat(player, chat, playerFilter);
+            return true;
+        }
+
+        private bool SendChatToParty(Player player, NetMessageChat chat)
+        {
+            Party party = player.GetParty();
+            if (party == null)
+                return false;
+
+            List<ulong> playerFilter = new();
+            foreach (var kvp in party)
+                playerFilter.Add(kvp.Value.PlayerDbId);
 
             SendChat(player, chat, playerFilter);
             return true;

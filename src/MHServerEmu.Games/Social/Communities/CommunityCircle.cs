@@ -191,7 +191,7 @@ namespace MHServerEmu.Games.Social.Communities
 
         public void OnMemberReceivedBroadcast(CommunityMember member, CommunityMemberUpdateOptions updateOptionBits)
         {
-            // update circle here
+            Community.Owner.OnCommunityCircleChanged(Id);
         }
 
         /// <summary>

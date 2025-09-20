@@ -2,10 +2,12 @@
 using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Social.Communities
 {
@@ -258,7 +260,7 @@ namespace MHServerEmu.Games.Social.Communities
 
             if (member.CanReceiveBroadcast())
             {
-                member.ReceiveBroadcast(broadcast);
+                member.ReceiveBroadcast(broadcast, true);
             }
             else
             {
@@ -398,6 +400,42 @@ namespace MHServerEmu.Games.Social.Communities
         public CommunityCircle GetCircle(CircleId circleId)
         {
             return CircleManager.GetCircle(circleId);
+        }
+
+        public void UpdateParty(Party party)
+        {
+            CommunityCircle partyCircle = GetCircle(CircleId.__Party);
+            if (partyCircle == null)
+            {
+                Logger.Warn("UpdateFromParty(): partyCircle == null");
+                return;
+            }
+
+            // Add members
+            if (party != null)
+            {
+                foreach (var kvp in party)
+                {
+                    ulong playerDbId = kvp.Value.PlayerDbId;
+                    string playerName = kvp.Value.PlayerName;
+                    AddMember(playerDbId, playerName, CircleId.__Party);
+                }
+            }
+
+            // Remove members
+            List<ulong> membersToRemove = ListPool<ulong>.Instance.Get();
+
+            foreach (CommunityMember member in IterateMembers(partyCircle))
+            {
+                ulong playerDbId = member.DbId;
+                if (party == null || party.IsMember(playerDbId) == false)
+                    membersToRemove.Add(playerDbId);
+            }
+
+            foreach (ulong playerDbId in membersToRemove)
+                RemoveMember(playerDbId, CircleId.__Party);
+
+            ListPool<ulong>.Instance.Return(membersToRemove);
         }
 
         /// <summary>

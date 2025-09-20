@@ -100,6 +100,10 @@ namespace MHServerEmu.Games.Entities
         protected PowerCollection _powerCollection;
         protected int _unkEvent;
 
+        // Clone data is initialized on demand for ClonePerPlayer world entities (primarily DR reward chests).
+        private Event<PlayerEnteredRegionGameEvent>.Action _playerEnteredRegionAction;
+        private HashSet<ulong> _playersWithClones;
+
         public Event<EntityCollisionEvent> OverlapBeginEvent = new();
         public Event<EntityCollisionEvent> CollideEvent = new();
         public Event<EntityCollisionEvent> OverlapEndEvent = new();
@@ -163,6 +167,8 @@ namespace MHServerEmu.Games.Entities
         public bool IsVacuumable { get => WorldEntityPrototype?.IsVacuumable == true; }
         public bool IsCrafter { get => ((PrototypeId)Properties[PropertyEnum.VendorType]).As<VendorTypePrototype>()?.IsCrafter == true; }
         public bool IsStash { get => Properties[PropertyEnum.OpenPlayerStash]; }
+        public bool IsClonePerPlayer { get => WorldEntityPrototype.ClonePerPlayer; }
+        public bool IsCloneParent { get => IsClonePerPlayer && Properties[PropertyEnum.RestrictedToPlayerGuid] == 0; }
         public Dictionary<ulong, long> TankingContributors { get; private set; }
         public Dictionary<ulong, long> DamageContributors { get; private set; }
         public TagPlayers TagPlayers { get; private set; }
@@ -1071,7 +1077,7 @@ namespace MHServerEmu.Games.Entities
             var entityProto = WorldEntityPrototype;
             if (entityProto == null) return false;
 
-            if (IsCloneParent()) return false;
+            if (IsCloneParent) return false;
 
             var boundsProto = entityProto.Bounds;
             if (boundsProto != null && boundsProto.IgnoreCollisionWithAllies && IsFriendlyTo(other)) return false;
@@ -1119,7 +1125,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool CanInfluenceNavigationMesh()
         {
-            if (IsInWorld == false || TestStatus(EntityStatus.ExitingWorld) || NoCollide || IsIntangible || IsCloneParent())
+            if (IsInWorld == false || TestStatus(EntityStatus.ExitingWorld) || NoCollide || IsIntangible || IsCloneParent)
                 return false;
 
             var prototype = WorldEntityPrototype;
@@ -3176,6 +3182,42 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        private bool CloneForPlayer(ulong playerDbId)
+        {
+            if (IsInWorld == false) return Logger.WarnReturn(false, "CloneForPlayer(): IsInWorld == false");
+            if (IsClonePerPlayer == false) return Logger.WarnReturn(false, "CloneForPlayer(): IsClonePerPlayer == false");
+
+            if (playerDbId == 0) return Logger.WarnReturn(false, "CloneForPlayer(): playerDbId == 0");
+
+            if (_playersWithClones != null && _playersWithClones.Contains(playerDbId))
+                return false;
+
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            properties.FlattenCopyFrom(Properties, false);
+            properties[PropertyEnum.RestrictedToPlayerGuid] = playerDbId;
+
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            settings.EntityRef = PrototypeDataRef;
+            settings.RegionId = RegionLocation.RegionId;
+            settings.Position = RegionLocation.Position;
+            settings.Orientation = RegionLocation.Orientation;
+            settings.Properties = properties;
+
+            if (Game.EntityManager.CreateEntity(settings) == null)
+                return Logger.WarnReturn(false, $"CloneForPlayer(): Failed to clone [{this}] for player 0x{playerDbId:X}");
+
+            // Keep track of created clones to avoid spawning multiple ones for players who revisit the region.
+            _playersWithClones ??= new();
+            _playersWithClones.Add(playerDbId);
+
+            return true;
+        }
+
+        private void OnPlayerEnteredRegion(in PlayerEnteredRegionGameEvent evt)
+        {
+            CloneForPlayer(evt.Player.DatabaseUniqueId);
+        }
+
         #endregion
 
         #region Event Handlers
@@ -3226,6 +3268,17 @@ namespace MHServerEmu.Games.Entities
             if (WorldEntityPrototype.DiscoverInRegion)
                 region.DiscoverEntity(this, false);
 
+            if (IsCloneParent)
+            {
+                // Create clones for all players currently in the region.
+                foreach (Player player in new PlayerIterator(region))
+                    CloneForPlayer(player.DatabaseUniqueId);
+
+                // Add an event to create additional clones for players who will come later.
+                _playerEnteredRegionAction ??= OnPlayerEnteredRegion;
+                region.PlayerEnteredRegionEvent.AddActionBack(_playerEnteredRegionAction);
+            }
+
             if (Bounds.CollisionType != BoundsCollisionType.None)
                 RegisterForPendingPhysicsResolve();
 
@@ -3256,6 +3309,10 @@ namespace MHServerEmu.Games.Entities
                 // Undiscover from region
                 if (WorldEntityPrototype.DiscoverInRegion)
                     region.UndiscoverEntity(this, true);
+
+                // Stop cloning
+                if (IsCloneParent)
+                    region.PlayerEnteredRegionEvent.RemoveAction(_playerEnteredRegionAction);
             }
 
             // Undiscover from players
@@ -3760,14 +3817,25 @@ namespace MHServerEmu.Games.Entities
 
         private bool AwardInteractionLoot(ulong interactorEntityId)
         {
-            // TODO: Per-player clones for chests, use interactorEntity for this
             WorldEntity interactorEntity = Game.EntityManager.GetEntity<WorldEntity>(interactorEntityId);
             if (interactorEntity == null) return Logger.WarnReturn(false, "AwardInteractionLoot(): interactorEntity == null");
 
             // NOTE: Bowling ball dispenser is not per-player cloned, so interacting
             // with it will give a ball to all players nearby. This doesn't seem right.
             List<Player> playerList = ListPool<Player>.Instance.Get();
-            Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, false, playerList);
+
+            if (IsClonePerPlayer)
+            {
+                // If this is a clone-per-player entity, award loot only to the owner of the interacting entity.
+                Player player = interactorEntity.GetOwnerOfType<Player>();
+                if (player != null)
+                    playerList.Add(player);
+            }
+            else
+            {
+                // For regular entities award loot to all nearby players.
+                Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, false, playerList);
+            }
 
             AwardLootForDropEvent(LootDropEventType.OnInteractedWith, playerList);
 
@@ -3967,11 +4035,6 @@ namespace MHServerEmu.Games.Entities
         public virtual bool IsSummonedPet()
         {
             return false;
-        }
-
-        public bool IsCloneParent()
-        {
-            return WorldEntityPrototype.ClonePerPlayer && Properties[PropertyEnum.RestrictedToPlayerGuid] == 0;
         }
 
         public override bool ApplyState(PrototypeId stateRef)

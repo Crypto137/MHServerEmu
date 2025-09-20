@@ -20,12 +20,14 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         private Dictionary<ulong, GameDialogInstance> _dialogs;
         private Action<ulong, DialogResponse> _onResponseAction;
         private Action<ulong, bool> _onTeleportAction;
+        private Event<PlayerLeavePartyGameEvent>.Action _playerLeavePartyAction;
 
         public MetaStateShutdown(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
             _proto = prototype as MetaStateShutdownPrototype;
             _onTeleportAction = OnTeleport;
             _onResponseAction = OnResponse;
+            _playerLeavePartyAction = OnPlayerLeaveParty;
             _pendingPlayers = new();
             _dialogs = new();
         }
@@ -35,7 +37,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             var region = Region;
             if (region == null) return;
 
-            // region.PlayerLeavePartyGameEvent.AddActionBack(_playerLeavePartyEvent);
+            region.PlayerLeavePartyEvent.AddActionBack(_playerLeavePartyAction);
 
             int teleportDelayMS = _proto.TeleportDelayMS;
             if (teleportDelayMS > 0)
@@ -45,7 +47,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     foreach (var player in MetaGame.Players)
                     {
                         ulong playerGuid = player.DatabaseUniqueId;
-                        if (region.InOwnerParty(player))
+                        if (player.IsInPartyWith(region.Settings.OwnerPlayerDbId))
                         {
                             _pendingPlayers[playerGuid] = PlayerState.Pending; 
                             CreateDialog(playerGuid, _proto.TeleportDialog);
@@ -170,22 +172,37 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
         public override void OnRemove()
         {
-            //region.PlayerLeavePartyGameEvent.RemoveAction(_playerLeavePartyEvent);
+            Region?.PlayerLeavePartyEvent.RemoveAction(_playerLeavePartyAction);
             base.OnRemove();
+        }
+
+        private void OnPlayerLeaveParty(in PlayerLeavePartyGameEvent evt)
+        {
+            var player = evt.Player;
+            if (player == null) return;
+
+            var region = Region;
+            if (region == null) return;
+
+            var ownerDbId = region.Settings.OwnerPlayerDbId;
+            if (player.IsInPartyWith(ownerDbId) == false)
+                _pendingPlayers.Remove(ownerDbId);
+
+            OnTeleport();
         }
 
         public override void OnRemovePlayer(Player player)
         {
             if (player == null) return;
-            ulong playerGuid = player.DatabaseUniqueId;
-            _pendingPlayers.Remove(playerGuid);
+            ulong playerDbId = player.DatabaseUniqueId;
+            _pendingPlayers.Remove(playerDbId);
 
-            RemoveDialog(playerGuid);
+            RemoveDialog(playerDbId);
 
             OnTeleport();
 
             var widget = GetReadyCheckWidget();
-            widget?.ResetPlayerState(playerGuid);
+            widget?.ResetPlayerState(playerDbId);
         }
 
         private void ScheduleTeleport(TimeSpan timeOffset)

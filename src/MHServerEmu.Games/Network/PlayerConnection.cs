@@ -31,6 +31,7 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Communities;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Network
 {
@@ -383,6 +384,8 @@ namespace MHServerEmu.Games.Network
 
             if (_dbAccount.MigrationData.IsFirstLoad)
             {
+                Player.SendDifficultyTierPreferenceToPlayerManager();
+
                 // Recount and update achievements
                 Player.AchievementManager.RecountAchievements();
                 Player.AchievementManager.UpdateScore();
@@ -419,6 +422,7 @@ namespace MHServerEmu.Games.Network
 
             AOI.SetRegion(region.Id, false, startPosition, startOrientation);
             region.PlayerEnteredRegionEvent.Invoke(new(Player, region.PrototypeDataRef));
+            Game.PartyManager.OnPlayerEnteredRegion(Player);
 
             // Load discovered map and entities
             Player.GetMapDiscoveryData(region.Id)?.LoadPlayerDiscovered(Player);
@@ -520,6 +524,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
                 case ClientToGameServerMessage.NetMessageTryMoveInventoryContentsToGeneral: OnTryMoveInventoryContentsToGeneral(message); break;// 112
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;         // 113
+                case ClientToGameServerMessage.NetMessageTeleportToPartyMember:             OnTeleportToPartyMember(message); break;            // 114
                 case ClientToGameServerMessage.NetMessageSelectAvatarSynergies:             OnSelectAvatarSynergies(message); break;            // 116
                 case ClientToGameServerMessage.NetMessageRequestLegendaryMissionReroll:     OnRequestLegendaryMissionReroll(message); break;    // 117
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;       // 121
@@ -550,6 +555,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageStashTabOptions:                   OnStashTabOptions(message); break;                  // 156
                 case ClientToGameServerMessage.NetMessageLeaderboardRequest:                OnLeaderboardRequest(message); break;               // 157
                 case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:      OnLeaderboardInitializeRequest(message); break;     // 159
+                case ClientToGameServerMessage.NetMessagePartyOperationRequest:             OnPartyOperationRequest(message); break;            // 162
                 case ClientToGameServerMessage.NetMessageMissionTrackerFiltersUpdate:           OnMissionTrackerFiltersUpdate(message); break;              // 166
                 case ClientToGameServerMessage.NetMessageAchievementMissionTrackerFilterChange: OnAchievementMissionTrackerFilterChange(message); break;    // 167
 
@@ -1738,6 +1744,24 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnTeleportToPartyMember(in MailboxMessage message) // 114
+        {
+            var teleportToPartyMember = message.As<NetMessageTeleportToPartyMember>();
+            if (teleportToPartyMember == null) return Logger.WarnReturn(false, $"OnTeleportToPartyMember(): Failed to retrieve message");
+
+            Party party = Player.GetParty();
+            if (party == null) return Logger.WarnReturn(false, "OnTeleportToPartyMember(): party == null");
+
+            Avatar avatar = Player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "OnTeleportToPartyMember(): avatar == null");
+
+            ulong memberId = party.GetMemberIdByName(teleportToPartyMember.PlayerName);
+            if (memberId == 0) return Logger.WarnReturn(false, "OnTeleportToPartyMember(): memberId == 0");
+
+            Player.BeginTeleportToPartyMember(memberId);
+            return true;
+        }
+
         private bool OnSelectAvatarSynergies(MailboxMessage message)    // 116
         {
             var selectAvatarSynergies = message.As<NetMessageSelectAvatarSynergies>();
@@ -2230,6 +2254,20 @@ namespace MHServerEmu.Games.Network
             // All the data with need to handle initialize requests is cached in games, so no need to use the leaderboard service here.
             var response = LeaderboardInfoCache.Instance.BuildInitializeRequestResponse(initializeRequest);
             SendMessage(response);
+
+            return true;
+        }
+
+        private bool OnPartyOperationRequest(in MailboxMessage message) // 162
+        {
+            var partyOperationRequest = message.As<NetMessagePartyOperationRequest>();
+            if (partyOperationRequest == null) return Logger.WarnReturn(false, $"OnPartyOperationRequest(): Failed to retrieve message");
+
+            ulong requestingPlayerDbId = partyOperationRequest.Payload.RequestingPlayerDbId;
+            if (requestingPlayerDbId != Player.DatabaseUniqueId)
+                return Logger.WarnReturn(false, $"OnPartyOperationRequest(): requestingPlayerDbId != Player.DatabaseUniqueId");
+
+            Game.PartyManager.OnClientPartyOperationRequest(Player, partyOperationRequest.Payload);
 
             return true;
         }

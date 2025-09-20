@@ -4,6 +4,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.System.Time;
@@ -31,6 +32,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Guilds;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
@@ -4042,9 +4044,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (IsInWorld == false)
                 return 0;
 
-            // TODO: Prestige multiplier
-            // TODO: Party bonus
-
             // Flat per kill bonus (optionally capped by a percentage)
             if (applyKillBonus)
             {
@@ -4078,6 +4077,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 // Apply unconditional tuning table multiplier
                 xpMult *= tuningProto.PctXPMultiplier;
+
+                // Party
+                xpMult *= GetPartyXPMultiplier(tuningProto);
             }
 
             // Live tuning
@@ -4712,6 +4714,21 @@ namespace MHServerEmu.Games.Entities.Avatars
             multiplier += GetStackingExperienceBonusPct(Properties);
 
             return MathF.Max(-1f, multiplier);
+        }
+
+        public float GetPartyXPMultiplier(TuningPrototype tuningProto)
+        {
+            Party party = Party;
+            if (party == null)
+                return 1f;
+
+            CurveId curveRef = party.Type == GroupType.GroupType_Raid ? tuningProto.PctXPFromRaid : tuningProto.PctXPFromParty;
+            Curve curve = curveRef.AsCurve();
+            if (curve == null) return Logger.WarnReturn(1f, "GetPartyXPMultiplier(): curve == null");
+
+            float multiplier = 1f + curve.GetAt(CharacterLevel);
+            multiplier += Math.Max(LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_PartyXPBonusPct) - 1f, 0f);
+            return MathF.Max(multiplier, 0f);
         }
 
         public float GetLiveTuningXPMultiplier()
@@ -6265,6 +6282,17 @@ namespace MHServerEmu.Games.Entities.Avatars
                     }
 
                     break;
+
+                case PropertyEnum.DifficultyTierPreference:
+                    {
+                        Player player = GetOwnerOfType<Player>();
+                        if (player != null)
+                        {
+                            player.SendDifficultyTierPreferenceToPlayerManager();
+                            player.UpdatePartyDifficulty(newValue);
+                        }
+                    }
+                    break;
             }
         }
 
@@ -6425,6 +6453,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             AreaOfInterest aoi = player.AOI;
             aoi.Update(RegionLocation.Position, true);
 
+            // Update party
+            Party party = Party;
+            if (party != null)
+            {
+                AssignPartyBonusPower();
+                SetPartySize(party.NumMembers);
+                SyncPartyBoostConditions();
+            }
+
             // Assign region passive powers (e.g. min health tutorial power)
             AssignRegionPowers();
 
@@ -6481,6 +6518,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // despawn teamups / controlled entities
             DespawnPersistentAgents();
+
+            if (PartyId != 0)
+            {
+                UnassignPartyBonusPower();
+                SetPartySize(1);
+            }
 
             CancelEnduranceEvents();
 
@@ -6547,6 +6590,137 @@ namespace MHServerEmu.Games.Entities.Avatars
             // AvatarLastActiveCalendarTime is used by the client to choose the voice line to play when the client logs in
             Properties[PropertyEnum.AvatarLastActiveTime] = Game.CurrentTime;
             Properties[PropertyEnum.AvatarLastActiveCalendarTime] = (long)Clock.UnixTime.TotalMilliseconds;
+        }
+
+        #endregion
+
+        #region Party
+
+        // PartyBoost is a power assigned to players in party. This is used in 1.10 and maybe other versions too.
+
+        public void AssignPartyBonusPower()
+        {
+            if (IsInWorld == false)
+                return;
+
+            PrototypeId partyBonusPower = AvatarPrototype.PartyBonusPower;
+            if (partyBonusPower == PrototypeId.Invalid)
+                return;
+
+            if (GetPower(partyBonusPower) != null)
+                return;
+
+            PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+            AssignPower(partyBonusPower, indexProps);
+        }
+
+        public void UnassignPartyBonusPower()
+        {
+            if (IsInWorld == false)
+                return;
+
+            PrototypeId partyBonusPower = AvatarPrototype.PartyBonusPower;
+            if (partyBonusPower == PrototypeId.Invalid)
+                return;
+
+            UnassignPower(partyBonusPower);
+        }
+
+        public void SetPartySize(int partySize)
+        {
+            Properties[PropertyEnum.PartySize] = partySize;
+
+            // Potentially move this to OnPropertyChange?
+            foreach (Condition condition in ConditionCollection)
+            {
+                if (condition.Properties.HasProperty(PropertyEnum.PartySize))
+                    condition.Properties[PropertyEnum.PartySize] = partySize;
+            }
+
+            // This eval doesn't seem to be used in any data for version 1.52, but it may have been used in older versions.
+            EvalPrototype evalOnPartySizeChange = AvatarPrototype.OnPartySizeChange;
+            if (evalOnPartySizeChange != null)
+                Logger.Debug("SetPartySize(): evalOnPartySizeChange != null");
+        }
+
+        // PartyBoostCondition is a condition that scales with the number of party members that have this condition (e.g. Avengers Assemble boosts).
+
+        public void OnPartyBoostConditionAdded(Condition condition)
+        {
+            if (condition.IsPartyBoost() == false)
+                return;
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null && player.IsSwitchingAvatar)
+                return;
+
+            if (player != null && player.PartyId != 0)
+            {
+                SyncPartyBoostConditions();
+            }
+            else
+            {
+                condition.Properties[PropertyEnum.PartyBoostCount] = 1;
+                condition.RunEvalPartyBoost();
+            }
+        }
+
+        public void OnPartyBoostConditionRemoved(Condition condition)
+        {
+            if (condition.IsPartyBoost() == false)
+                return;
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null && player.IsSwitchingAvatar)
+                return;
+
+            if (player != null && player.PartyId != 0)
+                SyncPartyBoostConditions();
+        }
+
+        public void ResetPartyBoostConditions()
+        {
+            foreach (Condition condition in ConditionCollection)
+            {
+                if (condition.IsPartyBoost() == false)
+                    continue;
+
+                if (condition.Properties[PropertyEnum.PartyBoostCount] <= 1)
+                    continue;
+
+                condition.Properties[PropertyEnum.PartyBoostCount] = 1;
+                condition.RunEvalPartyBoost();
+            }
+        }
+
+        public bool SyncPartyBoostConditions()
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "SyncPartyBoostConditions(): player == null");
+
+            List<ulong> boosts = null;  // allocate on demand
+
+            foreach (Condition condition in ConditionCollection)
+            {
+                if (condition.IsPartyBoost() == false)
+                    continue;
+
+                if (condition.ConditionPrototypeRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn($"SyncPartyBoostConditions(): Non-standalone [{condition}] is flagged as a party boost, which is not supported");
+                    continue;
+                }
+
+                boosts ??= new();
+                PrototypeGuid conditionGuid = GameDatabase.GetPrototypeGuid(condition.ConditionPrototypeRef);
+                boosts.Add((ulong)conditionGuid);
+            }
+
+            // Even if there are no party boosts currently, notify anyway to clear the conditions that may have previously been applied.
+            ServiceMessage.PartyBoostUpdate message = new(player.DatabaseUniqueId, boosts);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+
+            return true;
         }
 
         #endregion

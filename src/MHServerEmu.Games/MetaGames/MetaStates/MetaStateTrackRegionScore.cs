@@ -135,7 +135,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             {
                 if (orb.Properties.HasProperty(PropertyEnum.TrackedRegionScoreDivByParty))
                 {
-                    var party = player?.Party;
+                    var party = player?.GetParty();
                     if (party != null)
                     {
                         int numMembers = party.NumMembers;

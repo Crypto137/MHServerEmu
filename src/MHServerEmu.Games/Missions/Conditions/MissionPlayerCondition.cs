@@ -68,7 +68,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (missionPlayer == null || player == missionPlayer) return true;
             if (_proto != null && _proto.PartyMembersGetCredit)
             {
-                var party = missionPlayer.Party;
+                var party = missionPlayer.GetParty();
                 if (party != null && party.IsMember(player.DatabaseUniqueId)) return true;
             }
             return false;

@@ -212,7 +212,7 @@ namespace MHServerEmu.Games.Regions
             }
             else
             {
-                if (ValidateTargetRegion(regionProtoRef) == false)
+                if (Player.CanEnterRegion(regionProtoRef, DifficultyTierRef, false) == false)
                     return false;
 
                 return TeleportToRemoteTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
@@ -288,6 +288,33 @@ namespace MHServerEmu.Games.Regions
 
             ChangePositionResult result = Player.CurrentAvatar.ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
             return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
+        }
+
+        public bool TeleportToPlayer(ulong playerDbId)
+        {
+            if (playerDbId == 0) return Logger.WarnReturn(false, "TeleportToPlayer(): playerDbId == 0");
+
+            // See if we can do a local teleport
+            Avatar otherAvatar = Player.Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId)?.CurrentAvatar;
+            if (otherAvatar != null && otherAvatar.IsInWorld && otherAvatar.Region == Player.GetRegion())
+            {
+                Vector3 position = otherAvatar.RegionLocation.Position;
+                if (Avatar.AdjustStartPositionIfNeeded(otherAvatar.Region, ref position))
+                {
+                    ChangePositionResult result = Player.CurrentAvatar.ChangeRegionPosition(position, null, ChangePositionFlags.Teleport);
+                    if (result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport)
+                        return true;
+                }
+            }
+
+            // Do a remote teleport
+            Player.PlayerConnection.BeginRegionTransfer(PrototypeId.Invalid);
+
+            ChangeRegionRequestHeader header = BuildChangeRegionRequestHeader();
+            ServiceMessage.ChangeRegionRequest message = new(header, playerDbId);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+
+            return true;
         }
 
         public static void DebugTeleportToTarget(Player player, PrototypeId targetProtoRef)
@@ -381,31 +408,6 @@ namespace MHServerEmu.Games.Regions
 
                 if (avatar.InInteractRange(TransitionEntity, Dialog.InteractionMethod.Use) == false)
                     return false;
-            }
-
-            return true;
-        }
-
-        private bool ValidateTargetRegion(PrototypeId regionProtoRef)
-        {
-            RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
-            if (regionProto == null) return Logger.WarnReturn(false, "ValidateTargetRegion(): regionProto == null");
-
-            Avatar avatar = Player.CurrentAvatar;
-            if (avatar == null) return Logger.WarnReturn(false, "ValidateTargetRegion(): avatar == null");
-
-            // TODO: Add more checks
-
-            if (LiveTuningManager.GetLiveRegionTuningVar(regionProto, RegionTuningVar.eRTV_Enabled) == 0f)
-            {
-                Player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionDisabledPortalFail.As<BannerMessagePrototype>());
-                return false;
-            }
-
-            if (regionProto.RunEvalAccessRestriction(Player, avatar, DifficultyTierRef) == false)
-            {
-                Player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionRestricted.As<BannerMessagePrototype>());
-                return false;
             }
 
             return true;

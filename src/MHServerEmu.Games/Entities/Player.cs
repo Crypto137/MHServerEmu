@@ -41,6 +41,7 @@ using MHServerEmu.Games.Regions.Maps;
 using MHServerEmu.Games.Regions.MatchQueues;
 using MHServerEmu.Games.Social.Communities;
 using MHServerEmu.Games.Social.Guilds;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -87,7 +88,9 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<CheckHoursPlayedEvent> _checkHoursPlayedEvent = new();
         private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
         private readonly EventPointer<CommunityBroadcastEvent> _communityBroadcastEvent = new();
+        private readonly EventPointer<CommunityPartyCircleChangedEvent> _communityPartyCircleChangedEvent = new();
         private readonly EventPointer<WorldViewUpdateEvent> _worldViewUpdateEvent = new();
+        private readonly EventPointer<TeleportToPartyMemberEvent> _teleportToPartyMemberEvent = new();
         private readonly EventGroup _pendingEvents = new();
 
         private ReplicatedPropertyCollection _avatarProperties = new();
@@ -129,7 +132,6 @@ namespace MHServerEmu.Games.Entities
 
         public MissionManager MissionManager { get; private set; }
         public MatchQueueStatus MatchQueueStatus { get; private set; } = new();
-        public override ulong PartyId { get => _partyId.Get(); }
         public Community Community { get => _community; }
         public GameplayOptions GameplayOptions { get; private set; } = new();
         public AchievementState AchievementState { get; private set; } = new();
@@ -155,7 +157,6 @@ namespace MHServerEmu.Games.Entities
         public bool IsConsoleUI { get => false; }
         public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
 
-        public bool IsInParty { get; internal set; }
         public Avatar PrimaryAvatar { get => CurrentAvatar; } // Fix for PC
         public Avatar SecondaryAvatar { get; private set; }
         public int CurrentAvatarCharacterLevel { get => PrimaryAvatar?.CharacterLevel ?? 0; }
@@ -170,6 +171,10 @@ namespace MHServerEmu.Games.Entities
         public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
         public int PowerSpecIndexUnlocked { get => Properties[PropertyEnum.PowerSpecIndexUnlocked]; }
         public ulong TeamUpSynergyConditionId { get; set; }
+
+        public override ulong PartyId { get => _partyId.Get(); }
+        public bool IsInParty { get => PartyId != 0; }
+        public List<PrototypeId> PartyFilters { get; } = new();
 
         public static bool IsPlayerTradeEnabled { get; internal set; }
         public PlayerTradeStatusCode PlayerTradeStatusCode { get; private set; } = PlayerTradeStatusCode.ePTSC_None;
@@ -503,9 +508,15 @@ namespace MHServerEmu.Games.Entities
             if (region != null)
                 MissionManager.Shutdown(region);
 
+            // We need to remove references to this player entity from other party members before we destroy it
+            // to avoid triggering validation. TODO: Find a better solution for this.
+            UpdatePartyAOI(GetParty());
+
             LeaderboardManager.Destroy();
 
             base.Destroy();
+
+            Game.PartyManager.OnPlayerDestroyed(this);
         }
 
         public override void OnDeallocate()
@@ -577,6 +588,66 @@ namespace MHServerEmu.Games.Entities
         {
             // This shouldn't need any null checks, at least for now
             return AOI.Region;
+        }
+
+        public bool CanEnterRegion(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef, bool isPartyTeleport)
+        {
+            RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
+            if (regionProto == null) return Logger.WarnReturn(false, "CanEnterRegion(): regionProto == null");
+
+            Avatar avatar = CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "CanEnterRegion(): avatar == null");
+
+            if (regionProto.HasPvPMetaGame)
+            {
+                // Do not allow teleports to PvP regions when PvP is disabled
+                if (LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_PVPEnabled) == 0f)
+                {
+                    SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePvPDisabledPortalFail.As<BannerMessagePrototype>());
+                    return false;
+                }
+
+                // Do not allow party teleports to PvP regions
+                if (isPartyTeleport)
+                {
+                    SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePartyPvPPortalFail.As<BannerMessagePrototype>());
+                    return false;
+                }
+            }
+
+            if (regionProto.RunEvalAccessRestriction(this, avatar, difficultyTierProtoRef) == false)
+            {
+                SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionRestricted.As<BannerMessagePrototype>());
+                return false;
+            }
+
+            Party party = GetParty();
+            if (party != null && party.Type == GroupType.GroupType_Raid)
+            {
+                switch (regionProto.Behavior)
+                {
+                    case RegionBehavior.PrivateStory:
+                    case RegionBehavior.PrivateNonStory:
+                        SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePrivateDisallowedInRaid.As<BannerMessagePrototype>());
+                        return false;
+
+                    case RegionBehavior.MatchPlay:
+                        if (regionProto.AllowRaids() == false)
+                        {
+                            SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageQueueNotAvailableInRaid.As<BannerMessagePrototype>());
+                            return false;
+                        }
+                        break;
+                }
+            }
+
+            if (LiveTuningManager.GetLiveRegionTuningVar(regionProto, RegionTuningVar.eRTV_Enabled) == 0f)
+            {
+                SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionDisabledPortalFail.As<BannerMessagePrototype>());
+                return false;
+            }
+
+            return true;
         }
 
         public void UpdateSpawnMap(Vector3 position)
@@ -2405,7 +2476,9 @@ namespace MHServerEmu.Games.Entities
 
         public PrototypeId GetDifficultyTierPreference()
         {
-            // TODO: Party
+            Party party = GetParty();
+            if (party != null)
+                return party.DifficultyTierProtoRef;
 
             if (CurrentAvatar != null)
                 return CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference];
@@ -2426,6 +2499,37 @@ namespace MHServerEmu.Games.Entities
                 return difficultyTierProtoRef;
 
             return PrototypeId.Invalid;
+        }
+
+        public void SendDifficultyTierPreferenceToPlayerManager()
+        {
+            PrototypeId difficultyTierProtoRef = CurrentAvatar != null
+                ? CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference]
+                : GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+
+            ServiceMessage.SetDifficultyTierPreference message = new(DatabaseUniqueId, (ulong)difficultyTierProtoRef);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+        }
+
+        public void UpdatePartyDifficulty(PrototypeId difficultyTierProtoRef)
+        {
+            Party party = GetParty();
+            if (party == null)
+                return;
+
+            // Only the leader can update difficulty.
+            if (party.IsLeader(this) == false)
+                return;
+
+            PartyOperationPayload request = PartyOperationPayload.CreateBuilder()
+                .SetRequestingPlayerDbId(DatabaseUniqueId)
+                .SetRequestingPlayerName(GetName())
+                .SetOperation(GroupingOperationType.eGOP_ChangeDifficulty)
+                .SetDifficultyTierProtoId((ulong)difficultyTierProtoRef)
+                .Build();
+
+            ServiceMessage.PartyOperationRequest message = new(request);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         #endregion
@@ -3031,18 +3135,19 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message.Build());
         }
 
-        public void SendAIAggroNotification(PrototypeId bannerMessageRef, Agent aiAgent, Player targetPlayer, bool party = false)
+        public void SendAIAggroNotification(PrototypeId bannerMessageRef, Agent aiAgent, Player aggroPlayer, bool sendToParty = false)
         {
-            if (party)
+            if (sendToParty)
             {
-                // TODO send to party members
+                Party party = GetParty();
+                party?.SendAIAggroNotification(bannerMessageRef, aiAgent, aggroPlayer);
             }
             else
             {
                 var message = NetMessageAIAggroNotification.CreateBuilder()
                     .SetBannerMessageRef((ulong)bannerMessageRef)
                     .SetAiRef((ulong)aiAgent.PrototypeDataRef)
-                    .SetPlayerId(targetPlayer.Id)
+                    .SetPlayerId(aggroPlayer.Id)
                     .Build();
 
                 SendMessage(message);
@@ -3214,6 +3319,42 @@ namespace MHServerEmu.Games.Entities
             ScoringEventContext = new(this);
             AchievementManager.OnUpdateEventContext();
             LeaderboardManager.OnUpdateEventContext();
+        }
+
+        private void UpdatePartyFilters(List<AvatarPrototype> avatars, List<CostumePrototype> costumes, int playerIndex)
+        {
+            bool updateContext = false;
+
+            Party party = GetParty();
+            if (party != null && party.Type == GroupType.GroupType_Party && avatars.Count > 0)
+            {
+                List<PrototypeId> newFilters = ListPool<PrototypeId>.Instance.Get();
+
+                foreach (PrototypeId partyFilterProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<PartyFilterPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    PartyFilterPrototype partyFilterProto = partyFilterProtoRef.As<PartyFilterPrototype>();
+                    if (partyFilterProto.Evaluate(avatars, costumes, playerIndex))
+                        newFilters.Add(partyFilterProtoRef);
+                }
+
+                newFilters.Sort();
+
+                if (PartyFilters.SequenceEqual(newFilters) == false)
+                {
+                    PartyFilters.Set(newFilters);
+                    updateContext = true;
+                }
+
+                ListPool<PrototypeId>.Instance.Return(newFilters);
+            }
+            else if (PartyFilters.Count > 0)
+            {
+                PartyFilters.Clear();
+                updateContext = true;
+            }
+
+            if (updateContext)
+                UpdateScoringEventContext();
         }
 
         #endregion
@@ -3554,7 +3695,11 @@ namespace MHServerEmu.Games.Entities
             if (circleId != CircleId.__Party)
                 return;
 
-            // TODO: Update parties
+            if (_communityPartyCircleChangedEvent.IsValid)
+                return;
+
+            Game.GameEventScheduler.ScheduleEvent(_communityPartyCircleChangedEvent, TimeSpan.FromMilliseconds(1000), _pendingEvents);
+            _communityPartyCircleChangedEvent.Get()?.Initialize(this);
         }
 
         private void DoCommunityBroadcast()
@@ -3576,6 +3721,277 @@ namespace MHServerEmu.Games.Entities
 
                 community.RequestLocalBroadcast(member);
             }
+        }
+
+        private bool OnPartyCircleChanged()
+        {
+            CommunityCircle partyCircle = Community?.GetCircle(CircleId.__Party);
+            if (partyCircle == null) return Logger.WarnReturn(false, "OnPartyCircleChanged(): partyCircle == null");
+
+            List<AvatarPrototype> avatars = ListPool<AvatarPrototype>.Instance.Get();
+            List<CostumePrototype> costumes = ListPool<CostumePrototype>.Instance.Get();
+
+            ulong playerDbId = DatabaseUniqueId;
+            int playerIndex = -1;
+
+            int i = 0;
+            foreach (CommunityMember member in Community.IterateMembers(partyCircle))
+            {
+                AvatarSlotInfo slot = member.GetAvatarSlotInfo();
+                if (slot == null || slot.AvatarRef == PrototypeId.Invalid || slot.CostumeRef == PrototypeId.Invalid)
+                    continue;
+
+                AvatarPrototype avatarProto = slot.AvatarRef.As<AvatarPrototype>();
+                if (avatarProto == null)
+                {
+                    Logger.Warn("OnPartyCircleChanged(): avatarProto == null");
+                    continue;
+                }
+
+                CostumePrototype costumeProto = slot.CostumeRef.As<CostumePrototype>();
+                if (costumeProto == null)
+                {
+                    Logger.Warn("OnPartyCircleChanged(): costumeProto == null");
+                    continue;
+                }
+
+                avatars.Add(avatarProto);
+                costumes.Add(costumeProto);
+
+                if (member.DbId == playerDbId)
+                    playerIndex = i;
+
+                i++;
+            }
+
+            UpdatePartyFilters(avatars, costumes, playerIndex);
+
+            ListPool<AvatarPrototype>.Instance.Return(avatars);
+            ListPool<CostumePrototype>.Instance.Return(costumes);
+
+            return true;
+        }
+
+        #endregion
+
+        #region Parties
+
+        public Party GetParty()
+        {
+            ulong partyId = PartyId;
+            if (partyId == 0)
+                return null;
+
+            return Game.PartyManager.GetParty(partyId);
+        }
+
+        public bool IsPartyLeader()
+        {
+            Party party = GetParty();
+            if (party == null)
+                return false;
+
+            return party.LeaderId == DatabaseUniqueId;
+        }
+
+        public bool IsInPartyWith(ulong playerDbId)
+        {
+            if (playerDbId == 0)
+                return false;
+
+            // Players are always implicitly in party with themselves even if an explicit party instance does not exist.
+            if (playerDbId == DatabaseUniqueId)
+                return true;
+
+            Party party = GetParty();
+            if (party == null)
+                return false;
+
+            return party.IsMember(playerDbId);
+        }
+
+        public bool CanFormParty()
+        {
+            Region region = GetRegion();
+            if (region == null) return Logger.WarnReturn(false, "CanFormParty(): region == null");
+
+            return region.AllowsPartyFormation;
+        }
+
+        public void BeginTeleportToPartyMember(ulong targetPlayerDbId)
+        {
+            if (targetPlayerDbId == 0)
+                return;
+
+            Avatar avatar = CurrentAvatar;
+            if (avatar == null)
+                return;
+
+            PrototypeId teleportToPartyMemberPower = GameDatabase.GlobalsPrototype.TeleportToPartyMemberPower;
+
+            PowerActivationSettings settings = new(avatar.Id, Vector3.Zero, avatar.RegionLocation.Position);
+            settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+            if (avatar.ActivatePower(teleportToPartyMemberPower, ref settings) != PowerUseResult.Success)
+                return;
+
+            Properties[PropertyEnum.PendingTeleportPartyMemberId] = targetPlayerDbId;
+        }
+
+        public void ScheduleTeleportToPartyMember()
+        {
+            ulong pendingTeleportPartyMemberId = Properties[PropertyEnum.PendingTeleportPartyMemberId];
+            if (pendingTeleportPartyMemberId == 0)
+            {
+                Logger.Warn("ScheduleTeleportToPartyMember(): pendingTeleportPartyMemberId == 0");
+                return;
+            }
+
+            ScheduleEntityEvent(_teleportToPartyMemberEvent, TimeSpan.Zero, pendingTeleportPartyMemberId);
+
+            Properties.RemoveProperty(PropertyEnum.PendingTeleportPartyMemberId);
+        }
+
+        public void OnAddedToParty(Party party)
+        {
+            if (PartyId != 0)
+            {
+                Logger.Warn($"OnAddedToParty(): Already in party 0x{PartyId:X}");
+                return;
+            }
+
+            _partyId.Set(party.PartyId);
+            UpdatePartyAOI(party);
+
+            Avatar avatar = CurrentAvatar;
+            if (avatar != null && avatar.IsInWorld)
+            {
+                avatar.AssignPartyBonusPower();
+                avatar.SyncPartyBoostConditions();
+            }
+
+            // TODO: sync discovery data
+
+            // we should receive a OnPartySizeChanged callback after this
+        }
+
+        public void OnRemovedFromParty(Party party, GroupLeaveReason reason)
+        {
+            _partyId.Set(0);
+            UpdatePartyAOI(party);
+
+            Avatar avatar = CurrentAvatar;
+            if (avatar != null && avatar.IsInWorld)
+            {
+                AOI.Update(avatar.RegionLocation.Position, true);
+                avatar.UnassignPartyBonusPower();
+                avatar.SetPartySize(1);
+                avatar.ResetPartyBoostConditions();
+            }
+
+            // Need to do community cleanup here because we will no longer get OnPartySizeChanged callbacks.
+            Community.UpdateParty(null);
+
+            Region region = GetRegion();
+            if (region != null)
+            {
+                region.PlayerLeavePartyEvent.Invoke(new(this));
+                region.PartySizeChangedEvent.Invoke(new(this, 1));
+            }
+
+            RegionPrototype bodyslideRegionProto = GameDatabase.GetPrototype<RegionPrototype>(Properties[PropertyEnum.BodySliderRegionRef]);
+            if (bodyslideRegionProto != null && bodyslideRegionProto.IsPrivate)
+                RemoveBodysliderProperties();
+        }
+
+        public void OnPartySizeChanged(Party party)
+        {
+            int partySize = party.NumMembers;
+
+            CurrentAvatar?.SetPartySize(partySize);
+
+            Region region = GetRegion();
+            region?.PartySizeChangedEvent.Invoke(new(this, partySize));
+
+            Community.UpdateParty(party);
+        }
+
+        public void RefreshPartyOnRegionEnter(Party party)
+        {
+            _partyId.Set(party.PartyId);
+            UpdatePartyAOI(party);
+            Community.UpdateParty(party);
+        }
+
+        private void UpdatePartyAOI(Party party)
+        {
+            // NOTE: We need to pass the party instance as an argument because by the time
+            // we get here when we leave a party, we no longer have a reference to it.
+
+            if (party == null)
+                return;
+
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (var kvp in party)
+            {
+                ulong memberId = kvp.Value.PlayerDbId;
+                if (memberId == DatabaseUniqueId)
+                    continue;
+
+                Player partyMember = entityManager.GetEntityByDbGuid<Player>(memberId);
+                if (partyMember == null)
+                    continue;
+
+                AOI.ConsiderEntity(partyMember);
+                partyMember.AOI.ConsiderEntity(this);
+            }
+        }
+
+        private bool TeleportToPartyMember(ulong targetPlayerDbId)
+        {
+            if (PlayerConnection.HasPendingRegionTransfer)
+                return false;
+
+            if (targetPlayerDbId == 0 || targetPlayerDbId == DatabaseUniqueId)
+                return false;
+
+            // Check avatar
+            Avatar avatar = CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "TeleportToPartyMember(): avatar == null");
+
+            if (avatar.IsInWorld == false)
+                return false;
+
+            if (avatar.IsDead)
+                return false;
+
+            // Check party
+            Party party = GetParty();
+            if (party == null)
+                return false;
+
+            if (party.IsMember(targetPlayerDbId) == false)
+                return false;
+
+            // Check destination region, use community data for this
+            CommunityMember member = Community.GetMember(targetPlayerDbId);
+            if (member != null)
+            {
+                PrototypeId regionProtoRef = member.RegionRef;
+                PrototypeId difficultyProtoRef = member.DifficultyRef;
+                if (regionProtoRef != PrototypeId.Invalid && difficultyProtoRef != PrototypeId.Invalid)
+                {
+                    if (CanEnterRegion(regionProtoRef, difficultyProtoRef, true) == false)
+                        return false;
+                }
+            }
+
+            // TODO: Additional validation for match regions?
+
+            // Teleport
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(this, TeleportContextEnum.TeleportContext_Party);
+            return teleporter.TeleportToPlayer(targetPlayerDbId);
         }
 
         #endregion
@@ -3602,9 +4018,19 @@ namespace MHServerEmu.Games.Entities
             protected override CallbackDelegate GetCallback() => (t) => ((Player)t).DoCommunityBroadcast();
         }
 
+        private class CommunityPartyCircleChangedEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Player)t).OnPartyCircleChanged();
+        }
+
         private class WorldViewUpdateEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Player)t).OnWorldViewUpdate();
+        }
+
+        private class TeleportToPartyMemberEvent : CallMethodEventParam1<Entity, ulong>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((Player)t).TeleportToPartyMember(p1);
         }
 
         #endregion

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.DatabaseAccess.Models;
+﻿using Gazillion;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -59,26 +60,45 @@ namespace MHServerEmu.Games.Network
 
         public static void StoreCommunity(MigrationData migrationData, Community community)
         {
-            migrationData.CommunityOnlineStatuses.Clear();
+            migrationData.CommunityStatus.Clear();
             foreach (CommunityMember member in community.IterateMembers())
             {
                 if (member.IsOnline != CommunityMemberOnlineStatus.Online)
                     continue;
 
-                migrationData.CommunityOnlineStatuses[member.DbId] = 1;
+                var broadcast = CommunityMemberBroadcast.CreateBuilder()
+                    .SetMemberPlayerDbId(member.DbId)
+                    .SetCurrentRegionRefId((ulong)member.RegionRef)
+                    .SetCurrentDifficultyRefId((ulong)member.DifficultyRef)
+                    .SetIsOnline((int)member.IsOnline);
+
+                AvatarSlotInfo slot = member.GetAvatarSlotInfo();
+                if (slot != null)
+                {
+                    broadcast.AddSlots(CommunityMemberAvatarSlot.CreateBuilder()
+                        .SetAvatarRefId((ulong)slot.AvatarRef)
+                        .SetCostumeRefId((ulong)slot.CostumeRef)
+                        .SetLevel((uint)slot.Level)
+                        .SetPrestigeLevel((uint)slot.PrestigeLevel));
+                }
+
+                migrationData.CommunityStatus.Add(broadcast.Build());
             }
         }
 
         public static void RestoreCommunity(MigrationData migrationData, Community community)
         {
-            foreach (var kvp in migrationData.CommunityOnlineStatuses)
+            foreach (CommunityMemberBroadcast broadcast in migrationData.CommunityStatus)
             {
-                CommunityMember member = community.GetMember(kvp.Key);
+                CommunityMember member = community.GetMember(broadcast.MemberPlayerDbId);
                 if (member == null)
                     continue;
 
-                member.RestoreIsOnline(kvp.Value);
+                member.ReceiveBroadcast(broadcast, false);
             }
+
+            // Clear status in the migration data to allow the garbage colelctor to reclaim it asap
+            migrationData.CommunityStatus.Clear();
         }
     }
 }

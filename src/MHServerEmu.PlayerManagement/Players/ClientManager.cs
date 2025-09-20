@@ -12,6 +12,7 @@ namespace MHServerEmu.PlayerManagement.Players
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<ulong, PlayerHandle> _playerDict = new();
+        private readonly Dictionary<string, PlayerHandle> _playersByName = new(StringComparer.OrdinalIgnoreCase);
 
         private readonly PlayerManagerService _playerManager;
 
@@ -73,7 +74,8 @@ namespace MHServerEmu.PlayerManagement.Players
 
             _playerManager.SessionManager.RemoveActiveSession(client.Session.Id);
 
-            if (TryGetPlayerHandle(client.DbId, out PlayerHandle player) == false)
+            PlayerHandle player = GetPlayer(client.DbId);
+            if (player == null)
                 return Logger.WarnReturn(false, $"OnRemoveClient(): Failed to get player handle for client [{client}]");
 
             // When we are handling duplicate logins this handle may already have a different client,
@@ -111,10 +113,26 @@ namespace MHServerEmu.PlayerManagement.Players
 
         #region PlayerHandle Management
 
-        public bool TryGetPlayerHandle(ulong playerDbId, out PlayerHandle player)
+        public PlayerHandle GetPlayer(ulong playerDbId)
         {
             lock (_playerDict)
-                return _playerDict.TryGetValue(playerDbId, out player);
+            {
+                if (_playerDict.TryGetValue(playerDbId, out PlayerHandle player) == false)
+                    return null;
+
+                return player;
+            }
+        }
+
+        public PlayerHandle GetPlayer(string playerName)
+        {
+            lock (_playerDict)
+            {
+                if (_playersByName.TryGetValue(playerName, out PlayerHandle player) == false)
+                    return null;
+
+                return player;
+            }
         }
 
         public void BroadcastMessage(IMessage message)
@@ -126,6 +144,28 @@ namespace MHServerEmu.PlayerManagement.Players
             }
         }
 
+        public void OnPlayerNameChanged(ulong playerDbId, string oldPlayerName, string newPlayerName)
+        {
+            lock (_playerDict)
+            {
+                if (_playerDict.TryGetValue(playerDbId, out PlayerHandle player) == false)
+                    return;
+
+                lock (player.Account)
+                    player.Account.PlayerName = newPlayerName;
+
+                if (_playersByName.Remove(oldPlayerName) == false)
+                    Logger.Warn($"OnPlayerNameChanged(): Player 0x{playerDbId:X} is logged in, but doesn't have a name lookup!");
+
+                _playersByName.Add(newPlayerName, player);
+
+                Logger.Info($"Updated name for player 0x{playerDbId:X}: {oldPlayerName} => {newPlayerName}");
+
+                // TODO: Send player name change to the player entity in a game instance
+            }
+
+        }
+
         private bool CreatePlayerHandle(IFrontendClient client, out PlayerHandle player)
         {
             player = null;
@@ -135,6 +175,7 @@ namespace MHServerEmu.PlayerManagement.Players
             {
                 player = new(client);
                 _playerDict.Add(playerDbId, player);
+                _playersByName.Add(player.PlayerName, player);
                 Logger.Info($"Created new PlayerHandle: [{player}]");
 
                 player.LoadPlayerData();
@@ -161,6 +202,8 @@ namespace MHServerEmu.PlayerManagement.Players
 
             if (_playerDict.Remove(playerDbId, out PlayerHandle player) == false)
                 return Logger.WarnReturn(false, $"RemovePlayer(): Client [{client}] is not bound to a PlayerHandle");
+
+            _playersByName.Remove(player.PlayerName);
 
             Logger.Info($"Removed PlayerHandle [{player}]");
 

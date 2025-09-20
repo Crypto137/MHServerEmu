@@ -1,7 +1,9 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Regions;
 using MHServerEmu.PlayerManagement.Social;
@@ -61,6 +63,10 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnClearPrivateStoryRegions(clearPrivateStoryRegions);
                     break;
 
+                case ServiceMessage.SetDifficultyTierPreference setDifficultyTierPreference:
+                    OnSetDifficultyTierPreference(setDifficultyTierPreference);
+                    break;
+
                 case ServiceMessage.PlayerLookupByNameRequest playerLookupByNameRequest:
                     OnPlayerLookupByNameRequest(playerLookupByNameRequest);
                     break;
@@ -75,6 +81,14 @@ namespace MHServerEmu.PlayerManagement.Network
 
                 case ServiceMessage.CommunityStatusRequest communityStatusRequest:
                     OnCommunityStatusRequest(communityStatusRequest);
+                    break;
+
+                case ServiceMessage.PartyOperationRequest partyOperationRequest:
+                    OnPartyOperationRequest(partyOperationRequest);
+                    break;
+
+                case ServiceMessage.PartyBoostUpdate partyBoostUpdate:
+                    OnPartyBoostUpdate(partyBoostUpdate);
                     break;
 
                 default:
@@ -125,7 +139,8 @@ namespace MHServerEmu.PlayerManagement.Network
             IFrontendClient client = gameInstanceClientOp.Client;
             ulong gameId = gameInstanceClientOp.GameId;
 
-            if (_playerManager.ClientManager.TryGetPlayerHandle(client.DbId, out PlayerHandle player) == false)
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(client.DbId);
+            if (player == null)
                 return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): No handle found for client [{client}]");
 
             switch (gameInstanceClientOp.Type)
@@ -171,7 +186,8 @@ namespace MHServerEmu.PlayerManagement.Network
             ulong playerDbId = changeRegionRequest.Header.RequestingPlayerGuid;
             TeleportContextEnum context = changeRegionRequest.Header.Type;
 
-            if (_playerManager.ClientManager.TryGetPlayerHandle(playerDbId, out PlayerHandle player) == false)
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
+            if (player == null)
                 return Logger.WarnReturn(false, $"OnChangeRegionRequest(): No player handle for dbid 0x{playerDbId:X}");
 
             if (changeRegionRequest.DestTarget != null)
@@ -190,18 +206,38 @@ namespace MHServerEmu.PlayerManagement.Network
 
         private bool OnRegionTransferFinished(in ServiceMessage.RegionTransferFinished regionTransferFinished)
         {
-            if (_playerManager.ClientManager.TryGetPlayerHandle(regionTransferFinished.PlayerDbId, out PlayerHandle player) == false)
-                return Logger.WarnReturn(false, $"OnRegionTransferFinished(): No handle found for playerDbId 0x{regionTransferFinished.PlayerDbId}");
+            ulong playerDbId = regionTransferFinished.PlayerDbId;
+            ulong transferId = regionTransferFinished.TransferId;
+
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
+            if (player == null)
+                return Logger.WarnReturn(false, $"OnRegionTransferFinished(): No handle found for playerDbId 0x{playerDbId:X}");
 
             return player.FinishRegionTransfer(regionTransferFinished.TransferId);
         }
 
         private bool OnClearPrivateStoryRegions(in ServiceMessage.ClearPrivateStoryRegions clearPrivateStoryRegions)
         {
-            if (_playerManager.ClientManager.TryGetPlayerHandle(clearPrivateStoryRegions.PlayerDbId, out PlayerHandle player) == false)
-                return Logger.WarnReturn(false, $"OnClearPrivateStoryRegions(): No handle found for playerDbId 0x{clearPrivateStoryRegions.PlayerDbId}");
+            ulong playerDbId = clearPrivateStoryRegions.PlayerDbId;
+
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
+            if (player == null)
+                return Logger.WarnReturn(false, $"OnClearPrivateStoryRegions(): No handle found for playerDbId 0x{playerDbId:X}");
 
             player.WorldView.ClearPrivateStoryRegions();
+            return true;
+        }
+
+        private bool OnSetDifficultyTierPreference(in ServiceMessage.SetDifficultyTierPreference setDifficultyTierPreference)
+        {
+            ulong playerDbId = setDifficultyTierPreference.PlayerDbId;
+            PrototypeId difficultyTierProtoRef = (PrototypeId)setDifficultyTierPreference.DifficultyTierProtoId;
+
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
+            if (player == null)
+                return Logger.WarnReturn(false, $"OnSetDifficultyTierPreference(): No handle found for playerDbId 0x{playerDbId:X}");
+
+            player.SetDifficultyTierPreference(difficultyTierProtoRef);
             return true;
         }
 
@@ -236,18 +272,12 @@ namespace MHServerEmu.PlayerManagement.Network
         private bool OnPlayerNameChanged(in ServiceMessage.PlayerNameChanged playerNameChanged)
         {
             ulong playerDbId = playerNameChanged.PlayerDbId;
+            string oldPlayerName = playerNameChanged.OldPlayerName;
             string newPlayerName = playerNameChanged.NewPlayerName;
 
+            _playerManager.ClientManager.OnPlayerNameChanged(playerDbId, oldPlayerName, newPlayerName);
             PlayerNameCache.Instance.OnPlayerNameChanged(playerDbId);
             _playerManager.CommunityRegistry.OnPlayerNameChanged(playerDbId, newPlayerName);
-
-            // Update the logged in player
-            if (_playerManager.ClientManager.TryGetPlayerHandle(playerDbId, out PlayerHandle player))
-            {
-                lock (player.Account)
-                    player.Account.PlayerName = newPlayerName;
-                // TODO: Send player name change to the player entity in a game instance
-            }
 
             return true;
         }
@@ -267,6 +297,48 @@ namespace MHServerEmu.PlayerManagement.Network
             List<ulong> members = communityStatusRequest.Members;
 
             _playerManager.CommunityRegistry.RequestMemberBroadcast(gameId, playerDbId, members);
+            return true;
+        }
+
+        private bool OnPartyOperationRequest(in ServiceMessage.PartyOperationRequest partyOperationRequest)
+        {
+            PartyOperationPayload request = partyOperationRequest.Request;
+
+            HashSet<PlayerHandle> playersToNotify = HashSetPool<PlayerHandle>.Instance.Get();
+
+            GroupingOperationResult result = _playerManager.PartyManager.DoPartyOperation(ref request, playersToNotify);
+
+            if (playersToNotify.Count == 0)
+                return Logger.WarnReturn(false, "OnPartyOperationRequest(): playersToNotify.Count == 0");
+
+            foreach (PlayerHandle player in playersToNotify)
+            {
+                if (player.CurrentGame == null)
+                    continue;
+
+                ulong gameId = player.CurrentGame.Id;
+                ulong playerDbId = player.PlayerDbId;
+
+                ServiceMessage.PartyOperationRequestServerResult message = new(gameId, playerDbId, request, result);
+                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            }
+
+            HashSetPool<PlayerHandle>.Instance.Return(playersToNotify);
+            return true;
+        }
+
+        private bool OnPartyBoostUpdate(in ServiceMessage.PartyBoostUpdate partyBoostUpdate)
+        {
+            ulong playerDbId = partyBoostUpdate.PlayerDbId;
+            List<ulong> boosts = partyBoostUpdate.Boosts;
+
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
+            if (player == null)
+                return Logger.WarnReturn(false, $"OnPartyBoostUpdate(): No handle found for playerDbId 0x{playerDbId:X}");
+
+            player.SetPartyBoosts(boosts);
+            player.CurrentParty?.UpdateMember(player);
+
             return true;
         }
 

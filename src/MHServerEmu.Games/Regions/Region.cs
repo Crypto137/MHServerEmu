@@ -95,6 +95,7 @@ namespace MHServerEmu.Games.Regions
         public bool IsPrivate { get => Prototype != null && Prototype.IsPrivate; }
         public RegionBehavior Behavior { get => Prototype != null ? Prototype.Behavior : RegionBehavior.Invalid; }
         public bool CanBeLastTown { get => Behavior == RegionBehavior.Town || PrototypeDataRef == GameDatabase.GlobalsPrototype.PrestigeRegionProtoRef; }
+        public bool AllowsPartyFormation { get => Prototype != null && Prototype.PartyFormationAllowed; }
 
         public Aabb Aabb { get; private set; }
         public Aabb2 Aabb2 { get => new(Aabb); }
@@ -191,6 +192,7 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerEnteredAreaGameEvent> PlayerEnteredAreaEvent = new();
         public Event<PlayerLeftAreaGameEvent> PlayerLeftAreaEvent = new();
         public Event<PartySizeChangedGameEvent> PartySizeChangedEvent = new();
+        public Event<PlayerLeavePartyGameEvent> PlayerLeavePartyEvent = new();
         public Event<PlayerSwitchedToAvatarGameEvent> PlayerSwitchedToAvatarEvent = new();
         public Event<PlayerFactionChangedGameEvent> PlayerFactionChangedEvent = new();
         public Event<PlayerCollectedItemGameEvent> PlayerCollectedItemEvent = new();
@@ -1925,16 +1927,6 @@ namespace MHServerEmu.Games.Regions
                 startTargetRef = pickLocation.Location.Target;
                 return true;
             }
-
-            return false;
-        }
-
-        public bool InOwnerParty(Player player)
-        {
-            ulong playerGuid = player.DatabaseUniqueId;
-            if (Settings.OwnerPlayerDbId == playerGuid) return true;    // FIXME: This doesn't look right
-
-            // TODO check owner is in party
 
             return false;
         }
