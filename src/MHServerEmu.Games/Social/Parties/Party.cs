@@ -1,9 +1,13 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.Social.Parties
@@ -14,6 +18,8 @@ namespace MHServerEmu.Games.Social.Parties
 
         private readonly Dictionary<ulong, PartyMemberInfo> _members = new();
         private readonly Dictionary<PrototypeId, int> _boostCounts = new();
+
+        private ulong _lastAIAggroNotificationEntityId = Entity.InvalidId;
 
         public ulong PartyId { get; }
         public Gazillion.GroupType Type { get; private set; }
@@ -178,6 +184,60 @@ namespace MHServerEmu.Games.Social.Parties
         public CommunityMember GetCommunityMemberForLeader(Player player)
         {
             return GetCommunityMemberForDbGuid(player, LeaderId);
+        }
+
+        public bool SendAIAggroNotification(PrototypeId bannerMessageRef, Agent aiAgent, Player aggroPlayer)
+        {
+            if (bannerMessageRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "SendAIAggroNotification(): bannerMessageRef == PrototypeId.Invalid");
+            if (aiAgent == null) return Logger.WarnReturn(false, "SendAIAggroNotification(): aiAgent == null");
+            if (aggroPlayer == null) return Logger.WarnReturn(false, "SendAIAggroNotification(): aggroPlayer == null");
+
+            Region region = aggroPlayer.GetRegion();
+            if (region == null) return Logger.WarnReturn(false, "SendAIAggroNotification(): region == null");
+
+            Avatar aggroAvatar = aggroPlayer.CurrentAvatar;
+            if (aggroAvatar == null) return Logger.WarnReturn(false, "SendAIAggroNotification(): aggroAvatar == null");
+            if (aggroAvatar.IsInWorld == false) return Logger.WarnReturn(false, "SendAIAggroNotification(): aggroAvatar.IsInWorld == false");
+
+            UINotificationGlobalsPrototype notificationGlobalsProto = GameDatabase.UIGlobalsPrototype.UINotificationGlobals.As<UINotificationGlobalsPrototype>();
+            if (notificationGlobalsProto == null) return Logger.WarnReturn(false, "SendAIAggroNotification(): notificationGlobalsProto == null");
+
+            if (aiAgent.Id == _lastAIAggroNotificationEntityId)
+                return true;
+
+            _lastAIAggroNotificationEntityId = aiAgent.Id;
+
+            ulong regionId = region.Id;
+            Vector3 aggroPosition = aggroAvatar.RegionLocation.Position;
+            float notificationRangeSq = MathHelper.Square(notificationGlobalsProto.NotificationPartyAIAggroRange);
+
+            EntityManager entityManager = aggroPlayer.Game.EntityManager;
+            foreach (PartyMemberInfo member in _members.Values)
+            {
+                Player itPlayer = entityManager.GetEntityByDbGuid<Player>(member.PlayerDbId);
+                if (itPlayer == null)
+                    continue;
+
+                if (itPlayer.DatabaseUniqueId == aggroPlayer.DatabaseUniqueId)
+                    continue;
+
+                Region itRegion = itPlayer.GetRegion();
+                if (itRegion == null || itRegion.Id != regionId)
+                    continue;
+
+                Avatar itAvatar = itPlayer.CurrentAvatar;
+                if (itAvatar == null || itAvatar.IsInWorld == false)
+                    continue;
+
+                Vector3 itPosition = itAvatar.RegionLocation.Position;
+                float distanceSq = Vector3.DistanceSquared2D(aggroPosition, itPosition);
+                if (distanceSq <= notificationRangeSq)
+                    continue;
+
+                itPlayer.SendAIAggroNotification(bannerMessageRef, aiAgent, aggroPlayer, false);
+            }
+
+            return true;
         }
 
         private void UpdateBoostCounts()

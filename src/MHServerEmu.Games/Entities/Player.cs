@@ -3135,18 +3135,19 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message.Build());
         }
 
-        public void SendAIAggroNotification(PrototypeId bannerMessageRef, Agent aiAgent, Player targetPlayer, bool party = false)
+        public void SendAIAggroNotification(PrototypeId bannerMessageRef, Agent aiAgent, Player aggroPlayer, bool sendToParty = false)
         {
-            if (party)
+            if (sendToParty)
             {
-                // TODO send to party members
+                Party party = GetParty();
+                party?.SendAIAggroNotification(bannerMessageRef, aiAgent, aggroPlayer);
             }
             else
             {
                 var message = NetMessageAIAggroNotification.CreateBuilder()
                     .SetBannerMessageRef((ulong)bannerMessageRef)
                     .SetAiRef((ulong)aiAgent.PrototypeDataRef)
-                    .SetPlayerId(targetPlayer.Id)
+                    .SetPlayerId(aggroPlayer.Id)
                     .Build();
 
                 SendMessage(message);
