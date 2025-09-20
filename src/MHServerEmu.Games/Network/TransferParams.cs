@@ -176,7 +176,7 @@ namespace MHServerEmu.Games.Network
                 return false;
 
             DestTarget = NetStructRegionTarget.CreateBuilder()
-                .SetRegionProtoId(DestTarget.RegionProtoId)     // Keep this within the same region, we are just falling back to a different position.
+                .SetRegionProtoId((ulong)region.PrototypeDataRef)     // Keep this within the same region, we are just falling back to a different position.
                 .SetAreaProtoId((ulong)targetProto.Area)
                 .SetCellProtoId((ulong)GameDatabase.GetDataRefByAsset(targetProto.Cell))
                 .SetEntityProtoId((ulong)targetProto.Entity)
