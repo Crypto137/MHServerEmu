@@ -88,9 +88,9 @@ namespace MHServerEmu.PlayerManagement.Social
             switch (request.Operation)
             {
                 case GroupingOperationType.eGOP_InvitePlayer:
-                    if (targetPlayer != null)
-                        playersToNotify.Add(targetPlayer);
                     result = DoPartyOperationInvitePlayer(requestingPlayer, targetPlayer);
+                    if (result == GroupingOperationResult.eGOPR_Success)
+                        playersToNotify.Add(targetPlayer);
                     break;
 
                 case GroupingOperationType.eGOP_AcceptInvite:
