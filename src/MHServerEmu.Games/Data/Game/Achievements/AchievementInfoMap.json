@@ -79113,7 +79113,7 @@
     "SubCategoryStr": 15015462008017325281,
     "DisplayOrder": 5,
     "VisibleState": 1,
-    "EvaluationType": 1,
+    "EvaluationType": 2,
     "EventType": 19,
     "Threshold": 0,
     "DependentAchievementId": 0,
