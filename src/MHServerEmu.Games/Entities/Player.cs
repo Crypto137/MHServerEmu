@@ -3907,7 +3907,7 @@ namespace MHServerEmu.Games.Entities
         {
             int partySize = party.NumMembers;
 
-            // TODO: Update party condition on the current avatar
+            CurrentAvatar?.SetPartySize(partySize);
 
             Region region = GetRegion();
             region?.PartySizeChangedEvent.Invoke(new(this, partySize));
