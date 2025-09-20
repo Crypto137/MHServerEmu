@@ -6651,7 +6651,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return;
 
             Player player = GetOwnerOfType<Player>();
-            if (player == null && player.IsSwitchingAvatar)
+            if (player != null && player.IsSwitchingAvatar)
                 return;
 
             if (player != null && player.PartyId != 0)
@@ -6671,7 +6671,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return;
 
             Player player = GetOwnerOfType<Player>();
-            if (player == null && player.IsSwitchingAvatar)
+            if (player != null && player.IsSwitchingAvatar)
                 return;
 
             if (player != null && player.PartyId != 0)
