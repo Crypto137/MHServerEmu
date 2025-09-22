@@ -2,6 +2,43 @@
 
 Below are some of the more advanced setup topics you might be interested in. For first-time setup instructions please see [Initial Setup](./InitialSetup.md).
 
+## Setting Up LAN Connections
+
+There are additional steps you need to do to allow LAN connections to your server.
+
+Before you do this, you need to know your local IP address:
+
+1. Open the Windows Command Prompt.
+
+2. Enter the `ipconfig` command.
+
+3. Your local IP address should be displayed as `IPv4 Address`.
+
+Now you need to add your local IP address to server configuration files. In the examples below we are going to use `192.168.1.2` as the local IP address.
+
+1. Find the `ConfigOverride.ini` file in the `MHServerEmu` directory and open it with a text editor. If this file does not exist, create a new text file with this name. It should be located next to `Config.ini`.
+
+2. Set the value of the `PublicAddress` setting under the `Frontend` section to your local IP address. Add these lines if they do no exist. It should look like this:
+
+```ini
+[Frontend]
+PublicAddress=192.168.1.2
+```
+
+3. Find the `SiteConfig.xml` file in the `Apache24\htdocs` directory and open it with a text editor.
+
+4. Set the value of the AuthServerAddress setting to your local IP address. It should look like this:
+
+```xml
+<str name="AuthServerAddress" value="192.168.1.2" />
+```
+
+When you connect to the server from another machine, use the IP address you entered in the configuration files instead of `localhost`. Using the `192.168.1.2` address as an example, your client launch argument should be `-siteconfigurl=192.168.1.2/SiteConfig.xml`.
+
+## Setting Up Remote Connections
+
+Setting the server up for connections outside of your local network requires the same steps as above, but instead of a local IP address you need to use a publicly accessible address or a domain name pointing to that address. You may also need to expose ports `443` for the auth server and `4306` for the frontend server. The latter port is configurable in `Config.ini`.
+
 ## Managing Accounts
 
 You can create and manage accounts by using ! commands in the server console or the in-game chat window. Here are some commands to get you started:
@@ -13,38 +50,6 @@ You can create and manage accounts by using ! commands in the server console or 
 - `!account password [email] [newPassword]` - changes password for the specified account.
 
 For a more in-depth list of commands see [Server Commands](./../ServerEmu/ServerCommands.md) or type `!commands`.
-
-## Setting Up Remote Connections
-
-To allow remote clients to connect to your server you need to set up your Apache to function as a reverse proxy server.
-
-1. Remove `RewriteEngine on` and `RewriteRule ^/AuthServer(.*) http://%{HTTP_HOST}:8080$1 [P]` from `httpd-ssl.conf`.
-
-2. Add `ProxyPass /AuthServer http://localhost:8080` and `ProxyPassReverse /AuthServer http://localhost:8080` to the `<VirtualHost _default_:443>` section in `httpd-ssl.conf`.
-
-3. Create a copy of your `SiteConfig.xml` in `Apache24\htdocs` and replace the `AuthServerAddress` value in it with your server's externally accessible IP address or domain name. For LAN this is something like `192.168.x.x`, and for hosting on the Internet it is going to be your server's IP address or a domain name pointing to it.
-
-4. Replace `BindIP` in `Config.ini` with your local IP address or `0.0.0.0`. This has to be an IP address and not a domain name.
-
-5. Replace `PublicAddress` in `Config.ini` with your externally accessible address (this can be an IP address or a domain name, like in `SiteConfig.xml`).
-
-After doing the above steps you can connect to the server remotely by either editing `ClientConfig.xml` on the client's machine, or launching the game with the following parameter: `-siteconfigurl=yourserveraddress.com/SiteConfig.xml`. To connect to the server from the same machine it is being hosted on, you need to use the original `SiteConfig.xml` that points to `localhost`.
-
-Please keep in mind that MHServerEmu is experimental software still heavily in development, and hosting a publicly available server on the Internet brings with it potential security risks.
-
-## Setting Up In-Game Store and News
-
-The client uses an embedded web browser for some of its UI panels. MHServerEmu provides some options that allow you to make use of this feature.
-
-1. Copy the [store](https://github.com/Crypto137/MHServerEmuWebAssets/tree/master/store) folder provided in the [MHServerEmuWebAssets](https://github.com/Crypto137/MHServerEmuWebAssets) repository to `Apache24\htdocs`.
-
-2. Set `OverrideStoreUrls` in `Config.ini` to `true`.
-
-3. Set `StoreHomePageUrl` in `Config.ini` to `http://localhost/store`.
-
-Restart the server, and you should be able to see an example store home page when you open the in-game store. You can set other pages by editing various URL options in `Config.ini` (e.g. `NewsUrl` to change the content of the news window). For more information on the embedded browser see [Embedded Browser](./../Web/EmbeddedBrowser.md).
-
-Please note that the embedded browser is a 2014 version of the Chromium Embedded Framework (CEF), and using it for general web browsing is a major security risk. You should use it only for displaying the content you trust.
 
 ## Setting Up Live Tips
 
