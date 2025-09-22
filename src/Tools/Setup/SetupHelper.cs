@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 
 namespace Setup
 {
@@ -16,6 +15,9 @@ namespace Setup
     internal static class SetupHelper
     {
         private const string ExecutableHash = "6DC9BCDB145F98E5C2D7A1F7E25AEB75507A9D1A";  // Win64 1.52.0.1700
+
+        private const string DefaultAccountEmail = "test1@test.com";
+        private const string DefaultAccountPassword = "123";
 
         private static readonly string CalligraphyPath = Path.Combine("Data", "Game", "Calligraphy.sip");
         private static readonly string ResourcePath = Path.Combine("Data", "Game", "mu_cdata.sip");
@@ -147,15 +149,16 @@ namespace Setup
 
             // Launching the client with auto-login
             using (StreamWriter writer = new(Path.Combine(rootDirectory, "StartClientAutoLogin.bat")))
-                writer.WriteLine($"@start \"\" \"{clientExecutablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml -emailaddress=test1@test.com -password=123");
+                writer.WriteLine($"@start \"\" \"{clientExecutablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml -emailaddress={DefaultAccountEmail} -password={DefaultAccountPassword}");
 
             // Starting servers
             using (StreamWriter writer = new(Path.Combine(rootDirectory, "StartServer.bat")))
             {
+                // We now use %~dp0 instead of %cd% because the current directory may not necessarily be the one where the bat file is located.
                 writer.WriteLine("@echo off");
-                writer.WriteLine($"set APACHE_SERVER_ROOT={Path.Combine("%cd%", "Apache24")}");
+                writer.WriteLine($"set APACHE_SERVER_ROOT={Path.Combine("%~dp0", "Apache24")}");
                 writer.WriteLine($"start /min \"\" \"{Path.Combine("%APACHE_SERVER_ROOT%", "bin", "httpd.exe")}\"");
-                writer.WriteLine($"start \"\" \"{Path.Combine("%cd%", relativeServerExecutablePath)}\"");
+                writer.WriteLine($"start \"\" \"{Path.Combine("%~dp0", relativeServerExecutablePath)}\"");
             }
 
             // Stopping servers
