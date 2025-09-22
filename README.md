@@ -34,11 +34,9 @@ You can always upgrade from stable to nightly simply by downloading the latest n
 
 ## Features
 
-MHServerEmu is feature-complete as a single player experience with limited multiplayer support. We are actively working on getting the remaining social features up and running, including:
+MHServerEmu is feature-complete as a single player experience, and we are actively working on getting the remaining multiplayer features up and running:
 
-- Parties
-
-- Friends
+- Store Gifting
 
 - Supergroups
 
@@ -62,7 +60,7 @@ Download the latest stable or nightly build and overwrite your existing files. N
 
 **Will there be any wipes?**
 
-We plan to force a fresh start when version 1.0 comes out. Your data will not be deleted, but it will no longer be compatible with the server. You will be able to continue using your existing data on whatever the last 0.x version is going to be.
+We plan to force a fresh start when version 1.0 comes out in early 2026. Your data will not be deleted, but it will no longer be compatible with the server. You will be able to continue using your existing data on whatever the last 0.x version is going to be.
 
 **Are you going to support other versions of the game, like the ones from before the Biggest Update Ever (BUE) came out?**
 
@@ -72,7 +70,7 @@ Yes, we do plan to implement support for other versions of the game after 1.52 i
 
 The scope of this project is restoring the game to its original state. We do not have any plans to create custom content. However, all of our research on the game is completely open-source, and it can be potentially used by others in such endeavors.
 
-**Are you going to upgrade the game to Unreal Engine 5?**
+**Are you going to make improvements to the game client (e.g. upgrade graphics)?**
 
 No, we do not touch the client side of the game in any way. This project is a recreation of only the server backend needed to run the game.
 
