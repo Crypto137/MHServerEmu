@@ -27,6 +27,8 @@ namespace MHServerEmu.Core.Config
             string overridePath = Path.Combine(FileHelper.ServerRoot, "ConfigOverride.ini");
             if (File.Exists(overridePath))
                 _overrideFile = new(overridePath);
+            else
+                File.WriteAllText(overridePath, null);
         }
 
         /// <summary>
