@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AssemblyVersion>0.7.0.0</AssemblyVersion>
+    <AssemblyVersion>0.8.0.0</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
     <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
   </PropertyGroup>
