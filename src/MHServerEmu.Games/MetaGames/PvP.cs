@@ -11,8 +11,8 @@ namespace MHServerEmu.Games.MetaGames
 {
     public class PvP : MetaGame
     {
-        private RepInt _team1 = new();
-        private RepInt _team2 = new();
+        private RepVar_int _team1 = new();
+        private RepVar_int _team2 = new();
 
         public PvPPrototype PvPPrototype { get => Prototype as PvPPrototype; }
         public ScoreTable PvPScore { get; private set; }

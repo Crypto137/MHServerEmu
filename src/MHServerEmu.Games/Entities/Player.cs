@@ -95,9 +95,9 @@ namespace MHServerEmu.Games.Entities
 
         private ReplicatedPropertyCollection _avatarProperties = new();
         private ulong _shardId;     // This was probably used for database sharding, we don't need this
-        private RepString _playerName = new();
+        private RepVar_string _playerName = new();
         private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
-        private RepString _secondaryPlayerName = new();
+        private RepVar_string _secondaryPlayerName = new();
 
         // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that
         // should be sent in the packet right after logging in. NetMessageGetCurrencyBalanceResponse should be
@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.Entities
         private bool _emailVerified;
         private TimeSpan _accountCreationTimestamp;     // UnixTime
 
-        private RepULong _partyId = new();
+        private RepVar_ulong _partyId = new();
 
         private ulong _guildId;
         private string _guildName;

@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.MetaGames
         public static readonly Logger Logger = LogManager.CreateLogger();
         public static bool Debug = false;
 
-        protected RepString _name;
+        protected RepVar_string _name;
         protected ulong _regionId;
 
         public Region Region { get => GetRegion(); }

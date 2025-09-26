@@ -6,123 +6,72 @@ using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.Network
 {
-    // NOTE: The client uses C++ templates (RepVar<T>) for these to avoid repetition.
-    // We have to do a bunch of copying and pasting to achieve the same result without losing performance.
-
-    // NOTE: This per-variable replication system was much more heavily used before version 1.25.
-    // By version 1.52 only three types (int, ulong, string) are still in use,
-    // although ReplicatedPropertyCollection is also part of the same overall system.
-
-    // TODO: Port the improved implementation of this from the 1.10 server.
-
-    public class RepInt : IArchiveMessageHandler, ISerialize
+    public abstract class RepVar<T> : IArchiveMessageHandler, ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private IArchiveMessageDispatcher _messageDispatcher = null;
         private AOINetworkPolicyValues _interestPolicies = AOINetworkPolicyValues.AOIChannelNone;
         private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
-        private int _value = 0;
+
+        protected T _value;
 
         public ulong ReplicationId { get => _replicationId; }
         public bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
 
-        public RepInt() { }
+        public RepVar()
+        {
+        }
 
-        public int Get()
+        public override string ToString()
+        {
+            return $"[{_replicationId}] {_value}";
+        }
+
+        public T Get()
         {
             return _value;
         }
 
-        public void Set(int value)
+        public void Set(T value)
         {
-            if (_value == value) return;
-            _value = value;
+            // EqualityComparer<T>.Default uses IEquitable implementation if available, preventing boxing for value types.
+            if (EqualityComparer<T>.Default.Equals(_value, value))
+                return;
 
-            // TODO: Send archive message
-            if (_messageDispatcher?.CanSendArchiveMessages == true)
-                Logger.Trace($"Set(): {this}");
-        }
-
-        public override string ToString() => $"[{ReplicationId}] {_value}";
-
-        public bool Bind(IArchiveMessageDispatcher messageDispatcher, AOINetworkPolicyValues interestPolicies)
-        {
-            if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
-
-            if (IsBound)
-                return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
-
-            _messageDispatcher = messageDispatcher;
-            _interestPolicies = interestPolicies;
-            _replicationId = messageDispatcher.RegisterMessageHandler(this, ref _replicationId);    // pass repId field by ref so that we don't have to expose a setter
-
-            return true;
-        }
-
-        public void Unbind()
-        {
-            if (IsBound == false) return;
-
-            _messageDispatcher.UnregisterMessageHandler(this);
-            _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
-        }
-
-        public bool Serialize(Archive archive)
-        {
-            bool success = true;
-
-            if (archive.IsReplication)
-                success &= Serializer.Transfer(archive, ref _replicationId);
-
-            success &= Serializer.Transfer(archive, ref _value);
-
-            return success;
-        }
-    }
-
-    public class RepULong : IArchiveMessageHandler, ISerialize
-    {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
-        private IArchiveMessageDispatcher _messageDispatcher = null;
-        private AOINetworkPolicyValues _interestPolicies = AOINetworkPolicyValues.AOIChannelNone;
-        private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
-        private ulong _value = 0;
-
-        public ulong ReplicationId { get => _replicationId; }
-        public bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
-
-        public RepULong() { }
-
-        public ulong Get()
-        {
-            return _value;
-        }
-
-        public void Set(ulong value)
-        {
-            if (_value == value) return;
             _value = value;
 
             if (_messageDispatcher?.CanSendArchiveMessages == true)
             {
-                using Archive archive = new(ArchiveSerializeType.Replication, (ulong)_interestPolicies);
-                Serializer.Transfer(archive, this);
+                List<PlayerConnection> interestedClients = ListPool<PlayerConnection>.Instance.Get();
+                if (_messageDispatcher.GetInterestedClients(interestedClients, _interestPolicies))
+                {
+                    using Archive archive = new(ArchiveSerializeType.Replication, (ulong)_interestPolicies);
+                    SerializeValue(archive);    // Just the value, the replication id is transferred as a regular protobuf field
 
-                NetMessageReplicationArchive message = NetMessageReplicationArchive.CreateBuilder()
-                    .SetReplicationId(ReplicationId)
-                    .SetArchiveData(archive.ToByteString())
-                    .Build();
+                    NetMessageReplicationArchive message = NetMessageReplicationArchive.CreateBuilder()
+                        .SetReplicationId(ReplicationId)
+                        .SetArchiveData(archive.ToByteString())
+                        .Build();
 
-                List<PlayerConnection> interestedPlayers = ListPool<PlayerConnection>.Instance.Get();
-                _messageDispatcher.GetInterestedClients(interestedPlayers, _interestPolicies);
-                _messageDispatcher.Game.NetworkManager.SendMessageToMultiple(interestedPlayers, message);
-                ListPool<PlayerConnection>.Instance.Return(interestedPlayers);
+                    _messageDispatcher.Game.NetworkManager.SendMessageToMultiple(interestedClients, message);
+                }
+
+                ListPool<PlayerConnection>.Instance.Return(interestedClients);
             }
         }
 
-        public override string ToString() => $"[{ReplicationId}] {_value}";
+        public virtual bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            if (archive.IsReplication)
+                success &= Serializer.Transfer(archive, ref _replicationId);
+
+            success &= SerializeValue(archive);
+
+            return success;
+        }
 
         public bool Bind(IArchiveMessageDispatcher messageDispatcher, AOINetworkPolicyValues interestPolicies)
         {
@@ -140,88 +89,50 @@ namespace MHServerEmu.Games.Network
 
         public void Unbind()
         {
-            if (IsBound == false) return;
+            if (IsBound == false)
+                return;
 
             _messageDispatcher.UnregisterMessageHandler(this);
             _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
         }
 
-        public bool Serialize(Archive archive)
-        {
-            bool success = true;
-
-            if (archive.IsReplication)
-                success &= Serializer.Transfer(archive, ref _replicationId);
-            
-            success &= Serializer.Transfer(archive, ref _value);
-
-            return success;
-        }
+        // NOTE: The client uses a separate ISerialize implementation called SetRepVarMessage for NetMessageReplicationArchive.
+        // This implementation is a structure consisting of just the replicated value.
+        // We instead use a virtual function here and reuse the code for regular Serialize() calls and NetMessageReplicationArchive.
+        protected abstract bool SerializeValue(Archive archive);
     }
 
-    public class RepString : IArchiveMessageHandler, ISerialize
+    #region Implementations
+
+    public sealed class RepVar_int : RepVar<int>
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
-        private IArchiveMessageDispatcher _messageDispatcher = null;
-        private AOINetworkPolicyValues _interestPolicies = AOINetworkPolicyValues.AOIChannelNone;
-        private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
-        private string _value = string.Empty;
-
-        public ulong ReplicationId { get => _replicationId; }
-        public bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
-
-        public RepString() { }
-
-        public string Get()
+        protected override bool SerializeValue(Archive archive)
         {
-            return _value;
-        }
-
-        public void Set(string value)
-        {
-            if (_value == value) return;
-            _value = value;
-
-            // TODO: Send archive message
-            if (_messageDispatcher?.CanSendArchiveMessages == true)
-                Logger.Trace($"Set(): {this}");
-        }
-
-        public override string ToString() => $"[{ReplicationId}] {_value}";
-
-        public bool Bind(IArchiveMessageDispatcher messageDispatcher, AOINetworkPolicyValues interestPolicies)
-        {
-            if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
-
-            if (IsBound)
-                return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
-
-            _messageDispatcher = messageDispatcher;
-            _interestPolicies = interestPolicies;
-            _replicationId = messageDispatcher.RegisterMessageHandler(this, ref _replicationId);    // pass repId field by ref so that we don't have to expose a setter
-
-            return true;
-        }
-
-        public void Unbind()
-        {
-            if (IsBound == false) return;
-
-            _messageDispatcher.UnregisterMessageHandler(this);
-            _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
-        }
-
-        public bool Serialize(Archive archive)
-        {
-            bool success = true;
-
-            if (archive.IsReplication)
-                success &= Serializer.Transfer(archive, ref _replicationId);
-            
-            success &= Serializer.Transfer(archive, ref _value);
-
-            return success;
+            return Serializer.Transfer(archive, ref _value);
         }
     }
+
+    public sealed class RepVar_ulong : RepVar<ulong>
+    {
+        protected override bool SerializeValue(Archive archive)
+        {
+            return Serializer.Transfer(archive, ref _value);
+        }
+    }
+
+    public sealed class RepVar_string : RepVar<string>
+    {
+        public RepVar_string()
+        {
+            // default to an empty string rather than null.
+            _value = string.Empty;
+        }
+
+        protected override bool SerializeValue(Archive archive)
+        {
+            return Serializer.Transfer(archive, ref _value);
+        }
+    }
+
+    #endregion
 }

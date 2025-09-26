@@ -62,7 +62,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
         private readonly EventPointer<UpdateEnduranceEvent>[] _updateEnduranceEvents = new EventPointer<UpdateEnduranceEvent>[(int)ManaType.NumTypes];
 
-        private RepString _playerName = new();
+        private RepVar_string _playerName = new();
         private ulong _ownerPlayerDbId;
 
         private List<AbilityKeyMapping> _abilityKeyMappings = new();    // Persistent ability key mappings for each spec
