@@ -22,7 +22,6 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         private List<TuningVarArray> _perAvatarTuningVars;
         private List<TuningVarArray> _perConditionTuningVars;
         private List<TuningVarArray> _perPublicEventTuningVars;
-        private List<TuningVarArray> _perMetricsFrequencyTuningVars;
 
         private readonly Dictionary<int, List<WorldEntityPrototype>> _lootGroupDict = new();
 
@@ -48,7 +47,6 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             InitPerAvatarTuningVars();
             InitPerConditionTuningVars();
             InitPerPublicEventTuningVars();
-            InitPerMetricsFrequencyTuningVars();
         }
 
         public void ResetToDefaults()
@@ -65,7 +63,6 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             foreach (TuningVarArray tuningVarArray in _perAvatarTuningVars)             tuningVarArray.Clear();
             foreach (TuningVarArray tuningVarArray in _perConditionTuningVars)          tuningVarArray.Clear();
             foreach (TuningVarArray tuningVarArray in _perPublicEventTuningVars)        tuningVarArray.Clear();
-            foreach (TuningVarArray tuningVarArray in _perMetricsFrequencyTuningVars)   tuningVarArray.Clear();
 
             ClearLootGroups();
 
@@ -109,9 +106,6 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
             for (int i = 0; i < _perPublicEventTuningVars.Count; i++)
                 _perPublicEventTuningVars[i].Copy(other._perPublicEventTuningVars[i]);
-
-            for (int i = 0; i < _perMetricsFrequencyTuningVars.Count; i++)
-                _perMetricsFrequencyTuningVars[i].Copy(other._perMetricsFrequencyTuningVars[i]);
 
             ClearLootGroups();
 
@@ -172,9 +166,6 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
             if (prototype is PublicEventPrototype)
                 return UpdateLivePublicEventTuningVar(tuningVarProtoRef, (PublicEventTuningVar)tuningVarEnum, tuningVarValue);
-
-            if (prototype is MetricsFrequencyPrototype)
-                return UpdateLiveMetricsFrequencyTuningVar(tuningVarProtoRef, (MetricsFrequencyTuningVar)tuningVarEnum, tuningVarValue);
 
             return false;
         }
@@ -386,7 +377,6 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             if (prototype is LootTablePrototype) return ((LootTableTuningVar)tuningVarEnum).ToString();
             if (prototype is ConditionPrototype) return ((ConditionTuningVar)tuningVarEnum).ToString();
             if (prototype is PublicEventPrototype) return ((PublicEventTuningVar)tuningVarEnum).ToString();
-            if (prototype is MetricsFrequencyPrototype) return ((MetricsFrequencyTuningVar)tuningVarEnum).ToString();
 
             return tuningVarEnum.ToString();
         }
@@ -519,18 +509,6 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                 return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePublicEventTuningVar(): publicEventEnumVal < 0 || publicEventEnumVal >= _perPublicEventTuningVars.Count");
 
             return _perPublicEventTuningVars[publicEventEnumVal][(int)tuningVarEnum];
-        }
-
-        public float GetLiveMetricsFrequencyTuningVar(MetricsFrequencyPrototype metricsFrequencyProto, MetricsFrequencyTuningVar tuningVarEnum)
-        {
-            if (tuningVarEnum < 0 || tuningVarEnum >= MetricsFrequencyTuningVar.eMFTV_NumMetricsFrequencyTuningVars)
-                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePublicEventTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= MetricsFrequencyTuningVar.eMFTV_NumMetricsFrequencyTuningVars");
-
-            int metricsFrequencyEnumVal = metricsFrequencyProto.MetricsFrequencyPrototypeEnumValue;
-            if (metricsFrequencyEnumVal < 0 || metricsFrequencyEnumVal >= _perMetricsFrequencyTuningVars.Count)
-                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveMetricsFrequencyTuningVar(): metricsFrequencyEnumVal < 0 || metricsFrequencyEnumVal >= _perMetricsFrequencyTuningVars.Count");
-
-            return _perMetricsFrequencyTuningVars[metricsFrequencyEnumVal][(int)tuningVarEnum];
         }
 
         #endregion
@@ -873,19 +851,6 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             return true;
         }
 
-        private bool InitPerMetricsFrequencyTuningVars()
-        {
-            BlueprintId metricsFrequencyBlueprintRef = GetMetricsFrequencyBlueprintDataRef();
-            if (metricsFrequencyBlueprintRef == BlueprintId.Invalid) return Logger.WarnReturn(false, "InitPerMetricsFrequencyTuningVars(): metricsFrequencyBlueprintRef == BlueprintId.Invalid");
-
-            int numMetricsFrequencyPrototypes = DataDirectory.Instance.GetPrototypeMaxEnumValue(metricsFrequencyBlueprintRef) + 1;
-            _perMetricsFrequencyTuningVars = new(numMetricsFrequencyPrototypes);
-            for (int i = 0; i < numMetricsFrequencyPrototypes; i++)
-                _perMetricsFrequencyTuningVars.Add(new TuningVarArray((int)MetricsFrequencyTuningVar.eMFTV_NumMetricsFrequencyTuningVars));
-
-            return true;
-        }
-
         #endregion
 
         #region Tuning Var Update Methods
@@ -1088,26 +1053,6 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
             _perPublicEventTuningVars[publicEventEnumVal][(int)tuningVarEnum] = tuningVarValue;
             _updateProtobufOutOfDate = true;
-
-            return true;
-        }
-
-        private bool UpdateLiveMetricsFrequencyTuningVar(PrototypeId metricsFrequencyProtoRef, MetricsFrequencyTuningVar tuningVarEnum, float tuningVarValue)
-        {
-            if (tuningVarEnum < 0 || tuningVarEnum >= MetricsFrequencyTuningVar.eMFTV_NumMetricsFrequencyTuningVars)
-                return Logger.WarnReturn(false, $"UpdateLiveMetricsFrequencyTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= MetricsFrequencyTuningVar.eMFTV_NumMetricsFrequencyTuningVars");
-
-            if (metricsFrequencyProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, $"UpdateLiveMetricsFrequencyTuningVar(): metricsFrequencyProtoRef == PrototypeId.Invalid");
-
-            BlueprintId metricsFrequencyBlueprintRef = GetMetricsFrequencyBlueprintDataRef();
-            if (metricsFrequencyBlueprintRef == BlueprintId.Invalid) return Logger.WarnReturn(false, $"UpdateLiveMetricsFrequencyTuningVar(): metricsFrequencyBlueprintRef == BlueprintId.Invalid");
-
-            int metricsFrequencyEnumVal = DataDirectory.Instance.GetPrototypeEnumValue(metricsFrequencyProtoRef, metricsFrequencyBlueprintRef);
-            if (metricsFrequencyEnumVal < 0 || metricsFrequencyEnumVal >= _perMetricsFrequencyTuningVars.Count)
-                return Logger.WarnReturn(false, $"UpdateLiveMetricsFrequencyTuningVar(): metricsFrequencyEnumVal < 0 || metricsFrequencyEnumVal >= _perMetricsFrequencyTuningVars.Count");
-
-            _perMetricsFrequencyTuningVars[metricsFrequencyEnumVal][(int)tuningVarEnum] = tuningVarValue;
-            // Server-only live tuning
 
             return true;
         }

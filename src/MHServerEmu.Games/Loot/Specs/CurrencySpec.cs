@@ -21,15 +21,6 @@ namespace MHServerEmu.Games.Loot.Specs
             Amount = amount;
         }
 
-        public NetStructCurrencySpec ToProtobuf()
-        {
-            return NetStructCurrencySpec.CreateBuilder()
-                .SetAgentOrItemProtoRef((ulong)AgentOrItemProtoRef)
-                .SetCurrencyRef((ulong)CurrencyRef)
-                .SetAmount((uint)Amount)
-                .Build();
-        }
-
         public override string ToString()
         {
             return $"agentOrItemProtoRef={AgentOrItemProtoRef.GetName()}, currencyRef={CurrencyRef.GetNameFormatted()}, amount={Amount}";

@@ -27,6 +27,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public void OnPlayerRegionTransferFinished(PlayerHandle player)
         {
+            /* V48_TODO
             // The client "loses" pending party invites on region change, so just cancel it here as well.
             // This won't do anything if there isn't an actual pending invite.
             CancelPartyInvite(player);
@@ -42,13 +43,16 @@ namespace MHServerEmu.PlayerManagement.Social
                 ServiceMessage.PartyInfoServerUpdate message = new(player.CurrentGame.Id, player.PlayerDbId, 0, null);
                 ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
             }
+            */
         }
 
         public void OnPlayerRemoved(PlayerHandle player)
         {
             CancelPartyInvite(player);
-            RemoveMemberFromParty(player, GroupLeaveReason.GROUP_LEAVE_REASON_DISCONNECTED);
+            RemoveMemberFromParty(player, GroupLeaveReason.GROUP_LEAVE_REASON_LEFT);
         }
+
+        /* V48_TODO
 
         public GroupingOperationResult DoPartyOperation(ref PartyOperationPayload request, HashSet<PlayerHandle> playersToNotify)
         {
@@ -342,6 +346,8 @@ namespace MHServerEmu.PlayerManagement.Social
 
         #endregion
 
+        */
+
         #region Party Management
 
         private MasterParty CreateParty(PlayerHandle player)
@@ -440,7 +446,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 return GroupingOperationResult.eGOPR_SystemError;
 
             if (player.CurrentParty == null)
-                return GroupingOperationResult.eGOPR_NotInParty;
+                return GroupingOperationResult.eGOPR_SystemError;
 
             if (player.CurrentParty.Leader != player)
                 return GroupingOperationResult.eGOPR_NotLeader;

@@ -149,7 +149,6 @@ namespace MHServerEmu.Games.Regions.MatchQueues
         {
             return status == RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup
                 || status == RegionRequestQueueUpdateVar.eRRQ_RaidNotAllowed
-                || status == RegionRequestQueueUpdateVar.eRRQ_PartyTooLarge
                 || status == RegionRequestQueueUpdateVar.eRRQ_GroupInviteExpired
                 || status == RegionRequestQueueUpdateVar.eRRQ_MatchInviteExpired;
         }

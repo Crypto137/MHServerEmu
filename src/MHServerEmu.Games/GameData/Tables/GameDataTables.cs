@@ -6,8 +6,6 @@
 
         public AllianceTable AllianceTable { get; } = new();
         public EquipmentSlotTable EquipmentSlotTable { get; } = new();
-        public InfinityGemBonusTable InfinityGemBonusTable { get; } = new();
-        public InfinityGemBonusPostreqsTable InfinityGetBonusPostreqsTable { get; } = new();
         public LootPickingTable LootPickingTable { get; } = new();
         public PowerOwnerTable PowerOwnerTable { get; } = new();
         public OmegaBonusSetTable OmegaBonusSetTable { get; } = new();

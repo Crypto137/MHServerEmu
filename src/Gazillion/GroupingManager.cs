@@ -16,6 +16,30 @@ namespace Gazillion {
     }
     #endregion
     #region Static variables
+    internal static pbd::MessageDescriptor internal__static_Gazillion_PerPlayerInfo__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PerPlayerInfo, global::Gazillion.PerPlayerInfo.Builder> internal__static_Gazillion_PerPlayerInfo__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_ClientInvitedToGroup__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.ClientInvitedToGroup, global::Gazillion.ClientInvitedToGroup.Builder> internal__static_Gazillion_ClientInvitedToGroup__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_ClientInviteAcceptFailed__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.ClientInviteAcceptFailed, global::Gazillion.ClientInviteAcceptFailed.Builder> internal__static_Gazillion_ClientInviteAcceptFailed__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_ClientCreateGroup__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.ClientCreateGroup, global::Gazillion.ClientCreateGroup.Builder> internal__static_Gazillion_ClientCreateGroup__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_PlayerJoinedGroup__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PlayerJoinedGroup, global::Gazillion.PlayerJoinedGroup.Builder> internal__static_Gazillion_PlayerJoinedGroup__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GroupChangeType__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupChangeType, global::Gazillion.GroupChangeType.Builder> internal__static_Gazillion_GroupChangeType__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_PlayerLeftGroup__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PlayerLeftGroup, global::Gazillion.PlayerLeftGroup.Builder> internal__static_Gazillion_PlayerLeftGroup__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_PlayerChangedGroupLeader__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PlayerChangedGroupLeader, global::Gazillion.PlayerChangedGroupLeader.Builder> internal__static_Gazillion_PlayerChangedGroupLeader__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_ClientBootedFromGroup__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.ClientBootedFromGroup, global::Gazillion.ClientBootedFromGroup.Builder> internal__static_Gazillion_ClientBootedFromGroup__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_KickGroupMemberAttemptFailed__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.KickGroupMemberAttemptFailed, global::Gazillion.KickGroupMemberAttemptFailed.Builder> internal__static_Gazillion_KickGroupMemberAttemptFailed__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_PlayerDeclinedInvite__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PlayerDeclinedInvite, global::Gazillion.PlayerDeclinedInvite.Builder> internal__static_Gazillion_PlayerDeclinedInvite__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_CurrentPartyInfo__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.CurrentPartyInfo, global::Gazillion.CurrentPartyInfo.Builder> internal__static_Gazillion_CurrentPartyInfo__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_ChatResponseToExternalLogin__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatResponseToExternalLogin, global::Gazillion.ChatResponseToExternalLogin.Builder> internal__static_Gazillion_ChatResponseToExternalLogin__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_ChatNormalMessage__Descriptor;
@@ -28,6 +52,22 @@ namespace Gazillion {
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatErrorMessage, global::Gazillion.ChatErrorMessage.Builder> internal__static_Gazillion_ChatErrorMessage__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_ChatBanVoteResponse__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatBanVoteResponse, global::Gazillion.ChatBanVoteResponse.Builder> internal__static_Gazillion_ChatBanVoteResponse__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GroupingReportInvitationDestinationForPortal__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingReportInvitationDestinationForPortal, global::Gazillion.GroupingReportInvitationDestinationForPortal.Builder> internal__static_Gazillion_GroupingReportInvitationDestinationForPortal__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GroupingOperationResultMsg__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingOperationResultMsg, global::Gazillion.GroupingOperationResultMsg.Builder> internal__static_Gazillion_GroupingOperationResultMsg__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GroupingManagerRemovedPlayer__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingManagerRemovedPlayer, global::Gazillion.GroupingManagerRemovedPlayer.Builder> internal__static_Gazillion_GroupingManagerRemovedPlayer__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GroupingManagerAddedPlayer__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingManagerAddedPlayer, global::Gazillion.GroupingManagerAddedPlayer.Builder> internal__static_Gazillion_GroupingManagerAddedPlayer__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GroupingManagerCreateGroup__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingManagerCreateGroup, global::Gazillion.GroupingManagerCreateGroup.Builder> internal__static_Gazillion_GroupingManagerCreateGroup__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GroupingManagerGroupChangeType__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingManagerGroupChangeType, global::Gazillion.GroupingManagerGroupChangeType.Builder> internal__static_Gazillion_GroupingManagerGroupChangeType__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GroupingManagerPlayerEnteredRegion__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingManagerPlayerEnteredRegion, global::Gazillion.GroupingManagerPlayerEnteredRegion.Builder> internal__static_Gazillion_GroupingManagerPlayerEnteredRegion__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GroupingManagerUpdatedPartyBoostCount__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingManagerUpdatedPartyBoostCount, global::Gazillion.GroupingManagerUpdatedPartyBoostCount.Builder> internal__static_Gazillion_GroupingManagerUpdatedPartyBoostCount__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_ChatCreateChatRoomResult__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatCreateChatRoomResult, global::Gazillion.ChatCreateChatRoomResult.Builder> internal__static_Gazillion_ChatCreateChatRoomResult__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_ChatAddPlayerToRoomResult__Descriptor;
@@ -49,91 +89,272 @@ namespace Gazillion {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "ChVHcm91cGluZ01hbmFnZXIucHJvdG8SCUdhemlsbGlvbhoQQ2hhdENvbW1v", 
-            "bi5wcm90bxoUQ29tbW9uTWVzc2FnZXMucHJvdG8iQQobQ2hhdFJlc3BvbnNl", 
-            "VG9FeHRlcm5hbExvZ2luEiIKDHNvbWVyZXNwb25zZRgBIAEoDFIMc29tZXJl", 
-            "c3BvbnNlIvsBChFDaGF0Tm9ybWFsTWVzc2FnZRI0Cghyb29tVHlwZRgBIAIo", 
-            "DjIYLkdhemlsbGlvbi5DaGF0Um9vbVR5cGVzUghyb29tVHlwZRImCg5mcm9t", 
-            "UGxheWVyTmFtZRgCIAIoCVIOZnJvbVBsYXllck5hbWUSNgoKdGhlTWVzc2Fn", 
-            "ZRgDIAIoCzIWLkdhemlsbGlvbi5DaGF0TWVzc2FnZVIKdGhlTWVzc2FnZRIk", 
-            "Cg1wcmVzdGlnZUxldmVsGAQgASgFUg1wcmVzdGlnZUxldmVsEioKEGNvbnNv", 
-            "bGVBY2NvdW50SWQYBSABKARSEGNvbnNvbGVBY2NvdW50SWQiwwEKD0NoYXRU", 
-            "ZWxsTWVzc2FnZRImCg5mcm9tUGxheWVyTmFtZRgBIAIoCVIOZnJvbVBsYXll", 
-            "ck5hbWUSNgoKdGhlTWVzc2FnZRgCIAIoCzIWLkdhemlsbGlvbi5DaGF0TWVz", 
-            "c2FnZVIKdGhlTWVzc2FnZRIkCg1wcmVzdGlnZUxldmVsGAMgASgFUg1wcmVz", 
-            "dGlnZUxldmVsEioKEGNvbnNvbGVBY2NvdW50SWQYBCABKARSEGNvbnNvbGVB", 
-            "Y2NvdW50SWQi/gEKFENoYXRCcm9hZGNhc3RNZXNzYWdlEjQKCHJvb21UeXBl", 
-            "GAEgAigOMhguR2F6aWxsaW9uLkNoYXRSb29tVHlwZXNSCHJvb21UeXBlEiYK", 
-            "DmZyb21QbGF5ZXJOYW1lGAIgAigJUg5mcm9tUGxheWVyTmFtZRI2Cgp0aGVN", 
-            "ZXNzYWdlGAMgAigLMhYuR2F6aWxsaW9uLkNoYXRNZXNzYWdlUgp0aGVNZXNz", 
-            "YWdlEiQKDXByZXN0aWdlTGV2ZWwYBCABKAVSDXByZXN0aWdlTGV2ZWwSKgoQ", 
-            "Y29uc29sZUFjY291bnRJZBgFIAEoBFIQY29uc29sZUFjY291bnRJZCJUChBD", 
-            "aGF0RXJyb3JNZXNzYWdlEkAKDGVycm9yTWVzc2FnZRgBIAIoDjIcLkdhemls", 
-            "bGlvbi5DaGF0RXJyb3JNZXNzYWdlc1IMZXJyb3JNZXNzYWdlIokBChNDaGF0", 
-            "QmFuVm90ZVJlc3BvbnNlEioKEHRhcmdldFBsYXllck5hbWUYASACKAlSEHRh", 
-            "cmdldFBsYXllck5hbWUSRgoMcmVzcG9uc2VDb2RlGAIgAigOMiIuR2F6aWxs", 
-            "aW9uLkNoYXRCYW5Wb3RlUmVzcG9uc2VDb2RlUgxyZXNwb25zZUNvZGUifwoY", 
-            "Q2hhdENyZWF0ZUNoYXRSb29tUmVzdWx0EioKEHJlcXVlc3RpbmdHYW1lSWQY", 
-            "AyACKARSEHJlcXVlc3RpbmdHYW1lSWQSHwoHc3VjY2VzcxgBIAEoCDoFZmFs", 
-            "c2VSB3N1Y2Nlc3MSFgoGcmVhc29uGAIgASgJUgZyZWFzb24igAEKGUNoYXRB", 
-            "ZGRQbGF5ZXJUb1Jvb21SZXN1bHQSKgoQcmVxdWVzdGluZ0dhbWVJZBgDIAIo", 
-            "BFIQcmVxdWVzdGluZ0dhbWVJZBIfCgdzdWNjZXNzGAEgASgIOgVmYWxzZVIH", 
-            "c3VjY2VzcxIWCgZyZWFzb24YAiABKAlSBnJlYXNvbiKrAQoTQ2hhdFNjcnVi", 
-            "VGV4dFJlc3VsdBIqChByZXF1ZXN0aW5nR2FtZUlkGAEgAigEUhByZXF1ZXN0", 
-            "aW5nR2FtZUlkEiIKDHRleHRPcmlnaW5hbBgCIAIoCVIMdGV4dE9yaWdpbmFs", 
-            "EiIKDHRleHRTY3J1YmJlZBgDIAIoCVIMdGV4dFNjcnViYmVkEiAKC3JlbW90", 
-            "ZUpvYklkGAQgAigEUgtyZW1vdGVKb2JJZCI4ChZDaGF0U2VydmVyTm90aWZp", 
-            "Y2F0aW9uEh4KCnRoZU1lc3NhZ2UYASACKAlSCnRoZU1lc3NhZ2UiYgoUQ2hh", 
-            "dENsaWVudElzTG9nZ2VkSW4SKgoQcmVxdWVzdGluZ0dhbWVJZBgBIAIoBFIQ", 
-            "cmVxdWVzdGluZ0dhbWVJZBIeCgpwbGF5ZXJEYklkGAIgAigEUgpwbGF5ZXJE", 
-            "YklkKogCChdDaGF0QmFuVm90ZVJlc3BvbnNlQ29kZRIZChVDSEFUX0JBTl9W", 
-            "T1RFX1NVQ0NFU1MQABIXChNDSEFUX0JBTl9WT1RFX0VSUk9SEAESIAocQ0hB", 
-            "VF9CQU5fVk9URV9BTFJFQURZX0JBTk5FRBACEh8KG0NIQVRfQkFOX1ZPVEVf", 
-            "QUxSRUFEWV9WT1RFRBADEh0KGUNIQVRfQkFOX1ZPVEVfTk9UX0FMTE9XRUQQ", 
-            "BBIYChRDSEFUX0JBTl9WT1RFX0JBTk5FRBAFEiAKHENIQVRfQkFOX1ZPVEVf", 
-          "SU5WQUxJRF9UQVJHRVQQBhIbChdDSEFUX0JBTl9WT1RFX05VTV9DT0RFUxAH"));
+            "bi5wcm90bxoUQ29tbW9uTWVzc2FnZXMucHJvdG8ieQoNUGVyUGxheWVySW5m", 
+            "bxIeCgpwbGF5ZXJOYW1lGAEgAigJUgpwbGF5ZXJOYW1lEigKD3BsYXllclNl", 
+            "c3Npb25JZBgCIAIoBFIPcGxheWVyU2Vzc2lvbklkEh4KCnBsYXllckRiSWQY", 
+            "AyACKARSCnBsYXllckRiSWQi3gEKFENsaWVudEludml0ZWRUb0dyb3VwEi4K", 
+            "Emludml0aW5nUGxheWVyTmFtZRgBIAIoCVISaW52aXRpbmdQbGF5ZXJOYW1l", 
+            "EhgKB2dyb3VwSWQYAiACKARSB2dyb3VwSWQSLAoRZ3JvdXBQU05TZXNzaW9u", 
+            "SWQYAyABKAlSEWdyb3VwUFNOU2Vzc2lvbklkEhwKCXVzZVBvcnRhbBgEIAIo", 
+            "CFIJdXNlUG9ydGFsEjAKE2hhc1RlbXBvcmFyeVJlZ2lvbnMYBSACKAhSE2hh", 
+            "c1RlbXBvcmFyeVJlZ2lvbnMiGgoYQ2xpZW50SW52aXRlQWNjZXB0RmFpbGVk", 
+            "ItkBChFDbGllbnRDcmVhdGVHcm91cBIYCgdncm91cElkGAEgAigEUgdncm91", 
+            "cElkEjIKCWdyb3VwVHlwZRgCIAIoDjIULkdhemlsbGlvbi5Hcm91cFR5cGVS", 
+            "CWdyb3VwVHlwZRIsChFncm91cFBTTlNlc3Npb25JZBgDIAEoCVIRZ3JvdXBQ", 
+            "U05TZXNzaW9uSWQSKAoPbGVhZGVyU2Vzc2lvbklkGAQgAigEUg9sZWFkZXJT", 
+            "ZXNzaW9uSWQSHgoKbGVhZGVyTmFtZRgFIAIoCVIKbGVhZGVyTmFtZSKFAQoR", 
+            "UGxheWVySm9pbmVkR3JvdXASLAoRam9pbmluZ1BsYXllck5hbWUYASACKAlS", 
+            "EWpvaW5pbmdQbGF5ZXJOYW1lEigKD3BsYXllclNlc3Npb25JZBgCIAIoBFIP", 
+            "cGxheWVyU2Vzc2lvbklkEhgKB2dyb3VwSWQYAyACKARSB2dyb3VwSWQibwoP", 
+            "R3JvdXBDaGFuZ2VUeXBlEhgKB2dyb3VwSWQYASACKARSB2dyb3VwSWQSKAoE", 
+            "dHlwZRgCIAIoDjIULkdhemlsbGlvbi5Hcm91cFR5cGVSBHR5cGUSGAoHY29u", 
+            "ZmlybRgDIAIoCFIHY29uZmlybSLkAQoPUGxheWVyTGVmdEdyb3VwEh4KCmxl", 
+            "YXZlck5hbWUYASACKAlSCmxlYXZlck5hbWUSKAoPcGxheWVyU2Vzc2lvbklk", 
+            "GAIgAigEUg9wbGF5ZXJTZXNzaW9uSWQSLgoSbmV3TGVhZGVyU2Vzc2lvbklk", 
+            "GAMgASgEUhJuZXdMZWFkZXJTZXNzaW9uSWQSGAoHZ3JvdXBJZBgEIAIoBFIH", 
+            "Z3JvdXBJZBI9CgtsZWF2ZVJlYXNvbhgFIAIoDjIbLkdhemlsbGlvbi5Hcm91", 
+            "cExlYXZlUmVhc29uUgtsZWF2ZVJlYXNvbiLQAQoYUGxheWVyQ2hhbmdlZEdy", 
+            "b3VwTGVhZGVyEioKEHJlcXVlc3RpbmdHYW1lSWQYASACKARSEHJlcXVlc3Rp", 
+            "bmdHYW1lSWQSGAoHZ3JvdXBJZBgCIAIoBFIHZ3JvdXBJZBI2CgluZXdMZWFk", 
+            "ZXIYAyACKAsyGC5HYXppbGxpb24uUGVyUGxheWVySW5mb1IJbmV3TGVhZGVy", 
+            "EjYKCW9sZExlYWRlchgEIAIoCzIYLkdhemlsbGlvbi5QZXJQbGF5ZXJJbmZv", 
+            "UglvbGRMZWFkZXIicAoVQ2xpZW50Qm9vdGVkRnJvbUdyb3VwEhgKB2dyb3Vw", 
+            "SWQYASACKARSB2dyb3VwSWQSPQoLbGVhdmVSZWFzb24YAiACKA4yGy5HYXpp", 
+            "bGxpb24uR3JvdXBMZWF2ZVJlYXNvblILbGVhdmVSZWFzb24iWgocS2lja0dy", 
+            "b3VwTWVtYmVyQXR0ZW1wdEZhaWxlZBI6CgZyZWFzb24YASACKA4yIi5HYXpp", 
+            "bGxpb24uR3JvdXBpbmdPcGVyYXRpb25SZXN1bHRSBnJlYXNvbiJoChRQbGF5", 
+            "ZXJEZWNsaW5lZEludml0ZRIiCgxkZWNsaW5lck5hbWUYASABKAlSDGRlY2xp", 
+            "bmVyTmFtZRIsChFkZWNsaW5lclNlc3Npb25JZBgCIAEoBFIRZGVjbGluZXJT", 
+            "ZXNzaW9uSWQi9AEKEEN1cnJlbnRQYXJ0eUluZm8SGAoHZ3JvdXBJZBgBIAIo", 
+            "BFIHZ3JvdXBJZBIyCglncm91cFR5cGUYAiACKA4yFC5HYXppbGxpb24uR3Jv", 
+            "dXBUeXBlUglncm91cFR5cGUSLAoRZ3JvdXBQU05TZXNzaW9uSWQYAyABKAlS", 
+            "EWdyb3VwUFNOU2Vzc2lvbklkEjAKBmxlYWRlchgEIAIoCzIYLkdhemlsbGlv", 
+            "bi5QZXJQbGF5ZXJJbmZvUgZsZWFkZXISMgoHbWVtYmVycxgFIAMoCzIYLkdh", 
+            "emlsbGlvbi5QZXJQbGF5ZXJJbmZvUgdtZW1iZXJzIkEKG0NoYXRSZXNwb25z", 
+            "ZVRvRXh0ZXJuYWxMb2dpbhIiCgxzb21lcmVzcG9uc2UYASABKAxSDHNvbWVy", 
+            "ZXNwb25zZSLPAQoRQ2hhdE5vcm1hbE1lc3NhZ2USNAoIcm9vbVR5cGUYASAC", 
+            "KA4yGC5HYXppbGxpb24uQ2hhdFJvb21UeXBlc1IIcm9vbVR5cGUSJgoOZnJv", 
+            "bVBsYXllck5hbWUYAiACKAlSDmZyb21QbGF5ZXJOYW1lEjYKCnRoZU1lc3Nh", 
+            "Z2UYBCACKAsyFi5HYXppbGxpb24uQ2hhdE1lc3NhZ2VSCnRoZU1lc3NhZ2US", 
+            "JAoNcHJlc3RpZ2VMZXZlbBgFIAEoBVINcHJlc3RpZ2VMZXZlbCKXAQoPQ2hh", 
+            "dFRlbGxNZXNzYWdlEiYKDmZyb21QbGF5ZXJOYW1lGAEgAigJUg5mcm9tUGxh", 
+            "eWVyTmFtZRI2Cgp0aGVNZXNzYWdlGAMgAigLMhYuR2F6aWxsaW9uLkNoYXRN", 
+            "ZXNzYWdlUgp0aGVNZXNzYWdlEiQKDXByZXN0aWdlTGV2ZWwYBCABKAVSDXBy", 
+            "ZXN0aWdlTGV2ZWwi0gEKFENoYXRCcm9hZGNhc3RNZXNzYWdlEjQKCHJvb21U", 
+            "eXBlGAEgAigOMhguR2F6aWxsaW9uLkNoYXRSb29tVHlwZXNSCHJvb21UeXBl", 
+            "EiYKDmZyb21QbGF5ZXJOYW1lGAIgAigJUg5mcm9tUGxheWVyTmFtZRI2Cgp0", 
+            "aGVNZXNzYWdlGAMgAigLMhYuR2F6aWxsaW9uLkNoYXRNZXNzYWdlUgp0aGVN", 
+            "ZXNzYWdlEiQKDXByZXN0aWdlTGV2ZWwYBCABKAVSDXByZXN0aWdlTGV2ZWwi", 
+            "VAoQQ2hhdEVycm9yTWVzc2FnZRJACgxlcnJvck1lc3NhZ2UYASACKA4yHC5H", 
+            "YXppbGxpb24uQ2hhdEVycm9yTWVzc2FnZXNSDGVycm9yTWVzc2FnZSKJAQoT", 
+            "Q2hhdEJhblZvdGVSZXNwb25zZRIqChB0YXJnZXRQbGF5ZXJOYW1lGAEgAigJ", 
+            "UhB0YXJnZXRQbGF5ZXJOYW1lEkYKDHJlc3BvbnNlQ29kZRgCIAIoDjIiLkdh", 
+            "emlsbGlvbi5DaGF0QmFuVm90ZVJlc3BvbnNlQ29kZVIMcmVzcG9uc2VDb2Rl", 
+            "ItoBCixHcm91cGluZ1JlcG9ydEludml0YXRpb25EZXN0aW5hdGlvbkZvclBv", 
+            "cnRhbBIwChNhY2NlcHRpbmdQbGF5ZXJEYklkGAEgAigEUhNhY2NlcHRpbmdQ", 
+            "bGF5ZXJEYklkEi4KEmludml0aW5nUGxheWVyRGJJZBgCIAIoBFISaW52aXRp", 
+            "bmdQbGF5ZXJEYklkEioKEHJlcXVlc3RpbmdHYW1lSWQYAyACKARSEHJlcXVl", 
+            "c3RpbmdHYW1lSWQSHAoJdXNlUG9ydGFsGAQgAigIUgl1c2VQb3J0YWwitwQK", 
+            "Gkdyb3VwaW5nT3BlcmF0aW9uUmVzdWx0TXNnEioKEHJlcXVlc3RpbmdHYW1l", 
+            "SWQYASACKARSEHJlcXVlc3RpbmdHYW1lSWQSMgoUcmVxdWVzdGluZ1BsYXll", 
+            "ckRiSWQYAiACKARSFHJlcXVlc3RpbmdQbGF5ZXJEYklkEjgKBm9wVHlwZRgD", 
+            "IAIoDjIgLkdhemlsbGlvbi5Hcm91cGluZ09wZXJhdGlvblR5cGVSBm9wVHlw", 
+            "ZRI+CghvcFJlc3VsdBgEIAIoDjIiLkdhemlsbGlvbi5Hcm91cGluZ09wZXJh", 
+            "dGlvblJlc3VsdFIIb3BSZXN1bHQSMAoTaGFzVGVtcG9yYXJ5UmVnaW9ucxgF", 
+            "IAEoCFITaGFzVGVtcG9yYXJ5UmVnaW9ucxIYCgdncm91cElkGAYgASgEUgdn", 
+            "cm91cElkEkUKCWdyb3VwVHlwZRgHIAEoDjIULkdhemlsbGlvbi5Hcm91cFR5", 
+            "cGU6EUdyb3VwVHlwZV9JbnZhbGlkUglncm91cFR5cGUSOAoKbGVhZGVySW5m", 
+            "bxgIIAEoCzIYLkdhemlsbGlvbi5QZXJQbGF5ZXJJbmZvUgpsZWFkZXJJbmZv", 
+            "EkQKEGN1cnJlbnRQYXJ0eUluZm8YCSADKAsyGC5HYXppbGxpb24uUGVyUGxh", 
+            "eWVySW5mb1IQY3VycmVudFBhcnR5SW5mbxIsChFncm91cFBTTlNlc3Npb25J", 
+            "ZBgKIAEoCVIRZ3JvdXBQU05TZXNzaW9uSWQiywIKHEdyb3VwaW5nTWFuYWdl", 
+            "clJlbW92ZWRQbGF5ZXISKgoQcmVxdWVzdGluZ0dhbWVJZBgBIAIoBFIQcmVx", 
+            "dWVzdGluZ0dhbWVJZBI+Cg1yZW1vdmVkUGxheWVyGAIgAigLMhguR2F6aWxs", 
+            "aW9uLlBlclBsYXllckluZm9SDXJlbW92ZWRQbGF5ZXISGAoHZ3JvdXBJZBgD", 
+            "IAIoBFIHZ3JvdXBJZBI2CgluZXdMZWFkZXIYBCABKAsyGC5HYXppbGxpb24u", 
+            "UGVyUGxheWVySW5mb1IJbmV3TGVhZGVyEi4KEnByZXZpb3VzTGVhZGVyRGJJ", 
+            "ZBgGIAEoBFIScHJldmlvdXNMZWFkZXJEYklkEj0KC2xlYXZlUmVhc29uGAUg", 
+            "AigOMhsuR2F6aWxsaW9uLkdyb3VwTGVhdmVSZWFzb25SC2xlYXZlUmVhc29u", 
+            "Ip4BChpHcm91cGluZ01hbmFnZXJBZGRlZFBsYXllchIqChByZXF1ZXN0aW5n", 
+            "R2FtZUlkGAEgAigEUhByZXF1ZXN0aW5nR2FtZUlkEjoKC2FkZGVkUGxheWVy", 
+            "GAIgAigLMhguR2F6aWxsaW9uLlBlclBsYXllckluZm9SC2FkZGVkUGxheWVy", 
+            "EhgKB2dyb3VwSWQYAyACKARSB2dyb3VwSWQi/gEKGkdyb3VwaW5nTWFuYWdl", 
+            "ckNyZWF0ZUdyb3VwEioKEHJlcXVlc3RpbmdHYW1lSWQYASACKARSEHJlcXVl", 
+            "c3RpbmdHYW1lSWQSGAoHZ3JvdXBJZBgCIAIoBFIHZ3JvdXBJZBIsChFncm91", 
+            "cFBTTlNlc3Npb25JZBgDIAEoCVIRZ3JvdXBQU05TZXNzaW9uSWQSMgoJZ3Jv", 
+            "dXBUeXBlGAQgAigOMhQuR2F6aWxsaW9uLkdyb3VwVHlwZVIJZ3JvdXBUeXBl", 
+            "EjgKCmxlYWRlckluZm8YBSACKAsyGC5HYXppbGxpb24uUGVyUGxheWVySW5m", 
+            "b1IKbGVhZGVySW5mbyKQAQoeR3JvdXBpbmdNYW5hZ2VyR3JvdXBDaGFuZ2VU", 
+            "eXBlEioKEHJlcXVlc3RpbmdHYW1lSWQYASACKARSEHJlcXVlc3RpbmdHYW1l", 
+            "SWQSGAoHZ3JvdXBJZBgCIAIoBFIHZ3JvdXBJZBIoCgR0eXBlGAMgAigOMhQu", 
+            "R2F6aWxsaW9uLkdyb3VwVHlwZVIEdHlwZSLaAgoiR3JvdXBpbmdNYW5hZ2Vy", 
+            "UGxheWVyRW50ZXJlZFJlZ2lvbhIeCgpwbGF5ZXJEYklkGAEgAigEUgpwbGF5", 
+            "ZXJEYklkEioKEHJlcXVlc3RpbmdHYW1lSWQYAiACKARSEHJlcXVlc3RpbmdH", 
+            "YW1lSWQSGAoHZ3JvdXBJZBgDIAIoBFIHZ3JvdXBJZBIsChFncm91cFBTTlNl", 
+            "c3Npb25JZBgEIAEoCVIRZ3JvdXBQU05TZXNzaW9uSWQSMgoJZ3JvdXBUeXBl", 
+            "GAUgAigOMhQuR2F6aWxsaW9uLkdyb3VwVHlwZVIJZ3JvdXBUeXBlEjgKCmxl", 
+            "YWRlckluZm8YBiABKAsyGC5HYXppbGxpb24uUGVyUGxheWVySW5mb1IKbGVh", 
+            "ZGVySW5mbxIyCgdtZW1iZXJzGAcgAygLMhguR2F6aWxsaW9uLlBlclBsYXll", 
+            "ckluZm9SB21lbWJlcnMi4QEKJUdyb3VwaW5nTWFuYWdlclVwZGF0ZWRQYXJ0", 
+            "eUJvb3N0Q291bnQSKgoQcmVxdWVzdGluZ0dhbWVJZBgBIAIoBFIQcmVxdWVz", 
+            "dGluZ0dhbWVJZBIwChNwYXJ0eUJvb3N0Q29uZGl0aW9uGAIgAigEUhNwYXJ0", 
+            "eUJvb3N0Q29uZGl0aW9uEhgKB2dyb3VwSWQYAyACKARSB2dyb3VwSWQSFAoF", 
+            "Y291bnQYBCACKA1SBWNvdW50EioKEHJlcXVlc3RpbmdQbGF5ZXIYBSABKARS", 
+            "EHJlcXVlc3RpbmdQbGF5ZXIifwoYQ2hhdENyZWF0ZUNoYXRSb29tUmVzdWx0", 
+            "EioKEHJlcXVlc3RpbmdHYW1lSWQYAyACKARSEHJlcXVlc3RpbmdHYW1lSWQS", 
+            "HwoHc3VjY2VzcxgBIAEoCDoFZmFsc2VSB3N1Y2Nlc3MSFgoGcmVhc29uGAIg", 
+            "ASgJUgZyZWFzb24igAEKGUNoYXRBZGRQbGF5ZXJUb1Jvb21SZXN1bHQSKgoQ", 
+            "cmVxdWVzdGluZ0dhbWVJZBgDIAIoBFIQcmVxdWVzdGluZ0dhbWVJZBIfCgdz", 
+            "dWNjZXNzGAEgASgIOgVmYWxzZVIHc3VjY2VzcxIWCgZyZWFzb24YAiABKAlS", 
+            "BnJlYXNvbiKrAQoTQ2hhdFNjcnViVGV4dFJlc3VsdBIqChByZXF1ZXN0aW5n", 
+            "R2FtZUlkGAEgAigEUhByZXF1ZXN0aW5nR2FtZUlkEiIKDHRleHRPcmlnaW5h", 
+            "bBgCIAIoCVIMdGV4dE9yaWdpbmFsEiIKDHRleHRTY3J1YmJlZBgDIAIoCVIM", 
+            "dGV4dFNjcnViYmVkEiAKC3JlbW90ZUpvYklkGAQgAigEUgtyZW1vdGVKb2JJ", 
+            "ZCI4ChZDaGF0U2VydmVyTm90aWZpY2F0aW9uEh4KCnRoZU1lc3NhZ2UYASAC", 
+            "KAlSCnRoZU1lc3NhZ2UiYgoUQ2hhdENsaWVudElzTG9nZ2VkSW4SKgoQcmVx", 
+            "dWVzdGluZ0dhbWVJZBgBIAIoBFIQcmVxdWVzdGluZ0dhbWVJZBIeCgpwbGF5", 
+            "ZXJEYklkGAIgAigEUgpwbGF5ZXJEYklkKncKFUdyb3VwaW5nT3BlcmF0aW9u", 
+            "VHlwZRIVChFlR09QX0ludml0ZVBsYXllchABEhUKEWVHT1BfQWNjZXB0SW52", 
+            "aXRlEAISGwoXZUdPUF9TZXJ2ZXJOb3RpZmljYXRpb24QAxITCg9lR09QX0tp", 
+            "Y2tQbGF5ZXIQBCq/AgoXR3JvdXBpbmdPcGVyYXRpb25SZXN1bHQSEQoNZUdP", 
+            "UFJfU3VjY2VzcxABEhUKEWVHT1BSX1N5c3RlbUVycm9yEAISHgoaZUdPUFJf", 
+            "VGFyZ2V0UGxheWVyTm90Rm91bmQQAxIWChJlR09QUl9UYXJnZXRlZFNlbGYQ", 
+            "BBIaChZlR09QUl9BbHJlYWR5SGFzSW52aXRlEAUSEwoPZUdPUFJfUGFydHlG", 
+            "dWxsEAYSEwoPZUdPUFJfTm90TGVhZGVyEAcSHwobZUdPUFJfUGVuZGluZ1Bh", 
+            "cnR5RGlzYmFuZGVkEAgSHgoaZUdPUFJfQXV0b1BhcnlQcmV2ZW50c0tpY2sQ", 
+            "CRIhCh1lR09QUl9QYXJ0eVBvcnRhbExlYWRzVG9NYXRjaBAKEhgKFGVHT1BS", 
+            "X0FscmVhZHlJblBhcnR5EAsqiAIKF0NoYXRCYW5Wb3RlUmVzcG9uc2VDb2Rl", 
+            "EhkKFUNIQVRfQkFOX1ZPVEVfU1VDQ0VTUxAAEhcKE0NIQVRfQkFOX1ZPVEVf", 
+            "RVJST1IQARIgChxDSEFUX0JBTl9WT1RFX0FMUkVBRFlfQkFOTkVEEAISHwob", 
+            "Q0hBVF9CQU5fVk9URV9BTFJFQURZX1ZPVEVEEAMSHQoZQ0hBVF9CQU5fVk9U", 
+            "RV9OT1RfQUxMT1dFRBAEEhgKFENIQVRfQkFOX1ZPVEVfQkFOTkVEEAUSIAoc", 
+            "Q0hBVF9CQU5fVk9URV9JTlZBTElEX1RBUkdFVBAGEhsKF0NIQVRfQkFOX1ZP", 
+            "VEVfTlVNX0NPREVTEAcqUwoVR3JvdXBpbmdTdGF0ZU9mUGxheWVyEg4KCmVH", 
+            "U09QX1NvbG8QARIXChNlR1NPUF9QZW5kaW5nSW52aXRlEAISEQoNZUdTT1Bf", 
+          "SW5Hcm91cBAD"));
       pbd::FileDescriptor.InternalDescriptorAssigner assigner = delegate(pbd::FileDescriptor root) {
         descriptor = root;
-        internal__static_Gazillion_ChatResponseToExternalLogin__Descriptor = Descriptor.MessageTypes[0];
+        internal__static_Gazillion_PerPlayerInfo__Descriptor = Descriptor.MessageTypes[0];
+        internal__static_Gazillion_PerPlayerInfo__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PerPlayerInfo, global::Gazillion.PerPlayerInfo.Builder>(internal__static_Gazillion_PerPlayerInfo__Descriptor,
+                new string[] { "PlayerName", "PlayerSessionId", "PlayerDbId", });
+        internal__static_Gazillion_ClientInvitedToGroup__Descriptor = Descriptor.MessageTypes[1];
+        internal__static_Gazillion_ClientInvitedToGroup__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ClientInvitedToGroup, global::Gazillion.ClientInvitedToGroup.Builder>(internal__static_Gazillion_ClientInvitedToGroup__Descriptor,
+                new string[] { "InvitingPlayerName", "GroupId", "GroupPSNSessionId", "UsePortal", "HasTemporaryRegions", });
+        internal__static_Gazillion_ClientInviteAcceptFailed__Descriptor = Descriptor.MessageTypes[2];
+        internal__static_Gazillion_ClientInviteAcceptFailed__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ClientInviteAcceptFailed, global::Gazillion.ClientInviteAcceptFailed.Builder>(internal__static_Gazillion_ClientInviteAcceptFailed__Descriptor,
+                new string[] { });
+        internal__static_Gazillion_ClientCreateGroup__Descriptor = Descriptor.MessageTypes[3];
+        internal__static_Gazillion_ClientCreateGroup__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ClientCreateGroup, global::Gazillion.ClientCreateGroup.Builder>(internal__static_Gazillion_ClientCreateGroup__Descriptor,
+                new string[] { "GroupId", "GroupType", "GroupPSNSessionId", "LeaderSessionId", "LeaderName", });
+        internal__static_Gazillion_PlayerJoinedGroup__Descriptor = Descriptor.MessageTypes[4];
+        internal__static_Gazillion_PlayerJoinedGroup__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PlayerJoinedGroup, global::Gazillion.PlayerJoinedGroup.Builder>(internal__static_Gazillion_PlayerJoinedGroup__Descriptor,
+                new string[] { "JoiningPlayerName", "PlayerSessionId", "GroupId", });
+        internal__static_Gazillion_GroupChangeType__Descriptor = Descriptor.MessageTypes[5];
+        internal__static_Gazillion_GroupChangeType__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupChangeType, global::Gazillion.GroupChangeType.Builder>(internal__static_Gazillion_GroupChangeType__Descriptor,
+                new string[] { "GroupId", "Type", "Confirm", });
+        internal__static_Gazillion_PlayerLeftGroup__Descriptor = Descriptor.MessageTypes[6];
+        internal__static_Gazillion_PlayerLeftGroup__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PlayerLeftGroup, global::Gazillion.PlayerLeftGroup.Builder>(internal__static_Gazillion_PlayerLeftGroup__Descriptor,
+                new string[] { "LeaverName", "PlayerSessionId", "NewLeaderSessionId", "GroupId", "LeaveReason", });
+        internal__static_Gazillion_PlayerChangedGroupLeader__Descriptor = Descriptor.MessageTypes[7];
+        internal__static_Gazillion_PlayerChangedGroupLeader__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PlayerChangedGroupLeader, global::Gazillion.PlayerChangedGroupLeader.Builder>(internal__static_Gazillion_PlayerChangedGroupLeader__Descriptor,
+                new string[] { "RequestingGameId", "GroupId", "NewLeader", "OldLeader", });
+        internal__static_Gazillion_ClientBootedFromGroup__Descriptor = Descriptor.MessageTypes[8];
+        internal__static_Gazillion_ClientBootedFromGroup__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ClientBootedFromGroup, global::Gazillion.ClientBootedFromGroup.Builder>(internal__static_Gazillion_ClientBootedFromGroup__Descriptor,
+                new string[] { "GroupId", "LeaveReason", });
+        internal__static_Gazillion_KickGroupMemberAttemptFailed__Descriptor = Descriptor.MessageTypes[9];
+        internal__static_Gazillion_KickGroupMemberAttemptFailed__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.KickGroupMemberAttemptFailed, global::Gazillion.KickGroupMemberAttemptFailed.Builder>(internal__static_Gazillion_KickGroupMemberAttemptFailed__Descriptor,
+                new string[] { "Reason", });
+        internal__static_Gazillion_PlayerDeclinedInvite__Descriptor = Descriptor.MessageTypes[10];
+        internal__static_Gazillion_PlayerDeclinedInvite__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PlayerDeclinedInvite, global::Gazillion.PlayerDeclinedInvite.Builder>(internal__static_Gazillion_PlayerDeclinedInvite__Descriptor,
+                new string[] { "DeclinerName", "DeclinerSessionId", });
+        internal__static_Gazillion_CurrentPartyInfo__Descriptor = Descriptor.MessageTypes[11];
+        internal__static_Gazillion_CurrentPartyInfo__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.CurrentPartyInfo, global::Gazillion.CurrentPartyInfo.Builder>(internal__static_Gazillion_CurrentPartyInfo__Descriptor,
+                new string[] { "GroupId", "GroupType", "GroupPSNSessionId", "Leader", "Members", });
+        internal__static_Gazillion_ChatResponseToExternalLogin__Descriptor = Descriptor.MessageTypes[12];
         internal__static_Gazillion_ChatResponseToExternalLogin__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatResponseToExternalLogin, global::Gazillion.ChatResponseToExternalLogin.Builder>(internal__static_Gazillion_ChatResponseToExternalLogin__Descriptor,
                 new string[] { "Someresponse", });
-        internal__static_Gazillion_ChatNormalMessage__Descriptor = Descriptor.MessageTypes[1];
+        internal__static_Gazillion_ChatNormalMessage__Descriptor = Descriptor.MessageTypes[13];
         internal__static_Gazillion_ChatNormalMessage__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatNormalMessage, global::Gazillion.ChatNormalMessage.Builder>(internal__static_Gazillion_ChatNormalMessage__Descriptor,
-                new string[] { "RoomType", "FromPlayerName", "TheMessage", "PrestigeLevel", "ConsoleAccountId", });
-        internal__static_Gazillion_ChatTellMessage__Descriptor = Descriptor.MessageTypes[2];
+                new string[] { "RoomType", "FromPlayerName", "TheMessage", "PrestigeLevel", });
+        internal__static_Gazillion_ChatTellMessage__Descriptor = Descriptor.MessageTypes[14];
         internal__static_Gazillion_ChatTellMessage__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatTellMessage, global::Gazillion.ChatTellMessage.Builder>(internal__static_Gazillion_ChatTellMessage__Descriptor,
-                new string[] { "FromPlayerName", "TheMessage", "PrestigeLevel", "ConsoleAccountId", });
-        internal__static_Gazillion_ChatBroadcastMessage__Descriptor = Descriptor.MessageTypes[3];
+                new string[] { "FromPlayerName", "TheMessage", "PrestigeLevel", });
+        internal__static_Gazillion_ChatBroadcastMessage__Descriptor = Descriptor.MessageTypes[15];
         internal__static_Gazillion_ChatBroadcastMessage__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatBroadcastMessage, global::Gazillion.ChatBroadcastMessage.Builder>(internal__static_Gazillion_ChatBroadcastMessage__Descriptor,
-                new string[] { "RoomType", "FromPlayerName", "TheMessage", "PrestigeLevel", "ConsoleAccountId", });
-        internal__static_Gazillion_ChatErrorMessage__Descriptor = Descriptor.MessageTypes[4];
+                new string[] { "RoomType", "FromPlayerName", "TheMessage", "PrestigeLevel", });
+        internal__static_Gazillion_ChatErrorMessage__Descriptor = Descriptor.MessageTypes[16];
         internal__static_Gazillion_ChatErrorMessage__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatErrorMessage, global::Gazillion.ChatErrorMessage.Builder>(internal__static_Gazillion_ChatErrorMessage__Descriptor,
                 new string[] { "ErrorMessage", });
-        internal__static_Gazillion_ChatBanVoteResponse__Descriptor = Descriptor.MessageTypes[5];
+        internal__static_Gazillion_ChatBanVoteResponse__Descriptor = Descriptor.MessageTypes[17];
         internal__static_Gazillion_ChatBanVoteResponse__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatBanVoteResponse, global::Gazillion.ChatBanVoteResponse.Builder>(internal__static_Gazillion_ChatBanVoteResponse__Descriptor,
                 new string[] { "TargetPlayerName", "ResponseCode", });
-        internal__static_Gazillion_ChatCreateChatRoomResult__Descriptor = Descriptor.MessageTypes[6];
+        internal__static_Gazillion_GroupingReportInvitationDestinationForPortal__Descriptor = Descriptor.MessageTypes[18];
+        internal__static_Gazillion_GroupingReportInvitationDestinationForPortal__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingReportInvitationDestinationForPortal, global::Gazillion.GroupingReportInvitationDestinationForPortal.Builder>(internal__static_Gazillion_GroupingReportInvitationDestinationForPortal__Descriptor,
+                new string[] { "AcceptingPlayerDbId", "InvitingPlayerDbId", "RequestingGameId", "UsePortal", });
+        internal__static_Gazillion_GroupingOperationResultMsg__Descriptor = Descriptor.MessageTypes[19];
+        internal__static_Gazillion_GroupingOperationResultMsg__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingOperationResultMsg, global::Gazillion.GroupingOperationResultMsg.Builder>(internal__static_Gazillion_GroupingOperationResultMsg__Descriptor,
+                new string[] { "RequestingGameId", "RequestingPlayerDbId", "OpType", "OpResult", "HasTemporaryRegions", "GroupId", "GroupType", "LeaderInfo", "CurrentPartyInfo", "GroupPSNSessionId", });
+        internal__static_Gazillion_GroupingManagerRemovedPlayer__Descriptor = Descriptor.MessageTypes[20];
+        internal__static_Gazillion_GroupingManagerRemovedPlayer__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingManagerRemovedPlayer, global::Gazillion.GroupingManagerRemovedPlayer.Builder>(internal__static_Gazillion_GroupingManagerRemovedPlayer__Descriptor,
+                new string[] { "RequestingGameId", "RemovedPlayer", "GroupId", "NewLeader", "PreviousLeaderDbId", "LeaveReason", });
+        internal__static_Gazillion_GroupingManagerAddedPlayer__Descriptor = Descriptor.MessageTypes[21];
+        internal__static_Gazillion_GroupingManagerAddedPlayer__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingManagerAddedPlayer, global::Gazillion.GroupingManagerAddedPlayer.Builder>(internal__static_Gazillion_GroupingManagerAddedPlayer__Descriptor,
+                new string[] { "RequestingGameId", "AddedPlayer", "GroupId", });
+        internal__static_Gazillion_GroupingManagerCreateGroup__Descriptor = Descriptor.MessageTypes[22];
+        internal__static_Gazillion_GroupingManagerCreateGroup__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingManagerCreateGroup, global::Gazillion.GroupingManagerCreateGroup.Builder>(internal__static_Gazillion_GroupingManagerCreateGroup__Descriptor,
+                new string[] { "RequestingGameId", "GroupId", "GroupPSNSessionId", "GroupType", "LeaderInfo", });
+        internal__static_Gazillion_GroupingManagerGroupChangeType__Descriptor = Descriptor.MessageTypes[23];
+        internal__static_Gazillion_GroupingManagerGroupChangeType__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingManagerGroupChangeType, global::Gazillion.GroupingManagerGroupChangeType.Builder>(internal__static_Gazillion_GroupingManagerGroupChangeType__Descriptor,
+                new string[] { "RequestingGameId", "GroupId", "Type", });
+        internal__static_Gazillion_GroupingManagerPlayerEnteredRegion__Descriptor = Descriptor.MessageTypes[24];
+        internal__static_Gazillion_GroupingManagerPlayerEnteredRegion__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingManagerPlayerEnteredRegion, global::Gazillion.GroupingManagerPlayerEnteredRegion.Builder>(internal__static_Gazillion_GroupingManagerPlayerEnteredRegion__Descriptor,
+                new string[] { "PlayerDbId", "RequestingGameId", "GroupId", "GroupPSNSessionId", "GroupType", "LeaderInfo", "Members", });
+        internal__static_Gazillion_GroupingManagerUpdatedPartyBoostCount__Descriptor = Descriptor.MessageTypes[25];
+        internal__static_Gazillion_GroupingManagerUpdatedPartyBoostCount__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GroupingManagerUpdatedPartyBoostCount, global::Gazillion.GroupingManagerUpdatedPartyBoostCount.Builder>(internal__static_Gazillion_GroupingManagerUpdatedPartyBoostCount__Descriptor,
+                new string[] { "RequestingGameId", "PartyBoostCondition", "GroupId", "Count", "RequestingPlayer", });
+        internal__static_Gazillion_ChatCreateChatRoomResult__Descriptor = Descriptor.MessageTypes[26];
         internal__static_Gazillion_ChatCreateChatRoomResult__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatCreateChatRoomResult, global::Gazillion.ChatCreateChatRoomResult.Builder>(internal__static_Gazillion_ChatCreateChatRoomResult__Descriptor,
                 new string[] { "RequestingGameId", "Success", "Reason", });
-        internal__static_Gazillion_ChatAddPlayerToRoomResult__Descriptor = Descriptor.MessageTypes[7];
+        internal__static_Gazillion_ChatAddPlayerToRoomResult__Descriptor = Descriptor.MessageTypes[27];
         internal__static_Gazillion_ChatAddPlayerToRoomResult__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatAddPlayerToRoomResult, global::Gazillion.ChatAddPlayerToRoomResult.Builder>(internal__static_Gazillion_ChatAddPlayerToRoomResult__Descriptor,
                 new string[] { "RequestingGameId", "Success", "Reason", });
-        internal__static_Gazillion_ChatScrubTextResult__Descriptor = Descriptor.MessageTypes[8];
+        internal__static_Gazillion_ChatScrubTextResult__Descriptor = Descriptor.MessageTypes[28];
         internal__static_Gazillion_ChatScrubTextResult__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatScrubTextResult, global::Gazillion.ChatScrubTextResult.Builder>(internal__static_Gazillion_ChatScrubTextResult__Descriptor,
                 new string[] { "RequestingGameId", "TextOriginal", "TextScrubbed", "RemoteJobId", });
-        internal__static_Gazillion_ChatServerNotification__Descriptor = Descriptor.MessageTypes[9];
+        internal__static_Gazillion_ChatServerNotification__Descriptor = Descriptor.MessageTypes[29];
         internal__static_Gazillion_ChatServerNotification__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatServerNotification, global::Gazillion.ChatServerNotification.Builder>(internal__static_Gazillion_ChatServerNotification__Descriptor,
                 new string[] { "TheMessage", });
-        internal__static_Gazillion_ChatClientIsLoggedIn__Descriptor = Descriptor.MessageTypes[10];
+        internal__static_Gazillion_ChatClientIsLoggedIn__Descriptor = Descriptor.MessageTypes[30];
         internal__static_Gazillion_ChatClientIsLoggedIn__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatClientIsLoggedIn, global::Gazillion.ChatClientIsLoggedIn.Builder>(internal__static_Gazillion_ChatClientIsLoggedIn__Descriptor,
                 new string[] { "RequestingGameId", "PlayerDbId", });
@@ -153,6 +374,27 @@ namespace Gazillion {
     
   }
   #region Enums
+  public enum GroupingOperationType {
+    eGOP_InvitePlayer = 1,
+    eGOP_AcceptInvite = 2,
+    eGOP_ServerNotification = 3,
+    eGOP_KickPlayer = 4,
+  }
+  
+  public enum GroupingOperationResult {
+    eGOPR_Success = 1,
+    eGOPR_SystemError = 2,
+    eGOPR_TargetPlayerNotFound = 3,
+    eGOPR_TargetedSelf = 4,
+    eGOPR_AlreadyHasInvite = 5,
+    eGOPR_PartyFull = 6,
+    eGOPR_NotLeader = 7,
+    eGOPR_PendingPartyDisbanded = 8,
+    eGOPR_AutoParyPreventsKick = 9,
+    eGOPR_PartyPortalLeadsToMatch = 10,
+    eGOPR_AlreadyInParty = 11,
+  }
+  
   public enum ChatBanVoteResponseCode {
     CHAT_BAN_VOTE_SUCCESS = 0,
     CHAT_BAN_VOTE_ERROR = 1,
@@ -164,9 +406,4629 @@ namespace Gazillion {
     CHAT_BAN_VOTE_NUM_CODES = 7,
   }
   
+  public enum GroupingStateOfPlayer {
+    eGSOP_Solo = 1,
+    eGSOP_PendingInvite = 2,
+    eGSOP_InGroup = 3,
+  }
+  
   #endregion
   
   #region Messages
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class PerPlayerInfo : pb::GeneratedMessage<PerPlayerInfo, PerPlayerInfo.Builder> {
+    private PerPlayerInfo() { }
+    private static readonly PerPlayerInfo defaultInstance = new PerPlayerInfo().MakeReadOnly();
+    private static readonly string[] _perPlayerInfoFieldNames = new string[] { "playerDbId", "playerName", "playerSessionId" };
+    private static readonly uint[] _perPlayerInfoFieldTags = new uint[] { 24, 10, 16 };
+    public static PerPlayerInfo DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override PerPlayerInfo DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override PerPlayerInfo ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_PerPlayerInfo__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<PerPlayerInfo, PerPlayerInfo.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_PerPlayerInfo__FieldAccessorTable; }
+    }
+    
+    public const int PlayerNameFieldNumber = 1;
+    private bool hasPlayerName;
+    private string playerName_ = "";
+    public bool HasPlayerName {
+      get { return hasPlayerName; }
+    }
+    public string PlayerName {
+      get { return playerName_; }
+    }
+    
+    public const int PlayerSessionIdFieldNumber = 2;
+    private bool hasPlayerSessionId;
+    private ulong playerSessionId_;
+    public bool HasPlayerSessionId {
+      get { return hasPlayerSessionId; }
+    }
+    public ulong PlayerSessionId {
+      get { return playerSessionId_; }
+    }
+    
+    public const int PlayerDbIdFieldNumber = 3;
+    private bool hasPlayerDbId;
+    private ulong playerDbId_;
+    public bool HasPlayerDbId {
+      get { return hasPlayerDbId; }
+    }
+    public ulong PlayerDbId {
+      get { return playerDbId_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasPlayerName) return false;
+        if (!hasPlayerSessionId) return false;
+        if (!hasPlayerDbId) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _perPlayerInfoFieldNames;
+      if (hasPlayerName) {
+        output.WriteString(1, field_names[1], PlayerName);
+      }
+      if (hasPlayerSessionId) {
+        output.WriteUInt64(2, field_names[2], PlayerSessionId);
+      }
+      if (hasPlayerDbId) {
+        output.WriteUInt64(3, field_names[0], PlayerDbId);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasPlayerName) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, PlayerName);
+      }
+      if (hasPlayerSessionId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, PlayerSessionId);
+      }
+      if (hasPlayerDbId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, PlayerDbId);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static PerPlayerInfo ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PerPlayerInfo ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PerPlayerInfo ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PerPlayerInfo ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PerPlayerInfo ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PerPlayerInfo ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static PerPlayerInfo ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static PerPlayerInfo ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static PerPlayerInfo ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PerPlayerInfo ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private PerPlayerInfo MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(PerPlayerInfo prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<PerPlayerInfo, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(PerPlayerInfo cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private PerPlayerInfo result;
+      
+      private PerPlayerInfo PrepareBuilder() {
+        if (resultIsReadOnly) {
+          PerPlayerInfo original = result;
+          result = new PerPlayerInfo();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override PerPlayerInfo MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.PerPlayerInfo.Descriptor; }
+      }
+      
+      public override PerPlayerInfo DefaultInstanceForType {
+        get { return global::Gazillion.PerPlayerInfo.DefaultInstance; }
+      }
+      
+      public override PerPlayerInfo BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is PerPlayerInfo) {
+          return MergeFrom((PerPlayerInfo) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(PerPlayerInfo other) {
+        if (other == global::Gazillion.PerPlayerInfo.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasPlayerName) {
+          PlayerName = other.PlayerName;
+        }
+        if (other.HasPlayerSessionId) {
+          PlayerSessionId = other.PlayerSessionId;
+        }
+        if (other.HasPlayerDbId) {
+          PlayerDbId = other.PlayerDbId;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_perPlayerInfoFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _perPlayerInfoFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasPlayerName = input.ReadString(ref result.playerName_);
+              break;
+            }
+            case 16: {
+              result.hasPlayerSessionId = input.ReadUInt64(ref result.playerSessionId_);
+              break;
+            }
+            case 24: {
+              result.hasPlayerDbId = input.ReadUInt64(ref result.playerDbId_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasPlayerName {
+        get { return result.hasPlayerName; }
+      }
+      public string PlayerName {
+        get { return result.PlayerName; }
+        set { SetPlayerName(value); }
+      }
+      public Builder SetPlayerName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasPlayerName = true;
+        result.playerName_ = value;
+        return this;
+      }
+      public Builder ClearPlayerName() {
+        PrepareBuilder();
+        result.hasPlayerName = false;
+        result.playerName_ = "";
+        return this;
+      }
+      
+      public bool HasPlayerSessionId {
+        get { return result.hasPlayerSessionId; }
+      }
+      public ulong PlayerSessionId {
+        get { return result.PlayerSessionId; }
+        set { SetPlayerSessionId(value); }
+      }
+      public Builder SetPlayerSessionId(ulong value) {
+        PrepareBuilder();
+        result.hasPlayerSessionId = true;
+        result.playerSessionId_ = value;
+        return this;
+      }
+      public Builder ClearPlayerSessionId() {
+        PrepareBuilder();
+        result.hasPlayerSessionId = false;
+        result.playerSessionId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasPlayerDbId {
+        get { return result.hasPlayerDbId; }
+      }
+      public ulong PlayerDbId {
+        get { return result.PlayerDbId; }
+        set { SetPlayerDbId(value); }
+      }
+      public Builder SetPlayerDbId(ulong value) {
+        PrepareBuilder();
+        result.hasPlayerDbId = true;
+        result.playerDbId_ = value;
+        return this;
+      }
+      public Builder ClearPlayerDbId() {
+        PrepareBuilder();
+        result.hasPlayerDbId = false;
+        result.playerDbId_ = 0UL;
+        return this;
+      }
+    }
+    static PerPlayerInfo() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class ClientInvitedToGroup : pb::GeneratedMessage<ClientInvitedToGroup, ClientInvitedToGroup.Builder> {
+    private ClientInvitedToGroup() { }
+    private static readonly ClientInvitedToGroup defaultInstance = new ClientInvitedToGroup().MakeReadOnly();
+    private static readonly string[] _clientInvitedToGroupFieldNames = new string[] { "groupId", "groupPSNSessionId", "hasTemporaryRegions", "invitingPlayerName", "usePortal" };
+    private static readonly uint[] _clientInvitedToGroupFieldTags = new uint[] { 16, 26, 40, 10, 32 };
+    public static ClientInvitedToGroup DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override ClientInvitedToGroup DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override ClientInvitedToGroup ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_ClientInvitedToGroup__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<ClientInvitedToGroup, ClientInvitedToGroup.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_ClientInvitedToGroup__FieldAccessorTable; }
+    }
+    
+    public const int InvitingPlayerNameFieldNumber = 1;
+    private bool hasInvitingPlayerName;
+    private string invitingPlayerName_ = "";
+    public bool HasInvitingPlayerName {
+      get { return hasInvitingPlayerName; }
+    }
+    public string InvitingPlayerName {
+      get { return invitingPlayerName_; }
+    }
+    
+    public const int GroupIdFieldNumber = 2;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int GroupPSNSessionIdFieldNumber = 3;
+    private bool hasGroupPSNSessionId;
+    private string groupPSNSessionId_ = "";
+    public bool HasGroupPSNSessionId {
+      get { return hasGroupPSNSessionId; }
+    }
+    public string GroupPSNSessionId {
+      get { return groupPSNSessionId_; }
+    }
+    
+    public const int UsePortalFieldNumber = 4;
+    private bool hasUsePortal;
+    private bool usePortal_;
+    public bool HasUsePortal {
+      get { return hasUsePortal; }
+    }
+    public bool UsePortal {
+      get { return usePortal_; }
+    }
+    
+    public const int HasTemporaryRegionsFieldNumber = 5;
+    private bool hasHasTemporaryRegions;
+    private bool hasTemporaryRegions_;
+    public bool HasHasTemporaryRegions {
+      get { return hasHasTemporaryRegions; }
+    }
+    public bool HasTemporaryRegions {
+      get { return hasTemporaryRegions_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasInvitingPlayerName) return false;
+        if (!hasGroupId) return false;
+        if (!hasUsePortal) return false;
+        if (!hasHasTemporaryRegions) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _clientInvitedToGroupFieldNames;
+      if (hasInvitingPlayerName) {
+        output.WriteString(1, field_names[3], InvitingPlayerName);
+      }
+      if (hasGroupId) {
+        output.WriteUInt64(2, field_names[0], GroupId);
+      }
+      if (hasGroupPSNSessionId) {
+        output.WriteString(3, field_names[1], GroupPSNSessionId);
+      }
+      if (hasUsePortal) {
+        output.WriteBool(4, field_names[4], UsePortal);
+      }
+      if (hasHasTemporaryRegions) {
+        output.WriteBool(5, field_names[2], HasTemporaryRegions);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasInvitingPlayerName) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, InvitingPlayerName);
+      }
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, GroupId);
+      }
+      if (hasGroupPSNSessionId) {
+        size += pb::CodedOutputStream.ComputeStringSize(3, GroupPSNSessionId);
+      }
+      if (hasUsePortal) {
+        size += pb::CodedOutputStream.ComputeBoolSize(4, UsePortal);
+      }
+      if (hasHasTemporaryRegions) {
+        size += pb::CodedOutputStream.ComputeBoolSize(5, HasTemporaryRegions);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static ClientInvitedToGroup ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static ClientInvitedToGroup ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static ClientInvitedToGroup ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static ClientInvitedToGroup ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static ClientInvitedToGroup ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static ClientInvitedToGroup ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static ClientInvitedToGroup ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static ClientInvitedToGroup ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static ClientInvitedToGroup ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static ClientInvitedToGroup ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private ClientInvitedToGroup MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(ClientInvitedToGroup prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<ClientInvitedToGroup, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(ClientInvitedToGroup cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private ClientInvitedToGroup result;
+      
+      private ClientInvitedToGroup PrepareBuilder() {
+        if (resultIsReadOnly) {
+          ClientInvitedToGroup original = result;
+          result = new ClientInvitedToGroup();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override ClientInvitedToGroup MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.ClientInvitedToGroup.Descriptor; }
+      }
+      
+      public override ClientInvitedToGroup DefaultInstanceForType {
+        get { return global::Gazillion.ClientInvitedToGroup.DefaultInstance; }
+      }
+      
+      public override ClientInvitedToGroup BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is ClientInvitedToGroup) {
+          return MergeFrom((ClientInvitedToGroup) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(ClientInvitedToGroup other) {
+        if (other == global::Gazillion.ClientInvitedToGroup.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasInvitingPlayerName) {
+          InvitingPlayerName = other.InvitingPlayerName;
+        }
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasGroupPSNSessionId) {
+          GroupPSNSessionId = other.GroupPSNSessionId;
+        }
+        if (other.HasUsePortal) {
+          UsePortal = other.UsePortal;
+        }
+        if (other.HasHasTemporaryRegions) {
+          HasTemporaryRegions = other.HasTemporaryRegions;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_clientInvitedToGroupFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _clientInvitedToGroupFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasInvitingPlayerName = input.ReadString(ref result.invitingPlayerName_);
+              break;
+            }
+            case 16: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 26: {
+              result.hasGroupPSNSessionId = input.ReadString(ref result.groupPSNSessionId_);
+              break;
+            }
+            case 32: {
+              result.hasUsePortal = input.ReadBool(ref result.usePortal_);
+              break;
+            }
+            case 40: {
+              result.hasHasTemporaryRegions = input.ReadBool(ref result.hasTemporaryRegions_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasInvitingPlayerName {
+        get { return result.hasInvitingPlayerName; }
+      }
+      public string InvitingPlayerName {
+        get { return result.InvitingPlayerName; }
+        set { SetInvitingPlayerName(value); }
+      }
+      public Builder SetInvitingPlayerName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasInvitingPlayerName = true;
+        result.invitingPlayerName_ = value;
+        return this;
+      }
+      public Builder ClearInvitingPlayerName() {
+        PrepareBuilder();
+        result.hasInvitingPlayerName = false;
+        result.invitingPlayerName_ = "";
+        return this;
+      }
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupPSNSessionId {
+        get { return result.hasGroupPSNSessionId; }
+      }
+      public string GroupPSNSessionId {
+        get { return result.GroupPSNSessionId; }
+        set { SetGroupPSNSessionId(value); }
+      }
+      public Builder SetGroupPSNSessionId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGroupPSNSessionId = true;
+        result.groupPSNSessionId_ = value;
+        return this;
+      }
+      public Builder ClearGroupPSNSessionId() {
+        PrepareBuilder();
+        result.hasGroupPSNSessionId = false;
+        result.groupPSNSessionId_ = "";
+        return this;
+      }
+      
+      public bool HasUsePortal {
+        get { return result.hasUsePortal; }
+      }
+      public bool UsePortal {
+        get { return result.UsePortal; }
+        set { SetUsePortal(value); }
+      }
+      public Builder SetUsePortal(bool value) {
+        PrepareBuilder();
+        result.hasUsePortal = true;
+        result.usePortal_ = value;
+        return this;
+      }
+      public Builder ClearUsePortal() {
+        PrepareBuilder();
+        result.hasUsePortal = false;
+        result.usePortal_ = false;
+        return this;
+      }
+      
+      public bool HasHasTemporaryRegions {
+        get { return result.hasHasTemporaryRegions; }
+      }
+      public bool HasTemporaryRegions {
+        get { return result.HasTemporaryRegions; }
+        set { SetHasTemporaryRegions(value); }
+      }
+      public Builder SetHasTemporaryRegions(bool value) {
+        PrepareBuilder();
+        result.hasHasTemporaryRegions = true;
+        result.hasTemporaryRegions_ = value;
+        return this;
+      }
+      public Builder ClearHasTemporaryRegions() {
+        PrepareBuilder();
+        result.hasHasTemporaryRegions = false;
+        result.hasTemporaryRegions_ = false;
+        return this;
+      }
+    }
+    static ClientInvitedToGroup() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class ClientInviteAcceptFailed : pb::GeneratedMessage<ClientInviteAcceptFailed, ClientInviteAcceptFailed.Builder> {
+    private ClientInviteAcceptFailed() { }
+    private static readonly ClientInviteAcceptFailed defaultInstance = new ClientInviteAcceptFailed().MakeReadOnly();
+    private static readonly string[] _clientInviteAcceptFailedFieldNames = new string[] {  };
+    private static readonly uint[] _clientInviteAcceptFailedFieldTags = new uint[] {  };
+    public static ClientInviteAcceptFailed DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override ClientInviteAcceptFailed DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override ClientInviteAcceptFailed ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_ClientInviteAcceptFailed__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<ClientInviteAcceptFailed, ClientInviteAcceptFailed.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_ClientInviteAcceptFailed__FieldAccessorTable; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _clientInviteAcceptFailedFieldNames;
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static ClientInviteAcceptFailed ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static ClientInviteAcceptFailed ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static ClientInviteAcceptFailed ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static ClientInviteAcceptFailed ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static ClientInviteAcceptFailed ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static ClientInviteAcceptFailed ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static ClientInviteAcceptFailed ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static ClientInviteAcceptFailed ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static ClientInviteAcceptFailed ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static ClientInviteAcceptFailed ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private ClientInviteAcceptFailed MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(ClientInviteAcceptFailed prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<ClientInviteAcceptFailed, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(ClientInviteAcceptFailed cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private ClientInviteAcceptFailed result;
+      
+      private ClientInviteAcceptFailed PrepareBuilder() {
+        if (resultIsReadOnly) {
+          ClientInviteAcceptFailed original = result;
+          result = new ClientInviteAcceptFailed();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override ClientInviteAcceptFailed MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.ClientInviteAcceptFailed.Descriptor; }
+      }
+      
+      public override ClientInviteAcceptFailed DefaultInstanceForType {
+        get { return global::Gazillion.ClientInviteAcceptFailed.DefaultInstance; }
+      }
+      
+      public override ClientInviteAcceptFailed BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is ClientInviteAcceptFailed) {
+          return MergeFrom((ClientInviteAcceptFailed) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(ClientInviteAcceptFailed other) {
+        if (other == global::Gazillion.ClientInviteAcceptFailed.DefaultInstance) return this;
+        PrepareBuilder();
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_clientInviteAcceptFailedFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _clientInviteAcceptFailedFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+    }
+    static ClientInviteAcceptFailed() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class ClientCreateGroup : pb::GeneratedMessage<ClientCreateGroup, ClientCreateGroup.Builder> {
+    private ClientCreateGroup() { }
+    private static readonly ClientCreateGroup defaultInstance = new ClientCreateGroup().MakeReadOnly();
+    private static readonly string[] _clientCreateGroupFieldNames = new string[] { "groupId", "groupPSNSessionId", "groupType", "leaderName", "leaderSessionId" };
+    private static readonly uint[] _clientCreateGroupFieldTags = new uint[] { 8, 26, 16, 42, 32 };
+    public static ClientCreateGroup DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override ClientCreateGroup DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override ClientCreateGroup ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_ClientCreateGroup__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<ClientCreateGroup, ClientCreateGroup.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_ClientCreateGroup__FieldAccessorTable; }
+    }
+    
+    public const int GroupIdFieldNumber = 1;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int GroupTypeFieldNumber = 2;
+    private bool hasGroupType;
+    private global::Gazillion.GroupType groupType_ = global::Gazillion.GroupType.GroupType_Invalid;
+    public bool HasGroupType {
+      get { return hasGroupType; }
+    }
+    public global::Gazillion.GroupType GroupType {
+      get { return groupType_; }
+    }
+    
+    public const int GroupPSNSessionIdFieldNumber = 3;
+    private bool hasGroupPSNSessionId;
+    private string groupPSNSessionId_ = "";
+    public bool HasGroupPSNSessionId {
+      get { return hasGroupPSNSessionId; }
+    }
+    public string GroupPSNSessionId {
+      get { return groupPSNSessionId_; }
+    }
+    
+    public const int LeaderSessionIdFieldNumber = 4;
+    private bool hasLeaderSessionId;
+    private ulong leaderSessionId_;
+    public bool HasLeaderSessionId {
+      get { return hasLeaderSessionId; }
+    }
+    public ulong LeaderSessionId {
+      get { return leaderSessionId_; }
+    }
+    
+    public const int LeaderNameFieldNumber = 5;
+    private bool hasLeaderName;
+    private string leaderName_ = "";
+    public bool HasLeaderName {
+      get { return hasLeaderName; }
+    }
+    public string LeaderName {
+      get { return leaderName_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasGroupId) return false;
+        if (!hasGroupType) return false;
+        if (!hasLeaderSessionId) return false;
+        if (!hasLeaderName) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _clientCreateGroupFieldNames;
+      if (hasGroupId) {
+        output.WriteUInt64(1, field_names[0], GroupId);
+      }
+      if (hasGroupType) {
+        output.WriteEnum(2, field_names[2], (int) GroupType, GroupType);
+      }
+      if (hasGroupPSNSessionId) {
+        output.WriteString(3, field_names[1], GroupPSNSessionId);
+      }
+      if (hasLeaderSessionId) {
+        output.WriteUInt64(4, field_names[4], LeaderSessionId);
+      }
+      if (hasLeaderName) {
+        output.WriteString(5, field_names[3], LeaderName);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, GroupId);
+      }
+      if (hasGroupType) {
+        size += pb::CodedOutputStream.ComputeEnumSize(2, (int) GroupType);
+      }
+      if (hasGroupPSNSessionId) {
+        size += pb::CodedOutputStream.ComputeStringSize(3, GroupPSNSessionId);
+      }
+      if (hasLeaderSessionId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(4, LeaderSessionId);
+      }
+      if (hasLeaderName) {
+        size += pb::CodedOutputStream.ComputeStringSize(5, LeaderName);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static ClientCreateGroup ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static ClientCreateGroup ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static ClientCreateGroup ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static ClientCreateGroup ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static ClientCreateGroup ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static ClientCreateGroup ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static ClientCreateGroup ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static ClientCreateGroup ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static ClientCreateGroup ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static ClientCreateGroup ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private ClientCreateGroup MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(ClientCreateGroup prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<ClientCreateGroup, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(ClientCreateGroup cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private ClientCreateGroup result;
+      
+      private ClientCreateGroup PrepareBuilder() {
+        if (resultIsReadOnly) {
+          ClientCreateGroup original = result;
+          result = new ClientCreateGroup();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override ClientCreateGroup MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.ClientCreateGroup.Descriptor; }
+      }
+      
+      public override ClientCreateGroup DefaultInstanceForType {
+        get { return global::Gazillion.ClientCreateGroup.DefaultInstance; }
+      }
+      
+      public override ClientCreateGroup BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is ClientCreateGroup) {
+          return MergeFrom((ClientCreateGroup) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(ClientCreateGroup other) {
+        if (other == global::Gazillion.ClientCreateGroup.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasGroupType) {
+          GroupType = other.GroupType;
+        }
+        if (other.HasGroupPSNSessionId) {
+          GroupPSNSessionId = other.GroupPSNSessionId;
+        }
+        if (other.HasLeaderSessionId) {
+          LeaderSessionId = other.LeaderSessionId;
+        }
+        if (other.HasLeaderName) {
+          LeaderName = other.LeaderName;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_clientCreateGroupFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _clientCreateGroupFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 16: {
+              object unknown;
+              if(input.ReadEnum(ref result.groupType_, out unknown)) {
+                result.hasGroupType = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(2, (ulong)(int)unknown);
+              }
+              break;
+            }
+            case 26: {
+              result.hasGroupPSNSessionId = input.ReadString(ref result.groupPSNSessionId_);
+              break;
+            }
+            case 32: {
+              result.hasLeaderSessionId = input.ReadUInt64(ref result.leaderSessionId_);
+              break;
+            }
+            case 42: {
+              result.hasLeaderName = input.ReadString(ref result.leaderName_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupType {
+       get { return result.hasGroupType; }
+      }
+      public global::Gazillion.GroupType GroupType {
+        get { return result.GroupType; }
+        set { SetGroupType(value); }
+      }
+      public Builder SetGroupType(global::Gazillion.GroupType value) {
+        PrepareBuilder();
+        result.hasGroupType = true;
+        result.groupType_ = value;
+        return this;
+      }
+      public Builder ClearGroupType() {
+        PrepareBuilder();
+        result.hasGroupType = false;
+        result.groupType_ = global::Gazillion.GroupType.GroupType_Invalid;
+        return this;
+      }
+      
+      public bool HasGroupPSNSessionId {
+        get { return result.hasGroupPSNSessionId; }
+      }
+      public string GroupPSNSessionId {
+        get { return result.GroupPSNSessionId; }
+        set { SetGroupPSNSessionId(value); }
+      }
+      public Builder SetGroupPSNSessionId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGroupPSNSessionId = true;
+        result.groupPSNSessionId_ = value;
+        return this;
+      }
+      public Builder ClearGroupPSNSessionId() {
+        PrepareBuilder();
+        result.hasGroupPSNSessionId = false;
+        result.groupPSNSessionId_ = "";
+        return this;
+      }
+      
+      public bool HasLeaderSessionId {
+        get { return result.hasLeaderSessionId; }
+      }
+      public ulong LeaderSessionId {
+        get { return result.LeaderSessionId; }
+        set { SetLeaderSessionId(value); }
+      }
+      public Builder SetLeaderSessionId(ulong value) {
+        PrepareBuilder();
+        result.hasLeaderSessionId = true;
+        result.leaderSessionId_ = value;
+        return this;
+      }
+      public Builder ClearLeaderSessionId() {
+        PrepareBuilder();
+        result.hasLeaderSessionId = false;
+        result.leaderSessionId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasLeaderName {
+        get { return result.hasLeaderName; }
+      }
+      public string LeaderName {
+        get { return result.LeaderName; }
+        set { SetLeaderName(value); }
+      }
+      public Builder SetLeaderName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasLeaderName = true;
+        result.leaderName_ = value;
+        return this;
+      }
+      public Builder ClearLeaderName() {
+        PrepareBuilder();
+        result.hasLeaderName = false;
+        result.leaderName_ = "";
+        return this;
+      }
+    }
+    static ClientCreateGroup() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class PlayerJoinedGroup : pb::GeneratedMessage<PlayerJoinedGroup, PlayerJoinedGroup.Builder> {
+    private PlayerJoinedGroup() { }
+    private static readonly PlayerJoinedGroup defaultInstance = new PlayerJoinedGroup().MakeReadOnly();
+    private static readonly string[] _playerJoinedGroupFieldNames = new string[] { "groupId", "joiningPlayerName", "playerSessionId" };
+    private static readonly uint[] _playerJoinedGroupFieldTags = new uint[] { 24, 10, 16 };
+    public static PlayerJoinedGroup DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override PlayerJoinedGroup DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override PlayerJoinedGroup ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_PlayerJoinedGroup__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<PlayerJoinedGroup, PlayerJoinedGroup.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_PlayerJoinedGroup__FieldAccessorTable; }
+    }
+    
+    public const int JoiningPlayerNameFieldNumber = 1;
+    private bool hasJoiningPlayerName;
+    private string joiningPlayerName_ = "";
+    public bool HasJoiningPlayerName {
+      get { return hasJoiningPlayerName; }
+    }
+    public string JoiningPlayerName {
+      get { return joiningPlayerName_; }
+    }
+    
+    public const int PlayerSessionIdFieldNumber = 2;
+    private bool hasPlayerSessionId;
+    private ulong playerSessionId_;
+    public bool HasPlayerSessionId {
+      get { return hasPlayerSessionId; }
+    }
+    public ulong PlayerSessionId {
+      get { return playerSessionId_; }
+    }
+    
+    public const int GroupIdFieldNumber = 3;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasJoiningPlayerName) return false;
+        if (!hasPlayerSessionId) return false;
+        if (!hasGroupId) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _playerJoinedGroupFieldNames;
+      if (hasJoiningPlayerName) {
+        output.WriteString(1, field_names[1], JoiningPlayerName);
+      }
+      if (hasPlayerSessionId) {
+        output.WriteUInt64(2, field_names[2], PlayerSessionId);
+      }
+      if (hasGroupId) {
+        output.WriteUInt64(3, field_names[0], GroupId);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasJoiningPlayerName) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, JoiningPlayerName);
+      }
+      if (hasPlayerSessionId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, PlayerSessionId);
+      }
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, GroupId);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static PlayerJoinedGroup ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PlayerJoinedGroup ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PlayerJoinedGroup ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PlayerJoinedGroup ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PlayerJoinedGroup ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PlayerJoinedGroup ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static PlayerJoinedGroup ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static PlayerJoinedGroup ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static PlayerJoinedGroup ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PlayerJoinedGroup ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private PlayerJoinedGroup MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(PlayerJoinedGroup prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<PlayerJoinedGroup, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(PlayerJoinedGroup cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private PlayerJoinedGroup result;
+      
+      private PlayerJoinedGroup PrepareBuilder() {
+        if (resultIsReadOnly) {
+          PlayerJoinedGroup original = result;
+          result = new PlayerJoinedGroup();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override PlayerJoinedGroup MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.PlayerJoinedGroup.Descriptor; }
+      }
+      
+      public override PlayerJoinedGroup DefaultInstanceForType {
+        get { return global::Gazillion.PlayerJoinedGroup.DefaultInstance; }
+      }
+      
+      public override PlayerJoinedGroup BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is PlayerJoinedGroup) {
+          return MergeFrom((PlayerJoinedGroup) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(PlayerJoinedGroup other) {
+        if (other == global::Gazillion.PlayerJoinedGroup.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasJoiningPlayerName) {
+          JoiningPlayerName = other.JoiningPlayerName;
+        }
+        if (other.HasPlayerSessionId) {
+          PlayerSessionId = other.PlayerSessionId;
+        }
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_playerJoinedGroupFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _playerJoinedGroupFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasJoiningPlayerName = input.ReadString(ref result.joiningPlayerName_);
+              break;
+            }
+            case 16: {
+              result.hasPlayerSessionId = input.ReadUInt64(ref result.playerSessionId_);
+              break;
+            }
+            case 24: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasJoiningPlayerName {
+        get { return result.hasJoiningPlayerName; }
+      }
+      public string JoiningPlayerName {
+        get { return result.JoiningPlayerName; }
+        set { SetJoiningPlayerName(value); }
+      }
+      public Builder SetJoiningPlayerName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasJoiningPlayerName = true;
+        result.joiningPlayerName_ = value;
+        return this;
+      }
+      public Builder ClearJoiningPlayerName() {
+        PrepareBuilder();
+        result.hasJoiningPlayerName = false;
+        result.joiningPlayerName_ = "";
+        return this;
+      }
+      
+      public bool HasPlayerSessionId {
+        get { return result.hasPlayerSessionId; }
+      }
+      public ulong PlayerSessionId {
+        get { return result.PlayerSessionId; }
+        set { SetPlayerSessionId(value); }
+      }
+      public Builder SetPlayerSessionId(ulong value) {
+        PrepareBuilder();
+        result.hasPlayerSessionId = true;
+        result.playerSessionId_ = value;
+        return this;
+      }
+      public Builder ClearPlayerSessionId() {
+        PrepareBuilder();
+        result.hasPlayerSessionId = false;
+        result.playerSessionId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+    }
+    static PlayerJoinedGroup() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GroupChangeType : pb::GeneratedMessage<GroupChangeType, GroupChangeType.Builder> {
+    private GroupChangeType() { }
+    private static readonly GroupChangeType defaultInstance = new GroupChangeType().MakeReadOnly();
+    private static readonly string[] _groupChangeTypeFieldNames = new string[] { "confirm", "groupId", "type" };
+    private static readonly uint[] _groupChangeTypeFieldTags = new uint[] { 24, 8, 16 };
+    public static GroupChangeType DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GroupChangeType DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GroupChangeType ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupChangeType__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GroupChangeType, GroupChangeType.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupChangeType__FieldAccessorTable; }
+    }
+    
+    public const int GroupIdFieldNumber = 1;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int TypeFieldNumber = 2;
+    private bool hasType;
+    private global::Gazillion.GroupType type_ = global::Gazillion.GroupType.GroupType_Invalid;
+    public bool HasType {
+      get { return hasType; }
+    }
+    public global::Gazillion.GroupType Type {
+      get { return type_; }
+    }
+    
+    public const int ConfirmFieldNumber = 3;
+    private bool hasConfirm;
+    private bool confirm_;
+    public bool HasConfirm {
+      get { return hasConfirm; }
+    }
+    public bool Confirm {
+      get { return confirm_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasGroupId) return false;
+        if (!hasType) return false;
+        if (!hasConfirm) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _groupChangeTypeFieldNames;
+      if (hasGroupId) {
+        output.WriteUInt64(1, field_names[1], GroupId);
+      }
+      if (hasType) {
+        output.WriteEnum(2, field_names[2], (int) Type, Type);
+      }
+      if (hasConfirm) {
+        output.WriteBool(3, field_names[0], Confirm);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, GroupId);
+      }
+      if (hasType) {
+        size += pb::CodedOutputStream.ComputeEnumSize(2, (int) Type);
+      }
+      if (hasConfirm) {
+        size += pb::CodedOutputStream.ComputeBoolSize(3, Confirm);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GroupChangeType ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupChangeType ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupChangeType ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupChangeType ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupChangeType ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupChangeType ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GroupChangeType ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GroupChangeType ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GroupChangeType ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupChangeType ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GroupChangeType MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GroupChangeType prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GroupChangeType, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GroupChangeType cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GroupChangeType result;
+      
+      private GroupChangeType PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GroupChangeType original = result;
+          result = new GroupChangeType();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GroupChangeType MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GroupChangeType.Descriptor; }
+      }
+      
+      public override GroupChangeType DefaultInstanceForType {
+        get { return global::Gazillion.GroupChangeType.DefaultInstance; }
+      }
+      
+      public override GroupChangeType BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GroupChangeType) {
+          return MergeFrom((GroupChangeType) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GroupChangeType other) {
+        if (other == global::Gazillion.GroupChangeType.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasType) {
+          Type = other.Type;
+        }
+        if (other.HasConfirm) {
+          Confirm = other.Confirm;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_groupChangeTypeFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _groupChangeTypeFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 16: {
+              object unknown;
+              if(input.ReadEnum(ref result.type_, out unknown)) {
+                result.hasType = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(2, (ulong)(int)unknown);
+              }
+              break;
+            }
+            case 24: {
+              result.hasConfirm = input.ReadBool(ref result.confirm_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasType {
+       get { return result.hasType; }
+      }
+      public global::Gazillion.GroupType Type {
+        get { return result.Type; }
+        set { SetType(value); }
+      }
+      public Builder SetType(global::Gazillion.GroupType value) {
+        PrepareBuilder();
+        result.hasType = true;
+        result.type_ = value;
+        return this;
+      }
+      public Builder ClearType() {
+        PrepareBuilder();
+        result.hasType = false;
+        result.type_ = global::Gazillion.GroupType.GroupType_Invalid;
+        return this;
+      }
+      
+      public bool HasConfirm {
+        get { return result.hasConfirm; }
+      }
+      public bool Confirm {
+        get { return result.Confirm; }
+        set { SetConfirm(value); }
+      }
+      public Builder SetConfirm(bool value) {
+        PrepareBuilder();
+        result.hasConfirm = true;
+        result.confirm_ = value;
+        return this;
+      }
+      public Builder ClearConfirm() {
+        PrepareBuilder();
+        result.hasConfirm = false;
+        result.confirm_ = false;
+        return this;
+      }
+    }
+    static GroupChangeType() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class PlayerLeftGroup : pb::GeneratedMessage<PlayerLeftGroup, PlayerLeftGroup.Builder> {
+    private PlayerLeftGroup() { }
+    private static readonly PlayerLeftGroup defaultInstance = new PlayerLeftGroup().MakeReadOnly();
+    private static readonly string[] _playerLeftGroupFieldNames = new string[] { "groupId", "leaveReason", "leaverName", "newLeaderSessionId", "playerSessionId" };
+    private static readonly uint[] _playerLeftGroupFieldTags = new uint[] { 32, 40, 10, 24, 16 };
+    public static PlayerLeftGroup DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override PlayerLeftGroup DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override PlayerLeftGroup ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_PlayerLeftGroup__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<PlayerLeftGroup, PlayerLeftGroup.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_PlayerLeftGroup__FieldAccessorTable; }
+    }
+    
+    public const int LeaverNameFieldNumber = 1;
+    private bool hasLeaverName;
+    private string leaverName_ = "";
+    public bool HasLeaverName {
+      get { return hasLeaverName; }
+    }
+    public string LeaverName {
+      get { return leaverName_; }
+    }
+    
+    public const int PlayerSessionIdFieldNumber = 2;
+    private bool hasPlayerSessionId;
+    private ulong playerSessionId_;
+    public bool HasPlayerSessionId {
+      get { return hasPlayerSessionId; }
+    }
+    public ulong PlayerSessionId {
+      get { return playerSessionId_; }
+    }
+    
+    public const int NewLeaderSessionIdFieldNumber = 3;
+    private bool hasNewLeaderSessionId;
+    private ulong newLeaderSessionId_;
+    public bool HasNewLeaderSessionId {
+      get { return hasNewLeaderSessionId; }
+    }
+    public ulong NewLeaderSessionId {
+      get { return newLeaderSessionId_; }
+    }
+    
+    public const int GroupIdFieldNumber = 4;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int LeaveReasonFieldNumber = 5;
+    private bool hasLeaveReason;
+    private global::Gazillion.GroupLeaveReason leaveReason_ = global::Gazillion.GroupLeaveReason.GROUP_LEAVE_REASON_LEFT;
+    public bool HasLeaveReason {
+      get { return hasLeaveReason; }
+    }
+    public global::Gazillion.GroupLeaveReason LeaveReason {
+      get { return leaveReason_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasLeaverName) return false;
+        if (!hasPlayerSessionId) return false;
+        if (!hasGroupId) return false;
+        if (!hasLeaveReason) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _playerLeftGroupFieldNames;
+      if (hasLeaverName) {
+        output.WriteString(1, field_names[2], LeaverName);
+      }
+      if (hasPlayerSessionId) {
+        output.WriteUInt64(2, field_names[4], PlayerSessionId);
+      }
+      if (hasNewLeaderSessionId) {
+        output.WriteUInt64(3, field_names[3], NewLeaderSessionId);
+      }
+      if (hasGroupId) {
+        output.WriteUInt64(4, field_names[0], GroupId);
+      }
+      if (hasLeaveReason) {
+        output.WriteEnum(5, field_names[1], (int) LeaveReason, LeaveReason);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasLeaverName) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, LeaverName);
+      }
+      if (hasPlayerSessionId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, PlayerSessionId);
+      }
+      if (hasNewLeaderSessionId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, NewLeaderSessionId);
+      }
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(4, GroupId);
+      }
+      if (hasLeaveReason) {
+        size += pb::CodedOutputStream.ComputeEnumSize(5, (int) LeaveReason);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static PlayerLeftGroup ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PlayerLeftGroup ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PlayerLeftGroup ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PlayerLeftGroup ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PlayerLeftGroup ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PlayerLeftGroup ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static PlayerLeftGroup ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static PlayerLeftGroup ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static PlayerLeftGroup ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PlayerLeftGroup ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private PlayerLeftGroup MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(PlayerLeftGroup prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<PlayerLeftGroup, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(PlayerLeftGroup cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private PlayerLeftGroup result;
+      
+      private PlayerLeftGroup PrepareBuilder() {
+        if (resultIsReadOnly) {
+          PlayerLeftGroup original = result;
+          result = new PlayerLeftGroup();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override PlayerLeftGroup MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.PlayerLeftGroup.Descriptor; }
+      }
+      
+      public override PlayerLeftGroup DefaultInstanceForType {
+        get { return global::Gazillion.PlayerLeftGroup.DefaultInstance; }
+      }
+      
+      public override PlayerLeftGroup BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is PlayerLeftGroup) {
+          return MergeFrom((PlayerLeftGroup) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(PlayerLeftGroup other) {
+        if (other == global::Gazillion.PlayerLeftGroup.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasLeaverName) {
+          LeaverName = other.LeaverName;
+        }
+        if (other.HasPlayerSessionId) {
+          PlayerSessionId = other.PlayerSessionId;
+        }
+        if (other.HasNewLeaderSessionId) {
+          NewLeaderSessionId = other.NewLeaderSessionId;
+        }
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasLeaveReason) {
+          LeaveReason = other.LeaveReason;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_playerLeftGroupFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _playerLeftGroupFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasLeaverName = input.ReadString(ref result.leaverName_);
+              break;
+            }
+            case 16: {
+              result.hasPlayerSessionId = input.ReadUInt64(ref result.playerSessionId_);
+              break;
+            }
+            case 24: {
+              result.hasNewLeaderSessionId = input.ReadUInt64(ref result.newLeaderSessionId_);
+              break;
+            }
+            case 32: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 40: {
+              object unknown;
+              if(input.ReadEnum(ref result.leaveReason_, out unknown)) {
+                result.hasLeaveReason = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(5, (ulong)(int)unknown);
+              }
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasLeaverName {
+        get { return result.hasLeaverName; }
+      }
+      public string LeaverName {
+        get { return result.LeaverName; }
+        set { SetLeaverName(value); }
+      }
+      public Builder SetLeaverName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasLeaverName = true;
+        result.leaverName_ = value;
+        return this;
+      }
+      public Builder ClearLeaverName() {
+        PrepareBuilder();
+        result.hasLeaverName = false;
+        result.leaverName_ = "";
+        return this;
+      }
+      
+      public bool HasPlayerSessionId {
+        get { return result.hasPlayerSessionId; }
+      }
+      public ulong PlayerSessionId {
+        get { return result.PlayerSessionId; }
+        set { SetPlayerSessionId(value); }
+      }
+      public Builder SetPlayerSessionId(ulong value) {
+        PrepareBuilder();
+        result.hasPlayerSessionId = true;
+        result.playerSessionId_ = value;
+        return this;
+      }
+      public Builder ClearPlayerSessionId() {
+        PrepareBuilder();
+        result.hasPlayerSessionId = false;
+        result.playerSessionId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasNewLeaderSessionId {
+        get { return result.hasNewLeaderSessionId; }
+      }
+      public ulong NewLeaderSessionId {
+        get { return result.NewLeaderSessionId; }
+        set { SetNewLeaderSessionId(value); }
+      }
+      public Builder SetNewLeaderSessionId(ulong value) {
+        PrepareBuilder();
+        result.hasNewLeaderSessionId = true;
+        result.newLeaderSessionId_ = value;
+        return this;
+      }
+      public Builder ClearNewLeaderSessionId() {
+        PrepareBuilder();
+        result.hasNewLeaderSessionId = false;
+        result.newLeaderSessionId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasLeaveReason {
+       get { return result.hasLeaveReason; }
+      }
+      public global::Gazillion.GroupLeaveReason LeaveReason {
+        get { return result.LeaveReason; }
+        set { SetLeaveReason(value); }
+      }
+      public Builder SetLeaveReason(global::Gazillion.GroupLeaveReason value) {
+        PrepareBuilder();
+        result.hasLeaveReason = true;
+        result.leaveReason_ = value;
+        return this;
+      }
+      public Builder ClearLeaveReason() {
+        PrepareBuilder();
+        result.hasLeaveReason = false;
+        result.leaveReason_ = global::Gazillion.GroupLeaveReason.GROUP_LEAVE_REASON_LEFT;
+        return this;
+      }
+    }
+    static PlayerLeftGroup() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class PlayerChangedGroupLeader : pb::GeneratedMessage<PlayerChangedGroupLeader, PlayerChangedGroupLeader.Builder> {
+    private PlayerChangedGroupLeader() { }
+    private static readonly PlayerChangedGroupLeader defaultInstance = new PlayerChangedGroupLeader().MakeReadOnly();
+    private static readonly string[] _playerChangedGroupLeaderFieldNames = new string[] { "groupId", "newLeader", "oldLeader", "requestingGameId" };
+    private static readonly uint[] _playerChangedGroupLeaderFieldTags = new uint[] { 16, 26, 34, 8 };
+    public static PlayerChangedGroupLeader DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override PlayerChangedGroupLeader DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override PlayerChangedGroupLeader ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_PlayerChangedGroupLeader__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<PlayerChangedGroupLeader, PlayerChangedGroupLeader.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_PlayerChangedGroupLeader__FieldAccessorTable; }
+    }
+    
+    public const int RequestingGameIdFieldNumber = 1;
+    private bool hasRequestingGameId;
+    private ulong requestingGameId_;
+    public bool HasRequestingGameId {
+      get { return hasRequestingGameId; }
+    }
+    public ulong RequestingGameId {
+      get { return requestingGameId_; }
+    }
+    
+    public const int GroupIdFieldNumber = 2;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int NewLeaderFieldNumber = 3;
+    private bool hasNewLeader;
+    private global::Gazillion.PerPlayerInfo newLeader_;
+    public bool HasNewLeader {
+      get { return hasNewLeader; }
+    }
+    public global::Gazillion.PerPlayerInfo NewLeader {
+      get { return newLeader_ ?? global::Gazillion.PerPlayerInfo.DefaultInstance; }
+    }
+    
+    public const int OldLeaderFieldNumber = 4;
+    private bool hasOldLeader;
+    private global::Gazillion.PerPlayerInfo oldLeader_;
+    public bool HasOldLeader {
+      get { return hasOldLeader; }
+    }
+    public global::Gazillion.PerPlayerInfo OldLeader {
+      get { return oldLeader_ ?? global::Gazillion.PerPlayerInfo.DefaultInstance; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasRequestingGameId) return false;
+        if (!hasGroupId) return false;
+        if (!hasNewLeader) return false;
+        if (!hasOldLeader) return false;
+        if (!NewLeader.IsInitialized) return false;
+        if (!OldLeader.IsInitialized) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _playerChangedGroupLeaderFieldNames;
+      if (hasRequestingGameId) {
+        output.WriteUInt64(1, field_names[3], RequestingGameId);
+      }
+      if (hasGroupId) {
+        output.WriteUInt64(2, field_names[0], GroupId);
+      }
+      if (hasNewLeader) {
+        output.WriteMessage(3, field_names[1], NewLeader);
+      }
+      if (hasOldLeader) {
+        output.WriteMessage(4, field_names[2], OldLeader);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasRequestingGameId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, RequestingGameId);
+      }
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, GroupId);
+      }
+      if (hasNewLeader) {
+        size += pb::CodedOutputStream.ComputeMessageSize(3, NewLeader);
+      }
+      if (hasOldLeader) {
+        size += pb::CodedOutputStream.ComputeMessageSize(4, OldLeader);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static PlayerChangedGroupLeader ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PlayerChangedGroupLeader ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PlayerChangedGroupLeader ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PlayerChangedGroupLeader ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PlayerChangedGroupLeader ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PlayerChangedGroupLeader ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static PlayerChangedGroupLeader ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static PlayerChangedGroupLeader ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static PlayerChangedGroupLeader ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PlayerChangedGroupLeader ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private PlayerChangedGroupLeader MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(PlayerChangedGroupLeader prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<PlayerChangedGroupLeader, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(PlayerChangedGroupLeader cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private PlayerChangedGroupLeader result;
+      
+      private PlayerChangedGroupLeader PrepareBuilder() {
+        if (resultIsReadOnly) {
+          PlayerChangedGroupLeader original = result;
+          result = new PlayerChangedGroupLeader();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override PlayerChangedGroupLeader MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.PlayerChangedGroupLeader.Descriptor; }
+      }
+      
+      public override PlayerChangedGroupLeader DefaultInstanceForType {
+        get { return global::Gazillion.PlayerChangedGroupLeader.DefaultInstance; }
+      }
+      
+      public override PlayerChangedGroupLeader BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is PlayerChangedGroupLeader) {
+          return MergeFrom((PlayerChangedGroupLeader) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(PlayerChangedGroupLeader other) {
+        if (other == global::Gazillion.PlayerChangedGroupLeader.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasRequestingGameId) {
+          RequestingGameId = other.RequestingGameId;
+        }
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasNewLeader) {
+          MergeNewLeader(other.NewLeader);
+        }
+        if (other.HasOldLeader) {
+          MergeOldLeader(other.OldLeader);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_playerChangedGroupLeaderFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _playerChangedGroupLeaderFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasRequestingGameId = input.ReadUInt64(ref result.requestingGameId_);
+              break;
+            }
+            case 16: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 26: {
+              global::Gazillion.PerPlayerInfo.Builder subBuilder = global::Gazillion.PerPlayerInfo.CreateBuilder();
+              if (result.hasNewLeader) {
+                subBuilder.MergeFrom(NewLeader);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              NewLeader = subBuilder.BuildPartial();
+              break;
+            }
+            case 34: {
+              global::Gazillion.PerPlayerInfo.Builder subBuilder = global::Gazillion.PerPlayerInfo.CreateBuilder();
+              if (result.hasOldLeader) {
+                subBuilder.MergeFrom(OldLeader);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              OldLeader = subBuilder.BuildPartial();
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasRequestingGameId {
+        get { return result.hasRequestingGameId; }
+      }
+      public ulong RequestingGameId {
+        get { return result.RequestingGameId; }
+        set { SetRequestingGameId(value); }
+      }
+      public Builder SetRequestingGameId(ulong value) {
+        PrepareBuilder();
+        result.hasRequestingGameId = true;
+        result.requestingGameId_ = value;
+        return this;
+      }
+      public Builder ClearRequestingGameId() {
+        PrepareBuilder();
+        result.hasRequestingGameId = false;
+        result.requestingGameId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasNewLeader {
+       get { return result.hasNewLeader; }
+      }
+      public global::Gazillion.PerPlayerInfo NewLeader {
+        get { return result.NewLeader; }
+        set { SetNewLeader(value); }
+      }
+      public Builder SetNewLeader(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasNewLeader = true;
+        result.newLeader_ = value;
+        return this;
+      }
+      public Builder SetNewLeader(global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasNewLeader = true;
+        result.newLeader_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeNewLeader(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasNewLeader &&
+            result.newLeader_ != global::Gazillion.PerPlayerInfo.DefaultInstance) {
+            result.newLeader_ = global::Gazillion.PerPlayerInfo.CreateBuilder(result.newLeader_).MergeFrom(value).BuildPartial();
+        } else {
+          result.newLeader_ = value;
+        }
+        result.hasNewLeader = true;
+        return this;
+      }
+      public Builder ClearNewLeader() {
+        PrepareBuilder();
+        result.hasNewLeader = false;
+        result.newLeader_ = null;
+        return this;
+      }
+      
+      public bool HasOldLeader {
+       get { return result.hasOldLeader; }
+      }
+      public global::Gazillion.PerPlayerInfo OldLeader {
+        get { return result.OldLeader; }
+        set { SetOldLeader(value); }
+      }
+      public Builder SetOldLeader(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasOldLeader = true;
+        result.oldLeader_ = value;
+        return this;
+      }
+      public Builder SetOldLeader(global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasOldLeader = true;
+        result.oldLeader_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeOldLeader(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasOldLeader &&
+            result.oldLeader_ != global::Gazillion.PerPlayerInfo.DefaultInstance) {
+            result.oldLeader_ = global::Gazillion.PerPlayerInfo.CreateBuilder(result.oldLeader_).MergeFrom(value).BuildPartial();
+        } else {
+          result.oldLeader_ = value;
+        }
+        result.hasOldLeader = true;
+        return this;
+      }
+      public Builder ClearOldLeader() {
+        PrepareBuilder();
+        result.hasOldLeader = false;
+        result.oldLeader_ = null;
+        return this;
+      }
+    }
+    static PlayerChangedGroupLeader() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class ClientBootedFromGroup : pb::GeneratedMessage<ClientBootedFromGroup, ClientBootedFromGroup.Builder> {
+    private ClientBootedFromGroup() { }
+    private static readonly ClientBootedFromGroup defaultInstance = new ClientBootedFromGroup().MakeReadOnly();
+    private static readonly string[] _clientBootedFromGroupFieldNames = new string[] { "groupId", "leaveReason" };
+    private static readonly uint[] _clientBootedFromGroupFieldTags = new uint[] { 8, 16 };
+    public static ClientBootedFromGroup DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override ClientBootedFromGroup DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override ClientBootedFromGroup ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_ClientBootedFromGroup__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<ClientBootedFromGroup, ClientBootedFromGroup.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_ClientBootedFromGroup__FieldAccessorTable; }
+    }
+    
+    public const int GroupIdFieldNumber = 1;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int LeaveReasonFieldNumber = 2;
+    private bool hasLeaveReason;
+    private global::Gazillion.GroupLeaveReason leaveReason_ = global::Gazillion.GroupLeaveReason.GROUP_LEAVE_REASON_LEFT;
+    public bool HasLeaveReason {
+      get { return hasLeaveReason; }
+    }
+    public global::Gazillion.GroupLeaveReason LeaveReason {
+      get { return leaveReason_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasGroupId) return false;
+        if (!hasLeaveReason) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _clientBootedFromGroupFieldNames;
+      if (hasGroupId) {
+        output.WriteUInt64(1, field_names[0], GroupId);
+      }
+      if (hasLeaveReason) {
+        output.WriteEnum(2, field_names[1], (int) LeaveReason, LeaveReason);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, GroupId);
+      }
+      if (hasLeaveReason) {
+        size += pb::CodedOutputStream.ComputeEnumSize(2, (int) LeaveReason);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static ClientBootedFromGroup ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static ClientBootedFromGroup ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static ClientBootedFromGroup ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static ClientBootedFromGroup ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static ClientBootedFromGroup ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static ClientBootedFromGroup ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static ClientBootedFromGroup ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static ClientBootedFromGroup ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static ClientBootedFromGroup ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static ClientBootedFromGroup ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private ClientBootedFromGroup MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(ClientBootedFromGroup prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<ClientBootedFromGroup, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(ClientBootedFromGroup cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private ClientBootedFromGroup result;
+      
+      private ClientBootedFromGroup PrepareBuilder() {
+        if (resultIsReadOnly) {
+          ClientBootedFromGroup original = result;
+          result = new ClientBootedFromGroup();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override ClientBootedFromGroup MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.ClientBootedFromGroup.Descriptor; }
+      }
+      
+      public override ClientBootedFromGroup DefaultInstanceForType {
+        get { return global::Gazillion.ClientBootedFromGroup.DefaultInstance; }
+      }
+      
+      public override ClientBootedFromGroup BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is ClientBootedFromGroup) {
+          return MergeFrom((ClientBootedFromGroup) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(ClientBootedFromGroup other) {
+        if (other == global::Gazillion.ClientBootedFromGroup.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasLeaveReason) {
+          LeaveReason = other.LeaveReason;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_clientBootedFromGroupFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _clientBootedFromGroupFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 16: {
+              object unknown;
+              if(input.ReadEnum(ref result.leaveReason_, out unknown)) {
+                result.hasLeaveReason = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(2, (ulong)(int)unknown);
+              }
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasLeaveReason {
+       get { return result.hasLeaveReason; }
+      }
+      public global::Gazillion.GroupLeaveReason LeaveReason {
+        get { return result.LeaveReason; }
+        set { SetLeaveReason(value); }
+      }
+      public Builder SetLeaveReason(global::Gazillion.GroupLeaveReason value) {
+        PrepareBuilder();
+        result.hasLeaveReason = true;
+        result.leaveReason_ = value;
+        return this;
+      }
+      public Builder ClearLeaveReason() {
+        PrepareBuilder();
+        result.hasLeaveReason = false;
+        result.leaveReason_ = global::Gazillion.GroupLeaveReason.GROUP_LEAVE_REASON_LEFT;
+        return this;
+      }
+    }
+    static ClientBootedFromGroup() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class KickGroupMemberAttemptFailed : pb::GeneratedMessage<KickGroupMemberAttemptFailed, KickGroupMemberAttemptFailed.Builder> {
+    private KickGroupMemberAttemptFailed() { }
+    private static readonly KickGroupMemberAttemptFailed defaultInstance = new KickGroupMemberAttemptFailed().MakeReadOnly();
+    private static readonly string[] _kickGroupMemberAttemptFailedFieldNames = new string[] { "reason" };
+    private static readonly uint[] _kickGroupMemberAttemptFailedFieldTags = new uint[] { 8 };
+    public static KickGroupMemberAttemptFailed DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override KickGroupMemberAttemptFailed DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override KickGroupMemberAttemptFailed ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_KickGroupMemberAttemptFailed__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<KickGroupMemberAttemptFailed, KickGroupMemberAttemptFailed.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_KickGroupMemberAttemptFailed__FieldAccessorTable; }
+    }
+    
+    public const int ReasonFieldNumber = 1;
+    private bool hasReason;
+    private global::Gazillion.GroupingOperationResult reason_ = global::Gazillion.GroupingOperationResult.eGOPR_Success;
+    public bool HasReason {
+      get { return hasReason; }
+    }
+    public global::Gazillion.GroupingOperationResult Reason {
+      get { return reason_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasReason) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _kickGroupMemberAttemptFailedFieldNames;
+      if (hasReason) {
+        output.WriteEnum(1, field_names[0], (int) Reason, Reason);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasReason) {
+        size += pb::CodedOutputStream.ComputeEnumSize(1, (int) Reason);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static KickGroupMemberAttemptFailed ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static KickGroupMemberAttemptFailed ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static KickGroupMemberAttemptFailed ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static KickGroupMemberAttemptFailed ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static KickGroupMemberAttemptFailed ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static KickGroupMemberAttemptFailed ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static KickGroupMemberAttemptFailed ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static KickGroupMemberAttemptFailed ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static KickGroupMemberAttemptFailed ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static KickGroupMemberAttemptFailed ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private KickGroupMemberAttemptFailed MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(KickGroupMemberAttemptFailed prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<KickGroupMemberAttemptFailed, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(KickGroupMemberAttemptFailed cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private KickGroupMemberAttemptFailed result;
+      
+      private KickGroupMemberAttemptFailed PrepareBuilder() {
+        if (resultIsReadOnly) {
+          KickGroupMemberAttemptFailed original = result;
+          result = new KickGroupMemberAttemptFailed();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override KickGroupMemberAttemptFailed MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.KickGroupMemberAttemptFailed.Descriptor; }
+      }
+      
+      public override KickGroupMemberAttemptFailed DefaultInstanceForType {
+        get { return global::Gazillion.KickGroupMemberAttemptFailed.DefaultInstance; }
+      }
+      
+      public override KickGroupMemberAttemptFailed BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is KickGroupMemberAttemptFailed) {
+          return MergeFrom((KickGroupMemberAttemptFailed) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(KickGroupMemberAttemptFailed other) {
+        if (other == global::Gazillion.KickGroupMemberAttemptFailed.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasReason) {
+          Reason = other.Reason;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_kickGroupMemberAttemptFailedFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _kickGroupMemberAttemptFailedFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              object unknown;
+              if(input.ReadEnum(ref result.reason_, out unknown)) {
+                result.hasReason = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(1, (ulong)(int)unknown);
+              }
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasReason {
+       get { return result.hasReason; }
+      }
+      public global::Gazillion.GroupingOperationResult Reason {
+        get { return result.Reason; }
+        set { SetReason(value); }
+      }
+      public Builder SetReason(global::Gazillion.GroupingOperationResult value) {
+        PrepareBuilder();
+        result.hasReason = true;
+        result.reason_ = value;
+        return this;
+      }
+      public Builder ClearReason() {
+        PrepareBuilder();
+        result.hasReason = false;
+        result.reason_ = global::Gazillion.GroupingOperationResult.eGOPR_Success;
+        return this;
+      }
+    }
+    static KickGroupMemberAttemptFailed() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class PlayerDeclinedInvite : pb::GeneratedMessage<PlayerDeclinedInvite, PlayerDeclinedInvite.Builder> {
+    private PlayerDeclinedInvite() { }
+    private static readonly PlayerDeclinedInvite defaultInstance = new PlayerDeclinedInvite().MakeReadOnly();
+    private static readonly string[] _playerDeclinedInviteFieldNames = new string[] { "declinerName", "declinerSessionId" };
+    private static readonly uint[] _playerDeclinedInviteFieldTags = new uint[] { 10, 16 };
+    public static PlayerDeclinedInvite DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override PlayerDeclinedInvite DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override PlayerDeclinedInvite ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_PlayerDeclinedInvite__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<PlayerDeclinedInvite, PlayerDeclinedInvite.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_PlayerDeclinedInvite__FieldAccessorTable; }
+    }
+    
+    public const int DeclinerNameFieldNumber = 1;
+    private bool hasDeclinerName;
+    private string declinerName_ = "";
+    public bool HasDeclinerName {
+      get { return hasDeclinerName; }
+    }
+    public string DeclinerName {
+      get { return declinerName_; }
+    }
+    
+    public const int DeclinerSessionIdFieldNumber = 2;
+    private bool hasDeclinerSessionId;
+    private ulong declinerSessionId_;
+    public bool HasDeclinerSessionId {
+      get { return hasDeclinerSessionId; }
+    }
+    public ulong DeclinerSessionId {
+      get { return declinerSessionId_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _playerDeclinedInviteFieldNames;
+      if (hasDeclinerName) {
+        output.WriteString(1, field_names[0], DeclinerName);
+      }
+      if (hasDeclinerSessionId) {
+        output.WriteUInt64(2, field_names[1], DeclinerSessionId);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasDeclinerName) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, DeclinerName);
+      }
+      if (hasDeclinerSessionId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, DeclinerSessionId);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static PlayerDeclinedInvite ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PlayerDeclinedInvite ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PlayerDeclinedInvite ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PlayerDeclinedInvite ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PlayerDeclinedInvite ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PlayerDeclinedInvite ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static PlayerDeclinedInvite ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static PlayerDeclinedInvite ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static PlayerDeclinedInvite ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PlayerDeclinedInvite ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private PlayerDeclinedInvite MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(PlayerDeclinedInvite prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<PlayerDeclinedInvite, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(PlayerDeclinedInvite cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private PlayerDeclinedInvite result;
+      
+      private PlayerDeclinedInvite PrepareBuilder() {
+        if (resultIsReadOnly) {
+          PlayerDeclinedInvite original = result;
+          result = new PlayerDeclinedInvite();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override PlayerDeclinedInvite MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.PlayerDeclinedInvite.Descriptor; }
+      }
+      
+      public override PlayerDeclinedInvite DefaultInstanceForType {
+        get { return global::Gazillion.PlayerDeclinedInvite.DefaultInstance; }
+      }
+      
+      public override PlayerDeclinedInvite BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is PlayerDeclinedInvite) {
+          return MergeFrom((PlayerDeclinedInvite) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(PlayerDeclinedInvite other) {
+        if (other == global::Gazillion.PlayerDeclinedInvite.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasDeclinerName) {
+          DeclinerName = other.DeclinerName;
+        }
+        if (other.HasDeclinerSessionId) {
+          DeclinerSessionId = other.DeclinerSessionId;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_playerDeclinedInviteFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _playerDeclinedInviteFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasDeclinerName = input.ReadString(ref result.declinerName_);
+              break;
+            }
+            case 16: {
+              result.hasDeclinerSessionId = input.ReadUInt64(ref result.declinerSessionId_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasDeclinerName {
+        get { return result.hasDeclinerName; }
+      }
+      public string DeclinerName {
+        get { return result.DeclinerName; }
+        set { SetDeclinerName(value); }
+      }
+      public Builder SetDeclinerName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasDeclinerName = true;
+        result.declinerName_ = value;
+        return this;
+      }
+      public Builder ClearDeclinerName() {
+        PrepareBuilder();
+        result.hasDeclinerName = false;
+        result.declinerName_ = "";
+        return this;
+      }
+      
+      public bool HasDeclinerSessionId {
+        get { return result.hasDeclinerSessionId; }
+      }
+      public ulong DeclinerSessionId {
+        get { return result.DeclinerSessionId; }
+        set { SetDeclinerSessionId(value); }
+      }
+      public Builder SetDeclinerSessionId(ulong value) {
+        PrepareBuilder();
+        result.hasDeclinerSessionId = true;
+        result.declinerSessionId_ = value;
+        return this;
+      }
+      public Builder ClearDeclinerSessionId() {
+        PrepareBuilder();
+        result.hasDeclinerSessionId = false;
+        result.declinerSessionId_ = 0UL;
+        return this;
+      }
+    }
+    static PlayerDeclinedInvite() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class CurrentPartyInfo : pb::GeneratedMessage<CurrentPartyInfo, CurrentPartyInfo.Builder> {
+    private CurrentPartyInfo() { }
+    private static readonly CurrentPartyInfo defaultInstance = new CurrentPartyInfo().MakeReadOnly();
+    private static readonly string[] _currentPartyInfoFieldNames = new string[] { "groupId", "groupPSNSessionId", "groupType", "leader", "members" };
+    private static readonly uint[] _currentPartyInfoFieldTags = new uint[] { 8, 26, 16, 34, 42 };
+    public static CurrentPartyInfo DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override CurrentPartyInfo DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override CurrentPartyInfo ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_CurrentPartyInfo__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<CurrentPartyInfo, CurrentPartyInfo.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_CurrentPartyInfo__FieldAccessorTable; }
+    }
+    
+    public const int GroupIdFieldNumber = 1;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int GroupTypeFieldNumber = 2;
+    private bool hasGroupType;
+    private global::Gazillion.GroupType groupType_ = global::Gazillion.GroupType.GroupType_Invalid;
+    public bool HasGroupType {
+      get { return hasGroupType; }
+    }
+    public global::Gazillion.GroupType GroupType {
+      get { return groupType_; }
+    }
+    
+    public const int GroupPSNSessionIdFieldNumber = 3;
+    private bool hasGroupPSNSessionId;
+    private string groupPSNSessionId_ = "";
+    public bool HasGroupPSNSessionId {
+      get { return hasGroupPSNSessionId; }
+    }
+    public string GroupPSNSessionId {
+      get { return groupPSNSessionId_; }
+    }
+    
+    public const int LeaderFieldNumber = 4;
+    private bool hasLeader;
+    private global::Gazillion.PerPlayerInfo leader_;
+    public bool HasLeader {
+      get { return hasLeader; }
+    }
+    public global::Gazillion.PerPlayerInfo Leader {
+      get { return leader_ ?? global::Gazillion.PerPlayerInfo.DefaultInstance; }
+    }
+    
+    public const int MembersFieldNumber = 5;
+    private pbc::PopsicleList<global::Gazillion.PerPlayerInfo> members_ = new pbc::PopsicleList<global::Gazillion.PerPlayerInfo>();
+    public scg::IList<global::Gazillion.PerPlayerInfo> MembersList {
+      get { return members_; }
+    }
+    public int MembersCount {
+      get { return members_.Count; }
+    }
+    public global::Gazillion.PerPlayerInfo GetMembers(int index) {
+      return members_[index];
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasGroupId) return false;
+        if (!hasGroupType) return false;
+        if (!hasLeader) return false;
+        if (!Leader.IsInitialized) return false;
+        foreach (global::Gazillion.PerPlayerInfo element in MembersList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _currentPartyInfoFieldNames;
+      if (hasGroupId) {
+        output.WriteUInt64(1, field_names[0], GroupId);
+      }
+      if (hasGroupType) {
+        output.WriteEnum(2, field_names[2], (int) GroupType, GroupType);
+      }
+      if (hasGroupPSNSessionId) {
+        output.WriteString(3, field_names[1], GroupPSNSessionId);
+      }
+      if (hasLeader) {
+        output.WriteMessage(4, field_names[3], Leader);
+      }
+      if (members_.Count > 0) {
+        output.WriteMessageArray(5, field_names[4], members_);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, GroupId);
+      }
+      if (hasGroupType) {
+        size += pb::CodedOutputStream.ComputeEnumSize(2, (int) GroupType);
+      }
+      if (hasGroupPSNSessionId) {
+        size += pb::CodedOutputStream.ComputeStringSize(3, GroupPSNSessionId);
+      }
+      if (hasLeader) {
+        size += pb::CodedOutputStream.ComputeMessageSize(4, Leader);
+      }
+      foreach (global::Gazillion.PerPlayerInfo element in MembersList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(5, element);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static CurrentPartyInfo ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static CurrentPartyInfo ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static CurrentPartyInfo ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static CurrentPartyInfo ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static CurrentPartyInfo ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static CurrentPartyInfo ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static CurrentPartyInfo ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static CurrentPartyInfo ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static CurrentPartyInfo ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static CurrentPartyInfo ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private CurrentPartyInfo MakeReadOnly() {
+      members_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(CurrentPartyInfo prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<CurrentPartyInfo, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(CurrentPartyInfo cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private CurrentPartyInfo result;
+      
+      private CurrentPartyInfo PrepareBuilder() {
+        if (resultIsReadOnly) {
+          CurrentPartyInfo original = result;
+          result = new CurrentPartyInfo();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override CurrentPartyInfo MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.CurrentPartyInfo.Descriptor; }
+      }
+      
+      public override CurrentPartyInfo DefaultInstanceForType {
+        get { return global::Gazillion.CurrentPartyInfo.DefaultInstance; }
+      }
+      
+      public override CurrentPartyInfo BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is CurrentPartyInfo) {
+          return MergeFrom((CurrentPartyInfo) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(CurrentPartyInfo other) {
+        if (other == global::Gazillion.CurrentPartyInfo.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasGroupType) {
+          GroupType = other.GroupType;
+        }
+        if (other.HasGroupPSNSessionId) {
+          GroupPSNSessionId = other.GroupPSNSessionId;
+        }
+        if (other.HasLeader) {
+          MergeLeader(other.Leader);
+        }
+        if (other.members_.Count != 0) {
+          result.members_.Add(other.members_);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_currentPartyInfoFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _currentPartyInfoFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 16: {
+              object unknown;
+              if(input.ReadEnum(ref result.groupType_, out unknown)) {
+                result.hasGroupType = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(2, (ulong)(int)unknown);
+              }
+              break;
+            }
+            case 26: {
+              result.hasGroupPSNSessionId = input.ReadString(ref result.groupPSNSessionId_);
+              break;
+            }
+            case 34: {
+              global::Gazillion.PerPlayerInfo.Builder subBuilder = global::Gazillion.PerPlayerInfo.CreateBuilder();
+              if (result.hasLeader) {
+                subBuilder.MergeFrom(Leader);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              Leader = subBuilder.BuildPartial();
+              break;
+            }
+            case 42: {
+              input.ReadMessageArray(tag, field_name, result.members_, global::Gazillion.PerPlayerInfo.DefaultInstance, extensionRegistry);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupType {
+       get { return result.hasGroupType; }
+      }
+      public global::Gazillion.GroupType GroupType {
+        get { return result.GroupType; }
+        set { SetGroupType(value); }
+      }
+      public Builder SetGroupType(global::Gazillion.GroupType value) {
+        PrepareBuilder();
+        result.hasGroupType = true;
+        result.groupType_ = value;
+        return this;
+      }
+      public Builder ClearGroupType() {
+        PrepareBuilder();
+        result.hasGroupType = false;
+        result.groupType_ = global::Gazillion.GroupType.GroupType_Invalid;
+        return this;
+      }
+      
+      public bool HasGroupPSNSessionId {
+        get { return result.hasGroupPSNSessionId; }
+      }
+      public string GroupPSNSessionId {
+        get { return result.GroupPSNSessionId; }
+        set { SetGroupPSNSessionId(value); }
+      }
+      public Builder SetGroupPSNSessionId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGroupPSNSessionId = true;
+        result.groupPSNSessionId_ = value;
+        return this;
+      }
+      public Builder ClearGroupPSNSessionId() {
+        PrepareBuilder();
+        result.hasGroupPSNSessionId = false;
+        result.groupPSNSessionId_ = "";
+        return this;
+      }
+      
+      public bool HasLeader {
+       get { return result.hasLeader; }
+      }
+      public global::Gazillion.PerPlayerInfo Leader {
+        get { return result.Leader; }
+        set { SetLeader(value); }
+      }
+      public Builder SetLeader(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasLeader = true;
+        result.leader_ = value;
+        return this;
+      }
+      public Builder SetLeader(global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasLeader = true;
+        result.leader_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeLeader(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasLeader &&
+            result.leader_ != global::Gazillion.PerPlayerInfo.DefaultInstance) {
+            result.leader_ = global::Gazillion.PerPlayerInfo.CreateBuilder(result.leader_).MergeFrom(value).BuildPartial();
+        } else {
+          result.leader_ = value;
+        }
+        result.hasLeader = true;
+        return this;
+      }
+      public Builder ClearLeader() {
+        PrepareBuilder();
+        result.hasLeader = false;
+        result.leader_ = null;
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.PerPlayerInfo> MembersList {
+        get { return PrepareBuilder().members_; }
+      }
+      public int MembersCount {
+        get { return result.MembersCount; }
+      }
+      public global::Gazillion.PerPlayerInfo GetMembers(int index) {
+        return result.GetMembers(index);
+      }
+      public Builder SetMembers(int index, global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.members_[index] = value;
+        return this;
+      }
+      public Builder SetMembers(int index, global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.members_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddMembers(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.members_.Add(value);
+        return this;
+      }
+      public Builder AddMembers(global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.members_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeMembers(scg::IEnumerable<global::Gazillion.PerPlayerInfo> values) {
+        PrepareBuilder();
+        result.members_.Add(values);
+        return this;
+      }
+      public Builder ClearMembers() {
+        PrepareBuilder();
+        result.members_.Clear();
+        return this;
+      }
+    }
+    static CurrentPartyInfo() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
   public sealed partial class ChatResponseToExternalLogin : pb::GeneratedMessage<ChatResponseToExternalLogin, ChatResponseToExternalLogin.Builder> {
     private ChatResponseToExternalLogin() { }
@@ -447,8 +5309,8 @@ namespace Gazillion {
   public sealed partial class ChatNormalMessage : pb::GeneratedMessage<ChatNormalMessage, ChatNormalMessage.Builder> {
     private ChatNormalMessage() { }
     private static readonly ChatNormalMessage defaultInstance = new ChatNormalMessage().MakeReadOnly();
-    private static readonly string[] _chatNormalMessageFieldNames = new string[] { "consoleAccountId", "fromPlayerName", "prestigeLevel", "roomType", "theMessage" };
-    private static readonly uint[] _chatNormalMessageFieldTags = new uint[] { 40, 18, 32, 8, 26 };
+    private static readonly string[] _chatNormalMessageFieldNames = new string[] { "fromPlayerName", "prestigeLevel", "roomType", "theMessage" };
+    private static readonly uint[] _chatNormalMessageFieldTags = new uint[] { 18, 40, 8, 34 };
     public static ChatNormalMessage DefaultInstance {
       get { return defaultInstance; }
     }
@@ -489,7 +5351,7 @@ namespace Gazillion {
       get { return fromPlayerName_; }
     }
     
-    public const int TheMessageFieldNumber = 3;
+    public const int TheMessageFieldNumber = 4;
     private bool hasTheMessage;
     private global::Gazillion.ChatMessage theMessage_;
     public bool HasTheMessage {
@@ -499,7 +5361,7 @@ namespace Gazillion {
       get { return theMessage_ ?? global::Gazillion.ChatMessage.DefaultInstance; }
     }
     
-    public const int PrestigeLevelFieldNumber = 4;
+    public const int PrestigeLevelFieldNumber = 5;
     private bool hasPrestigeLevel;
     private int prestigeLevel_;
     public bool HasPrestigeLevel {
@@ -507,16 +5369,6 @@ namespace Gazillion {
     }
     public int PrestigeLevel {
       get { return prestigeLevel_; }
-    }
-    
-    public const int ConsoleAccountIdFieldNumber = 5;
-    private bool hasConsoleAccountId;
-    private ulong consoleAccountId_;
-    public bool HasConsoleAccountId {
-      get { return hasConsoleAccountId; }
-    }
-    public ulong ConsoleAccountId {
-      get { return consoleAccountId_; }
     }
     
     public override bool IsInitialized {
@@ -533,19 +5385,16 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _chatNormalMessageFieldNames;
       if (hasRoomType) {
-        output.WriteEnum(1, field_names[3], (int) RoomType, RoomType);
+        output.WriteEnum(1, field_names[2], (int) RoomType, RoomType);
       }
       if (hasFromPlayerName) {
-        output.WriteString(2, field_names[1], FromPlayerName);
+        output.WriteString(2, field_names[0], FromPlayerName);
       }
       if (hasTheMessage) {
-        output.WriteMessage(3, field_names[4], TheMessage);
+        output.WriteMessage(4, field_names[3], TheMessage);
       }
       if (hasPrestigeLevel) {
-        output.WriteInt32(4, field_names[2], PrestigeLevel);
-      }
-      if (hasConsoleAccountId) {
-        output.WriteUInt64(5, field_names[0], ConsoleAccountId);
+        output.WriteInt32(5, field_names[1], PrestigeLevel);
       }
       UnknownFields.WriteTo(output);
     }
@@ -571,13 +5420,10 @@ namespace Gazillion {
         size += pb::CodedOutputStream.ComputeStringSize(2, FromPlayerName);
       }
       if (hasTheMessage) {
-        size += pb::CodedOutputStream.ComputeMessageSize(3, TheMessage);
+        size += pb::CodedOutputStream.ComputeMessageSize(4, TheMessage);
       }
       if (hasPrestigeLevel) {
-        size += pb::CodedOutputStream.ComputeInt32Size(4, PrestigeLevel);
-      }
-      if (hasConsoleAccountId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(5, ConsoleAccountId);
+        size += pb::CodedOutputStream.ComputeInt32Size(5, PrestigeLevel);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -713,9 +5559,6 @@ namespace Gazillion {
         if (other.HasPrestigeLevel) {
           PrestigeLevel = other.PrestigeLevel;
         }
-        if (other.HasConsoleAccountId) {
-          ConsoleAccountId = other.ConsoleAccountId;
-        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -775,7 +5618,7 @@ namespace Gazillion {
               result.hasFromPlayerName = input.ReadString(ref result.fromPlayerName_);
               break;
             }
-            case 26: {
+            case 34: {
               global::Gazillion.ChatMessage.Builder subBuilder = global::Gazillion.ChatMessage.CreateBuilder();
               if (result.hasTheMessage) {
                 subBuilder.MergeFrom(TheMessage);
@@ -784,12 +5627,8 @@ namespace Gazillion {
               TheMessage = subBuilder.BuildPartial();
               break;
             }
-            case 32: {
-              result.hasPrestigeLevel = input.ReadInt32(ref result.prestigeLevel_);
-              break;
-            }
             case 40: {
-              result.hasConsoleAccountId = input.ReadUInt64(ref result.consoleAccountId_);
+              result.hasPrestigeLevel = input.ReadInt32(ref result.prestigeLevel_);
               break;
             }
           }
@@ -902,26 +5741,6 @@ namespace Gazillion {
         result.prestigeLevel_ = 0;
         return this;
       }
-      
-      public bool HasConsoleAccountId {
-        get { return result.hasConsoleAccountId; }
-      }
-      public ulong ConsoleAccountId {
-        get { return result.ConsoleAccountId; }
-        set { SetConsoleAccountId(value); }
-      }
-      public Builder SetConsoleAccountId(ulong value) {
-        PrepareBuilder();
-        result.hasConsoleAccountId = true;
-        result.consoleAccountId_ = value;
-        return this;
-      }
-      public Builder ClearConsoleAccountId() {
-        PrepareBuilder();
-        result.hasConsoleAccountId = false;
-        result.consoleAccountId_ = 0UL;
-        return this;
-      }
     }
     static ChatNormalMessage() {
       object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
@@ -932,8 +5751,8 @@ namespace Gazillion {
   public sealed partial class ChatTellMessage : pb::GeneratedMessage<ChatTellMessage, ChatTellMessage.Builder> {
     private ChatTellMessage() { }
     private static readonly ChatTellMessage defaultInstance = new ChatTellMessage().MakeReadOnly();
-    private static readonly string[] _chatTellMessageFieldNames = new string[] { "consoleAccountId", "fromPlayerName", "prestigeLevel", "theMessage" };
-    private static readonly uint[] _chatTellMessageFieldTags = new uint[] { 32, 10, 24, 18 };
+    private static readonly string[] _chatTellMessageFieldNames = new string[] { "fromPlayerName", "prestigeLevel", "theMessage" };
+    private static readonly uint[] _chatTellMessageFieldTags = new uint[] { 10, 32, 26 };
     public static ChatTellMessage DefaultInstance {
       get { return defaultInstance; }
     }
@@ -964,7 +5783,7 @@ namespace Gazillion {
       get { return fromPlayerName_; }
     }
     
-    public const int TheMessageFieldNumber = 2;
+    public const int TheMessageFieldNumber = 3;
     private bool hasTheMessage;
     private global::Gazillion.ChatMessage theMessage_;
     public bool HasTheMessage {
@@ -974,7 +5793,7 @@ namespace Gazillion {
       get { return theMessage_ ?? global::Gazillion.ChatMessage.DefaultInstance; }
     }
     
-    public const int PrestigeLevelFieldNumber = 3;
+    public const int PrestigeLevelFieldNumber = 4;
     private bool hasPrestigeLevel;
     private int prestigeLevel_;
     public bool HasPrestigeLevel {
@@ -982,16 +5801,6 @@ namespace Gazillion {
     }
     public int PrestigeLevel {
       get { return prestigeLevel_; }
-    }
-    
-    public const int ConsoleAccountIdFieldNumber = 4;
-    private bool hasConsoleAccountId;
-    private ulong consoleAccountId_;
-    public bool HasConsoleAccountId {
-      get { return hasConsoleAccountId; }
-    }
-    public ulong ConsoleAccountId {
-      get { return consoleAccountId_; }
     }
     
     public override bool IsInitialized {
@@ -1007,16 +5816,13 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _chatTellMessageFieldNames;
       if (hasFromPlayerName) {
-        output.WriteString(1, field_names[1], FromPlayerName);
+        output.WriteString(1, field_names[0], FromPlayerName);
       }
       if (hasTheMessage) {
-        output.WriteMessage(2, field_names[3], TheMessage);
+        output.WriteMessage(3, field_names[2], TheMessage);
       }
       if (hasPrestigeLevel) {
-        output.WriteInt32(3, field_names[2], PrestigeLevel);
-      }
-      if (hasConsoleAccountId) {
-        output.WriteUInt64(4, field_names[0], ConsoleAccountId);
+        output.WriteInt32(4, field_names[1], PrestigeLevel);
       }
       UnknownFields.WriteTo(output);
     }
@@ -1039,13 +5845,10 @@ namespace Gazillion {
         size += pb::CodedOutputStream.ComputeStringSize(1, FromPlayerName);
       }
       if (hasTheMessage) {
-        size += pb::CodedOutputStream.ComputeMessageSize(2, TheMessage);
+        size += pb::CodedOutputStream.ComputeMessageSize(3, TheMessage);
       }
       if (hasPrestigeLevel) {
-        size += pb::CodedOutputStream.ComputeInt32Size(3, PrestigeLevel);
-      }
-      if (hasConsoleAccountId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(4, ConsoleAccountId);
+        size += pb::CodedOutputStream.ComputeInt32Size(4, PrestigeLevel);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -1178,9 +5981,6 @@ namespace Gazillion {
         if (other.HasPrestigeLevel) {
           PrestigeLevel = other.PrestigeLevel;
         }
-        if (other.HasConsoleAccountId) {
-          ConsoleAccountId = other.ConsoleAccountId;
-        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -1228,7 +6028,7 @@ namespace Gazillion {
               result.hasFromPlayerName = input.ReadString(ref result.fromPlayerName_);
               break;
             }
-            case 18: {
+            case 26: {
               global::Gazillion.ChatMessage.Builder subBuilder = global::Gazillion.ChatMessage.CreateBuilder();
               if (result.hasTheMessage) {
                 subBuilder.MergeFrom(TheMessage);
@@ -1237,12 +6037,8 @@ namespace Gazillion {
               TheMessage = subBuilder.BuildPartial();
               break;
             }
-            case 24: {
-              result.hasPrestigeLevel = input.ReadInt32(ref result.prestigeLevel_);
-              break;
-            }
             case 32: {
-              result.hasConsoleAccountId = input.ReadUInt64(ref result.consoleAccountId_);
+              result.hasPrestigeLevel = input.ReadInt32(ref result.prestigeLevel_);
               break;
             }
           }
@@ -1335,26 +6131,6 @@ namespace Gazillion {
         result.prestigeLevel_ = 0;
         return this;
       }
-      
-      public bool HasConsoleAccountId {
-        get { return result.hasConsoleAccountId; }
-      }
-      public ulong ConsoleAccountId {
-        get { return result.ConsoleAccountId; }
-        set { SetConsoleAccountId(value); }
-      }
-      public Builder SetConsoleAccountId(ulong value) {
-        PrepareBuilder();
-        result.hasConsoleAccountId = true;
-        result.consoleAccountId_ = value;
-        return this;
-      }
-      public Builder ClearConsoleAccountId() {
-        PrepareBuilder();
-        result.hasConsoleAccountId = false;
-        result.consoleAccountId_ = 0UL;
-        return this;
-      }
     }
     static ChatTellMessage() {
       object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
@@ -1365,8 +6141,8 @@ namespace Gazillion {
   public sealed partial class ChatBroadcastMessage : pb::GeneratedMessage<ChatBroadcastMessage, ChatBroadcastMessage.Builder> {
     private ChatBroadcastMessage() { }
     private static readonly ChatBroadcastMessage defaultInstance = new ChatBroadcastMessage().MakeReadOnly();
-    private static readonly string[] _chatBroadcastMessageFieldNames = new string[] { "consoleAccountId", "fromPlayerName", "prestigeLevel", "roomType", "theMessage" };
-    private static readonly uint[] _chatBroadcastMessageFieldTags = new uint[] { 40, 18, 32, 8, 26 };
+    private static readonly string[] _chatBroadcastMessageFieldNames = new string[] { "fromPlayerName", "prestigeLevel", "roomType", "theMessage" };
+    private static readonly uint[] _chatBroadcastMessageFieldTags = new uint[] { 18, 32, 8, 26 };
     public static ChatBroadcastMessage DefaultInstance {
       get { return defaultInstance; }
     }
@@ -1427,16 +6203,6 @@ namespace Gazillion {
       get { return prestigeLevel_; }
     }
     
-    public const int ConsoleAccountIdFieldNumber = 5;
-    private bool hasConsoleAccountId;
-    private ulong consoleAccountId_;
-    public bool HasConsoleAccountId {
-      get { return hasConsoleAccountId; }
-    }
-    public ulong ConsoleAccountId {
-      get { return consoleAccountId_; }
-    }
-    
     public override bool IsInitialized {
       get {
         if (!hasRoomType) return false;
@@ -1451,19 +6217,16 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _chatBroadcastMessageFieldNames;
       if (hasRoomType) {
-        output.WriteEnum(1, field_names[3], (int) RoomType, RoomType);
+        output.WriteEnum(1, field_names[2], (int) RoomType, RoomType);
       }
       if (hasFromPlayerName) {
-        output.WriteString(2, field_names[1], FromPlayerName);
+        output.WriteString(2, field_names[0], FromPlayerName);
       }
       if (hasTheMessage) {
-        output.WriteMessage(3, field_names[4], TheMessage);
+        output.WriteMessage(3, field_names[3], TheMessage);
       }
       if (hasPrestigeLevel) {
-        output.WriteInt32(4, field_names[2], PrestigeLevel);
-      }
-      if (hasConsoleAccountId) {
-        output.WriteUInt64(5, field_names[0], ConsoleAccountId);
+        output.WriteInt32(4, field_names[1], PrestigeLevel);
       }
       UnknownFields.WriteTo(output);
     }
@@ -1493,9 +6256,6 @@ namespace Gazillion {
       }
       if (hasPrestigeLevel) {
         size += pb::CodedOutputStream.ComputeInt32Size(4, PrestigeLevel);
-      }
-      if (hasConsoleAccountId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(5, ConsoleAccountId);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -1631,9 +6391,6 @@ namespace Gazillion {
         if (other.HasPrestigeLevel) {
           PrestigeLevel = other.PrestigeLevel;
         }
-        if (other.HasConsoleAccountId) {
-          ConsoleAccountId = other.ConsoleAccountId;
-        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -1704,10 +6461,6 @@ namespace Gazillion {
             }
             case 32: {
               result.hasPrestigeLevel = input.ReadInt32(ref result.prestigeLevel_);
-              break;
-            }
-            case 40: {
-              result.hasConsoleAccountId = input.ReadUInt64(ref result.consoleAccountId_);
               break;
             }
           }
@@ -1818,26 +6571,6 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasPrestigeLevel = false;
         result.prestigeLevel_ = 0;
-        return this;
-      }
-      
-      public bool HasConsoleAccountId {
-        get { return result.hasConsoleAccountId; }
-      }
-      public ulong ConsoleAccountId {
-        get { return result.ConsoleAccountId; }
-        set { SetConsoleAccountId(value); }
-      }
-      public Builder SetConsoleAccountId(ulong value) {
-        PrepareBuilder();
-        result.hasConsoleAccountId = true;
-        result.consoleAccountId_ = value;
-        return this;
-      }
-      public Builder ClearConsoleAccountId() {
-        PrepareBuilder();
-        result.hasConsoleAccountId = false;
-        result.consoleAccountId_ = 0UL;
         return this;
       }
     }
@@ -2455,6 +7188,4022 @@ namespace Gazillion {
       }
     }
     static ChatBanVoteResponse() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GroupingReportInvitationDestinationForPortal : pb::GeneratedMessage<GroupingReportInvitationDestinationForPortal, GroupingReportInvitationDestinationForPortal.Builder> {
+    private GroupingReportInvitationDestinationForPortal() { }
+    private static readonly GroupingReportInvitationDestinationForPortal defaultInstance = new GroupingReportInvitationDestinationForPortal().MakeReadOnly();
+    private static readonly string[] _groupingReportInvitationDestinationForPortalFieldNames = new string[] { "acceptingPlayerDbId", "invitingPlayerDbId", "requestingGameId", "usePortal" };
+    private static readonly uint[] _groupingReportInvitationDestinationForPortalFieldTags = new uint[] { 8, 16, 24, 32 };
+    public static GroupingReportInvitationDestinationForPortal DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GroupingReportInvitationDestinationForPortal DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GroupingReportInvitationDestinationForPortal ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingReportInvitationDestinationForPortal__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GroupingReportInvitationDestinationForPortal, GroupingReportInvitationDestinationForPortal.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingReportInvitationDestinationForPortal__FieldAccessorTable; }
+    }
+    
+    public const int AcceptingPlayerDbIdFieldNumber = 1;
+    private bool hasAcceptingPlayerDbId;
+    private ulong acceptingPlayerDbId_;
+    public bool HasAcceptingPlayerDbId {
+      get { return hasAcceptingPlayerDbId; }
+    }
+    public ulong AcceptingPlayerDbId {
+      get { return acceptingPlayerDbId_; }
+    }
+    
+    public const int InvitingPlayerDbIdFieldNumber = 2;
+    private bool hasInvitingPlayerDbId;
+    private ulong invitingPlayerDbId_;
+    public bool HasInvitingPlayerDbId {
+      get { return hasInvitingPlayerDbId; }
+    }
+    public ulong InvitingPlayerDbId {
+      get { return invitingPlayerDbId_; }
+    }
+    
+    public const int RequestingGameIdFieldNumber = 3;
+    private bool hasRequestingGameId;
+    private ulong requestingGameId_;
+    public bool HasRequestingGameId {
+      get { return hasRequestingGameId; }
+    }
+    public ulong RequestingGameId {
+      get { return requestingGameId_; }
+    }
+    
+    public const int UsePortalFieldNumber = 4;
+    private bool hasUsePortal;
+    private bool usePortal_;
+    public bool HasUsePortal {
+      get { return hasUsePortal; }
+    }
+    public bool UsePortal {
+      get { return usePortal_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasAcceptingPlayerDbId) return false;
+        if (!hasInvitingPlayerDbId) return false;
+        if (!hasRequestingGameId) return false;
+        if (!hasUsePortal) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _groupingReportInvitationDestinationForPortalFieldNames;
+      if (hasAcceptingPlayerDbId) {
+        output.WriteUInt64(1, field_names[0], AcceptingPlayerDbId);
+      }
+      if (hasInvitingPlayerDbId) {
+        output.WriteUInt64(2, field_names[1], InvitingPlayerDbId);
+      }
+      if (hasRequestingGameId) {
+        output.WriteUInt64(3, field_names[2], RequestingGameId);
+      }
+      if (hasUsePortal) {
+        output.WriteBool(4, field_names[3], UsePortal);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasAcceptingPlayerDbId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, AcceptingPlayerDbId);
+      }
+      if (hasInvitingPlayerDbId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, InvitingPlayerDbId);
+      }
+      if (hasRequestingGameId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, RequestingGameId);
+      }
+      if (hasUsePortal) {
+        size += pb::CodedOutputStream.ComputeBoolSize(4, UsePortal);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GroupingReportInvitationDestinationForPortal ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingReportInvitationDestinationForPortal ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingReportInvitationDestinationForPortal ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingReportInvitationDestinationForPortal ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingReportInvitationDestinationForPortal ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingReportInvitationDestinationForPortal ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingReportInvitationDestinationForPortal ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GroupingReportInvitationDestinationForPortal ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GroupingReportInvitationDestinationForPortal ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingReportInvitationDestinationForPortal ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GroupingReportInvitationDestinationForPortal MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GroupingReportInvitationDestinationForPortal prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GroupingReportInvitationDestinationForPortal, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GroupingReportInvitationDestinationForPortal cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GroupingReportInvitationDestinationForPortal result;
+      
+      private GroupingReportInvitationDestinationForPortal PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GroupingReportInvitationDestinationForPortal original = result;
+          result = new GroupingReportInvitationDestinationForPortal();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GroupingReportInvitationDestinationForPortal MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GroupingReportInvitationDestinationForPortal.Descriptor; }
+      }
+      
+      public override GroupingReportInvitationDestinationForPortal DefaultInstanceForType {
+        get { return global::Gazillion.GroupingReportInvitationDestinationForPortal.DefaultInstance; }
+      }
+      
+      public override GroupingReportInvitationDestinationForPortal BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GroupingReportInvitationDestinationForPortal) {
+          return MergeFrom((GroupingReportInvitationDestinationForPortal) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GroupingReportInvitationDestinationForPortal other) {
+        if (other == global::Gazillion.GroupingReportInvitationDestinationForPortal.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasAcceptingPlayerDbId) {
+          AcceptingPlayerDbId = other.AcceptingPlayerDbId;
+        }
+        if (other.HasInvitingPlayerDbId) {
+          InvitingPlayerDbId = other.InvitingPlayerDbId;
+        }
+        if (other.HasRequestingGameId) {
+          RequestingGameId = other.RequestingGameId;
+        }
+        if (other.HasUsePortal) {
+          UsePortal = other.UsePortal;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_groupingReportInvitationDestinationForPortalFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _groupingReportInvitationDestinationForPortalFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasAcceptingPlayerDbId = input.ReadUInt64(ref result.acceptingPlayerDbId_);
+              break;
+            }
+            case 16: {
+              result.hasInvitingPlayerDbId = input.ReadUInt64(ref result.invitingPlayerDbId_);
+              break;
+            }
+            case 24: {
+              result.hasRequestingGameId = input.ReadUInt64(ref result.requestingGameId_);
+              break;
+            }
+            case 32: {
+              result.hasUsePortal = input.ReadBool(ref result.usePortal_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasAcceptingPlayerDbId {
+        get { return result.hasAcceptingPlayerDbId; }
+      }
+      public ulong AcceptingPlayerDbId {
+        get { return result.AcceptingPlayerDbId; }
+        set { SetAcceptingPlayerDbId(value); }
+      }
+      public Builder SetAcceptingPlayerDbId(ulong value) {
+        PrepareBuilder();
+        result.hasAcceptingPlayerDbId = true;
+        result.acceptingPlayerDbId_ = value;
+        return this;
+      }
+      public Builder ClearAcceptingPlayerDbId() {
+        PrepareBuilder();
+        result.hasAcceptingPlayerDbId = false;
+        result.acceptingPlayerDbId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasInvitingPlayerDbId {
+        get { return result.hasInvitingPlayerDbId; }
+      }
+      public ulong InvitingPlayerDbId {
+        get { return result.InvitingPlayerDbId; }
+        set { SetInvitingPlayerDbId(value); }
+      }
+      public Builder SetInvitingPlayerDbId(ulong value) {
+        PrepareBuilder();
+        result.hasInvitingPlayerDbId = true;
+        result.invitingPlayerDbId_ = value;
+        return this;
+      }
+      public Builder ClearInvitingPlayerDbId() {
+        PrepareBuilder();
+        result.hasInvitingPlayerDbId = false;
+        result.invitingPlayerDbId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasRequestingGameId {
+        get { return result.hasRequestingGameId; }
+      }
+      public ulong RequestingGameId {
+        get { return result.RequestingGameId; }
+        set { SetRequestingGameId(value); }
+      }
+      public Builder SetRequestingGameId(ulong value) {
+        PrepareBuilder();
+        result.hasRequestingGameId = true;
+        result.requestingGameId_ = value;
+        return this;
+      }
+      public Builder ClearRequestingGameId() {
+        PrepareBuilder();
+        result.hasRequestingGameId = false;
+        result.requestingGameId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasUsePortal {
+        get { return result.hasUsePortal; }
+      }
+      public bool UsePortal {
+        get { return result.UsePortal; }
+        set { SetUsePortal(value); }
+      }
+      public Builder SetUsePortal(bool value) {
+        PrepareBuilder();
+        result.hasUsePortal = true;
+        result.usePortal_ = value;
+        return this;
+      }
+      public Builder ClearUsePortal() {
+        PrepareBuilder();
+        result.hasUsePortal = false;
+        result.usePortal_ = false;
+        return this;
+      }
+    }
+    static GroupingReportInvitationDestinationForPortal() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GroupingOperationResultMsg : pb::GeneratedMessage<GroupingOperationResultMsg, GroupingOperationResultMsg.Builder> {
+    private GroupingOperationResultMsg() { }
+    private static readonly GroupingOperationResultMsg defaultInstance = new GroupingOperationResultMsg().MakeReadOnly();
+    private static readonly string[] _groupingOperationResultMsgFieldNames = new string[] { "currentPartyInfo", "groupId", "groupPSNSessionId", "groupType", "hasTemporaryRegions", "leaderInfo", "opResult", "opType", "requestingGameId", "requestingPlayerDbId" };
+    private static readonly uint[] _groupingOperationResultMsgFieldTags = new uint[] { 74, 48, 82, 56, 40, 66, 32, 24, 8, 16 };
+    public static GroupingOperationResultMsg DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GroupingOperationResultMsg DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GroupingOperationResultMsg ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingOperationResultMsg__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GroupingOperationResultMsg, GroupingOperationResultMsg.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingOperationResultMsg__FieldAccessorTable; }
+    }
+    
+    public const int RequestingGameIdFieldNumber = 1;
+    private bool hasRequestingGameId;
+    private ulong requestingGameId_;
+    public bool HasRequestingGameId {
+      get { return hasRequestingGameId; }
+    }
+    public ulong RequestingGameId {
+      get { return requestingGameId_; }
+    }
+    
+    public const int RequestingPlayerDbIdFieldNumber = 2;
+    private bool hasRequestingPlayerDbId;
+    private ulong requestingPlayerDbId_;
+    public bool HasRequestingPlayerDbId {
+      get { return hasRequestingPlayerDbId; }
+    }
+    public ulong RequestingPlayerDbId {
+      get { return requestingPlayerDbId_; }
+    }
+    
+    public const int OpTypeFieldNumber = 3;
+    private bool hasOpType;
+    private global::Gazillion.GroupingOperationType opType_ = global::Gazillion.GroupingOperationType.eGOP_InvitePlayer;
+    public bool HasOpType {
+      get { return hasOpType; }
+    }
+    public global::Gazillion.GroupingOperationType OpType {
+      get { return opType_; }
+    }
+    
+    public const int OpResultFieldNumber = 4;
+    private bool hasOpResult;
+    private global::Gazillion.GroupingOperationResult opResult_ = global::Gazillion.GroupingOperationResult.eGOPR_Success;
+    public bool HasOpResult {
+      get { return hasOpResult; }
+    }
+    public global::Gazillion.GroupingOperationResult OpResult {
+      get { return opResult_; }
+    }
+    
+    public const int HasTemporaryRegionsFieldNumber = 5;
+    private bool hasHasTemporaryRegions;
+    private bool hasTemporaryRegions_;
+    public bool HasHasTemporaryRegions {
+      get { return hasHasTemporaryRegions; }
+    }
+    public bool HasTemporaryRegions {
+      get { return hasTemporaryRegions_; }
+    }
+    
+    public const int GroupIdFieldNumber = 6;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int GroupTypeFieldNumber = 7;
+    private bool hasGroupType;
+    private global::Gazillion.GroupType groupType_ = global::Gazillion.GroupType.GroupType_Invalid;
+    public bool HasGroupType {
+      get { return hasGroupType; }
+    }
+    public global::Gazillion.GroupType GroupType {
+      get { return groupType_; }
+    }
+    
+    public const int LeaderInfoFieldNumber = 8;
+    private bool hasLeaderInfo;
+    private global::Gazillion.PerPlayerInfo leaderInfo_;
+    public bool HasLeaderInfo {
+      get { return hasLeaderInfo; }
+    }
+    public global::Gazillion.PerPlayerInfo LeaderInfo {
+      get { return leaderInfo_ ?? global::Gazillion.PerPlayerInfo.DefaultInstance; }
+    }
+    
+    public const int CurrentPartyInfoFieldNumber = 9;
+    private pbc::PopsicleList<global::Gazillion.PerPlayerInfo> currentPartyInfo_ = new pbc::PopsicleList<global::Gazillion.PerPlayerInfo>();
+    public scg::IList<global::Gazillion.PerPlayerInfo> CurrentPartyInfoList {
+      get { return currentPartyInfo_; }
+    }
+    public int CurrentPartyInfoCount {
+      get { return currentPartyInfo_.Count; }
+    }
+    public global::Gazillion.PerPlayerInfo GetCurrentPartyInfo(int index) {
+      return currentPartyInfo_[index];
+    }
+    
+    public const int GroupPSNSessionIdFieldNumber = 10;
+    private bool hasGroupPSNSessionId;
+    private string groupPSNSessionId_ = "";
+    public bool HasGroupPSNSessionId {
+      get { return hasGroupPSNSessionId; }
+    }
+    public string GroupPSNSessionId {
+      get { return groupPSNSessionId_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasRequestingGameId) return false;
+        if (!hasRequestingPlayerDbId) return false;
+        if (!hasOpType) return false;
+        if (!hasOpResult) return false;
+        if (HasLeaderInfo) {
+          if (!LeaderInfo.IsInitialized) return false;
+        }
+        foreach (global::Gazillion.PerPlayerInfo element in CurrentPartyInfoList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _groupingOperationResultMsgFieldNames;
+      if (hasRequestingGameId) {
+        output.WriteUInt64(1, field_names[8], RequestingGameId);
+      }
+      if (hasRequestingPlayerDbId) {
+        output.WriteUInt64(2, field_names[9], RequestingPlayerDbId);
+      }
+      if (hasOpType) {
+        output.WriteEnum(3, field_names[7], (int) OpType, OpType);
+      }
+      if (hasOpResult) {
+        output.WriteEnum(4, field_names[6], (int) OpResult, OpResult);
+      }
+      if (hasHasTemporaryRegions) {
+        output.WriteBool(5, field_names[4], HasTemporaryRegions);
+      }
+      if (hasGroupId) {
+        output.WriteUInt64(6, field_names[1], GroupId);
+      }
+      if (hasGroupType) {
+        output.WriteEnum(7, field_names[3], (int) GroupType, GroupType);
+      }
+      if (hasLeaderInfo) {
+        output.WriteMessage(8, field_names[5], LeaderInfo);
+      }
+      if (currentPartyInfo_.Count > 0) {
+        output.WriteMessageArray(9, field_names[0], currentPartyInfo_);
+      }
+      if (hasGroupPSNSessionId) {
+        output.WriteString(10, field_names[2], GroupPSNSessionId);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasRequestingGameId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, RequestingGameId);
+      }
+      if (hasRequestingPlayerDbId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, RequestingPlayerDbId);
+      }
+      if (hasOpType) {
+        size += pb::CodedOutputStream.ComputeEnumSize(3, (int) OpType);
+      }
+      if (hasOpResult) {
+        size += pb::CodedOutputStream.ComputeEnumSize(4, (int) OpResult);
+      }
+      if (hasHasTemporaryRegions) {
+        size += pb::CodedOutputStream.ComputeBoolSize(5, HasTemporaryRegions);
+      }
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(6, GroupId);
+      }
+      if (hasGroupType) {
+        size += pb::CodedOutputStream.ComputeEnumSize(7, (int) GroupType);
+      }
+      if (hasLeaderInfo) {
+        size += pb::CodedOutputStream.ComputeMessageSize(8, LeaderInfo);
+      }
+      foreach (global::Gazillion.PerPlayerInfo element in CurrentPartyInfoList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(9, element);
+      }
+      if (hasGroupPSNSessionId) {
+        size += pb::CodedOutputStream.ComputeStringSize(10, GroupPSNSessionId);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GroupingOperationResultMsg ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingOperationResultMsg ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingOperationResultMsg ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingOperationResultMsg ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingOperationResultMsg ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingOperationResultMsg ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingOperationResultMsg ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GroupingOperationResultMsg ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GroupingOperationResultMsg ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingOperationResultMsg ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GroupingOperationResultMsg MakeReadOnly() {
+      currentPartyInfo_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GroupingOperationResultMsg prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GroupingOperationResultMsg, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GroupingOperationResultMsg cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GroupingOperationResultMsg result;
+      
+      private GroupingOperationResultMsg PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GroupingOperationResultMsg original = result;
+          result = new GroupingOperationResultMsg();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GroupingOperationResultMsg MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GroupingOperationResultMsg.Descriptor; }
+      }
+      
+      public override GroupingOperationResultMsg DefaultInstanceForType {
+        get { return global::Gazillion.GroupingOperationResultMsg.DefaultInstance; }
+      }
+      
+      public override GroupingOperationResultMsg BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GroupingOperationResultMsg) {
+          return MergeFrom((GroupingOperationResultMsg) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GroupingOperationResultMsg other) {
+        if (other == global::Gazillion.GroupingOperationResultMsg.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasRequestingGameId) {
+          RequestingGameId = other.RequestingGameId;
+        }
+        if (other.HasRequestingPlayerDbId) {
+          RequestingPlayerDbId = other.RequestingPlayerDbId;
+        }
+        if (other.HasOpType) {
+          OpType = other.OpType;
+        }
+        if (other.HasOpResult) {
+          OpResult = other.OpResult;
+        }
+        if (other.HasHasTemporaryRegions) {
+          HasTemporaryRegions = other.HasTemporaryRegions;
+        }
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasGroupType) {
+          GroupType = other.GroupType;
+        }
+        if (other.HasLeaderInfo) {
+          MergeLeaderInfo(other.LeaderInfo);
+        }
+        if (other.currentPartyInfo_.Count != 0) {
+          result.currentPartyInfo_.Add(other.currentPartyInfo_);
+        }
+        if (other.HasGroupPSNSessionId) {
+          GroupPSNSessionId = other.GroupPSNSessionId;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_groupingOperationResultMsgFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _groupingOperationResultMsgFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasRequestingGameId = input.ReadUInt64(ref result.requestingGameId_);
+              break;
+            }
+            case 16: {
+              result.hasRequestingPlayerDbId = input.ReadUInt64(ref result.requestingPlayerDbId_);
+              break;
+            }
+            case 24: {
+              object unknown;
+              if(input.ReadEnum(ref result.opType_, out unknown)) {
+                result.hasOpType = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(3, (ulong)(int)unknown);
+              }
+              break;
+            }
+            case 32: {
+              object unknown;
+              if(input.ReadEnum(ref result.opResult_, out unknown)) {
+                result.hasOpResult = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(4, (ulong)(int)unknown);
+              }
+              break;
+            }
+            case 40: {
+              result.hasHasTemporaryRegions = input.ReadBool(ref result.hasTemporaryRegions_);
+              break;
+            }
+            case 48: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 56: {
+              object unknown;
+              if(input.ReadEnum(ref result.groupType_, out unknown)) {
+                result.hasGroupType = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(7, (ulong)(int)unknown);
+              }
+              break;
+            }
+            case 66: {
+              global::Gazillion.PerPlayerInfo.Builder subBuilder = global::Gazillion.PerPlayerInfo.CreateBuilder();
+              if (result.hasLeaderInfo) {
+                subBuilder.MergeFrom(LeaderInfo);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              LeaderInfo = subBuilder.BuildPartial();
+              break;
+            }
+            case 74: {
+              input.ReadMessageArray(tag, field_name, result.currentPartyInfo_, global::Gazillion.PerPlayerInfo.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 82: {
+              result.hasGroupPSNSessionId = input.ReadString(ref result.groupPSNSessionId_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasRequestingGameId {
+        get { return result.hasRequestingGameId; }
+      }
+      public ulong RequestingGameId {
+        get { return result.RequestingGameId; }
+        set { SetRequestingGameId(value); }
+      }
+      public Builder SetRequestingGameId(ulong value) {
+        PrepareBuilder();
+        result.hasRequestingGameId = true;
+        result.requestingGameId_ = value;
+        return this;
+      }
+      public Builder ClearRequestingGameId() {
+        PrepareBuilder();
+        result.hasRequestingGameId = false;
+        result.requestingGameId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasRequestingPlayerDbId {
+        get { return result.hasRequestingPlayerDbId; }
+      }
+      public ulong RequestingPlayerDbId {
+        get { return result.RequestingPlayerDbId; }
+        set { SetRequestingPlayerDbId(value); }
+      }
+      public Builder SetRequestingPlayerDbId(ulong value) {
+        PrepareBuilder();
+        result.hasRequestingPlayerDbId = true;
+        result.requestingPlayerDbId_ = value;
+        return this;
+      }
+      public Builder ClearRequestingPlayerDbId() {
+        PrepareBuilder();
+        result.hasRequestingPlayerDbId = false;
+        result.requestingPlayerDbId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasOpType {
+       get { return result.hasOpType; }
+      }
+      public global::Gazillion.GroupingOperationType OpType {
+        get { return result.OpType; }
+        set { SetOpType(value); }
+      }
+      public Builder SetOpType(global::Gazillion.GroupingOperationType value) {
+        PrepareBuilder();
+        result.hasOpType = true;
+        result.opType_ = value;
+        return this;
+      }
+      public Builder ClearOpType() {
+        PrepareBuilder();
+        result.hasOpType = false;
+        result.opType_ = global::Gazillion.GroupingOperationType.eGOP_InvitePlayer;
+        return this;
+      }
+      
+      public bool HasOpResult {
+       get { return result.hasOpResult; }
+      }
+      public global::Gazillion.GroupingOperationResult OpResult {
+        get { return result.OpResult; }
+        set { SetOpResult(value); }
+      }
+      public Builder SetOpResult(global::Gazillion.GroupingOperationResult value) {
+        PrepareBuilder();
+        result.hasOpResult = true;
+        result.opResult_ = value;
+        return this;
+      }
+      public Builder ClearOpResult() {
+        PrepareBuilder();
+        result.hasOpResult = false;
+        result.opResult_ = global::Gazillion.GroupingOperationResult.eGOPR_Success;
+        return this;
+      }
+      
+      public bool HasHasTemporaryRegions {
+        get { return result.hasHasTemporaryRegions; }
+      }
+      public bool HasTemporaryRegions {
+        get { return result.HasTemporaryRegions; }
+        set { SetHasTemporaryRegions(value); }
+      }
+      public Builder SetHasTemporaryRegions(bool value) {
+        PrepareBuilder();
+        result.hasHasTemporaryRegions = true;
+        result.hasTemporaryRegions_ = value;
+        return this;
+      }
+      public Builder ClearHasTemporaryRegions() {
+        PrepareBuilder();
+        result.hasHasTemporaryRegions = false;
+        result.hasTemporaryRegions_ = false;
+        return this;
+      }
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupType {
+       get { return result.hasGroupType; }
+      }
+      public global::Gazillion.GroupType GroupType {
+        get { return result.GroupType; }
+        set { SetGroupType(value); }
+      }
+      public Builder SetGroupType(global::Gazillion.GroupType value) {
+        PrepareBuilder();
+        result.hasGroupType = true;
+        result.groupType_ = value;
+        return this;
+      }
+      public Builder ClearGroupType() {
+        PrepareBuilder();
+        result.hasGroupType = false;
+        result.groupType_ = global::Gazillion.GroupType.GroupType_Invalid;
+        return this;
+      }
+      
+      public bool HasLeaderInfo {
+       get { return result.hasLeaderInfo; }
+      }
+      public global::Gazillion.PerPlayerInfo LeaderInfo {
+        get { return result.LeaderInfo; }
+        set { SetLeaderInfo(value); }
+      }
+      public Builder SetLeaderInfo(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasLeaderInfo = true;
+        result.leaderInfo_ = value;
+        return this;
+      }
+      public Builder SetLeaderInfo(global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasLeaderInfo = true;
+        result.leaderInfo_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeLeaderInfo(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasLeaderInfo &&
+            result.leaderInfo_ != global::Gazillion.PerPlayerInfo.DefaultInstance) {
+            result.leaderInfo_ = global::Gazillion.PerPlayerInfo.CreateBuilder(result.leaderInfo_).MergeFrom(value).BuildPartial();
+        } else {
+          result.leaderInfo_ = value;
+        }
+        result.hasLeaderInfo = true;
+        return this;
+      }
+      public Builder ClearLeaderInfo() {
+        PrepareBuilder();
+        result.hasLeaderInfo = false;
+        result.leaderInfo_ = null;
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.PerPlayerInfo> CurrentPartyInfoList {
+        get { return PrepareBuilder().currentPartyInfo_; }
+      }
+      public int CurrentPartyInfoCount {
+        get { return result.CurrentPartyInfoCount; }
+      }
+      public global::Gazillion.PerPlayerInfo GetCurrentPartyInfo(int index) {
+        return result.GetCurrentPartyInfo(index);
+      }
+      public Builder SetCurrentPartyInfo(int index, global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.currentPartyInfo_[index] = value;
+        return this;
+      }
+      public Builder SetCurrentPartyInfo(int index, global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.currentPartyInfo_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddCurrentPartyInfo(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.currentPartyInfo_.Add(value);
+        return this;
+      }
+      public Builder AddCurrentPartyInfo(global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.currentPartyInfo_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeCurrentPartyInfo(scg::IEnumerable<global::Gazillion.PerPlayerInfo> values) {
+        PrepareBuilder();
+        result.currentPartyInfo_.Add(values);
+        return this;
+      }
+      public Builder ClearCurrentPartyInfo() {
+        PrepareBuilder();
+        result.currentPartyInfo_.Clear();
+        return this;
+      }
+      
+      public bool HasGroupPSNSessionId {
+        get { return result.hasGroupPSNSessionId; }
+      }
+      public string GroupPSNSessionId {
+        get { return result.GroupPSNSessionId; }
+        set { SetGroupPSNSessionId(value); }
+      }
+      public Builder SetGroupPSNSessionId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGroupPSNSessionId = true;
+        result.groupPSNSessionId_ = value;
+        return this;
+      }
+      public Builder ClearGroupPSNSessionId() {
+        PrepareBuilder();
+        result.hasGroupPSNSessionId = false;
+        result.groupPSNSessionId_ = "";
+        return this;
+      }
+    }
+    static GroupingOperationResultMsg() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GroupingManagerRemovedPlayer : pb::GeneratedMessage<GroupingManagerRemovedPlayer, GroupingManagerRemovedPlayer.Builder> {
+    private GroupingManagerRemovedPlayer() { }
+    private static readonly GroupingManagerRemovedPlayer defaultInstance = new GroupingManagerRemovedPlayer().MakeReadOnly();
+    private static readonly string[] _groupingManagerRemovedPlayerFieldNames = new string[] { "groupId", "leaveReason", "newLeader", "previousLeaderDbId", "removedPlayer", "requestingGameId" };
+    private static readonly uint[] _groupingManagerRemovedPlayerFieldTags = new uint[] { 24, 40, 34, 48, 18, 8 };
+    public static GroupingManagerRemovedPlayer DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GroupingManagerRemovedPlayer DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GroupingManagerRemovedPlayer ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingManagerRemovedPlayer__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GroupingManagerRemovedPlayer, GroupingManagerRemovedPlayer.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingManagerRemovedPlayer__FieldAccessorTable; }
+    }
+    
+    public const int RequestingGameIdFieldNumber = 1;
+    private bool hasRequestingGameId;
+    private ulong requestingGameId_;
+    public bool HasRequestingGameId {
+      get { return hasRequestingGameId; }
+    }
+    public ulong RequestingGameId {
+      get { return requestingGameId_; }
+    }
+    
+    public const int RemovedPlayerFieldNumber = 2;
+    private bool hasRemovedPlayer;
+    private global::Gazillion.PerPlayerInfo removedPlayer_;
+    public bool HasRemovedPlayer {
+      get { return hasRemovedPlayer; }
+    }
+    public global::Gazillion.PerPlayerInfo RemovedPlayer {
+      get { return removedPlayer_ ?? global::Gazillion.PerPlayerInfo.DefaultInstance; }
+    }
+    
+    public const int GroupIdFieldNumber = 3;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int NewLeaderFieldNumber = 4;
+    private bool hasNewLeader;
+    private global::Gazillion.PerPlayerInfo newLeader_;
+    public bool HasNewLeader {
+      get { return hasNewLeader; }
+    }
+    public global::Gazillion.PerPlayerInfo NewLeader {
+      get { return newLeader_ ?? global::Gazillion.PerPlayerInfo.DefaultInstance; }
+    }
+    
+    public const int PreviousLeaderDbIdFieldNumber = 6;
+    private bool hasPreviousLeaderDbId;
+    private ulong previousLeaderDbId_;
+    public bool HasPreviousLeaderDbId {
+      get { return hasPreviousLeaderDbId; }
+    }
+    public ulong PreviousLeaderDbId {
+      get { return previousLeaderDbId_; }
+    }
+    
+    public const int LeaveReasonFieldNumber = 5;
+    private bool hasLeaveReason;
+    private global::Gazillion.GroupLeaveReason leaveReason_ = global::Gazillion.GroupLeaveReason.GROUP_LEAVE_REASON_LEFT;
+    public bool HasLeaveReason {
+      get { return hasLeaveReason; }
+    }
+    public global::Gazillion.GroupLeaveReason LeaveReason {
+      get { return leaveReason_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasRequestingGameId) return false;
+        if (!hasRemovedPlayer) return false;
+        if (!hasGroupId) return false;
+        if (!hasLeaveReason) return false;
+        if (!RemovedPlayer.IsInitialized) return false;
+        if (HasNewLeader) {
+          if (!NewLeader.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _groupingManagerRemovedPlayerFieldNames;
+      if (hasRequestingGameId) {
+        output.WriteUInt64(1, field_names[5], RequestingGameId);
+      }
+      if (hasRemovedPlayer) {
+        output.WriteMessage(2, field_names[4], RemovedPlayer);
+      }
+      if (hasGroupId) {
+        output.WriteUInt64(3, field_names[0], GroupId);
+      }
+      if (hasNewLeader) {
+        output.WriteMessage(4, field_names[2], NewLeader);
+      }
+      if (hasLeaveReason) {
+        output.WriteEnum(5, field_names[1], (int) LeaveReason, LeaveReason);
+      }
+      if (hasPreviousLeaderDbId) {
+        output.WriteUInt64(6, field_names[3], PreviousLeaderDbId);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasRequestingGameId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, RequestingGameId);
+      }
+      if (hasRemovedPlayer) {
+        size += pb::CodedOutputStream.ComputeMessageSize(2, RemovedPlayer);
+      }
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, GroupId);
+      }
+      if (hasNewLeader) {
+        size += pb::CodedOutputStream.ComputeMessageSize(4, NewLeader);
+      }
+      if (hasPreviousLeaderDbId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(6, PreviousLeaderDbId);
+      }
+      if (hasLeaveReason) {
+        size += pb::CodedOutputStream.ComputeEnumSize(5, (int) LeaveReason);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GroupingManagerRemovedPlayer ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingManagerRemovedPlayer ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerRemovedPlayer ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingManagerRemovedPlayer ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerRemovedPlayer ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingManagerRemovedPlayer ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerRemovedPlayer ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GroupingManagerRemovedPlayer ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GroupingManagerRemovedPlayer ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingManagerRemovedPlayer ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GroupingManagerRemovedPlayer MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GroupingManagerRemovedPlayer prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GroupingManagerRemovedPlayer, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GroupingManagerRemovedPlayer cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GroupingManagerRemovedPlayer result;
+      
+      private GroupingManagerRemovedPlayer PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GroupingManagerRemovedPlayer original = result;
+          result = new GroupingManagerRemovedPlayer();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GroupingManagerRemovedPlayer MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GroupingManagerRemovedPlayer.Descriptor; }
+      }
+      
+      public override GroupingManagerRemovedPlayer DefaultInstanceForType {
+        get { return global::Gazillion.GroupingManagerRemovedPlayer.DefaultInstance; }
+      }
+      
+      public override GroupingManagerRemovedPlayer BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GroupingManagerRemovedPlayer) {
+          return MergeFrom((GroupingManagerRemovedPlayer) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GroupingManagerRemovedPlayer other) {
+        if (other == global::Gazillion.GroupingManagerRemovedPlayer.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasRequestingGameId) {
+          RequestingGameId = other.RequestingGameId;
+        }
+        if (other.HasRemovedPlayer) {
+          MergeRemovedPlayer(other.RemovedPlayer);
+        }
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasNewLeader) {
+          MergeNewLeader(other.NewLeader);
+        }
+        if (other.HasPreviousLeaderDbId) {
+          PreviousLeaderDbId = other.PreviousLeaderDbId;
+        }
+        if (other.HasLeaveReason) {
+          LeaveReason = other.LeaveReason;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_groupingManagerRemovedPlayerFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _groupingManagerRemovedPlayerFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasRequestingGameId = input.ReadUInt64(ref result.requestingGameId_);
+              break;
+            }
+            case 18: {
+              global::Gazillion.PerPlayerInfo.Builder subBuilder = global::Gazillion.PerPlayerInfo.CreateBuilder();
+              if (result.hasRemovedPlayer) {
+                subBuilder.MergeFrom(RemovedPlayer);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              RemovedPlayer = subBuilder.BuildPartial();
+              break;
+            }
+            case 24: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 34: {
+              global::Gazillion.PerPlayerInfo.Builder subBuilder = global::Gazillion.PerPlayerInfo.CreateBuilder();
+              if (result.hasNewLeader) {
+                subBuilder.MergeFrom(NewLeader);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              NewLeader = subBuilder.BuildPartial();
+              break;
+            }
+            case 40: {
+              object unknown;
+              if(input.ReadEnum(ref result.leaveReason_, out unknown)) {
+                result.hasLeaveReason = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(5, (ulong)(int)unknown);
+              }
+              break;
+            }
+            case 48: {
+              result.hasPreviousLeaderDbId = input.ReadUInt64(ref result.previousLeaderDbId_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasRequestingGameId {
+        get { return result.hasRequestingGameId; }
+      }
+      public ulong RequestingGameId {
+        get { return result.RequestingGameId; }
+        set { SetRequestingGameId(value); }
+      }
+      public Builder SetRequestingGameId(ulong value) {
+        PrepareBuilder();
+        result.hasRequestingGameId = true;
+        result.requestingGameId_ = value;
+        return this;
+      }
+      public Builder ClearRequestingGameId() {
+        PrepareBuilder();
+        result.hasRequestingGameId = false;
+        result.requestingGameId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasRemovedPlayer {
+       get { return result.hasRemovedPlayer; }
+      }
+      public global::Gazillion.PerPlayerInfo RemovedPlayer {
+        get { return result.RemovedPlayer; }
+        set { SetRemovedPlayer(value); }
+      }
+      public Builder SetRemovedPlayer(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasRemovedPlayer = true;
+        result.removedPlayer_ = value;
+        return this;
+      }
+      public Builder SetRemovedPlayer(global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasRemovedPlayer = true;
+        result.removedPlayer_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeRemovedPlayer(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasRemovedPlayer &&
+            result.removedPlayer_ != global::Gazillion.PerPlayerInfo.DefaultInstance) {
+            result.removedPlayer_ = global::Gazillion.PerPlayerInfo.CreateBuilder(result.removedPlayer_).MergeFrom(value).BuildPartial();
+        } else {
+          result.removedPlayer_ = value;
+        }
+        result.hasRemovedPlayer = true;
+        return this;
+      }
+      public Builder ClearRemovedPlayer() {
+        PrepareBuilder();
+        result.hasRemovedPlayer = false;
+        result.removedPlayer_ = null;
+        return this;
+      }
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasNewLeader {
+       get { return result.hasNewLeader; }
+      }
+      public global::Gazillion.PerPlayerInfo NewLeader {
+        get { return result.NewLeader; }
+        set { SetNewLeader(value); }
+      }
+      public Builder SetNewLeader(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasNewLeader = true;
+        result.newLeader_ = value;
+        return this;
+      }
+      public Builder SetNewLeader(global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasNewLeader = true;
+        result.newLeader_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeNewLeader(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasNewLeader &&
+            result.newLeader_ != global::Gazillion.PerPlayerInfo.DefaultInstance) {
+            result.newLeader_ = global::Gazillion.PerPlayerInfo.CreateBuilder(result.newLeader_).MergeFrom(value).BuildPartial();
+        } else {
+          result.newLeader_ = value;
+        }
+        result.hasNewLeader = true;
+        return this;
+      }
+      public Builder ClearNewLeader() {
+        PrepareBuilder();
+        result.hasNewLeader = false;
+        result.newLeader_ = null;
+        return this;
+      }
+      
+      public bool HasPreviousLeaderDbId {
+        get { return result.hasPreviousLeaderDbId; }
+      }
+      public ulong PreviousLeaderDbId {
+        get { return result.PreviousLeaderDbId; }
+        set { SetPreviousLeaderDbId(value); }
+      }
+      public Builder SetPreviousLeaderDbId(ulong value) {
+        PrepareBuilder();
+        result.hasPreviousLeaderDbId = true;
+        result.previousLeaderDbId_ = value;
+        return this;
+      }
+      public Builder ClearPreviousLeaderDbId() {
+        PrepareBuilder();
+        result.hasPreviousLeaderDbId = false;
+        result.previousLeaderDbId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasLeaveReason {
+       get { return result.hasLeaveReason; }
+      }
+      public global::Gazillion.GroupLeaveReason LeaveReason {
+        get { return result.LeaveReason; }
+        set { SetLeaveReason(value); }
+      }
+      public Builder SetLeaveReason(global::Gazillion.GroupLeaveReason value) {
+        PrepareBuilder();
+        result.hasLeaveReason = true;
+        result.leaveReason_ = value;
+        return this;
+      }
+      public Builder ClearLeaveReason() {
+        PrepareBuilder();
+        result.hasLeaveReason = false;
+        result.leaveReason_ = global::Gazillion.GroupLeaveReason.GROUP_LEAVE_REASON_LEFT;
+        return this;
+      }
+    }
+    static GroupingManagerRemovedPlayer() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GroupingManagerAddedPlayer : pb::GeneratedMessage<GroupingManagerAddedPlayer, GroupingManagerAddedPlayer.Builder> {
+    private GroupingManagerAddedPlayer() { }
+    private static readonly GroupingManagerAddedPlayer defaultInstance = new GroupingManagerAddedPlayer().MakeReadOnly();
+    private static readonly string[] _groupingManagerAddedPlayerFieldNames = new string[] { "addedPlayer", "groupId", "requestingGameId" };
+    private static readonly uint[] _groupingManagerAddedPlayerFieldTags = new uint[] { 18, 24, 8 };
+    public static GroupingManagerAddedPlayer DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GroupingManagerAddedPlayer DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GroupingManagerAddedPlayer ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingManagerAddedPlayer__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GroupingManagerAddedPlayer, GroupingManagerAddedPlayer.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingManagerAddedPlayer__FieldAccessorTable; }
+    }
+    
+    public const int RequestingGameIdFieldNumber = 1;
+    private bool hasRequestingGameId;
+    private ulong requestingGameId_;
+    public bool HasRequestingGameId {
+      get { return hasRequestingGameId; }
+    }
+    public ulong RequestingGameId {
+      get { return requestingGameId_; }
+    }
+    
+    public const int AddedPlayerFieldNumber = 2;
+    private bool hasAddedPlayer;
+    private global::Gazillion.PerPlayerInfo addedPlayer_;
+    public bool HasAddedPlayer {
+      get { return hasAddedPlayer; }
+    }
+    public global::Gazillion.PerPlayerInfo AddedPlayer {
+      get { return addedPlayer_ ?? global::Gazillion.PerPlayerInfo.DefaultInstance; }
+    }
+    
+    public const int GroupIdFieldNumber = 3;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasRequestingGameId) return false;
+        if (!hasAddedPlayer) return false;
+        if (!hasGroupId) return false;
+        if (!AddedPlayer.IsInitialized) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _groupingManagerAddedPlayerFieldNames;
+      if (hasRequestingGameId) {
+        output.WriteUInt64(1, field_names[2], RequestingGameId);
+      }
+      if (hasAddedPlayer) {
+        output.WriteMessage(2, field_names[0], AddedPlayer);
+      }
+      if (hasGroupId) {
+        output.WriteUInt64(3, field_names[1], GroupId);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasRequestingGameId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, RequestingGameId);
+      }
+      if (hasAddedPlayer) {
+        size += pb::CodedOutputStream.ComputeMessageSize(2, AddedPlayer);
+      }
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, GroupId);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GroupingManagerAddedPlayer ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingManagerAddedPlayer ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerAddedPlayer ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingManagerAddedPlayer ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerAddedPlayer ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingManagerAddedPlayer ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerAddedPlayer ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GroupingManagerAddedPlayer ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GroupingManagerAddedPlayer ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingManagerAddedPlayer ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GroupingManagerAddedPlayer MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GroupingManagerAddedPlayer prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GroupingManagerAddedPlayer, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GroupingManagerAddedPlayer cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GroupingManagerAddedPlayer result;
+      
+      private GroupingManagerAddedPlayer PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GroupingManagerAddedPlayer original = result;
+          result = new GroupingManagerAddedPlayer();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GroupingManagerAddedPlayer MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GroupingManagerAddedPlayer.Descriptor; }
+      }
+      
+      public override GroupingManagerAddedPlayer DefaultInstanceForType {
+        get { return global::Gazillion.GroupingManagerAddedPlayer.DefaultInstance; }
+      }
+      
+      public override GroupingManagerAddedPlayer BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GroupingManagerAddedPlayer) {
+          return MergeFrom((GroupingManagerAddedPlayer) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GroupingManagerAddedPlayer other) {
+        if (other == global::Gazillion.GroupingManagerAddedPlayer.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasRequestingGameId) {
+          RequestingGameId = other.RequestingGameId;
+        }
+        if (other.HasAddedPlayer) {
+          MergeAddedPlayer(other.AddedPlayer);
+        }
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_groupingManagerAddedPlayerFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _groupingManagerAddedPlayerFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasRequestingGameId = input.ReadUInt64(ref result.requestingGameId_);
+              break;
+            }
+            case 18: {
+              global::Gazillion.PerPlayerInfo.Builder subBuilder = global::Gazillion.PerPlayerInfo.CreateBuilder();
+              if (result.hasAddedPlayer) {
+                subBuilder.MergeFrom(AddedPlayer);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              AddedPlayer = subBuilder.BuildPartial();
+              break;
+            }
+            case 24: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasRequestingGameId {
+        get { return result.hasRequestingGameId; }
+      }
+      public ulong RequestingGameId {
+        get { return result.RequestingGameId; }
+        set { SetRequestingGameId(value); }
+      }
+      public Builder SetRequestingGameId(ulong value) {
+        PrepareBuilder();
+        result.hasRequestingGameId = true;
+        result.requestingGameId_ = value;
+        return this;
+      }
+      public Builder ClearRequestingGameId() {
+        PrepareBuilder();
+        result.hasRequestingGameId = false;
+        result.requestingGameId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasAddedPlayer {
+       get { return result.hasAddedPlayer; }
+      }
+      public global::Gazillion.PerPlayerInfo AddedPlayer {
+        get { return result.AddedPlayer; }
+        set { SetAddedPlayer(value); }
+      }
+      public Builder SetAddedPlayer(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasAddedPlayer = true;
+        result.addedPlayer_ = value;
+        return this;
+      }
+      public Builder SetAddedPlayer(global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasAddedPlayer = true;
+        result.addedPlayer_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeAddedPlayer(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasAddedPlayer &&
+            result.addedPlayer_ != global::Gazillion.PerPlayerInfo.DefaultInstance) {
+            result.addedPlayer_ = global::Gazillion.PerPlayerInfo.CreateBuilder(result.addedPlayer_).MergeFrom(value).BuildPartial();
+        } else {
+          result.addedPlayer_ = value;
+        }
+        result.hasAddedPlayer = true;
+        return this;
+      }
+      public Builder ClearAddedPlayer() {
+        PrepareBuilder();
+        result.hasAddedPlayer = false;
+        result.addedPlayer_ = null;
+        return this;
+      }
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+    }
+    static GroupingManagerAddedPlayer() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GroupingManagerCreateGroup : pb::GeneratedMessage<GroupingManagerCreateGroup, GroupingManagerCreateGroup.Builder> {
+    private GroupingManagerCreateGroup() { }
+    private static readonly GroupingManagerCreateGroup defaultInstance = new GroupingManagerCreateGroup().MakeReadOnly();
+    private static readonly string[] _groupingManagerCreateGroupFieldNames = new string[] { "groupId", "groupPSNSessionId", "groupType", "leaderInfo", "requestingGameId" };
+    private static readonly uint[] _groupingManagerCreateGroupFieldTags = new uint[] { 16, 26, 32, 42, 8 };
+    public static GroupingManagerCreateGroup DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GroupingManagerCreateGroup DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GroupingManagerCreateGroup ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingManagerCreateGroup__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GroupingManagerCreateGroup, GroupingManagerCreateGroup.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingManagerCreateGroup__FieldAccessorTable; }
+    }
+    
+    public const int RequestingGameIdFieldNumber = 1;
+    private bool hasRequestingGameId;
+    private ulong requestingGameId_;
+    public bool HasRequestingGameId {
+      get { return hasRequestingGameId; }
+    }
+    public ulong RequestingGameId {
+      get { return requestingGameId_; }
+    }
+    
+    public const int GroupIdFieldNumber = 2;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int GroupPSNSessionIdFieldNumber = 3;
+    private bool hasGroupPSNSessionId;
+    private string groupPSNSessionId_ = "";
+    public bool HasGroupPSNSessionId {
+      get { return hasGroupPSNSessionId; }
+    }
+    public string GroupPSNSessionId {
+      get { return groupPSNSessionId_; }
+    }
+    
+    public const int GroupTypeFieldNumber = 4;
+    private bool hasGroupType;
+    private global::Gazillion.GroupType groupType_ = global::Gazillion.GroupType.GroupType_Invalid;
+    public bool HasGroupType {
+      get { return hasGroupType; }
+    }
+    public global::Gazillion.GroupType GroupType {
+      get { return groupType_; }
+    }
+    
+    public const int LeaderInfoFieldNumber = 5;
+    private bool hasLeaderInfo;
+    private global::Gazillion.PerPlayerInfo leaderInfo_;
+    public bool HasLeaderInfo {
+      get { return hasLeaderInfo; }
+    }
+    public global::Gazillion.PerPlayerInfo LeaderInfo {
+      get { return leaderInfo_ ?? global::Gazillion.PerPlayerInfo.DefaultInstance; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasRequestingGameId) return false;
+        if (!hasGroupId) return false;
+        if (!hasGroupType) return false;
+        if (!hasLeaderInfo) return false;
+        if (!LeaderInfo.IsInitialized) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _groupingManagerCreateGroupFieldNames;
+      if (hasRequestingGameId) {
+        output.WriteUInt64(1, field_names[4], RequestingGameId);
+      }
+      if (hasGroupId) {
+        output.WriteUInt64(2, field_names[0], GroupId);
+      }
+      if (hasGroupPSNSessionId) {
+        output.WriteString(3, field_names[1], GroupPSNSessionId);
+      }
+      if (hasGroupType) {
+        output.WriteEnum(4, field_names[2], (int) GroupType, GroupType);
+      }
+      if (hasLeaderInfo) {
+        output.WriteMessage(5, field_names[3], LeaderInfo);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasRequestingGameId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, RequestingGameId);
+      }
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, GroupId);
+      }
+      if (hasGroupPSNSessionId) {
+        size += pb::CodedOutputStream.ComputeStringSize(3, GroupPSNSessionId);
+      }
+      if (hasGroupType) {
+        size += pb::CodedOutputStream.ComputeEnumSize(4, (int) GroupType);
+      }
+      if (hasLeaderInfo) {
+        size += pb::CodedOutputStream.ComputeMessageSize(5, LeaderInfo);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GroupingManagerCreateGroup ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingManagerCreateGroup ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerCreateGroup ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingManagerCreateGroup ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerCreateGroup ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingManagerCreateGroup ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerCreateGroup ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GroupingManagerCreateGroup ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GroupingManagerCreateGroup ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingManagerCreateGroup ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GroupingManagerCreateGroup MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GroupingManagerCreateGroup prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GroupingManagerCreateGroup, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GroupingManagerCreateGroup cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GroupingManagerCreateGroup result;
+      
+      private GroupingManagerCreateGroup PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GroupingManagerCreateGroup original = result;
+          result = new GroupingManagerCreateGroup();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GroupingManagerCreateGroup MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GroupingManagerCreateGroup.Descriptor; }
+      }
+      
+      public override GroupingManagerCreateGroup DefaultInstanceForType {
+        get { return global::Gazillion.GroupingManagerCreateGroup.DefaultInstance; }
+      }
+      
+      public override GroupingManagerCreateGroup BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GroupingManagerCreateGroup) {
+          return MergeFrom((GroupingManagerCreateGroup) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GroupingManagerCreateGroup other) {
+        if (other == global::Gazillion.GroupingManagerCreateGroup.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasRequestingGameId) {
+          RequestingGameId = other.RequestingGameId;
+        }
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasGroupPSNSessionId) {
+          GroupPSNSessionId = other.GroupPSNSessionId;
+        }
+        if (other.HasGroupType) {
+          GroupType = other.GroupType;
+        }
+        if (other.HasLeaderInfo) {
+          MergeLeaderInfo(other.LeaderInfo);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_groupingManagerCreateGroupFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _groupingManagerCreateGroupFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasRequestingGameId = input.ReadUInt64(ref result.requestingGameId_);
+              break;
+            }
+            case 16: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 26: {
+              result.hasGroupPSNSessionId = input.ReadString(ref result.groupPSNSessionId_);
+              break;
+            }
+            case 32: {
+              object unknown;
+              if(input.ReadEnum(ref result.groupType_, out unknown)) {
+                result.hasGroupType = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(4, (ulong)(int)unknown);
+              }
+              break;
+            }
+            case 42: {
+              global::Gazillion.PerPlayerInfo.Builder subBuilder = global::Gazillion.PerPlayerInfo.CreateBuilder();
+              if (result.hasLeaderInfo) {
+                subBuilder.MergeFrom(LeaderInfo);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              LeaderInfo = subBuilder.BuildPartial();
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasRequestingGameId {
+        get { return result.hasRequestingGameId; }
+      }
+      public ulong RequestingGameId {
+        get { return result.RequestingGameId; }
+        set { SetRequestingGameId(value); }
+      }
+      public Builder SetRequestingGameId(ulong value) {
+        PrepareBuilder();
+        result.hasRequestingGameId = true;
+        result.requestingGameId_ = value;
+        return this;
+      }
+      public Builder ClearRequestingGameId() {
+        PrepareBuilder();
+        result.hasRequestingGameId = false;
+        result.requestingGameId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupPSNSessionId {
+        get { return result.hasGroupPSNSessionId; }
+      }
+      public string GroupPSNSessionId {
+        get { return result.GroupPSNSessionId; }
+        set { SetGroupPSNSessionId(value); }
+      }
+      public Builder SetGroupPSNSessionId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGroupPSNSessionId = true;
+        result.groupPSNSessionId_ = value;
+        return this;
+      }
+      public Builder ClearGroupPSNSessionId() {
+        PrepareBuilder();
+        result.hasGroupPSNSessionId = false;
+        result.groupPSNSessionId_ = "";
+        return this;
+      }
+      
+      public bool HasGroupType {
+       get { return result.hasGroupType; }
+      }
+      public global::Gazillion.GroupType GroupType {
+        get { return result.GroupType; }
+        set { SetGroupType(value); }
+      }
+      public Builder SetGroupType(global::Gazillion.GroupType value) {
+        PrepareBuilder();
+        result.hasGroupType = true;
+        result.groupType_ = value;
+        return this;
+      }
+      public Builder ClearGroupType() {
+        PrepareBuilder();
+        result.hasGroupType = false;
+        result.groupType_ = global::Gazillion.GroupType.GroupType_Invalid;
+        return this;
+      }
+      
+      public bool HasLeaderInfo {
+       get { return result.hasLeaderInfo; }
+      }
+      public global::Gazillion.PerPlayerInfo LeaderInfo {
+        get { return result.LeaderInfo; }
+        set { SetLeaderInfo(value); }
+      }
+      public Builder SetLeaderInfo(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasLeaderInfo = true;
+        result.leaderInfo_ = value;
+        return this;
+      }
+      public Builder SetLeaderInfo(global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasLeaderInfo = true;
+        result.leaderInfo_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeLeaderInfo(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasLeaderInfo &&
+            result.leaderInfo_ != global::Gazillion.PerPlayerInfo.DefaultInstance) {
+            result.leaderInfo_ = global::Gazillion.PerPlayerInfo.CreateBuilder(result.leaderInfo_).MergeFrom(value).BuildPartial();
+        } else {
+          result.leaderInfo_ = value;
+        }
+        result.hasLeaderInfo = true;
+        return this;
+      }
+      public Builder ClearLeaderInfo() {
+        PrepareBuilder();
+        result.hasLeaderInfo = false;
+        result.leaderInfo_ = null;
+        return this;
+      }
+    }
+    static GroupingManagerCreateGroup() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GroupingManagerGroupChangeType : pb::GeneratedMessage<GroupingManagerGroupChangeType, GroupingManagerGroupChangeType.Builder> {
+    private GroupingManagerGroupChangeType() { }
+    private static readonly GroupingManagerGroupChangeType defaultInstance = new GroupingManagerGroupChangeType().MakeReadOnly();
+    private static readonly string[] _groupingManagerGroupChangeTypeFieldNames = new string[] { "groupId", "requestingGameId", "type" };
+    private static readonly uint[] _groupingManagerGroupChangeTypeFieldTags = new uint[] { 16, 8, 24 };
+    public static GroupingManagerGroupChangeType DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GroupingManagerGroupChangeType DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GroupingManagerGroupChangeType ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingManagerGroupChangeType__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GroupingManagerGroupChangeType, GroupingManagerGroupChangeType.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingManagerGroupChangeType__FieldAccessorTable; }
+    }
+    
+    public const int RequestingGameIdFieldNumber = 1;
+    private bool hasRequestingGameId;
+    private ulong requestingGameId_;
+    public bool HasRequestingGameId {
+      get { return hasRequestingGameId; }
+    }
+    public ulong RequestingGameId {
+      get { return requestingGameId_; }
+    }
+    
+    public const int GroupIdFieldNumber = 2;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int TypeFieldNumber = 3;
+    private bool hasType;
+    private global::Gazillion.GroupType type_ = global::Gazillion.GroupType.GroupType_Invalid;
+    public bool HasType {
+      get { return hasType; }
+    }
+    public global::Gazillion.GroupType Type {
+      get { return type_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasRequestingGameId) return false;
+        if (!hasGroupId) return false;
+        if (!hasType) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _groupingManagerGroupChangeTypeFieldNames;
+      if (hasRequestingGameId) {
+        output.WriteUInt64(1, field_names[1], RequestingGameId);
+      }
+      if (hasGroupId) {
+        output.WriteUInt64(2, field_names[0], GroupId);
+      }
+      if (hasType) {
+        output.WriteEnum(3, field_names[2], (int) Type, Type);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasRequestingGameId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, RequestingGameId);
+      }
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, GroupId);
+      }
+      if (hasType) {
+        size += pb::CodedOutputStream.ComputeEnumSize(3, (int) Type);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GroupingManagerGroupChangeType ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingManagerGroupChangeType ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerGroupChangeType ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingManagerGroupChangeType ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerGroupChangeType ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingManagerGroupChangeType ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerGroupChangeType ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GroupingManagerGroupChangeType ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GroupingManagerGroupChangeType ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingManagerGroupChangeType ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GroupingManagerGroupChangeType MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GroupingManagerGroupChangeType prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GroupingManagerGroupChangeType, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GroupingManagerGroupChangeType cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GroupingManagerGroupChangeType result;
+      
+      private GroupingManagerGroupChangeType PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GroupingManagerGroupChangeType original = result;
+          result = new GroupingManagerGroupChangeType();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GroupingManagerGroupChangeType MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GroupingManagerGroupChangeType.Descriptor; }
+      }
+      
+      public override GroupingManagerGroupChangeType DefaultInstanceForType {
+        get { return global::Gazillion.GroupingManagerGroupChangeType.DefaultInstance; }
+      }
+      
+      public override GroupingManagerGroupChangeType BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GroupingManagerGroupChangeType) {
+          return MergeFrom((GroupingManagerGroupChangeType) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GroupingManagerGroupChangeType other) {
+        if (other == global::Gazillion.GroupingManagerGroupChangeType.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasRequestingGameId) {
+          RequestingGameId = other.RequestingGameId;
+        }
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasType) {
+          Type = other.Type;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_groupingManagerGroupChangeTypeFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _groupingManagerGroupChangeTypeFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasRequestingGameId = input.ReadUInt64(ref result.requestingGameId_);
+              break;
+            }
+            case 16: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 24: {
+              object unknown;
+              if(input.ReadEnum(ref result.type_, out unknown)) {
+                result.hasType = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(3, (ulong)(int)unknown);
+              }
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasRequestingGameId {
+        get { return result.hasRequestingGameId; }
+      }
+      public ulong RequestingGameId {
+        get { return result.RequestingGameId; }
+        set { SetRequestingGameId(value); }
+      }
+      public Builder SetRequestingGameId(ulong value) {
+        PrepareBuilder();
+        result.hasRequestingGameId = true;
+        result.requestingGameId_ = value;
+        return this;
+      }
+      public Builder ClearRequestingGameId() {
+        PrepareBuilder();
+        result.hasRequestingGameId = false;
+        result.requestingGameId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasType {
+       get { return result.hasType; }
+      }
+      public global::Gazillion.GroupType Type {
+        get { return result.Type; }
+        set { SetType(value); }
+      }
+      public Builder SetType(global::Gazillion.GroupType value) {
+        PrepareBuilder();
+        result.hasType = true;
+        result.type_ = value;
+        return this;
+      }
+      public Builder ClearType() {
+        PrepareBuilder();
+        result.hasType = false;
+        result.type_ = global::Gazillion.GroupType.GroupType_Invalid;
+        return this;
+      }
+    }
+    static GroupingManagerGroupChangeType() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GroupingManagerPlayerEnteredRegion : pb::GeneratedMessage<GroupingManagerPlayerEnteredRegion, GroupingManagerPlayerEnteredRegion.Builder> {
+    private GroupingManagerPlayerEnteredRegion() { }
+    private static readonly GroupingManagerPlayerEnteredRegion defaultInstance = new GroupingManagerPlayerEnteredRegion().MakeReadOnly();
+    private static readonly string[] _groupingManagerPlayerEnteredRegionFieldNames = new string[] { "groupId", "groupPSNSessionId", "groupType", "leaderInfo", "members", "playerDbId", "requestingGameId" };
+    private static readonly uint[] _groupingManagerPlayerEnteredRegionFieldTags = new uint[] { 24, 34, 40, 50, 58, 8, 16 };
+    public static GroupingManagerPlayerEnteredRegion DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GroupingManagerPlayerEnteredRegion DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GroupingManagerPlayerEnteredRegion ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingManagerPlayerEnteredRegion__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GroupingManagerPlayerEnteredRegion, GroupingManagerPlayerEnteredRegion.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingManagerPlayerEnteredRegion__FieldAccessorTable; }
+    }
+    
+    public const int PlayerDbIdFieldNumber = 1;
+    private bool hasPlayerDbId;
+    private ulong playerDbId_;
+    public bool HasPlayerDbId {
+      get { return hasPlayerDbId; }
+    }
+    public ulong PlayerDbId {
+      get { return playerDbId_; }
+    }
+    
+    public const int RequestingGameIdFieldNumber = 2;
+    private bool hasRequestingGameId;
+    private ulong requestingGameId_;
+    public bool HasRequestingGameId {
+      get { return hasRequestingGameId; }
+    }
+    public ulong RequestingGameId {
+      get { return requestingGameId_; }
+    }
+    
+    public const int GroupIdFieldNumber = 3;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int GroupPSNSessionIdFieldNumber = 4;
+    private bool hasGroupPSNSessionId;
+    private string groupPSNSessionId_ = "";
+    public bool HasGroupPSNSessionId {
+      get { return hasGroupPSNSessionId; }
+    }
+    public string GroupPSNSessionId {
+      get { return groupPSNSessionId_; }
+    }
+    
+    public const int GroupTypeFieldNumber = 5;
+    private bool hasGroupType;
+    private global::Gazillion.GroupType groupType_ = global::Gazillion.GroupType.GroupType_Invalid;
+    public bool HasGroupType {
+      get { return hasGroupType; }
+    }
+    public global::Gazillion.GroupType GroupType {
+      get { return groupType_; }
+    }
+    
+    public const int LeaderInfoFieldNumber = 6;
+    private bool hasLeaderInfo;
+    private global::Gazillion.PerPlayerInfo leaderInfo_;
+    public bool HasLeaderInfo {
+      get { return hasLeaderInfo; }
+    }
+    public global::Gazillion.PerPlayerInfo LeaderInfo {
+      get { return leaderInfo_ ?? global::Gazillion.PerPlayerInfo.DefaultInstance; }
+    }
+    
+    public const int MembersFieldNumber = 7;
+    private pbc::PopsicleList<global::Gazillion.PerPlayerInfo> members_ = new pbc::PopsicleList<global::Gazillion.PerPlayerInfo>();
+    public scg::IList<global::Gazillion.PerPlayerInfo> MembersList {
+      get { return members_; }
+    }
+    public int MembersCount {
+      get { return members_.Count; }
+    }
+    public global::Gazillion.PerPlayerInfo GetMembers(int index) {
+      return members_[index];
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasPlayerDbId) return false;
+        if (!hasRequestingGameId) return false;
+        if (!hasGroupId) return false;
+        if (!hasGroupType) return false;
+        if (HasLeaderInfo) {
+          if (!LeaderInfo.IsInitialized) return false;
+        }
+        foreach (global::Gazillion.PerPlayerInfo element in MembersList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _groupingManagerPlayerEnteredRegionFieldNames;
+      if (hasPlayerDbId) {
+        output.WriteUInt64(1, field_names[5], PlayerDbId);
+      }
+      if (hasRequestingGameId) {
+        output.WriteUInt64(2, field_names[6], RequestingGameId);
+      }
+      if (hasGroupId) {
+        output.WriteUInt64(3, field_names[0], GroupId);
+      }
+      if (hasGroupPSNSessionId) {
+        output.WriteString(4, field_names[1], GroupPSNSessionId);
+      }
+      if (hasGroupType) {
+        output.WriteEnum(5, field_names[2], (int) GroupType, GroupType);
+      }
+      if (hasLeaderInfo) {
+        output.WriteMessage(6, field_names[3], LeaderInfo);
+      }
+      if (members_.Count > 0) {
+        output.WriteMessageArray(7, field_names[4], members_);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasPlayerDbId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, PlayerDbId);
+      }
+      if (hasRequestingGameId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, RequestingGameId);
+      }
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, GroupId);
+      }
+      if (hasGroupPSNSessionId) {
+        size += pb::CodedOutputStream.ComputeStringSize(4, GroupPSNSessionId);
+      }
+      if (hasGroupType) {
+        size += pb::CodedOutputStream.ComputeEnumSize(5, (int) GroupType);
+      }
+      if (hasLeaderInfo) {
+        size += pb::CodedOutputStream.ComputeMessageSize(6, LeaderInfo);
+      }
+      foreach (global::Gazillion.PerPlayerInfo element in MembersList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(7, element);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GroupingManagerPlayerEnteredRegion ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingManagerPlayerEnteredRegion ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerPlayerEnteredRegion ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingManagerPlayerEnteredRegion ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerPlayerEnteredRegion ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingManagerPlayerEnteredRegion ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerPlayerEnteredRegion ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GroupingManagerPlayerEnteredRegion ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GroupingManagerPlayerEnteredRegion ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingManagerPlayerEnteredRegion ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GroupingManagerPlayerEnteredRegion MakeReadOnly() {
+      members_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GroupingManagerPlayerEnteredRegion prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GroupingManagerPlayerEnteredRegion, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GroupingManagerPlayerEnteredRegion cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GroupingManagerPlayerEnteredRegion result;
+      
+      private GroupingManagerPlayerEnteredRegion PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GroupingManagerPlayerEnteredRegion original = result;
+          result = new GroupingManagerPlayerEnteredRegion();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GroupingManagerPlayerEnteredRegion MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GroupingManagerPlayerEnteredRegion.Descriptor; }
+      }
+      
+      public override GroupingManagerPlayerEnteredRegion DefaultInstanceForType {
+        get { return global::Gazillion.GroupingManagerPlayerEnteredRegion.DefaultInstance; }
+      }
+      
+      public override GroupingManagerPlayerEnteredRegion BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GroupingManagerPlayerEnteredRegion) {
+          return MergeFrom((GroupingManagerPlayerEnteredRegion) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GroupingManagerPlayerEnteredRegion other) {
+        if (other == global::Gazillion.GroupingManagerPlayerEnteredRegion.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasPlayerDbId) {
+          PlayerDbId = other.PlayerDbId;
+        }
+        if (other.HasRequestingGameId) {
+          RequestingGameId = other.RequestingGameId;
+        }
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasGroupPSNSessionId) {
+          GroupPSNSessionId = other.GroupPSNSessionId;
+        }
+        if (other.HasGroupType) {
+          GroupType = other.GroupType;
+        }
+        if (other.HasLeaderInfo) {
+          MergeLeaderInfo(other.LeaderInfo);
+        }
+        if (other.members_.Count != 0) {
+          result.members_.Add(other.members_);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_groupingManagerPlayerEnteredRegionFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _groupingManagerPlayerEnteredRegionFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasPlayerDbId = input.ReadUInt64(ref result.playerDbId_);
+              break;
+            }
+            case 16: {
+              result.hasRequestingGameId = input.ReadUInt64(ref result.requestingGameId_);
+              break;
+            }
+            case 24: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 34: {
+              result.hasGroupPSNSessionId = input.ReadString(ref result.groupPSNSessionId_);
+              break;
+            }
+            case 40: {
+              object unknown;
+              if(input.ReadEnum(ref result.groupType_, out unknown)) {
+                result.hasGroupType = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(5, (ulong)(int)unknown);
+              }
+              break;
+            }
+            case 50: {
+              global::Gazillion.PerPlayerInfo.Builder subBuilder = global::Gazillion.PerPlayerInfo.CreateBuilder();
+              if (result.hasLeaderInfo) {
+                subBuilder.MergeFrom(LeaderInfo);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              LeaderInfo = subBuilder.BuildPartial();
+              break;
+            }
+            case 58: {
+              input.ReadMessageArray(tag, field_name, result.members_, global::Gazillion.PerPlayerInfo.DefaultInstance, extensionRegistry);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasPlayerDbId {
+        get { return result.hasPlayerDbId; }
+      }
+      public ulong PlayerDbId {
+        get { return result.PlayerDbId; }
+        set { SetPlayerDbId(value); }
+      }
+      public Builder SetPlayerDbId(ulong value) {
+        PrepareBuilder();
+        result.hasPlayerDbId = true;
+        result.playerDbId_ = value;
+        return this;
+      }
+      public Builder ClearPlayerDbId() {
+        PrepareBuilder();
+        result.hasPlayerDbId = false;
+        result.playerDbId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasRequestingGameId {
+        get { return result.hasRequestingGameId; }
+      }
+      public ulong RequestingGameId {
+        get { return result.RequestingGameId; }
+        set { SetRequestingGameId(value); }
+      }
+      public Builder SetRequestingGameId(ulong value) {
+        PrepareBuilder();
+        result.hasRequestingGameId = true;
+        result.requestingGameId_ = value;
+        return this;
+      }
+      public Builder ClearRequestingGameId() {
+        PrepareBuilder();
+        result.hasRequestingGameId = false;
+        result.requestingGameId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupPSNSessionId {
+        get { return result.hasGroupPSNSessionId; }
+      }
+      public string GroupPSNSessionId {
+        get { return result.GroupPSNSessionId; }
+        set { SetGroupPSNSessionId(value); }
+      }
+      public Builder SetGroupPSNSessionId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGroupPSNSessionId = true;
+        result.groupPSNSessionId_ = value;
+        return this;
+      }
+      public Builder ClearGroupPSNSessionId() {
+        PrepareBuilder();
+        result.hasGroupPSNSessionId = false;
+        result.groupPSNSessionId_ = "";
+        return this;
+      }
+      
+      public bool HasGroupType {
+       get { return result.hasGroupType; }
+      }
+      public global::Gazillion.GroupType GroupType {
+        get { return result.GroupType; }
+        set { SetGroupType(value); }
+      }
+      public Builder SetGroupType(global::Gazillion.GroupType value) {
+        PrepareBuilder();
+        result.hasGroupType = true;
+        result.groupType_ = value;
+        return this;
+      }
+      public Builder ClearGroupType() {
+        PrepareBuilder();
+        result.hasGroupType = false;
+        result.groupType_ = global::Gazillion.GroupType.GroupType_Invalid;
+        return this;
+      }
+      
+      public bool HasLeaderInfo {
+       get { return result.hasLeaderInfo; }
+      }
+      public global::Gazillion.PerPlayerInfo LeaderInfo {
+        get { return result.LeaderInfo; }
+        set { SetLeaderInfo(value); }
+      }
+      public Builder SetLeaderInfo(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasLeaderInfo = true;
+        result.leaderInfo_ = value;
+        return this;
+      }
+      public Builder SetLeaderInfo(global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasLeaderInfo = true;
+        result.leaderInfo_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeLeaderInfo(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasLeaderInfo &&
+            result.leaderInfo_ != global::Gazillion.PerPlayerInfo.DefaultInstance) {
+            result.leaderInfo_ = global::Gazillion.PerPlayerInfo.CreateBuilder(result.leaderInfo_).MergeFrom(value).BuildPartial();
+        } else {
+          result.leaderInfo_ = value;
+        }
+        result.hasLeaderInfo = true;
+        return this;
+      }
+      public Builder ClearLeaderInfo() {
+        PrepareBuilder();
+        result.hasLeaderInfo = false;
+        result.leaderInfo_ = null;
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.PerPlayerInfo> MembersList {
+        get { return PrepareBuilder().members_; }
+      }
+      public int MembersCount {
+        get { return result.MembersCount; }
+      }
+      public global::Gazillion.PerPlayerInfo GetMembers(int index) {
+        return result.GetMembers(index);
+      }
+      public Builder SetMembers(int index, global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.members_[index] = value;
+        return this;
+      }
+      public Builder SetMembers(int index, global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.members_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddMembers(global::Gazillion.PerPlayerInfo value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.members_.Add(value);
+        return this;
+      }
+      public Builder AddMembers(global::Gazillion.PerPlayerInfo.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.members_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeMembers(scg::IEnumerable<global::Gazillion.PerPlayerInfo> values) {
+        PrepareBuilder();
+        result.members_.Add(values);
+        return this;
+      }
+      public Builder ClearMembers() {
+        PrepareBuilder();
+        result.members_.Clear();
+        return this;
+      }
+    }
+    static GroupingManagerPlayerEnteredRegion() {
+      object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GroupingManagerUpdatedPartyBoostCount : pb::GeneratedMessage<GroupingManagerUpdatedPartyBoostCount, GroupingManagerUpdatedPartyBoostCount.Builder> {
+    private GroupingManagerUpdatedPartyBoostCount() { }
+    private static readonly GroupingManagerUpdatedPartyBoostCount defaultInstance = new GroupingManagerUpdatedPartyBoostCount().MakeReadOnly();
+    private static readonly string[] _groupingManagerUpdatedPartyBoostCountFieldNames = new string[] { "count", "groupId", "partyBoostCondition", "requestingGameId", "requestingPlayer" };
+    private static readonly uint[] _groupingManagerUpdatedPartyBoostCountFieldTags = new uint[] { 32, 24, 16, 8, 40 };
+    public static GroupingManagerUpdatedPartyBoostCount DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GroupingManagerUpdatedPartyBoostCount DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GroupingManagerUpdatedPartyBoostCount ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingManagerUpdatedPartyBoostCount__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GroupingManagerUpdatedPartyBoostCount, GroupingManagerUpdatedPartyBoostCount.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.GroupingManager.internal__static_Gazillion_GroupingManagerUpdatedPartyBoostCount__FieldAccessorTable; }
+    }
+    
+    public const int RequestingGameIdFieldNumber = 1;
+    private bool hasRequestingGameId;
+    private ulong requestingGameId_;
+    public bool HasRequestingGameId {
+      get { return hasRequestingGameId; }
+    }
+    public ulong RequestingGameId {
+      get { return requestingGameId_; }
+    }
+    
+    public const int PartyBoostConditionFieldNumber = 2;
+    private bool hasPartyBoostCondition;
+    private ulong partyBoostCondition_;
+    public bool HasPartyBoostCondition {
+      get { return hasPartyBoostCondition; }
+    }
+    public ulong PartyBoostCondition {
+      get { return partyBoostCondition_; }
+    }
+    
+    public const int GroupIdFieldNumber = 3;
+    private bool hasGroupId;
+    private ulong groupId_;
+    public bool HasGroupId {
+      get { return hasGroupId; }
+    }
+    public ulong GroupId {
+      get { return groupId_; }
+    }
+    
+    public const int CountFieldNumber = 4;
+    private bool hasCount;
+    private uint count_;
+    public bool HasCount {
+      get { return hasCount; }
+    }
+    public uint Count {
+      get { return count_; }
+    }
+    
+    public const int RequestingPlayerFieldNumber = 5;
+    private bool hasRequestingPlayer;
+    private ulong requestingPlayer_;
+    public bool HasRequestingPlayer {
+      get { return hasRequestingPlayer; }
+    }
+    public ulong RequestingPlayer {
+      get { return requestingPlayer_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasRequestingGameId) return false;
+        if (!hasPartyBoostCondition) return false;
+        if (!hasGroupId) return false;
+        if (!hasCount) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _groupingManagerUpdatedPartyBoostCountFieldNames;
+      if (hasRequestingGameId) {
+        output.WriteUInt64(1, field_names[3], RequestingGameId);
+      }
+      if (hasPartyBoostCondition) {
+        output.WriteUInt64(2, field_names[2], PartyBoostCondition);
+      }
+      if (hasGroupId) {
+        output.WriteUInt64(3, field_names[1], GroupId);
+      }
+      if (hasCount) {
+        output.WriteUInt32(4, field_names[0], Count);
+      }
+      if (hasRequestingPlayer) {
+        output.WriteUInt64(5, field_names[4], RequestingPlayer);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasRequestingGameId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, RequestingGameId);
+      }
+      if (hasPartyBoostCondition) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, PartyBoostCondition);
+      }
+      if (hasGroupId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, GroupId);
+      }
+      if (hasCount) {
+        size += pb::CodedOutputStream.ComputeUInt32Size(4, Count);
+      }
+      if (hasRequestingPlayer) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(5, RequestingPlayer);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GroupingManagerUpdatedPartyBoostCount ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingManagerUpdatedPartyBoostCount ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerUpdatedPartyBoostCount ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GroupingManagerUpdatedPartyBoostCount ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerUpdatedPartyBoostCount ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingManagerUpdatedPartyBoostCount ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GroupingManagerUpdatedPartyBoostCount ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GroupingManagerUpdatedPartyBoostCount ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GroupingManagerUpdatedPartyBoostCount ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GroupingManagerUpdatedPartyBoostCount ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GroupingManagerUpdatedPartyBoostCount MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GroupingManagerUpdatedPartyBoostCount prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GroupingManagerUpdatedPartyBoostCount, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GroupingManagerUpdatedPartyBoostCount cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GroupingManagerUpdatedPartyBoostCount result;
+      
+      private GroupingManagerUpdatedPartyBoostCount PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GroupingManagerUpdatedPartyBoostCount original = result;
+          result = new GroupingManagerUpdatedPartyBoostCount();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GroupingManagerUpdatedPartyBoostCount MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GroupingManagerUpdatedPartyBoostCount.Descriptor; }
+      }
+      
+      public override GroupingManagerUpdatedPartyBoostCount DefaultInstanceForType {
+        get { return global::Gazillion.GroupingManagerUpdatedPartyBoostCount.DefaultInstance; }
+      }
+      
+      public override GroupingManagerUpdatedPartyBoostCount BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GroupingManagerUpdatedPartyBoostCount) {
+          return MergeFrom((GroupingManagerUpdatedPartyBoostCount) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GroupingManagerUpdatedPartyBoostCount other) {
+        if (other == global::Gazillion.GroupingManagerUpdatedPartyBoostCount.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasRequestingGameId) {
+          RequestingGameId = other.RequestingGameId;
+        }
+        if (other.HasPartyBoostCondition) {
+          PartyBoostCondition = other.PartyBoostCondition;
+        }
+        if (other.HasGroupId) {
+          GroupId = other.GroupId;
+        }
+        if (other.HasCount) {
+          Count = other.Count;
+        }
+        if (other.HasRequestingPlayer) {
+          RequestingPlayer = other.RequestingPlayer;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_groupingManagerUpdatedPartyBoostCountFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _groupingManagerUpdatedPartyBoostCountFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasRequestingGameId = input.ReadUInt64(ref result.requestingGameId_);
+              break;
+            }
+            case 16: {
+              result.hasPartyBoostCondition = input.ReadUInt64(ref result.partyBoostCondition_);
+              break;
+            }
+            case 24: {
+              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
+              break;
+            }
+            case 32: {
+              result.hasCount = input.ReadUInt32(ref result.count_);
+              break;
+            }
+            case 40: {
+              result.hasRequestingPlayer = input.ReadUInt64(ref result.requestingPlayer_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasRequestingGameId {
+        get { return result.hasRequestingGameId; }
+      }
+      public ulong RequestingGameId {
+        get { return result.RequestingGameId; }
+        set { SetRequestingGameId(value); }
+      }
+      public Builder SetRequestingGameId(ulong value) {
+        PrepareBuilder();
+        result.hasRequestingGameId = true;
+        result.requestingGameId_ = value;
+        return this;
+      }
+      public Builder ClearRequestingGameId() {
+        PrepareBuilder();
+        result.hasRequestingGameId = false;
+        result.requestingGameId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasPartyBoostCondition {
+        get { return result.hasPartyBoostCondition; }
+      }
+      public ulong PartyBoostCondition {
+        get { return result.PartyBoostCondition; }
+        set { SetPartyBoostCondition(value); }
+      }
+      public Builder SetPartyBoostCondition(ulong value) {
+        PrepareBuilder();
+        result.hasPartyBoostCondition = true;
+        result.partyBoostCondition_ = value;
+        return this;
+      }
+      public Builder ClearPartyBoostCondition() {
+        PrepareBuilder();
+        result.hasPartyBoostCondition = false;
+        result.partyBoostCondition_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGroupId {
+        get { return result.hasGroupId; }
+      }
+      public ulong GroupId {
+        get { return result.GroupId; }
+        set { SetGroupId(value); }
+      }
+      public Builder SetGroupId(ulong value) {
+        PrepareBuilder();
+        result.hasGroupId = true;
+        result.groupId_ = value;
+        return this;
+      }
+      public Builder ClearGroupId() {
+        PrepareBuilder();
+        result.hasGroupId = false;
+        result.groupId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasCount {
+        get { return result.hasCount; }
+      }
+      public uint Count {
+        get { return result.Count; }
+        set { SetCount(value); }
+      }
+      public Builder SetCount(uint value) {
+        PrepareBuilder();
+        result.hasCount = true;
+        result.count_ = value;
+        return this;
+      }
+      public Builder ClearCount() {
+        PrepareBuilder();
+        result.hasCount = false;
+        result.count_ = 0;
+        return this;
+      }
+      
+      public bool HasRequestingPlayer {
+        get { return result.hasRequestingPlayer; }
+      }
+      public ulong RequestingPlayer {
+        get { return result.RequestingPlayer; }
+        set { SetRequestingPlayer(value); }
+      }
+      public Builder SetRequestingPlayer(ulong value) {
+        PrepareBuilder();
+        result.hasRequestingPlayer = true;
+        result.requestingPlayer_ = value;
+        return this;
+      }
+      public Builder ClearRequestingPlayer() {
+        PrepareBuilder();
+        result.hasRequestingPlayer = false;
+        result.requestingPlayer_ = 0UL;
+        return this;
+      }
+    }
+    static GroupingManagerUpdatedPartyBoostCount() {
       object.ReferenceEquals(global::Gazillion.GroupingManager.Descriptor, null);
     }
   }

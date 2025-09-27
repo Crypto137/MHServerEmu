@@ -319,10 +319,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 ListPool<(PrototypeId, int)>.Instance.Return(pvpUpgradeList);
 
                 // Apply alternate advancement (infinity / omega) bonuses
-                if (Game.InfinitySystemEnabled)
-                    ApplyInfinityBonuses();
-                else
-                    ApplyOmegaBonuses();
+                ApplyOmegaBonuses();
             }
 
             return result;
@@ -3943,22 +3940,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             long awardedAmount = base.AwardXP(amount, minAmount, showXPAwardedText);
 
             // Award alternate advancement XP (omega or infinity)
-            if (Game.InfinitySystemEnabled)
-            {
-                float infinityLiveTuningMult = 1f;
-                if (LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForInfinityXP) == 0f || player.CanUseLiveTuneBonuses())
-                    infinityLiveTuningMult = Math.Max(LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_InfinityXPPct), 0f);
+            float omegaLiveTuningMult = 1f;
+            if (LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForOmegaXP) == 0f || player.CanUseLiveTuneBonuses())
+                omegaLiveTuningMult = Math.Max(LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_OmegaXPPct), 0f);
 
-                player.AwardInfinityXP((long)(amount * infinityLiveTuningMult), true);
-            }
-            else
-            {
-                float omegaLiveTuningMult = 1f;
-                if (LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForOmegaXP) == 0f || player.CanUseLiveTuneBonuses())
-                    omegaLiveTuningMult = Math.Max(LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_OmegaXPPct), 0f);
-
-                player.AwardOmegaXP((long)(amount * omegaLiveTuningMult), true);
-            }
+            player.AwardOmegaXP((long)(amount * omegaLiveTuningMult), true);
 
             // Award XP to the equipped legendary item if there is one
             Inventory legendaryInventory = GetInventory(InventoryConvenienceLabel.AvatarLegendary);
@@ -6284,17 +6270,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                     }
 
                     break;
-
-                case PropertyEnum.DifficultyTierPreference:
-                    {
-                        Player player = GetOwnerOfType<Player>();
-                        if (player != null)
-                        {
-                            player.SendDifficultyTierPreferenceToPlayerManager();
-                            player.UpdatePartyDifficulty(newValue);
-                        }
-                    }
-                    break;
             }
         }
 
@@ -6396,10 +6371,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Assign powers
             InitializePowers();
 
-            if (Game.InfinitySystemEnabled)
-                InitializeInfinityBonuses();
-            else
-                InitializeOmegaBonuses();
+            InitializeOmegaBonuses();
 
             OnEnteredWorldSetTransformMode();
 
@@ -6719,8 +6691,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             // Even if there are no party boosts currently, notify anyway to clear the conditions that may have previously been applied.
+            /* V48_TODO
             ServiceMessage.PartyBoostUpdate message = new(player.DatabaseUniqueId, boosts);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+            */
 
             return true;
         }

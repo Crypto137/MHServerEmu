@@ -96,6 +96,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                         GameManager.BroadcastServiceMessageToGames(communityBroadcastBatch);
                     break;
 
+                /* V48_TODO
                 case ServiceMessage.PartyOperationRequestServerResult partyOperationRequestServerResult:
                     RouteMessageToGame(partyOperationRequestServerResult.GameId, partyOperationRequestServerResult);
                     break;
@@ -107,6 +108,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                 case ServiceMessage.PartyMemberInfoServerUpdate partyMemberInfoServerUpdate:
                     RouteMessageToGame(partyMemberInfoServerUpdate.GameId, partyMemberInfoServerUpdate);
                     break;
+                */
 
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);

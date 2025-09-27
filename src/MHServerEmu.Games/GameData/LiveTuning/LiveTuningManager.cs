@@ -288,22 +288,6 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             }
         }
 
-        public static float GetLiveMetricsFrequencyTuningVar(MetricsFrequencyPrototype metricsFrequencyProto, MetricsFrequencyTuningVar tuningVarEnum)
-        {
-            Game game = Game.Current;
-            if (game != null)
-            {
-                LiveTuningData liveTuningData = game.LiveTuningData;
-                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLiveMetricsFrequencyTuningVar(): liveTuningData == null");
-                return liveTuningData.GetLiveMetricsFrequencyTuningVar(metricsFrequencyProto, tuningVarEnum);
-            }
-            else
-            {
-                lock (Instance._liveTuningData)
-                    return Instance._liveTuningData.GetLiveMetricsFrequencyTuningVar(metricsFrequencyProto, tuningVarEnum);
-            }
-        }
-
         public static bool GetLiveLootGroup(int lootGroupNum, out IReadOnlyList<WorldEntityPrototype> lootGroup)
         {
             lootGroup = Array.Empty<WorldEntityPrototype>();

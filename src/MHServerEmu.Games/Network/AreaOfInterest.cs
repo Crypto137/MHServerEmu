@@ -289,8 +289,7 @@ namespace MHServerEmu.Games.Network
                     .SetRegionMin(newRegion.Aabb.Min.ToNetStructPoint3())
                     .SetRegionMax(newRegion.Aabb.Max.ToNetStructPoint3())
                     .SetCreateRegionParams(NetStructCreateRegionParams.CreateBuilder()
-                        .SetLevel((uint)newRegion.RegionLevel)
-                        .SetDifficultyTierProtoId((ulong)newRegion.DifficultyTierRef));
+                        .SetLevel((uint)newRegion.RegionLevel));
 
                 using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AllChannels))
                 {

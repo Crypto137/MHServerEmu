@@ -41,7 +41,7 @@ namespace MHServerEmu.PlayerManagement.Regions
                 _publicRegions.Add(regionProtoRef, regionLoadBalancer);
             }
 
-            RegionHandle region = regionLoadBalancer.GetAvailableRegion((PrototypeId)createRegionParams.DifficultyTierProtoId);
+            RegionHandle region = regionLoadBalancer.GetAvailableRegion();
             if (region == null)
             {
                 GameHandle game = _playerManager.GameHandleManager.CreateGame();

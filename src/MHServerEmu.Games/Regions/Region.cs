@@ -1659,13 +1659,6 @@ namespace MHServerEmu.Games.Regions
                 : avatarOnKilledInfo;
         }
 
-        public int GetBonusItemFindMultiplier()
-        {
-            int difficultyMult = Properties[PropertyEnum.BonusItemFindBonusDifficultyMult];
-            int liveTuningMult = (int)LiveTuningManager.GetLiveRegionTuningVar(Prototype, RegionTuningVar.eRT_BonusItemFindMultiplier);
-            return Prototype.BonusItemFindMultiplier * difficultyMult * liveTuningMult;
-        }
-
         public bool PausesBoostConditions()
         {
             RegionPrototype regionProto = Prototype;

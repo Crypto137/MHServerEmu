@@ -207,12 +207,6 @@ namespace MHServerEmu.Games.Loot
                     builder.AddVendorxp(vendorXP.ToProtobuf());
             }
 
-            if (Types.HasFlag(LootType.Currency))
-            {
-                foreach (CurrencySpec currency in Currencies)
-                    builder.AddCurrencies(currency.ToProtobuf());
-            }
-
             if (Types.HasFlag(LootType.PowerPoints))
                 builder.SetPowerPoints((uint)PowerPoints);
 

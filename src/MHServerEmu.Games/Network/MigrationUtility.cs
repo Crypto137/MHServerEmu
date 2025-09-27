@@ -69,18 +69,11 @@ namespace MHServerEmu.Games.Network
                 var broadcast = CommunityMemberBroadcast.CreateBuilder()
                     .SetMemberPlayerDbId(member.DbId)
                     .SetCurrentRegionRefId((ulong)member.RegionRef)
-                    .SetCurrentDifficultyRefId((ulong)member.DifficultyRef)
+                    .SetCurrentAvatarRefId((ulong)member.AvatarRef)
+                    .SetCurrentCostumeRefId((ulong)member.CostumeRef)
+                    .SetCurrentCharacterLevel((uint)member.CharacterLevel)
+                    .SetCurrentPrestigeLevel((uint)member.PrestigeLevel)
                     .SetIsOnline((int)member.IsOnline);
-
-                AvatarSlotInfo slot = member.GetAvatarSlotInfo();
-                if (slot != null)
-                {
-                    broadcast.AddSlots(CommunityMemberAvatarSlot.CreateBuilder()
-                        .SetAvatarRefId((ulong)slot.AvatarRef)
-                        .SetCostumeRefId((ulong)slot.CostumeRef)
-                        .SetLevel((uint)slot.Level)
-                        .SetPrestigeLevel((uint)slot.PrestigeLevel));
-                }
 
                 migrationData.CommunityStatus.Add(broadcast.Build());
             }

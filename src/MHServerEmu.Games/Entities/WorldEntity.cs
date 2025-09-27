@@ -3796,9 +3796,6 @@ namespace MHServerEmu.Games.Entities
                     : LootDropEventType.OnKilled;
 
                 AwardLootForDropEvent(lootDropEventType, playerList);
-
-                // Bonus Item Find (aka Shield Supply Boost) points
-                AwardBonusLoot(playerList);
             }
 
             // XP
@@ -3921,31 +3918,6 @@ namespace MHServerEmu.Games.Entities
         {
             PropertyList.Iterator iterator = Properties.IteratePropertyRange(PropertyEnum.LootTablePrototype, (int)eventType);
             return iterator.GetEnumerator().MoveNext();
-        }
-
-        private bool AwardBonusLoot(List<Player> playerList)
-        {
-            Region region = Region;
-            if (region == null) return Logger.WarnReturn(false, "AwardBonusLoot(): region == null");
-
-            int bonusItemFindMultiplier = region.GetBonusItemFindMultiplier();
-            if (bonusItemFindMultiplier <= 0)
-                return true;
-
-            RankPrototype rankProto = GetRankPrototype();
-            if (rankProto == null || rankProto.BonusItemFindPoints <= 0)
-                return true;
-
-            int bonusItemFindPoints = rankProto.BonusItemFindPoints * bonusItemFindMultiplier;
-
-            foreach (Player player in playerList)
-            {
-                using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                settings.Initialize(LootContext.Drop, player, this);
-                player.AwardBonusItemFindPoints(bonusItemFindPoints, settings);
-            }
-
-            return true;
         }
 
         private bool ApplyLootTableSourceOverrides(Region region)

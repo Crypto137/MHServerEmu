@@ -83,6 +83,7 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnCommunityStatusRequest(communityStatusRequest);
                     break;
 
+                /* V48_TODO
                 case ServiceMessage.PartyOperationRequest partyOperationRequest:
                     OnPartyOperationRequest(partyOperationRequest);
                     break;
@@ -90,6 +91,7 @@ namespace MHServerEmu.PlayerManagement.Network
                 case ServiceMessage.PartyBoostUpdate partyBoostUpdate:
                     OnPartyBoostUpdate(partyBoostUpdate);
                     break;
+                */
 
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
@@ -300,6 +302,8 @@ namespace MHServerEmu.PlayerManagement.Network
             return true;
         }
 
+        /* V48_TODO
+
         private bool OnPartyOperationRequest(in ServiceMessage.PartyOperationRequest partyOperationRequest)
         {
             PartyOperationPayload request = partyOperationRequest.Request;
@@ -341,6 +345,8 @@ namespace MHServerEmu.PlayerManagement.Network
 
             return true;
         }
+
+        */
 
         #endregion
     }

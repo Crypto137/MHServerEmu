@@ -2,13 +2,8 @@
 {
     public enum AuthMessage : uint
     {
-        AuthRequiredDoc,
         AuthTicket,
         ConsoleCreateAccountMessageResponse,
-        PrecacheHeadersMessageResponse,
-        NewsMessageResponse,
-        MHLocalizedNewsLayout,
-        MHLocalizedNewsEntry
     }
 
     public enum BillingCommonMessage : uint
@@ -21,35 +16,21 @@
         MHLocalizedCatalogEntryUrlOrData,
         MHCatalogGuidEntry,
         MarvelHeroesCatalogEntry,
-        MHLocalizedStringCollection,
-        MHStringValue,
-        MHConsolePresentationEntry,
-        MHConsoleItemPrice,
-        MHConsoleDiscount,
-        MHConsoleUpsell,
-        MarvelHeroesConsoleCatalogEntry,
-        MHConsoleCatalogCategoryEntry,
-        MHConsoleCatalogTagEntry,
-        MHConsoleCatalogFeaturedEntry,
-        MHConsoleCatalogFeatureLayout,
-        MHConsoleCatalogFeatured,
         GiftHistoryEntry,
         GiftHistoryForPlayerEntry,
         AwardItem,
         AwardCouponDescription,
         AwardCoupon,
         AwardEntry,
-        MessageEntitlementStatus,
         BillingPlayStationUpdateEntitlementStatus,
-        MessageEntitlementStatusResponse,
         BillingPlayStationUpdateEntitlementStatusResponse,
-        BillingAcquireUnfulfilledOrders
+        BillingPlayStationProcessPendingEntitlementTransactions,
     }
 
     public enum ChatCommonMessage : uint
     {
         ChatMessageAttachments,
-        ChatMessage
+        ChatMessage,
     }
 
     public enum ClientToGameServerMessage : uint
@@ -85,7 +66,6 @@
         NetStructMessageStoreMetric,
         NetMessagePing,
         NetMessageFPS,
-        NetMessageGamepadMetric,
         NetMessagePickupInteraction,
         NetMessageTryInventoryMove,
         NetMessageTryMoveCraftingResultsToGeneral,
@@ -97,15 +77,16 @@
         NetMessageUseWaypoint,
         NetMessageDebugAcquireAndSwitchToAvatar,
         NetMessageSwitchAvatar,
-        NetMessageChangeDifficulty,
         NetMessageSelectPublicEventTeam,
-        NetMessageRefreshAbilityKeyMapping,
+        NetMessageAssignHotkey,
+        NetMessageUnassignHotkey,
+        NetMessageSelectAbilityKeyMapping,
         NetMessageAbilitySlotToAbilityBar,
         NetMessageAbilityUnslotFromAbilityBar,
         NetMessageAbilitySwapInAbilityBar,
         NetMessageModCommitTemporary,
         NetMessageModReset,
-        NetMessagePowerRecentlyUnlocked,
+        NetMessagePowerPointAllocationCommit,
         NetMessageRequestDeathRelease,
         NetMessageRequestResurrectDecline,
         NetMessageRequestResurrectAvatar,
@@ -114,6 +95,15 @@
         NetMessageRequestMissionRewards,
         NetMessageRequestRemoveAndKillControlledAgent,
         NetMessageDamageMeter,
+        NetMessageInvitePlayer,
+        NetMessageRequestPartyJoinPortal,
+        NetMessageDeclineGroupInvite,
+        NetMessageLeaveGroup,
+        NetMessageChangeGroupLeader,
+        NetMessageBootPlayer,
+        NetMessageDisbandGroup,
+        NetMessageGroupChangeType,
+        NetMessageGroupChangeTypeConfirmResponse,
         NetMessageDuelInvite,
         NetMessageDuelAccept,
         NetMessageDuelCancel,
@@ -164,7 +154,9 @@
         NetMessagePullCommunityStatus,
         NetMessageGuildMessageToPlayerManager,
         NetMessageAkEvent,
+        NetMessageSetShowTips,
         NetMessageSetTipSeen,
+        NetMessageResetSeenTips,
         NetMessageHUDTutorialDismissed,
         NetMessageTryMoveInventoryContentsToGeneral,
         NetMessageSetPlayerGameplayOptions,
@@ -176,24 +168,18 @@
         NetMessageAttemptShareLegendaryMissionResponse,
         NetMessageRequestPlayerOwnsItemStatus,
         NetMessageRequestInterestInInventory,
-        NetMessageRequestLoadInventorySlots,
         NetMessageRequestInterestInAvatarEquipment,
         NetMessageRequestInterestInTeamUpEquipment,
         NetMessageTryTeamUpSelect,
         NetMessageRequestTeamUpDismiss,
         NetMessageTryTeamUpStyleSelect,
-        NetMessageSelectInfinityGemBonus,
-        NetMessageInfinityPointAllocationCommit,
-        NetMessageRespecInfinity,
         NetMessageSelectOmegaBonus,
         NetMessageOmegaBonusAllocationCommit,
         NetMessageRespecOmegaBonus,
         NetMessageRespecPowerSpec,
         NetMessageNewItemGlintPlayed,
         NetMessageNewItemHighlightCleared,
-        NetMessageNewSynergyCleared,
         NetMessageUnassignMappedPower,
-        NetMessageAssignStolenPower,
         NetMessageVanityTitleSelect,
         NetMessageRequestGlobalEventUpdate,
         NetMessageHasPendingGift,
@@ -205,7 +191,7 @@
         NetMessageChangeCameraSettings,
         NetMessageRequestSocketAffix,
         NetMessageUISystemLockState,
-        NetMessageEnableTalentPower,
+        NetMessageEnableSpecializationPower,
         NetMessageStashInventoryViewed,
         NetMessageStashCurrentlyOpen,
         NetMessageWidgetButtonResult,
@@ -214,23 +200,15 @@
         NetMessageLeaderboardRequest,
         NetMessageLeaderboardArchivedInstanceListRequest,
         NetMessageLeaderboardInitializeRequest,
-        NetMessageCoopOpRequest,
+        NetMessageRequestLocalCoopStart,
+        NetMessageRequestLocalCoopEnd,
         NetMessageCouponAwardPresented,
-        NetMessagePartyOperationRequest,
-        NetMessagePSNNotification,
-        NetMessageSuggestPlayerToPartyLeader,
-        NetMessageMissionTrackerFilterChange,
-        NetMessageMissionTrackerFiltersUpdate,
-        NetMessageAchievementMissionTrackerFilterChange,
         NetMessageBillingRoutedClientMessage,
-        NetMessagePlayerLookupByNameClientRequest,
-        NetMessageCostumeChange,
-        NetMessageLookForParty
     }
 
     public enum ClientToGroupingManagerMessage : uint
     {
-        GetPlayerInfoByName
+        ClientIgnoredInvite,
     }
 
     public enum CommonMessage : uint
@@ -253,9 +231,9 @@
         ChangeRegionRequestHeader,
         NetStructCreateRegionParams,
         NetStructModChangeObject,
+        NetStructPowerPointAllocation,
         NetStructAffixSpec,
         NetStructItemSpec,
-        CommunityMemberAvatarSlot,
         CommunityMemberBroadcast,
         CommunityNotify,
         NetStructLiveTuningSettingEnumValue,
@@ -278,16 +256,11 @@
         LeaderboardReport,
         LeaderboardInstanceData,
         WorldViewEntry,
-        PartyOperationPayload,
-        PartyMemberInfo,
-        PartyInfo,
-        PSNNotification
     }
 
     public enum FrontendProtocolMessage : uint
     {
         LoginDataPB,
-        ConsoleServiceEntitlement,
         LoginDataConsole,
         CreateAccountConsole,
         AcceptDocuments,
@@ -298,8 +271,6 @@
         SessionEncryptionChanged,
         ExtendedLoginError,
         EncryptedTrafficHeader,
-        PrecacheHeaders,
-        NewsRequest
     }
 
     public enum GameServerToClientMessage : uint
@@ -325,8 +296,6 @@
         NetMessageEntityPosition,
         NetMessageLocomotionStateUpdate,
         NetMessageLootRollFailed,
-        NetMessageLootEntity,
-        NetMessageLootRewardReport,
         NetMessageInterestPolicies,
         NetMessageUnableToChangeRegion,
         NetStructAreaConnection,
@@ -371,7 +340,6 @@
         NetMessageServerVersion,
         NetStructAgentSpec,
         NetStructVendorXPSummary,
-        NetStructCurrencySpec,
         NetStructItemSpecStack,
         NetStructLootResultSummary,
         NetStructVaporizedItem,
@@ -392,6 +360,7 @@
         NetMessageShowXPAwardedText,
         NetMessageAIToggleState,
         NetMessageDamageToggleState,
+        NetMessageDynamicCombatLevelToggleState,
         NetMessageMatchTeamRosterNotification,
         NetMessageMatchTeamSizeNotification,
         NetMessageChatFromGameSystem,
@@ -399,8 +368,6 @@
         NetMessageBroadcastRareItem,
         NetMessageChatError,
         NetMessageCatalogItems,
-        NetMessageConsoleCatalogItems,
-        NetMessageConsoleCatalogAvailable,
         AwardCouponEntryDesc,
         AwardCouponEntry,
         AwardItemEntry,
@@ -424,7 +391,6 @@
         NetMessageSetExtraText,
         NetMessageBannerMessage,
         NetMessageHUDTutorial,
-        NetMessageWaypointNotification,
         NetMessageRegionAvatarSwapUpdate,
         NetMessageRegionRestrictedRosterUpdate,
         NetMessageTeamSelectDialog,
@@ -440,8 +406,6 @@
         NetMessageUnloadPackagesEnd,
         NetMessageForceDisconnect,
         NetMessageLevelUp,
-        NetStructInfinityPointGain,
-        NetMessageInfinityPointGain,
         NetMessageOmegaPointGain,
         NetMessageVendorLevelUp,
         NetMessageVendorRefresh,
@@ -468,6 +432,8 @@
         NetMessageAbilitySlotToAbilityBarFromServer,
         NetMessageAbilityUnslotFromAbilityBarFromServer,
         NetMessageAbilitySwapInAbilityBarFromServer,
+        NetMessageAssignHotkeyFromServer,
+        NetMessageUnassignHotkeyFromServer,
         NetMessagePowerCollectionAssignPower,
         NetMessageAssignPowerCollection,
         NetMessagePowerCollectionUnassignPower,
@@ -514,6 +480,7 @@
         NetMessageRemoveDialogFromClient,
         NetMessageCancelPendingActionToClient,
         NetMessageRecvAkEventFromEntity,
+        NetMessageShowTutorialTip,
         NetMessageMatchQueueUpdateClient,
         GlobalEventCriteriaData,
         NetMessageGlobalEventDataUpdate,
@@ -533,7 +500,6 @@
         NetMessageAchievementCompletedByPartyMember,
         NetMessageVerifyOnClient,
         NetMessageCreateAndOpenFileOnClient,
-        NetMessageInventoryArchivedEntity,
         NetMessageInventoryLoaded,
         NetMessageLeaderboardReportClient,
         NetMessageLeaderboardCheatResponseClient,
@@ -546,32 +512,56 @@
         NetMessageGiftHistoryResult,
         NetMessageStoreTooBusy,
         NetMessageSetDebuggingClient,
-        NetMessageCoopOpResult,
+        NetMessageLocalCoopStart,
+        NetMessageLocalCoopEnd,
         NetMessageAwardUpdate,
         NetMessageDisplayCouponNotifications,
         NetMessagePublicEventTeamAssigned,
         NetMessageRoutedClientMessageResponse,
         NetMessageGiftingRestrictionsUpdate,
-        PartyOperationRequestClientResult,
-        PartyInfoClientUpdate,
-        PartyMemberInfoClientUpdate,
-        NetMessagePlayerLookupByNameServerResponse,
-        NetMessageSuggestedPlayerForParty
+    }
+
+    public enum GazillionCommonMessage : uint
+    {
+    }
+
+    public enum GlobalEventsCommonMessage : uint
+    {
     }
 
     public enum GroupingManagerMessage : uint
     {
+        PerPlayerInfo,
+        ClientInvitedToGroup,
+        ClientInviteAcceptFailed,
+        ClientCreateGroup,
+        PlayerJoinedGroup,
+        GroupChangeType,
+        PlayerLeftGroup,
+        PlayerChangedGroupLeader,
+        ClientBootedFromGroup,
+        KickGroupMemberAttemptFailed,
+        PlayerDeclinedInvite,
+        CurrentPartyInfo,
         ChatResponseToExternalLogin,
         ChatNormalMessage,
         ChatTellMessage,
         ChatBroadcastMessage,
         ChatErrorMessage,
         ChatBanVoteResponse,
+        GroupingReportInvitationDestinationForPortal,
+        GroupingOperationResultMsg,
+        GroupingManagerRemovedPlayer,
+        GroupingManagerAddedPlayer,
+        GroupingManagerCreateGroup,
+        GroupingManagerGroupChangeType,
+        GroupingManagerPlayerEnteredRegion,
+        GroupingManagerUpdatedPartyBoostCount,
         ChatCreateChatRoomResult,
         ChatAddPlayerToRoomResult,
         ChatScrubTextResult,
         ChatServerNotification,
-        ChatClientIsLoggedIn
+        ChatClientIsLoggedIn,
     }
 
     public enum GuildMessage : uint
@@ -598,7 +588,7 @@
         GuildCompleteInfo,
         GuildMessageSetToServer,
         GuildMessageSetToClient,
-        GuildMessageSetToPlayerManager
+        GuildMessageSetToPlayerManager,
     }
 
     public enum MatchCommonMessage : uint
@@ -608,7 +598,7 @@
         MatchQueueDescription,
         MatchTeamResultData,
         MatchResultData,
-        MatchPlayerStatisticsSummary
+        MatchPlayerStatisticsSummary,
     }
 
     public enum PubSubProtocolMessage : uint
@@ -619,6 +609,6 @@
         PubSubOrderlyShutdown,
         PubSubForceLogRollover,
         PubSubServerStatusUpdate,
-        PubSubServerStatusRequest
+        PubSubServerStatusRequest,
     }
 }

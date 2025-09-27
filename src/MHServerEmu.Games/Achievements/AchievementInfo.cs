@@ -65,10 +65,6 @@ namespace MHServerEmu.Games.Achievements
         public uint DependentAchievementId { get; set; }
         public AchievementUIProgressDisplayOption UIProgressDisplayOption { get; set; }
         public TimeSpan PublishedDateUS { get; set; }
-        public AssetId IconPathHiResAssetId { get; set; }
-        public bool OrbisTrophy { get; set; } = false;
-        public int OrbisTrophyId { get; set; } = -1;
-        public bool OrbisTrophyShared { get; set; } = false;
 
         [JsonIgnore]
         public bool PartyVisible { get; set; }
@@ -110,10 +106,6 @@ namespace MHServerEmu.Games.Achievements
             DependentAchievementId = info.DependentAchievementId;
             UIProgressDisplayOption = GetAchievementUIProgressDisplayOptionFromInt(info.UiProgressDisplayOption);
             PublishedDateUS = new((long)info.PublishedDateUS * TimeSpan.TicksPerSecond);
-            IconPathHiResAssetId = (AssetId)info.IconPathHiResAssetId;
-            OrbisTrophy = info.OrbisTrophy;
-            OrbisTrophyId = info.OrbisTrophyId;
-            OrbisTrophyShared = info.OrbisTrophyShared;
         }
 
         public bool SetContext(in AchievementContext context)
@@ -148,8 +140,6 @@ namespace MHServerEmu.Games.Achievements
 
         public bool InOrbis()
         {
-            if (OrbisTrophy) return true;
-            if (Parent != null) return Parent.InOrbis();
             return false;
         }
 
@@ -180,11 +170,7 @@ namespace MHServerEmu.Games.Achievements
                 .SetThreshold(Threshold)
                 .SetDependentAchievementId(DependentAchievementId)
                 .SetUiProgressDisplayOption((uint)UIProgressDisplayOption)
-                .SetPublishedDateUS((ulong)PublishedDateUS.TotalSeconds)
-                .SetIconPathHiResAssetId((ulong)IconPathHiResAssetId);
-
-            if (OrbisTrophy)
-                builder.SetOrbisTrophy(OrbisTrophy).SetOrbisTrophyId(OrbisTrophyId).SetOrbisTrophyShared(OrbisTrophyShared);
+                .SetPublishedDateUS((ulong)PublishedDateUS.TotalSeconds);
 
             return builder.Build();
         }
@@ -223,7 +209,6 @@ namespace MHServerEmu.Games.Achievements
             sb.AppendLine($"{nameof(DependentAchievementId)}: {DependentAchievementId}");
             sb.AppendLine($"{nameof(UIProgressDisplayOption)}: {UIProgressDisplayOption}");
             sb.AppendLine($"{nameof(PublishedDateUS)}: {Clock.UnixTimeToDateTime(PublishedDateUS)}");
-            sb.AppendLine($"{nameof(IconPathHiResAssetId)}: {GameDatabase.GetAssetName(IconPathHiResAssetId)}");
             return sb.ToString();
         }
     }

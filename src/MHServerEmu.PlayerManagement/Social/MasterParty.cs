@@ -88,7 +88,9 @@ namespace MHServerEmu.PlayerManagement.Social
             if (_members.Contains(player) == false)
             {
                 // Send update to existing players (the player we are adding will get this in the party info sync below)
+                /* V48_TODO
                 SendPartyMemberInfoUpdate(player, PartyMemberEvent.ePME_Add, _members);
+                */
 
                 _pendingMembers.Remove(player);
                 player.PendingParty = null;
@@ -113,7 +115,9 @@ namespace MHServerEmu.PlayerManagement.Social
             if (player == null) return Logger.WarnReturn(false, "RemoveMember(): player == null");
 
             // Send this before removing so that the player we are removing gets the message as well.
+            /* V48_TODO
             SendPartyMemberInfoUpdate(player, PartyMemberEvent.ePME_Remove, _members);
+            */
 
             if (_members.Remove(player) == false)
                 return false;
@@ -160,7 +164,9 @@ namespace MHServerEmu.PlayerManagement.Social
             if (HasMember(player) == false)
                 return Logger.WarnReturn(false, $"UpdateMember(): Attempting to update player [{player}] who is not a member of party [{this}]");
 
+            /* V48_TODO
             SendPartyMemberInfoUpdate(player, PartyMemberEvent.ePME_Update, _members);
+            */
             return true;
         }
 
@@ -243,6 +249,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 if (player.CurrentGame == null)
                     continue;
 
+                /* V48_TODO
                 var request = PartyOperationPayload.CreateBuilder()
                     .SetRequestingPlayerDbId(player.PlayerDbId)
                     .SetRequestingPlayerName(player.PlayerName)
@@ -252,6 +259,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 ServiceMessage.PartyOperationRequestServerResult message = new(player.CurrentGame.Id, player.PlayerDbId,
                     request, GroupingOperationResult.eGOPR_PendingPartyDisbanded);
                 ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+                */
             }
 
             _pendingMembers.Clear();
@@ -267,6 +275,8 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void SendPartyInfo(bool includeMemberInfo, List<PlayerHandle> recipients)
         {
+            /* V48_TODO
+
             if (recipients.Count == 0)
                 return;
 
@@ -295,8 +305,10 @@ namespace MHServerEmu.PlayerManagement.Social
                 ServiceMessage.PartyInfoServerUpdate message = new(player.CurrentGame.Id, player.PlayerDbId, Id, partyInfo);
                 ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
             }
+            */
         }
 
+        /* V48_TODO
         private void SendPartyMemberInfoUpdate(PlayerHandle member, PartyMemberEvent memberEvent, List<PlayerHandle> recipients)
         {
             // This is valid (e.g. when adding the first member)
@@ -328,5 +340,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
             return builder.Build();
         }
+        */
     }
 }

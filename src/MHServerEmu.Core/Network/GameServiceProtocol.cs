@@ -319,6 +319,8 @@ namespace MHServerEmu.Core.Network
             }
         }
 
+        /* V48_TODO
+
         /// <summary>
         /// [Game -> PlayerManager] Forwards a party operation request received from a client to the player manager.
         /// </summary>
@@ -374,6 +376,8 @@ namespace MHServerEmu.Core.Network
             public readonly PartyMemberEvent MemberEvent = memberEvent;
             public readonly PartyMemberInfo MemberInfo = memberInfo;
         }
+
+        */
 
         #endregion
 

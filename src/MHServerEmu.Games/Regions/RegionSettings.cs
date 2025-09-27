@@ -52,9 +52,6 @@ namespace MHServerEmu.Games.Regions
             if (createRegionParams.HasOrigin)
                 Origin = createRegionParams.Origin;
 
-            if (createRegionParams.HasDifficultyTierProtoId)
-                DifficultyTierRef = (PrototypeId)createRegionParams.DifficultyTierProtoId;
-
             if (createRegionParams.HasEndlessLevel)
                 EndlessLevel = (int)createRegionParams.EndlessLevel;
 

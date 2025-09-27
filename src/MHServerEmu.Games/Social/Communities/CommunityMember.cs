@@ -49,19 +49,24 @@ namespace MHServerEmu.Games.Social.Communities
         private PrototypeId _difficultyRef;
 
         private long _lastLogoutTimeAsFileTimeUtc = 0;
-        private AvatarSlotInfo[] _slots = Array.Empty<AvatarSlotInfo>();
+
+        private PrototypeId _avatarRef;
+        private PrototypeId _costumeRef;
+        private int _characterLevel;
+        private int _prestigeLevel;
+
         private CommunityMemberOnlineStatus _isOnline;
         private string _playerName = string.Empty;
-        private string _secondaryPlayerName = string.Empty;
         private readonly BitArray _systemCircles = new((int)CircleId.NumCircles);
-
-        private readonly ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
 
         public Community Community { get; }
 
         public ulong DbId { get => _dbId; }
         public PrototypeId RegionRef { get => _regionRef; }
-        public PrototypeId DifficultyRef { get => _difficultyRef; }
+        public PrototypeId AvatarRef { get => _avatarRef; }
+        public PrototypeId CostumeRef { get => _costumeRef; }
+        public int CharacterLevel { get => _characterLevel; }
+        public int PrestigeLevel { get => _prestigeLevel; }
         public CommunityMemberOnlineStatus IsOnline { get => _isOnline; }
 
         public CommunityMember(Community community, ulong playerDbId, string playerName)
@@ -80,36 +85,13 @@ namespace MHServerEmu.Games.Social.Communities
                 success &= Serializer.Transfer(archive, ref _regionRef);
                 success &= Serializer.Transfer(archive, ref _difficultyRef);
 
-                byte numSlots = 0;
-                if (archive.IsPacking)
-                {
-                    if (_slots.Length >= byte.MaxValue)
-                        return Logger.ErrorReturn(false, $"Serialize(): numSlots overflow {_slots.Length}");
-                    numSlots = (byte)_slots.Length;
-                }
-
-                success &= Serializer.Transfer(archive, ref numSlots);
-
-                if (archive.IsUnpacking)
-                    Array.Resize(ref _slots, numSlots);
-
-                for (int i = 0; i < numSlots; i++)
-                {
-                    // Slight deviation from the client: we implemented ISerialize for AvatarSlotInfo to make this a bit cleaner
-                    if (_slots[i] == null)
-                        _slots[i] = new();
-
-                    success &= Serializer.Transfer(archive, ref _slots[i]);
-                }
+                // V48_TODO: Fix this
 
                 int isOnline = (int)_isOnline;
                 success &= Serializer.Transfer(archive, ref isOnline);
                 _isOnline = (CommunityMemberOnlineStatus)isOnline;
 
                 success &= Serializer.Transfer(archive, ref _playerName);
-                success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
-                success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
-                success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
             }
 
             int numCircles = 0;
@@ -155,47 +137,14 @@ namespace MHServerEmu.Games.Social.Communities
             return success;
         }
 
-        public string GetName(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
+        public string GetName()
         {
-            if (avatarIndex == PlayerAvatarIndex.Secondary)
-                return _secondaryPlayerName;
-
             return _playerName;
         }
 
-        public void SetName(string name, PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
+        public void SetName(string name)
         {
-            if (avatarIndex == PlayerAvatarIndex.Secondary)
-                _secondaryPlayerName = name;
-            else
-                _playerName = name;
-        }
-
-        public ulong GetConsoleAccountId(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
-        {
-            if ((avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count) == false)
-                return Logger.WarnReturn(0ul, "GetConsoleAccountId(): avatarIndex out of range");
-
-            return _consoleAccountIds[(int)avatarIndex];
-        }
-
-        public bool SetConsoleAccountId(ulong consoleAccountId, PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
-        {
-            if ((avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count) == false)
-                return Logger.WarnReturn(false, "SetConsoleAccountId(): avatarIndex out of range");
-
-            _consoleAccountIds[(int)avatarIndex] = consoleAccountId;
-            return true;
-        }
-
-        public AvatarSlotInfo GetAvatarSlotInfo(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
-        {
-            int index = (int)avatarIndex;
-
-            if (index >= 0 && index < _slots.Length)
-                return _slots[index];
-
-            return null;
+            _playerName = name;
         }
 
         public bool ShouldArchiveTo(Archive archive)
@@ -295,18 +244,6 @@ namespace MHServerEmu.Games.Social.Communities
                     
             }
 
-            if (broadcast.HasCurrentDifficultyRefId)
-            {
-                // CommunityMember::updateDifficultyRef()
-                PrototypeId newDifficultyRef = (PrototypeId)broadcast.CurrentDifficultyRefId;
-
-                if (DifficultyRef != newDifficultyRef)
-                {
-                    _difficultyRef = newDifficultyRef;
-                    updateOptions |= CommunityMemberUpdateOptions.DifficultyRef;
-                }  
-            }
-
             if (broadcast.HasIsOnline)
             {
                 CommunityMemberOnlineStatus isOnlineBefore = _isOnline;
@@ -325,68 +262,47 @@ namespace MHServerEmu.Games.Social.Communities
                     updateOptions |= CommunityMemberUpdateOptions.LastLogoutTime;
             }
 
-            if (broadcast.SlotsCount > 0)
+            if (broadcast.HasCurrentAvatarRefId)
             {
-                // Number of avatars changed
-                while (_slots.Length > broadcast.SlotsCount)
-                    updateOptions |= CommunityMemberUpdateOptions.AvatarRef;
+                PrototypeId newAvatarRef = (PrototypeId)broadcast.CurrentAvatarRefId;
 
-                Array.Resize(ref _slots, broadcast.SlotsCount);
-
-                for (int i = 0; i < broadcast.SlotsCount; i++)
+                if (_avatarRef != newAvatarRef)
                 {
-                    // Create a new slot if needed
-                    if (_slots.ElementAtOrDefault(i) == null)
-                        _slots[i] = new();
+                    _avatarRef = newAvatarRef;
+                    updateOptions |= CommunityMemberUpdateOptions.AvatarRef;
+                }
+            }
 
-                    // Get slot info from the broadcast
-                    var slot = broadcast.SlotsList[i];
+            if (broadcast.HasCurrentCostumeRefId)
+            {
+                PrototypeId newCostumeRef = (PrototypeId)broadcast.CurrentCostumeRefId;
 
-                    if (slot.HasAvatarRefId)
-                    {
-                        PrototypeId oldAvatarRef = _slots[i].AvatarRef;
-                        PrototypeId newAvatarRef = (PrototypeId)slot.AvatarRefId;
+                if (_costumeRef != newCostumeRef)
+                {
+                    _costumeRef = newCostumeRef;
+                    updateOptions |= CommunityMemberUpdateOptions.CostumeRef;
+                }
+            }
 
-                        if (oldAvatarRef != newAvatarRef)
-                        {
-                            _slots[i].AvatarRef = newAvatarRef;
-                            updateOptions |= CommunityMemberUpdateOptions.AvatarRef;
-                        }
-                    }
+            if (broadcast.HasCurrentCharacterLevel)
+            {
+                int newCharacterLevel = (int)broadcast.CurrentCharacterLevel;
 
-                    if (slot.HasCostumeRefId)
-                    {
-                        PrototypeId oldCostumeRef = _slots[i].CostumeRef;
-                        PrototypeId newCostumeRef = (PrototypeId)slot.CostumeRefId;
+                if (_characterLevel != newCharacterLevel)
+                {
+                    _characterLevel = newCharacterLevel;
+                    updateOptions |= CommunityMemberUpdateOptions.Level;
+                }
+            }
 
-                        if (oldCostumeRef != newCostumeRef)
-                        {
-                            _slots[i].CostumeRef = newCostumeRef;
-                            updateOptions |= CommunityMemberUpdateOptions.CostumeRef;
-                        }
-                    }
+            if (broadcast.HasCurrentPrestigeLevel)
+            {
+                int newPrestigeLevel = (int)broadcast.CurrentPrestigeLevel;
 
-                    if (slot.HasLevel)
-                    {
-                        if (_slots[i].Level != slot.Level)
-                        {
-                            _slots[i].Level = (int)slot.Level;
-                            updateOptions |= CommunityMemberUpdateOptions.Level;
-                        }
-                    }
-
-                    if (slot.HasPrestigeLevel)
-                    {
-                        if (_slots[i].PrestigeLevel != slot.PrestigeLevel)
-                        {
-                            _slots[i].PrestigeLevel = (int)slot.PrestigeLevel;
-                            updateOptions |= CommunityMemberUpdateOptions.PrestigeLevel;
-                        }
-                    }
-
-                    // slot.OnlineId is ignored for some reason
-                    if (slot.HasOnlineId)
-                        Logger.Warn($"ReceiveBroadcast(): HasOnlineId {slot.OnlineId}");
+                if (_prestigeLevel != newPrestigeLevel)
+                {
+                    _prestigeLevel = newPrestigeLevel;
+                    updateOptions |= CommunityMemberUpdateOptions.PrestigeLevel;
                 }
             }
 
@@ -396,24 +312,6 @@ namespace MHServerEmu.Games.Social.Communities
                 {
                     _playerName = broadcast.CurrentPlayerName;
                     updateOptions |= CommunityMemberUpdateOptions.Name;
-                }
-            }
-
-            if (broadcast.HasSecondaryPlayerName)
-            {
-                if (_secondaryPlayerName != broadcast.SecondaryPlayerName)
-                {
-                    _secondaryPlayerName = broadcast.SecondaryPlayerName;
-                    updateOptions |= CommunityMemberUpdateOptions.SecondaryPlayer;
-                }
-            }
-
-            if (broadcast.HasSecondaryConsoleAccountId)
-            {
-                if (GetConsoleAccountId(PlayerAvatarIndex.Secondary) != broadcast.ConsoleAccountId)
-                {
-                    SetConsoleAccountId(broadcast.SecondaryConsoleAccountId, PlayerAvatarIndex.Secondary);
-                    updateOptions |= CommunityMemberUpdateOptions.SecondaryPlayer;
                 }
             }
 
@@ -441,37 +339,28 @@ namespace MHServerEmu.Games.Social.Communities
                 updateOptions |= CommunityMemberUpdateOptions.RegionRef;
             }
 
-            if (DifficultyRef != PrototypeId.Invalid)
+            if (AvatarRef != PrototypeId.Invalid)
             {
-                _difficultyRef = PrototypeId.Invalid;
-                updateOptions |= CommunityMemberUpdateOptions.DifficultyRef;
+                _avatarRef = PrototypeId.Invalid;
+                updateOptions |= CommunityMemberUpdateOptions.AvatarRef;
             }
 
-            foreach (AvatarSlotInfo slot in _slots)
+            if (CostumeRef != PrototypeId.Invalid)
             {
-                if (slot.AvatarRef != PrototypeId.Invalid)
-                {
-                    slot.AvatarRef = PrototypeId.Invalid;
-                    updateOptions |= CommunityMemberUpdateOptions.AvatarRef;
-                }
+                _costumeRef = PrototypeId.Invalid;
+                updateOptions |= CommunityMemberUpdateOptions.CostumeRef;
+            }
 
-                if (slot.CostumeRef != PrototypeId.Invalid)
-                {
-                    slot.CostumeRef = PrototypeId.Invalid;
-                    updateOptions |= CommunityMemberUpdateOptions.CostumeRef;
-                }
+            if (CharacterLevel != 0)
+            {
+                _characterLevel = 0;
+                updateOptions |= CommunityMemberUpdateOptions.Level;
+            }
 
-                if (slot.Level != 0)
-                {
-                    slot.Level = 0;
-                    updateOptions |= CommunityMemberUpdateOptions.Level;
-                }
-
-                if (slot.PrestigeLevel != 0)
-                {
-                    slot.PrestigeLevel = 0;
-                    updateOptions |= CommunityMemberUpdateOptions.PrestigeLevel;
-                }
+            if (PrestigeLevel != 0)
+            {
+                _prestigeLevel = 0;
+                updateOptions |= CommunityMemberUpdateOptions.PrestigeLevel;
             }
 
             return updateOptions;
@@ -496,27 +385,17 @@ namespace MHServerEmu.Games.Social.Communities
             if (updateOptions.HasFlag(CommunityMemberUpdateOptions.RegionRef))
                 broadcastBuilder.SetCurrentRegionRefId((ulong)RegionRef);
 
-            if ((updateOptions & CommunityMemberUpdateOptions.AvatarSlotBits) != 0)
-            {
-                foreach (AvatarSlotInfo avatarSlotInfo in _slots)
-                {
-                    CommunityMemberAvatarSlot.Builder avatarSlotBuilder = CommunityMemberAvatarSlot.CreateBuilder();
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.AvatarRef))
+                broadcastBuilder.SetCurrentAvatarRefId((ulong)AvatarRef);
 
-                    if (updateOptions.HasFlag(CommunityMemberUpdateOptions.AvatarRef))
-                        avatarSlotBuilder.SetAvatarRefId((ulong)avatarSlotInfo.AvatarRef);
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.CostumeRef))
+                broadcastBuilder.SetCurrentCostumeRefId((ulong)CostumeRef);
 
-                    if (updateOptions.HasFlag(CommunityMemberUpdateOptions.CostumeRef))
-                        avatarSlotBuilder.SetCostumeRefId((ulong)avatarSlotInfo.CostumeRef);
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.Level))
+                broadcastBuilder.SetCurrentCharacterLevel((uint)CharacterLevel);
 
-                    if (updateOptions.HasFlag(CommunityMemberUpdateOptions.Level))
-                        avatarSlotBuilder.SetLevel((uint)avatarSlotInfo.Level);
-
-                    if (updateOptions.HasFlag(CommunityMemberUpdateOptions.PrestigeLevel))
-                        avatarSlotBuilder.SetPrestigeLevel((uint)avatarSlotInfo.PrestigeLevel);
-
-                    broadcastBuilder.AddSlots(avatarSlotBuilder.Build());
-                }
-            }
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.PrestigeLevel))
+                broadcastBuilder.SetCurrentPrestigeLevel((uint)PrestigeLevel);
 
             if (updateOptions.HasFlag(CommunityMemberUpdateOptions.IsOnline))
                 broadcastBuilder.SetIsOnline((int)IsOnline);
@@ -526,9 +405,6 @@ namespace MHServerEmu.Games.Social.Communities
 
             if (IsOnline != CommunityMemberOnlineStatus.Online && updateOptions.HasFlag(CommunityMemberUpdateOptions.LastLogoutTime))
                 broadcastBuilder.SetLastLogoutTimeAsFileTimeUtc(_lastLogoutTimeAsFileTimeUtc);
-
-            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.DifficultyRef))
-                broadcastBuilder.SetCurrentDifficultyRefId((ulong)DifficultyRef);
 
             // We don't care about secondary players on PC
 
@@ -565,13 +441,7 @@ namespace MHServerEmu.Games.Social.Communities
             sb.AppendLine($"{nameof(_regionRef)}: {GameDatabase.GetPrototypeName(_regionRef)}");
             sb.AppendLine($"{nameof(_difficultyRef)}: {GameDatabase.GetPrototypeName(_difficultyRef)}");
 
-            for (int i = 0; i < _slots.Length; i++)
-                sb.AppendLine($"{nameof(_slots)}[{i}]: {_slots[i]}");
-
-            sb.AppendLine($"{nameof(_isOnline)}: {_isOnline}");
-            sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
-            sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
-            sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
+            // V48_TODO
 
             sb.Append($"{nameof(_systemCircles)}: ");
             for (int i = 0; i < _systemCircles.Count; i++)

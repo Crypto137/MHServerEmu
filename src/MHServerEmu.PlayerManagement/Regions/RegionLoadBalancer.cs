@@ -19,7 +19,7 @@ namespace MHServerEmu.PlayerManagement.Regions
             RegionProtoRef = regionProtoRef;
         }
 
-        public RegionHandle GetAvailableRegion(PrototypeId difficultyProtoRef)
+        public RegionHandle GetAvailableRegion()
         {
             TryCleanUpRegions();
 
@@ -30,9 +30,6 @@ namespace MHServerEmu.PlayerManagement.Regions
                     break;
 
                 if (region.State == RegionHandleState.Shutdown)
-                    continue;
-
-                if (region.DifficultyTierProtoRef != difficultyProtoRef)
                     continue;
 
                 // TODO: eRPA_InviteOnly?

@@ -6,7 +6,6 @@ namespace MHServerEmu.PlayerManagement.Social
     public class CommunityMemberEntry
     {
         private CommunityMemberBroadcast.Builder _broadcastBuilder = CommunityMemberBroadcast.CreateBuilder();
-        private CommunityMemberAvatarSlot.Builder _avatarSlotBuilder = CommunityMemberAvatarSlot.CreateBuilder();
 
         private bool _hasUpToDateBroadcast = false;
         private CommunityMemberBroadcast _cachedBroadcast = null;
@@ -23,8 +22,6 @@ namespace MHServerEmu.PlayerManagement.Social
         {
             if (_hasUpToDateBroadcast == false)
             {
-                _broadcastBuilder.ClearSlots();
-                _broadcastBuilder.AddSlots(_avatarSlotBuilder);
                 _cachedBroadcast = _broadcastBuilder.Build();
                 _hasUpToDateBroadcast = true;
             }
@@ -42,52 +39,42 @@ namespace MHServerEmu.PlayerManagement.Social
             return true;
         }
 
-        public bool SetCurrentDifficultyRefId(ulong currentDifficultyRefId)
-        {
-            if (_broadcastBuilder.CurrentDifficultyRefId == currentDifficultyRefId)
-                return false;
-
-            _broadcastBuilder.SetCurrentDifficultyRefId(currentDifficultyRefId);
-            _hasUpToDateBroadcast = false;
-            return true;
-        }
-
         public bool SetAvatarRefId(ulong avatarRefId)
         {
-            if (_avatarSlotBuilder.AvatarRefId == avatarRefId)
+            if (_broadcastBuilder.CurrentAvatarRefId == avatarRefId)
                 return false;
 
-            _avatarSlotBuilder.SetAvatarRefId(avatarRefId);
+            _broadcastBuilder.SetCurrentAvatarRefId(avatarRefId);
             _hasUpToDateBroadcast = false;
             return true;
         }
 
         public bool SetCostumeRefId(ulong costumeRefId)
         {
-            if (_avatarSlotBuilder.CostumeRefId == costumeRefId)
+            if (_broadcastBuilder.CurrentCostumeRefId == costumeRefId)
                 return false;
 
-            _avatarSlotBuilder.SetCostumeRefId(costumeRefId);
+            _broadcastBuilder.SetCurrentCostumeRefId(costumeRefId);
             _hasUpToDateBroadcast = false;
             return true;
         }
 
         public bool SetLevel(uint level)
         {
-            if (_avatarSlotBuilder.Level == level)
+            if (_broadcastBuilder.CurrentCharacterLevel == level)
                 return false;
 
-            _avatarSlotBuilder.SetLevel(level);
+            _broadcastBuilder.SetCurrentCharacterLevel(level);
             _hasUpToDateBroadcast = false;
             return true;
         }
 
         public bool SetPrestigeLevel(uint prestigeLevel)
         {
-            if (_avatarSlotBuilder.PrestigeLevel == prestigeLevel)
+            if (_broadcastBuilder.CurrentPrestigeLevel == prestigeLevel)
                 return false;
 
-            _avatarSlotBuilder.SetPrestigeLevel(prestigeLevel);
+            _broadcastBuilder.SetCurrentPrestigeLevel(prestigeLevel);
             _hasUpToDateBroadcast = false;
             return true;
         }

@@ -187,16 +187,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             lootResultSummary.Add(lootResult);
 
-            NetMessageLootRewardReport.Builder reportBuilder = NetMessageLootRewardReport.CreateBuilder();
-
-            if (ReplaceSelfHelper(lootResultSummary, player, reportBuilder))
-            {
-                reportBuilder.SetSource(_itemSpec.ToProtobuf());
-                player.SendMessage(reportBuilder.Build());
-                return true;
-            }
-
-            return false;
+            return ReplaceSelfHelper(lootResultSummary, player);
         }
 
         private bool DoItemActionReplaceSelfLootTable(LootTablePrototype lootTableProto, bool useAvatarLevel, Player player, Avatar avatar)
@@ -218,16 +209,7 @@ namespace MHServerEmu.Games.Entities.Items
             using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
             resolver.FillLootResultSummary(lootResultSummary);
 
-            NetMessageLootRewardReport.Builder reportBuilder = NetMessageLootRewardReport.CreateBuilder();
-
-            if (ReplaceSelfHelper(lootResultSummary, player, reportBuilder))
-            {
-                reportBuilder.SetSource(_itemSpec.ToProtobuf());
-                player.SendMessage(reportBuilder.Build());
-                return true;
-            }
-            
-            return false;
+            return ReplaceSelfHelper(lootResultSummary, player);
         }
 
         private bool DoItemActionResetMissions(Avatar avatar)
@@ -287,7 +269,7 @@ namespace MHServerEmu.Games.Entities.Items
             return player.SendOpenUIPanel(panelNameId);
         }
 
-        private bool ReplaceSelfHelper(LootResultSummary lootResultSummary, Player player, NetMessageLootRewardReport.Builder reportBuilder)
+        private bool ReplaceSelfHelper(LootResultSummary lootResultSummary, Player player)
         {
             // Validation
 
@@ -398,22 +380,12 @@ namespace MHServerEmu.Games.Entities.Items
                     {
                         // The replacement was added as a new item
                         replacementItemList.Add((replacementItem.Id, replacementItem.CurrentStackSize));
-
-                        reportBuilder.AddItemSpecs(NetMessageLootEntity.CreateBuilder()
-                            .SetItemSpec(itemSpec.ToProtobuf())
-                            .SetItemId(replacementItem.Id));
-
                         replacementItem.SetRecentlyAdded(true);
                     }
                     else
                     {
                         // The replacement got stacked
                         replacementItemList.Add((replacementItem.Id, itemSpec.StackCount));
-
-                        reportBuilder.AddItemSpecs(NetMessageLootEntity.CreateBuilder()
-                            .SetItemSpec(itemSpec.ToProtobuf())
-                            .SetItemId(stackEntityId.Value));
-
                         Item stackEntity = entityManager.GetEntity<Item>(stackEntityId.Value);
                         stackEntity?.SetRecentlyAdded(true);
                     }
@@ -457,8 +429,6 @@ namespace MHServerEmu.Games.Entities.Items
                         CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
                         return false;
                     }
-
-                    reportBuilder.AddCurrencySpecs(currencySpec.ToProtobuf());
                 }
 
                 // Scoring ItemCollected

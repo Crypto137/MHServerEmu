@@ -626,11 +626,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (party != null)
                 {
                     CommunityMember communityMember = party.GetCommunityMemberForLeader(player);
-                    if (communityMember != null)
-                    {
-                        AvatarSlotInfo avatarSlotInfo = communityMember.GetAvatarSlotInfo();
-                        avatarLevel = avatarSlotInfo != null ? avatarSlotInfo.Level : 0;
-                    }
+                    avatarLevel = communityMember != null ? communityMember.CharacterLevel : 0;
                 }
             }
 

@@ -18,8 +18,6 @@ namespace Gazillion {
     #region Static variables
     internal static pbd::MessageDescriptor internal__static_Gazillion_LoginDataPB__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.LoginDataPB, global::Gazillion.LoginDataPB.Builder> internal__static_Gazillion_LoginDataPB__FieldAccessorTable;
-    internal static pbd::MessageDescriptor internal__static_Gazillion_ConsoleServiceEntitlement__Descriptor;
-    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.ConsoleServiceEntitlement, global::Gazillion.ConsoleServiceEntitlement.Builder> internal__static_Gazillion_ConsoleServiceEntitlement__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_LoginDataConsole__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.LoginDataConsole, global::Gazillion.LoginDataConsole.Builder> internal__static_Gazillion_LoginDataConsole__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_CreateAccountConsole__Descriptor;
@@ -40,10 +38,6 @@ namespace Gazillion {
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.ExtendedLoginError, global::Gazillion.ExtendedLoginError.Builder> internal__static_Gazillion_ExtendedLoginError__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_EncryptedTrafficHeader__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.EncryptedTrafficHeader, global::Gazillion.EncryptedTrafficHeader.Builder> internal__static_Gazillion_EncryptedTrafficHeader__FieldAccessorTable;
-    internal static pbd::MessageDescriptor internal__static_Gazillion_PrecacheHeaders__Descriptor;
-    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PrecacheHeaders, global::Gazillion.PrecacheHeaders.Builder> internal__static_Gazillion_PrecacheHeaders__FieldAccessorTable;
-    internal static pbd::MessageDescriptor internal__static_Gazillion_NewsRequest__Descriptor;
-    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.NewsRequest, global::Gazillion.NewsRequest.Builder> internal__static_Gazillion_NewsRequest__FieldAccessorTable;
     #endregion
     #region Descriptor
     public static pbd::FileDescriptor Descriptor {
@@ -71,102 +65,82 @@ namespace Gazillion {
             "DXR3b2ZhY3RvcmNvZGUYDyABKAlSDXR3b2ZhY3RvcmNvZGUSJAoNdHdvZmFj", 
             "dG9ybmFtZRgQIAEoCVINdHdvZmFjdG9ybmFtZRI0ChV0d29mYWN0b3J0cnVz", 
             "dG1hY2hpbmUYESABKAlSFXR3b2ZhY3RvcnRydXN0bWFjaGluZRIoCg9zdHJl", 
-            "YW1pbmdjbGllbnQYEyABKAhSD3N0cmVhbWluZ2NsaWVudCKdAQoZQ29uc29s", 
-            "ZVNlcnZpY2VFbnRpdGxlbWVudBIkCg1FbnRpdGxlbWVudElkGAEgAigJUg1F", 
-            "bnRpdGxlbWVudElkEhoKCFVzZUNvdW50GAIgAigFUghVc2VDb3VudBIaCghV", 
-            "c2VMaW1pdBgDIAIoBVIIVXNlTGltaXQSIgoMSXNDb25zdW1hYmxlGAQgAigI", 
-            "UgxJc0NvbnN1bWFibGUi8AEKEExvZ2luRGF0YUNvbnNvbGUSFAoFdG9rZW4Y", 
-            "ASACKAlSBXRva2VuEhgKB3ZlcnNpb24YAiABKAlSB3ZlcnNpb24SOgoYbm9Q", 
-            "ZXJzaXN0ZW5jZVRoaXNTZXNzaW9uGAMgASgIUhhub1BlcnNpc3RlbmNlVGhp", 
-            "c1Nlc3Npb24SVgoTc2VydmljZUVudGl0bGVtZW50cxgEIAMoCzIkLkdhemls", 
-            "bGlvbi5Db25zb2xlU2VydmljZUVudGl0bGVtZW50UhNzZXJ2aWNlRW50aXRs", 
-            "ZW1lbnRzEhgKB3RpdGxlaWQYBSABKAlSB3RpdGxlaWQiZgoUQ3JlYXRlQWNj", 
-            "b3VudENvbnNvbGUSFAoFdG9rZW4YASACKAlSBXRva2VuEhgKB3ZlcnNpb24Y", 
-            "AiABKAlSB3ZlcnNpb24SHgoKcGxheWVybmFtZRgDIAIoCVIKcGxheWVybmFt", 
-            "ZSJfCg9BY2NlcHREb2N1bWVudHMSFAoFdG9rZW4YASACKAlSBXRva2VuEhgK", 
-            "B3ZlcnNpb24YAiABKAlSB3ZlcnNpb24SHAoJZG9jdW1lbnRzGAMgAygJUglk", 
-            "b2N1bWVudHMiYgoQU2VsZWN0UGxheWVyTmFtZRIUCgV0b2tlbhgBIAIoCVIF", 
-            "dG9rZW4SGAoHdmVyc2lvbhgCIAEoCVIHdmVyc2lvbhIeCgpwbGF5ZXJuYW1l", 
-            "GAMgAigJUgpwbGF5ZXJuYW1lIrUBChZJbml0aWFsQ2xpZW50SGFuZHNoYWtl", 
-            "El0KD3Byb3RvY29sVmVyc2lvbhgBIAIoDjIiLkdhemlsbGlvbi5Gcm9udGVu", 
-            "ZFByb3RvY29sVmVyc2lvbjoPQ1VSUkVOVF9WRVJTSU9OUg9wcm90b2NvbFZl", 
-            "cnNpb24SPAoKc2VydmVyVHlwZRgCIAIoDjIcLkdhemlsbGlvbi5QdWJTdWJT", 
-            "ZXJ2ZXJUeXBlc1IKc2VydmVyVHlwZSJpChFDbGllbnRDcmVkZW50aWFscxIc", 
-            "CglzZXNzaW9uaWQYASACKARSCXNlc3Npb25pZBIOCgJpdhgCIAIoDFICaXYS", 
-            "JgoOZW5jcnlwdGVkVG9rZW4YAyACKAxSDmVuY3J5cHRlZFRva2VuImoKEExv", 
-            "Z2luUXVldWVTdGF0dXMSIAoLcGxhY2VJbkxpbmUYASACKARSC3BsYWNlSW5M", 
-            "aW5lEjQKFW51bWJlck9mUGxheWVyc0luTGluZRgCIAIoBFIVbnVtYmVyT2ZQ", 
-            "bGF5ZXJzSW5MaW5lIoEBChhTZXNzaW9uRW5jcnlwdGlvbkNoYW5nZWQSLwoR", 
-            "cmFuZG9tTnVtYmVySW5kZXgYASACKA06ATFSEXJhbmRvbU51bWJlckluZGV4", 
-            "EjQKFWVuY3J5cHRlZFJhbmRvbU51bWJlchgCIAIoDFIVZW5jcnlwdGVkUmFu", 
-            "ZG9tTnVtYmVyIkoKEkV4dGVuZGVkTG9naW5FcnJvchI0CgVlcnJvchgBIAEo", 
-            "DjIeLkdhemlsbGlvbi5FeHRlbmRlZExvZ2luRXJyb3JzUgVlcnJvciJyChZF", 
-            "bmNyeXB0ZWRUcmFmZmljSGVhZGVyEiwKEXJhbmRvbU51bWJlckluZGV4GAEg", 
-            "AigNUhFyYW5kb21OdW1iZXJJbmRleBIqChBlbmNyeXB0ZWRUcmFmZmljGAIg", 
-            "AigMUhBlbmNyeXB0ZWRUcmFmZmljIikKD1ByZWNhY2hlSGVhZGVycxIWCgZs", 
-            "b2NhbGUYASACKAlSBmxvY2FsZSIlCgtOZXdzUmVxdWVzdBIWCgZsb2NhbGUY", 
-            "ASACKAlSBmxvY2FsZSouChdGcm9udGVuZFByb3RvY29sVmVyc2lvbhITCg9D", 
-            "VVJSRU5UX1ZFUlNJT04QASpLChNFeHRlbmRlZExvZ2luRXJyb3JzEhIKDk5P", 
-            "X0xPR0lOX0VSUk9SEAASIAocQ0xJRU5UX01BTkFHRVJfTk9UX0FWQUlMQUJM", 
-          "RRAB"));
+            "YW1pbmdjbGllbnQYEyABKAhSD3N0cmVhbWluZ2NsaWVudCJ+ChBMb2dpbkRh", 
+            "dGFDb25zb2xlEhQKBXRva2VuGAEgAigJUgV0b2tlbhIYCgd2ZXJzaW9uGAIg", 
+            "ASgJUgd2ZXJzaW9uEjoKGG5vUGVyc2lzdGVuY2VUaGlzU2Vzc2lvbhgDIAEo", 
+            "CFIYbm9QZXJzaXN0ZW5jZVRoaXNTZXNzaW9uImYKFENyZWF0ZUFjY291bnRD", 
+            "b25zb2xlEhQKBXRva2VuGAEgAigJUgV0b2tlbhIYCgd2ZXJzaW9uGAIgASgJ", 
+            "Ugd2ZXJzaW9uEh4KCnBsYXllcm5hbWUYAyACKAlSCnBsYXllcm5hbWUiXwoP", 
+            "QWNjZXB0RG9jdW1lbnRzEhQKBXRva2VuGAEgAigJUgV0b2tlbhIYCgd2ZXJz", 
+            "aW9uGAIgASgJUgd2ZXJzaW9uEhwKCWRvY3VtZW50cxgDIAMoCVIJZG9jdW1l", 
+            "bnRzImIKEFNlbGVjdFBsYXllck5hbWUSFAoFdG9rZW4YASACKAlSBXRva2Vu", 
+            "EhgKB3ZlcnNpb24YAiABKAlSB3ZlcnNpb24SHgoKcGxheWVybmFtZRgDIAIo", 
+            "CVIKcGxheWVybmFtZSK1AQoWSW5pdGlhbENsaWVudEhhbmRzaGFrZRJdCg9w", 
+            "cm90b2NvbFZlcnNpb24YASACKA4yIi5HYXppbGxpb24uRnJvbnRlbmRQcm90", 
+            "b2NvbFZlcnNpb246D0NVUlJFTlRfVkVSU0lPTlIPcHJvdG9jb2xWZXJzaW9u", 
+            "EjwKCnNlcnZlclR5cGUYAiACKA4yHC5HYXppbGxpb24uUHViU3ViU2VydmVy", 
+            "VHlwZXNSCnNlcnZlclR5cGUiaQoRQ2xpZW50Q3JlZGVudGlhbHMSHAoJc2Vz", 
+            "c2lvbmlkGAEgAigEUglzZXNzaW9uaWQSDgoCaXYYAiACKAxSAml2EiYKDmVu", 
+            "Y3J5cHRlZFRva2VuGAMgAigMUg5lbmNyeXB0ZWRUb2tlbiJqChBMb2dpblF1", 
+            "ZXVlU3RhdHVzEiAKC3BsYWNlSW5MaW5lGAEgAigEUgtwbGFjZUluTGluZRI0", 
+            "ChVudW1iZXJPZlBsYXllcnNJbkxpbmUYAiACKARSFW51bWJlck9mUGxheWVy", 
+            "c0luTGluZSKBAQoYU2Vzc2lvbkVuY3J5cHRpb25DaGFuZ2VkEi8KEXJhbmRv", 
+            "bU51bWJlckluZGV4GAEgAigNOgExUhFyYW5kb21OdW1iZXJJbmRleBI0ChVl", 
+            "bmNyeXB0ZWRSYW5kb21OdW1iZXIYAiACKAxSFWVuY3J5cHRlZFJhbmRvbU51", 
+            "bWJlciJKChJFeHRlbmRlZExvZ2luRXJyb3ISNAoFZXJyb3IYASABKA4yHi5H", 
+            "YXppbGxpb24uRXh0ZW5kZWRMb2dpbkVycm9yc1IFZXJyb3IicgoWRW5jcnlw", 
+            "dGVkVHJhZmZpY0hlYWRlchIsChFyYW5kb21OdW1iZXJJbmRleBgBIAIoDVIR", 
+            "cmFuZG9tTnVtYmVySW5kZXgSKgoQZW5jcnlwdGVkVHJhZmZpYxgCIAIoDFIQ", 
+            "ZW5jcnlwdGVkVHJhZmZpYyouChdGcm9udGVuZFByb3RvY29sVmVyc2lvbhIT", 
+            "Cg9DVVJSRU5UX1ZFUlNJT04QASpLChNFeHRlbmRlZExvZ2luRXJyb3JzEhIK", 
+            "Dk5PX0xPR0lOX0VSUk9SEAASIAocQ0xJRU5UX01BTkFHRVJfTk9UX0FWQUlM", 
+          "QUJMRRAB"));
       pbd::FileDescriptor.InternalDescriptorAssigner assigner = delegate(pbd::FileDescriptor root) {
         descriptor = root;
         internal__static_Gazillion_LoginDataPB__Descriptor = Descriptor.MessageTypes[0];
         internal__static_Gazillion_LoginDataPB__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.LoginDataPB, global::Gazillion.LoginDataPB.Builder>(internal__static_Gazillion_LoginDataPB__Descriptor,
                 new string[] { "EmailAddress", "Password", "Version", "Dbservername", "Token", "LoginAsAnotherPlayer", "NoPersistenceThisSession", "LoginAsPlayer", "ClientDownloader", "MachineId", "MachineIdDebugInfo", "Timezoneutcbias", "Platform", "PlatformString", "Locale", "Twofactorcode", "Twofactorname", "Twofactortrustmachine", "Streamingclient", });
-        internal__static_Gazillion_ConsoleServiceEntitlement__Descriptor = Descriptor.MessageTypes[1];
-        internal__static_Gazillion_ConsoleServiceEntitlement__FieldAccessorTable = 
-            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ConsoleServiceEntitlement, global::Gazillion.ConsoleServiceEntitlement.Builder>(internal__static_Gazillion_ConsoleServiceEntitlement__Descriptor,
-                new string[] { "EntitlementId", "UseCount", "UseLimit", "IsConsumable", });
-        internal__static_Gazillion_LoginDataConsole__Descriptor = Descriptor.MessageTypes[2];
+        internal__static_Gazillion_LoginDataConsole__Descriptor = Descriptor.MessageTypes[1];
         internal__static_Gazillion_LoginDataConsole__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.LoginDataConsole, global::Gazillion.LoginDataConsole.Builder>(internal__static_Gazillion_LoginDataConsole__Descriptor,
-                new string[] { "Token", "Version", "NoPersistenceThisSession", "ServiceEntitlements", "Titleid", });
-        internal__static_Gazillion_CreateAccountConsole__Descriptor = Descriptor.MessageTypes[3];
+                new string[] { "Token", "Version", "NoPersistenceThisSession", });
+        internal__static_Gazillion_CreateAccountConsole__Descriptor = Descriptor.MessageTypes[2];
         internal__static_Gazillion_CreateAccountConsole__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.CreateAccountConsole, global::Gazillion.CreateAccountConsole.Builder>(internal__static_Gazillion_CreateAccountConsole__Descriptor,
                 new string[] { "Token", "Version", "Playername", });
-        internal__static_Gazillion_AcceptDocuments__Descriptor = Descriptor.MessageTypes[4];
+        internal__static_Gazillion_AcceptDocuments__Descriptor = Descriptor.MessageTypes[3];
         internal__static_Gazillion_AcceptDocuments__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.AcceptDocuments, global::Gazillion.AcceptDocuments.Builder>(internal__static_Gazillion_AcceptDocuments__Descriptor,
                 new string[] { "Token", "Version", "Documents", });
-        internal__static_Gazillion_SelectPlayerName__Descriptor = Descriptor.MessageTypes[5];
+        internal__static_Gazillion_SelectPlayerName__Descriptor = Descriptor.MessageTypes[4];
         internal__static_Gazillion_SelectPlayerName__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.SelectPlayerName, global::Gazillion.SelectPlayerName.Builder>(internal__static_Gazillion_SelectPlayerName__Descriptor,
                 new string[] { "Token", "Version", "Playername", });
-        internal__static_Gazillion_InitialClientHandshake__Descriptor = Descriptor.MessageTypes[6];
+        internal__static_Gazillion_InitialClientHandshake__Descriptor = Descriptor.MessageTypes[5];
         internal__static_Gazillion_InitialClientHandshake__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.InitialClientHandshake, global::Gazillion.InitialClientHandshake.Builder>(internal__static_Gazillion_InitialClientHandshake__Descriptor,
                 new string[] { "ProtocolVersion", "ServerType", });
-        internal__static_Gazillion_ClientCredentials__Descriptor = Descriptor.MessageTypes[7];
+        internal__static_Gazillion_ClientCredentials__Descriptor = Descriptor.MessageTypes[6];
         internal__static_Gazillion_ClientCredentials__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ClientCredentials, global::Gazillion.ClientCredentials.Builder>(internal__static_Gazillion_ClientCredentials__Descriptor,
                 new string[] { "Sessionid", "Iv", "EncryptedToken", });
-        internal__static_Gazillion_LoginQueueStatus__Descriptor = Descriptor.MessageTypes[8];
+        internal__static_Gazillion_LoginQueueStatus__Descriptor = Descriptor.MessageTypes[7];
         internal__static_Gazillion_LoginQueueStatus__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.LoginQueueStatus, global::Gazillion.LoginQueueStatus.Builder>(internal__static_Gazillion_LoginQueueStatus__Descriptor,
                 new string[] { "PlaceInLine", "NumberOfPlayersInLine", });
-        internal__static_Gazillion_SessionEncryptionChanged__Descriptor = Descriptor.MessageTypes[9];
+        internal__static_Gazillion_SessionEncryptionChanged__Descriptor = Descriptor.MessageTypes[8];
         internal__static_Gazillion_SessionEncryptionChanged__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.SessionEncryptionChanged, global::Gazillion.SessionEncryptionChanged.Builder>(internal__static_Gazillion_SessionEncryptionChanged__Descriptor,
                 new string[] { "RandomNumberIndex", "EncryptedRandomNumber", });
-        internal__static_Gazillion_ExtendedLoginError__Descriptor = Descriptor.MessageTypes[10];
+        internal__static_Gazillion_ExtendedLoginError__Descriptor = Descriptor.MessageTypes[9];
         internal__static_Gazillion_ExtendedLoginError__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ExtendedLoginError, global::Gazillion.ExtendedLoginError.Builder>(internal__static_Gazillion_ExtendedLoginError__Descriptor,
                 new string[] { "Error", });
-        internal__static_Gazillion_EncryptedTrafficHeader__Descriptor = Descriptor.MessageTypes[11];
+        internal__static_Gazillion_EncryptedTrafficHeader__Descriptor = Descriptor.MessageTypes[10];
         internal__static_Gazillion_EncryptedTrafficHeader__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.EncryptedTrafficHeader, global::Gazillion.EncryptedTrafficHeader.Builder>(internal__static_Gazillion_EncryptedTrafficHeader__Descriptor,
                 new string[] { "RandomNumberIndex", "EncryptedTraffic", });
-        internal__static_Gazillion_PrecacheHeaders__Descriptor = Descriptor.MessageTypes[12];
-        internal__static_Gazillion_PrecacheHeaders__FieldAccessorTable = 
-            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PrecacheHeaders, global::Gazillion.PrecacheHeaders.Builder>(internal__static_Gazillion_PrecacheHeaders__Descriptor,
-                new string[] { "Locale", });
-        internal__static_Gazillion_NewsRequest__Descriptor = Descriptor.MessageTypes[13];
-        internal__static_Gazillion_NewsRequest__FieldAccessorTable = 
-            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.NewsRequest, global::Gazillion.NewsRequest.Builder>(internal__static_Gazillion_NewsRequest__Descriptor,
-                new string[] { "Locale", });
         pb::ExtensionRegistry registry = pb::ExtensionRegistry.CreateInstance();
         RegisterAllExtensions(registry);
         global::Gazillion.PubSubProtocol.RegisterAllExtensions(registry);
@@ -1259,420 +1233,11 @@ namespace Gazillion {
   }
   
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-  public sealed partial class ConsoleServiceEntitlement : pb::GeneratedMessage<ConsoleServiceEntitlement, ConsoleServiceEntitlement.Builder> {
-    private ConsoleServiceEntitlement() { }
-    private static readonly ConsoleServiceEntitlement defaultInstance = new ConsoleServiceEntitlement().MakeReadOnly();
-    private static readonly string[] _consoleServiceEntitlementFieldNames = new string[] { "EntitlementId", "IsConsumable", "UseCount", "UseLimit" };
-    private static readonly uint[] _consoleServiceEntitlementFieldTags = new uint[] { 10, 32, 16, 24 };
-    public static ConsoleServiceEntitlement DefaultInstance {
-      get { return defaultInstance; }
-    }
-    
-    public override ConsoleServiceEntitlement DefaultInstanceForType {
-      get { return DefaultInstance; }
-    }
-    
-    protected override ConsoleServiceEntitlement ThisMessage {
-      get { return this; }
-    }
-    
-    public static pbd::MessageDescriptor Descriptor {
-      get { return global::Gazillion.FrontendProtocol.internal__static_Gazillion_ConsoleServiceEntitlement__Descriptor; }
-    }
-    
-    protected override pb::FieldAccess.FieldAccessorTable<ConsoleServiceEntitlement, ConsoleServiceEntitlement.Builder> InternalFieldAccessors {
-      get { return global::Gazillion.FrontendProtocol.internal__static_Gazillion_ConsoleServiceEntitlement__FieldAccessorTable; }
-    }
-    
-    public const int EntitlementIdFieldNumber = 1;
-    private bool hasEntitlementId;
-    private string entitlementId_ = "";
-    public bool HasEntitlementId {
-      get { return hasEntitlementId; }
-    }
-    public string EntitlementId {
-      get { return entitlementId_; }
-    }
-    
-    public const int UseCountFieldNumber = 2;
-    private bool hasUseCount;
-    private int useCount_;
-    public bool HasUseCount {
-      get { return hasUseCount; }
-    }
-    public int UseCount {
-      get { return useCount_; }
-    }
-    
-    public const int UseLimitFieldNumber = 3;
-    private bool hasUseLimit;
-    private int useLimit_;
-    public bool HasUseLimit {
-      get { return hasUseLimit; }
-    }
-    public int UseLimit {
-      get { return useLimit_; }
-    }
-    
-    public const int IsConsumableFieldNumber = 4;
-    private bool hasIsConsumable;
-    private bool isConsumable_;
-    public bool HasIsConsumable {
-      get { return hasIsConsumable; }
-    }
-    public bool IsConsumable {
-      get { return isConsumable_; }
-    }
-    
-    public override bool IsInitialized {
-      get {
-        if (!hasEntitlementId) return false;
-        if (!hasUseCount) return false;
-        if (!hasUseLimit) return false;
-        if (!hasIsConsumable) return false;
-        return true;
-      }
-    }
-    
-    public override void WriteTo(pb::ICodedOutputStream output) {
-      CalcSerializedSize();
-      string[] field_names = _consoleServiceEntitlementFieldNames;
-      if (hasEntitlementId) {
-        output.WriteString(1, field_names[0], EntitlementId);
-      }
-      if (hasUseCount) {
-        output.WriteInt32(2, field_names[2], UseCount);
-      }
-      if (hasUseLimit) {
-        output.WriteInt32(3, field_names[3], UseLimit);
-      }
-      if (hasIsConsumable) {
-        output.WriteBool(4, field_names[1], IsConsumable);
-      }
-      UnknownFields.WriteTo(output);
-    }
-    
-    private int memoizedSerializedSize = -1;
-    public override int SerializedSize {
-      get {
-        int size = memoizedSerializedSize;
-        if (size != -1) return size;
-        return CalcSerializedSize();
-      }
-    }
-    
-    private int CalcSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-      
-      size = 0;
-      if (hasEntitlementId) {
-        size += pb::CodedOutputStream.ComputeStringSize(1, EntitlementId);
-      }
-      if (hasUseCount) {
-        size += pb::CodedOutputStream.ComputeInt32Size(2, UseCount);
-      }
-      if (hasUseLimit) {
-        size += pb::CodedOutputStream.ComputeInt32Size(3, UseLimit);
-      }
-      if (hasIsConsumable) {
-        size += pb::CodedOutputStream.ComputeBoolSize(4, IsConsumable);
-      }
-      size += UnknownFields.SerializedSize;
-      memoizedSerializedSize = size;
-      return size;
-    }
-    public static ConsoleServiceEntitlement ParseFrom(pb::ByteString data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static ConsoleServiceEntitlement ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static ConsoleServiceEntitlement ParseFrom(byte[] data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static ConsoleServiceEntitlement ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static ConsoleServiceEntitlement ParseFrom(global::System.IO.Stream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static ConsoleServiceEntitlement ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    public static ConsoleServiceEntitlement ParseDelimitedFrom(global::System.IO.Stream input) {
-      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
-    }
-    public static ConsoleServiceEntitlement ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
-    }
-    public static ConsoleServiceEntitlement ParseFrom(pb::ICodedInputStream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static ConsoleServiceEntitlement ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    private ConsoleServiceEntitlement MakeReadOnly() {
-      return this;
-    }
-    
-    public static Builder CreateBuilder() { return new Builder(); }
-    public override Builder ToBuilder() { return CreateBuilder(this); }
-    public override Builder CreateBuilderForType() { return new Builder(); }
-    public static Builder CreateBuilder(ConsoleServiceEntitlement prototype) {
-      return new Builder(prototype);
-    }
-    
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-    public sealed partial class Builder : pb::GeneratedBuilder<ConsoleServiceEntitlement, Builder> {
-      protected override Builder ThisBuilder {
-        get { return this; }
-      }
-      public Builder() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-      }
-      internal Builder(ConsoleServiceEntitlement cloneFrom) {
-        result = cloneFrom;
-        resultIsReadOnly = true;
-      }
-      
-      private bool resultIsReadOnly;
-      private ConsoleServiceEntitlement result;
-      
-      private ConsoleServiceEntitlement PrepareBuilder() {
-        if (resultIsReadOnly) {
-          ConsoleServiceEntitlement original = result;
-          result = new ConsoleServiceEntitlement();
-          resultIsReadOnly = false;
-          MergeFrom(original);
-        }
-        return result;
-      }
-      
-      public override bool IsInitialized {
-        get { return result.IsInitialized; }
-      }
-      
-      protected override ConsoleServiceEntitlement MessageBeingBuilt {
-        get { return PrepareBuilder(); }
-      }
-      
-      public override Builder Clear() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-        return this;
-      }
-      
-      public override Builder Clone() {
-        if (resultIsReadOnly) {
-          return new Builder(result);
-        } else {
-          return new Builder().MergeFrom(result);
-        }
-      }
-      
-      public override pbd::MessageDescriptor DescriptorForType {
-        get { return global::Gazillion.ConsoleServiceEntitlement.Descriptor; }
-      }
-      
-      public override ConsoleServiceEntitlement DefaultInstanceForType {
-        get { return global::Gazillion.ConsoleServiceEntitlement.DefaultInstance; }
-      }
-      
-      public override ConsoleServiceEntitlement BuildPartial() {
-        if (resultIsReadOnly) {
-          return result;
-        }
-        resultIsReadOnly = true;
-        return result.MakeReadOnly();
-      }
-      
-      public override Builder MergeFrom(pb::IMessage other) {
-        if (other is ConsoleServiceEntitlement) {
-          return MergeFrom((ConsoleServiceEntitlement) other);
-        } else {
-          base.MergeFrom(other);
-          return this;
-        }
-      }
-      
-      public override Builder MergeFrom(ConsoleServiceEntitlement other) {
-        if (other == global::Gazillion.ConsoleServiceEntitlement.DefaultInstance) return this;
-        PrepareBuilder();
-        if (other.HasEntitlementId) {
-          EntitlementId = other.EntitlementId;
-        }
-        if (other.HasUseCount) {
-          UseCount = other.UseCount;
-        }
-        if (other.HasUseLimit) {
-          UseLimit = other.UseLimit;
-        }
-        if (other.HasIsConsumable) {
-          IsConsumable = other.IsConsumable;
-        }
-        this.MergeUnknownFields(other.UnknownFields);
-        return this;
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input) {
-        return MergeFrom(input, pb::ExtensionRegistry.Empty);
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-        PrepareBuilder();
-        pb::UnknownFieldSet.Builder unknownFields = null;
-        uint tag;
-        string field_name;
-        while (input.ReadTag(out tag, out field_name)) {
-          if(tag == 0 && field_name != null) {
-            int field_ordinal = global::System.Array.BinarySearch(_consoleServiceEntitlementFieldNames, field_name, global::System.StringComparer.Ordinal);
-            if(field_ordinal >= 0)
-              tag = _consoleServiceEntitlementFieldTags[field_ordinal];
-            else {
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              continue;
-            }
-          }
-          switch (tag) {
-            case 0: {
-              throw pb::InvalidProtocolBufferException.InvalidTag();
-            }
-            default: {
-              if (pb::WireFormat.IsEndGroupTag(tag)) {
-                if (unknownFields != null) {
-                  this.UnknownFields = unknownFields.Build();
-                }
-                return this;
-              }
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              break;
-            }
-            case 10: {
-              result.hasEntitlementId = input.ReadString(ref result.entitlementId_);
-              break;
-            }
-            case 16: {
-              result.hasUseCount = input.ReadInt32(ref result.useCount_);
-              break;
-            }
-            case 24: {
-              result.hasUseLimit = input.ReadInt32(ref result.useLimit_);
-              break;
-            }
-            case 32: {
-              result.hasIsConsumable = input.ReadBool(ref result.isConsumable_);
-              break;
-            }
-          }
-        }
-        
-        if (unknownFields != null) {
-          this.UnknownFields = unknownFields.Build();
-        }
-        return this;
-      }
-      
-      
-      public bool HasEntitlementId {
-        get { return result.hasEntitlementId; }
-      }
-      public string EntitlementId {
-        get { return result.EntitlementId; }
-        set { SetEntitlementId(value); }
-      }
-      public Builder SetEntitlementId(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasEntitlementId = true;
-        result.entitlementId_ = value;
-        return this;
-      }
-      public Builder ClearEntitlementId() {
-        PrepareBuilder();
-        result.hasEntitlementId = false;
-        result.entitlementId_ = "";
-        return this;
-      }
-      
-      public bool HasUseCount {
-        get { return result.hasUseCount; }
-      }
-      public int UseCount {
-        get { return result.UseCount; }
-        set { SetUseCount(value); }
-      }
-      public Builder SetUseCount(int value) {
-        PrepareBuilder();
-        result.hasUseCount = true;
-        result.useCount_ = value;
-        return this;
-      }
-      public Builder ClearUseCount() {
-        PrepareBuilder();
-        result.hasUseCount = false;
-        result.useCount_ = 0;
-        return this;
-      }
-      
-      public bool HasUseLimit {
-        get { return result.hasUseLimit; }
-      }
-      public int UseLimit {
-        get { return result.UseLimit; }
-        set { SetUseLimit(value); }
-      }
-      public Builder SetUseLimit(int value) {
-        PrepareBuilder();
-        result.hasUseLimit = true;
-        result.useLimit_ = value;
-        return this;
-      }
-      public Builder ClearUseLimit() {
-        PrepareBuilder();
-        result.hasUseLimit = false;
-        result.useLimit_ = 0;
-        return this;
-      }
-      
-      public bool HasIsConsumable {
-        get { return result.hasIsConsumable; }
-      }
-      public bool IsConsumable {
-        get { return result.IsConsumable; }
-        set { SetIsConsumable(value); }
-      }
-      public Builder SetIsConsumable(bool value) {
-        PrepareBuilder();
-        result.hasIsConsumable = true;
-        result.isConsumable_ = value;
-        return this;
-      }
-      public Builder ClearIsConsumable() {
-        PrepareBuilder();
-        result.hasIsConsumable = false;
-        result.isConsumable_ = false;
-        return this;
-      }
-    }
-    static ConsoleServiceEntitlement() {
-      object.ReferenceEquals(global::Gazillion.FrontendProtocol.Descriptor, null);
-    }
-  }
-  
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
   public sealed partial class LoginDataConsole : pb::GeneratedMessage<LoginDataConsole, LoginDataConsole.Builder> {
     private LoginDataConsole() { }
     private static readonly LoginDataConsole defaultInstance = new LoginDataConsole().MakeReadOnly();
-    private static readonly string[] _loginDataConsoleFieldNames = new string[] { "noPersistenceThisSession", "serviceEntitlements", "titleid", "token", "version" };
-    private static readonly uint[] _loginDataConsoleFieldTags = new uint[] { 24, 34, 42, 10, 18 };
+    private static readonly string[] _loginDataConsoleFieldNames = new string[] { "noPersistenceThisSession", "token", "version" };
+    private static readonly uint[] _loginDataConsoleFieldTags = new uint[] { 24, 10, 18 };
     public static LoginDataConsole DefaultInstance {
       get { return defaultInstance; }
     }
@@ -1723,34 +1288,9 @@ namespace Gazillion {
       get { return noPersistenceThisSession_; }
     }
     
-    public const int ServiceEntitlementsFieldNumber = 4;
-    private pbc::PopsicleList<global::Gazillion.ConsoleServiceEntitlement> serviceEntitlements_ = new pbc::PopsicleList<global::Gazillion.ConsoleServiceEntitlement>();
-    public scg::IList<global::Gazillion.ConsoleServiceEntitlement> ServiceEntitlementsList {
-      get { return serviceEntitlements_; }
-    }
-    public int ServiceEntitlementsCount {
-      get { return serviceEntitlements_.Count; }
-    }
-    public global::Gazillion.ConsoleServiceEntitlement GetServiceEntitlements(int index) {
-      return serviceEntitlements_[index];
-    }
-    
-    public const int TitleidFieldNumber = 5;
-    private bool hasTitleid;
-    private string titleid_ = "";
-    public bool HasTitleid {
-      get { return hasTitleid; }
-    }
-    public string Titleid {
-      get { return titleid_; }
-    }
-    
     public override bool IsInitialized {
       get {
         if (!hasToken) return false;
-        foreach (global::Gazillion.ConsoleServiceEntitlement element in ServiceEntitlementsList) {
-          if (!element.IsInitialized) return false;
-        }
         return true;
       }
     }
@@ -1759,19 +1299,13 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _loginDataConsoleFieldNames;
       if (hasToken) {
-        output.WriteString(1, field_names[3], Token);
+        output.WriteString(1, field_names[1], Token);
       }
       if (hasVersion) {
-        output.WriteString(2, field_names[4], Version);
+        output.WriteString(2, field_names[2], Version);
       }
       if (hasNoPersistenceThisSession) {
         output.WriteBool(3, field_names[0], NoPersistenceThisSession);
-      }
-      if (serviceEntitlements_.Count > 0) {
-        output.WriteMessageArray(4, field_names[1], serviceEntitlements_);
-      }
-      if (hasTitleid) {
-        output.WriteString(5, field_names[2], Titleid);
       }
       UnknownFields.WriteTo(output);
     }
@@ -1798,12 +1332,6 @@ namespace Gazillion {
       }
       if (hasNoPersistenceThisSession) {
         size += pb::CodedOutputStream.ComputeBoolSize(3, NoPersistenceThisSession);
-      }
-      foreach (global::Gazillion.ConsoleServiceEntitlement element in ServiceEntitlementsList) {
-        size += pb::CodedOutputStream.ComputeMessageSize(4, element);
-      }
-      if (hasTitleid) {
-        size += pb::CodedOutputStream.ComputeStringSize(5, Titleid);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -1840,7 +1368,6 @@ namespace Gazillion {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
     private LoginDataConsole MakeReadOnly() {
-      serviceEntitlements_.MakeReadOnly();
       return this;
     }
     
@@ -1937,12 +1464,6 @@ namespace Gazillion {
         if (other.HasNoPersistenceThisSession) {
           NoPersistenceThisSession = other.NoPersistenceThisSession;
         }
-        if (other.serviceEntitlements_.Count != 0) {
-          result.serviceEntitlements_.Add(other.serviceEntitlements_);
-        }
-        if (other.HasTitleid) {
-          Titleid = other.Titleid;
-        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -1996,14 +1517,6 @@ namespace Gazillion {
             }
             case 24: {
               result.hasNoPersistenceThisSession = input.ReadBool(ref result.noPersistenceThisSession_);
-              break;
-            }
-            case 34: {
-              input.ReadMessageArray(tag, field_name, result.serviceEntitlements_, global::Gazillion.ConsoleServiceEntitlement.DefaultInstance, extensionRegistry);
-              break;
-            }
-            case 42: {
-              result.hasTitleid = input.ReadString(ref result.titleid_);
               break;
             }
           }
@@ -2075,71 +1588,6 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasNoPersistenceThisSession = false;
         result.noPersistenceThisSession_ = false;
-        return this;
-      }
-      
-      public pbc::IPopsicleList<global::Gazillion.ConsoleServiceEntitlement> ServiceEntitlementsList {
-        get { return PrepareBuilder().serviceEntitlements_; }
-      }
-      public int ServiceEntitlementsCount {
-        get { return result.ServiceEntitlementsCount; }
-      }
-      public global::Gazillion.ConsoleServiceEntitlement GetServiceEntitlements(int index) {
-        return result.GetServiceEntitlements(index);
-      }
-      public Builder SetServiceEntitlements(int index, global::Gazillion.ConsoleServiceEntitlement value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.serviceEntitlements_[index] = value;
-        return this;
-      }
-      public Builder SetServiceEntitlements(int index, global::Gazillion.ConsoleServiceEntitlement.Builder builderForValue) {
-        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
-        PrepareBuilder();
-        result.serviceEntitlements_[index] = builderForValue.Build();
-        return this;
-      }
-      public Builder AddServiceEntitlements(global::Gazillion.ConsoleServiceEntitlement value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.serviceEntitlements_.Add(value);
-        return this;
-      }
-      public Builder AddServiceEntitlements(global::Gazillion.ConsoleServiceEntitlement.Builder builderForValue) {
-        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
-        PrepareBuilder();
-        result.serviceEntitlements_.Add(builderForValue.Build());
-        return this;
-      }
-      public Builder AddRangeServiceEntitlements(scg::IEnumerable<global::Gazillion.ConsoleServiceEntitlement> values) {
-        PrepareBuilder();
-        result.serviceEntitlements_.Add(values);
-        return this;
-      }
-      public Builder ClearServiceEntitlements() {
-        PrepareBuilder();
-        result.serviceEntitlements_.Clear();
-        return this;
-      }
-      
-      public bool HasTitleid {
-        get { return result.hasTitleid; }
-      }
-      public string Titleid {
-        get { return result.Titleid; }
-        set { SetTitleid(value); }
-      }
-      public Builder SetTitleid(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasTitleid = true;
-        result.titleid_ = value;
-        return this;
-      }
-      public Builder ClearTitleid() {
-        PrepareBuilder();
-        result.hasTitleid = false;
-        result.titleid_ = "";
         return this;
       }
     }
@@ -5207,560 +4655,6 @@ namespace Gazillion {
       }
     }
     static EncryptedTrafficHeader() {
-      object.ReferenceEquals(global::Gazillion.FrontendProtocol.Descriptor, null);
-    }
-  }
-  
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-  public sealed partial class PrecacheHeaders : pb::GeneratedMessage<PrecacheHeaders, PrecacheHeaders.Builder> {
-    private PrecacheHeaders() { }
-    private static readonly PrecacheHeaders defaultInstance = new PrecacheHeaders().MakeReadOnly();
-    private static readonly string[] _precacheHeadersFieldNames = new string[] { "locale" };
-    private static readonly uint[] _precacheHeadersFieldTags = new uint[] { 10 };
-    public static PrecacheHeaders DefaultInstance {
-      get { return defaultInstance; }
-    }
-    
-    public override PrecacheHeaders DefaultInstanceForType {
-      get { return DefaultInstance; }
-    }
-    
-    protected override PrecacheHeaders ThisMessage {
-      get { return this; }
-    }
-    
-    public static pbd::MessageDescriptor Descriptor {
-      get { return global::Gazillion.FrontendProtocol.internal__static_Gazillion_PrecacheHeaders__Descriptor; }
-    }
-    
-    protected override pb::FieldAccess.FieldAccessorTable<PrecacheHeaders, PrecacheHeaders.Builder> InternalFieldAccessors {
-      get { return global::Gazillion.FrontendProtocol.internal__static_Gazillion_PrecacheHeaders__FieldAccessorTable; }
-    }
-    
-    public const int LocaleFieldNumber = 1;
-    private bool hasLocale;
-    private string locale_ = "";
-    public bool HasLocale {
-      get { return hasLocale; }
-    }
-    public string Locale {
-      get { return locale_; }
-    }
-    
-    public override bool IsInitialized {
-      get {
-        if (!hasLocale) return false;
-        return true;
-      }
-    }
-    
-    public override void WriteTo(pb::ICodedOutputStream output) {
-      CalcSerializedSize();
-      string[] field_names = _precacheHeadersFieldNames;
-      if (hasLocale) {
-        output.WriteString(1, field_names[0], Locale);
-      }
-      UnknownFields.WriteTo(output);
-    }
-    
-    private int memoizedSerializedSize = -1;
-    public override int SerializedSize {
-      get {
-        int size = memoizedSerializedSize;
-        if (size != -1) return size;
-        return CalcSerializedSize();
-      }
-    }
-    
-    private int CalcSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-      
-      size = 0;
-      if (hasLocale) {
-        size += pb::CodedOutputStream.ComputeStringSize(1, Locale);
-      }
-      size += UnknownFields.SerializedSize;
-      memoizedSerializedSize = size;
-      return size;
-    }
-    public static PrecacheHeaders ParseFrom(pb::ByteString data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static PrecacheHeaders ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static PrecacheHeaders ParseFrom(byte[] data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static PrecacheHeaders ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static PrecacheHeaders ParseFrom(global::System.IO.Stream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static PrecacheHeaders ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    public static PrecacheHeaders ParseDelimitedFrom(global::System.IO.Stream input) {
-      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
-    }
-    public static PrecacheHeaders ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
-    }
-    public static PrecacheHeaders ParseFrom(pb::ICodedInputStream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static PrecacheHeaders ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    private PrecacheHeaders MakeReadOnly() {
-      return this;
-    }
-    
-    public static Builder CreateBuilder() { return new Builder(); }
-    public override Builder ToBuilder() { return CreateBuilder(this); }
-    public override Builder CreateBuilderForType() { return new Builder(); }
-    public static Builder CreateBuilder(PrecacheHeaders prototype) {
-      return new Builder(prototype);
-    }
-    
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-    public sealed partial class Builder : pb::GeneratedBuilder<PrecacheHeaders, Builder> {
-      protected override Builder ThisBuilder {
-        get { return this; }
-      }
-      public Builder() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-      }
-      internal Builder(PrecacheHeaders cloneFrom) {
-        result = cloneFrom;
-        resultIsReadOnly = true;
-      }
-      
-      private bool resultIsReadOnly;
-      private PrecacheHeaders result;
-      
-      private PrecacheHeaders PrepareBuilder() {
-        if (resultIsReadOnly) {
-          PrecacheHeaders original = result;
-          result = new PrecacheHeaders();
-          resultIsReadOnly = false;
-          MergeFrom(original);
-        }
-        return result;
-      }
-      
-      public override bool IsInitialized {
-        get { return result.IsInitialized; }
-      }
-      
-      protected override PrecacheHeaders MessageBeingBuilt {
-        get { return PrepareBuilder(); }
-      }
-      
-      public override Builder Clear() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-        return this;
-      }
-      
-      public override Builder Clone() {
-        if (resultIsReadOnly) {
-          return new Builder(result);
-        } else {
-          return new Builder().MergeFrom(result);
-        }
-      }
-      
-      public override pbd::MessageDescriptor DescriptorForType {
-        get { return global::Gazillion.PrecacheHeaders.Descriptor; }
-      }
-      
-      public override PrecacheHeaders DefaultInstanceForType {
-        get { return global::Gazillion.PrecacheHeaders.DefaultInstance; }
-      }
-      
-      public override PrecacheHeaders BuildPartial() {
-        if (resultIsReadOnly) {
-          return result;
-        }
-        resultIsReadOnly = true;
-        return result.MakeReadOnly();
-      }
-      
-      public override Builder MergeFrom(pb::IMessage other) {
-        if (other is PrecacheHeaders) {
-          return MergeFrom((PrecacheHeaders) other);
-        } else {
-          base.MergeFrom(other);
-          return this;
-        }
-      }
-      
-      public override Builder MergeFrom(PrecacheHeaders other) {
-        if (other == global::Gazillion.PrecacheHeaders.DefaultInstance) return this;
-        PrepareBuilder();
-        if (other.HasLocale) {
-          Locale = other.Locale;
-        }
-        this.MergeUnknownFields(other.UnknownFields);
-        return this;
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input) {
-        return MergeFrom(input, pb::ExtensionRegistry.Empty);
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-        PrepareBuilder();
-        pb::UnknownFieldSet.Builder unknownFields = null;
-        uint tag;
-        string field_name;
-        while (input.ReadTag(out tag, out field_name)) {
-          if(tag == 0 && field_name != null) {
-            int field_ordinal = global::System.Array.BinarySearch(_precacheHeadersFieldNames, field_name, global::System.StringComparer.Ordinal);
-            if(field_ordinal >= 0)
-              tag = _precacheHeadersFieldTags[field_ordinal];
-            else {
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              continue;
-            }
-          }
-          switch (tag) {
-            case 0: {
-              throw pb::InvalidProtocolBufferException.InvalidTag();
-            }
-            default: {
-              if (pb::WireFormat.IsEndGroupTag(tag)) {
-                if (unknownFields != null) {
-                  this.UnknownFields = unknownFields.Build();
-                }
-                return this;
-              }
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              break;
-            }
-            case 10: {
-              result.hasLocale = input.ReadString(ref result.locale_);
-              break;
-            }
-          }
-        }
-        
-        if (unknownFields != null) {
-          this.UnknownFields = unknownFields.Build();
-        }
-        return this;
-      }
-      
-      
-      public bool HasLocale {
-        get { return result.hasLocale; }
-      }
-      public string Locale {
-        get { return result.Locale; }
-        set { SetLocale(value); }
-      }
-      public Builder SetLocale(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasLocale = true;
-        result.locale_ = value;
-        return this;
-      }
-      public Builder ClearLocale() {
-        PrepareBuilder();
-        result.hasLocale = false;
-        result.locale_ = "";
-        return this;
-      }
-    }
-    static PrecacheHeaders() {
-      object.ReferenceEquals(global::Gazillion.FrontendProtocol.Descriptor, null);
-    }
-  }
-  
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-  public sealed partial class NewsRequest : pb::GeneratedMessage<NewsRequest, NewsRequest.Builder> {
-    private NewsRequest() { }
-    private static readonly NewsRequest defaultInstance = new NewsRequest().MakeReadOnly();
-    private static readonly string[] _newsRequestFieldNames = new string[] { "locale" };
-    private static readonly uint[] _newsRequestFieldTags = new uint[] { 10 };
-    public static NewsRequest DefaultInstance {
-      get { return defaultInstance; }
-    }
-    
-    public override NewsRequest DefaultInstanceForType {
-      get { return DefaultInstance; }
-    }
-    
-    protected override NewsRequest ThisMessage {
-      get { return this; }
-    }
-    
-    public static pbd::MessageDescriptor Descriptor {
-      get { return global::Gazillion.FrontendProtocol.internal__static_Gazillion_NewsRequest__Descriptor; }
-    }
-    
-    protected override pb::FieldAccess.FieldAccessorTable<NewsRequest, NewsRequest.Builder> InternalFieldAccessors {
-      get { return global::Gazillion.FrontendProtocol.internal__static_Gazillion_NewsRequest__FieldAccessorTable; }
-    }
-    
-    public const int LocaleFieldNumber = 1;
-    private bool hasLocale;
-    private string locale_ = "";
-    public bool HasLocale {
-      get { return hasLocale; }
-    }
-    public string Locale {
-      get { return locale_; }
-    }
-    
-    public override bool IsInitialized {
-      get {
-        if (!hasLocale) return false;
-        return true;
-      }
-    }
-    
-    public override void WriteTo(pb::ICodedOutputStream output) {
-      CalcSerializedSize();
-      string[] field_names = _newsRequestFieldNames;
-      if (hasLocale) {
-        output.WriteString(1, field_names[0], Locale);
-      }
-      UnknownFields.WriteTo(output);
-    }
-    
-    private int memoizedSerializedSize = -1;
-    public override int SerializedSize {
-      get {
-        int size = memoizedSerializedSize;
-        if (size != -1) return size;
-        return CalcSerializedSize();
-      }
-    }
-    
-    private int CalcSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-      
-      size = 0;
-      if (hasLocale) {
-        size += pb::CodedOutputStream.ComputeStringSize(1, Locale);
-      }
-      size += UnknownFields.SerializedSize;
-      memoizedSerializedSize = size;
-      return size;
-    }
-    public static NewsRequest ParseFrom(pb::ByteString data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static NewsRequest ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static NewsRequest ParseFrom(byte[] data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static NewsRequest ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static NewsRequest ParseFrom(global::System.IO.Stream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static NewsRequest ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    public static NewsRequest ParseDelimitedFrom(global::System.IO.Stream input) {
-      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
-    }
-    public static NewsRequest ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
-    }
-    public static NewsRequest ParseFrom(pb::ICodedInputStream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static NewsRequest ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    private NewsRequest MakeReadOnly() {
-      return this;
-    }
-    
-    public static Builder CreateBuilder() { return new Builder(); }
-    public override Builder ToBuilder() { return CreateBuilder(this); }
-    public override Builder CreateBuilderForType() { return new Builder(); }
-    public static Builder CreateBuilder(NewsRequest prototype) {
-      return new Builder(prototype);
-    }
-    
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-    public sealed partial class Builder : pb::GeneratedBuilder<NewsRequest, Builder> {
-      protected override Builder ThisBuilder {
-        get { return this; }
-      }
-      public Builder() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-      }
-      internal Builder(NewsRequest cloneFrom) {
-        result = cloneFrom;
-        resultIsReadOnly = true;
-      }
-      
-      private bool resultIsReadOnly;
-      private NewsRequest result;
-      
-      private NewsRequest PrepareBuilder() {
-        if (resultIsReadOnly) {
-          NewsRequest original = result;
-          result = new NewsRequest();
-          resultIsReadOnly = false;
-          MergeFrom(original);
-        }
-        return result;
-      }
-      
-      public override bool IsInitialized {
-        get { return result.IsInitialized; }
-      }
-      
-      protected override NewsRequest MessageBeingBuilt {
-        get { return PrepareBuilder(); }
-      }
-      
-      public override Builder Clear() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-        return this;
-      }
-      
-      public override Builder Clone() {
-        if (resultIsReadOnly) {
-          return new Builder(result);
-        } else {
-          return new Builder().MergeFrom(result);
-        }
-      }
-      
-      public override pbd::MessageDescriptor DescriptorForType {
-        get { return global::Gazillion.NewsRequest.Descriptor; }
-      }
-      
-      public override NewsRequest DefaultInstanceForType {
-        get { return global::Gazillion.NewsRequest.DefaultInstance; }
-      }
-      
-      public override NewsRequest BuildPartial() {
-        if (resultIsReadOnly) {
-          return result;
-        }
-        resultIsReadOnly = true;
-        return result.MakeReadOnly();
-      }
-      
-      public override Builder MergeFrom(pb::IMessage other) {
-        if (other is NewsRequest) {
-          return MergeFrom((NewsRequest) other);
-        } else {
-          base.MergeFrom(other);
-          return this;
-        }
-      }
-      
-      public override Builder MergeFrom(NewsRequest other) {
-        if (other == global::Gazillion.NewsRequest.DefaultInstance) return this;
-        PrepareBuilder();
-        if (other.HasLocale) {
-          Locale = other.Locale;
-        }
-        this.MergeUnknownFields(other.UnknownFields);
-        return this;
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input) {
-        return MergeFrom(input, pb::ExtensionRegistry.Empty);
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-        PrepareBuilder();
-        pb::UnknownFieldSet.Builder unknownFields = null;
-        uint tag;
-        string field_name;
-        while (input.ReadTag(out tag, out field_name)) {
-          if(tag == 0 && field_name != null) {
-            int field_ordinal = global::System.Array.BinarySearch(_newsRequestFieldNames, field_name, global::System.StringComparer.Ordinal);
-            if(field_ordinal >= 0)
-              tag = _newsRequestFieldTags[field_ordinal];
-            else {
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              continue;
-            }
-          }
-          switch (tag) {
-            case 0: {
-              throw pb::InvalidProtocolBufferException.InvalidTag();
-            }
-            default: {
-              if (pb::WireFormat.IsEndGroupTag(tag)) {
-                if (unknownFields != null) {
-                  this.UnknownFields = unknownFields.Build();
-                }
-                return this;
-              }
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              break;
-            }
-            case 10: {
-              result.hasLocale = input.ReadString(ref result.locale_);
-              break;
-            }
-          }
-        }
-        
-        if (unknownFields != null) {
-          this.UnknownFields = unknownFields.Build();
-        }
-        return this;
-      }
-      
-      
-      public bool HasLocale {
-        get { return result.hasLocale; }
-      }
-      public string Locale {
-        get { return result.Locale; }
-        set { SetLocale(value); }
-      }
-      public Builder SetLocale(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasLocale = true;
-        result.locale_ = value;
-        return this;
-      }
-      public Builder ClearLocale() {
-        PrepareBuilder();
-        result.hasLocale = false;
-        result.locale_ = "";
-        return this;
-      }
-    }
-    static NewsRequest() {
       object.ReferenceEquals(global::Gazillion.FrontendProtocol.Descriptor, null);
     }
   }

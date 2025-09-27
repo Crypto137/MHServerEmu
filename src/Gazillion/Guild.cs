@@ -98,132 +98,127 @@ namespace Gazillion {
             "UGxheWVyTmFtZRgDIAEoCVITY2hhbmdlZEJ5UGxheWVyTmFtZSJ0ChZHdWls", 
             "ZE1lbWJlck5hbWVDaGFuZ2VkEhgKB2d1aWxkSWQYASACKARSB2d1aWxkSWQS", 
             "GgoIcGxheWVySWQYAiACKARSCHBsYXllcklkEiQKDW5ld01lbWJlck5hbWUY", 
-            "AyACKAlSDW5ld01lbWJlck5hbWUilwEKC0d1aWxkSW52aXRlEi4KEnRvSW52", 
-            "aXRlUGxheWVyTmFtZRgBIAIoCVISdG9JbnZpdGVQbGF5ZXJOYW1lEioKEHRv", 
-            "SW52aXRlUGxheWVySWQYAiABKARSEHRvSW52aXRlUGxheWVySWQSLAoRaW52", 
-            "aXRlZEJ5UGxheWVySWQYAyACKARSEWludml0ZWRCeVBsYXllcklkIoUBChFH", 
+            "AyACKAlSDW5ld01lbWJlck5hbWUiawoLR3VpbGRJbnZpdGUSLgoSdG9JbnZp", 
+            "dGVQbGF5ZXJOYW1lGAEgAigJUhJ0b0ludml0ZVBsYXllck5hbWUSLAoRaW52", 
+            "aXRlZEJ5UGxheWVySWQYAiACKARSEWludml0ZWRCeVBsYXllcklkIoUBChFH", 
             "dWlsZEludml0ZVJlc3VsdBIuCgZpbnZpdGUYASACKAsyFi5HYXppbGxpb24u", 
             "R3VpbGRJbnZpdGVSBmludml0ZRJACgpyZXN1bHRDb2RlGAIgAigOMiAuR2F6", 
-            "aWxsaW9uLkd1aWxkSW52aXRlUmVzdWx0Q29kZVIKcmVzdWx0Q29kZSLIAQoS", 
-            "R3VpbGRJbnZpdGVkVG9Kb2luEhgKB2d1aWxkSWQYASACKARSB2d1aWxkSWQS", 
-            "HAoJZ3VpbGROYW1lGAIgAigJUglndWlsZE5hbWUSMAoTaW52aXRlZEJ5UGxh", 
-            "eWVyTmFtZRgDIAIoCVITaW52aXRlZEJ5UGxheWVyTmFtZRJICh9pbnZpdGVk", 
-            "QnlQbGF5ZXJDb25zb2xlQWNjb3VudElkGAQgASgEUh9pbnZpdGVkQnlQbGF5", 
-            "ZXJDb25zb2xlQWNjb3VudElkIpMBChRHdWlsZFJlc3BvbmRUb0ludml0ZRIa", 
-            "CghwbGF5ZXJJZBgBIAIoBFIIcGxheWVySWQSGAoHZ3VpbGRJZBgCIAIoBFIH", 
-            "Z3VpbGRJZBJFCgtyZXNwb25kQ29kZRgDIAIoDjIjLkdhemlsbGlvbi5HdWls", 
-            "ZFJlc3BvbmRUb0ludml0ZUNvZGVSC3Jlc3BvbmRDb2RlIoUBChpHdWlsZFJl", 
-            "c3BvbmRUb0ludml0ZVJlc3VsdBJJCgpyZXN1bHRDb2RlGAEgAigOMikuR2F6", 
-            "aWxsaW9uLkd1aWxkUmVzcG9uZFRvSW52aXRlUmVzdWx0Q29kZVIKcmVzdWx0", 
-            "Q29kZRIcCglndWlsZE5hbWUYAiACKAlSCWd1aWxkTmFtZSK1AQoPR3VpbGRN", 
-            "ZW1iZXJJbmZvEhoKCHBsYXllcklkGAEgAigEUghwbGF5ZXJJZBIeCgpwbGF5", 
-            "ZXJOYW1lGAIgAigJUgpwbGF5ZXJOYW1lEjoKCm1lbWJlcnNoaXAYAyACKA4y", 
-            "Gi5HYXppbGxpb24uR3VpbGRNZW1iZXJzaGlwUgptZW1iZXJzaGlwEioKEGNv", 
-            "bnNvbGVBY2NvdW50SWQYBCABKARSEGNvbnNvbGVBY2NvdW50SWQi3QEKEUd1", 
-            "aWxkQ2hhbmdlTWVtYmVyEiYKDnNvdXJjZVBsYXllcklkGAEgAigEUg5zb3Vy", 
-            "Y2VQbGF5ZXJJZBIqChB0YXJnZXRQbGF5ZXJOYW1lGAIgAigJUhB0YXJnZXRQ", 
-            "bGF5ZXJOYW1lEiYKDnRhcmdldFBsYXllcklkGAMgAigEUg50YXJnZXRQbGF5", 
-            "ZXJJZBJMChN0YXJnZXROZXdNZW1iZXJzaGlwGAQgAigOMhouR2F6aWxsaW9u", 
-            "Lkd1aWxkTWVtYmVyc2hpcFITdGFyZ2V0TmV3TWVtYmVyc2hpcCKNAQoXR3Vp", 
-            "bGRDaGFuZ2VNZW1iZXJSZXN1bHQSKgoQdGFyZ2V0UGxheWVyTmFtZRgBIAIo", 
-            "CVIQdGFyZ2V0UGxheWVyTmFtZRJGCgpyZXN1bHRDb2RlGAIgAigOMiYuR2F6", 
-            "aWxsaW9uLkd1aWxkQ2hhbmdlTWVtYmVyUmVzdWx0Q29kZVIKcmVzdWx0Q29k", 
-            "ZSLCAQoXR3VpbGRNZW1iZXJzSW5mb0NoYW5nZWQSGAoHZ3VpbGRJZBgBIAIo", 
-            "BFIHZ3VpbGRJZBI0CgdtZW1iZXJzGAIgAygLMhouR2F6aWxsaW9uLkd1aWxk", 
-            "TWVtYmVySW5mb1IHbWVtYmVycxIyChRpbml0aWF0aW5nTWVtYmVyTmFtZRgD", 
-            "IAIoCVIUaW5pdGlhdGluZ01lbWJlck5hbWUSIwoJbmV3TWVtYmVyGAQgASgI", 
-            "OgVmYWxzZVIJbmV3TWVtYmVyIp8BChFHdWlsZENvbXBsZXRlSW5mbxIYCgdn", 
-            "dWlsZElkGAEgAigEUgdndWlsZElkEhwKCWd1aWxkTmFtZRgCIAIoCVIJZ3Vp", 
-            "bGROYW1lEjQKB21lbWJlcnMYAyADKAsyGi5HYXppbGxpb24uR3VpbGRNZW1i", 
-            "ZXJJbmZvUgdtZW1iZXJzEhwKCWd1aWxkTW90ZBgEIAEoCVIJZ3VpbGRNb3Rk", 
-            "IrkEChdHdWlsZE1lc3NhZ2VTZXRUb1NlcnZlchJHChBndWlsZE5hbWVDaGFu", 
-            "Z2VkGAEgASgLMhsuR2F6aWxsaW9uLkd1aWxkTmFtZUNoYW5nZWRSEGd1aWxk", 
-            "TmFtZUNoYW5nZWQSXAoXZ3VpbGRNZW1iZXJzSW5mb0NoYW5nZWQYAiABKAsy", 
-            "Ii5HYXppbGxpb24uR3VpbGRNZW1iZXJzSW5mb0NoYW5nZWRSF2d1aWxkTWVt", 
-            "YmVyc0luZm9DaGFuZ2VkEkoKEWd1aWxkQ29tcGxldGVJbmZvGAMgASgLMhwu", 
-            "R2F6aWxsaW9uLkd1aWxkQ29tcGxldGVJbmZvUhFndWlsZENvbXBsZXRlSW5m", 
-            "bxJBCg5ndWlsZERpc2JhbmRlZBgEIAEoCzIZLkdhemlsbGlvbi5HdWlsZERp", 
-            "c2JhbmRlZFIOZ3VpbGREaXNiYW5kZWQSRAoPZ3VpbGRGb3JtUmVzdWx0GAUg", 
-            "ASgLMhouR2F6aWxsaW9uLkd1aWxkRm9ybVJlc3VsdFIPZ3VpbGRGb3JtUmVz", 
-            "dWx0EkcKEGd1aWxkTW90ZENoYW5nZWQYBiABKAsyGy5HYXppbGxpb24uR3Vp", 
-            "bGRNb3RkQ2hhbmdlZFIQZ3VpbGRNb3RkQ2hhbmdlZBJZChZndWlsZE1lbWJl", 
-            "ck5hbWVDaGFuZ2VkGAcgASgLMiEuR2F6aWxsaW9uLkd1aWxkTWVtYmVyTmFt", 
-            "ZUNoYW5nZWRSFmd1aWxkTWVtYmVyTmFtZUNoYW5nZWQiyQgKF0d1aWxkTWVz", 
-            "c2FnZVNldFRvQ2xpZW50ElYKFWd1aWxkQ2hhbmdlTmFtZVJlc3VsdBgCIAEo", 
-            "CzIgLkdhemlsbGlvbi5HdWlsZENoYW5nZU5hbWVSZXN1bHRSFWd1aWxkQ2hh", 
-            "bmdlTmFtZVJlc3VsdBJKChFndWlsZEludml0ZVJlc3VsdBgDIAEoCzIcLkdh", 
-            "emlsbGlvbi5HdWlsZEludml0ZVJlc3VsdFIRZ3VpbGRJbnZpdGVSZXN1bHQS", 
-            "ZQoaZ3VpbGRSZXNwb25kVG9JbnZpdGVSZXN1bHQYBCABKAsyJS5HYXppbGxp", 
-            "b24uR3VpbGRSZXNwb25kVG9JbnZpdGVSZXN1bHRSGmd1aWxkUmVzcG9uZFRv", 
-            "SW52aXRlUmVzdWx0ElwKF2d1aWxkQ2hhbmdlTWVtYmVyUmVzdWx0GAUgASgL", 
-            "MiIuR2F6aWxsaW9uLkd1aWxkQ2hhbmdlTWVtYmVyUmVzdWx0UhdndWlsZENo", 
-            "YW5nZU1lbWJlclJlc3VsdBJNChJndWlsZEludml0ZWRUb0pvaW4YBiABKAsy", 
-            "HS5HYXppbGxpb24uR3VpbGRJbnZpdGVkVG9Kb2luUhJndWlsZEludml0ZWRU", 
-            "b0pvaW4SVgoVZ3VpbGRDaGFuZ2VNb3RkUmVzdWx0GAsgASgLMiAuR2F6aWxs", 
-            "aW9uLkd1aWxkQ2hhbmdlTW90ZFJlc3VsdFIVZ3VpbGRDaGFuZ2VNb3RkUmVz", 
-            "dWx0EkcKEGd1aWxkTmFtZUNoYW5nZWQYByABKAsyGy5HYXppbGxpb24uR3Vp", 
-            "bGROYW1lQ2hhbmdlZFIQZ3VpbGROYW1lQ2hhbmdlZBJcChdndWlsZE1lbWJl", 
-            "cnNJbmZvQ2hhbmdlZBgIIAEoCzIiLkdhemlsbGlvbi5HdWlsZE1lbWJlcnNJ", 
-            "bmZvQ2hhbmdlZFIXZ3VpbGRNZW1iZXJzSW5mb0NoYW5nZWQSSgoRZ3VpbGRD", 
-            "b21wbGV0ZUluZm8YCSABKAsyHC5HYXppbGxpb24uR3VpbGRDb21wbGV0ZUlu", 
-            "Zm9SEWd1aWxkQ29tcGxldGVJbmZvEkEKDmd1aWxkRGlzYmFuZGVkGAogASgL", 
-            "MhkuR2F6aWxsaW9uLkd1aWxkRGlzYmFuZGVkUg5ndWlsZERpc2JhbmRlZBJE", 
-            "Cg9ndWlsZEZvcm1SZXN1bHQYASABKAsyGi5HYXppbGxpb24uR3VpbGRGb3Jt", 
-            "UmVzdWx0Ug9ndWlsZEZvcm1SZXN1bHQSRwoQZ3VpbGRNb3RkQ2hhbmdlZBgM", 
-            "IAEoCzIbLkdhemlsbGlvbi5HdWlsZE1vdGRDaGFuZ2VkUhBndWlsZE1vdGRD", 
-            "aGFuZ2VkElkKFmd1aWxkTWVtYmVyTmFtZUNoYW5nZWQYDSABKAsyIS5HYXpp", 
-            "bGxpb24uR3VpbGRNZW1iZXJOYW1lQ2hhbmdlZFIWZ3VpbGRNZW1iZXJOYW1l", 
-            "Q2hhbmdlZCK7AwoeR3VpbGRNZXNzYWdlU2V0VG9QbGF5ZXJNYW5hZ2VyEjIK", 
-            "CWd1aWxkRm9ybRgBIAEoCzIULkdhemlsbGlvbi5HdWlsZEZvcm1SCWd1aWxk", 
-            "Rm9ybRJECg9ndWlsZENoYW5nZU5hbWUYAiABKAsyGi5HYXppbGxpb24uR3Vp", 
-            "bGRDaGFuZ2VOYW1lUg9ndWlsZENoYW5nZU5hbWUSOAoLZ3VpbGRJbnZpdGUY", 
-            "AyABKAsyFi5HYXppbGxpb24uR3VpbGRJbnZpdGVSC2d1aWxkSW52aXRlElMK", 
-            "FGd1aWxkUmVzcG9uZFRvSW52aXRlGAQgASgLMh8uR2F6aWxsaW9uLkd1aWxk", 
-            "UmVzcG9uZFRvSW52aXRlUhRndWlsZFJlc3BvbmRUb0ludml0ZRJKChFndWls", 
-            "ZENoYW5nZU1lbWJlchgFIAEoCzIcLkdhemlsbGlvbi5HdWlsZENoYW5nZU1l", 
-            "bWJlclIRZ3VpbGRDaGFuZ2VNZW1iZXISRAoPZ3VpbGRDaGFuZ2VNb3RkGAYg", 
-            "ASgLMhouR2F6aWxsaW9uLkd1aWxkQ2hhbmdlTW90ZFIPZ3VpbGRDaGFuZ2VN", 
-            "b3RkKs4BChNHdWlsZEZvcm1SZXN1bHRDb2RlEhUKEWVHRkNJbnRlcm5hbEVy", 
-            "cm9yEAASGQoVZUdGQ0d1aWxkSW5FcnJvclN0YXRlEAESEQoNZUdGQ05vdE9u", 
-            "bGluZRACEhYKEmVHRkNSZXN0cmljdGVkTmFtZRADEhUKEWVHRkNEdXBsaWNh", 
-            "dGVOYW1lEAQSFgoSZUdGQ0FscmVhZHlJbkd1aWxkEAUSGgoWZUdGQ1dhaXRp", 
-            "bmdGb3JEYXRhYmFzZRAGEg8KC2VHRkNTdWNjZXNzEAcqkAIKGUd1aWxkQ2hh", 
-            "bmdlTmFtZVJlc3VsdENvZGUSFwoTZUdDTlJDSW50ZXJuYWxFcnJvchAAEhsK", 
-            "F2VHQ05SQ0d1aWxkSW5FcnJvclN0YXRlEAESEwoPZUdDTlJDTm90T25saW5l", 
-            "EAISFgoSZUdDTlJDSW52YWxpZEd1aWxkEAMSFAoQZUdDTlJDTm90SW5HdWls", 
-            "ZBAEEhgKFGVHQ05SQ1Jlc3RyaWN0ZWROYW1lEAUSFwoTZUdDTlJDRHVwbGlj", 
-            "YXRlTmFtZRAGEhYKEmVHQ05SQ05vUGVybWlzc2lvbhAHEhwKGGVHQ05SQ1dh", 
-            "aXRpbmdGb3JEYXRhYmFzZRAIEhEKDWVHQ05SQ1N1Y2Nlc3MQCSr1AQoZR3Vp", 
-            "bGRDaGFuZ2VNb3RkUmVzdWx0Q29kZRIaChZlR0NNb3RkUkNJbnRlcm5hbEVy", 
-            "cm9yEAASHgoaZUdDTW90ZFJDR3VpbGRJbkVycm9yU3RhdGUQARIWChJlR0NN", 
-            "b3RkUkNOb3RPbmxpbmUQAhIZChVlR0NNb3RkUkNJbnZhbGlkR3VpbGQQAxIX", 
-            "ChNlR0NNb3RkUkNOb3RJbkd1aWxkEAQSGQoVZUdDTW90ZFJDTm9QZXJtaXNz", 
-            "aW9uEAUSHwobZUdDTW90ZFJDV2FpdGluZ0ZvckRhdGFiYXNlEAYSFAoQZUdD", 
-            "TW90ZFJDU3VjY2VzcxAHKoACChVHdWlsZEludml0ZVJlc3VsdENvZGUSFgoS", 
-            "ZUdJUkNJbnRlcm5hbEVycm9yEAASGgoWZUdJUkNHdWlsZEluRXJyb3JTdGF0", 
-            "ZRABEhIKDmVHSVJDR3VpbGRGdWxsEAMSFwoTZUdJUkNJbnZpdGVkSW5HdWls", 
-            "ZBAEEhwKGGVHSVJDSW52aXRlZEluT3RoZXJHdWlsZBAFEhwKGGVHSVJDSW52", 
-            "aXRlZFVua293blBsYXllchAGEhoKFmVHSVJDSW52aXRlck5vdEluR3VpbGQQ", 
-            "BxIcChhlR0lSQ0ludml0ZXJOb1Blcm1pc3Npb24QCBIQCgxlR0lSQ1N1Y2Nl", 
-            "c3MQCipWChhHdWlsZFJlc3BvbmRUb0ludml0ZUNvZGUSEQoNZUdSSUNSZWpl", 
-            "Y3RlZBAAEhEKDWVHUklDQWNjZXB0ZWQQARIUChBlR1JJQ0F1dG9JZ25vcmVk", 
-            "EAIqjAIKHkd1aWxkUmVzcG9uZFRvSW52aXRlUmVzdWx0Q29kZRIXChNlR1JJ", 
-            "UkNJbnRlcm5hbEVycm9yEAASGwoXZUdSSVJDR3VpbGRJbkVycm9yU3RhdGUQ", 
-            "ARITCg9lR1JJUkNOb3RPbmxpbmUQAhIWChJlR1JJUkNJbnZhbGlkR3VpbGQQ", 
-            "AxIYChRlR1JJUkNBbHJlYWR5SW5HdWlsZBAEEhMKD2VHUklSQ0d1aWxkRnVs", 
-            "bBAFEhQKEGVHUklSQ05vdEludml0ZWQQBhIQCgxlR1JJUkNKb2luZWQQBxIS", 
-            "Cg5lR1JJUkNSZWplY3RlZBAIEhwKGGVHUklSQWxyZWFkeUluT3RoZXJHdWls", 
-            "ZBAJKkwKD0d1aWxkTWVtYmVyc2hpcBILCgdlR01Ob25lEAASDQoJZUdNTWVt", 
-            "YmVyEAESDgoKZUdNT2ZmaWNlchACEg0KCWVHTUxlYWRlchADKvgCChtHdWls", 
-            "ZENoYW5nZU1lbWJlclJlc3VsdENvZGUSFwoTZUdDTVJDSW50ZXJuYWxFcnJv", 
-            "chAAEhsKF2VHQ01SQ0d1aWxkSW5FcnJvclN0YXRlEAESEwoPZUdDTVJDTm90", 
-            "T25saW5lEAISHQoZZUdDTVJDSW5pdGlhdG9yTm90SW5HdWlsZBADEh8KG2VH", 
-            "Q01SQ0luaXRpYXRvck5vUGVybWlzc2lvbhAEEhcKE2VHQ01SQ1Vua25vd25N", 
-            "ZW1iZXIQBRISCg5lR0NNUkNOb0NoYW5nZRAGEhoKFmVHQ01SQ0NhbnRNb2Rp", 
-            "ZnlMZWFkZXIQBxIXChNlR0NNUkNSZXF1aXJlc1N0YWZmEAgSGAoUZUdDTVJD", 
-            "UmVxdWlyZXNMZWFkZXIQCRIeChplR0NNUkNOb1RyYW5zZmVyTGVhZGVyc2hp", 
-            "cBAKEhEKDWVHQ01SQ1N1Y2Nlc3MQCxIfChtlR0NNUkNTdWNjZXNzR3VpbGRE", 
-          "aXNzb2x2ZWQQDA=="));
+            "aWxsaW9uLkd1aWxkSW52aXRlUmVzdWx0Q29kZVIKcmVzdWx0Q29kZSJ+ChJH", 
+            "dWlsZEludml0ZWRUb0pvaW4SGAoHZ3VpbGRJZBgBIAIoBFIHZ3VpbGRJZBIc", 
+            "CglndWlsZE5hbWUYAiACKAlSCWd1aWxkTmFtZRIwChNpbnZpdGVkQnlQbGF5", 
+            "ZXJOYW1lGAMgAigJUhNpbnZpdGVkQnlQbGF5ZXJOYW1lIpMBChRHdWlsZFJl", 
+            "c3BvbmRUb0ludml0ZRIaCghwbGF5ZXJJZBgBIAIoBFIIcGxheWVySWQSGAoH", 
+            "Z3VpbGRJZBgCIAIoBFIHZ3VpbGRJZBJFCgtyZXNwb25kQ29kZRgDIAIoDjIj", 
+            "LkdhemlsbGlvbi5HdWlsZFJlc3BvbmRUb0ludml0ZUNvZGVSC3Jlc3BvbmRD", 
+            "b2RlIoUBChpHdWlsZFJlc3BvbmRUb0ludml0ZVJlc3VsdBJJCgpyZXN1bHRD", 
+            "b2RlGAEgAigOMikuR2F6aWxsaW9uLkd1aWxkUmVzcG9uZFRvSW52aXRlUmVz", 
+            "dWx0Q29kZVIKcmVzdWx0Q29kZRIcCglndWlsZE5hbWUYAiACKAlSCWd1aWxk", 
+            "TmFtZSKJAQoPR3VpbGRNZW1iZXJJbmZvEhoKCHBsYXllcklkGAEgAigEUghw", 
+            "bGF5ZXJJZBIeCgpwbGF5ZXJOYW1lGAIgAigJUgpwbGF5ZXJOYW1lEjoKCm1l", 
+            "bWJlcnNoaXAYAyACKA4yGi5HYXppbGxpb24uR3VpbGRNZW1iZXJzaGlwUgpt", 
+            "ZW1iZXJzaGlwIrUBChFHdWlsZENoYW5nZU1lbWJlchImCg5zb3VyY2VQbGF5", 
+            "ZXJJZBgBIAIoBFIOc291cmNlUGxheWVySWQSKgoQdGFyZ2V0UGxheWVyTmFt", 
+            "ZRgCIAIoCVIQdGFyZ2V0UGxheWVyTmFtZRJMChN0YXJnZXROZXdNZW1iZXJz", 
+            "aGlwGAMgAigOMhouR2F6aWxsaW9uLkd1aWxkTWVtYmVyc2hpcFITdGFyZ2V0", 
+            "TmV3TWVtYmVyc2hpcCKNAQoXR3VpbGRDaGFuZ2VNZW1iZXJSZXN1bHQSKgoQ", 
+            "dGFyZ2V0UGxheWVyTmFtZRgBIAIoCVIQdGFyZ2V0UGxheWVyTmFtZRJGCgpy", 
+            "ZXN1bHRDb2RlGAIgAigOMiYuR2F6aWxsaW9uLkd1aWxkQ2hhbmdlTWVtYmVy", 
+            "UmVzdWx0Q29kZVIKcmVzdWx0Q29kZSLCAQoXR3VpbGRNZW1iZXJzSW5mb0No", 
+            "YW5nZWQSGAoHZ3VpbGRJZBgBIAIoBFIHZ3VpbGRJZBI0CgdtZW1iZXJzGAIg", 
+            "AygLMhouR2F6aWxsaW9uLkd1aWxkTWVtYmVySW5mb1IHbWVtYmVycxIyChRp", 
+            "bml0aWF0aW5nTWVtYmVyTmFtZRgDIAIoCVIUaW5pdGlhdGluZ01lbWJlck5h", 
+            "bWUSIwoJbmV3TWVtYmVyGAQgASgIOgVmYWxzZVIJbmV3TWVtYmVyIp8BChFH", 
+            "dWlsZENvbXBsZXRlSW5mbxIYCgdndWlsZElkGAEgAigEUgdndWlsZElkEhwK", 
+            "CWd1aWxkTmFtZRgCIAIoCVIJZ3VpbGROYW1lEjQKB21lbWJlcnMYAyADKAsy", 
+            "Gi5HYXppbGxpb24uR3VpbGRNZW1iZXJJbmZvUgdtZW1iZXJzEhwKCWd1aWxk", 
+            "TW90ZBgEIAEoCVIJZ3VpbGRNb3RkIrkEChdHdWlsZE1lc3NhZ2VTZXRUb1Nl", 
+            "cnZlchJHChBndWlsZE5hbWVDaGFuZ2VkGAEgASgLMhsuR2F6aWxsaW9uLkd1", 
+            "aWxkTmFtZUNoYW5nZWRSEGd1aWxkTmFtZUNoYW5nZWQSXAoXZ3VpbGRNZW1i", 
+            "ZXJzSW5mb0NoYW5nZWQYAiABKAsyIi5HYXppbGxpb24uR3VpbGRNZW1iZXJz", 
+            "SW5mb0NoYW5nZWRSF2d1aWxkTWVtYmVyc0luZm9DaGFuZ2VkEkoKEWd1aWxk", 
+            "Q29tcGxldGVJbmZvGAMgASgLMhwuR2F6aWxsaW9uLkd1aWxkQ29tcGxldGVJ", 
+            "bmZvUhFndWlsZENvbXBsZXRlSW5mbxJBCg5ndWlsZERpc2JhbmRlZBgEIAEo", 
+            "CzIZLkdhemlsbGlvbi5HdWlsZERpc2JhbmRlZFIOZ3VpbGREaXNiYW5kZWQS", 
+            "RAoPZ3VpbGRGb3JtUmVzdWx0GAUgASgLMhouR2F6aWxsaW9uLkd1aWxkRm9y", 
+            "bVJlc3VsdFIPZ3VpbGRGb3JtUmVzdWx0EkcKEGd1aWxkTW90ZENoYW5nZWQY", 
+            "BiABKAsyGy5HYXppbGxpb24uR3VpbGRNb3RkQ2hhbmdlZFIQZ3VpbGRNb3Rk", 
+            "Q2hhbmdlZBJZChZndWlsZE1lbWJlck5hbWVDaGFuZ2VkGAcgASgLMiEuR2F6", 
+            "aWxsaW9uLkd1aWxkTWVtYmVyTmFtZUNoYW5nZWRSFmd1aWxkTWVtYmVyTmFt", 
+            "ZUNoYW5nZWQiyQgKF0d1aWxkTWVzc2FnZVNldFRvQ2xpZW50ElYKFWd1aWxk", 
+            "Q2hhbmdlTmFtZVJlc3VsdBgCIAEoCzIgLkdhemlsbGlvbi5HdWlsZENoYW5n", 
+            "ZU5hbWVSZXN1bHRSFWd1aWxkQ2hhbmdlTmFtZVJlc3VsdBJKChFndWlsZElu", 
+            "dml0ZVJlc3VsdBgDIAEoCzIcLkdhemlsbGlvbi5HdWlsZEludml0ZVJlc3Vs", 
+            "dFIRZ3VpbGRJbnZpdGVSZXN1bHQSZQoaZ3VpbGRSZXNwb25kVG9JbnZpdGVS", 
+            "ZXN1bHQYBCABKAsyJS5HYXppbGxpb24uR3VpbGRSZXNwb25kVG9JbnZpdGVS", 
+            "ZXN1bHRSGmd1aWxkUmVzcG9uZFRvSW52aXRlUmVzdWx0ElwKF2d1aWxkQ2hh", 
+            "bmdlTWVtYmVyUmVzdWx0GAUgASgLMiIuR2F6aWxsaW9uLkd1aWxkQ2hhbmdl", 
+            "TWVtYmVyUmVzdWx0UhdndWlsZENoYW5nZU1lbWJlclJlc3VsdBJNChJndWls", 
+            "ZEludml0ZWRUb0pvaW4YBiABKAsyHS5HYXppbGxpb24uR3VpbGRJbnZpdGVk", 
+            "VG9Kb2luUhJndWlsZEludml0ZWRUb0pvaW4SVgoVZ3VpbGRDaGFuZ2VNb3Rk", 
+            "UmVzdWx0GAsgASgLMiAuR2F6aWxsaW9uLkd1aWxkQ2hhbmdlTW90ZFJlc3Vs", 
+            "dFIVZ3VpbGRDaGFuZ2VNb3RkUmVzdWx0EkcKEGd1aWxkTmFtZUNoYW5nZWQY", 
+            "ByABKAsyGy5HYXppbGxpb24uR3VpbGROYW1lQ2hhbmdlZFIQZ3VpbGROYW1l", 
+            "Q2hhbmdlZBJcChdndWlsZE1lbWJlcnNJbmZvQ2hhbmdlZBgIIAEoCzIiLkdh", 
+            "emlsbGlvbi5HdWlsZE1lbWJlcnNJbmZvQ2hhbmdlZFIXZ3VpbGRNZW1iZXJz", 
+            "SW5mb0NoYW5nZWQSSgoRZ3VpbGRDb21wbGV0ZUluZm8YCSABKAsyHC5HYXpp", 
+            "bGxpb24uR3VpbGRDb21wbGV0ZUluZm9SEWd1aWxkQ29tcGxldGVJbmZvEkEK", 
+            "Dmd1aWxkRGlzYmFuZGVkGAogASgLMhkuR2F6aWxsaW9uLkd1aWxkRGlzYmFu", 
+            "ZGVkUg5ndWlsZERpc2JhbmRlZBJECg9ndWlsZEZvcm1SZXN1bHQYASABKAsy", 
+            "Gi5HYXppbGxpb24uR3VpbGRGb3JtUmVzdWx0Ug9ndWlsZEZvcm1SZXN1bHQS", 
+            "RwoQZ3VpbGRNb3RkQ2hhbmdlZBgMIAEoCzIbLkdhemlsbGlvbi5HdWlsZE1v", 
+            "dGRDaGFuZ2VkUhBndWlsZE1vdGRDaGFuZ2VkElkKFmd1aWxkTWVtYmVyTmFt", 
+            "ZUNoYW5nZWQYDSABKAsyIS5HYXppbGxpb24uR3VpbGRNZW1iZXJOYW1lQ2hh", 
+            "bmdlZFIWZ3VpbGRNZW1iZXJOYW1lQ2hhbmdlZCK7AwoeR3VpbGRNZXNzYWdl", 
+            "U2V0VG9QbGF5ZXJNYW5hZ2VyEjIKCWd1aWxkRm9ybRgBIAEoCzIULkdhemls", 
+            "bGlvbi5HdWlsZEZvcm1SCWd1aWxkRm9ybRJECg9ndWlsZENoYW5nZU5hbWUY", 
+            "AiABKAsyGi5HYXppbGxpb24uR3VpbGRDaGFuZ2VOYW1lUg9ndWlsZENoYW5n", 
+            "ZU5hbWUSOAoLZ3VpbGRJbnZpdGUYAyABKAsyFi5HYXppbGxpb24uR3VpbGRJ", 
+            "bnZpdGVSC2d1aWxkSW52aXRlElMKFGd1aWxkUmVzcG9uZFRvSW52aXRlGAQg", 
+            "ASgLMh8uR2F6aWxsaW9uLkd1aWxkUmVzcG9uZFRvSW52aXRlUhRndWlsZFJl", 
+            "c3BvbmRUb0ludml0ZRJKChFndWlsZENoYW5nZU1lbWJlchgFIAEoCzIcLkdh", 
+            "emlsbGlvbi5HdWlsZENoYW5nZU1lbWJlclIRZ3VpbGRDaGFuZ2VNZW1iZXIS", 
+            "RAoPZ3VpbGRDaGFuZ2VNb3RkGAYgASgLMhouR2F6aWxsaW9uLkd1aWxkQ2hh", 
+            "bmdlTW90ZFIPZ3VpbGRDaGFuZ2VNb3RkKs4BChNHdWlsZEZvcm1SZXN1bHRD", 
+            "b2RlEhUKEWVHRkNJbnRlcm5hbEVycm9yEAASGQoVZUdGQ0d1aWxkSW5FcnJv", 
+            "clN0YXRlEAESEQoNZUdGQ05vdE9ubGluZRACEhYKEmVHRkNSZXN0cmljdGVk", 
+            "TmFtZRADEhUKEWVHRkNEdXBsaWNhdGVOYW1lEAQSFgoSZUdGQ0FscmVhZHlJ", 
+            "bkd1aWxkEAUSGgoWZUdGQ1dhaXRpbmdGb3JEYXRhYmFzZRAGEg8KC2VHRkNT", 
+            "dWNjZXNzEAcqkAIKGUd1aWxkQ2hhbmdlTmFtZVJlc3VsdENvZGUSFwoTZUdD", 
+            "TlJDSW50ZXJuYWxFcnJvchAAEhsKF2VHQ05SQ0d1aWxkSW5FcnJvclN0YXRl", 
+            "EAESEwoPZUdDTlJDTm90T25saW5lEAISFgoSZUdDTlJDSW52YWxpZEd1aWxk", 
+            "EAMSFAoQZUdDTlJDTm90SW5HdWlsZBAEEhgKFGVHQ05SQ1Jlc3RyaWN0ZWRO", 
+            "YW1lEAUSFwoTZUdDTlJDRHVwbGljYXRlTmFtZRAGEhYKEmVHQ05SQ05vUGVy", 
+            "bWlzc2lvbhAHEhwKGGVHQ05SQ1dhaXRpbmdGb3JEYXRhYmFzZRAIEhEKDWVH", 
+            "Q05SQ1N1Y2Nlc3MQCSr1AQoZR3VpbGRDaGFuZ2VNb3RkUmVzdWx0Q29kZRIa", 
+            "ChZlR0NNb3RkUkNJbnRlcm5hbEVycm9yEAASHgoaZUdDTW90ZFJDR3VpbGRJ", 
+            "bkVycm9yU3RhdGUQARIWChJlR0NNb3RkUkNOb3RPbmxpbmUQAhIZChVlR0NN", 
+            "b3RkUkNJbnZhbGlkR3VpbGQQAxIXChNlR0NNb3RkUkNOb3RJbkd1aWxkEAQS", 
+            "GQoVZUdDTW90ZFJDTm9QZXJtaXNzaW9uEAUSHwobZUdDTW90ZFJDV2FpdGlu", 
+            "Z0ZvckRhdGFiYXNlEAYSFAoQZUdDTW90ZFJDU3VjY2VzcxAHKoACChVHdWls", 
+            "ZEludml0ZVJlc3VsdENvZGUSFgoSZUdJUkNJbnRlcm5hbEVycm9yEAASGgoW", 
+            "ZUdJUkNHdWlsZEluRXJyb3JTdGF0ZRABEhIKDmVHSVJDR3VpbGRGdWxsEAMS", 
+            "FwoTZUdJUkNJbnZpdGVkSW5HdWlsZBAEEhwKGGVHSVJDSW52aXRlZEluT3Ro", 
+            "ZXJHdWlsZBAFEhwKGGVHSVJDSW52aXRlZFVua293blBsYXllchAGEhoKFmVH", 
+            "SVJDSW52aXRlck5vdEluR3VpbGQQBxIcChhlR0lSQ0ludml0ZXJOb1Blcm1p", 
+            "c3Npb24QCBIQCgxlR0lSQ1N1Y2Nlc3MQCipWChhHdWlsZFJlc3BvbmRUb0lu", 
+            "dml0ZUNvZGUSEQoNZUdSSUNSZWplY3RlZBAAEhEKDWVHUklDQWNjZXB0ZWQQ", 
+            "ARIUChBlR1JJQ0F1dG9JZ25vcmVkEAIqjAIKHkd1aWxkUmVzcG9uZFRvSW52", 
+            "aXRlUmVzdWx0Q29kZRIXChNlR1JJUkNJbnRlcm5hbEVycm9yEAASGwoXZUdS", 
+            "SVJDR3VpbGRJbkVycm9yU3RhdGUQARITCg9lR1JJUkNOb3RPbmxpbmUQAhIW", 
+            "ChJlR1JJUkNJbnZhbGlkR3VpbGQQAxIYChRlR1JJUkNBbHJlYWR5SW5HdWls", 
+            "ZBAEEhMKD2VHUklSQ0d1aWxkRnVsbBAFEhQKEGVHUklSQ05vdEludml0ZWQQ", 
+            "BhIQCgxlR1JJUkNKb2luZWQQBxISCg5lR1JJUkNSZWplY3RlZBAIEhwKGGVH", 
+            "UklSQWxyZWFkeUluT3RoZXJHdWlsZBAJKkwKD0d1aWxkTWVtYmVyc2hpcBIL", 
+            "CgdlR01Ob25lEAASDQoJZUdNTWVtYmVyEAESDgoKZUdNT2ZmaWNlchACEg0K", 
+            "CWVHTUxlYWRlchADKvgCChtHdWlsZENoYW5nZU1lbWJlclJlc3VsdENvZGUS", 
+            "FwoTZUdDTVJDSW50ZXJuYWxFcnJvchAAEhsKF2VHQ01SQ0d1aWxkSW5FcnJv", 
+            "clN0YXRlEAESEwoPZUdDTVJDTm90T25saW5lEAISHQoZZUdDTVJDSW5pdGlh", 
+            "dG9yTm90SW5HdWlsZBADEh8KG2VHQ01SQ0luaXRpYXRvck5vUGVybWlzc2lv", 
+            "bhAEEhcKE2VHQ01SQ1Vua25vd25NZW1iZXIQBRISCg5lR0NNUkNOb0NoYW5n", 
+            "ZRAGEhoKFmVHQ01SQ0NhbnRNb2RpZnlMZWFkZXIQBxIXChNlR0NNUkNSZXF1", 
+            "aXJlc1N0YWZmEAgSGAoUZUdDTVJDUmVxdWlyZXNMZWFkZXIQCRIeChplR0NN", 
+            "UkNOb1RyYW5zZmVyTGVhZGVyc2hpcBAKEhEKDWVHQ01SQ1N1Y2Nlc3MQCxIf", 
+          "ChtlR0NNUkNTdWNjZXNzR3VpbGREaXNzb2x2ZWQQDA=="));
       pbd::FileDescriptor.InternalDescriptorAssigner assigner = delegate(pbd::FileDescriptor root) {
         descriptor = root;
         internal__static_Gazillion_GuildForm__Descriptor = Descriptor.MessageTypes[0];
@@ -269,7 +264,7 @@ namespace Gazillion {
         internal__static_Gazillion_GuildInvite__Descriptor = Descriptor.MessageTypes[10];
         internal__static_Gazillion_GuildInvite__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildInvite, global::Gazillion.GuildInvite.Builder>(internal__static_Gazillion_GuildInvite__Descriptor,
-                new string[] { "ToInvitePlayerName", "ToInvitePlayerId", "InvitedByPlayerId", });
+                new string[] { "ToInvitePlayerName", "InvitedByPlayerId", });
         internal__static_Gazillion_GuildInviteResult__Descriptor = Descriptor.MessageTypes[11];
         internal__static_Gazillion_GuildInviteResult__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildInviteResult, global::Gazillion.GuildInviteResult.Builder>(internal__static_Gazillion_GuildInviteResult__Descriptor,
@@ -277,7 +272,7 @@ namespace Gazillion {
         internal__static_Gazillion_GuildInvitedToJoin__Descriptor = Descriptor.MessageTypes[12];
         internal__static_Gazillion_GuildInvitedToJoin__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildInvitedToJoin, global::Gazillion.GuildInvitedToJoin.Builder>(internal__static_Gazillion_GuildInvitedToJoin__Descriptor,
-                new string[] { "GuildId", "GuildName", "InvitedByPlayerName", "InvitedByPlayerConsoleAccountId", });
+                new string[] { "GuildId", "GuildName", "InvitedByPlayerName", });
         internal__static_Gazillion_GuildRespondToInvite__Descriptor = Descriptor.MessageTypes[13];
         internal__static_Gazillion_GuildRespondToInvite__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildRespondToInvite, global::Gazillion.GuildRespondToInvite.Builder>(internal__static_Gazillion_GuildRespondToInvite__Descriptor,
@@ -289,11 +284,11 @@ namespace Gazillion {
         internal__static_Gazillion_GuildMemberInfo__Descriptor = Descriptor.MessageTypes[15];
         internal__static_Gazillion_GuildMemberInfo__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildMemberInfo, global::Gazillion.GuildMemberInfo.Builder>(internal__static_Gazillion_GuildMemberInfo__Descriptor,
-                new string[] { "PlayerId", "PlayerName", "Membership", "ConsoleAccountId", });
+                new string[] { "PlayerId", "PlayerName", "Membership", });
         internal__static_Gazillion_GuildChangeMember__Descriptor = Descriptor.MessageTypes[16];
         internal__static_Gazillion_GuildChangeMember__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildChangeMember, global::Gazillion.GuildChangeMember.Builder>(internal__static_Gazillion_GuildChangeMember__Descriptor,
-                new string[] { "SourcePlayerId", "TargetPlayerName", "TargetPlayerId", "TargetNewMembership", });
+                new string[] { "SourcePlayerId", "TargetPlayerName", "TargetNewMembership", });
         internal__static_Gazillion_GuildChangeMemberResult__Descriptor = Descriptor.MessageTypes[17];
         internal__static_Gazillion_GuildChangeMemberResult__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildChangeMemberResult, global::Gazillion.GuildChangeMemberResult.Builder>(internal__static_Gazillion_GuildChangeMemberResult__Descriptor,
@@ -3923,8 +3918,8 @@ namespace Gazillion {
   public sealed partial class GuildInvite : pb::GeneratedMessage<GuildInvite, GuildInvite.Builder> {
     private GuildInvite() { }
     private static readonly GuildInvite defaultInstance = new GuildInvite().MakeReadOnly();
-    private static readonly string[] _guildInviteFieldNames = new string[] { "invitedByPlayerId", "toInvitePlayerId", "toInvitePlayerName" };
-    private static readonly uint[] _guildInviteFieldTags = new uint[] { 24, 16, 10 };
+    private static readonly string[] _guildInviteFieldNames = new string[] { "invitedByPlayerId", "toInvitePlayerName" };
+    private static readonly uint[] _guildInviteFieldTags = new uint[] { 16, 10 };
     public static GuildInvite DefaultInstance {
       get { return defaultInstance; }
     }
@@ -3955,17 +3950,7 @@ namespace Gazillion {
       get { return toInvitePlayerName_; }
     }
     
-    public const int ToInvitePlayerIdFieldNumber = 2;
-    private bool hasToInvitePlayerId;
-    private ulong toInvitePlayerId_;
-    public bool HasToInvitePlayerId {
-      get { return hasToInvitePlayerId; }
-    }
-    public ulong ToInvitePlayerId {
-      get { return toInvitePlayerId_; }
-    }
-    
-    public const int InvitedByPlayerIdFieldNumber = 3;
+    public const int InvitedByPlayerIdFieldNumber = 2;
     private bool hasInvitedByPlayerId;
     private ulong invitedByPlayerId_;
     public bool HasInvitedByPlayerId {
@@ -3987,13 +3972,10 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _guildInviteFieldNames;
       if (hasToInvitePlayerName) {
-        output.WriteString(1, field_names[2], ToInvitePlayerName);
-      }
-      if (hasToInvitePlayerId) {
-        output.WriteUInt64(2, field_names[1], ToInvitePlayerId);
+        output.WriteString(1, field_names[1], ToInvitePlayerName);
       }
       if (hasInvitedByPlayerId) {
-        output.WriteUInt64(3, field_names[0], InvitedByPlayerId);
+        output.WriteUInt64(2, field_names[0], InvitedByPlayerId);
       }
       UnknownFields.WriteTo(output);
     }
@@ -4015,11 +3997,8 @@ namespace Gazillion {
       if (hasToInvitePlayerName) {
         size += pb::CodedOutputStream.ComputeStringSize(1, ToInvitePlayerName);
       }
-      if (hasToInvitePlayerId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(2, ToInvitePlayerId);
-      }
       if (hasInvitedByPlayerId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(3, InvitedByPlayerId);
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, InvitedByPlayerId);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -4146,9 +4125,6 @@ namespace Gazillion {
         if (other.HasToInvitePlayerName) {
           ToInvitePlayerName = other.ToInvitePlayerName;
         }
-        if (other.HasToInvitePlayerId) {
-          ToInvitePlayerId = other.ToInvitePlayerId;
-        }
         if (other.HasInvitedByPlayerId) {
           InvitedByPlayerId = other.InvitedByPlayerId;
         }
@@ -4200,10 +4176,6 @@ namespace Gazillion {
               break;
             }
             case 16: {
-              result.hasToInvitePlayerId = input.ReadUInt64(ref result.toInvitePlayerId_);
-              break;
-            }
-            case 24: {
               result.hasInvitedByPlayerId = input.ReadUInt64(ref result.invitedByPlayerId_);
               break;
             }
@@ -4235,26 +4207,6 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasToInvitePlayerName = false;
         result.toInvitePlayerName_ = "";
-        return this;
-      }
-      
-      public bool HasToInvitePlayerId {
-        get { return result.hasToInvitePlayerId; }
-      }
-      public ulong ToInvitePlayerId {
-        get { return result.ToInvitePlayerId; }
-        set { SetToInvitePlayerId(value); }
-      }
-      public Builder SetToInvitePlayerId(ulong value) {
-        PrepareBuilder();
-        result.hasToInvitePlayerId = true;
-        result.toInvitePlayerId_ = value;
-        return this;
-      }
-      public Builder ClearToInvitePlayerId() {
-        PrepareBuilder();
-        result.hasToInvitePlayerId = false;
-        result.toInvitePlayerId_ = 0UL;
         return this;
       }
       
@@ -4641,8 +4593,8 @@ namespace Gazillion {
   public sealed partial class GuildInvitedToJoin : pb::GeneratedMessage<GuildInvitedToJoin, GuildInvitedToJoin.Builder> {
     private GuildInvitedToJoin() { }
     private static readonly GuildInvitedToJoin defaultInstance = new GuildInvitedToJoin().MakeReadOnly();
-    private static readonly string[] _guildInvitedToJoinFieldNames = new string[] { "guildId", "guildName", "invitedByPlayerConsoleAccountId", "invitedByPlayerName" };
-    private static readonly uint[] _guildInvitedToJoinFieldTags = new uint[] { 8, 18, 32, 26 };
+    private static readonly string[] _guildInvitedToJoinFieldNames = new string[] { "guildId", "guildName", "invitedByPlayerName" };
+    private static readonly uint[] _guildInvitedToJoinFieldTags = new uint[] { 8, 18, 26 };
     public static GuildInvitedToJoin DefaultInstance {
       get { return defaultInstance; }
     }
@@ -4693,16 +4645,6 @@ namespace Gazillion {
       get { return invitedByPlayerName_; }
     }
     
-    public const int InvitedByPlayerConsoleAccountIdFieldNumber = 4;
-    private bool hasInvitedByPlayerConsoleAccountId;
-    private ulong invitedByPlayerConsoleAccountId_;
-    public bool HasInvitedByPlayerConsoleAccountId {
-      get { return hasInvitedByPlayerConsoleAccountId; }
-    }
-    public ulong InvitedByPlayerConsoleAccountId {
-      get { return invitedByPlayerConsoleAccountId_; }
-    }
-    
     public override bool IsInitialized {
       get {
         if (!hasGuildId) return false;
@@ -4722,10 +4664,7 @@ namespace Gazillion {
         output.WriteString(2, field_names[1], GuildName);
       }
       if (hasInvitedByPlayerName) {
-        output.WriteString(3, field_names[3], InvitedByPlayerName);
-      }
-      if (hasInvitedByPlayerConsoleAccountId) {
-        output.WriteUInt64(4, field_names[2], InvitedByPlayerConsoleAccountId);
+        output.WriteString(3, field_names[2], InvitedByPlayerName);
       }
       UnknownFields.WriteTo(output);
     }
@@ -4752,9 +4691,6 @@ namespace Gazillion {
       }
       if (hasInvitedByPlayerName) {
         size += pb::CodedOutputStream.ComputeStringSize(3, InvitedByPlayerName);
-      }
-      if (hasInvitedByPlayerConsoleAccountId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(4, InvitedByPlayerConsoleAccountId);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -4887,9 +4823,6 @@ namespace Gazillion {
         if (other.HasInvitedByPlayerName) {
           InvitedByPlayerName = other.InvitedByPlayerName;
         }
-        if (other.HasInvitedByPlayerConsoleAccountId) {
-          InvitedByPlayerConsoleAccountId = other.InvitedByPlayerConsoleAccountId;
-        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -4943,10 +4876,6 @@ namespace Gazillion {
             }
             case 26: {
               result.hasInvitedByPlayerName = input.ReadString(ref result.invitedByPlayerName_);
-              break;
-            }
-            case 32: {
-              result.hasInvitedByPlayerConsoleAccountId = input.ReadUInt64(ref result.invitedByPlayerConsoleAccountId_);
               break;
             }
           }
@@ -5018,26 +4947,6 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasInvitedByPlayerName = false;
         result.invitedByPlayerName_ = "";
-        return this;
-      }
-      
-      public bool HasInvitedByPlayerConsoleAccountId {
-        get { return result.hasInvitedByPlayerConsoleAccountId; }
-      }
-      public ulong InvitedByPlayerConsoleAccountId {
-        get { return result.InvitedByPlayerConsoleAccountId; }
-        set { SetInvitedByPlayerConsoleAccountId(value); }
-      }
-      public Builder SetInvitedByPlayerConsoleAccountId(ulong value) {
-        PrepareBuilder();
-        result.hasInvitedByPlayerConsoleAccountId = true;
-        result.invitedByPlayerConsoleAccountId_ = value;
-        return this;
-      }
-      public Builder ClearInvitedByPlayerConsoleAccountId() {
-        PrepareBuilder();
-        result.hasInvitedByPlayerConsoleAccountId = false;
-        result.invitedByPlayerConsoleAccountId_ = 0UL;
         return this;
       }
     }
@@ -5751,8 +5660,8 @@ namespace Gazillion {
   public sealed partial class GuildMemberInfo : pb::GeneratedMessage<GuildMemberInfo, GuildMemberInfo.Builder> {
     private GuildMemberInfo() { }
     private static readonly GuildMemberInfo defaultInstance = new GuildMemberInfo().MakeReadOnly();
-    private static readonly string[] _guildMemberInfoFieldNames = new string[] { "consoleAccountId", "membership", "playerId", "playerName" };
-    private static readonly uint[] _guildMemberInfoFieldTags = new uint[] { 32, 24, 8, 18 };
+    private static readonly string[] _guildMemberInfoFieldNames = new string[] { "membership", "playerId", "playerName" };
+    private static readonly uint[] _guildMemberInfoFieldTags = new uint[] { 24, 8, 18 };
     public static GuildMemberInfo DefaultInstance {
       get { return defaultInstance; }
     }
@@ -5803,16 +5712,6 @@ namespace Gazillion {
       get { return membership_; }
     }
     
-    public const int ConsoleAccountIdFieldNumber = 4;
-    private bool hasConsoleAccountId;
-    private ulong consoleAccountId_;
-    public bool HasConsoleAccountId {
-      get { return hasConsoleAccountId; }
-    }
-    public ulong ConsoleAccountId {
-      get { return consoleAccountId_; }
-    }
-    
     public override bool IsInitialized {
       get {
         if (!hasPlayerId) return false;
@@ -5826,16 +5725,13 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _guildMemberInfoFieldNames;
       if (hasPlayerId) {
-        output.WriteUInt64(1, field_names[2], PlayerId);
+        output.WriteUInt64(1, field_names[1], PlayerId);
       }
       if (hasPlayerName) {
-        output.WriteString(2, field_names[3], PlayerName);
+        output.WriteString(2, field_names[2], PlayerName);
       }
       if (hasMembership) {
-        output.WriteEnum(3, field_names[1], (int) Membership, Membership);
-      }
-      if (hasConsoleAccountId) {
-        output.WriteUInt64(4, field_names[0], ConsoleAccountId);
+        output.WriteEnum(3, field_names[0], (int) Membership, Membership);
       }
       UnknownFields.WriteTo(output);
     }
@@ -5862,9 +5758,6 @@ namespace Gazillion {
       }
       if (hasMembership) {
         size += pb::CodedOutputStream.ComputeEnumSize(3, (int) Membership);
-      }
-      if (hasConsoleAccountId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(4, ConsoleAccountId);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -5997,9 +5890,6 @@ namespace Gazillion {
         if (other.HasMembership) {
           Membership = other.Membership;
         }
-        if (other.HasConsoleAccountId) {
-          ConsoleAccountId = other.ConsoleAccountId;
-        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -6061,10 +5951,6 @@ namespace Gazillion {
                 }
                 unknownFields.MergeVarintField(3, (ulong)(int)unknown);
               }
-              break;
-            }
-            case 32: {
-              result.hasConsoleAccountId = input.ReadUInt64(ref result.consoleAccountId_);
               break;
             }
           }
@@ -6137,26 +6023,6 @@ namespace Gazillion {
         result.membership_ = global::Gazillion.GuildMembership.eGMNone;
         return this;
       }
-      
-      public bool HasConsoleAccountId {
-        get { return result.hasConsoleAccountId; }
-      }
-      public ulong ConsoleAccountId {
-        get { return result.ConsoleAccountId; }
-        set { SetConsoleAccountId(value); }
-      }
-      public Builder SetConsoleAccountId(ulong value) {
-        PrepareBuilder();
-        result.hasConsoleAccountId = true;
-        result.consoleAccountId_ = value;
-        return this;
-      }
-      public Builder ClearConsoleAccountId() {
-        PrepareBuilder();
-        result.hasConsoleAccountId = false;
-        result.consoleAccountId_ = 0UL;
-        return this;
-      }
     }
     static GuildMemberInfo() {
       object.ReferenceEquals(global::Gazillion.Guild.Descriptor, null);
@@ -6167,8 +6033,8 @@ namespace Gazillion {
   public sealed partial class GuildChangeMember : pb::GeneratedMessage<GuildChangeMember, GuildChangeMember.Builder> {
     private GuildChangeMember() { }
     private static readonly GuildChangeMember defaultInstance = new GuildChangeMember().MakeReadOnly();
-    private static readonly string[] _guildChangeMemberFieldNames = new string[] { "sourcePlayerId", "targetNewMembership", "targetPlayerId", "targetPlayerName" };
-    private static readonly uint[] _guildChangeMemberFieldTags = new uint[] { 8, 32, 24, 18 };
+    private static readonly string[] _guildChangeMemberFieldNames = new string[] { "sourcePlayerId", "targetNewMembership", "targetPlayerName" };
+    private static readonly uint[] _guildChangeMemberFieldTags = new uint[] { 8, 24, 18 };
     public static GuildChangeMember DefaultInstance {
       get { return defaultInstance; }
     }
@@ -6209,17 +6075,7 @@ namespace Gazillion {
       get { return targetPlayerName_; }
     }
     
-    public const int TargetPlayerIdFieldNumber = 3;
-    private bool hasTargetPlayerId;
-    private ulong targetPlayerId_;
-    public bool HasTargetPlayerId {
-      get { return hasTargetPlayerId; }
-    }
-    public ulong TargetPlayerId {
-      get { return targetPlayerId_; }
-    }
-    
-    public const int TargetNewMembershipFieldNumber = 4;
+    public const int TargetNewMembershipFieldNumber = 3;
     private bool hasTargetNewMembership;
     private global::Gazillion.GuildMembership targetNewMembership_ = global::Gazillion.GuildMembership.eGMNone;
     public bool HasTargetNewMembership {
@@ -6233,7 +6089,6 @@ namespace Gazillion {
       get {
         if (!hasSourcePlayerId) return false;
         if (!hasTargetPlayerName) return false;
-        if (!hasTargetPlayerId) return false;
         if (!hasTargetNewMembership) return false;
         return true;
       }
@@ -6246,13 +6101,10 @@ namespace Gazillion {
         output.WriteUInt64(1, field_names[0], SourcePlayerId);
       }
       if (hasTargetPlayerName) {
-        output.WriteString(2, field_names[3], TargetPlayerName);
-      }
-      if (hasTargetPlayerId) {
-        output.WriteUInt64(3, field_names[2], TargetPlayerId);
+        output.WriteString(2, field_names[2], TargetPlayerName);
       }
       if (hasTargetNewMembership) {
-        output.WriteEnum(4, field_names[1], (int) TargetNewMembership, TargetNewMembership);
+        output.WriteEnum(3, field_names[1], (int) TargetNewMembership, TargetNewMembership);
       }
       UnknownFields.WriteTo(output);
     }
@@ -6277,11 +6129,8 @@ namespace Gazillion {
       if (hasTargetPlayerName) {
         size += pb::CodedOutputStream.ComputeStringSize(2, TargetPlayerName);
       }
-      if (hasTargetPlayerId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(3, TargetPlayerId);
-      }
       if (hasTargetNewMembership) {
-        size += pb::CodedOutputStream.ComputeEnumSize(4, (int) TargetNewMembership);
+        size += pb::CodedOutputStream.ComputeEnumSize(3, (int) TargetNewMembership);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -6411,9 +6260,6 @@ namespace Gazillion {
         if (other.HasTargetPlayerName) {
           TargetPlayerName = other.TargetPlayerName;
         }
-        if (other.HasTargetPlayerId) {
-          TargetPlayerId = other.TargetPlayerId;
-        }
         if (other.HasTargetNewMembership) {
           TargetNewMembership = other.TargetNewMembership;
         }
@@ -6469,10 +6315,6 @@ namespace Gazillion {
               break;
             }
             case 24: {
-              result.hasTargetPlayerId = input.ReadUInt64(ref result.targetPlayerId_);
-              break;
-            }
-            case 32: {
               object unknown;
               if(input.ReadEnum(ref result.targetNewMembership_, out unknown)) {
                 result.hasTargetNewMembership = true;
@@ -6480,7 +6322,7 @@ namespace Gazillion {
                 if (unknownFields == null) {
                   unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
                 }
-                unknownFields.MergeVarintField(4, (ulong)(int)unknown);
+                unknownFields.MergeVarintField(3, (ulong)(int)unknown);
               }
               break;
             }
@@ -6532,26 +6374,6 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasTargetPlayerName = false;
         result.targetPlayerName_ = "";
-        return this;
-      }
-      
-      public bool HasTargetPlayerId {
-        get { return result.hasTargetPlayerId; }
-      }
-      public ulong TargetPlayerId {
-        get { return result.TargetPlayerId; }
-        set { SetTargetPlayerId(value); }
-      }
-      public Builder SetTargetPlayerId(ulong value) {
-        PrepareBuilder();
-        result.hasTargetPlayerId = true;
-        result.targetPlayerId_ = value;
-        return this;
-      }
-      public Builder ClearTargetPlayerId() {
-        PrepareBuilder();
-        result.hasTargetPlayerId = false;
-        result.targetPlayerId_ = 0UL;
         return this;
       }
       

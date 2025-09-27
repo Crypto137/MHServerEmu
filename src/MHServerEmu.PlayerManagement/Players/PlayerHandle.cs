@@ -327,7 +327,6 @@ namespace MHServerEmu.PlayerManagement.Players
 
             NetStructCreateRegionParams createRegionParams = NetStructCreateRegionParams.CreateBuilder()
                 .SetLevel(0)
-                .SetDifficultyTierProtoId((ulong)GameDatabase.GlobalsPrototype.DifficultyTierDefault)
                 .Build();
 
             return BeginRegionTransferToTarget(0, TeleportContextEnum.TeleportContext_Transition, destTarget, createRegionParams);
@@ -587,6 +586,8 @@ namespace MHServerEmu.PlayerManagement.Players
             Logger.Trace($"SetDifficultyTierPreference(): player=[{this}], difficulty=[{difficultyTierProtoRef.GetNameFormatted()}]");
         }
 
+        /* V48_TODO
+
         public void GetPartyBoosts(PartyMemberInfo.Builder infoBuilder)
         {
             if (_partyBoosts.Count == 0)
@@ -614,6 +615,8 @@ namespace MHServerEmu.PlayerManagement.Players
                 _partyBoosts.Add((PrototypeGuid)boost);
             }
         }
+
+        */
 
         private void SetTransferParams(ulong gameId, NetStructTransferParams transferParams)
         {

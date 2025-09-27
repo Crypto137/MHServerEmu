@@ -52,12 +52,12 @@ namespace Gazillion {
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.NetStructCreateRegionParams, global::Gazillion.NetStructCreateRegionParams.Builder> internal__static_Gazillion_NetStructCreateRegionParams__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_NetStructModChangeObject__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.NetStructModChangeObject, global::Gazillion.NetStructModChangeObject.Builder> internal__static_Gazillion_NetStructModChangeObject__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_NetStructPowerPointAllocation__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.NetStructPowerPointAllocation, global::Gazillion.NetStructPowerPointAllocation.Builder> internal__static_Gazillion_NetStructPowerPointAllocation__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_NetStructAffixSpec__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.NetStructAffixSpec, global::Gazillion.NetStructAffixSpec.Builder> internal__static_Gazillion_NetStructAffixSpec__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_NetStructItemSpec__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.NetStructItemSpec, global::Gazillion.NetStructItemSpec.Builder> internal__static_Gazillion_NetStructItemSpec__FieldAccessorTable;
-    internal static pbd::MessageDescriptor internal__static_Gazillion_CommunityMemberAvatarSlot__Descriptor;
-    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.CommunityMemberAvatarSlot, global::Gazillion.CommunityMemberAvatarSlot.Builder> internal__static_Gazillion_CommunityMemberAvatarSlot__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_CommunityMemberBroadcast__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.CommunityMemberBroadcast, global::Gazillion.CommunityMemberBroadcast.Builder> internal__static_Gazillion_CommunityMemberBroadcast__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_CommunityNotify__Descriptor;
@@ -102,14 +102,6 @@ namespace Gazillion {
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.LeaderboardInstanceData, global::Gazillion.LeaderboardInstanceData.Builder> internal__static_Gazillion_LeaderboardInstanceData__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_WorldViewEntry__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.WorldViewEntry, global::Gazillion.WorldViewEntry.Builder> internal__static_Gazillion_WorldViewEntry__FieldAccessorTable;
-    internal static pbd::MessageDescriptor internal__static_Gazillion_PartyOperationPayload__Descriptor;
-    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PartyOperationPayload, global::Gazillion.PartyOperationPayload.Builder> internal__static_Gazillion_PartyOperationPayload__FieldAccessorTable;
-    internal static pbd::MessageDescriptor internal__static_Gazillion_PartyMemberInfo__Descriptor;
-    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PartyMemberInfo, global::Gazillion.PartyMemberInfo.Builder> internal__static_Gazillion_PartyMemberInfo__FieldAccessorTable;
-    internal static pbd::MessageDescriptor internal__static_Gazillion_PartyInfo__Descriptor;
-    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PartyInfo, global::Gazillion.PartyInfo.Builder> internal__static_Gazillion_PartyInfo__FieldAccessorTable;
-    internal static pbd::MessageDescriptor internal__static_Gazillion_PSNNotification__Descriptor;
-    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PSNNotification, global::Gazillion.PSNNotification.Builder> internal__static_Gazillion_PSNNotification__FieldAccessorTable;
     #endregion
     #region Descriptor
     public static pbd::FileDescriptor Descriptor {
@@ -178,339 +170,264 @@ namespace Gazillion {
             "c3RpbmdHYW1lSWQSMgoUcmVxdWVzdGluZ1BsYXllckd1aWQYAiACKARSFHJl", 
             "cXVlc3RpbmdQbGF5ZXJHdWlkEjgKBm9yaWdpbhgDIAIoCzIgLkdhemlsbGlv", 
             "bi5OZXRTdHJ1Y3RSZWdpb25PcmlnaW5SBm9yaWdpbhIyCgR0eXBlGAQgAigO", 
-            "Mh4uR2F6aWxsaW9uLlRlbGVwb3J0Q29udGV4dEVudW1SBHR5cGUilgYKG05l", 
+            "Mh4uR2F6aWxsaW9uLlRlbGVwb3J0Q29udGV4dEVudW1SBHR5cGUi4AUKG05l", 
             "dFN0cnVjdENyZWF0ZVJlZ2lvblBhcmFtcxIUCgVsZXZlbBgBIAIoDVIFbGV2", 
             "ZWwSOAoGb3JpZ2luGAIgASgLMiAuR2F6aWxsaW9uLk5ldFN0cnVjdFJlZ2lv", 
-            "bk9yaWdpblIGb3JpZ2luEhQKBWNoZWF0GAMgASgIUgVjaGVhdBI0ChVkaWZm", 
-            "aWN1bHR5VGllclByb3RvSWQYBCABKARSFWRpZmZpY3VsdHlUaWVyUHJvdG9J", 
-            "ZBIlCgxlbmRsZXNzTGV2ZWwYBSABKA06ATBSDGVuZGxlc3NMZXZlbBIgCgtn", 
-            "YW1lU3RhdGVJZBgGIAEoBFILZ2FtZVN0YXRlSWQSIwoLbWF0Y2hOdW1iZXIY", 
-            "ByABKAQ6ATBSC21hdGNoTnVtYmVyEhIKBHNlZWQYCCABKA1SBHNlZWQSJgoO", 
-            "cGFyZW50UmVnaW9uSWQYCSABKARSDnBhcmVudFJlZ2lvbklkEjAKE3JlcXVp", 
-            "cmVkSXRlbVByb3RvSWQYCiABKARSE3JlcXVpcmVkSXRlbVByb3RvSWQSMgoU", 
-            "cmVxdWlyZWRJdGVtRW50aXR5SWQYCyABKARSFHJlcXVpcmVkSXRlbUVudGl0", 
-            "eUlkEkYKDGFjY2Vzc1BvcnRhbBgMIAEoCzIiLkdhemlsbGlvbi5OZXRTdHJ1", 
-            "Y3RQb3J0YWxJbnN0YW5jZVIMYWNjZXNzUG9ydGFsEhgKB2FmZml4ZXMYDSAD", 
-            "KARSB2FmZml4ZXMSJQoMcGxheWVyRGVhdGhzGA4gASgNOgEwUgxwbGF5ZXJE", 
-            "ZWF0aHMSRQocZGFuZ2VyUm9vbVNjZW5hcmlvSXRlbURiR3VpZBgPIAEoBDoB", 
-            "MFIcZGFuZ2VyUm9vbVNjZW5hcmlvSXRlbURiR3VpZBIhCgppdGVtUmFyaXR5", 
-            "GBAgASgEOgEwUgppdGVtUmFyaXR5EiYKDnByb3BlcnR5QnVmZmVyGBEgASgM", 
-            "Ug5wcm9wZXJ0eUJ1ZmZlchIwChNkYW5nZXJSb29tU2NlbmFyaW9SGBIgASgE", 
-            "UhNkYW5nZXJSb29tU2NlbmFyaW9SIkQKGE5ldFN0cnVjdE1vZENoYW5nZU9i", 
-            "amVjdBIQCgNtb2QYASACKARSA21vZBIWCgZjaGFuZ2UYAiACKA1SBmNoYW5n", 
-            "ZSJ0ChJOZXRTdHJ1Y3RBZmZpeFNwZWMSJAoNYWZmaXhQcm90b1JlZhgBIAIo", 
-            "BFINYWZmaXhQcm90b1JlZhIkCg1zY29wZVByb3RvUmVmGAIgAigEUg1zY29w", 
-            "ZVByb3RvUmVmEhIKBHNlZWQYAyACKAVSBHNlZWQimgIKEU5ldFN0cnVjdEl0", 
-            "ZW1TcGVjEiIKDGl0ZW1Qcm90b1JlZhgBIAIoBFIMaXRlbVByb3RvUmVmEhwK", 
-            "CWl0ZW1MZXZlbBgCIAIoDVIJaXRlbUxldmVsEiYKDnJhcml0eVByb3RvUmVm", 
-            "GAMgAigEUg5yYXJpdHlQcm90b1JlZhISCgRzZWVkGAQgAigNUgRzZWVkEiQK", 
-            "DWNyZWRpdHNBbW91bnQYBSABKA1SDWNyZWRpdHNBbW91bnQSPQoKYWZmaXhT", 
-            "cGVjcxgGIAMoCzIdLkdhemlsbGlvbi5OZXRTdHJ1Y3RBZmZpeFNwZWNSCmFm", 
-            "Zml4U3BlY3MSIgoMZXF1aXBwYWJsZUJ5GAcgASgEUgxlcXVpcHBhYmxlQnki", 
-            "uQEKGUNvbW11bml0eU1lbWJlckF2YXRhclNsb3QSIAoLYXZhdGFyUmVmSWQY", 
-            "ASABKARSC2F2YXRhclJlZklkEiIKDGNvc3R1bWVSZWZJZBgCIAEoBFIMY29z", 
-            "dHVtZVJlZklkEhQKBWxldmVsGAMgASgNUgVsZXZlbBIkCg1wcmVzdGlnZUxl", 
-            "dmVsGAQgASgNUg1wcmVzdGlnZUxldmVsEhoKCG9ubGluZUlkGAUgASgJUghv", 
-            "bmxpbmVJZCKSBQoYQ29tbXVuaXR5TWVtYmVyQnJvYWRjYXN0EioKEG1lbWJl", 
-            "clBsYXllckRiSWQYASACKARSEG1lbWJlclBsYXllckRiSWQSMwoSY3VycmVu", 
-            "dFJlZ2lvblJlZklkGAIgASgEOgMxMjNSEmN1cnJlbnRSZWdpb25SZWZJZBI2", 
-            "ChZjdXJyZW50RGlmZmljdWx0eVJlZklkGAMgASgEUhZjdXJyZW50RGlmZmlj", 
-            "dWx0eVJlZklkEjoKBXNsb3RzGAQgAygLMiQuR2F6aWxsaW9uLkNvbW11bml0", 
-            "eU1lbWJlckF2YXRhclNsb3RSBXNsb3RzEiwKEWN1cnJlbnRQbGF5ZXJOYW1l", 
-            "GAUgASgJUhFjdXJyZW50UGxheWVyTmFtZRI+ChptZW1iZXJQbGF5ZXJEYklk", 
-            "SWdub3JlTGlzdBgGIAMoBFIabWVtYmVyUGxheWVyRGJJZElnbm9yZUxpc3QS", 
-            "HgoIaXNPbmxpbmUYByABKAU6Ai0xUghpc09ubGluZRJAChtsYXN0TG9nb3V0", 
-            "VGltZUFzRmlsZVRpbWVVdGMYCCABKANSG2xhc3RMb2dvdXRUaW1lQXNGaWxl", 
-            "VGltZVV0YxI1ChNjdXJyZW50Q29zdHVtZVJlZklkGAkgASgEOgMxMjNSE2N1", 
-            "cnJlbnRDb3N0dW1lUmVmSWQSKgoQY29uc29sZUFjY291bnRJZBgKIAEoBFIQ", 
-            "Y29uc29sZUFjY291bnRJZBI8ChlzZWNvbmRhcnlDb25zb2xlQWNjb3VudElk", 
-            "GAsgASgEUhlzZWNvbmRhcnlDb25zb2xlQWNjb3VudElkEjAKE3NlY29uZGFy", 
-            "eVBsYXllck5hbWUYDCABKAlSE3NlY29uZGFyeVBsYXllck5hbWUixQEKD0Nv", 
-            "bW11bml0eU5vdGlmeRIqChB0YXJnZXRQbGF5ZXJEYklkGAEgAigEUhB0YXJn", 
-            "ZXRQbGF5ZXJEYklkEioKEHNvdXJjZVBsYXllck5hbWUYAiACKAlSEHNvdXJj", 
-            "ZVBsYXllck5hbWUSGgoIY2lyY2xlSWQYAyACKARSCGNpcmNsZUlkEj4KCW9w", 
-            "ZXJhdGlvbhgEIAIoDjIgLkdhemlsbGlvbi5Nb2RpZnlDaXJjbGVPcGVyYXRp", 
-            "b25SCW9wZXJhdGlvbiJzCiNOZXRTdHJ1Y3RMaXZlVHVuaW5nU2V0dGluZ0Vu", 
-            "dW1WYWx1ZRIkCg10dW5pbmdWYXJFbnVtGAEgAigFUg10dW5pbmdWYXJFbnVt", 
-            "EiYKDnR1bmluZ1ZhclZhbHVlGAIgAigCUg50dW5pbmdWYXJWYWx1ZSKkAQoo", 
-            "TmV0U3RydWN0TGl2ZVR1bmluZ1NldHRpbmdQcm90b0VudW1WYWx1ZRIqChB0", 
-            "dW5pbmdWYXJQcm90b0lkGAEgAigEUhB0dW5pbmdWYXJQcm90b0lkEiQKDXR1", 
-            "bmluZ1ZhckVudW0YAiACKAVSDXR1bmluZ1ZhckVudW0SJgoOdHVuaW5nVmFy", 
-            "VmFsdWUYAyACKAJSDnR1bmluZ1ZhclZhbHVlIqYBChJDaGFuZ2VSZWdpb25G", 
-            "YWlsZWQSOAoGcmVhc29uGAEgAigOMiAuR2F6aWxsaW9uLlJlZ2lvblRyYW5z", 
-            "ZmVyRmFpbHVyZVIGcmVhc29uEiQKDXJlZ2lvblByb3RvSWQYAiABKARSDXJl", 
-            "Z2lvblByb3RvSWQSMAoTcmVxdWlyZWRJdGVtUHJvdG9JZBgDIAEoBFITcmVx", 
-            "dWlyZWRJdGVtUHJvdG9JZCJtCh9OZXRTdHJ1Y3RDaGF0Q2hhbm5lbEZpbHRl", 
-            "clN0YXRlEiYKDmNoYW5uZWxQcm90b0lkGAEgAigEUg5jaGFubmVsUHJvdG9J", 
-            "ZBIiCgxpc1N1YnNjcmliZWQYAiACKAhSDGlzU3Vic2NyaWJlZCI/ChVOZXRT", 
-            "dHJ1Y3RDaGF0VGFiU3RhdGUSJgoOY2hhbm5lbFByb3RvSWQYASACKARSDmNo", 
-            "YW5uZWxQcm90b0lkIswCChhOZXRTdHJ1Y3RHYW1lcGxheU9wdGlvbnMSJgoO", 
-            "b3B0aW9uU2V0dGluZ3MYASADKARSDm9wdGlvblNldHRpbmdzEmAKFWNoYXRD", 
-            "aGFubmVsRmlsdGVyc01hcBgCIAMoCzIqLkdhemlsbGlvbi5OZXRTdHJ1Y3RD", 
-            "aGF0Q2hhbm5lbEZpbHRlclN0YXRlUhVjaGF0Q2hhbm5lbEZpbHRlcnNNYXAS", 
-            "VAoUY2hhdFRhYkNoYW5uZWxzQXJyYXkYAyADKAsyIC5HYXppbGxpb24uTmV0", 
-            "U3RydWN0Q2hhdFRhYlN0YXRlUhRjaGF0VGFiQ2hhbm5lbHNBcnJheRJQCiNh", 
-            "cm1vclJhcml0eVZhcG9yaXplVGhyZXNob2xkUHJvdG9JZBgEIAMoBFIjYXJt", 
-            "b3JSYXJpdHlWYXBvcml6ZVRocmVzaG9sZFByb3RvSWQiRgocU2hhcmVMZWdl", 
-            "bmRhcnlNaXNzaW9uUmVxdWVzdBImCg5taXNzaW9uRGF0YVJlZhgBIAIoBFIO", 
-            "bWlzc2lvbkRhdGFSZWYiiQEKG1NoYXJlTGVnZW5kYXJ5TWlzc2lvblJlc3Vs", 
-            "dBImCg5taXNzaW9uRGF0YVJlZhgBIAIoBFIObWlzc2lvbkRhdGFSZWYSQgoG", 
-            "cmVzdWx0GAIgAigOMiouR2F6aWxsaW9uLkxlZ2VuZGFyeU1pc3Npb25TaGFy", 
-            "ZVJlc3VsdFR5cGVSBnJlc3VsdCLBAgoUQmlsbGluZ1AyUEdpZnRSZXN1bHQS", 
-            "JAoNdHJhbnNhY3Rpb25JZBgBIAIoBFINdHJhbnNhY3Rpb25JZBIeCgpkaWRT", 
-            "dWNjZWVkGAIgAigIUgpkaWRTdWNjZWVkEiYKDmN1cnJlbnRCYWxhbmNlGAMg", 
-            "ASgDUg5jdXJyZW50QmFsYW5jZRIUCgVza3VJZBgEIAIoBFIFc2t1SWQSHAoJ", 
-            "ZXJyb3JDb2RlGAUgASgFUgllcnJvckNvZGUSHQoIbnVtVW5pdHMYBiACKAU6", 
-            "ATFSCG51bVVuaXRzEiAKC2dpZnRNZXNzYWdlGAcgAigJUgtnaWZ0TWVzc2Fn", 
-            "ZRIaCghzZW5kZXJJZBgIIAIoBFIIc2VuZGVySWQSKgoQc2VsbGFibGVPYmpl", 
-            "Y3RJZBgJIAEoCVIQc2VsbGFibGVPYmplY3RJZCKhAQobTGVhZGVyYm9hcmRQ", 
-            "bGF5ZXJTY29yZVF1ZXJ5EiQKDWxlYWRlcmJvYXJkSWQYASACKARSDWxlYWRl", 
-            "cmJvYXJkSWQSIQoKaW5zdGFuY2VJZBgCIAEoBDoBMFIKaW5zdGFuY2VJZBIa", 
-            "CghwbGF5ZXJJZBgDIAIoBFIIcGxheWVySWQSHQoIYXZhdGFySWQYBCABKAQ6", 
-            "ATBSCGF2YXRhcklkIn8KGkxlYWRlcmJvYXJkR3VpbGRTY29yZVF1ZXJ5EiQK", 
-            "DWxlYWRlcmJvYXJkSWQYASACKARSDWxlYWRlcmJvYXJkSWQSIQoKaW5zdGFu", 
-            "Y2VJZBgCIAEoBDoBMFIKaW5zdGFuY2VJZBIYCgdndWlsZElkGAMgAigEUgdn", 
-            "dWlsZElkIoABChlMZWFkZXJib2FyZE1ldGFTY29yZVF1ZXJ5EiQKDWxlYWRl", 
-            "cmJvYXJkSWQYASACKARSDWxlYWRlcmJvYXJkSWQSIQoKaW5zdGFuY2VJZBgC", 
-            "IAEoBDoBMFIKaW5zdGFuY2VJZBIaCghwbGF5ZXJJZBgDIAIoBFIIcGxheWVy", 
-            "SWQiXwoUTGVhZGVyYm9hcmREYXRhUXVlcnkSJAoNbGVhZGVyYm9hcmRJZBgB", 
+            "bk9yaWdpblIGb3JpZ2luEhQKBWNoZWF0GAMgASgIUgVjaGVhdBIlCgxlbmRs", 
+            "ZXNzTGV2ZWwYBCABKA06ATBSDGVuZGxlc3NMZXZlbBIgCgtnYW1lU3RhdGVJ", 
+            "ZBgFIAEoBFILZ2FtZVN0YXRlSWQSIwoLbWF0Y2hOdW1iZXIYBiABKAQ6ATBS", 
+            "C21hdGNoTnVtYmVyEhIKBHNlZWQYByABKA1SBHNlZWQSJgoOcGFyZW50UmVn", 
+            "aW9uSWQYCCABKARSDnBhcmVudFJlZ2lvbklkEjAKE3JlcXVpcmVkSXRlbVBy", 
+            "b3RvSWQYCSABKARSE3JlcXVpcmVkSXRlbVByb3RvSWQSMgoUcmVxdWlyZWRJ", 
+            "dGVtRW50aXR5SWQYCiABKARSFHJlcXVpcmVkSXRlbUVudGl0eUlkEkYKDGFj", 
+            "Y2Vzc1BvcnRhbBgLIAEoCzIiLkdhemlsbGlvbi5OZXRTdHJ1Y3RQb3J0YWxJ", 
+            "bnN0YW5jZVIMYWNjZXNzUG9ydGFsEhgKB2FmZml4ZXMYDCADKARSB2FmZml4", 
+            "ZXMSJQoMcGxheWVyRGVhdGhzGA0gASgNOgEwUgxwbGF5ZXJEZWF0aHMSRQoc", 
+            "ZGFuZ2VyUm9vbVNjZW5hcmlvSXRlbURiR3VpZBgOIAEoBDoBMFIcZGFuZ2Vy", 
+            "Um9vbVNjZW5hcmlvSXRlbURiR3VpZBIhCgppdGVtUmFyaXR5GA8gASgEOgEw", 
+            "UgppdGVtUmFyaXR5EiYKDnByb3BlcnR5QnVmZmVyGBAgASgMUg5wcm9wZXJ0", 
+            "eUJ1ZmZlchIwChNkYW5nZXJSb29tU2NlbmFyaW9SGBEgASgEUhNkYW5nZXJS", 
+            "b29tU2NlbmFyaW9SIkQKGE5ldFN0cnVjdE1vZENoYW5nZU9iamVjdBIQCgNt", 
+            "b2QYASACKARSA21vZBIWCgZjaGFuZ2UYAiACKA1SBmNoYW5nZSJZCh1OZXRT", 
+            "dHJ1Y3RQb3dlclBvaW50QWxsb2NhdGlvbhIiCgxwb3dlclByb3RvSWQYASAC", 
+            "KARSDHBvd2VyUHJvdG9JZBIUCgVkZWx0YRgCIAIoDVIFZGVsdGEidAoSTmV0", 
+            "U3RydWN0QWZmaXhTcGVjEiQKDWFmZml4UHJvdG9SZWYYASACKARSDWFmZml4", 
+            "UHJvdG9SZWYSJAoNc2NvcGVQcm90b1JlZhgCIAIoBFINc2NvcGVQcm90b1Jl", 
+            "ZhISCgRzZWVkGAMgAigFUgRzZWVkIpoCChFOZXRTdHJ1Y3RJdGVtU3BlYxIi", 
+            "CgxpdGVtUHJvdG9SZWYYASACKARSDGl0ZW1Qcm90b1JlZhIcCglpdGVtTGV2", 
+            "ZWwYAiACKA1SCWl0ZW1MZXZlbBImCg5yYXJpdHlQcm90b1JlZhgDIAIoBFIO", 
+            "cmFyaXR5UHJvdG9SZWYSEgoEc2VlZBgEIAIoDVIEc2VlZBIkCg1jcmVkaXRz", 
+            "QW1vdW50GAUgASgNUg1jcmVkaXRzQW1vdW50Ej0KCmFmZml4U3BlY3MYBiAD", 
+            "KAsyHS5HYXppbGxpb24uTmV0U3RydWN0QWZmaXhTcGVjUgphZmZpeFNwZWNz", 
+            "EiIKDGVxdWlwcGFibGVCeRgHIAEoBFIMZXF1aXBwYWJsZUJ5It4EChhDb21t", 
+            "dW5pdHlNZW1iZXJCcm9hZGNhc3QSKgoQbWVtYmVyUGxheWVyRGJJZBgBIAIo", 
+            "BFIQbWVtYmVyUGxheWVyRGJJZBIzChJjdXJyZW50UmVnaW9uUmVmSWQYAiAB", 
+            "KAQ6AzEyM1ISY3VycmVudFJlZ2lvblJlZklkEjMKEmN1cnJlbnRBdmF0YXJS", 
+            "ZWZJZBgDIAEoBDoDMTIzUhJjdXJyZW50QXZhdGFyUmVmSWQSNAoVY3VycmVu", 
+            "dENoYXJhY3RlckxldmVsGAQgASgEUhVjdXJyZW50Q2hhcmFjdGVyTGV2ZWwS", 
+            "OwoWY3VycmVudFB2cEZhY3Rpb25SZWZJZBgFIAEoBDoDMTIzUhZjdXJyZW50", 
+            "UHZwRmFjdGlvblJlZklkEiwKEWN1cnJlbnRQbGF5ZXJOYW1lGAYgASgJUhFj", 
+            "dXJyZW50UGxheWVyTmFtZRI+ChptZW1iZXJQbGF5ZXJEYklkSWdub3JlTGlz", 
+            "dBgHIAMoBFIabWVtYmVyUGxheWVyRGJJZElnbm9yZUxpc3QSMgoUY3VycmVu", 
+            "dFByZXN0aWdlTGV2ZWwYCCABKARSFGN1cnJlbnRQcmVzdGlnZUxldmVsEh4K", 
+            "CGlzT25saW5lGAkgASgFOgItMVIIaXNPbmxpbmUSQAobbGFzdExvZ291dFRp", 
+            "bWVBc0ZpbGVUaW1lVXRjGAogASgDUhtsYXN0TG9nb3V0VGltZUFzRmlsZVRp", 
+            "bWVVdGMSNQoTY3VycmVudENvc3R1bWVSZWZJZBgLIAEoBDoDMTIzUhNjdXJy", 
+            "ZW50Q29zdHVtZVJlZklkIsUBCg9Db21tdW5pdHlOb3RpZnkSKgoQdGFyZ2V0", 
+            "UGxheWVyRGJJZBgBIAIoBFIQdGFyZ2V0UGxheWVyRGJJZBIqChBzb3VyY2VQ", 
+            "bGF5ZXJOYW1lGAIgAigJUhBzb3VyY2VQbGF5ZXJOYW1lEhoKCGNpcmNsZUlk", 
+            "GAMgAigEUghjaXJjbGVJZBI+CglvcGVyYXRpb24YBCACKA4yIC5HYXppbGxp", 
+            "b24uTW9kaWZ5Q2lyY2xlT3BlcmF0aW9uUglvcGVyYXRpb24icwojTmV0U3Ry", 
+            "dWN0TGl2ZVR1bmluZ1NldHRpbmdFbnVtVmFsdWUSJAoNdHVuaW5nVmFyRW51", 
+            "bRgBIAIoBVINdHVuaW5nVmFyRW51bRImCg50dW5pbmdWYXJWYWx1ZRgCIAIo", 
+            "AlIOdHVuaW5nVmFyVmFsdWUipAEKKE5ldFN0cnVjdExpdmVUdW5pbmdTZXR0", 
+            "aW5nUHJvdG9FbnVtVmFsdWUSKgoQdHVuaW5nVmFyUHJvdG9JZBgBIAIoBFIQ", 
+            "dHVuaW5nVmFyUHJvdG9JZBIkCg10dW5pbmdWYXJFbnVtGAIgAigFUg10dW5p", 
+            "bmdWYXJFbnVtEiYKDnR1bmluZ1ZhclZhbHVlGAMgAigCUg50dW5pbmdWYXJW", 
+            "YWx1ZSKmAQoSQ2hhbmdlUmVnaW9uRmFpbGVkEjgKBnJlYXNvbhgBIAIoDjIg", 
+            "LkdhemlsbGlvbi5SZWdpb25UcmFuc2ZlckZhaWx1cmVSBnJlYXNvbhIkCg1y", 
+            "ZWdpb25Qcm90b0lkGAIgASgEUg1yZWdpb25Qcm90b0lkEjAKE3JlcXVpcmVk", 
+            "SXRlbVByb3RvSWQYAyABKARSE3JlcXVpcmVkSXRlbVByb3RvSWQibQofTmV0", 
+            "U3RydWN0Q2hhdENoYW5uZWxGaWx0ZXJTdGF0ZRImCg5jaGFubmVsUHJvdG9J", 
+            "ZBgBIAIoBFIOY2hhbm5lbFByb3RvSWQSIgoMaXNTdWJzY3JpYmVkGAIgAigI", 
+            "Ugxpc1N1YnNjcmliZWQiPwoVTmV0U3RydWN0Q2hhdFRhYlN0YXRlEiYKDmNo", 
+            "YW5uZWxQcm90b0lkGAEgAigEUg5jaGFubmVsUHJvdG9JZCLMAgoYTmV0U3Ry", 
+            "dWN0R2FtZXBsYXlPcHRpb25zEiYKDm9wdGlvblNldHRpbmdzGAEgAygIUg5v", 
+            "cHRpb25TZXR0aW5ncxJgChVjaGF0Q2hhbm5lbEZpbHRlcnNNYXAYAiADKAsy", 
+            "Ki5HYXppbGxpb24uTmV0U3RydWN0Q2hhdENoYW5uZWxGaWx0ZXJTdGF0ZVIV", 
+            "Y2hhdENoYW5uZWxGaWx0ZXJzTWFwElQKFGNoYXRUYWJDaGFubmVsc0FycmF5", 
+            "GAMgAygLMiAuR2F6aWxsaW9uLk5ldFN0cnVjdENoYXRUYWJTdGF0ZVIUY2hh", 
+            "dFRhYkNoYW5uZWxzQXJyYXkSUAojYXJtb3JSYXJpdHlWYXBvcml6ZVRocmVz", 
+            "aG9sZFByb3RvSWQYBCADKARSI2FybW9yUmFyaXR5VmFwb3JpemVUaHJlc2hv", 
+            "bGRQcm90b0lkIkYKHFNoYXJlTGVnZW5kYXJ5TWlzc2lvblJlcXVlc3QSJgoO", 
+            "bWlzc2lvbkRhdGFSZWYYASACKARSDm1pc3Npb25EYXRhUmVmIokBChtTaGFy", 
+            "ZUxlZ2VuZGFyeU1pc3Npb25SZXN1bHQSJgoObWlzc2lvbkRhdGFSZWYYASAC", 
+            "KARSDm1pc3Npb25EYXRhUmVmEkIKBnJlc3VsdBgCIAIoDjIqLkdhemlsbGlv", 
+            "bi5MZWdlbmRhcnlNaXNzaW9uU2hhcmVSZXN1bHRUeXBlUgZyZXN1bHQilQIK", 
+            "FEJpbGxpbmdQMlBHaWZ0UmVzdWx0EiQKDXRyYW5zYWN0aW9uSWQYASACKARS", 
+            "DXRyYW5zYWN0aW9uSWQSHgoKZGlkU3VjY2VlZBgCIAIoCFIKZGlkU3VjY2Vl", 
+            "ZBImCg5jdXJyZW50QmFsYW5jZRgDIAEoA1IOY3VycmVudEJhbGFuY2USFAoF", 
+            "c2t1SWQYBCACKARSBXNrdUlkEhwKCWVycm9yQ29kZRgFIAEoBVIJZXJyb3JD", 
+            "b2RlEh0KCG51bVVuaXRzGAYgAigFOgExUghudW1Vbml0cxIgCgtnaWZ0TWVz", 
+            "c2FnZRgHIAIoCVILZ2lmdE1lc3NhZ2USGgoIc2VuZGVySWQYCCACKARSCHNl", 
+            "bmRlcklkIqEBChtMZWFkZXJib2FyZFBsYXllclNjb3JlUXVlcnkSJAoNbGVh", 
+            "ZGVyYm9hcmRJZBgBIAIoBFINbGVhZGVyYm9hcmRJZBIhCgppbnN0YW5jZUlk", 
+            "GAIgASgEOgEwUgppbnN0YW5jZUlkEhoKCHBsYXllcklkGAMgAigEUghwbGF5", 
+            "ZXJJZBIdCghhdmF0YXJJZBgEIAEoBDoBMFIIYXZhdGFySWQifwoaTGVhZGVy", 
+            "Ym9hcmRHdWlsZFNjb3JlUXVlcnkSJAoNbGVhZGVyYm9hcmRJZBgBIAIoBFIN", 
+            "bGVhZGVyYm9hcmRJZBIhCgppbnN0YW5jZUlkGAIgASgEOgEwUgppbnN0YW5j", 
+            "ZUlkEhgKB2d1aWxkSWQYAyACKARSB2d1aWxkSWQigAEKGUxlYWRlcmJvYXJk", 
+            "TWV0YVNjb3JlUXVlcnkSJAoNbGVhZGVyYm9hcmRJZBgBIAIoBFINbGVhZGVy", 
+            "Ym9hcmRJZBIhCgppbnN0YW5jZUlkGAIgASgEOgEwUgppbnN0YW5jZUlkEhoK", 
+            "CHBsYXllcklkGAMgAigEUghwbGF5ZXJJZCJfChRMZWFkZXJib2FyZERhdGFR", 
+            "dWVyeRIkCg1sZWFkZXJib2FyZElkGAEgAigEUg1sZWFkZXJib2FyZElkEiEK", 
+            "Cmluc3RhbmNlSWQYAiABKAQ6ATBSCmluc3RhbmNlSWQimAIKE0xlYWRlcmJv", 
+            "YXJkTWV0YWRhdGESJAoNbGVhZGVyYm9hcmRJZBgBIAIoBFINbGVhZGVyYm9h", 
+            "cmRJZBIeCgppbnN0YW5jZUlkGAIgAigEUgppbnN0YW5jZUlkEjEKBXN0YXRl", 
+            "GAMgAigOMhsuR2F6aWxsaW9uLkxlYWRlcmJvYXJkU3RhdGVSBXN0YXRlEjYK", 
+            "FmFjdGl2YXRpb25UaW1lc3RhbXBVdGMYBCACKANSFmFjdGl2YXRpb25UaW1l", 
+            "c3RhbXBVdGMSNgoWZXhwaXJhdGlvblRpbWVzdGFtcFV0YxgFIAIoA1IWZXhw", 
+            "aXJhdGlvblRpbWVzdGFtcFV0YxIYCgd2aXNpYmxlGAYgAigIUgd2aXNpYmxl", 
+            "IogBChBMZWFkZXJib2FyZEVudHJ5EhIKBG5hbWUYASACKAlSBG5hbWUSFgoG", 
+            "bmFtZUlkGAIgASgEUgZuYW1lSWQSFgoGZ2FtZUlkGAMgAigEUgZnYW1lSWQS", 
+            "FAoFc2NvcmUYBCACKARSBXNjb3JlEhoKCGF2YXRhcklkGAUgASgEUghhdmF0", 
+            "YXJJZCKBAQoUTGVhZGVyYm9hcmRUYWJsZURhdGESMgoEaW5mbxgBIAIoCzIe", 
+            "LkdhemlsbGlvbi5MZWFkZXJib2FyZE1ldGFkYXRhUgRpbmZvEjUKB2VudHJp", 
+            "ZXMYAiADKAsyGy5HYXppbGxpb24uTGVhZGVyYm9hcmRFbnRyeVIHZW50cmll", 
+            "cyKiAgoUTGVhZGVyYm9hcmRTY29yZURhdGESJAoNbGVhZGVyYm9hcmRJZBgB", 
             "IAIoBFINbGVhZGVyYm9hcmRJZBIhCgppbnN0YW5jZUlkGAIgASgEOgEwUgpp", 
-            "bnN0YW5jZUlkIpgCChNMZWFkZXJib2FyZE1ldGFkYXRhEiQKDWxlYWRlcmJv", 
-            "YXJkSWQYASACKARSDWxlYWRlcmJvYXJkSWQSHgoKaW5zdGFuY2VJZBgCIAIo", 
-            "BFIKaW5zdGFuY2VJZBIxCgVzdGF0ZRgDIAIoDjIbLkdhemlsbGlvbi5MZWFk", 
-            "ZXJib2FyZFN0YXRlUgVzdGF0ZRI2ChZhY3RpdmF0aW9uVGltZXN0YW1wVXRj", 
-            "GAQgAigDUhZhY3RpdmF0aW9uVGltZXN0YW1wVXRjEjYKFmV4cGlyYXRpb25U", 
-            "aW1lc3RhbXBVdGMYBSACKANSFmV4cGlyYXRpb25UaW1lc3RhbXBVdGMSGAoH", 
-            "dmlzaWJsZRgGIAIoCFIHdmlzaWJsZSKIAQoQTGVhZGVyYm9hcmRFbnRyeRIS", 
-            "CgRuYW1lGAEgAigJUgRuYW1lEhYKBm5hbWVJZBgCIAEoBFIGbmFtZUlkEhYK", 
-            "BmdhbWVJZBgDIAIoBFIGZ2FtZUlkEhQKBXNjb3JlGAQgAigEUgVzY29yZRIa", 
-            "CghhdmF0YXJJZBgFIAEoBFIIYXZhdGFySWQigQEKFExlYWRlcmJvYXJkVGFi", 
-            "bGVEYXRhEjIKBGluZm8YASACKAsyHi5HYXppbGxpb24uTGVhZGVyYm9hcmRN", 
-            "ZXRhZGF0YVIEaW5mbxI1CgdlbnRyaWVzGAIgAygLMhsuR2F6aWxsaW9uLkxl", 
-            "YWRlcmJvYXJkRW50cnlSB2VudHJpZXMiogIKFExlYWRlcmJvYXJkU2NvcmVE", 
-            "YXRhEiQKDWxlYWRlcmJvYXJkSWQYASACKARSDWxlYWRlcmJvYXJkSWQSIQoK", 
-            "aW5zdGFuY2VJZBgCIAEoBDoBMFIKaW5zdGFuY2VJZBIaCghwbGF5ZXJJZBgD", 
-            "IAEoBFIIcGxheWVySWQSGAoHZ3VpbGRJZBgEIAEoBFIHZ3VpbGRJZBIqChBz", 
-            "dWJMZWFkZXJib2FyZElkGAUgASgEUhBzdWJMZWFkZXJib2FyZElkEhQKBXNj", 
-            "b3JlGAYgAigEUgVzY29yZRIqChBwZXJjZW50aWxlQnVja2V0GAcgAigNUhBw", 
-            "ZXJjZW50aWxlQnVja2V0Eh0KCGF2YXRhcklkGAggASgEOgEwUghhdmF0YXJJ", 
-            "ZCKWAgoRTGVhZGVyYm9hcmRSZXBvcnQSJAoNbGVhZGVyYm9hcmRJZBgBIAIo", 
-            "BFINbGVhZGVyYm9hcmRJZBIhCgppbnN0YW5jZUlkGAIgASgEOgEwUgppbnN0", 
-            "YW5jZUlkEj0KCXNjb3JlRGF0YRgDIAEoCzIfLkdhemlsbGlvbi5MZWFkZXJi", 
-            "b2FyZFNjb3JlRGF0YVIJc2NvcmVEYXRhEj0KCXRhYmxlRGF0YRgEIAEoCzIf", 
-            "LkdhemlsbGlvbi5MZWFkZXJib2FyZFRhYmxlRGF0YVIJdGFibGVEYXRhEjoK", 
-            "GG5leHRVcGRhdGVUaW1lSW50ZXJ2YWxNUxgFIAEoBFIYbmV4dFVwZGF0ZVRp", 
-            "bWVJbnRlcnZhbE1TIuoBChdMZWFkZXJib2FyZEluc3RhbmNlRGF0YRIeCgpp", 
-            "bnN0YW5jZUlkGAEgAigEUgppbnN0YW5jZUlkEjEKBXN0YXRlGAIgAigOMhsu", 
-            "R2F6aWxsaW9uLkxlYWRlcmJvYXJkU3RhdGVSBXN0YXRlEjAKE2FjdGl2YXRp", 
-            "b25UaW1lc3RhbXAYAyACKANSE2FjdGl2YXRpb25UaW1lc3RhbXASMAoTZXhw", 
-            "aXJhdGlvblRpbWVzdGFtcBgEIAIoA1ITZXhwaXJhdGlvblRpbWVzdGFtcBIY", 
-            "Cgd2aXNpYmxlGAUgAigIUgd2aXNpYmxlIlgKDldvcmxkVmlld0VudHJ5EhoK", 
-            "CHJlZ2lvbklkGAEgAigEUghyZWdpb25JZBIqChByZWdpb25Qcm90b1JlZklk", 
-            "GAIgAigEUhByZWdpb25Qcm90b1JlZklkIrUDChVQYXJ0eU9wZXJhdGlvblBh", 
-            "eWxvYWQSMgoUcmVxdWVzdGluZ1BsYXllckRiSWQYASACKARSFHJlcXVlc3Rp", 
-            "bmdQbGF5ZXJEYklkEjIKFHJlcXVlc3RpbmdQbGF5ZXJOYW1lGAIgAigJUhRy", 
-            "ZXF1ZXN0aW5nUGxheWVyTmFtZRJCChxyZXF1ZXN0aW5nUGxheWVyUHNuQWNj", 
-            "b3VudElkGAMgASgEUhxyZXF1ZXN0aW5nUGxheWVyUHNuQWNjb3VudElkEioK", 
-            "EHRhcmdldFBsYXllckRiSWQYBCABKARSEHRhcmdldFBsYXllckRiSWQSKgoQ", 
-            "dGFyZ2V0UGxheWVyTmFtZRgFIAEoCVIQdGFyZ2V0UGxheWVyTmFtZRI+Cglv", 
-            "cGVyYXRpb24YBiACKA4yIC5HYXppbGxpb24uR3JvdXBpbmdPcGVyYXRpb25U", 
-            "eXBlUglvcGVyYXRpb24SIgoMcHNuU2Vzc2lvbklkGAcgASgJUgxwc25TZXNz", 
-            "aW9uSWQSNAoVZGlmZmljdWx0eVRpZXJQcm90b0lkGAggASgEUhVkaWZmaWN1", 
-            "bHR5VGllclByb3RvSWQihQIKD1BhcnR5TWVtYmVySW5mbxIeCgpwbGF5ZXJE", 
-            "YklkGAEgAigEUgpwbGF5ZXJEYklkEh4KCnBsYXllck5hbWUYAiACKAlSCnBs", 
-            "YXllck5hbWUSFgoGYm9vc3RzGAMgAygEUgZib29zdHMSKgoQY29uc29sZUFj", 
-            "Y291bnRJZBgEIAEoBFIQY29uc29sZUFjY291bnRJZBI8ChlzZWNvbmRhcnlD", 
-            "b25zb2xlQWNjb3VudElkGAUgASgEUhlzZWNvbmRhcnlDb25zb2xlQWNjb3Vu", 
-            "dElkEjAKE3NlY29uZGFyeVBsYXllck5hbWUYBiABKAlSE3NlY29uZGFyeVBs", 
-            "YXllck5hbWUi+QIKCVBhcnR5SW5mbxIYCgdncm91cElkGAEgAigEUgdncm91", 
-            "cElkEigKBHR5cGUYAiACKA4yFC5HYXppbGxpb24uR3JvdXBUeXBlUgR0eXBl", 
-            "Eh4KCmxlYWRlckRiSWQYAyACKARSCmxlYWRlckRiSWQSNAoVZGlmZmljdWx0", 
-            "eVRpZXJQcm90b0lkGAQgAigEUhVkaWZmaWN1bHR5VGllclByb3RvSWQSLAoR", 
-            "Z3JvdXBQU05TZXNzaW9uSWQYBSABKAlSEWdyb3VwUFNOU2Vzc2lvbklkEjQK", 
-            "B21lbWJlcnMYBiADKAsyGi5HYXppbGxpb24uUGFydHlNZW1iZXJJbmZvUgdt", 
-            "ZW1iZXJzEjgKF3ZvaWNlQ2hhdEZyb250ZW5kSVBBZGRyGAcgASgJUhd2b2lj", 
-            "ZUNoYXRGcm9udGVuZElQQWRkchI0ChV2b2ljZUNoYXRGcm9udGVuZFBvcnQY", 
-            "CCABKAlSFXZvaWNlQ2hhdEZyb250ZW5kUG9ydCKXAQoPUFNOTm90aWZpY2F0", 
-            "aW9uEjIKFHJlcXVlc3RpbmdQbGF5ZXJEYklkGAEgAigEUhRyZXF1ZXN0aW5n", 
-            "UGxheWVyRGJJZBIsCgR0eXBlGAIgAigOMhguR2F6aWxsaW9uLlBTTk5vdGlm", 
-            "eVR5cGVSBHR5cGUSIgoMcHNuU2Vzc2lvbklkGAMgASgJUgxwc25TZXNzaW9u", 
-            "SWQqTwoWSW52ZW50b3J5TG9hZFN0YXRlRW51bRIRCg1lSUxTX1VubG9hZGVk", 
-            "EAASEQoNZUlMU19BcmNoaXZlZBABEg8KC2VJTFNfTG9hZGVkEAIqtgEKFEdh", 
-            "bWVEaWFsb2dSZXN1bHRFbnVtEiEKFGVHRFJfVGltZW91dE9uU2VydmVyEP7/", 
-            "/////////wESIQoUZUdEUl9UaW1lb3V0T25DbGllbnQQ////////////ARIP", 
-            "CgtlR0RSX0Nsb3NlZBAAEhAKDGVHRFJfT3B0aW9uMRABEhAKDGVHRFJfT3B0", 
-            "aW9uMhACEhAKDGVHRFJfT3B0aW9uMxADEhEKDWVHRFJfQ2hlY2tib3gQBCqO", 
-            "AwoTVGVsZXBvcnRDb250ZXh0RW51bRIbChdUZWxlcG9ydENvbnRleHRfSW52", 
-            "YWxpZBAAEh0KGVRlbGVwb3J0Q29udGV4dF9Cb2R5c2xpZGUQARIXChNUZWxl", 
-            "cG9ydENvbnRleHRfQm90EAISGQoVVGVsZXBvcnRDb250ZXh0X0RlYnVnEAMS", 
-            "HAoYVGVsZXBvcnRDb250ZXh0X01ldGFHYW1lEAQSGwoXVGVsZXBvcnRDb250", 
-            "ZXh0X01pc3Npb24QBRIZChVUZWxlcG9ydENvbnRleHRfUGFydHkQBhIaChZU", 
-            "ZWxlcG9ydENvbnRleHRfUG9ydGFsEAcSGQoVVGVsZXBvcnRDb250ZXh0X1Bv", 
-            "d2VyEAgSHQoZVGVsZXBvcnRDb250ZXh0X1Jlc3VycmVjdBAJEh4KGlRlbGVw", 
-            "b3J0Q29udGV4dF9UcmFuc2l0aW9uEAoSHAoYVGVsZXBvcnRDb250ZXh0X1dh", 
-            "eXBvaW50EAsSHQoZVGVsZXBvcnRDb250ZXh0X1N0b3J5V2FycBAMKjYKFU1v", 
-            "ZGlmeUNpcmNsZU9wZXJhdGlvbhIMCghlTUNPX0FkZBABEg8KC2VNQ09fUmVt", 
-            "b3ZlEAIqnQcKD0dsb2JhbFR1bmluZ1ZhchIXChNlR1RWX1ZlbmRvckJ1eVBy", 
-            "aWNlEAASGAoUZUdUVl9WZW5kb3JTZWxsUHJpY2UQARIVChFlR1RWX1ZlbmRv", 
-            "clhQR2FpbhACEhMKD2VHVFZfUFZQRW5hYmxlZBADEg8KC2VHVFZfWFBHYWlu", 
-            "EAQSFQoRZUdUVl9Mb290RHJvcFJhdGUQBRIcChhlR1RWX0xvb3RTcGVjaWFs", 
-            "RHJvcFJhdGUQBhITCg9lR1RWX0xvb3RSYXJpdHkQBxIYChRlR1RWX1BhcnR5", 
-            "WFBCb251c1BjdBAIEhsKF2VHVFZfUGxheWVyVHJhZGVFbmFibGVkEAkSHAoY", 
-            "ZUdUVl9Db3NtaWNQcmVzdGlnZVhQUGN0EAoSIAocZUdUVl9Mb290VmFwb3Jp", 
-            "emF0aW9uRW5hYmxlZBALEhYKEmVHVFZfWFBCdWZmRGlzcGxheRAMEhcKE2VH", 
-            "VFZfU0lGQnVmZkRpc3BsYXkQDRIXChNlR1RWX1JJRkJ1ZmZEaXNwbGF5EA4S", 
-            "EwoPZUdUVl9PbWVnYVhQUGN0EA8SIAocZUdUVl9SZXNwZWN0TGV2ZWxGb3JH", 
-            "bG9iYWxYUBAQEiEKHWVHVFZfUmVzcGVjdExldmVsRm9yR2xvYmFsUklGEBES", 
-            "IQodZUdUVl9SZXNwZWN0TGV2ZWxGb3JHbG9iYWxTSUYQEhIfChtlR1RWX1Jl", 
-            "c3BlY3RMZXZlbEZvck9tZWdhWFAQExIgChxlR1RWX1Jlc3BlY3RMZXZlbEZv", 
-            "ckF2YXRhclhQEBQSIAocZUdUVl9SZXNwZWN0TGV2ZWxGb3JSZWdpb25YUBAV", 
-            "EicKI2VHVFZfU2VydmVyQm9udXNVbmxvY2tMZXZlbE92ZXJyaWRlEBYSGwoX", 
-            "ZUdUVl9Cb29zdFRpbWVyc1J1bm5pbmcQFxIWChJlR1RWX0luZmluaXR5WFBQ", 
-            "Y3QQGBIiCh5lR1RWX1Jlc3BlY3RMZXZlbEZvckluZmluaXR5WFAQGRIjCh9l", 
-            "R1RWX1N1cGVyVmVyYm9zZU1ldHJpY3NFbmFibGVkEBoSIQodZUdUVl9IaWdo", 
-            "Vm9sdW1lTWV0cmljc0VuYWJsZWQQGxIjCh9lR1RWX01lZGl1bVZvbHVtZU1l", 
-            "dHJpY3NFbmFibGVkEBwSIAocZUdUVl9Mb3dWb2x1bWVNZXRyaWNzRW5hYmxl", 
-            "ZBAdEhwKGGVHVFZfTnVtR2xvYmFsVHVuaW5nVmFycxAeKmcKDUFyZWFUdW5p", 
-            "bmdWYXISGQoVZUFUVl9BcmVhTW9iU3Bhd25IZWF0EAASHwobZUFUVl9BcmVh", 
-            "TW9iU3Bhd25IZWF0UmV0dXJuEAESGgoWZUFUVl9OdW1BcmVhVHVuaW5nVmFy", 
-            "cxACKvACChRXb3JsZEVudGl0eVR1bmluZ1ZhchIYChRlV0VUVl9Nb2JQb3dl", 
-            "ckRhbWFnZRAAEhMKD2VXRVRWX01vYkhlYWx0aBABEg8KC2VXRVRWX01vYlhQ", 
-            "EAISFQoRZVdFVFZfTW9iRHJvcFJhdGUQAxIcChhlV0VUVl9Nb2JTcGVjaWFs", 
-            "RHJvcFJhdGUQBBIRCg1lV0VUVl9FbmFibGVkEAUSFwoTZVdFVFZfTW9iRHJv", 
-            "cFJhcml0eRAGEhcKE2VXRVRWX1ZlbmRvckVuYWJsZWQQBxIRCg1lV0VUVl9V", 
-            "bnVzZWQxEAgSHwobZVdFVFZfRXRlcm5pdHlTcGxpbnRlclByaWNlEAkSFgoS", 
-            "ZVdFVFZfTG9vdEdyb3VwTnVtEAoSGwoXZVdFVFZfTG9vdE5vRHJvcFBlcmNl", 
-            "bnQQCxIRCg1lV0VUVl9WaXNpYmxlEAwSIgoeZVdFVFZfTnVtV29ybGRFbnRp", 
-            "dHlUdW5pbmdWYXJzEA0qnwEKFUF2YXRhckVudGl0eVR1bmluZ1ZhchIUChBl", 
-            "QUVUVl9Cb251c1hQUGN0EAASFwoTZUFFVFZfWFBCdWZmRGlzcGxheRABEh8K", 
-            "G2VBRVRWX0V0ZXJuaXR5U3BsaW50ZXJQcmljZRACEhEKDWVBRVRWX0VuYWJs", 
-            "ZWQQAxIjCh9lQUVUVl9OdW1BdmF0YXJFbnRpdHlUdW5pbmdWYXJzEAQqXAoP", 
-            "UG9wT2JqVHVuaW5nVmFyEiAKHGVQT1RWX1BvcHVsYXRpb25PYmplY3RXZWln", 
-            "aHQQABInCiNlUE9UVl9OdW1Qb3B1bGF0aW9uT2JqZWN0VHVuaW5nVmFycxAB", 
-            "KooBCg5Qb3dlclR1bmluZ1ZhchISCg5lUFRWX1Bvd2VyQ29zdBAAEhcKE2VQ", 
-            "VFZfUG93ZXJEYW1hZ2VQVkUQARIXChNlUFRWX1Bvd2VyRGFtYWdlUFZQEAIS", 
-            "FQoRZVBUVl9Qb3dlckVuYWJsZWQQAxIbChdlUFRWX051bVBvd2VyVHVuaW5n", 
-            "VmFycxAEKqMBCg9SZWdpb25UdW5pbmdWYXISFAoQZVJUVl9QbGF5ZXJMaW1p", 
-            "dBAAEhAKDGVSVFZfRW5hYmxlZBABEhIKDmVSVF9Cb251c1hQUGN0EAISFQoR", 
-            "ZVJUX1hQQnVmZkRpc3BsYXkQAxIfChtlUlRfQm9udXNJdGVtRmluZE11bHRp", 
-            "cGxpZXIQBBIcChhlUlRWX051bVJlZ2lvblR1bmluZ1ZhcnMQBSqZAQoSTG9v", 
-            "dFRhYmxlVHVuaW5nVmFyEhEKDWVMVFRWX0VuYWJsZWQQABIQCgxlTFRUVl9X", 
-            "ZWlnaHQQARIPCgtlTFRUVl9Sb2xscxACEhcKE2VMVFRWX05vRHJvcFBlcmNl", 
-            "bnQQAxISCg5lTFRUVl9Hcm91cE51bRAEEiAKHGVMVFRWX051bUxvb3RUYWJs", 
-            "ZVR1bmluZ1ZhcnMQBSpbChBNaXNzaW9uVHVuaW5nVmFyEhAKDGVNVFZfRW5h", 
-            "YmxlZBAAEhYKEmVNVFZfRXZlbnRJbnN0YW5jZRABEh0KGWVNVFZfTnVtTWlz", 
-            "c2lvblR1bmluZ1ZhcnMQAipHChJDb25kaXRpb25UdW5pbmdWYXISEAoMZUNU", 
-            "Vl9FbmFibGVkEAASHwobZUNUVl9OdW1Db25kaXRpb25UdW5pbmdWYXJzEAEq", 
-            "ZgoUUHVibGljRXZlbnRUdW5pbmdWYXISEQoNZVBFVFZfRW5hYmxlZBAAEhcK", 
-            "E2VQRVRWX0V2ZW50SW5zdGFuY2UQARIiCh5lUEVUVl9OdW1QdWJsaWNFdmVu", 
-            "dFR1bmluZ1ZhcnMQAipaChlNZXRyaWNzRnJlcXVlbmN5VHVuaW5nVmFyEhQK", 
-            "EGVNRlRWX1NhbXBsZVJhdGUQABInCiNlTUZUVl9OdW1NZXRyaWNzRnJlcXVl", 
-            "bmN5VHVuaW5nVmFycxABKq0EChtSZWdpb25SZXF1ZXN0UXVldWVVcGRhdGVW", 
-            "YXISEAoMZVJSUV9JbnZhbGlkEAESGgoWZVJSUV9TZWxlY3RRdWV1ZU1ldGhv", 
-            "ZBACEhkKFWVSUlFfUmVtb3ZlZEZyb21Hcm91cBADEhsKF2VSUlFfUmVtb3Zl", 
-            "ZEdyYWNlUGVyaW9kEAQSIgoeZVJSUV9SZW1vdmVkR3JhY2VQZXJpb2RFeHBp", 
-            "cmVkEAUSFwoTZVJSUV9SYWlkTm90QWxsb3dlZBAGEhYKEmVSUlFfUGFydHlU", 
-            "b29MYXJnZRAHEhsKF2VSUlFfR3JvdXBJbnZpdGVQZW5kaW5nEAgSHAoYZVJS", 
-            "UV9Hcm91cEludml0ZUFjY2VwdGVkEAkSHAoYZVJSUV9Hcm91cEludml0ZURl", 
-            "Y2xpbmVkEAoSGwoXZVJSUV9Hcm91cEludml0ZUV4cGlyZWQQCxIXChNlUlJR", 
-            "X1dhaXRpbmdJblF1ZXVlEAwSGgoWZVJSUV9XYWl0aW5nSW5XYWl0bGlzdBAN", 
-            "EiAKHGVSUlFfV2FpdGluZ0luV2FpdGxpc3RMb2NrZWQQDhIbChdlUlJRX01h", 
-            "dGNoSW52aXRlUGVuZGluZxAPEhwKGGVSUlFfTWF0Y2hJbnZpdGVBY2NlcHRl", 
-            "ZBAQEhwKGGVSUlFfTWF0Y2hJbnZpdGVEZWNsaW5lZBAREhsKF2VSUlFfTWF0", 
-            "Y2hJbnZpdGVFeHBpcmVkEBISEAoMZVJSUV9Jbk1hdGNoEBMqzgIKHFJlZ2lv", 
-            "blJlcXVlc3RRdWV1ZUNvbW1hbmRWYXISGAoUZVJSUUNfQWRkVG9RdWV1ZVNv", 
-            "bG8QARIZChVlUlJRQ19BZGRUb1F1ZXVlUGFydHkQAhIaChZlUlJRQ19BZGRU", 
-            "b1F1ZXVlQnlwYXNzEAMSGwoXZVJSUUNfR3JvdXBJbnZpdGVBY2NlcHQQBBIc", 
-            "ChhlUlJRQ19Hcm91cEludml0ZURlY2xpbmUQBRIZChVlUlJRQ19SZW1vdmVG", 
-            "cm9tUXVldWUQBhIbChdlUlJRQ19NYXRjaEludml0ZUFjY2VwdBAHEhwKGGVS", 
-            "UlFDX01hdGNoSW52aXRlRGVjbGluZRAIEhkKFWVSUlFDX0RlYnVnRm9yY2VT", 
-            "dGFydBAJEhMKD2VSUlFDX0RlYnVnSW5mbxAKEhwKGGVSUlFDX1JlcXVlc3RU", 
-            "b0pvaW5Hcm91cBALKocBChVSZWdpb25QbGF5ZXJBY2Nlc3NWYXISEAoMZVJQ", 
-            "QV9JbnZhbGlkEAASDQoJZVJQQV9PcGVuEAESEwoPZVJQQV9JbnZpdGVPbmx5", 
-            "EAISFgoSZVJQQV9Cb2R5c2xpZGVPbmx5EAMSDwoLZVJQQV9Mb2NrZWQQBBIP", 
-            "CgtlUlBBX0Nsb3NlZBAFKpwDChVSZWdpb25UcmFuc2ZlckZhaWx1cmUSEAoM", 
-            "ZVJURl9Ob0Vycm9yEAASFQoRZVJURl9HZW5lcmljRXJyb3IQARIhCh1lUlRG", 
-            "X0NyZWF0aW9uUHJvaGliaXRlZEJ5R2FtZRACEg0KCWVSVEZfRnVsbBADEhoK", 
-            "FmVSVEZfUGFydGllc05vdEFsbG93ZWQQBBIYChRlUlRGX1JhaWRzTm90QWxs", 
-            "b3dlZBAFEiAKHGVSVEZfVGFyZ2V0UGxheWVyVW5hdmFpbGFibGUQBhIjCh9l", 
-            "UlRGX0JvZHlzbGlkZVJlZ2lvblVuYXZhaWxhYmxlEAcSIAocZVJURl9EZXN0", 
-            "aW5hdGlvbkluYWNjZXNzaWJsZRAIEiAKHGVSVEZfTWF0Y2hOb1RlbGVwb3J0", 
-            "VG9QbGF5ZXIQCRIfChtlUlRGX01hdGNoTm9UZWxlcG9ydFRvUGFydHkQChIk", 
-            "CiBlUlRGX1BsYXllckJsYWNrbGlzdGVkRnJvbVJlZ2lvbhALEiAKHGVSVEZf", 
-            "RW5kbGVzc1Byb2dyZXNzZWRUb29GYXIQDCr7AgoVQXZhaWxhYmxlU3RvcmVB", 
-            "Y3Rpb25zEhsKF1N0b3JlQWN0aW9uX1ZpZXdIb21lVGFiEAESHQoZU3RvcmVB", 
-            "Y3Rpb25fVmlld0hlcm9lc1RhYhACEh8KG1N0b3JlQWN0aW9uX1ZpZXdDb3N0", 
-            "dW1lc1RhYhADEhwKGFN0b3JlQWN0aW9uX1ZpZXdJdGVtc1RhYhAEEhwKGFN0", 
-            "b3JlQWN0aW9uX1ZpZXdDYXJkc1RhYhAFEh8KG1N0b3JlQWN0aW9uX1ZpZXdT", 
-            "cGVjaWFsc1RhYhAGEiMKH1N0b3JlQWN0aW9uX1ZpZXdDb3N0dW1lc0Zvckhl", 
-            "cm8QBxIeChpTdG9yZUFjdGlvbl9Vc2VyUHJlc3NlZEJ1eRAIEiAKHFN0b3Jl", 
-            "QWN0aW9uX1VzZXJQcmVzc2VkQWRkR3MQCRIbChdTdG9yZUFjdGlvbl9TdG9y", 
-            "ZU9wZW5lZBAKEiQKIFN0b3JlQWN0aW9uX051bWJlck9mU3RvcmVBY3Rpb25z", 
-            "EAsq+QEKEU1ldHJpY1dhdmVSZXN1bHRzEh0KGU1ldHJpY1dhdmVSZXN1bHRz", 
-            "X1N1Y2Nlc3MQARIeChpNZXRyaWNXYXZlUmVzdWx0c19GYWlsUXVpdBACEiQK", 
-            "IE1ldHJpY1dhdmVSZXN1bHRzX0ZhaWxQbGF5ZXJXaXBlEAMSJgoiTWV0cmlj", 
-            "V2F2ZVJlc3VsdHNfRmFpbFN0dWRlbnREZWF0aBAEEiYKIk1ldHJpY1dhdmVS", 
-            "ZXN1bHRzX0ZhaWxEZWF0aFRpbWVvdXQQBRIvCitNZXRyaWNXYXZlUmVzdWx0", 
-            "c19OdW1iZXJPZk1ldHJpY1dhdmVSZXN1bHRzEAYqyAMKH0xlZ2VuZGFyeU1p", 
-            "c3Npb25TaGFyZVJlc3VsdFR5cGUSHgoaTGVnZW5kYXJ5TWlzc2lvblNoYXJl", 
-            "X1NlbnQQARIiCh5MZWdlbmRhcnlNaXNzaW9uU2hhcmVfQWNjZXB0ZWQQAhIi", 
-            "Ch5MZWdlbmRhcnlNaXNzaW9uU2hhcmVfRGVjbGluZWQQAxIvCitMZWdlbmRh", 
-            "cnlNaXNzaW9uU2hhcmVfUmVxdWVzdEFscmVhZHlQZW5kaW5nEAQSLAooTGVn", 
-            "ZW5kYXJ5TWlzc2lvblNoYXJlX0ZhaWxQbGF5ZXJOb3RGb3VuZBAFEikKJUxl", 
-            "Z2VuZGFyeU1pc3Npb25TaGFyZV9GYWlsTm90RWxpZ2libGUQBhIpCiVMZWdl", 
-            "bmRhcnlNaXNzaW9uU2hhcmVfRmFpbEFscmVhZHlIYXZlEAcSMQotTGVnZW5k", 
-            "YXJ5TWlzc2lvblNoYXJlX0ZhaWxDYW5ub3RTaGFyZVdpdGhTZWxmEAgSKwon", 
-            "TGVnZW5kYXJ5TWlzc2lvblNoYXJlX0ZhaWxDYW5ub3RSZVNoYXJlEAkSKAok", 
-            "TGVnZW5kYXJ5TWlzc2lvblNoYXJlX1Vua25vd25GYWlsdXJlEAoqSwoJR3Jv", 
-            "dXBUeXBlEhUKEUdyb3VwVHlwZV9JbnZhbGlkEAASEwoPR3JvdXBUeXBlX1Bh", 
-            "cnR5EAESEgoOR3JvdXBUeXBlX1JhaWQQAiqBAwoMQ3VycmVuY3lUeXBlEh0K", 
-            "GUN1cnJlbmN5X0V0ZXJuaXR5U3BsaW50ZXIQARIWChJDdXJyZW5jeV9DdWJl", 
-            "U2hhcmQQAhIWChJDdXJyZW5jeV9PZGluTWFya3MQAxIUChBDdXJyZW5jeV9D", 
-            "cmVkaXRzEAQSGwoXQ3VycmVuY3lfUmVzZWFyY2hEcml2ZXMQBRIYChRDdXJy", 
-            "ZW5jeV9Xb3JsZHN0b25lcxAGEhsKF0N1cnJlbmN5X0V5ZU9mRGVtb25maXJl", 
-            "EAcSHQoZQ3VycmVuY3lfSGVhcnRPZkRlbW9uZmlyZRAIEhkKFUN1cnJlbmN5", 
-            "X0Nyb3duT2ZWYWxvchAJEhcKE0N1cnJlbmN5X09tZWdhRmlsZXMQChIYChRD", 
-            "dXJyZW5jeV9HZW5vc2hhUmFpZBALEh0KGUN1cnJlbmN5X0RhbmdlclJvb21N", 
-            "ZXJpdHMQDBIsCihDdXJyZW5jeVNwZW5kX051bWJlck9mQ3VycmVuY3lTcGVu", 
-            "ZFR5cGVzEA0qPgoRU3RvcmVDdXJyZW5jeVR5cGUSEwoPU3RvcmVDdXJyZW5j", 
-            "eV9HEAASFAoQU3RvcmVDdXJyZW5jeV9FUxABKpUBChBHcm91cExlYXZlUmVh", 
-            "c29uEhsKF0dST1VQX0xFQVZFX1JFQVNPTl9MRUZUEAESHQoZR1JPVVBfTEVB", 
-            "VkVfUkVBU09OX0JPT1RFRBACEiAKHEdST1VQX0xFQVZFX1JFQVNPTl9ESVNC", 
-            "QU5ERUQQAxIjCh9HUk9VUF9MRUFWRV9SRUFTT05fRElTQ09OTkVDVEVEEAQq", 
-            "hAEKEExlYWRlcmJvYXJkU3RhdGUSEAoMZUxCU19DcmVhdGVkEAASDwoLZUxC", 
-            "U19BY3RpdmUQARIQCgxlTEJTX0V4cGlyZWQQAhIPCgtlTEJTX1Jld2FyZBAD", 
-            "EhcKE2VMQlNfUmV3YXJkc1BlbmRpbmcQBBIRCg1lTEJTX1Jld2FyZGVkEAUq", 
-            "UwoVR3JvdXBpbmdTdGF0ZU9mUGxheWVyEg4KCmVHU09QX1NvbG8QARIXChNl", 
-            "R1NPUF9QZW5kaW5nSW52aXRlEAISEQoNZUdTT1BfSW5Hcm91cBADKv8CChVH", 
-            "cm91cGluZ09wZXJhdGlvblR5cGUSFQoRZUdPUF9JbnZpdGVQbGF5ZXIQARIV", 
-            "ChFlR09QX0FjY2VwdEludml0ZRACEhYKEmVHT1BfRGVjbGluZUludml0ZRAD", 
-            "EiIKHmVHT1BfSm9pblBhcnR5V2l0aFBTTlNlc3Npb25JZBAEEhMKD2VHT1Bf", 
-            "TGVhdmVQYXJ0eRAFEhUKEWVHT1BfRGlzYmFuZFBhcnR5EAYSGwoXZUdPUF9T", 
-            "ZXJ2ZXJOb3RpZmljYXRpb24QBxITCg9lR09QX0tpY2tQbGF5ZXIQCBIVChFl", 
-            "R09QX0NoYW5nZUxlYWRlchAJEhYKEmVHT1BfQ29udmVydFRvUmFpZBAKEhwK", 
-            "GGVHT1BfQ29udmVydFRvUmFpZEFjY2VwdBALEh0KGWVHT1BfQ29udmVydFRv", 
-            "UmFpZERlY2xpbmUQDBIXChNlR09QX0NvbnZlcnRUb1BhcnR5EA0SGQoVZUdP", 
-            "UF9DaGFuZ2VEaWZmaWN1bHR5EA4q9gIKF0dyb3VwaW5nT3BlcmF0aW9uUmVz", 
-            "dWx0EhEKDWVHT1BSX1N1Y2Nlc3MQARISCg5lR09QUl9Ob0NoYW5nZRACEhUK", 
-            "EWVHT1BSX1N5c3RlbUVycm9yEAMSHgoaZUdPUFJfVGFyZ2V0UGxheWVyTm90", 
-            "Rm91bmQQBBIWChJlR09QUl9UYXJnZXRlZFNlbGYQBRIaChZlR09QUl9BbHJl", 
-            "YWR5SGFzSW52aXRlEAYSGQoVZUdPUFJfTm9QZW5kaW5nSW52aXRlEAcSEwoP", 
-            "ZUdPUFJfUGFydHlGdWxsEAgSEwoPZUdPUFJfTm90TGVhZGVyEAkSFAoQZUdP", 
-            "UFJfTm90SW5QYXJ0eRAKEhgKFGVHT1BSX05vdEluU2FtZVBhcnR5EAsSHwob", 
-            "ZUdPUFJfUGVuZGluZ1BhcnR5RGlzYmFuZGVkEAwSGAoUZUdPUFJfQWxyZWFk", 
-            "eUluUGFydHkQDhIZChVlR09QUl9IYXNOb0NoZWNrcG9pbnQQDypCChBQYXJ0", 
-            "eU1lbWJlckV2ZW50Eg8KC2VQTUVfUmVtb3ZlEAESDAoIZVBNRV9BZGQQAhIP", 
-            "CgtlUE1FX1VwZGF0ZRADKjgKBkNvb3BPcBIXChNDb29wT3BfU3RhcnRGb3JT", 
-            "bG90EAASFQoRQ29vcE9wX0VuZEZvclNsb3QQASqZAgoMQ29vcE9wUmVzdWx0", 
-            "EhgKFENvb3BPcFJlc3VsdF9TdWNjZXNzEAASHQoZQ29vcE9wUmVzdWx0X0dl", 
-            "bmVyaWNFcnJvchABEhoKFkNvb3BPcFJlc3VsdF9QYXJ0eUZ1bGwQAhIbChdD", 
-            "b29wT3BSZXN1bHRfUmVnaW9uRnVsbBADEh8KG0Nvb3BPcFJlc3VsdF9RdWV1", 
-            "ZUdyb3VwRnVsbBAEEhwKGENvb3BPcFJlc3VsdF9TcGF3bkZhaWxlZBAFEhsK", 
-            "F0Nvb3BPcFJlc3VsdF9TbG90QWN0aXZlEAYSHAoYQ29vcE9wUmVzdWx0X0F2", 
-            "YXRhckluVXNlEAcSHQoZQ29vcE9wUmVzdWx0X0F2YXRhckxvY2tlZBAIKksK", 
-            "DVBTTk5vdGlmeVR5cGUSHQoZUFNOTm90aWZ5X1BTTlNlc3Npb25TdGFydBAA", 
-          "EhsKF1BTTk5vdGlmeV9QU05TZXNzaW9uRW5kEAE="));
+            "bnN0YW5jZUlkEhoKCHBsYXllcklkGAMgASgEUghwbGF5ZXJJZBIYCgdndWls", 
+            "ZElkGAQgASgEUgdndWlsZElkEioKEHN1YkxlYWRlcmJvYXJkSWQYBSABKARS", 
+            "EHN1YkxlYWRlcmJvYXJkSWQSFAoFc2NvcmUYBiACKARSBXNjb3JlEioKEHBl", 
+            "cmNlbnRpbGVCdWNrZXQYByACKA1SEHBlcmNlbnRpbGVCdWNrZXQSHQoIYXZh", 
+            "dGFySWQYCCABKAQ6ATBSCGF2YXRhcklkIpYCChFMZWFkZXJib2FyZFJlcG9y", 
+            "dBIkCg1sZWFkZXJib2FyZElkGAEgAigEUg1sZWFkZXJib2FyZElkEiEKCmlu", 
+            "c3RhbmNlSWQYAiABKAQ6ATBSCmluc3RhbmNlSWQSPQoJc2NvcmVEYXRhGAMg", 
+            "ASgLMh8uR2F6aWxsaW9uLkxlYWRlcmJvYXJkU2NvcmVEYXRhUglzY29yZURh", 
+            "dGESPQoJdGFibGVEYXRhGAQgASgLMh8uR2F6aWxsaW9uLkxlYWRlcmJvYXJk", 
+            "VGFibGVEYXRhUgl0YWJsZURhdGESOgoYbmV4dFVwZGF0ZVRpbWVJbnRlcnZh", 
+            "bE1TGAUgASgEUhhuZXh0VXBkYXRlVGltZUludGVydmFsTVMi6gEKF0xlYWRl", 
+            "cmJvYXJkSW5zdGFuY2VEYXRhEh4KCmluc3RhbmNlSWQYASACKARSCmluc3Rh", 
+            "bmNlSWQSMQoFc3RhdGUYAiACKA4yGy5HYXppbGxpb24uTGVhZGVyYm9hcmRT", 
+            "dGF0ZVIFc3RhdGUSMAoTYWN0aXZhdGlvblRpbWVzdGFtcBgDIAIoA1ITYWN0", 
+            "aXZhdGlvblRpbWVzdGFtcBIwChNleHBpcmF0aW9uVGltZXN0YW1wGAQgAigD", 
+            "UhNleHBpcmF0aW9uVGltZXN0YW1wEhgKB3Zpc2libGUYBSACKAhSB3Zpc2li", 
+            "bGUiWAoOV29ybGRWaWV3RW50cnkSGgoIcmVnaW9uSWQYASACKARSCHJlZ2lv", 
+            "bklkEioKEHJlZ2lvblByb3RvUmVmSWQYAiACKARSEHJlZ2lvblByb3RvUmVm", 
+            "SWQqtgEKFEdhbWVEaWFsb2dSZXN1bHRFbnVtEiEKFGVHRFJfVGltZW91dE9u", 
+            "U2VydmVyEP7//////////wESIQoUZUdEUl9UaW1lb3V0T25DbGllbnQQ////", 
+            "////////ARIPCgtlR0RSX0Nsb3NlZBAAEhAKDGVHRFJfT3B0aW9uMRABEhAK", 
+            "DGVHRFJfT3B0aW9uMhACEhAKDGVHRFJfT3B0aW9uMxADEhEKDWVHRFJfQ2hl", 
+            "Y2tib3gQBCqOAwoTVGVsZXBvcnRDb250ZXh0RW51bRIbChdUZWxlcG9ydENv", 
+            "bnRleHRfSW52YWxpZBAAEh0KGVRlbGVwb3J0Q29udGV4dF9Cb2R5c2xpZGUQ", 
+            "ARIXChNUZWxlcG9ydENvbnRleHRfQm90EAISGQoVVGVsZXBvcnRDb250ZXh0", 
+            "X0RlYnVnEAMSHAoYVGVsZXBvcnRDb250ZXh0X01ldGFHYW1lEAQSGwoXVGVs", 
+            "ZXBvcnRDb250ZXh0X01pc3Npb24QBRIZChVUZWxlcG9ydENvbnRleHRfUGFy", 
+            "dHkQBhIaChZUZWxlcG9ydENvbnRleHRfUG9ydGFsEAcSGQoVVGVsZXBvcnRD", 
+            "b250ZXh0X1Bvd2VyEAgSHQoZVGVsZXBvcnRDb250ZXh0X1Jlc3VycmVjdBAJ", 
+            "Eh4KGlRlbGVwb3J0Q29udGV4dF9UcmFuc2l0aW9uEAoSHAoYVGVsZXBvcnRD", 
+            "b250ZXh0X1dheXBvaW50EAsSHQoZVGVsZXBvcnRDb250ZXh0X1N0b3J5V2Fy", 
+            "cBAMKjYKFU1vZGlmeUNpcmNsZU9wZXJhdGlvbhIMCghlTUNPX0FkZBABEg8K", 
+            "C2VNQ09fUmVtb3ZlEAIq0gUKD0dsb2JhbFR1bmluZ1ZhchIXChNlR1RWX1Zl", 
+            "bmRvckJ1eVByaWNlEAASGAoUZUdUVl9WZW5kb3JTZWxsUHJpY2UQARIVChFl", 
+            "R1RWX1ZlbmRvclhQR2FpbhACEhMKD2VHVFZfUFZQRW5hYmxlZBADEg8KC2VH", 
+            "VFZfWFBHYWluEAQSFQoRZUdUVl9Mb290RHJvcFJhdGUQBRIcChhlR1RWX0xv", 
+            "b3RTcGVjaWFsRHJvcFJhdGUQBhITCg9lR1RWX0xvb3RSYXJpdHkQBxIYChRl", 
+            "R1RWX1BhcnR5WFBCb251c1BjdBAIEhsKF2VHVFZfUGxheWVyVHJhZGVFbmFi", 
+            "bGVkEAkSHAoYZUdUVl9Db3NtaWNQcmVzdGlnZVhQUGN0EAoSIAocZUdUVl9M", 
+            "b290VmFwb3JpemF0aW9uRW5hYmxlZBALEhYKEmVHVFZfWFBCdWZmRGlzcGxh", 
+            "eRAMEhcKE2VHVFZfU0lGQnVmZkRpc3BsYXkQDRIXChNlR1RWX1JJRkJ1ZmZE", 
+            "aXNwbGF5EA4SEwoPZUdUVl9PbWVnYVhQUGN0EA8SIAocZUdUVl9SZXNwZWN0", 
+            "TGV2ZWxGb3JHbG9iYWxYUBAQEiEKHWVHVFZfUmVzcGVjdExldmVsRm9yR2xv", 
+            "YmFsUklGEBESIQodZUdUVl9SZXNwZWN0TGV2ZWxGb3JHbG9iYWxTSUYQEhIf", 
+            "ChtlR1RWX1Jlc3BlY3RMZXZlbEZvck9tZWdhWFAQExIgChxlR1RWX1Jlc3Bl", 
+            "Y3RMZXZlbEZvckF2YXRhclhQEBQSIAocZUdUVl9SZXNwZWN0TGV2ZWxGb3JS", 
+            "ZWdpb25YUBAVEicKI2VHVFZfU2VydmVyQm9udXNVbmxvY2tMZXZlbE92ZXJy", 
+            "aWRlEBYSGwoXZUdUVl9Cb29zdFRpbWVyc1J1bm5pbmcQFxIcChhlR1RWX051", 
+            "bUdsb2JhbFR1bmluZ1ZhcnMQGCpnCg1BcmVhVHVuaW5nVmFyEhkKFWVBVFZf", 
+            "QXJlYU1vYlNwYXduSGVhdBAAEh8KG2VBVFZfQXJlYU1vYlNwYXduSGVhdFJl", 
+            "dHVybhABEhoKFmVBVFZfTnVtQXJlYVR1bmluZ1ZhcnMQAirwAgoUV29ybGRF", 
+            "bnRpdHlUdW5pbmdWYXISGAoUZVdFVFZfTW9iUG93ZXJEYW1hZ2UQABITCg9l", 
+            "V0VUVl9Nb2JIZWFsdGgQARIPCgtlV0VUVl9Nb2JYUBACEhUKEWVXRVRWX01v", 
+            "YkRyb3BSYXRlEAMSHAoYZVdFVFZfTW9iU3BlY2lhbERyb3BSYXRlEAQSEQoN", 
+            "ZVdFVFZfRW5hYmxlZBAFEhcKE2VXRVRWX01vYkRyb3BSYXJpdHkQBhIXChNl", 
+            "V0VUVl9WZW5kb3JFbmFibGVkEAcSEQoNZVdFVFZfVW51c2VkMRAIEh8KG2VX", 
+            "RVRWX0V0ZXJuaXR5U3BsaW50ZXJQcmljZRAJEhYKEmVXRVRWX0xvb3RHcm91", 
+            "cE51bRAKEhsKF2VXRVRWX0xvb3ROb0Ryb3BQZXJjZW50EAsSEQoNZVdFVFZf", 
+            "VmlzaWJsZRAMEiIKHmVXRVRWX051bVdvcmxkRW50aXR5VHVuaW5nVmFycxAN", 
+            "Kp8BChVBdmF0YXJFbnRpdHlUdW5pbmdWYXISFAoQZUFFVFZfQm9udXNYUFBj", 
+            "dBAAEhcKE2VBRVRWX1hQQnVmZkRpc3BsYXkQARIfChtlQUVUVl9FdGVybml0", 
+            "eVNwbGludGVyUHJpY2UQAhIRCg1lQUVUVl9FbmFibGVkEAMSIwofZUFFVFZf", 
+            "TnVtQXZhdGFyRW50aXR5VHVuaW5nVmFycxAEKlwKD1BvcE9ialR1bmluZ1Zh", 
+            "chIgChxlUE9UVl9Qb3B1bGF0aW9uT2JqZWN0V2VpZ2h0EAASJwojZVBPVFZf", 
+            "TnVtUG9wdWxhdGlvbk9iamVjdFR1bmluZ1ZhcnMQASqKAQoOUG93ZXJUdW5p", 
+            "bmdWYXISEgoOZVBUVl9Qb3dlckNvc3QQABIXChNlUFRWX1Bvd2VyRGFtYWdl", 
+            "UFZFEAESFwoTZVBUVl9Qb3dlckRhbWFnZVBWUBACEhUKEWVQVFZfUG93ZXJF", 
+            "bmFibGVkEAMSGwoXZVBUVl9OdW1Qb3dlclR1bmluZ1ZhcnMQBCqCAQoPUmVn", 
+            "aW9uVHVuaW5nVmFyEhQKEGVSVFZfUGxheWVyTGltaXQQABIQCgxlUlRWX0Vu", 
+            "YWJsZWQQARISCg5lUlRfQm9udXNYUFBjdBACEhUKEWVSVF9YUEJ1ZmZEaXNw", 
+            "bGF5EAMSHAoYZVJUVl9OdW1SZWdpb25UdW5pbmdWYXJzEAQqmQEKEkxvb3RU", 
+            "YWJsZVR1bmluZ1ZhchIRCg1lTFRUVl9FbmFibGVkEAASEAoMZUxUVFZfV2Vp", 
+            "Z2h0EAESDwoLZUxUVFZfUm9sbHMQAhIXChNlTFRUVl9Ob0Ryb3BQZXJjZW50", 
+            "EAMSEgoOZUxUVFZfR3JvdXBOdW0QBBIgChxlTFRUVl9OdW1Mb290VGFibGVU", 
+            "dW5pbmdWYXJzEAUqWwoQTWlzc2lvblR1bmluZ1ZhchIQCgxlTVRWX0VuYWJs", 
+            "ZWQQABIWChJlTVRWX0V2ZW50SW5zdGFuY2UQARIdChllTVRWX051bU1pc3Np", 
+            "b25UdW5pbmdWYXJzEAIqRwoSQ29uZGl0aW9uVHVuaW5nVmFyEhAKDGVDVFZf", 
+            "RW5hYmxlZBAAEh8KG2VDVFZfTnVtQ29uZGl0aW9uVHVuaW5nVmFycxABKmYK", 
+            "FFB1YmxpY0V2ZW50VHVuaW5nVmFyEhEKDWVQRVRWX0VuYWJsZWQQABIXChNl", 
+            "UEVUVl9FdmVudEluc3RhbmNlEAESIgoeZVBFVFZfTnVtUHVibGljRXZlbnRU", 
+            "dW5pbmdWYXJzEAIqlQQKG1JlZ2lvblJlcXVlc3RRdWV1ZVVwZGF0ZVZhchIQ", 
+            "CgxlUlJRX0ludmFsaWQQARIaChZlUlJRX1NlbGVjdFF1ZXVlTWV0aG9kEAIS", 
+            "GQoVZVJSUV9SZW1vdmVkRnJvbUdyb3VwEAMSGwoXZVJSUV9SZW1vdmVkR3Jh", 
+            "Y2VQZXJpb2QQBBIiCh5lUlJRX1JlbW92ZWRHcmFjZVBlcmlvZEV4cGlyZWQQ", 
+            "BRIXChNlUlJRX1JhaWROb3RBbGxvd2VkEAYSGwoXZVJSUV9Hcm91cEludml0", 
+            "ZVBlbmRpbmcQBxIcChhlUlJRX0dyb3VwSW52aXRlQWNjZXB0ZWQQCBIcChhl", 
+            "UlJRX0dyb3VwSW52aXRlRGVjbGluZWQQCRIbChdlUlJRX0dyb3VwSW52aXRl", 
+            "RXhwaXJlZBAKEhcKE2VSUlFfV2FpdGluZ0luUXVldWUQCxIaChZlUlJRX1dh", 
+            "aXRpbmdJbldhaXRsaXN0EAwSIAocZVJSUV9XYWl0aW5nSW5XYWl0bGlzdExv", 
+            "Y2tlZBANEhsKF2VSUlFfTWF0Y2hJbnZpdGVQZW5kaW5nEA4SHAoYZVJSUV9N", 
+            "YXRjaEludml0ZUFjY2VwdGVkEA8SHAoYZVJSUV9NYXRjaEludml0ZURlY2xp", 
+            "bmVkEBASGwoXZVJSUV9NYXRjaEludml0ZUV4cGlyZWQQERIQCgxlUlJRX0lu", 
+            "TWF0Y2gQEirOAgocUmVnaW9uUmVxdWVzdFF1ZXVlQ29tbWFuZFZhchIYChRl", 
+            "UlJRQ19BZGRUb1F1ZXVlU29sbxABEhkKFWVSUlFDX0FkZFRvUXVldWVQYXJ0", 
+            "eRACEhoKFmVSUlFDX0FkZFRvUXVldWVCeXBhc3MQAxIbChdlUlJRQ19Hcm91", 
+            "cEludml0ZUFjY2VwdBAEEhwKGGVSUlFDX0dyb3VwSW52aXRlRGVjbGluZRAF", 
+            "EhkKFWVSUlFDX1JlbW92ZUZyb21RdWV1ZRAGEhsKF2VSUlFDX01hdGNoSW52", 
+            "aXRlQWNjZXB0EAcSHAoYZVJSUUNfTWF0Y2hJbnZpdGVEZWNsaW5lEAgSGQoV", 
+            "ZVJSUUNfRGVidWdGb3JjZVN0YXJ0EAkSEwoPZVJSUUNfRGVidWdJbmZvEAoS", 
+            "HAoYZVJSUUNfUmVxdWVzdFRvSm9pbkdyb3VwEAsqhwEKFVJlZ2lvblBsYXll", 
+            "ckFjY2Vzc1ZhchIQCgxlUlBBX0ludmFsaWQQABINCgllUlBBX09wZW4QARIT", 
+            "Cg9lUlBBX0ludml0ZU9ubHkQAhIWChJlUlBBX0JvZHlzbGlkZU9ubHkQAxIP", 
+            "CgtlUlBBX0xvY2tlZBAEEg8KC2VSUEFfQ2xvc2VkEAUqnAMKFVJlZ2lvblRy", 
+            "YW5zZmVyRmFpbHVyZRIQCgxlUlRGX05vRXJyb3IQABIVChFlUlRGX0dlbmVy", 
+            "aWNFcnJvchABEiEKHWVSVEZfQ3JlYXRpb25Qcm9oaWJpdGVkQnlHYW1lEAIS", 
+            "DQoJZVJURl9GdWxsEAMSGgoWZVJURl9QYXJ0aWVzTm90QWxsb3dlZBAEEhgK", 
+            "FGVSVEZfUmFpZHNOb3RBbGxvd2VkEAUSIAocZVJURl9UYXJnZXRQbGF5ZXJV", 
+            "bmF2YWlsYWJsZRAGEiMKH2VSVEZfQm9keXNsaWRlUmVnaW9uVW5hdmFpbGFi", 
+            "bGUQBxIgChxlUlRGX0Rlc3RpbmF0aW9uSW5hY2Nlc3NpYmxlEAgSIAocZVJU", 
+            "Rl9NYXRjaE5vVGVsZXBvcnRUb1BsYXllchAJEh8KG2VSVEZfTWF0Y2hOb1Rl", 
+            "bGVwb3J0VG9QYXJ0eRAKEiQKIGVSVEZfUGxheWVyQmxhY2tsaXN0ZWRGcm9t", 
+            "UmVnaW9uEAsSIAocZVJURl9FbmRsZXNzUHJvZ3Jlc3NlZFRvb0ZhchAMKvsC", 
+            "ChVBdmFpbGFibGVTdG9yZUFjdGlvbnMSGwoXU3RvcmVBY3Rpb25fVmlld0hv", 
+            "bWVUYWIQARIdChlTdG9yZUFjdGlvbl9WaWV3SGVyb2VzVGFiEAISHwobU3Rv", 
+            "cmVBY3Rpb25fVmlld0Nvc3R1bWVzVGFiEAMSHAoYU3RvcmVBY3Rpb25fVmll", 
+            "d0l0ZW1zVGFiEAQSHAoYU3RvcmVBY3Rpb25fVmlld0NhcmRzVGFiEAUSHwob", 
+            "U3RvcmVBY3Rpb25fVmlld1NwZWNpYWxzVGFiEAYSIwofU3RvcmVBY3Rpb25f", 
+            "Vmlld0Nvc3R1bWVzRm9ySGVybxAHEh4KGlN0b3JlQWN0aW9uX1VzZXJQcmVz", 
+            "c2VkQnV5EAgSIAocU3RvcmVBY3Rpb25fVXNlclByZXNzZWRBZGRHcxAJEhsK", 
+            "F1N0b3JlQWN0aW9uX1N0b3JlT3BlbmVkEAoSJAogU3RvcmVBY3Rpb25fTnVt", 
+            "YmVyT2ZTdG9yZUFjdGlvbnMQCyr5AQoRTWV0cmljV2F2ZVJlc3VsdHMSHQoZ", 
+            "TWV0cmljV2F2ZVJlc3VsdHNfU3VjY2VzcxABEh4KGk1ldHJpY1dhdmVSZXN1", 
+            "bHRzX0ZhaWxRdWl0EAISJAogTWV0cmljV2F2ZVJlc3VsdHNfRmFpbFBsYXll", 
+            "cldpcGUQAxImCiJNZXRyaWNXYXZlUmVzdWx0c19GYWlsU3R1ZGVudERlYXRo", 
+            "EAQSJgoiTWV0cmljV2F2ZVJlc3VsdHNfRmFpbERlYXRoVGltZW91dBAFEi8K", 
+            "K01ldHJpY1dhdmVSZXN1bHRzX051bWJlck9mTWV0cmljV2F2ZVJlc3VsdHMQ", 
+            "BirIAwofTGVnZW5kYXJ5TWlzc2lvblNoYXJlUmVzdWx0VHlwZRIeChpMZWdl", 
+            "bmRhcnlNaXNzaW9uU2hhcmVfU2VudBABEiIKHkxlZ2VuZGFyeU1pc3Npb25T", 
+            "aGFyZV9BY2NlcHRlZBACEiIKHkxlZ2VuZGFyeU1pc3Npb25TaGFyZV9EZWNs", 
+            "aW5lZBADEi8KK0xlZ2VuZGFyeU1pc3Npb25TaGFyZV9SZXF1ZXN0QWxyZWFk", 
+            "eVBlbmRpbmcQBBIsCihMZWdlbmRhcnlNaXNzaW9uU2hhcmVfRmFpbFBsYXll", 
+            "ck5vdEZvdW5kEAUSKQolTGVnZW5kYXJ5TWlzc2lvblNoYXJlX0ZhaWxOb3RF", 
+            "bGlnaWJsZRAGEikKJUxlZ2VuZGFyeU1pc3Npb25TaGFyZV9GYWlsQWxyZWFk", 
+            "eUhhdmUQBxIxCi1MZWdlbmRhcnlNaXNzaW9uU2hhcmVfRmFpbENhbm5vdFNo", 
+            "YXJlV2l0aFNlbGYQCBIrCidMZWdlbmRhcnlNaXNzaW9uU2hhcmVfRmFpbENh", 
+            "bm5vdFJlU2hhcmUQCRIoCiRMZWdlbmRhcnlNaXNzaW9uU2hhcmVfVW5rbm93", 
+            "bkZhaWx1cmUQCipLCglHcm91cFR5cGUSFQoRR3JvdXBUeXBlX0ludmFsaWQQ", 
+            "ABITCg9Hcm91cFR5cGVfUGFydHkQARISCg5Hcm91cFR5cGVfUmFpZBACKuIC", 
+            "CgxDdXJyZW5jeVR5cGUSHQoZQ3VycmVuY3lfRXRlcm5pdHlTcGxpbnRlchAB", 
+            "EhYKEkN1cnJlbmN5X0N1YmVTaGFyZBACEhYKEkN1cnJlbmN5X09kaW5NYXJr", 
+            "cxADEhQKEEN1cnJlbmN5X0NyZWRpdHMQBBIbChdDdXJyZW5jeV9SZXNlYXJj", 
+            "aERyaXZlcxAFEhgKFEN1cnJlbmN5X1dvcmxkc3RvbmVzEAYSGwoXQ3VycmVu", 
+            "Y3lfRXllT2ZEZW1vbmZpcmUQBxIdChlDdXJyZW5jeV9IZWFydE9mRGVtb25m", 
+            "aXJlEAgSGQoVQ3VycmVuY3lfQ3Jvd25PZlZhbG9yEAkSFwoTQ3VycmVuY3lf", 
+            "T21lZ2FGaWxlcxAKEhgKFEN1cnJlbmN5X0dlbm9zaGFSYWlkEAsSLAooQ3Vy", 
+            "cmVuY3lTcGVuZF9OdW1iZXJPZkN1cnJlbmN5U3BlbmRUeXBlcxAMKnAKEEdy", 
+            "b3VwTGVhdmVSZWFzb24SGwoXR1JPVVBfTEVBVkVfUkVBU09OX0xFRlQQARId", 
+            "ChlHUk9VUF9MRUFWRV9SRUFTT05fQk9PVEVEEAISIAocR1JPVVBfTEVBVkVf", 
+            "UkVBU09OX0RJU0JBTkRFRBADKoQBChBMZWFkZXJib2FyZFN0YXRlEhAKDGVM", 
+            "QlNfQ3JlYXRlZBAAEg8KC2VMQlNfQWN0aXZlEAESEAoMZUxCU19FeHBpcmVk", 
+            "EAISDwoLZUxCU19SZXdhcmQQAxIXChNlTEJTX1Jld2FyZHNQZW5kaW5nEAQS", 
+          "EQoNZUxCU19SZXdhcmRlZBAF"));
       pbd::FileDescriptor.InternalDescriptorAssigner assigner = delegate(pbd::FileDescriptor root) {
         descriptor = root;
         internal__static_Gazillion_NetStructPoint3__Descriptor = Descriptor.MessageTypes[0];
@@ -580,27 +497,27 @@ namespace Gazillion {
         internal__static_Gazillion_NetStructCreateRegionParams__Descriptor = Descriptor.MessageTypes[16];
         internal__static_Gazillion_NetStructCreateRegionParams__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.NetStructCreateRegionParams, global::Gazillion.NetStructCreateRegionParams.Builder>(internal__static_Gazillion_NetStructCreateRegionParams__Descriptor,
-                new string[] { "Level", "Origin", "Cheat", "DifficultyTierProtoId", "EndlessLevel", "GameStateId", "MatchNumber", "Seed", "ParentRegionId", "RequiredItemProtoId", "RequiredItemEntityId", "AccessPortal", "Affixes", "PlayerDeaths", "DangerRoomScenarioItemDbGuid", "ItemRarity", "PropertyBuffer", "DangerRoomScenarioR", });
+                new string[] { "Level", "Origin", "Cheat", "EndlessLevel", "GameStateId", "MatchNumber", "Seed", "ParentRegionId", "RequiredItemProtoId", "RequiredItemEntityId", "AccessPortal", "Affixes", "PlayerDeaths", "DangerRoomScenarioItemDbGuid", "ItemRarity", "PropertyBuffer", "DangerRoomScenarioR", });
         internal__static_Gazillion_NetStructModChangeObject__Descriptor = Descriptor.MessageTypes[17];
         internal__static_Gazillion_NetStructModChangeObject__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.NetStructModChangeObject, global::Gazillion.NetStructModChangeObject.Builder>(internal__static_Gazillion_NetStructModChangeObject__Descriptor,
                 new string[] { "Mod", "Change", });
-        internal__static_Gazillion_NetStructAffixSpec__Descriptor = Descriptor.MessageTypes[18];
+        internal__static_Gazillion_NetStructPowerPointAllocation__Descriptor = Descriptor.MessageTypes[18];
+        internal__static_Gazillion_NetStructPowerPointAllocation__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.NetStructPowerPointAllocation, global::Gazillion.NetStructPowerPointAllocation.Builder>(internal__static_Gazillion_NetStructPowerPointAllocation__Descriptor,
+                new string[] { "PowerProtoId", "Delta", });
+        internal__static_Gazillion_NetStructAffixSpec__Descriptor = Descriptor.MessageTypes[19];
         internal__static_Gazillion_NetStructAffixSpec__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.NetStructAffixSpec, global::Gazillion.NetStructAffixSpec.Builder>(internal__static_Gazillion_NetStructAffixSpec__Descriptor,
                 new string[] { "AffixProtoRef", "ScopeProtoRef", "Seed", });
-        internal__static_Gazillion_NetStructItemSpec__Descriptor = Descriptor.MessageTypes[19];
+        internal__static_Gazillion_NetStructItemSpec__Descriptor = Descriptor.MessageTypes[20];
         internal__static_Gazillion_NetStructItemSpec__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.NetStructItemSpec, global::Gazillion.NetStructItemSpec.Builder>(internal__static_Gazillion_NetStructItemSpec__Descriptor,
                 new string[] { "ItemProtoRef", "ItemLevel", "RarityProtoRef", "Seed", "CreditsAmount", "AffixSpecs", "EquippableBy", });
-        internal__static_Gazillion_CommunityMemberAvatarSlot__Descriptor = Descriptor.MessageTypes[20];
-        internal__static_Gazillion_CommunityMemberAvatarSlot__FieldAccessorTable = 
-            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.CommunityMemberAvatarSlot, global::Gazillion.CommunityMemberAvatarSlot.Builder>(internal__static_Gazillion_CommunityMemberAvatarSlot__Descriptor,
-                new string[] { "AvatarRefId", "CostumeRefId", "Level", "PrestigeLevel", "OnlineId", });
         internal__static_Gazillion_CommunityMemberBroadcast__Descriptor = Descriptor.MessageTypes[21];
         internal__static_Gazillion_CommunityMemberBroadcast__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.CommunityMemberBroadcast, global::Gazillion.CommunityMemberBroadcast.Builder>(internal__static_Gazillion_CommunityMemberBroadcast__Descriptor,
-                new string[] { "MemberPlayerDbId", "CurrentRegionRefId", "CurrentDifficultyRefId", "Slots", "CurrentPlayerName", "MemberPlayerDbIdIgnoreList", "IsOnline", "LastLogoutTimeAsFileTimeUtc", "CurrentCostumeRefId", "ConsoleAccountId", "SecondaryConsoleAccountId", "SecondaryPlayerName", });
+                new string[] { "MemberPlayerDbId", "CurrentRegionRefId", "CurrentAvatarRefId", "CurrentCharacterLevel", "CurrentPvpFactionRefId", "CurrentPlayerName", "MemberPlayerDbIdIgnoreList", "CurrentPrestigeLevel", "IsOnline", "LastLogoutTimeAsFileTimeUtc", "CurrentCostumeRefId", });
         internal__static_Gazillion_CommunityNotify__Descriptor = Descriptor.MessageTypes[22];
         internal__static_Gazillion_CommunityNotify__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.CommunityNotify, global::Gazillion.CommunityNotify.Builder>(internal__static_Gazillion_CommunityNotify__Descriptor,
@@ -640,7 +557,7 @@ namespace Gazillion {
         internal__static_Gazillion_BillingP2PGiftResult__Descriptor = Descriptor.MessageTypes[31];
         internal__static_Gazillion_BillingP2PGiftResult__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.BillingP2PGiftResult, global::Gazillion.BillingP2PGiftResult.Builder>(internal__static_Gazillion_BillingP2PGiftResult__Descriptor,
-                new string[] { "TransactionId", "DidSucceed", "CurrentBalance", "SkuId", "ErrorCode", "NumUnits", "GiftMessage", "SenderId", "SellableObjectId", });
+                new string[] { "TransactionId", "DidSucceed", "CurrentBalance", "SkuId", "ErrorCode", "NumUnits", "GiftMessage", "SenderId", });
         internal__static_Gazillion_LeaderboardPlayerScoreQuery__Descriptor = Descriptor.MessageTypes[32];
         internal__static_Gazillion_LeaderboardPlayerScoreQuery__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.LeaderboardPlayerScoreQuery, global::Gazillion.LeaderboardPlayerScoreQuery.Builder>(internal__static_Gazillion_LeaderboardPlayerScoreQuery__Descriptor,
@@ -685,22 +602,6 @@ namespace Gazillion {
         internal__static_Gazillion_WorldViewEntry__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.WorldViewEntry, global::Gazillion.WorldViewEntry.Builder>(internal__static_Gazillion_WorldViewEntry__Descriptor,
                 new string[] { "RegionId", "RegionProtoRefId", });
-        internal__static_Gazillion_PartyOperationPayload__Descriptor = Descriptor.MessageTypes[43];
-        internal__static_Gazillion_PartyOperationPayload__FieldAccessorTable = 
-            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PartyOperationPayload, global::Gazillion.PartyOperationPayload.Builder>(internal__static_Gazillion_PartyOperationPayload__Descriptor,
-                new string[] { "RequestingPlayerDbId", "RequestingPlayerName", "RequestingPlayerPsnAccountId", "TargetPlayerDbId", "TargetPlayerName", "Operation", "PsnSessionId", "DifficultyTierProtoId", });
-        internal__static_Gazillion_PartyMemberInfo__Descriptor = Descriptor.MessageTypes[44];
-        internal__static_Gazillion_PartyMemberInfo__FieldAccessorTable = 
-            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PartyMemberInfo, global::Gazillion.PartyMemberInfo.Builder>(internal__static_Gazillion_PartyMemberInfo__Descriptor,
-                new string[] { "PlayerDbId", "PlayerName", "Boosts", "ConsoleAccountId", "SecondaryConsoleAccountId", "SecondaryPlayerName", });
-        internal__static_Gazillion_PartyInfo__Descriptor = Descriptor.MessageTypes[45];
-        internal__static_Gazillion_PartyInfo__FieldAccessorTable = 
-            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PartyInfo, global::Gazillion.PartyInfo.Builder>(internal__static_Gazillion_PartyInfo__Descriptor,
-                new string[] { "GroupId", "Type", "LeaderDbId", "DifficultyTierProtoId", "GroupPSNSessionId", "Members", "VoiceChatFrontendIPAddr", "VoiceChatFrontendPort", });
-        internal__static_Gazillion_PSNNotification__Descriptor = Descriptor.MessageTypes[46];
-        internal__static_Gazillion_PSNNotification__FieldAccessorTable = 
-            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PSNNotification, global::Gazillion.PSNNotification.Builder>(internal__static_Gazillion_PSNNotification__Descriptor,
-                new string[] { "RequestingPlayerDbId", "Type", "PsnSessionId", });
         pb::ExtensionRegistry registry = pb::ExtensionRegistry.CreateInstance();
         RegisterAllExtensions(registry);
         return registry;
@@ -713,12 +614,6 @@ namespace Gazillion {
     
   }
   #region Enums
-  public enum InventoryLoadStateEnum {
-    eILS_Unloaded = 0,
-    eILS_Archived = 1,
-    eILS_Loaded = 2,
-  }
-  
   public enum GameDialogResultEnum {
     eGDR_TimeoutOnServer = -2,
     eGDR_TimeoutOnClient = -1,
@@ -775,13 +670,7 @@ namespace Gazillion {
     eGTV_RespectLevelForRegionXP = 21,
     eGTV_ServerBonusUnlockLevelOverride = 22,
     eGTV_BoostTimersRunning = 23,
-    eGTV_InfinityXPPct = 24,
-    eGTV_RespectLevelForInfinityXP = 25,
-    eGTV_SuperVerboseMetricsEnabled = 26,
-    eGTV_HighVolumeMetricsEnabled = 27,
-    eGTV_MediumVolumeMetricsEnabled = 28,
-    eGTV_LowVolumeMetricsEnabled = 29,
-    eGTV_NumGlobalTuningVars = 30,
+    eGTV_NumGlobalTuningVars = 24,
   }
   
   public enum AreaTuningVar {
@@ -833,8 +722,7 @@ namespace Gazillion {
     eRTV_Enabled = 1,
     eRT_BonusXPPct = 2,
     eRT_XPBuffDisplay = 3,
-    eRT_BonusItemFindMultiplier = 4,
-    eRTV_NumRegionTuningVars = 5,
+    eRTV_NumRegionTuningVars = 4,
   }
   
   public enum LootTableTuningVar {
@@ -863,11 +751,6 @@ namespace Gazillion {
     ePETV_NumPublicEventTuningVars = 2,
   }
   
-  public enum MetricsFrequencyTuningVar {
-    eMFTV_SampleRate = 0,
-    eMFTV_NumMetricsFrequencyTuningVars = 1,
-  }
-  
   public enum RegionRequestQueueUpdateVar {
     eRRQ_Invalid = 1,
     eRRQ_SelectQueueMethod = 2,
@@ -875,19 +758,18 @@ namespace Gazillion {
     eRRQ_RemovedGracePeriod = 4,
     eRRQ_RemovedGracePeriodExpired = 5,
     eRRQ_RaidNotAllowed = 6,
-    eRRQ_PartyTooLarge = 7,
-    eRRQ_GroupInvitePending = 8,
-    eRRQ_GroupInviteAccepted = 9,
-    eRRQ_GroupInviteDeclined = 10,
-    eRRQ_GroupInviteExpired = 11,
-    eRRQ_WaitingInQueue = 12,
-    eRRQ_WaitingInWaitlist = 13,
-    eRRQ_WaitingInWaitlistLocked = 14,
-    eRRQ_MatchInvitePending = 15,
-    eRRQ_MatchInviteAccepted = 16,
-    eRRQ_MatchInviteDeclined = 17,
-    eRRQ_MatchInviteExpired = 18,
-    eRRQ_InMatch = 19,
+    eRRQ_GroupInvitePending = 7,
+    eRRQ_GroupInviteAccepted = 8,
+    eRRQ_GroupInviteDeclined = 9,
+    eRRQ_GroupInviteExpired = 10,
+    eRRQ_WaitingInQueue = 11,
+    eRRQ_WaitingInWaitlist = 12,
+    eRRQ_WaitingInWaitlistLocked = 13,
+    eRRQ_MatchInvitePending = 14,
+    eRRQ_MatchInviteAccepted = 15,
+    eRRQ_MatchInviteDeclined = 16,
+    eRRQ_MatchInviteExpired = 17,
+    eRRQ_InMatch = 18,
   }
   
   public enum RegionRequestQueueCommandVar {
@@ -983,20 +865,13 @@ namespace Gazillion {
     Currency_CrownOfValor = 9,
     Currency_OmegaFiles = 10,
     Currency_GenoshaRaid = 11,
-    Currency_DangerRoomMerits = 12,
-    CurrencySpend_NumberOfCurrencySpendTypes = 13,
-  }
-  
-  public enum StoreCurrencyType {
-    StoreCurrency_G = 0,
-    StoreCurrency_ES = 1,
+    CurrencySpend_NumberOfCurrencySpendTypes = 12,
   }
   
   public enum GroupLeaveReason {
     GROUP_LEAVE_REASON_LEFT = 1,
     GROUP_LEAVE_REASON_BOOTED = 2,
     GROUP_LEAVE_REASON_DISBANDED = 3,
-    GROUP_LEAVE_REASON_DISCONNECTED = 4,
   }
   
   public enum LeaderboardState {
@@ -1006,74 +881,6 @@ namespace Gazillion {
     eLBS_Reward = 3,
     eLBS_RewardsPending = 4,
     eLBS_Rewarded = 5,
-  }
-  
-  public enum GroupingStateOfPlayer {
-    eGSOP_Solo = 1,
-    eGSOP_PendingInvite = 2,
-    eGSOP_InGroup = 3,
-  }
-  
-  public enum GroupingOperationType {
-    eGOP_InvitePlayer = 1,
-    eGOP_AcceptInvite = 2,
-    eGOP_DeclineInvite = 3,
-    eGOP_JoinPartyWithPSNSessionId = 4,
-    eGOP_LeaveParty = 5,
-    eGOP_DisbandParty = 6,
-    eGOP_ServerNotification = 7,
-    eGOP_KickPlayer = 8,
-    eGOP_ChangeLeader = 9,
-    eGOP_ConvertToRaid = 10,
-    eGOP_ConvertToRaidAccept = 11,
-    eGOP_ConvertToRaidDecline = 12,
-    eGOP_ConvertToParty = 13,
-    eGOP_ChangeDifficulty = 14,
-  }
-  
-  public enum GroupingOperationResult {
-    eGOPR_Success = 1,
-    eGOPR_NoChange = 2,
-    eGOPR_SystemError = 3,
-    eGOPR_TargetPlayerNotFound = 4,
-    eGOPR_TargetedSelf = 5,
-    eGOPR_AlreadyHasInvite = 6,
-    eGOPR_NoPendingInvite = 7,
-    eGOPR_PartyFull = 8,
-    eGOPR_NotLeader = 9,
-    eGOPR_NotInParty = 10,
-    eGOPR_NotInSameParty = 11,
-    eGOPR_PendingPartyDisbanded = 12,
-    eGOPR_AlreadyInParty = 14,
-    eGOPR_HasNoCheckpoint = 15,
-  }
-  
-  public enum PartyMemberEvent {
-    ePME_Remove = 1,
-    ePME_Add = 2,
-    ePME_Update = 3,
-  }
-  
-  public enum CoopOp {
-    CoopOp_StartForSlot = 0,
-    CoopOp_EndForSlot = 1,
-  }
-  
-  public enum CoopOpResult {
-    CoopOpResult_Success = 0,
-    CoopOpResult_GenericError = 1,
-    CoopOpResult_PartyFull = 2,
-    CoopOpResult_RegionFull = 3,
-    CoopOpResult_QueueGroupFull = 4,
-    CoopOpResult_SpawnFailed = 5,
-    CoopOpResult_SlotActive = 6,
-    CoopOpResult_AvatarInUse = 7,
-    CoopOpResult_AvatarLocked = 8,
-  }
-  
-  public enum PSNNotifyType {
-    PSNNotify_PSNSessionStart = 0,
-    PSNNotify_PSNSessionEnd = 1,
   }
   
   #endregion
@@ -7628,8 +7435,8 @@ namespace Gazillion {
   public sealed partial class NetStructCreateRegionParams : pb::GeneratedMessage<NetStructCreateRegionParams, NetStructCreateRegionParams.Builder> {
     private NetStructCreateRegionParams() { }
     private static readonly NetStructCreateRegionParams defaultInstance = new NetStructCreateRegionParams().MakeReadOnly();
-    private static readonly string[] _netStructCreateRegionParamsFieldNames = new string[] { "accessPortal", "affixes", "cheat", "dangerRoomScenarioItemDbGuid", "dangerRoomScenarioR", "difficultyTierProtoId", "endlessLevel", "gameStateId", "itemRarity", "level", "matchNumber", "origin", "parentRegionId", "playerDeaths", "propertyBuffer", "requiredItemEntityId", "requiredItemProtoId", "seed" };
-    private static readonly uint[] _netStructCreateRegionParamsFieldTags = new uint[] { 98, 104, 24, 120, 144, 32, 40, 48, 128, 8, 56, 18, 72, 112, 138, 88, 80, 64 };
+    private static readonly string[] _netStructCreateRegionParamsFieldNames = new string[] { "accessPortal", "affixes", "cheat", "dangerRoomScenarioItemDbGuid", "dangerRoomScenarioR", "endlessLevel", "gameStateId", "itemRarity", "level", "matchNumber", "origin", "parentRegionId", "playerDeaths", "propertyBuffer", "requiredItemEntityId", "requiredItemProtoId", "seed" };
+    private static readonly uint[] _netStructCreateRegionParamsFieldTags = new uint[] { 90, 96, 24, 112, 136, 32, 40, 120, 8, 48, 18, 64, 104, 130, 80, 72, 56 };
     public static NetStructCreateRegionParams DefaultInstance {
       get { return defaultInstance; }
     }
@@ -7680,17 +7487,7 @@ namespace Gazillion {
       get { return cheat_; }
     }
     
-    public const int DifficultyTierProtoIdFieldNumber = 4;
-    private bool hasDifficultyTierProtoId;
-    private ulong difficultyTierProtoId_;
-    public bool HasDifficultyTierProtoId {
-      get { return hasDifficultyTierProtoId; }
-    }
-    public ulong DifficultyTierProtoId {
-      get { return difficultyTierProtoId_; }
-    }
-    
-    public const int EndlessLevelFieldNumber = 5;
+    public const int EndlessLevelFieldNumber = 4;
     private bool hasEndlessLevel;
     private uint endlessLevel_;
     public bool HasEndlessLevel {
@@ -7700,7 +7497,7 @@ namespace Gazillion {
       get { return endlessLevel_; }
     }
     
-    public const int GameStateIdFieldNumber = 6;
+    public const int GameStateIdFieldNumber = 5;
     private bool hasGameStateId;
     private ulong gameStateId_;
     public bool HasGameStateId {
@@ -7710,7 +7507,7 @@ namespace Gazillion {
       get { return gameStateId_; }
     }
     
-    public const int MatchNumberFieldNumber = 7;
+    public const int MatchNumberFieldNumber = 6;
     private bool hasMatchNumber;
     private ulong matchNumber_;
     public bool HasMatchNumber {
@@ -7720,7 +7517,7 @@ namespace Gazillion {
       get { return matchNumber_; }
     }
     
-    public const int SeedFieldNumber = 8;
+    public const int SeedFieldNumber = 7;
     private bool hasSeed;
     private uint seed_;
     public bool HasSeed {
@@ -7730,7 +7527,7 @@ namespace Gazillion {
       get { return seed_; }
     }
     
-    public const int ParentRegionIdFieldNumber = 9;
+    public const int ParentRegionIdFieldNumber = 8;
     private bool hasParentRegionId;
     private ulong parentRegionId_;
     public bool HasParentRegionId {
@@ -7740,7 +7537,7 @@ namespace Gazillion {
       get { return parentRegionId_; }
     }
     
-    public const int RequiredItemProtoIdFieldNumber = 10;
+    public const int RequiredItemProtoIdFieldNumber = 9;
     private bool hasRequiredItemProtoId;
     private ulong requiredItemProtoId_;
     public bool HasRequiredItemProtoId {
@@ -7750,7 +7547,7 @@ namespace Gazillion {
       get { return requiredItemProtoId_; }
     }
     
-    public const int RequiredItemEntityIdFieldNumber = 11;
+    public const int RequiredItemEntityIdFieldNumber = 10;
     private bool hasRequiredItemEntityId;
     private ulong requiredItemEntityId_;
     public bool HasRequiredItemEntityId {
@@ -7760,7 +7557,7 @@ namespace Gazillion {
       get { return requiredItemEntityId_; }
     }
     
-    public const int AccessPortalFieldNumber = 12;
+    public const int AccessPortalFieldNumber = 11;
     private bool hasAccessPortal;
     private global::Gazillion.NetStructPortalInstance accessPortal_;
     public bool HasAccessPortal {
@@ -7770,7 +7567,7 @@ namespace Gazillion {
       get { return accessPortal_ ?? global::Gazillion.NetStructPortalInstance.DefaultInstance; }
     }
     
-    public const int AffixesFieldNumber = 13;
+    public const int AffixesFieldNumber = 12;
     private pbc::PopsicleList<ulong> affixes_ = new pbc::PopsicleList<ulong>();
     public scg::IList<ulong> AffixesList {
       get { return pbc::Lists.AsReadOnly(affixes_); }
@@ -7782,7 +7579,7 @@ namespace Gazillion {
       return affixes_[index];
     }
     
-    public const int PlayerDeathsFieldNumber = 14;
+    public const int PlayerDeathsFieldNumber = 13;
     private bool hasPlayerDeaths;
     private uint playerDeaths_;
     public bool HasPlayerDeaths {
@@ -7792,7 +7589,7 @@ namespace Gazillion {
       get { return playerDeaths_; }
     }
     
-    public const int DangerRoomScenarioItemDbGuidFieldNumber = 15;
+    public const int DangerRoomScenarioItemDbGuidFieldNumber = 14;
     private bool hasDangerRoomScenarioItemDbGuid;
     private ulong dangerRoomScenarioItemDbGuid_;
     public bool HasDangerRoomScenarioItemDbGuid {
@@ -7802,7 +7599,7 @@ namespace Gazillion {
       get { return dangerRoomScenarioItemDbGuid_; }
     }
     
-    public const int ItemRarityFieldNumber = 16;
+    public const int ItemRarityFieldNumber = 15;
     private bool hasItemRarity;
     private ulong itemRarity_;
     public bool HasItemRarity {
@@ -7812,7 +7609,7 @@ namespace Gazillion {
       get { return itemRarity_; }
     }
     
-    public const int PropertyBufferFieldNumber = 17;
+    public const int PropertyBufferFieldNumber = 16;
     private bool hasPropertyBuffer;
     private pb::ByteString propertyBuffer_ = pb::ByteString.Empty;
     public bool HasPropertyBuffer {
@@ -7822,7 +7619,7 @@ namespace Gazillion {
       get { return propertyBuffer_; }
     }
     
-    public const int DangerRoomScenarioRFieldNumber = 18;
+    public const int DangerRoomScenarioRFieldNumber = 17;
     private bool hasDangerRoomScenarioR;
     private ulong dangerRoomScenarioR_;
     public bool HasDangerRoomScenarioR {
@@ -7849,58 +7646,55 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _netStructCreateRegionParamsFieldNames;
       if (hasLevel) {
-        output.WriteUInt32(1, field_names[9], Level);
+        output.WriteUInt32(1, field_names[8], Level);
       }
       if (hasOrigin) {
-        output.WriteMessage(2, field_names[11], Origin);
+        output.WriteMessage(2, field_names[10], Origin);
       }
       if (hasCheat) {
         output.WriteBool(3, field_names[2], Cheat);
       }
-      if (hasDifficultyTierProtoId) {
-        output.WriteUInt64(4, field_names[5], DifficultyTierProtoId);
-      }
       if (hasEndlessLevel) {
-        output.WriteUInt32(5, field_names[6], EndlessLevel);
+        output.WriteUInt32(4, field_names[5], EndlessLevel);
       }
       if (hasGameStateId) {
-        output.WriteUInt64(6, field_names[7], GameStateId);
+        output.WriteUInt64(5, field_names[6], GameStateId);
       }
       if (hasMatchNumber) {
-        output.WriteUInt64(7, field_names[10], MatchNumber);
+        output.WriteUInt64(6, field_names[9], MatchNumber);
       }
       if (hasSeed) {
-        output.WriteUInt32(8, field_names[17], Seed);
+        output.WriteUInt32(7, field_names[16], Seed);
       }
       if (hasParentRegionId) {
-        output.WriteUInt64(9, field_names[12], ParentRegionId);
+        output.WriteUInt64(8, field_names[11], ParentRegionId);
       }
       if (hasRequiredItemProtoId) {
-        output.WriteUInt64(10, field_names[16], RequiredItemProtoId);
+        output.WriteUInt64(9, field_names[15], RequiredItemProtoId);
       }
       if (hasRequiredItemEntityId) {
-        output.WriteUInt64(11, field_names[15], RequiredItemEntityId);
+        output.WriteUInt64(10, field_names[14], RequiredItemEntityId);
       }
       if (hasAccessPortal) {
-        output.WriteMessage(12, field_names[0], AccessPortal);
+        output.WriteMessage(11, field_names[0], AccessPortal);
       }
       if (affixes_.Count > 0) {
-        output.WriteUInt64Array(13, field_names[1], affixes_);
+        output.WriteUInt64Array(12, field_names[1], affixes_);
       }
       if (hasPlayerDeaths) {
-        output.WriteUInt32(14, field_names[13], PlayerDeaths);
+        output.WriteUInt32(13, field_names[12], PlayerDeaths);
       }
       if (hasDangerRoomScenarioItemDbGuid) {
-        output.WriteUInt64(15, field_names[3], DangerRoomScenarioItemDbGuid);
+        output.WriteUInt64(14, field_names[3], DangerRoomScenarioItemDbGuid);
       }
       if (hasItemRarity) {
-        output.WriteUInt64(16, field_names[8], ItemRarity);
+        output.WriteUInt64(15, field_names[7], ItemRarity);
       }
       if (hasPropertyBuffer) {
-        output.WriteBytes(17, field_names[14], PropertyBuffer);
+        output.WriteBytes(16, field_names[13], PropertyBuffer);
       }
       if (hasDangerRoomScenarioR) {
-        output.WriteUInt64(18, field_names[4], DangerRoomScenarioR);
+        output.WriteUInt64(17, field_names[4], DangerRoomScenarioR);
       }
       UnknownFields.WriteTo(output);
     }
@@ -7928,32 +7722,29 @@ namespace Gazillion {
       if (hasCheat) {
         size += pb::CodedOutputStream.ComputeBoolSize(3, Cheat);
       }
-      if (hasDifficultyTierProtoId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(4, DifficultyTierProtoId);
-      }
       if (hasEndlessLevel) {
-        size += pb::CodedOutputStream.ComputeUInt32Size(5, EndlessLevel);
+        size += pb::CodedOutputStream.ComputeUInt32Size(4, EndlessLevel);
       }
       if (hasGameStateId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(6, GameStateId);
+        size += pb::CodedOutputStream.ComputeUInt64Size(5, GameStateId);
       }
       if (hasMatchNumber) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(7, MatchNumber);
+        size += pb::CodedOutputStream.ComputeUInt64Size(6, MatchNumber);
       }
       if (hasSeed) {
-        size += pb::CodedOutputStream.ComputeUInt32Size(8, Seed);
+        size += pb::CodedOutputStream.ComputeUInt32Size(7, Seed);
       }
       if (hasParentRegionId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(9, ParentRegionId);
+        size += pb::CodedOutputStream.ComputeUInt64Size(8, ParentRegionId);
       }
       if (hasRequiredItemProtoId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(10, RequiredItemProtoId);
+        size += pb::CodedOutputStream.ComputeUInt64Size(9, RequiredItemProtoId);
       }
       if (hasRequiredItemEntityId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(11, RequiredItemEntityId);
+        size += pb::CodedOutputStream.ComputeUInt64Size(10, RequiredItemEntityId);
       }
       if (hasAccessPortal) {
-        size += pb::CodedOutputStream.ComputeMessageSize(12, AccessPortal);
+        size += pb::CodedOutputStream.ComputeMessageSize(11, AccessPortal);
       }
       {
         int dataSize = 0;
@@ -7964,19 +7755,19 @@ namespace Gazillion {
         size += 1 * affixes_.Count;
       }
       if (hasPlayerDeaths) {
-        size += pb::CodedOutputStream.ComputeUInt32Size(14, PlayerDeaths);
+        size += pb::CodedOutputStream.ComputeUInt32Size(13, PlayerDeaths);
       }
       if (hasDangerRoomScenarioItemDbGuid) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(15, DangerRoomScenarioItemDbGuid);
+        size += pb::CodedOutputStream.ComputeUInt64Size(14, DangerRoomScenarioItemDbGuid);
       }
       if (hasItemRarity) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(16, ItemRarity);
+        size += pb::CodedOutputStream.ComputeUInt64Size(15, ItemRarity);
       }
       if (hasPropertyBuffer) {
-        size += pb::CodedOutputStream.ComputeBytesSize(17, PropertyBuffer);
+        size += pb::CodedOutputStream.ComputeBytesSize(16, PropertyBuffer);
       }
       if (hasDangerRoomScenarioR) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(18, DangerRoomScenarioR);
+        size += pb::CodedOutputStream.ComputeUInt64Size(17, DangerRoomScenarioR);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -8110,9 +7901,6 @@ namespace Gazillion {
         if (other.HasCheat) {
           Cheat = other.Cheat;
         }
-        if (other.HasDifficultyTierProtoId) {
-          DifficultyTierProtoId = other.DifficultyTierProtoId;
-        }
         if (other.HasEndlessLevel) {
           EndlessLevel = other.EndlessLevel;
         }
@@ -8216,38 +8004,34 @@ namespace Gazillion {
               break;
             }
             case 32: {
-              result.hasDifficultyTierProtoId = input.ReadUInt64(ref result.difficultyTierProtoId_);
-              break;
-            }
-            case 40: {
               result.hasEndlessLevel = input.ReadUInt32(ref result.endlessLevel_);
               break;
             }
-            case 48: {
+            case 40: {
               result.hasGameStateId = input.ReadUInt64(ref result.gameStateId_);
               break;
             }
-            case 56: {
+            case 48: {
               result.hasMatchNumber = input.ReadUInt64(ref result.matchNumber_);
               break;
             }
-            case 64: {
+            case 56: {
               result.hasSeed = input.ReadUInt32(ref result.seed_);
               break;
             }
-            case 72: {
+            case 64: {
               result.hasParentRegionId = input.ReadUInt64(ref result.parentRegionId_);
               break;
             }
-            case 80: {
+            case 72: {
               result.hasRequiredItemProtoId = input.ReadUInt64(ref result.requiredItemProtoId_);
               break;
             }
-            case 88: {
+            case 80: {
               result.hasRequiredItemEntityId = input.ReadUInt64(ref result.requiredItemEntityId_);
               break;
             }
-            case 98: {
+            case 90: {
               global::Gazillion.NetStructPortalInstance.Builder subBuilder = global::Gazillion.NetStructPortalInstance.CreateBuilder();
               if (result.hasAccessPortal) {
                 subBuilder.MergeFrom(AccessPortal);
@@ -8256,28 +8040,28 @@ namespace Gazillion {
               AccessPortal = subBuilder.BuildPartial();
               break;
             }
-            case 106:
-            case 104: {
+            case 98:
+            case 96: {
               input.ReadUInt64Array(tag, field_name, result.affixes_);
               break;
             }
-            case 112: {
+            case 104: {
               result.hasPlayerDeaths = input.ReadUInt32(ref result.playerDeaths_);
               break;
             }
-            case 120: {
+            case 112: {
               result.hasDangerRoomScenarioItemDbGuid = input.ReadUInt64(ref result.dangerRoomScenarioItemDbGuid_);
               break;
             }
-            case 128: {
+            case 120: {
               result.hasItemRarity = input.ReadUInt64(ref result.itemRarity_);
               break;
             }
-            case 138: {
+            case 130: {
               result.hasPropertyBuffer = input.ReadBytes(ref result.propertyBuffer_);
               break;
             }
-            case 144: {
+            case 136: {
               result.hasDangerRoomScenarioR = input.ReadUInt64(ref result.dangerRoomScenarioR_);
               break;
             }
@@ -8368,26 +8152,6 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasCheat = false;
         result.cheat_ = false;
-        return this;
-      }
-      
-      public bool HasDifficultyTierProtoId {
-        get { return result.hasDifficultyTierProtoId; }
-      }
-      public ulong DifficultyTierProtoId {
-        get { return result.DifficultyTierProtoId; }
-        set { SetDifficultyTierProtoId(value); }
-      }
-      public Builder SetDifficultyTierProtoId(ulong value) {
-        PrepareBuilder();
-        result.hasDifficultyTierProtoId = true;
-        result.difficultyTierProtoId_ = value;
-        return this;
-      }
-      public Builder ClearDifficultyTierProtoId() {
-        PrepareBuilder();
-        result.hasDifficultyTierProtoId = false;
-        result.difficultyTierProtoId_ = 0UL;
         return this;
       }
       
@@ -9023,6 +8787,326 @@ namespace Gazillion {
       }
     }
     static NetStructModChangeObject() {
+      object.ReferenceEquals(global::Gazillion.CommonMessages.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class NetStructPowerPointAllocation : pb::GeneratedMessage<NetStructPowerPointAllocation, NetStructPowerPointAllocation.Builder> {
+    private NetStructPowerPointAllocation() { }
+    private static readonly NetStructPowerPointAllocation defaultInstance = new NetStructPowerPointAllocation().MakeReadOnly();
+    private static readonly string[] _netStructPowerPointAllocationFieldNames = new string[] { "delta", "powerProtoId" };
+    private static readonly uint[] _netStructPowerPointAllocationFieldTags = new uint[] { 16, 8 };
+    public static NetStructPowerPointAllocation DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override NetStructPowerPointAllocation DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override NetStructPowerPointAllocation ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.CommonMessages.internal__static_Gazillion_NetStructPowerPointAllocation__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<NetStructPowerPointAllocation, NetStructPowerPointAllocation.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.CommonMessages.internal__static_Gazillion_NetStructPowerPointAllocation__FieldAccessorTable; }
+    }
+    
+    public const int PowerProtoIdFieldNumber = 1;
+    private bool hasPowerProtoId;
+    private ulong powerProtoId_;
+    public bool HasPowerProtoId {
+      get { return hasPowerProtoId; }
+    }
+    public ulong PowerProtoId {
+      get { return powerProtoId_; }
+    }
+    
+    public const int DeltaFieldNumber = 2;
+    private bool hasDelta;
+    private uint delta_;
+    public bool HasDelta {
+      get { return hasDelta; }
+    }
+    public uint Delta {
+      get { return delta_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasPowerProtoId) return false;
+        if (!hasDelta) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _netStructPowerPointAllocationFieldNames;
+      if (hasPowerProtoId) {
+        output.WriteUInt64(1, field_names[1], PowerProtoId);
+      }
+      if (hasDelta) {
+        output.WriteUInt32(2, field_names[0], Delta);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasPowerProtoId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, PowerProtoId);
+      }
+      if (hasDelta) {
+        size += pb::CodedOutputStream.ComputeUInt32Size(2, Delta);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static NetStructPowerPointAllocation ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static NetStructPowerPointAllocation ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static NetStructPowerPointAllocation ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static NetStructPowerPointAllocation ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static NetStructPowerPointAllocation ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static NetStructPowerPointAllocation ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static NetStructPowerPointAllocation ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static NetStructPowerPointAllocation ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static NetStructPowerPointAllocation ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static NetStructPowerPointAllocation ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private NetStructPowerPointAllocation MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(NetStructPowerPointAllocation prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<NetStructPowerPointAllocation, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(NetStructPowerPointAllocation cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private NetStructPowerPointAllocation result;
+      
+      private NetStructPowerPointAllocation PrepareBuilder() {
+        if (resultIsReadOnly) {
+          NetStructPowerPointAllocation original = result;
+          result = new NetStructPowerPointAllocation();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override NetStructPowerPointAllocation MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.NetStructPowerPointAllocation.Descriptor; }
+      }
+      
+      public override NetStructPowerPointAllocation DefaultInstanceForType {
+        get { return global::Gazillion.NetStructPowerPointAllocation.DefaultInstance; }
+      }
+      
+      public override NetStructPowerPointAllocation BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is NetStructPowerPointAllocation) {
+          return MergeFrom((NetStructPowerPointAllocation) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(NetStructPowerPointAllocation other) {
+        if (other == global::Gazillion.NetStructPowerPointAllocation.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasPowerProtoId) {
+          PowerProtoId = other.PowerProtoId;
+        }
+        if (other.HasDelta) {
+          Delta = other.Delta;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_netStructPowerPointAllocationFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _netStructPowerPointAllocationFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasPowerProtoId = input.ReadUInt64(ref result.powerProtoId_);
+              break;
+            }
+            case 16: {
+              result.hasDelta = input.ReadUInt32(ref result.delta_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasPowerProtoId {
+        get { return result.hasPowerProtoId; }
+      }
+      public ulong PowerProtoId {
+        get { return result.PowerProtoId; }
+        set { SetPowerProtoId(value); }
+      }
+      public Builder SetPowerProtoId(ulong value) {
+        PrepareBuilder();
+        result.hasPowerProtoId = true;
+        result.powerProtoId_ = value;
+        return this;
+      }
+      public Builder ClearPowerProtoId() {
+        PrepareBuilder();
+        result.hasPowerProtoId = false;
+        result.powerProtoId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasDelta {
+        get { return result.hasDelta; }
+      }
+      public uint Delta {
+        get { return result.Delta; }
+        set { SetDelta(value); }
+      }
+      public Builder SetDelta(uint value) {
+        PrepareBuilder();
+        result.hasDelta = true;
+        result.delta_ = value;
+        return this;
+      }
+      public Builder ClearDelta() {
+        PrepareBuilder();
+        result.hasDelta = false;
+        result.delta_ = 0;
+        return this;
+      }
+    }
+    static NetStructPowerPointAllocation() {
       object.ReferenceEquals(global::Gazillion.CommonMessages.Descriptor, null);
     }
   }
@@ -9959,459 +10043,11 @@ namespace Gazillion {
   }
   
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-  public sealed partial class CommunityMemberAvatarSlot : pb::GeneratedMessage<CommunityMemberAvatarSlot, CommunityMemberAvatarSlot.Builder> {
-    private CommunityMemberAvatarSlot() { }
-    private static readonly CommunityMemberAvatarSlot defaultInstance = new CommunityMemberAvatarSlot().MakeReadOnly();
-    private static readonly string[] _communityMemberAvatarSlotFieldNames = new string[] { "avatarRefId", "costumeRefId", "level", "onlineId", "prestigeLevel" };
-    private static readonly uint[] _communityMemberAvatarSlotFieldTags = new uint[] { 8, 16, 24, 42, 32 };
-    public static CommunityMemberAvatarSlot DefaultInstance {
-      get { return defaultInstance; }
-    }
-    
-    public override CommunityMemberAvatarSlot DefaultInstanceForType {
-      get { return DefaultInstance; }
-    }
-    
-    protected override CommunityMemberAvatarSlot ThisMessage {
-      get { return this; }
-    }
-    
-    public static pbd::MessageDescriptor Descriptor {
-      get { return global::Gazillion.CommonMessages.internal__static_Gazillion_CommunityMemberAvatarSlot__Descriptor; }
-    }
-    
-    protected override pb::FieldAccess.FieldAccessorTable<CommunityMemberAvatarSlot, CommunityMemberAvatarSlot.Builder> InternalFieldAccessors {
-      get { return global::Gazillion.CommonMessages.internal__static_Gazillion_CommunityMemberAvatarSlot__FieldAccessorTable; }
-    }
-    
-    public const int AvatarRefIdFieldNumber = 1;
-    private bool hasAvatarRefId;
-    private ulong avatarRefId_;
-    public bool HasAvatarRefId {
-      get { return hasAvatarRefId; }
-    }
-    public ulong AvatarRefId {
-      get { return avatarRefId_; }
-    }
-    
-    public const int CostumeRefIdFieldNumber = 2;
-    private bool hasCostumeRefId;
-    private ulong costumeRefId_;
-    public bool HasCostumeRefId {
-      get { return hasCostumeRefId; }
-    }
-    public ulong CostumeRefId {
-      get { return costumeRefId_; }
-    }
-    
-    public const int LevelFieldNumber = 3;
-    private bool hasLevel;
-    private uint level_;
-    public bool HasLevel {
-      get { return hasLevel; }
-    }
-    public uint Level {
-      get { return level_; }
-    }
-    
-    public const int PrestigeLevelFieldNumber = 4;
-    private bool hasPrestigeLevel;
-    private uint prestigeLevel_;
-    public bool HasPrestigeLevel {
-      get { return hasPrestigeLevel; }
-    }
-    public uint PrestigeLevel {
-      get { return prestigeLevel_; }
-    }
-    
-    public const int OnlineIdFieldNumber = 5;
-    private bool hasOnlineId;
-    private string onlineId_ = "";
-    public bool HasOnlineId {
-      get { return hasOnlineId; }
-    }
-    public string OnlineId {
-      get { return onlineId_; }
-    }
-    
-    public override bool IsInitialized {
-      get {
-        return true;
-      }
-    }
-    
-    public override void WriteTo(pb::ICodedOutputStream output) {
-      CalcSerializedSize();
-      string[] field_names = _communityMemberAvatarSlotFieldNames;
-      if (hasAvatarRefId) {
-        output.WriteUInt64(1, field_names[0], AvatarRefId);
-      }
-      if (hasCostumeRefId) {
-        output.WriteUInt64(2, field_names[1], CostumeRefId);
-      }
-      if (hasLevel) {
-        output.WriteUInt32(3, field_names[2], Level);
-      }
-      if (hasPrestigeLevel) {
-        output.WriteUInt32(4, field_names[4], PrestigeLevel);
-      }
-      if (hasOnlineId) {
-        output.WriteString(5, field_names[3], OnlineId);
-      }
-      UnknownFields.WriteTo(output);
-    }
-    
-    private int memoizedSerializedSize = -1;
-    public override int SerializedSize {
-      get {
-        int size = memoizedSerializedSize;
-        if (size != -1) return size;
-        return CalcSerializedSize();
-      }
-    }
-    
-    private int CalcSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-      
-      size = 0;
-      if (hasAvatarRefId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(1, AvatarRefId);
-      }
-      if (hasCostumeRefId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(2, CostumeRefId);
-      }
-      if (hasLevel) {
-        size += pb::CodedOutputStream.ComputeUInt32Size(3, Level);
-      }
-      if (hasPrestigeLevel) {
-        size += pb::CodedOutputStream.ComputeUInt32Size(4, PrestigeLevel);
-      }
-      if (hasOnlineId) {
-        size += pb::CodedOutputStream.ComputeStringSize(5, OnlineId);
-      }
-      size += UnknownFields.SerializedSize;
-      memoizedSerializedSize = size;
-      return size;
-    }
-    public static CommunityMemberAvatarSlot ParseFrom(pb::ByteString data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static CommunityMemberAvatarSlot ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static CommunityMemberAvatarSlot ParseFrom(byte[] data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static CommunityMemberAvatarSlot ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static CommunityMemberAvatarSlot ParseFrom(global::System.IO.Stream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static CommunityMemberAvatarSlot ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    public static CommunityMemberAvatarSlot ParseDelimitedFrom(global::System.IO.Stream input) {
-      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
-    }
-    public static CommunityMemberAvatarSlot ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
-    }
-    public static CommunityMemberAvatarSlot ParseFrom(pb::ICodedInputStream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static CommunityMemberAvatarSlot ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    private CommunityMemberAvatarSlot MakeReadOnly() {
-      return this;
-    }
-    
-    public static Builder CreateBuilder() { return new Builder(); }
-    public override Builder ToBuilder() { return CreateBuilder(this); }
-    public override Builder CreateBuilderForType() { return new Builder(); }
-    public static Builder CreateBuilder(CommunityMemberAvatarSlot prototype) {
-      return new Builder(prototype);
-    }
-    
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-    public sealed partial class Builder : pb::GeneratedBuilder<CommunityMemberAvatarSlot, Builder> {
-      protected override Builder ThisBuilder {
-        get { return this; }
-      }
-      public Builder() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-      }
-      internal Builder(CommunityMemberAvatarSlot cloneFrom) {
-        result = cloneFrom;
-        resultIsReadOnly = true;
-      }
-      
-      private bool resultIsReadOnly;
-      private CommunityMemberAvatarSlot result;
-      
-      private CommunityMemberAvatarSlot PrepareBuilder() {
-        if (resultIsReadOnly) {
-          CommunityMemberAvatarSlot original = result;
-          result = new CommunityMemberAvatarSlot();
-          resultIsReadOnly = false;
-          MergeFrom(original);
-        }
-        return result;
-      }
-      
-      public override bool IsInitialized {
-        get { return result.IsInitialized; }
-      }
-      
-      protected override CommunityMemberAvatarSlot MessageBeingBuilt {
-        get { return PrepareBuilder(); }
-      }
-      
-      public override Builder Clear() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-        return this;
-      }
-      
-      public override Builder Clone() {
-        if (resultIsReadOnly) {
-          return new Builder(result);
-        } else {
-          return new Builder().MergeFrom(result);
-        }
-      }
-      
-      public override pbd::MessageDescriptor DescriptorForType {
-        get { return global::Gazillion.CommunityMemberAvatarSlot.Descriptor; }
-      }
-      
-      public override CommunityMemberAvatarSlot DefaultInstanceForType {
-        get { return global::Gazillion.CommunityMemberAvatarSlot.DefaultInstance; }
-      }
-      
-      public override CommunityMemberAvatarSlot BuildPartial() {
-        if (resultIsReadOnly) {
-          return result;
-        }
-        resultIsReadOnly = true;
-        return result.MakeReadOnly();
-      }
-      
-      public override Builder MergeFrom(pb::IMessage other) {
-        if (other is CommunityMemberAvatarSlot) {
-          return MergeFrom((CommunityMemberAvatarSlot) other);
-        } else {
-          base.MergeFrom(other);
-          return this;
-        }
-      }
-      
-      public override Builder MergeFrom(CommunityMemberAvatarSlot other) {
-        if (other == global::Gazillion.CommunityMemberAvatarSlot.DefaultInstance) return this;
-        PrepareBuilder();
-        if (other.HasAvatarRefId) {
-          AvatarRefId = other.AvatarRefId;
-        }
-        if (other.HasCostumeRefId) {
-          CostumeRefId = other.CostumeRefId;
-        }
-        if (other.HasLevel) {
-          Level = other.Level;
-        }
-        if (other.HasPrestigeLevel) {
-          PrestigeLevel = other.PrestigeLevel;
-        }
-        if (other.HasOnlineId) {
-          OnlineId = other.OnlineId;
-        }
-        this.MergeUnknownFields(other.UnknownFields);
-        return this;
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input) {
-        return MergeFrom(input, pb::ExtensionRegistry.Empty);
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-        PrepareBuilder();
-        pb::UnknownFieldSet.Builder unknownFields = null;
-        uint tag;
-        string field_name;
-        while (input.ReadTag(out tag, out field_name)) {
-          if(tag == 0 && field_name != null) {
-            int field_ordinal = global::System.Array.BinarySearch(_communityMemberAvatarSlotFieldNames, field_name, global::System.StringComparer.Ordinal);
-            if(field_ordinal >= 0)
-              tag = _communityMemberAvatarSlotFieldTags[field_ordinal];
-            else {
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              continue;
-            }
-          }
-          switch (tag) {
-            case 0: {
-              throw pb::InvalidProtocolBufferException.InvalidTag();
-            }
-            default: {
-              if (pb::WireFormat.IsEndGroupTag(tag)) {
-                if (unknownFields != null) {
-                  this.UnknownFields = unknownFields.Build();
-                }
-                return this;
-              }
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              break;
-            }
-            case 8: {
-              result.hasAvatarRefId = input.ReadUInt64(ref result.avatarRefId_);
-              break;
-            }
-            case 16: {
-              result.hasCostumeRefId = input.ReadUInt64(ref result.costumeRefId_);
-              break;
-            }
-            case 24: {
-              result.hasLevel = input.ReadUInt32(ref result.level_);
-              break;
-            }
-            case 32: {
-              result.hasPrestigeLevel = input.ReadUInt32(ref result.prestigeLevel_);
-              break;
-            }
-            case 42: {
-              result.hasOnlineId = input.ReadString(ref result.onlineId_);
-              break;
-            }
-          }
-        }
-        
-        if (unknownFields != null) {
-          this.UnknownFields = unknownFields.Build();
-        }
-        return this;
-      }
-      
-      
-      public bool HasAvatarRefId {
-        get { return result.hasAvatarRefId; }
-      }
-      public ulong AvatarRefId {
-        get { return result.AvatarRefId; }
-        set { SetAvatarRefId(value); }
-      }
-      public Builder SetAvatarRefId(ulong value) {
-        PrepareBuilder();
-        result.hasAvatarRefId = true;
-        result.avatarRefId_ = value;
-        return this;
-      }
-      public Builder ClearAvatarRefId() {
-        PrepareBuilder();
-        result.hasAvatarRefId = false;
-        result.avatarRefId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasCostumeRefId {
-        get { return result.hasCostumeRefId; }
-      }
-      public ulong CostumeRefId {
-        get { return result.CostumeRefId; }
-        set { SetCostumeRefId(value); }
-      }
-      public Builder SetCostumeRefId(ulong value) {
-        PrepareBuilder();
-        result.hasCostumeRefId = true;
-        result.costumeRefId_ = value;
-        return this;
-      }
-      public Builder ClearCostumeRefId() {
-        PrepareBuilder();
-        result.hasCostumeRefId = false;
-        result.costumeRefId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasLevel {
-        get { return result.hasLevel; }
-      }
-      public uint Level {
-        get { return result.Level; }
-        set { SetLevel(value); }
-      }
-      public Builder SetLevel(uint value) {
-        PrepareBuilder();
-        result.hasLevel = true;
-        result.level_ = value;
-        return this;
-      }
-      public Builder ClearLevel() {
-        PrepareBuilder();
-        result.hasLevel = false;
-        result.level_ = 0;
-        return this;
-      }
-      
-      public bool HasPrestigeLevel {
-        get { return result.hasPrestigeLevel; }
-      }
-      public uint PrestigeLevel {
-        get { return result.PrestigeLevel; }
-        set { SetPrestigeLevel(value); }
-      }
-      public Builder SetPrestigeLevel(uint value) {
-        PrepareBuilder();
-        result.hasPrestigeLevel = true;
-        result.prestigeLevel_ = value;
-        return this;
-      }
-      public Builder ClearPrestigeLevel() {
-        PrepareBuilder();
-        result.hasPrestigeLevel = false;
-        result.prestigeLevel_ = 0;
-        return this;
-      }
-      
-      public bool HasOnlineId {
-        get { return result.hasOnlineId; }
-      }
-      public string OnlineId {
-        get { return result.OnlineId; }
-        set { SetOnlineId(value); }
-      }
-      public Builder SetOnlineId(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasOnlineId = true;
-        result.onlineId_ = value;
-        return this;
-      }
-      public Builder ClearOnlineId() {
-        PrepareBuilder();
-        result.hasOnlineId = false;
-        result.onlineId_ = "";
-        return this;
-      }
-    }
-    static CommunityMemberAvatarSlot() {
-      object.ReferenceEquals(global::Gazillion.CommonMessages.Descriptor, null);
-    }
-  }
-  
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
   public sealed partial class CommunityMemberBroadcast : pb::GeneratedMessage<CommunityMemberBroadcast, CommunityMemberBroadcast.Builder> {
     private CommunityMemberBroadcast() { }
     private static readonly CommunityMemberBroadcast defaultInstance = new CommunityMemberBroadcast().MakeReadOnly();
-    private static readonly string[] _communityMemberBroadcastFieldNames = new string[] { "consoleAccountId", "currentCostumeRefId", "currentDifficultyRefId", "currentPlayerName", "currentRegionRefId", "isOnline", "lastLogoutTimeAsFileTimeUtc", "memberPlayerDbId", "memberPlayerDbIdIgnoreList", "secondaryConsoleAccountId", "secondaryPlayerName", "slots" };
-    private static readonly uint[] _communityMemberBroadcastFieldTags = new uint[] { 80, 72, 24, 42, 16, 56, 64, 8, 48, 88, 98, 34 };
+    private static readonly string[] _communityMemberBroadcastFieldNames = new string[] { "currentAvatarRefId", "currentCharacterLevel", "currentCostumeRefId", "currentPlayerName", "currentPrestigeLevel", "currentPvpFactionRefId", "currentRegionRefId", "isOnline", "lastLogoutTimeAsFileTimeUtc", "memberPlayerDbId", "memberPlayerDbIdIgnoreList" };
+    private static readonly uint[] _communityMemberBroadcastFieldTags = new uint[] { 24, 32, 88, 50, 64, 40, 16, 72, 80, 8, 56 };
     public static CommunityMemberBroadcast DefaultInstance {
       get { return defaultInstance; }
     }
@@ -10452,29 +10088,37 @@ namespace Gazillion {
       get { return currentRegionRefId_; }
     }
     
-    public const int CurrentDifficultyRefIdFieldNumber = 3;
-    private bool hasCurrentDifficultyRefId;
-    private ulong currentDifficultyRefId_;
-    public bool HasCurrentDifficultyRefId {
-      get { return hasCurrentDifficultyRefId; }
+    public const int CurrentAvatarRefIdFieldNumber = 3;
+    private bool hasCurrentAvatarRefId;
+    private ulong currentAvatarRefId_ = 123UL;
+    public bool HasCurrentAvatarRefId {
+      get { return hasCurrentAvatarRefId; }
     }
-    public ulong CurrentDifficultyRefId {
-      get { return currentDifficultyRefId_; }
-    }
-    
-    public const int SlotsFieldNumber = 4;
-    private pbc::PopsicleList<global::Gazillion.CommunityMemberAvatarSlot> slots_ = new pbc::PopsicleList<global::Gazillion.CommunityMemberAvatarSlot>();
-    public scg::IList<global::Gazillion.CommunityMemberAvatarSlot> SlotsList {
-      get { return slots_; }
-    }
-    public int SlotsCount {
-      get { return slots_.Count; }
-    }
-    public global::Gazillion.CommunityMemberAvatarSlot GetSlots(int index) {
-      return slots_[index];
+    public ulong CurrentAvatarRefId {
+      get { return currentAvatarRefId_; }
     }
     
-    public const int CurrentPlayerNameFieldNumber = 5;
+    public const int CurrentCharacterLevelFieldNumber = 4;
+    private bool hasCurrentCharacterLevel;
+    private ulong currentCharacterLevel_;
+    public bool HasCurrentCharacterLevel {
+      get { return hasCurrentCharacterLevel; }
+    }
+    public ulong CurrentCharacterLevel {
+      get { return currentCharacterLevel_; }
+    }
+    
+    public const int CurrentPvpFactionRefIdFieldNumber = 5;
+    private bool hasCurrentPvpFactionRefId;
+    private ulong currentPvpFactionRefId_ = 123UL;
+    public bool HasCurrentPvpFactionRefId {
+      get { return hasCurrentPvpFactionRefId; }
+    }
+    public ulong CurrentPvpFactionRefId {
+      get { return currentPvpFactionRefId_; }
+    }
+    
+    public const int CurrentPlayerNameFieldNumber = 6;
     private bool hasCurrentPlayerName;
     private string currentPlayerName_ = "";
     public bool HasCurrentPlayerName {
@@ -10484,7 +10128,7 @@ namespace Gazillion {
       get { return currentPlayerName_; }
     }
     
-    public const int MemberPlayerDbIdIgnoreListFieldNumber = 6;
+    public const int MemberPlayerDbIdIgnoreListFieldNumber = 7;
     private pbc::PopsicleList<ulong> memberPlayerDbIdIgnoreList_ = new pbc::PopsicleList<ulong>();
     public scg::IList<ulong> MemberPlayerDbIdIgnoreListList {
       get { return pbc::Lists.AsReadOnly(memberPlayerDbIdIgnoreList_); }
@@ -10496,7 +10140,17 @@ namespace Gazillion {
       return memberPlayerDbIdIgnoreList_[index];
     }
     
-    public const int IsOnlineFieldNumber = 7;
+    public const int CurrentPrestigeLevelFieldNumber = 8;
+    private bool hasCurrentPrestigeLevel;
+    private ulong currentPrestigeLevel_;
+    public bool HasCurrentPrestigeLevel {
+      get { return hasCurrentPrestigeLevel; }
+    }
+    public ulong CurrentPrestigeLevel {
+      get { return currentPrestigeLevel_; }
+    }
+    
+    public const int IsOnlineFieldNumber = 9;
     private bool hasIsOnline;
     private int isOnline_ = -1;
     public bool HasIsOnline {
@@ -10506,7 +10160,7 @@ namespace Gazillion {
       get { return isOnline_; }
     }
     
-    public const int LastLogoutTimeAsFileTimeUtcFieldNumber = 8;
+    public const int LastLogoutTimeAsFileTimeUtcFieldNumber = 10;
     private bool hasLastLogoutTimeAsFileTimeUtc;
     private long lastLogoutTimeAsFileTimeUtc_;
     public bool HasLastLogoutTimeAsFileTimeUtc {
@@ -10516,7 +10170,7 @@ namespace Gazillion {
       get { return lastLogoutTimeAsFileTimeUtc_; }
     }
     
-    public const int CurrentCostumeRefIdFieldNumber = 9;
+    public const int CurrentCostumeRefIdFieldNumber = 11;
     private bool hasCurrentCostumeRefId;
     private ulong currentCostumeRefId_ = 123UL;
     public bool HasCurrentCostumeRefId {
@@ -10524,36 +10178,6 @@ namespace Gazillion {
     }
     public ulong CurrentCostumeRefId {
       get { return currentCostumeRefId_; }
-    }
-    
-    public const int ConsoleAccountIdFieldNumber = 10;
-    private bool hasConsoleAccountId;
-    private ulong consoleAccountId_;
-    public bool HasConsoleAccountId {
-      get { return hasConsoleAccountId; }
-    }
-    public ulong ConsoleAccountId {
-      get { return consoleAccountId_; }
-    }
-    
-    public const int SecondaryConsoleAccountIdFieldNumber = 11;
-    private bool hasSecondaryConsoleAccountId;
-    private ulong secondaryConsoleAccountId_;
-    public bool HasSecondaryConsoleAccountId {
-      get { return hasSecondaryConsoleAccountId; }
-    }
-    public ulong SecondaryConsoleAccountId {
-      get { return secondaryConsoleAccountId_; }
-    }
-    
-    public const int SecondaryPlayerNameFieldNumber = 12;
-    private bool hasSecondaryPlayerName;
-    private string secondaryPlayerName_ = "";
-    public bool HasSecondaryPlayerName {
-      get { return hasSecondaryPlayerName; }
-    }
-    public string SecondaryPlayerName {
-      get { return secondaryPlayerName_; }
     }
     
     public override bool IsInitialized {
@@ -10567,40 +10191,37 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _communityMemberBroadcastFieldNames;
       if (hasMemberPlayerDbId) {
-        output.WriteUInt64(1, field_names[7], MemberPlayerDbId);
+        output.WriteUInt64(1, field_names[9], MemberPlayerDbId);
       }
       if (hasCurrentRegionRefId) {
-        output.WriteUInt64(2, field_names[4], CurrentRegionRefId);
+        output.WriteUInt64(2, field_names[6], CurrentRegionRefId);
       }
-      if (hasCurrentDifficultyRefId) {
-        output.WriteUInt64(3, field_names[2], CurrentDifficultyRefId);
+      if (hasCurrentAvatarRefId) {
+        output.WriteUInt64(3, field_names[0], CurrentAvatarRefId);
       }
-      if (slots_.Count > 0) {
-        output.WriteMessageArray(4, field_names[11], slots_);
+      if (hasCurrentCharacterLevel) {
+        output.WriteUInt64(4, field_names[1], CurrentCharacterLevel);
+      }
+      if (hasCurrentPvpFactionRefId) {
+        output.WriteUInt64(5, field_names[5], CurrentPvpFactionRefId);
       }
       if (hasCurrentPlayerName) {
-        output.WriteString(5, field_names[3], CurrentPlayerName);
+        output.WriteString(6, field_names[3], CurrentPlayerName);
       }
       if (memberPlayerDbIdIgnoreList_.Count > 0) {
-        output.WriteUInt64Array(6, field_names[8], memberPlayerDbIdIgnoreList_);
+        output.WriteUInt64Array(7, field_names[10], memberPlayerDbIdIgnoreList_);
+      }
+      if (hasCurrentPrestigeLevel) {
+        output.WriteUInt64(8, field_names[4], CurrentPrestigeLevel);
       }
       if (hasIsOnline) {
-        output.WriteInt32(7, field_names[5], IsOnline);
+        output.WriteInt32(9, field_names[7], IsOnline);
       }
       if (hasLastLogoutTimeAsFileTimeUtc) {
-        output.WriteInt64(8, field_names[6], LastLogoutTimeAsFileTimeUtc);
+        output.WriteInt64(10, field_names[8], LastLogoutTimeAsFileTimeUtc);
       }
       if (hasCurrentCostumeRefId) {
-        output.WriteUInt64(9, field_names[1], CurrentCostumeRefId);
-      }
-      if (hasConsoleAccountId) {
-        output.WriteUInt64(10, field_names[0], ConsoleAccountId);
-      }
-      if (hasSecondaryConsoleAccountId) {
-        output.WriteUInt64(11, field_names[9], SecondaryConsoleAccountId);
-      }
-      if (hasSecondaryPlayerName) {
-        output.WriteString(12, field_names[10], SecondaryPlayerName);
+        output.WriteUInt64(11, field_names[2], CurrentCostumeRefId);
       }
       UnknownFields.WriteTo(output);
     }
@@ -10625,14 +10246,17 @@ namespace Gazillion {
       if (hasCurrentRegionRefId) {
         size += pb::CodedOutputStream.ComputeUInt64Size(2, CurrentRegionRefId);
       }
-      if (hasCurrentDifficultyRefId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(3, CurrentDifficultyRefId);
+      if (hasCurrentAvatarRefId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, CurrentAvatarRefId);
       }
-      foreach (global::Gazillion.CommunityMemberAvatarSlot element in SlotsList) {
-        size += pb::CodedOutputStream.ComputeMessageSize(4, element);
+      if (hasCurrentCharacterLevel) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(4, CurrentCharacterLevel);
+      }
+      if (hasCurrentPvpFactionRefId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(5, CurrentPvpFactionRefId);
       }
       if (hasCurrentPlayerName) {
-        size += pb::CodedOutputStream.ComputeStringSize(5, CurrentPlayerName);
+        size += pb::CodedOutputStream.ComputeStringSize(6, CurrentPlayerName);
       }
       {
         int dataSize = 0;
@@ -10642,23 +10266,17 @@ namespace Gazillion {
         size += dataSize;
         size += 1 * memberPlayerDbIdIgnoreList_.Count;
       }
+      if (hasCurrentPrestigeLevel) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(8, CurrentPrestigeLevel);
+      }
       if (hasIsOnline) {
-        size += pb::CodedOutputStream.ComputeInt32Size(7, IsOnline);
+        size += pb::CodedOutputStream.ComputeInt32Size(9, IsOnline);
       }
       if (hasLastLogoutTimeAsFileTimeUtc) {
-        size += pb::CodedOutputStream.ComputeInt64Size(8, LastLogoutTimeAsFileTimeUtc);
+        size += pb::CodedOutputStream.ComputeInt64Size(10, LastLogoutTimeAsFileTimeUtc);
       }
       if (hasCurrentCostumeRefId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(9, CurrentCostumeRefId);
-      }
-      if (hasConsoleAccountId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(10, ConsoleAccountId);
-      }
-      if (hasSecondaryConsoleAccountId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(11, SecondaryConsoleAccountId);
-      }
-      if (hasSecondaryPlayerName) {
-        size += pb::CodedOutputStream.ComputeStringSize(12, SecondaryPlayerName);
+        size += pb::CodedOutputStream.ComputeUInt64Size(11, CurrentCostumeRefId);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -10695,7 +10313,6 @@ namespace Gazillion {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
     private CommunityMemberBroadcast MakeReadOnly() {
-      slots_.MakeReadOnly();
       memberPlayerDbIdIgnoreList_.MakeReadOnly();
       return this;
     }
@@ -10790,17 +10407,23 @@ namespace Gazillion {
         if (other.HasCurrentRegionRefId) {
           CurrentRegionRefId = other.CurrentRegionRefId;
         }
-        if (other.HasCurrentDifficultyRefId) {
-          CurrentDifficultyRefId = other.CurrentDifficultyRefId;
+        if (other.HasCurrentAvatarRefId) {
+          CurrentAvatarRefId = other.CurrentAvatarRefId;
         }
-        if (other.slots_.Count != 0) {
-          result.slots_.Add(other.slots_);
+        if (other.HasCurrentCharacterLevel) {
+          CurrentCharacterLevel = other.CurrentCharacterLevel;
+        }
+        if (other.HasCurrentPvpFactionRefId) {
+          CurrentPvpFactionRefId = other.CurrentPvpFactionRefId;
         }
         if (other.HasCurrentPlayerName) {
           CurrentPlayerName = other.CurrentPlayerName;
         }
         if (other.memberPlayerDbIdIgnoreList_.Count != 0) {
           result.memberPlayerDbIdIgnoreList_.Add(other.memberPlayerDbIdIgnoreList_);
+        }
+        if (other.HasCurrentPrestigeLevel) {
+          CurrentPrestigeLevel = other.CurrentPrestigeLevel;
         }
         if (other.HasIsOnline) {
           IsOnline = other.IsOnline;
@@ -10810,15 +10433,6 @@ namespace Gazillion {
         }
         if (other.HasCurrentCostumeRefId) {
           CurrentCostumeRefId = other.CurrentCostumeRefId;
-        }
-        if (other.HasConsoleAccountId) {
-          ConsoleAccountId = other.ConsoleAccountId;
-        }
-        if (other.HasSecondaryConsoleAccountId) {
-          SecondaryConsoleAccountId = other.SecondaryConsoleAccountId;
-        }
-        if (other.HasSecondaryPlayerName) {
-          SecondaryPlayerName = other.SecondaryPlayerName;
         }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
@@ -10872,44 +10486,40 @@ namespace Gazillion {
               break;
             }
             case 24: {
-              result.hasCurrentDifficultyRefId = input.ReadUInt64(ref result.currentDifficultyRefId_);
+              result.hasCurrentAvatarRefId = input.ReadUInt64(ref result.currentAvatarRefId_);
               break;
             }
-            case 34: {
-              input.ReadMessageArray(tag, field_name, result.slots_, global::Gazillion.CommunityMemberAvatarSlot.DefaultInstance, extensionRegistry);
+            case 32: {
+              result.hasCurrentCharacterLevel = input.ReadUInt64(ref result.currentCharacterLevel_);
               break;
             }
-            case 42: {
+            case 40: {
+              result.hasCurrentPvpFactionRefId = input.ReadUInt64(ref result.currentPvpFactionRefId_);
+              break;
+            }
+            case 50: {
               result.hasCurrentPlayerName = input.ReadString(ref result.currentPlayerName_);
               break;
             }
-            case 50:
-            case 48: {
+            case 58:
+            case 56: {
               input.ReadUInt64Array(tag, field_name, result.memberPlayerDbIdIgnoreList_);
               break;
             }
-            case 56: {
-              result.hasIsOnline = input.ReadInt32(ref result.isOnline_);
-              break;
-            }
             case 64: {
-              result.hasLastLogoutTimeAsFileTimeUtc = input.ReadInt64(ref result.lastLogoutTimeAsFileTimeUtc_);
+              result.hasCurrentPrestigeLevel = input.ReadUInt64(ref result.currentPrestigeLevel_);
               break;
             }
             case 72: {
-              result.hasCurrentCostumeRefId = input.ReadUInt64(ref result.currentCostumeRefId_);
+              result.hasIsOnline = input.ReadInt32(ref result.isOnline_);
               break;
             }
             case 80: {
-              result.hasConsoleAccountId = input.ReadUInt64(ref result.consoleAccountId_);
+              result.hasLastLogoutTimeAsFileTimeUtc = input.ReadInt64(ref result.lastLogoutTimeAsFileTimeUtc_);
               break;
             }
             case 88: {
-              result.hasSecondaryConsoleAccountId = input.ReadUInt64(ref result.secondaryConsoleAccountId_);
-              break;
-            }
-            case 98: {
-              result.hasSecondaryPlayerName = input.ReadString(ref result.secondaryPlayerName_);
+              result.hasCurrentCostumeRefId = input.ReadUInt64(ref result.currentCostumeRefId_);
               break;
             }
           }
@@ -10962,67 +10572,63 @@ namespace Gazillion {
         return this;
       }
       
-      public bool HasCurrentDifficultyRefId {
-        get { return result.hasCurrentDifficultyRefId; }
+      public bool HasCurrentAvatarRefId {
+        get { return result.hasCurrentAvatarRefId; }
       }
-      public ulong CurrentDifficultyRefId {
-        get { return result.CurrentDifficultyRefId; }
-        set { SetCurrentDifficultyRefId(value); }
+      public ulong CurrentAvatarRefId {
+        get { return result.CurrentAvatarRefId; }
+        set { SetCurrentAvatarRefId(value); }
       }
-      public Builder SetCurrentDifficultyRefId(ulong value) {
+      public Builder SetCurrentAvatarRefId(ulong value) {
         PrepareBuilder();
-        result.hasCurrentDifficultyRefId = true;
-        result.currentDifficultyRefId_ = value;
+        result.hasCurrentAvatarRefId = true;
+        result.currentAvatarRefId_ = value;
         return this;
       }
-      public Builder ClearCurrentDifficultyRefId() {
+      public Builder ClearCurrentAvatarRefId() {
         PrepareBuilder();
-        result.hasCurrentDifficultyRefId = false;
-        result.currentDifficultyRefId_ = 0UL;
+        result.hasCurrentAvatarRefId = false;
+        result.currentAvatarRefId_ = 123UL;
         return this;
       }
       
-      public pbc::IPopsicleList<global::Gazillion.CommunityMemberAvatarSlot> SlotsList {
-        get { return PrepareBuilder().slots_; }
+      public bool HasCurrentCharacterLevel {
+        get { return result.hasCurrentCharacterLevel; }
       }
-      public int SlotsCount {
-        get { return result.SlotsCount; }
+      public ulong CurrentCharacterLevel {
+        get { return result.CurrentCharacterLevel; }
+        set { SetCurrentCharacterLevel(value); }
       }
-      public global::Gazillion.CommunityMemberAvatarSlot GetSlots(int index) {
-        return result.GetSlots(index);
-      }
-      public Builder SetSlots(int index, global::Gazillion.CommunityMemberAvatarSlot value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
+      public Builder SetCurrentCharacterLevel(ulong value) {
         PrepareBuilder();
-        result.slots_[index] = value;
+        result.hasCurrentCharacterLevel = true;
+        result.currentCharacterLevel_ = value;
         return this;
       }
-      public Builder SetSlots(int index, global::Gazillion.CommunityMemberAvatarSlot.Builder builderForValue) {
-        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+      public Builder ClearCurrentCharacterLevel() {
         PrepareBuilder();
-        result.slots_[index] = builderForValue.Build();
+        result.hasCurrentCharacterLevel = false;
+        result.currentCharacterLevel_ = 0UL;
         return this;
       }
-      public Builder AddSlots(global::Gazillion.CommunityMemberAvatarSlot value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
+      
+      public bool HasCurrentPvpFactionRefId {
+        get { return result.hasCurrentPvpFactionRefId; }
+      }
+      public ulong CurrentPvpFactionRefId {
+        get { return result.CurrentPvpFactionRefId; }
+        set { SetCurrentPvpFactionRefId(value); }
+      }
+      public Builder SetCurrentPvpFactionRefId(ulong value) {
         PrepareBuilder();
-        result.slots_.Add(value);
+        result.hasCurrentPvpFactionRefId = true;
+        result.currentPvpFactionRefId_ = value;
         return this;
       }
-      public Builder AddSlots(global::Gazillion.CommunityMemberAvatarSlot.Builder builderForValue) {
-        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+      public Builder ClearCurrentPvpFactionRefId() {
         PrepareBuilder();
-        result.slots_.Add(builderForValue.Build());
-        return this;
-      }
-      public Builder AddRangeSlots(scg::IEnumerable<global::Gazillion.CommunityMemberAvatarSlot> values) {
-        PrepareBuilder();
-        result.slots_.Add(values);
-        return this;
-      }
-      public Builder ClearSlots() {
-        PrepareBuilder();
-        result.slots_.Clear();
+        result.hasCurrentPvpFactionRefId = false;
+        result.currentPvpFactionRefId_ = 123UL;
         return this;
       }
       
@@ -11074,6 +10680,26 @@ namespace Gazillion {
       public Builder ClearMemberPlayerDbIdIgnoreList() {
         PrepareBuilder();
         result.memberPlayerDbIdIgnoreList_.Clear();
+        return this;
+      }
+      
+      public bool HasCurrentPrestigeLevel {
+        get { return result.hasCurrentPrestigeLevel; }
+      }
+      public ulong CurrentPrestigeLevel {
+        get { return result.CurrentPrestigeLevel; }
+        set { SetCurrentPrestigeLevel(value); }
+      }
+      public Builder SetCurrentPrestigeLevel(ulong value) {
+        PrepareBuilder();
+        result.hasCurrentPrestigeLevel = true;
+        result.currentPrestigeLevel_ = value;
+        return this;
+      }
+      public Builder ClearCurrentPrestigeLevel() {
+        PrepareBuilder();
+        result.hasCurrentPrestigeLevel = false;
+        result.currentPrestigeLevel_ = 0UL;
         return this;
       }
       
@@ -11134,67 +10760,6 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasCurrentCostumeRefId = false;
         result.currentCostumeRefId_ = 123UL;
-        return this;
-      }
-      
-      public bool HasConsoleAccountId {
-        get { return result.hasConsoleAccountId; }
-      }
-      public ulong ConsoleAccountId {
-        get { return result.ConsoleAccountId; }
-        set { SetConsoleAccountId(value); }
-      }
-      public Builder SetConsoleAccountId(ulong value) {
-        PrepareBuilder();
-        result.hasConsoleAccountId = true;
-        result.consoleAccountId_ = value;
-        return this;
-      }
-      public Builder ClearConsoleAccountId() {
-        PrepareBuilder();
-        result.hasConsoleAccountId = false;
-        result.consoleAccountId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasSecondaryConsoleAccountId {
-        get { return result.hasSecondaryConsoleAccountId; }
-      }
-      public ulong SecondaryConsoleAccountId {
-        get { return result.SecondaryConsoleAccountId; }
-        set { SetSecondaryConsoleAccountId(value); }
-      }
-      public Builder SetSecondaryConsoleAccountId(ulong value) {
-        PrepareBuilder();
-        result.hasSecondaryConsoleAccountId = true;
-        result.secondaryConsoleAccountId_ = value;
-        return this;
-      }
-      public Builder ClearSecondaryConsoleAccountId() {
-        PrepareBuilder();
-        result.hasSecondaryConsoleAccountId = false;
-        result.secondaryConsoleAccountId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasSecondaryPlayerName {
-        get { return result.hasSecondaryPlayerName; }
-      }
-      public string SecondaryPlayerName {
-        get { return result.SecondaryPlayerName; }
-        set { SetSecondaryPlayerName(value); }
-      }
-      public Builder SetSecondaryPlayerName(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasSecondaryPlayerName = true;
-        result.secondaryPlayerName_ = value;
-        return this;
-      }
-      public Builder ClearSecondaryPlayerName() {
-        PrepareBuilder();
-        result.hasSecondaryPlayerName = false;
-        result.secondaryPlayerName_ = "";
         return this;
       }
     }
@@ -13297,14 +12862,14 @@ namespace Gazillion {
     }
     
     public const int OptionSettingsFieldNumber = 1;
-    private pbc::PopsicleList<ulong> optionSettings_ = new pbc::PopsicleList<ulong>();
-    public scg::IList<ulong> OptionSettingsList {
+    private pbc::PopsicleList<bool> optionSettings_ = new pbc::PopsicleList<bool>();
+    public scg::IList<bool> OptionSettingsList {
       get { return pbc::Lists.AsReadOnly(optionSettings_); }
     }
     public int OptionSettingsCount {
       get { return optionSettings_.Count; }
     }
-    public ulong GetOptionSettings(int index) {
+    public bool GetOptionSettings(int index) {
       return optionSettings_[index];
     }
     
@@ -13360,7 +12925,7 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _netStructGameplayOptionsFieldNames;
       if (optionSettings_.Count > 0) {
-        output.WriteUInt64Array(1, field_names[3], optionSettings_);
+        output.WriteBoolArray(1, field_names[3], optionSettings_);
       }
       if (chatChannelFiltersMap_.Count > 0) {
         output.WriteMessageArray(2, field_names[1], chatChannelFiltersMap_);
@@ -13390,9 +12955,7 @@ namespace Gazillion {
       size = 0;
       {
         int dataSize = 0;
-        foreach (ulong element in OptionSettingsList) {
-          dataSize += pb::CodedOutputStream.ComputeUInt64SizeNoTag(element);
-        }
+        dataSize = 1 * optionSettings_.Count;
         size += dataSize;
         size += 1 * optionSettings_.Count;
       }
@@ -13593,7 +13156,7 @@ namespace Gazillion {
             }
             case 10:
             case 8: {
-              input.ReadUInt64Array(tag, field_name, result.optionSettings_);
+              input.ReadBoolArray(tag, field_name, result.optionSettings_);
               break;
             }
             case 18: {
@@ -13619,26 +13182,26 @@ namespace Gazillion {
       }
       
       
-      public pbc::IPopsicleList<ulong> OptionSettingsList {
+      public pbc::IPopsicleList<bool> OptionSettingsList {
         get { return PrepareBuilder().optionSettings_; }
       }
       public int OptionSettingsCount {
         get { return result.OptionSettingsCount; }
       }
-      public ulong GetOptionSettings(int index) {
+      public bool GetOptionSettings(int index) {
         return result.GetOptionSettings(index);
       }
-      public Builder SetOptionSettings(int index, ulong value) {
+      public Builder SetOptionSettings(int index, bool value) {
         PrepareBuilder();
         result.optionSettings_[index] = value;
         return this;
       }
-      public Builder AddOptionSettings(ulong value) {
+      public Builder AddOptionSettings(bool value) {
         PrepareBuilder();
         result.optionSettings_.Add(value);
         return this;
       }
-      public Builder AddRangeOptionSettings(scg::IEnumerable<ulong> values) {
+      public Builder AddRangeOptionSettings(scg::IEnumerable<bool> values) {
         PrepareBuilder();
         result.optionSettings_.Add(values);
         return this;
@@ -14380,8 +13943,8 @@ namespace Gazillion {
   public sealed partial class BillingP2PGiftResult : pb::GeneratedMessage<BillingP2PGiftResult, BillingP2PGiftResult.Builder> {
     private BillingP2PGiftResult() { }
     private static readonly BillingP2PGiftResult defaultInstance = new BillingP2PGiftResult().MakeReadOnly();
-    private static readonly string[] _billingP2PGiftResultFieldNames = new string[] { "currentBalance", "didSucceed", "errorCode", "giftMessage", "numUnits", "sellableObjectId", "senderId", "skuId", "transactionId" };
-    private static readonly uint[] _billingP2PGiftResultFieldTags = new uint[] { 24, 16, 40, 58, 48, 74, 64, 32, 8 };
+    private static readonly string[] _billingP2PGiftResultFieldNames = new string[] { "currentBalance", "didSucceed", "errorCode", "giftMessage", "numUnits", "senderId", "skuId", "transactionId" };
+    private static readonly uint[] _billingP2PGiftResultFieldTags = new uint[] { 24, 16, 40, 58, 48, 64, 32, 8 };
     public static BillingP2PGiftResult DefaultInstance {
       get { return defaultInstance; }
     }
@@ -14482,16 +14045,6 @@ namespace Gazillion {
       get { return senderId_; }
     }
     
-    public const int SellableObjectIdFieldNumber = 9;
-    private bool hasSellableObjectId;
-    private string sellableObjectId_ = "";
-    public bool HasSellableObjectId {
-      get { return hasSellableObjectId; }
-    }
-    public string SellableObjectId {
-      get { return sellableObjectId_; }
-    }
-    
     public override bool IsInitialized {
       get {
         if (!hasTransactionId) return false;
@@ -14508,7 +14061,7 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _billingP2PGiftResultFieldNames;
       if (hasTransactionId) {
-        output.WriteUInt64(1, field_names[8], TransactionId);
+        output.WriteUInt64(1, field_names[7], TransactionId);
       }
       if (hasDidSucceed) {
         output.WriteBool(2, field_names[1], DidSucceed);
@@ -14517,7 +14070,7 @@ namespace Gazillion {
         output.WriteInt64(3, field_names[0], CurrentBalance);
       }
       if (hasSkuId) {
-        output.WriteUInt64(4, field_names[7], SkuId);
+        output.WriteUInt64(4, field_names[6], SkuId);
       }
       if (hasErrorCode) {
         output.WriteInt32(5, field_names[2], ErrorCode);
@@ -14529,10 +14082,7 @@ namespace Gazillion {
         output.WriteString(7, field_names[3], GiftMessage);
       }
       if (hasSenderId) {
-        output.WriteUInt64(8, field_names[6], SenderId);
-      }
-      if (hasSellableObjectId) {
-        output.WriteString(9, field_names[5], SellableObjectId);
+        output.WriteUInt64(8, field_names[5], SenderId);
       }
       UnknownFields.WriteTo(output);
     }
@@ -14574,9 +14124,6 @@ namespace Gazillion {
       }
       if (hasSenderId) {
         size += pb::CodedOutputStream.ComputeUInt64Size(8, SenderId);
-      }
-      if (hasSellableObjectId) {
-        size += pb::CodedOutputStream.ComputeStringSize(9, SellableObjectId);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -14724,9 +14271,6 @@ namespace Gazillion {
         if (other.HasSenderId) {
           SenderId = other.SenderId;
         }
-        if (other.HasSellableObjectId) {
-          SellableObjectId = other.SellableObjectId;
-        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -14800,10 +14344,6 @@ namespace Gazillion {
             }
             case 64: {
               result.hasSenderId = input.ReadUInt64(ref result.senderId_);
-              break;
-            }
-            case 74: {
-              result.hasSellableObjectId = input.ReadString(ref result.sellableObjectId_);
               break;
             }
           }
@@ -14974,27 +14514,6 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasSenderId = false;
         result.senderId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasSellableObjectId {
-        get { return result.hasSellableObjectId; }
-      }
-      public string SellableObjectId {
-        get { return result.SellableObjectId; }
-        set { SetSellableObjectId(value); }
-      }
-      public Builder SetSellableObjectId(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasSellableObjectId = true;
-        result.sellableObjectId_ = value;
-        return this;
-      }
-      public Builder ClearSellableObjectId() {
-        PrepareBuilder();
-        result.hasSellableObjectId = false;
-        result.sellableObjectId_ = "";
         return this;
       }
     }
@@ -19643,2102 +19162,6 @@ namespace Gazillion {
       }
     }
     static WorldViewEntry() {
-      object.ReferenceEquals(global::Gazillion.CommonMessages.Descriptor, null);
-    }
-  }
-  
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-  public sealed partial class PartyOperationPayload : pb::GeneratedMessage<PartyOperationPayload, PartyOperationPayload.Builder> {
-    private PartyOperationPayload() { }
-    private static readonly PartyOperationPayload defaultInstance = new PartyOperationPayload().MakeReadOnly();
-    private static readonly string[] _partyOperationPayloadFieldNames = new string[] { "difficultyTierProtoId", "operation", "psnSessionId", "requestingPlayerDbId", "requestingPlayerName", "requestingPlayerPsnAccountId", "targetPlayerDbId", "targetPlayerName" };
-    private static readonly uint[] _partyOperationPayloadFieldTags = new uint[] { 64, 48, 58, 8, 18, 24, 32, 42 };
-    public static PartyOperationPayload DefaultInstance {
-      get { return defaultInstance; }
-    }
-    
-    public override PartyOperationPayload DefaultInstanceForType {
-      get { return DefaultInstance; }
-    }
-    
-    protected override PartyOperationPayload ThisMessage {
-      get { return this; }
-    }
-    
-    public static pbd::MessageDescriptor Descriptor {
-      get { return global::Gazillion.CommonMessages.internal__static_Gazillion_PartyOperationPayload__Descriptor; }
-    }
-    
-    protected override pb::FieldAccess.FieldAccessorTable<PartyOperationPayload, PartyOperationPayload.Builder> InternalFieldAccessors {
-      get { return global::Gazillion.CommonMessages.internal__static_Gazillion_PartyOperationPayload__FieldAccessorTable; }
-    }
-    
-    public const int RequestingPlayerDbIdFieldNumber = 1;
-    private bool hasRequestingPlayerDbId;
-    private ulong requestingPlayerDbId_;
-    public bool HasRequestingPlayerDbId {
-      get { return hasRequestingPlayerDbId; }
-    }
-    public ulong RequestingPlayerDbId {
-      get { return requestingPlayerDbId_; }
-    }
-    
-    public const int RequestingPlayerNameFieldNumber = 2;
-    private bool hasRequestingPlayerName;
-    private string requestingPlayerName_ = "";
-    public bool HasRequestingPlayerName {
-      get { return hasRequestingPlayerName; }
-    }
-    public string RequestingPlayerName {
-      get { return requestingPlayerName_; }
-    }
-    
-    public const int RequestingPlayerPsnAccountIdFieldNumber = 3;
-    private bool hasRequestingPlayerPsnAccountId;
-    private ulong requestingPlayerPsnAccountId_;
-    public bool HasRequestingPlayerPsnAccountId {
-      get { return hasRequestingPlayerPsnAccountId; }
-    }
-    public ulong RequestingPlayerPsnAccountId {
-      get { return requestingPlayerPsnAccountId_; }
-    }
-    
-    public const int TargetPlayerDbIdFieldNumber = 4;
-    private bool hasTargetPlayerDbId;
-    private ulong targetPlayerDbId_;
-    public bool HasTargetPlayerDbId {
-      get { return hasTargetPlayerDbId; }
-    }
-    public ulong TargetPlayerDbId {
-      get { return targetPlayerDbId_; }
-    }
-    
-    public const int TargetPlayerNameFieldNumber = 5;
-    private bool hasTargetPlayerName;
-    private string targetPlayerName_ = "";
-    public bool HasTargetPlayerName {
-      get { return hasTargetPlayerName; }
-    }
-    public string TargetPlayerName {
-      get { return targetPlayerName_; }
-    }
-    
-    public const int OperationFieldNumber = 6;
-    private bool hasOperation;
-    private global::Gazillion.GroupingOperationType operation_ = global::Gazillion.GroupingOperationType.eGOP_InvitePlayer;
-    public bool HasOperation {
-      get { return hasOperation; }
-    }
-    public global::Gazillion.GroupingOperationType Operation {
-      get { return operation_; }
-    }
-    
-    public const int PsnSessionIdFieldNumber = 7;
-    private bool hasPsnSessionId;
-    private string psnSessionId_ = "";
-    public bool HasPsnSessionId {
-      get { return hasPsnSessionId; }
-    }
-    public string PsnSessionId {
-      get { return psnSessionId_; }
-    }
-    
-    public const int DifficultyTierProtoIdFieldNumber = 8;
-    private bool hasDifficultyTierProtoId;
-    private ulong difficultyTierProtoId_;
-    public bool HasDifficultyTierProtoId {
-      get { return hasDifficultyTierProtoId; }
-    }
-    public ulong DifficultyTierProtoId {
-      get { return difficultyTierProtoId_; }
-    }
-    
-    public override bool IsInitialized {
-      get {
-        if (!hasRequestingPlayerDbId) return false;
-        if (!hasRequestingPlayerName) return false;
-        if (!hasOperation) return false;
-        return true;
-      }
-    }
-    
-    public override void WriteTo(pb::ICodedOutputStream output) {
-      CalcSerializedSize();
-      string[] field_names = _partyOperationPayloadFieldNames;
-      if (hasRequestingPlayerDbId) {
-        output.WriteUInt64(1, field_names[3], RequestingPlayerDbId);
-      }
-      if (hasRequestingPlayerName) {
-        output.WriteString(2, field_names[4], RequestingPlayerName);
-      }
-      if (hasRequestingPlayerPsnAccountId) {
-        output.WriteUInt64(3, field_names[5], RequestingPlayerPsnAccountId);
-      }
-      if (hasTargetPlayerDbId) {
-        output.WriteUInt64(4, field_names[6], TargetPlayerDbId);
-      }
-      if (hasTargetPlayerName) {
-        output.WriteString(5, field_names[7], TargetPlayerName);
-      }
-      if (hasOperation) {
-        output.WriteEnum(6, field_names[1], (int) Operation, Operation);
-      }
-      if (hasPsnSessionId) {
-        output.WriteString(7, field_names[2], PsnSessionId);
-      }
-      if (hasDifficultyTierProtoId) {
-        output.WriteUInt64(8, field_names[0], DifficultyTierProtoId);
-      }
-      UnknownFields.WriteTo(output);
-    }
-    
-    private int memoizedSerializedSize = -1;
-    public override int SerializedSize {
-      get {
-        int size = memoizedSerializedSize;
-        if (size != -1) return size;
-        return CalcSerializedSize();
-      }
-    }
-    
-    private int CalcSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-      
-      size = 0;
-      if (hasRequestingPlayerDbId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(1, RequestingPlayerDbId);
-      }
-      if (hasRequestingPlayerName) {
-        size += pb::CodedOutputStream.ComputeStringSize(2, RequestingPlayerName);
-      }
-      if (hasRequestingPlayerPsnAccountId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(3, RequestingPlayerPsnAccountId);
-      }
-      if (hasTargetPlayerDbId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(4, TargetPlayerDbId);
-      }
-      if (hasTargetPlayerName) {
-        size += pb::CodedOutputStream.ComputeStringSize(5, TargetPlayerName);
-      }
-      if (hasOperation) {
-        size += pb::CodedOutputStream.ComputeEnumSize(6, (int) Operation);
-      }
-      if (hasPsnSessionId) {
-        size += pb::CodedOutputStream.ComputeStringSize(7, PsnSessionId);
-      }
-      if (hasDifficultyTierProtoId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(8, DifficultyTierProtoId);
-      }
-      size += UnknownFields.SerializedSize;
-      memoizedSerializedSize = size;
-      return size;
-    }
-    public static PartyOperationPayload ParseFrom(pb::ByteString data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static PartyOperationPayload ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static PartyOperationPayload ParseFrom(byte[] data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static PartyOperationPayload ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static PartyOperationPayload ParseFrom(global::System.IO.Stream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static PartyOperationPayload ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    public static PartyOperationPayload ParseDelimitedFrom(global::System.IO.Stream input) {
-      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
-    }
-    public static PartyOperationPayload ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
-    }
-    public static PartyOperationPayload ParseFrom(pb::ICodedInputStream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static PartyOperationPayload ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    private PartyOperationPayload MakeReadOnly() {
-      return this;
-    }
-    
-    public static Builder CreateBuilder() { return new Builder(); }
-    public override Builder ToBuilder() { return CreateBuilder(this); }
-    public override Builder CreateBuilderForType() { return new Builder(); }
-    public static Builder CreateBuilder(PartyOperationPayload prototype) {
-      return new Builder(prototype);
-    }
-    
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-    public sealed partial class Builder : pb::GeneratedBuilder<PartyOperationPayload, Builder> {
-      protected override Builder ThisBuilder {
-        get { return this; }
-      }
-      public Builder() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-      }
-      internal Builder(PartyOperationPayload cloneFrom) {
-        result = cloneFrom;
-        resultIsReadOnly = true;
-      }
-      
-      private bool resultIsReadOnly;
-      private PartyOperationPayload result;
-      
-      private PartyOperationPayload PrepareBuilder() {
-        if (resultIsReadOnly) {
-          PartyOperationPayload original = result;
-          result = new PartyOperationPayload();
-          resultIsReadOnly = false;
-          MergeFrom(original);
-        }
-        return result;
-      }
-      
-      public override bool IsInitialized {
-        get { return result.IsInitialized; }
-      }
-      
-      protected override PartyOperationPayload MessageBeingBuilt {
-        get { return PrepareBuilder(); }
-      }
-      
-      public override Builder Clear() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-        return this;
-      }
-      
-      public override Builder Clone() {
-        if (resultIsReadOnly) {
-          return new Builder(result);
-        } else {
-          return new Builder().MergeFrom(result);
-        }
-      }
-      
-      public override pbd::MessageDescriptor DescriptorForType {
-        get { return global::Gazillion.PartyOperationPayload.Descriptor; }
-      }
-      
-      public override PartyOperationPayload DefaultInstanceForType {
-        get { return global::Gazillion.PartyOperationPayload.DefaultInstance; }
-      }
-      
-      public override PartyOperationPayload BuildPartial() {
-        if (resultIsReadOnly) {
-          return result;
-        }
-        resultIsReadOnly = true;
-        return result.MakeReadOnly();
-      }
-      
-      public override Builder MergeFrom(pb::IMessage other) {
-        if (other is PartyOperationPayload) {
-          return MergeFrom((PartyOperationPayload) other);
-        } else {
-          base.MergeFrom(other);
-          return this;
-        }
-      }
-      
-      public override Builder MergeFrom(PartyOperationPayload other) {
-        if (other == global::Gazillion.PartyOperationPayload.DefaultInstance) return this;
-        PrepareBuilder();
-        if (other.HasRequestingPlayerDbId) {
-          RequestingPlayerDbId = other.RequestingPlayerDbId;
-        }
-        if (other.HasRequestingPlayerName) {
-          RequestingPlayerName = other.RequestingPlayerName;
-        }
-        if (other.HasRequestingPlayerPsnAccountId) {
-          RequestingPlayerPsnAccountId = other.RequestingPlayerPsnAccountId;
-        }
-        if (other.HasTargetPlayerDbId) {
-          TargetPlayerDbId = other.TargetPlayerDbId;
-        }
-        if (other.HasTargetPlayerName) {
-          TargetPlayerName = other.TargetPlayerName;
-        }
-        if (other.HasOperation) {
-          Operation = other.Operation;
-        }
-        if (other.HasPsnSessionId) {
-          PsnSessionId = other.PsnSessionId;
-        }
-        if (other.HasDifficultyTierProtoId) {
-          DifficultyTierProtoId = other.DifficultyTierProtoId;
-        }
-        this.MergeUnknownFields(other.UnknownFields);
-        return this;
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input) {
-        return MergeFrom(input, pb::ExtensionRegistry.Empty);
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-        PrepareBuilder();
-        pb::UnknownFieldSet.Builder unknownFields = null;
-        uint tag;
-        string field_name;
-        while (input.ReadTag(out tag, out field_name)) {
-          if(tag == 0 && field_name != null) {
-            int field_ordinal = global::System.Array.BinarySearch(_partyOperationPayloadFieldNames, field_name, global::System.StringComparer.Ordinal);
-            if(field_ordinal >= 0)
-              tag = _partyOperationPayloadFieldTags[field_ordinal];
-            else {
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              continue;
-            }
-          }
-          switch (tag) {
-            case 0: {
-              throw pb::InvalidProtocolBufferException.InvalidTag();
-            }
-            default: {
-              if (pb::WireFormat.IsEndGroupTag(tag)) {
-                if (unknownFields != null) {
-                  this.UnknownFields = unknownFields.Build();
-                }
-                return this;
-              }
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              break;
-            }
-            case 8: {
-              result.hasRequestingPlayerDbId = input.ReadUInt64(ref result.requestingPlayerDbId_);
-              break;
-            }
-            case 18: {
-              result.hasRequestingPlayerName = input.ReadString(ref result.requestingPlayerName_);
-              break;
-            }
-            case 24: {
-              result.hasRequestingPlayerPsnAccountId = input.ReadUInt64(ref result.requestingPlayerPsnAccountId_);
-              break;
-            }
-            case 32: {
-              result.hasTargetPlayerDbId = input.ReadUInt64(ref result.targetPlayerDbId_);
-              break;
-            }
-            case 42: {
-              result.hasTargetPlayerName = input.ReadString(ref result.targetPlayerName_);
-              break;
-            }
-            case 48: {
-              object unknown;
-              if(input.ReadEnum(ref result.operation_, out unknown)) {
-                result.hasOperation = true;
-              } else if(unknown is int) {
-                if (unknownFields == null) {
-                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-                }
-                unknownFields.MergeVarintField(6, (ulong)(int)unknown);
-              }
-              break;
-            }
-            case 58: {
-              result.hasPsnSessionId = input.ReadString(ref result.psnSessionId_);
-              break;
-            }
-            case 64: {
-              result.hasDifficultyTierProtoId = input.ReadUInt64(ref result.difficultyTierProtoId_);
-              break;
-            }
-          }
-        }
-        
-        if (unknownFields != null) {
-          this.UnknownFields = unknownFields.Build();
-        }
-        return this;
-      }
-      
-      
-      public bool HasRequestingPlayerDbId {
-        get { return result.hasRequestingPlayerDbId; }
-      }
-      public ulong RequestingPlayerDbId {
-        get { return result.RequestingPlayerDbId; }
-        set { SetRequestingPlayerDbId(value); }
-      }
-      public Builder SetRequestingPlayerDbId(ulong value) {
-        PrepareBuilder();
-        result.hasRequestingPlayerDbId = true;
-        result.requestingPlayerDbId_ = value;
-        return this;
-      }
-      public Builder ClearRequestingPlayerDbId() {
-        PrepareBuilder();
-        result.hasRequestingPlayerDbId = false;
-        result.requestingPlayerDbId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasRequestingPlayerName {
-        get { return result.hasRequestingPlayerName; }
-      }
-      public string RequestingPlayerName {
-        get { return result.RequestingPlayerName; }
-        set { SetRequestingPlayerName(value); }
-      }
-      public Builder SetRequestingPlayerName(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasRequestingPlayerName = true;
-        result.requestingPlayerName_ = value;
-        return this;
-      }
-      public Builder ClearRequestingPlayerName() {
-        PrepareBuilder();
-        result.hasRequestingPlayerName = false;
-        result.requestingPlayerName_ = "";
-        return this;
-      }
-      
-      public bool HasRequestingPlayerPsnAccountId {
-        get { return result.hasRequestingPlayerPsnAccountId; }
-      }
-      public ulong RequestingPlayerPsnAccountId {
-        get { return result.RequestingPlayerPsnAccountId; }
-        set { SetRequestingPlayerPsnAccountId(value); }
-      }
-      public Builder SetRequestingPlayerPsnAccountId(ulong value) {
-        PrepareBuilder();
-        result.hasRequestingPlayerPsnAccountId = true;
-        result.requestingPlayerPsnAccountId_ = value;
-        return this;
-      }
-      public Builder ClearRequestingPlayerPsnAccountId() {
-        PrepareBuilder();
-        result.hasRequestingPlayerPsnAccountId = false;
-        result.requestingPlayerPsnAccountId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasTargetPlayerDbId {
-        get { return result.hasTargetPlayerDbId; }
-      }
-      public ulong TargetPlayerDbId {
-        get { return result.TargetPlayerDbId; }
-        set { SetTargetPlayerDbId(value); }
-      }
-      public Builder SetTargetPlayerDbId(ulong value) {
-        PrepareBuilder();
-        result.hasTargetPlayerDbId = true;
-        result.targetPlayerDbId_ = value;
-        return this;
-      }
-      public Builder ClearTargetPlayerDbId() {
-        PrepareBuilder();
-        result.hasTargetPlayerDbId = false;
-        result.targetPlayerDbId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasTargetPlayerName {
-        get { return result.hasTargetPlayerName; }
-      }
-      public string TargetPlayerName {
-        get { return result.TargetPlayerName; }
-        set { SetTargetPlayerName(value); }
-      }
-      public Builder SetTargetPlayerName(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasTargetPlayerName = true;
-        result.targetPlayerName_ = value;
-        return this;
-      }
-      public Builder ClearTargetPlayerName() {
-        PrepareBuilder();
-        result.hasTargetPlayerName = false;
-        result.targetPlayerName_ = "";
-        return this;
-      }
-      
-      public bool HasOperation {
-       get { return result.hasOperation; }
-      }
-      public global::Gazillion.GroupingOperationType Operation {
-        get { return result.Operation; }
-        set { SetOperation(value); }
-      }
-      public Builder SetOperation(global::Gazillion.GroupingOperationType value) {
-        PrepareBuilder();
-        result.hasOperation = true;
-        result.operation_ = value;
-        return this;
-      }
-      public Builder ClearOperation() {
-        PrepareBuilder();
-        result.hasOperation = false;
-        result.operation_ = global::Gazillion.GroupingOperationType.eGOP_InvitePlayer;
-        return this;
-      }
-      
-      public bool HasPsnSessionId {
-        get { return result.hasPsnSessionId; }
-      }
-      public string PsnSessionId {
-        get { return result.PsnSessionId; }
-        set { SetPsnSessionId(value); }
-      }
-      public Builder SetPsnSessionId(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasPsnSessionId = true;
-        result.psnSessionId_ = value;
-        return this;
-      }
-      public Builder ClearPsnSessionId() {
-        PrepareBuilder();
-        result.hasPsnSessionId = false;
-        result.psnSessionId_ = "";
-        return this;
-      }
-      
-      public bool HasDifficultyTierProtoId {
-        get { return result.hasDifficultyTierProtoId; }
-      }
-      public ulong DifficultyTierProtoId {
-        get { return result.DifficultyTierProtoId; }
-        set { SetDifficultyTierProtoId(value); }
-      }
-      public Builder SetDifficultyTierProtoId(ulong value) {
-        PrepareBuilder();
-        result.hasDifficultyTierProtoId = true;
-        result.difficultyTierProtoId_ = value;
-        return this;
-      }
-      public Builder ClearDifficultyTierProtoId() {
-        PrepareBuilder();
-        result.hasDifficultyTierProtoId = false;
-        result.difficultyTierProtoId_ = 0UL;
-        return this;
-      }
-    }
-    static PartyOperationPayload() {
-      object.ReferenceEquals(global::Gazillion.CommonMessages.Descriptor, null);
-    }
-  }
-  
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-  public sealed partial class PartyMemberInfo : pb::GeneratedMessage<PartyMemberInfo, PartyMemberInfo.Builder> {
-    private PartyMemberInfo() { }
-    private static readonly PartyMemberInfo defaultInstance = new PartyMemberInfo().MakeReadOnly();
-    private static readonly string[] _partyMemberInfoFieldNames = new string[] { "boosts", "consoleAccountId", "playerDbId", "playerName", "secondaryConsoleAccountId", "secondaryPlayerName" };
-    private static readonly uint[] _partyMemberInfoFieldTags = new uint[] { 24, 32, 8, 18, 40, 50 };
-    public static PartyMemberInfo DefaultInstance {
-      get { return defaultInstance; }
-    }
-    
-    public override PartyMemberInfo DefaultInstanceForType {
-      get { return DefaultInstance; }
-    }
-    
-    protected override PartyMemberInfo ThisMessage {
-      get { return this; }
-    }
-    
-    public static pbd::MessageDescriptor Descriptor {
-      get { return global::Gazillion.CommonMessages.internal__static_Gazillion_PartyMemberInfo__Descriptor; }
-    }
-    
-    protected override pb::FieldAccess.FieldAccessorTable<PartyMemberInfo, PartyMemberInfo.Builder> InternalFieldAccessors {
-      get { return global::Gazillion.CommonMessages.internal__static_Gazillion_PartyMemberInfo__FieldAccessorTable; }
-    }
-    
-    public const int PlayerDbIdFieldNumber = 1;
-    private bool hasPlayerDbId;
-    private ulong playerDbId_;
-    public bool HasPlayerDbId {
-      get { return hasPlayerDbId; }
-    }
-    public ulong PlayerDbId {
-      get { return playerDbId_; }
-    }
-    
-    public const int PlayerNameFieldNumber = 2;
-    private bool hasPlayerName;
-    private string playerName_ = "";
-    public bool HasPlayerName {
-      get { return hasPlayerName; }
-    }
-    public string PlayerName {
-      get { return playerName_; }
-    }
-    
-    public const int BoostsFieldNumber = 3;
-    private pbc::PopsicleList<ulong> boosts_ = new pbc::PopsicleList<ulong>();
-    public scg::IList<ulong> BoostsList {
-      get { return pbc::Lists.AsReadOnly(boosts_); }
-    }
-    public int BoostsCount {
-      get { return boosts_.Count; }
-    }
-    public ulong GetBoosts(int index) {
-      return boosts_[index];
-    }
-    
-    public const int ConsoleAccountIdFieldNumber = 4;
-    private bool hasConsoleAccountId;
-    private ulong consoleAccountId_;
-    public bool HasConsoleAccountId {
-      get { return hasConsoleAccountId; }
-    }
-    public ulong ConsoleAccountId {
-      get { return consoleAccountId_; }
-    }
-    
-    public const int SecondaryConsoleAccountIdFieldNumber = 5;
-    private bool hasSecondaryConsoleAccountId;
-    private ulong secondaryConsoleAccountId_;
-    public bool HasSecondaryConsoleAccountId {
-      get { return hasSecondaryConsoleAccountId; }
-    }
-    public ulong SecondaryConsoleAccountId {
-      get { return secondaryConsoleAccountId_; }
-    }
-    
-    public const int SecondaryPlayerNameFieldNumber = 6;
-    private bool hasSecondaryPlayerName;
-    private string secondaryPlayerName_ = "";
-    public bool HasSecondaryPlayerName {
-      get { return hasSecondaryPlayerName; }
-    }
-    public string SecondaryPlayerName {
-      get { return secondaryPlayerName_; }
-    }
-    
-    public override bool IsInitialized {
-      get {
-        if (!hasPlayerDbId) return false;
-        if (!hasPlayerName) return false;
-        return true;
-      }
-    }
-    
-    public override void WriteTo(pb::ICodedOutputStream output) {
-      CalcSerializedSize();
-      string[] field_names = _partyMemberInfoFieldNames;
-      if (hasPlayerDbId) {
-        output.WriteUInt64(1, field_names[2], PlayerDbId);
-      }
-      if (hasPlayerName) {
-        output.WriteString(2, field_names[3], PlayerName);
-      }
-      if (boosts_.Count > 0) {
-        output.WriteUInt64Array(3, field_names[0], boosts_);
-      }
-      if (hasConsoleAccountId) {
-        output.WriteUInt64(4, field_names[1], ConsoleAccountId);
-      }
-      if (hasSecondaryConsoleAccountId) {
-        output.WriteUInt64(5, field_names[4], SecondaryConsoleAccountId);
-      }
-      if (hasSecondaryPlayerName) {
-        output.WriteString(6, field_names[5], SecondaryPlayerName);
-      }
-      UnknownFields.WriteTo(output);
-    }
-    
-    private int memoizedSerializedSize = -1;
-    public override int SerializedSize {
-      get {
-        int size = memoizedSerializedSize;
-        if (size != -1) return size;
-        return CalcSerializedSize();
-      }
-    }
-    
-    private int CalcSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-      
-      size = 0;
-      if (hasPlayerDbId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(1, PlayerDbId);
-      }
-      if (hasPlayerName) {
-        size += pb::CodedOutputStream.ComputeStringSize(2, PlayerName);
-      }
-      {
-        int dataSize = 0;
-        foreach (ulong element in BoostsList) {
-          dataSize += pb::CodedOutputStream.ComputeUInt64SizeNoTag(element);
-        }
-        size += dataSize;
-        size += 1 * boosts_.Count;
-      }
-      if (hasConsoleAccountId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(4, ConsoleAccountId);
-      }
-      if (hasSecondaryConsoleAccountId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(5, SecondaryConsoleAccountId);
-      }
-      if (hasSecondaryPlayerName) {
-        size += pb::CodedOutputStream.ComputeStringSize(6, SecondaryPlayerName);
-      }
-      size += UnknownFields.SerializedSize;
-      memoizedSerializedSize = size;
-      return size;
-    }
-    public static PartyMemberInfo ParseFrom(pb::ByteString data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static PartyMemberInfo ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static PartyMemberInfo ParseFrom(byte[] data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static PartyMemberInfo ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static PartyMemberInfo ParseFrom(global::System.IO.Stream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static PartyMemberInfo ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    public static PartyMemberInfo ParseDelimitedFrom(global::System.IO.Stream input) {
-      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
-    }
-    public static PartyMemberInfo ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
-    }
-    public static PartyMemberInfo ParseFrom(pb::ICodedInputStream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static PartyMemberInfo ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    private PartyMemberInfo MakeReadOnly() {
-      boosts_.MakeReadOnly();
-      return this;
-    }
-    
-    public static Builder CreateBuilder() { return new Builder(); }
-    public override Builder ToBuilder() { return CreateBuilder(this); }
-    public override Builder CreateBuilderForType() { return new Builder(); }
-    public static Builder CreateBuilder(PartyMemberInfo prototype) {
-      return new Builder(prototype);
-    }
-    
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-    public sealed partial class Builder : pb::GeneratedBuilder<PartyMemberInfo, Builder> {
-      protected override Builder ThisBuilder {
-        get { return this; }
-      }
-      public Builder() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-      }
-      internal Builder(PartyMemberInfo cloneFrom) {
-        result = cloneFrom;
-        resultIsReadOnly = true;
-      }
-      
-      private bool resultIsReadOnly;
-      private PartyMemberInfo result;
-      
-      private PartyMemberInfo PrepareBuilder() {
-        if (resultIsReadOnly) {
-          PartyMemberInfo original = result;
-          result = new PartyMemberInfo();
-          resultIsReadOnly = false;
-          MergeFrom(original);
-        }
-        return result;
-      }
-      
-      public override bool IsInitialized {
-        get { return result.IsInitialized; }
-      }
-      
-      protected override PartyMemberInfo MessageBeingBuilt {
-        get { return PrepareBuilder(); }
-      }
-      
-      public override Builder Clear() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-        return this;
-      }
-      
-      public override Builder Clone() {
-        if (resultIsReadOnly) {
-          return new Builder(result);
-        } else {
-          return new Builder().MergeFrom(result);
-        }
-      }
-      
-      public override pbd::MessageDescriptor DescriptorForType {
-        get { return global::Gazillion.PartyMemberInfo.Descriptor; }
-      }
-      
-      public override PartyMemberInfo DefaultInstanceForType {
-        get { return global::Gazillion.PartyMemberInfo.DefaultInstance; }
-      }
-      
-      public override PartyMemberInfo BuildPartial() {
-        if (resultIsReadOnly) {
-          return result;
-        }
-        resultIsReadOnly = true;
-        return result.MakeReadOnly();
-      }
-      
-      public override Builder MergeFrom(pb::IMessage other) {
-        if (other is PartyMemberInfo) {
-          return MergeFrom((PartyMemberInfo) other);
-        } else {
-          base.MergeFrom(other);
-          return this;
-        }
-      }
-      
-      public override Builder MergeFrom(PartyMemberInfo other) {
-        if (other == global::Gazillion.PartyMemberInfo.DefaultInstance) return this;
-        PrepareBuilder();
-        if (other.HasPlayerDbId) {
-          PlayerDbId = other.PlayerDbId;
-        }
-        if (other.HasPlayerName) {
-          PlayerName = other.PlayerName;
-        }
-        if (other.boosts_.Count != 0) {
-          result.boosts_.Add(other.boosts_);
-        }
-        if (other.HasConsoleAccountId) {
-          ConsoleAccountId = other.ConsoleAccountId;
-        }
-        if (other.HasSecondaryConsoleAccountId) {
-          SecondaryConsoleAccountId = other.SecondaryConsoleAccountId;
-        }
-        if (other.HasSecondaryPlayerName) {
-          SecondaryPlayerName = other.SecondaryPlayerName;
-        }
-        this.MergeUnknownFields(other.UnknownFields);
-        return this;
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input) {
-        return MergeFrom(input, pb::ExtensionRegistry.Empty);
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-        PrepareBuilder();
-        pb::UnknownFieldSet.Builder unknownFields = null;
-        uint tag;
-        string field_name;
-        while (input.ReadTag(out tag, out field_name)) {
-          if(tag == 0 && field_name != null) {
-            int field_ordinal = global::System.Array.BinarySearch(_partyMemberInfoFieldNames, field_name, global::System.StringComparer.Ordinal);
-            if(field_ordinal >= 0)
-              tag = _partyMemberInfoFieldTags[field_ordinal];
-            else {
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              continue;
-            }
-          }
-          switch (tag) {
-            case 0: {
-              throw pb::InvalidProtocolBufferException.InvalidTag();
-            }
-            default: {
-              if (pb::WireFormat.IsEndGroupTag(tag)) {
-                if (unknownFields != null) {
-                  this.UnknownFields = unknownFields.Build();
-                }
-                return this;
-              }
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              break;
-            }
-            case 8: {
-              result.hasPlayerDbId = input.ReadUInt64(ref result.playerDbId_);
-              break;
-            }
-            case 18: {
-              result.hasPlayerName = input.ReadString(ref result.playerName_);
-              break;
-            }
-            case 26:
-            case 24: {
-              input.ReadUInt64Array(tag, field_name, result.boosts_);
-              break;
-            }
-            case 32: {
-              result.hasConsoleAccountId = input.ReadUInt64(ref result.consoleAccountId_);
-              break;
-            }
-            case 40: {
-              result.hasSecondaryConsoleAccountId = input.ReadUInt64(ref result.secondaryConsoleAccountId_);
-              break;
-            }
-            case 50: {
-              result.hasSecondaryPlayerName = input.ReadString(ref result.secondaryPlayerName_);
-              break;
-            }
-          }
-        }
-        
-        if (unknownFields != null) {
-          this.UnknownFields = unknownFields.Build();
-        }
-        return this;
-      }
-      
-      
-      public bool HasPlayerDbId {
-        get { return result.hasPlayerDbId; }
-      }
-      public ulong PlayerDbId {
-        get { return result.PlayerDbId; }
-        set { SetPlayerDbId(value); }
-      }
-      public Builder SetPlayerDbId(ulong value) {
-        PrepareBuilder();
-        result.hasPlayerDbId = true;
-        result.playerDbId_ = value;
-        return this;
-      }
-      public Builder ClearPlayerDbId() {
-        PrepareBuilder();
-        result.hasPlayerDbId = false;
-        result.playerDbId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasPlayerName {
-        get { return result.hasPlayerName; }
-      }
-      public string PlayerName {
-        get { return result.PlayerName; }
-        set { SetPlayerName(value); }
-      }
-      public Builder SetPlayerName(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasPlayerName = true;
-        result.playerName_ = value;
-        return this;
-      }
-      public Builder ClearPlayerName() {
-        PrepareBuilder();
-        result.hasPlayerName = false;
-        result.playerName_ = "";
-        return this;
-      }
-      
-      public pbc::IPopsicleList<ulong> BoostsList {
-        get { return PrepareBuilder().boosts_; }
-      }
-      public int BoostsCount {
-        get { return result.BoostsCount; }
-      }
-      public ulong GetBoosts(int index) {
-        return result.GetBoosts(index);
-      }
-      public Builder SetBoosts(int index, ulong value) {
-        PrepareBuilder();
-        result.boosts_[index] = value;
-        return this;
-      }
-      public Builder AddBoosts(ulong value) {
-        PrepareBuilder();
-        result.boosts_.Add(value);
-        return this;
-      }
-      public Builder AddRangeBoosts(scg::IEnumerable<ulong> values) {
-        PrepareBuilder();
-        result.boosts_.Add(values);
-        return this;
-      }
-      public Builder ClearBoosts() {
-        PrepareBuilder();
-        result.boosts_.Clear();
-        return this;
-      }
-      
-      public bool HasConsoleAccountId {
-        get { return result.hasConsoleAccountId; }
-      }
-      public ulong ConsoleAccountId {
-        get { return result.ConsoleAccountId; }
-        set { SetConsoleAccountId(value); }
-      }
-      public Builder SetConsoleAccountId(ulong value) {
-        PrepareBuilder();
-        result.hasConsoleAccountId = true;
-        result.consoleAccountId_ = value;
-        return this;
-      }
-      public Builder ClearConsoleAccountId() {
-        PrepareBuilder();
-        result.hasConsoleAccountId = false;
-        result.consoleAccountId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasSecondaryConsoleAccountId {
-        get { return result.hasSecondaryConsoleAccountId; }
-      }
-      public ulong SecondaryConsoleAccountId {
-        get { return result.SecondaryConsoleAccountId; }
-        set { SetSecondaryConsoleAccountId(value); }
-      }
-      public Builder SetSecondaryConsoleAccountId(ulong value) {
-        PrepareBuilder();
-        result.hasSecondaryConsoleAccountId = true;
-        result.secondaryConsoleAccountId_ = value;
-        return this;
-      }
-      public Builder ClearSecondaryConsoleAccountId() {
-        PrepareBuilder();
-        result.hasSecondaryConsoleAccountId = false;
-        result.secondaryConsoleAccountId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasSecondaryPlayerName {
-        get { return result.hasSecondaryPlayerName; }
-      }
-      public string SecondaryPlayerName {
-        get { return result.SecondaryPlayerName; }
-        set { SetSecondaryPlayerName(value); }
-      }
-      public Builder SetSecondaryPlayerName(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasSecondaryPlayerName = true;
-        result.secondaryPlayerName_ = value;
-        return this;
-      }
-      public Builder ClearSecondaryPlayerName() {
-        PrepareBuilder();
-        result.hasSecondaryPlayerName = false;
-        result.secondaryPlayerName_ = "";
-        return this;
-      }
-    }
-    static PartyMemberInfo() {
-      object.ReferenceEquals(global::Gazillion.CommonMessages.Descriptor, null);
-    }
-  }
-  
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-  public sealed partial class PartyInfo : pb::GeneratedMessage<PartyInfo, PartyInfo.Builder> {
-    private PartyInfo() { }
-    private static readonly PartyInfo defaultInstance = new PartyInfo().MakeReadOnly();
-    private static readonly string[] _partyInfoFieldNames = new string[] { "difficultyTierProtoId", "groupId", "groupPSNSessionId", "leaderDbId", "members", "type", "voiceChatFrontendIPAddr", "voiceChatFrontendPort" };
-    private static readonly uint[] _partyInfoFieldTags = new uint[] { 32, 8, 42, 24, 50, 16, 58, 66 };
-    public static PartyInfo DefaultInstance {
-      get { return defaultInstance; }
-    }
-    
-    public override PartyInfo DefaultInstanceForType {
-      get { return DefaultInstance; }
-    }
-    
-    protected override PartyInfo ThisMessage {
-      get { return this; }
-    }
-    
-    public static pbd::MessageDescriptor Descriptor {
-      get { return global::Gazillion.CommonMessages.internal__static_Gazillion_PartyInfo__Descriptor; }
-    }
-    
-    protected override pb::FieldAccess.FieldAccessorTable<PartyInfo, PartyInfo.Builder> InternalFieldAccessors {
-      get { return global::Gazillion.CommonMessages.internal__static_Gazillion_PartyInfo__FieldAccessorTable; }
-    }
-    
-    public const int GroupIdFieldNumber = 1;
-    private bool hasGroupId;
-    private ulong groupId_;
-    public bool HasGroupId {
-      get { return hasGroupId; }
-    }
-    public ulong GroupId {
-      get { return groupId_; }
-    }
-    
-    public const int TypeFieldNumber = 2;
-    private bool hasType;
-    private global::Gazillion.GroupType type_ = global::Gazillion.GroupType.GroupType_Invalid;
-    public bool HasType {
-      get { return hasType; }
-    }
-    public global::Gazillion.GroupType Type {
-      get { return type_; }
-    }
-    
-    public const int LeaderDbIdFieldNumber = 3;
-    private bool hasLeaderDbId;
-    private ulong leaderDbId_;
-    public bool HasLeaderDbId {
-      get { return hasLeaderDbId; }
-    }
-    public ulong LeaderDbId {
-      get { return leaderDbId_; }
-    }
-    
-    public const int DifficultyTierProtoIdFieldNumber = 4;
-    private bool hasDifficultyTierProtoId;
-    private ulong difficultyTierProtoId_;
-    public bool HasDifficultyTierProtoId {
-      get { return hasDifficultyTierProtoId; }
-    }
-    public ulong DifficultyTierProtoId {
-      get { return difficultyTierProtoId_; }
-    }
-    
-    public const int GroupPSNSessionIdFieldNumber = 5;
-    private bool hasGroupPSNSessionId;
-    private string groupPSNSessionId_ = "";
-    public bool HasGroupPSNSessionId {
-      get { return hasGroupPSNSessionId; }
-    }
-    public string GroupPSNSessionId {
-      get { return groupPSNSessionId_; }
-    }
-    
-    public const int MembersFieldNumber = 6;
-    private pbc::PopsicleList<global::Gazillion.PartyMemberInfo> members_ = new pbc::PopsicleList<global::Gazillion.PartyMemberInfo>();
-    public scg::IList<global::Gazillion.PartyMemberInfo> MembersList {
-      get { return members_; }
-    }
-    public int MembersCount {
-      get { return members_.Count; }
-    }
-    public global::Gazillion.PartyMemberInfo GetMembers(int index) {
-      return members_[index];
-    }
-    
-    public const int VoiceChatFrontendIPAddrFieldNumber = 7;
-    private bool hasVoiceChatFrontendIPAddr;
-    private string voiceChatFrontendIPAddr_ = "";
-    public bool HasVoiceChatFrontendIPAddr {
-      get { return hasVoiceChatFrontendIPAddr; }
-    }
-    public string VoiceChatFrontendIPAddr {
-      get { return voiceChatFrontendIPAddr_; }
-    }
-    
-    public const int VoiceChatFrontendPortFieldNumber = 8;
-    private bool hasVoiceChatFrontendPort;
-    private string voiceChatFrontendPort_ = "";
-    public bool HasVoiceChatFrontendPort {
-      get { return hasVoiceChatFrontendPort; }
-    }
-    public string VoiceChatFrontendPort {
-      get { return voiceChatFrontendPort_; }
-    }
-    
-    public override bool IsInitialized {
-      get {
-        if (!hasGroupId) return false;
-        if (!hasType) return false;
-        if (!hasLeaderDbId) return false;
-        if (!hasDifficultyTierProtoId) return false;
-        foreach (global::Gazillion.PartyMemberInfo element in MembersList) {
-          if (!element.IsInitialized) return false;
-        }
-        return true;
-      }
-    }
-    
-    public override void WriteTo(pb::ICodedOutputStream output) {
-      CalcSerializedSize();
-      string[] field_names = _partyInfoFieldNames;
-      if (hasGroupId) {
-        output.WriteUInt64(1, field_names[1], GroupId);
-      }
-      if (hasType) {
-        output.WriteEnum(2, field_names[5], (int) Type, Type);
-      }
-      if (hasLeaderDbId) {
-        output.WriteUInt64(3, field_names[3], LeaderDbId);
-      }
-      if (hasDifficultyTierProtoId) {
-        output.WriteUInt64(4, field_names[0], DifficultyTierProtoId);
-      }
-      if (hasGroupPSNSessionId) {
-        output.WriteString(5, field_names[2], GroupPSNSessionId);
-      }
-      if (members_.Count > 0) {
-        output.WriteMessageArray(6, field_names[4], members_);
-      }
-      if (hasVoiceChatFrontendIPAddr) {
-        output.WriteString(7, field_names[6], VoiceChatFrontendIPAddr);
-      }
-      if (hasVoiceChatFrontendPort) {
-        output.WriteString(8, field_names[7], VoiceChatFrontendPort);
-      }
-      UnknownFields.WriteTo(output);
-    }
-    
-    private int memoizedSerializedSize = -1;
-    public override int SerializedSize {
-      get {
-        int size = memoizedSerializedSize;
-        if (size != -1) return size;
-        return CalcSerializedSize();
-      }
-    }
-    
-    private int CalcSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-      
-      size = 0;
-      if (hasGroupId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(1, GroupId);
-      }
-      if (hasType) {
-        size += pb::CodedOutputStream.ComputeEnumSize(2, (int) Type);
-      }
-      if (hasLeaderDbId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(3, LeaderDbId);
-      }
-      if (hasDifficultyTierProtoId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(4, DifficultyTierProtoId);
-      }
-      if (hasGroupPSNSessionId) {
-        size += pb::CodedOutputStream.ComputeStringSize(5, GroupPSNSessionId);
-      }
-      foreach (global::Gazillion.PartyMemberInfo element in MembersList) {
-        size += pb::CodedOutputStream.ComputeMessageSize(6, element);
-      }
-      if (hasVoiceChatFrontendIPAddr) {
-        size += pb::CodedOutputStream.ComputeStringSize(7, VoiceChatFrontendIPAddr);
-      }
-      if (hasVoiceChatFrontendPort) {
-        size += pb::CodedOutputStream.ComputeStringSize(8, VoiceChatFrontendPort);
-      }
-      size += UnknownFields.SerializedSize;
-      memoizedSerializedSize = size;
-      return size;
-    }
-    public static PartyInfo ParseFrom(pb::ByteString data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static PartyInfo ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static PartyInfo ParseFrom(byte[] data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static PartyInfo ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static PartyInfo ParseFrom(global::System.IO.Stream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static PartyInfo ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    public static PartyInfo ParseDelimitedFrom(global::System.IO.Stream input) {
-      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
-    }
-    public static PartyInfo ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
-    }
-    public static PartyInfo ParseFrom(pb::ICodedInputStream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static PartyInfo ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    private PartyInfo MakeReadOnly() {
-      members_.MakeReadOnly();
-      return this;
-    }
-    
-    public static Builder CreateBuilder() { return new Builder(); }
-    public override Builder ToBuilder() { return CreateBuilder(this); }
-    public override Builder CreateBuilderForType() { return new Builder(); }
-    public static Builder CreateBuilder(PartyInfo prototype) {
-      return new Builder(prototype);
-    }
-    
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-    public sealed partial class Builder : pb::GeneratedBuilder<PartyInfo, Builder> {
-      protected override Builder ThisBuilder {
-        get { return this; }
-      }
-      public Builder() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-      }
-      internal Builder(PartyInfo cloneFrom) {
-        result = cloneFrom;
-        resultIsReadOnly = true;
-      }
-      
-      private bool resultIsReadOnly;
-      private PartyInfo result;
-      
-      private PartyInfo PrepareBuilder() {
-        if (resultIsReadOnly) {
-          PartyInfo original = result;
-          result = new PartyInfo();
-          resultIsReadOnly = false;
-          MergeFrom(original);
-        }
-        return result;
-      }
-      
-      public override bool IsInitialized {
-        get { return result.IsInitialized; }
-      }
-      
-      protected override PartyInfo MessageBeingBuilt {
-        get { return PrepareBuilder(); }
-      }
-      
-      public override Builder Clear() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-        return this;
-      }
-      
-      public override Builder Clone() {
-        if (resultIsReadOnly) {
-          return new Builder(result);
-        } else {
-          return new Builder().MergeFrom(result);
-        }
-      }
-      
-      public override pbd::MessageDescriptor DescriptorForType {
-        get { return global::Gazillion.PartyInfo.Descriptor; }
-      }
-      
-      public override PartyInfo DefaultInstanceForType {
-        get { return global::Gazillion.PartyInfo.DefaultInstance; }
-      }
-      
-      public override PartyInfo BuildPartial() {
-        if (resultIsReadOnly) {
-          return result;
-        }
-        resultIsReadOnly = true;
-        return result.MakeReadOnly();
-      }
-      
-      public override Builder MergeFrom(pb::IMessage other) {
-        if (other is PartyInfo) {
-          return MergeFrom((PartyInfo) other);
-        } else {
-          base.MergeFrom(other);
-          return this;
-        }
-      }
-      
-      public override Builder MergeFrom(PartyInfo other) {
-        if (other == global::Gazillion.PartyInfo.DefaultInstance) return this;
-        PrepareBuilder();
-        if (other.HasGroupId) {
-          GroupId = other.GroupId;
-        }
-        if (other.HasType) {
-          Type = other.Type;
-        }
-        if (other.HasLeaderDbId) {
-          LeaderDbId = other.LeaderDbId;
-        }
-        if (other.HasDifficultyTierProtoId) {
-          DifficultyTierProtoId = other.DifficultyTierProtoId;
-        }
-        if (other.HasGroupPSNSessionId) {
-          GroupPSNSessionId = other.GroupPSNSessionId;
-        }
-        if (other.members_.Count != 0) {
-          result.members_.Add(other.members_);
-        }
-        if (other.HasVoiceChatFrontendIPAddr) {
-          VoiceChatFrontendIPAddr = other.VoiceChatFrontendIPAddr;
-        }
-        if (other.HasVoiceChatFrontendPort) {
-          VoiceChatFrontendPort = other.VoiceChatFrontendPort;
-        }
-        this.MergeUnknownFields(other.UnknownFields);
-        return this;
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input) {
-        return MergeFrom(input, pb::ExtensionRegistry.Empty);
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-        PrepareBuilder();
-        pb::UnknownFieldSet.Builder unknownFields = null;
-        uint tag;
-        string field_name;
-        while (input.ReadTag(out tag, out field_name)) {
-          if(tag == 0 && field_name != null) {
-            int field_ordinal = global::System.Array.BinarySearch(_partyInfoFieldNames, field_name, global::System.StringComparer.Ordinal);
-            if(field_ordinal >= 0)
-              tag = _partyInfoFieldTags[field_ordinal];
-            else {
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              continue;
-            }
-          }
-          switch (tag) {
-            case 0: {
-              throw pb::InvalidProtocolBufferException.InvalidTag();
-            }
-            default: {
-              if (pb::WireFormat.IsEndGroupTag(tag)) {
-                if (unknownFields != null) {
-                  this.UnknownFields = unknownFields.Build();
-                }
-                return this;
-              }
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              break;
-            }
-            case 8: {
-              result.hasGroupId = input.ReadUInt64(ref result.groupId_);
-              break;
-            }
-            case 16: {
-              object unknown;
-              if(input.ReadEnum(ref result.type_, out unknown)) {
-                result.hasType = true;
-              } else if(unknown is int) {
-                if (unknownFields == null) {
-                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-                }
-                unknownFields.MergeVarintField(2, (ulong)(int)unknown);
-              }
-              break;
-            }
-            case 24: {
-              result.hasLeaderDbId = input.ReadUInt64(ref result.leaderDbId_);
-              break;
-            }
-            case 32: {
-              result.hasDifficultyTierProtoId = input.ReadUInt64(ref result.difficultyTierProtoId_);
-              break;
-            }
-            case 42: {
-              result.hasGroupPSNSessionId = input.ReadString(ref result.groupPSNSessionId_);
-              break;
-            }
-            case 50: {
-              input.ReadMessageArray(tag, field_name, result.members_, global::Gazillion.PartyMemberInfo.DefaultInstance, extensionRegistry);
-              break;
-            }
-            case 58: {
-              result.hasVoiceChatFrontendIPAddr = input.ReadString(ref result.voiceChatFrontendIPAddr_);
-              break;
-            }
-            case 66: {
-              result.hasVoiceChatFrontendPort = input.ReadString(ref result.voiceChatFrontendPort_);
-              break;
-            }
-          }
-        }
-        
-        if (unknownFields != null) {
-          this.UnknownFields = unknownFields.Build();
-        }
-        return this;
-      }
-      
-      
-      public bool HasGroupId {
-        get { return result.hasGroupId; }
-      }
-      public ulong GroupId {
-        get { return result.GroupId; }
-        set { SetGroupId(value); }
-      }
-      public Builder SetGroupId(ulong value) {
-        PrepareBuilder();
-        result.hasGroupId = true;
-        result.groupId_ = value;
-        return this;
-      }
-      public Builder ClearGroupId() {
-        PrepareBuilder();
-        result.hasGroupId = false;
-        result.groupId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasType {
-       get { return result.hasType; }
-      }
-      public global::Gazillion.GroupType Type {
-        get { return result.Type; }
-        set { SetType(value); }
-      }
-      public Builder SetType(global::Gazillion.GroupType value) {
-        PrepareBuilder();
-        result.hasType = true;
-        result.type_ = value;
-        return this;
-      }
-      public Builder ClearType() {
-        PrepareBuilder();
-        result.hasType = false;
-        result.type_ = global::Gazillion.GroupType.GroupType_Invalid;
-        return this;
-      }
-      
-      public bool HasLeaderDbId {
-        get { return result.hasLeaderDbId; }
-      }
-      public ulong LeaderDbId {
-        get { return result.LeaderDbId; }
-        set { SetLeaderDbId(value); }
-      }
-      public Builder SetLeaderDbId(ulong value) {
-        PrepareBuilder();
-        result.hasLeaderDbId = true;
-        result.leaderDbId_ = value;
-        return this;
-      }
-      public Builder ClearLeaderDbId() {
-        PrepareBuilder();
-        result.hasLeaderDbId = false;
-        result.leaderDbId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasDifficultyTierProtoId {
-        get { return result.hasDifficultyTierProtoId; }
-      }
-      public ulong DifficultyTierProtoId {
-        get { return result.DifficultyTierProtoId; }
-        set { SetDifficultyTierProtoId(value); }
-      }
-      public Builder SetDifficultyTierProtoId(ulong value) {
-        PrepareBuilder();
-        result.hasDifficultyTierProtoId = true;
-        result.difficultyTierProtoId_ = value;
-        return this;
-      }
-      public Builder ClearDifficultyTierProtoId() {
-        PrepareBuilder();
-        result.hasDifficultyTierProtoId = false;
-        result.difficultyTierProtoId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasGroupPSNSessionId {
-        get { return result.hasGroupPSNSessionId; }
-      }
-      public string GroupPSNSessionId {
-        get { return result.GroupPSNSessionId; }
-        set { SetGroupPSNSessionId(value); }
-      }
-      public Builder SetGroupPSNSessionId(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasGroupPSNSessionId = true;
-        result.groupPSNSessionId_ = value;
-        return this;
-      }
-      public Builder ClearGroupPSNSessionId() {
-        PrepareBuilder();
-        result.hasGroupPSNSessionId = false;
-        result.groupPSNSessionId_ = "";
-        return this;
-      }
-      
-      public pbc::IPopsicleList<global::Gazillion.PartyMemberInfo> MembersList {
-        get { return PrepareBuilder().members_; }
-      }
-      public int MembersCount {
-        get { return result.MembersCount; }
-      }
-      public global::Gazillion.PartyMemberInfo GetMembers(int index) {
-        return result.GetMembers(index);
-      }
-      public Builder SetMembers(int index, global::Gazillion.PartyMemberInfo value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.members_[index] = value;
-        return this;
-      }
-      public Builder SetMembers(int index, global::Gazillion.PartyMemberInfo.Builder builderForValue) {
-        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
-        PrepareBuilder();
-        result.members_[index] = builderForValue.Build();
-        return this;
-      }
-      public Builder AddMembers(global::Gazillion.PartyMemberInfo value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.members_.Add(value);
-        return this;
-      }
-      public Builder AddMembers(global::Gazillion.PartyMemberInfo.Builder builderForValue) {
-        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
-        PrepareBuilder();
-        result.members_.Add(builderForValue.Build());
-        return this;
-      }
-      public Builder AddRangeMembers(scg::IEnumerable<global::Gazillion.PartyMemberInfo> values) {
-        PrepareBuilder();
-        result.members_.Add(values);
-        return this;
-      }
-      public Builder ClearMembers() {
-        PrepareBuilder();
-        result.members_.Clear();
-        return this;
-      }
-      
-      public bool HasVoiceChatFrontendIPAddr {
-        get { return result.hasVoiceChatFrontendIPAddr; }
-      }
-      public string VoiceChatFrontendIPAddr {
-        get { return result.VoiceChatFrontendIPAddr; }
-        set { SetVoiceChatFrontendIPAddr(value); }
-      }
-      public Builder SetVoiceChatFrontendIPAddr(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasVoiceChatFrontendIPAddr = true;
-        result.voiceChatFrontendIPAddr_ = value;
-        return this;
-      }
-      public Builder ClearVoiceChatFrontendIPAddr() {
-        PrepareBuilder();
-        result.hasVoiceChatFrontendIPAddr = false;
-        result.voiceChatFrontendIPAddr_ = "";
-        return this;
-      }
-      
-      public bool HasVoiceChatFrontendPort {
-        get { return result.hasVoiceChatFrontendPort; }
-      }
-      public string VoiceChatFrontendPort {
-        get { return result.VoiceChatFrontendPort; }
-        set { SetVoiceChatFrontendPort(value); }
-      }
-      public Builder SetVoiceChatFrontendPort(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasVoiceChatFrontendPort = true;
-        result.voiceChatFrontendPort_ = value;
-        return this;
-      }
-      public Builder ClearVoiceChatFrontendPort() {
-        PrepareBuilder();
-        result.hasVoiceChatFrontendPort = false;
-        result.voiceChatFrontendPort_ = "";
-        return this;
-      }
-    }
-    static PartyInfo() {
-      object.ReferenceEquals(global::Gazillion.CommonMessages.Descriptor, null);
-    }
-  }
-  
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-  public sealed partial class PSNNotification : pb::GeneratedMessage<PSNNotification, PSNNotification.Builder> {
-    private PSNNotification() { }
-    private static readonly PSNNotification defaultInstance = new PSNNotification().MakeReadOnly();
-    private static readonly string[] _pSNNotificationFieldNames = new string[] { "psnSessionId", "requestingPlayerDbId", "type" };
-    private static readonly uint[] _pSNNotificationFieldTags = new uint[] { 26, 8, 16 };
-    public static PSNNotification DefaultInstance {
-      get { return defaultInstance; }
-    }
-    
-    public override PSNNotification DefaultInstanceForType {
-      get { return DefaultInstance; }
-    }
-    
-    protected override PSNNotification ThisMessage {
-      get { return this; }
-    }
-    
-    public static pbd::MessageDescriptor Descriptor {
-      get { return global::Gazillion.CommonMessages.internal__static_Gazillion_PSNNotification__Descriptor; }
-    }
-    
-    protected override pb::FieldAccess.FieldAccessorTable<PSNNotification, PSNNotification.Builder> InternalFieldAccessors {
-      get { return global::Gazillion.CommonMessages.internal__static_Gazillion_PSNNotification__FieldAccessorTable; }
-    }
-    
-    public const int RequestingPlayerDbIdFieldNumber = 1;
-    private bool hasRequestingPlayerDbId;
-    private ulong requestingPlayerDbId_;
-    public bool HasRequestingPlayerDbId {
-      get { return hasRequestingPlayerDbId; }
-    }
-    public ulong RequestingPlayerDbId {
-      get { return requestingPlayerDbId_; }
-    }
-    
-    public const int TypeFieldNumber = 2;
-    private bool hasType;
-    private global::Gazillion.PSNNotifyType type_ = global::Gazillion.PSNNotifyType.PSNNotify_PSNSessionStart;
-    public bool HasType {
-      get { return hasType; }
-    }
-    public global::Gazillion.PSNNotifyType Type {
-      get { return type_; }
-    }
-    
-    public const int PsnSessionIdFieldNumber = 3;
-    private bool hasPsnSessionId;
-    private string psnSessionId_ = "";
-    public bool HasPsnSessionId {
-      get { return hasPsnSessionId; }
-    }
-    public string PsnSessionId {
-      get { return psnSessionId_; }
-    }
-    
-    public override bool IsInitialized {
-      get {
-        if (!hasRequestingPlayerDbId) return false;
-        if (!hasType) return false;
-        return true;
-      }
-    }
-    
-    public override void WriteTo(pb::ICodedOutputStream output) {
-      CalcSerializedSize();
-      string[] field_names = _pSNNotificationFieldNames;
-      if (hasRequestingPlayerDbId) {
-        output.WriteUInt64(1, field_names[1], RequestingPlayerDbId);
-      }
-      if (hasType) {
-        output.WriteEnum(2, field_names[2], (int) Type, Type);
-      }
-      if (hasPsnSessionId) {
-        output.WriteString(3, field_names[0], PsnSessionId);
-      }
-      UnknownFields.WriteTo(output);
-    }
-    
-    private int memoizedSerializedSize = -1;
-    public override int SerializedSize {
-      get {
-        int size = memoizedSerializedSize;
-        if (size != -1) return size;
-        return CalcSerializedSize();
-      }
-    }
-    
-    private int CalcSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-      
-      size = 0;
-      if (hasRequestingPlayerDbId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(1, RequestingPlayerDbId);
-      }
-      if (hasType) {
-        size += pb::CodedOutputStream.ComputeEnumSize(2, (int) Type);
-      }
-      if (hasPsnSessionId) {
-        size += pb::CodedOutputStream.ComputeStringSize(3, PsnSessionId);
-      }
-      size += UnknownFields.SerializedSize;
-      memoizedSerializedSize = size;
-      return size;
-    }
-    public static PSNNotification ParseFrom(pb::ByteString data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static PSNNotification ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static PSNNotification ParseFrom(byte[] data) {
-      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
-    }
-    public static PSNNotification ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
-    }
-    public static PSNNotification ParseFrom(global::System.IO.Stream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static PSNNotification ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    public static PSNNotification ParseDelimitedFrom(global::System.IO.Stream input) {
-      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
-    }
-    public static PSNNotification ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
-      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
-    }
-    public static PSNNotification ParseFrom(pb::ICodedInputStream input) {
-      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
-    }
-    public static PSNNotification ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
-    }
-    private PSNNotification MakeReadOnly() {
-      return this;
-    }
-    
-    public static Builder CreateBuilder() { return new Builder(); }
-    public override Builder ToBuilder() { return CreateBuilder(this); }
-    public override Builder CreateBuilderForType() { return new Builder(); }
-    public static Builder CreateBuilder(PSNNotification prototype) {
-      return new Builder(prototype);
-    }
-    
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-    public sealed partial class Builder : pb::GeneratedBuilder<PSNNotification, Builder> {
-      protected override Builder ThisBuilder {
-        get { return this; }
-      }
-      public Builder() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-      }
-      internal Builder(PSNNotification cloneFrom) {
-        result = cloneFrom;
-        resultIsReadOnly = true;
-      }
-      
-      private bool resultIsReadOnly;
-      private PSNNotification result;
-      
-      private PSNNotification PrepareBuilder() {
-        if (resultIsReadOnly) {
-          PSNNotification original = result;
-          result = new PSNNotification();
-          resultIsReadOnly = false;
-          MergeFrom(original);
-        }
-        return result;
-      }
-      
-      public override bool IsInitialized {
-        get { return result.IsInitialized; }
-      }
-      
-      protected override PSNNotification MessageBeingBuilt {
-        get { return PrepareBuilder(); }
-      }
-      
-      public override Builder Clear() {
-        result = DefaultInstance;
-        resultIsReadOnly = true;
-        return this;
-      }
-      
-      public override Builder Clone() {
-        if (resultIsReadOnly) {
-          return new Builder(result);
-        } else {
-          return new Builder().MergeFrom(result);
-        }
-      }
-      
-      public override pbd::MessageDescriptor DescriptorForType {
-        get { return global::Gazillion.PSNNotification.Descriptor; }
-      }
-      
-      public override PSNNotification DefaultInstanceForType {
-        get { return global::Gazillion.PSNNotification.DefaultInstance; }
-      }
-      
-      public override PSNNotification BuildPartial() {
-        if (resultIsReadOnly) {
-          return result;
-        }
-        resultIsReadOnly = true;
-        return result.MakeReadOnly();
-      }
-      
-      public override Builder MergeFrom(pb::IMessage other) {
-        if (other is PSNNotification) {
-          return MergeFrom((PSNNotification) other);
-        } else {
-          base.MergeFrom(other);
-          return this;
-        }
-      }
-      
-      public override Builder MergeFrom(PSNNotification other) {
-        if (other == global::Gazillion.PSNNotification.DefaultInstance) return this;
-        PrepareBuilder();
-        if (other.HasRequestingPlayerDbId) {
-          RequestingPlayerDbId = other.RequestingPlayerDbId;
-        }
-        if (other.HasType) {
-          Type = other.Type;
-        }
-        if (other.HasPsnSessionId) {
-          PsnSessionId = other.PsnSessionId;
-        }
-        this.MergeUnknownFields(other.UnknownFields);
-        return this;
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input) {
-        return MergeFrom(input, pb::ExtensionRegistry.Empty);
-      }
-      
-      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-        PrepareBuilder();
-        pb::UnknownFieldSet.Builder unknownFields = null;
-        uint tag;
-        string field_name;
-        while (input.ReadTag(out tag, out field_name)) {
-          if(tag == 0 && field_name != null) {
-            int field_ordinal = global::System.Array.BinarySearch(_pSNNotificationFieldNames, field_name, global::System.StringComparer.Ordinal);
-            if(field_ordinal >= 0)
-              tag = _pSNNotificationFieldTags[field_ordinal];
-            else {
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              continue;
-            }
-          }
-          switch (tag) {
-            case 0: {
-              throw pb::InvalidProtocolBufferException.InvalidTag();
-            }
-            default: {
-              if (pb::WireFormat.IsEndGroupTag(tag)) {
-                if (unknownFields != null) {
-                  this.UnknownFields = unknownFields.Build();
-                }
-                return this;
-              }
-              if (unknownFields == null) {
-                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-              }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
-              break;
-            }
-            case 8: {
-              result.hasRequestingPlayerDbId = input.ReadUInt64(ref result.requestingPlayerDbId_);
-              break;
-            }
-            case 16: {
-              object unknown;
-              if(input.ReadEnum(ref result.type_, out unknown)) {
-                result.hasType = true;
-              } else if(unknown is int) {
-                if (unknownFields == null) {
-                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
-                }
-                unknownFields.MergeVarintField(2, (ulong)(int)unknown);
-              }
-              break;
-            }
-            case 26: {
-              result.hasPsnSessionId = input.ReadString(ref result.psnSessionId_);
-              break;
-            }
-          }
-        }
-        
-        if (unknownFields != null) {
-          this.UnknownFields = unknownFields.Build();
-        }
-        return this;
-      }
-      
-      
-      public bool HasRequestingPlayerDbId {
-        get { return result.hasRequestingPlayerDbId; }
-      }
-      public ulong RequestingPlayerDbId {
-        get { return result.RequestingPlayerDbId; }
-        set { SetRequestingPlayerDbId(value); }
-      }
-      public Builder SetRequestingPlayerDbId(ulong value) {
-        PrepareBuilder();
-        result.hasRequestingPlayerDbId = true;
-        result.requestingPlayerDbId_ = value;
-        return this;
-      }
-      public Builder ClearRequestingPlayerDbId() {
-        PrepareBuilder();
-        result.hasRequestingPlayerDbId = false;
-        result.requestingPlayerDbId_ = 0UL;
-        return this;
-      }
-      
-      public bool HasType {
-       get { return result.hasType; }
-      }
-      public global::Gazillion.PSNNotifyType Type {
-        get { return result.Type; }
-        set { SetType(value); }
-      }
-      public Builder SetType(global::Gazillion.PSNNotifyType value) {
-        PrepareBuilder();
-        result.hasType = true;
-        result.type_ = value;
-        return this;
-      }
-      public Builder ClearType() {
-        PrepareBuilder();
-        result.hasType = false;
-        result.type_ = global::Gazillion.PSNNotifyType.PSNNotify_PSNSessionStart;
-        return this;
-      }
-      
-      public bool HasPsnSessionId {
-        get { return result.hasPsnSessionId; }
-      }
-      public string PsnSessionId {
-        get { return result.PsnSessionId; }
-        set { SetPsnSessionId(value); }
-      }
-      public Builder SetPsnSessionId(string value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasPsnSessionId = true;
-        result.psnSessionId_ = value;
-        return this;
-      }
-      public Builder ClearPsnSessionId() {
-        PrepareBuilder();
-        result.hasPsnSessionId = false;
-        result.psnSessionId_ = "";
-        return this;
-      }
-    }
-    static PSNNotification() {
       object.ReferenceEquals(global::Gazillion.CommonMessages.Descriptor, null);
     }
   }

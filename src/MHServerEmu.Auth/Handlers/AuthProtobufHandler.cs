@@ -28,7 +28,6 @@ namespace MHServerEmu.Auth.Handlers
             switch ((FrontendProtocolMessage)messageBuffer.MessageId)
             {
                 case FrontendProtocolMessage.LoginDataPB:       await OnLoginDataPB(request, response, messageBuffer); break;
-                case FrontendProtocolMessage.PrecacheHeaders:   await OnPrecacheHeaders(request, response, messageBuffer); break;
 
                 default: Logger.Warn($"HandleMessageAsync(): Unhandled {(FrontendProtocolMessage)messageBuffer.MessageId} [{messageBuffer.MessageId}]"); break;
             }
@@ -79,17 +78,6 @@ namespace MHServerEmu.Auth.Handlers
             string machineId = loginDataPB.HasMachineId ? loginDataPB.MachineId : string.Empty;
             Logger.Info($"Sending AuthTicket for SessionId 0x{ticket.SessionId:X} to the game client on {endPointName}, machineId={machineId}");
             await HttpHelper.SendProtobufAsync(httpResponse, ticket);
-            return true;
-        }
-
-        /// <summary>
-        /// Handles a <see cref="PrecacheHeaders"/> message.
-        /// </summary>
-        private async Task<bool> OnPrecacheHeaders(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse, MessageBuffer messageBuffer)
-        {
-            // The client sends this message on startup
-            Logger.Trace($"Received PrecacheHeaders message");
-            await HttpHelper.SendProtobufAsync(httpResponse, PrecacheHeadersMessageResponse.DefaultInstance);
             return true;
         }
     }

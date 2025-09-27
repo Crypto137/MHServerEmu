@@ -94,8 +94,10 @@ namespace MHServerEmu.Games.Entities.Options
                 numSettings = (int)GameplayOptionSetting.NumSettings;
             }
 
+            /* V48_TODO: long -> bool
             for (int i = 0; i < numSettings; i++)
                 _optionSettings[i] = (long)netStruct.OptionSettingsList[i];
+            */
 
             // Chat channel filters
             foreach (var filter in netStruct.ChatChannelFiltersMapList)
@@ -305,7 +307,9 @@ namespace MHServerEmu.Games.Entities.Options
         {
             var builder = NetStructGameplayOptions.CreateBuilder();
 
+            /* V48_TODO
             builder.AddRangeOptionSettings(_optionSettings.Select(setting => (ulong)setting));
+            */
 
             builder.AddRangeChatChannelFiltersMap(_chatChannelFilterDict.Select(kvp => NetStructChatChannelFilterState.CreateBuilder()
                 .SetChannelProtoId((ulong)kvp.Key)

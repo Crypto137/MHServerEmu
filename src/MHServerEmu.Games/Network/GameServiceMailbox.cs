@@ -58,6 +58,8 @@ namespace MHServerEmu.Games.Network
                     OnCommunityBroadcastBatch(communityBroadcastBatch);
                     break;
 
+                /* V48_TODO
+
                 case ServiceMessage.PartyOperationRequestServerResult partyOperationRequestServerResult:
                     OnPartyOperationRequestServerResult(partyOperationRequestServerResult);
                     break;
@@ -69,6 +71,8 @@ namespace MHServerEmu.Games.Network
                 case ServiceMessage.PartyMemberInfoServerUpdate partyMemberInfoServerUpdate:
                     OnPartyMemberInfoServerUpdate(partyMemberInfoServerUpdate);
                     break;
+
+                */
 
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
@@ -185,6 +189,8 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        /* V48_TODO
+
         private void OnPartyOperationRequestServerResult(in ServiceMessage.PartyOperationRequestServerResult partyOperationRequestServerResult)
         {
             ulong playerDbId = partyOperationRequestServerResult.PlayerDbId;
@@ -213,6 +219,8 @@ namespace MHServerEmu.Games.Network
 
             Game.PartyManager.OnPartyMemberInfoServerUpdate(playerDbId, groupId, memberDbId, memberEvent, memberInfo);
         }
+
+        */
 
         private void OnLeaderboardStateChange(in ServiceMessage.LeaderboardStateChange leaderboardStateChange)
         {

@@ -44,6 +44,8 @@ namespace MHServerEmu.Games.Social.Parties
             return _members.GetEnumerator();
         }
 
+        /* V48_TODO
+
         public void SetFromMessage(Gazillion.PartyInfo protobuf)
         {
             LeaderId = protobuf.LeaderDbId;
@@ -114,6 +116,8 @@ namespace MHServerEmu.Games.Social.Parties
 
             return true;
         }
+
+        */
 
         public PartyMemberInfo GetMemberInfo(ulong memberId)
         {

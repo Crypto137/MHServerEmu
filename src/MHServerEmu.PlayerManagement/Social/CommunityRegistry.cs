@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Social
@@ -108,26 +109,17 @@ namespace MHServerEmu.PlayerManagement.Social
             if (broadcast.HasCurrentRegionRefId)
                 sendBroadcast |= member.SetCurrentRegionRefId(broadcast.CurrentRegionRefId);
 
-            if (broadcast.HasCurrentDifficultyRefId)
-                sendBroadcast |= member.SetCurrentDifficultyRefId(broadcast.CurrentDifficultyRefId);
+            if (broadcast.HasCurrentAvatarRefId)
+                sendBroadcast |= member.SetAvatarRefId(broadcast.CurrentAvatarRefId);
 
-            if (broadcast.SlotsCount > 0)
-            {
-                // We don't care about the second slot on PC.
-                CommunityMemberAvatarSlot avatarSlot = broadcast.SlotsList[0];
+            if (broadcast.HasCurrentCostumeRefId)
+                sendBroadcast |= member.SetCostumeRefId(broadcast.CurrentCostumeRefId);
 
-                if (avatarSlot.HasAvatarRefId)
-                    sendBroadcast |= member.SetAvatarRefId(avatarSlot.AvatarRefId);
+            if (broadcast.HasCurrentCharacterLevel)
+                sendBroadcast |= member.SetLevel((uint)broadcast.CurrentCharacterLevel);
 
-                if (avatarSlot.HasCostumeRefId)
-                    sendBroadcast |= member.SetCostumeRefId(avatarSlot.CostumeRefId);
-
-                if (avatarSlot.HasLevel)
-                    sendBroadcast |= member.SetLevel(avatarSlot.Level);
-
-                if (avatarSlot.HasPrestigeLevel)
-                    sendBroadcast |= member.SetPrestigeLevel(avatarSlot.PrestigeLevel);
-            }
+            if (broadcast.HasCurrentPrestigeLevel)
+                sendBroadcast |= member.SetPrestigeLevel((uint)broadcast.CurrentPrestigeLevel);
 
             sendBroadcast |= member.SetIsOnline(player.IsConnected);
             sendBroadcast |= member.SetLastLogoutTime(player.LastLogoutTime);

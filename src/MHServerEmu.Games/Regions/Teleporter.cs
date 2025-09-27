@@ -429,7 +429,6 @@ namespace MHServerEmu.Games.Regions
                 .SetLevel((uint)Level)
                 // origin
                 .SetCheat(Cheat)
-                .SetDifficultyTierProtoId((ulong)DifficultyTierRef)
                 .SetEndlessLevel((uint)EndlessLevel)
                 // gameStateId
                 // matchNumber

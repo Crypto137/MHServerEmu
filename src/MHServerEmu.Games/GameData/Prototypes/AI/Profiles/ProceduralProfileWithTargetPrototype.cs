@@ -658,18 +658,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             // Alternate advancement experience
-            if (avatar.Game.InfinitySystemEnabled)
-            {
-                long infinityXP = agent.Properties[PropertyEnum.InfinityXP];
-                if (infinityXP > 0)
-                    player.AwardInfinityXP(infinityXP, true);
-            }
-            else
-            {
-                long omegaXP = agent.Properties[PropertyEnum.OmegaXP];
-                if (omegaXP > 0)
-                    player.AwardOmegaXP(omegaXP, true);
-            }
+            long omegaXP = agent.Properties[PropertyEnum.OmegaXP];
+            if (omegaXP > 0)
+                player.AwardOmegaXP(omegaXP, true);
 
             // Credits / currency
             if (player.AcquireCurrencyItem(agent))

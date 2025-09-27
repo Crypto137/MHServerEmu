@@ -51,7 +51,6 @@ namespace MHServerEmu.PlayerManagement.Regions
         public PrototypeId RegionProtoRef { get; }
         public RegionPrototype Prototype { get; }
         public NetStructCreateRegionParams CreateParams { get; }
-        public PrototypeId DifficultyTierProtoRef { get => (PrototypeId)CreateParams.DifficultyTierProtoId; }
 
         public TimeSpan CreationTime { get; } = Clock.UnixTime;
         public TimeSpan Uptime { get => Clock.UnixTime - CreationTime; }
@@ -94,8 +93,7 @@ namespace MHServerEmu.PlayerManagement.Regions
         public override string ToString()
         {
             string regionName = RegionProtoRef.GetNameFormatted();
-            string difficultyName = DifficultyTierProtoRef.GetNameFormatted();
-            return $"[0x{Id:X}] {regionName} ({difficultyName})";
+            return $"[0x{Id:X}]";
         }
 
         public int CompareTo(RegionHandle other)
@@ -181,9 +179,6 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public bool MatchesCreateParams(NetStructCreateRegionParams otherParams)
         {
-            if (CreateParams.DifficultyTierProtoId != otherParams.DifficultyTierProtoId)
-                return false;
-
             // EndlessLevel > 0 indicates that this is an endless region, in which case the level needs to match.
             if (CreateParams.EndlessLevel != 0 && CreateParams.EndlessLevel != otherParams.EndlessLevel)
                 return false;
