@@ -61,40 +61,22 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             PropertyInfo info = _propertyInfoTable.LookupPropertyInfo(_propertyEnum);
             if (info.IsFullyLoaded) return Logger.WarnReturn(false, "PropertyInfo is already loaded");
 
-            int numIntegerParams = 0;
-            int usedBitCount = 0;
+            // V48_NOTE: Pre-BUE versions use fixed bit budget for integer params (12 bits).
+            const int MaxIntegerParamValue = (1 << 12) - 1;
 
-            // Iterate through params and allocate bit budget to asset and prototype params first
             for (int i = 0; i < ParamCount; i++)
             {
                 switch (_paramInfos[i].Type)
                 {
                     case PropertyParamType.Integer:
-                        numIntegerParams++;
+                        info.SetParamTypeInteger(i, (PropertyParam)MaxIntegerParamValue);
                         break;
                     case PropertyParamType.Asset:
                         info.SetParamTypeAsset(i, (AssetTypeId)_paramInfos[i].SubtypeDataRef);
-                        usedBitCount += info.GetParamBitCount(i);
                         break;
                     case PropertyParamType.Prototype:
                         info.SetParamTypePrototype(i, (BlueprintId)_paramInfos[i].SubtypeDataRef);
-                        usedBitCount += info.GetParamBitCount(i);
                         break;
-                }
-            }
-
-            // Split the remaining bit budget between integer params (if any)
-            if (numIntegerParams > 0)
-            {
-                int intBudget = Property.ParamBitCount - usedBitCount;
-                int bitCount = intBudget / numIntegerParams;
-                bitCount = Math.Min(bitCount, 31);
-                int intParamMaxValue = (1 << bitCount) - 1;
-
-                for (int i = 0; i < ParamCount; i++)
-                {
-                    if (_paramInfos[i].Type != PropertyParamType.Integer) continue;
-                    info.SetParamTypeInteger(i, (PropertyParam)intParamMaxValue);
                 }
             }
 
