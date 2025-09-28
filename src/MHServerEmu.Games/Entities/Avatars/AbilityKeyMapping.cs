@@ -36,9 +36,11 @@ namespace MHServerEmu.Games.Entities.Avatars
     public class AbilityKeyMapping : ISerialize
     {
         private const int NumActionKeySlots = 6;   // non-mouse slots
+        private const int NumHotkeys = 6;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private int _keyMappingIndex;
         private int _powerSpecIndex;
         private bool _shouldPersist;
         private PrototypeId _associatedTransformMode;
@@ -47,6 +49,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         private PrototypeId _primaryAction = PrototypeId.Invalid;
         private PrototypeId _secondaryAction = PrototypeId.Invalid;
         private PrototypeId[] _actionKeys = new PrototypeId[NumActionKeySlots];
+
+        private HotkeyData[] _hotkeys = new HotkeyData[NumHotkeys];
 
         public int PowerSpecIndex { get => _powerSpecIndex; set => _powerSpecIndex = value; }
         public bool ShouldPersist { get => _shouldPersist; set => _shouldPersist = value; }
@@ -71,12 +75,14 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             bool success = true;
 
+            success &= Serializer.Transfer(archive, ref _keyMappingIndex);
             success &= Serializer.Transfer(archive, ref _powerSpecIndex);
             success &= Serializer.Transfer(archive, ref _shouldPersist);
             success &= Serializer.Transfer(archive, ref _associatedTransformMode);
             success &= Serializer.Transfer(archive, ref _primaryAction);
             success &= Serializer.Transfer(archive, ref _secondaryAction);
             success &= Serializer.Transfer(archive, ref _actionKeys);
+            success &= Serializer.Transfer(archive, ref _hotkeys);
 
             return success;
         }

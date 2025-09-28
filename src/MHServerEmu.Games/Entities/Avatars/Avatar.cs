@@ -39,7 +39,6 @@ namespace MHServerEmu.Games.Entities.Avatars
     public partial class Avatar : Agent
     {
         private const int MaxNumTransientAbilityKeyMappings = 1;
-        private const uint TalentGroupIndexInvalid = 0;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly TimeSpan StandardContinuousPowerRecheckDelay = TimeSpan.FromMilliseconds(150);
@@ -68,6 +67,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         private List<AbilityKeyMapping> _abilityKeyMappings = new();    // Persistent ability key mappings for each spec
         private List<AbilityKeyMapping> _transientAbilityKeyMappings;   // Non-persistent ability key mappings used for transform modes (init on demand)
         private AbilityKeyMapping _currentAbilityKeyMapping;            // Reference to the currently active ability key mapping
+
+        // V48
+        private int _currentAbilityKeyMappingIndex = 0;
+        private int _unknownAbilityKeyMappingIndex = 0;
 
         private ulong _guildId = GuildMember.InvalidGuildId;
         private string _guildName = string.Empty;
@@ -204,6 +207,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             success &= Serializer.Transfer(archive, ref _abilityKeyMappings);
+
+            // V48_NOTE: The client clamps these to the 0-2 range.
+            success &= Serializer.Transfer(archive, ref _currentAbilityKeyMappingIndex);
+            success &= Serializer.Transfer(archive, ref _unknownAbilityKeyMappingIndex);
 
             return success;
         }
