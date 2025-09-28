@@ -5604,7 +5604,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "UpdateAvatarSynergyExperienceBonus(): player == null");
 
-            if (player.GameplayOptions.GetOptionSetting(Options.GameplayOptionSetting.DisableHeroSynergyBonusXP) == 1)
+            if (player.GameplayOptions.GetOptionSetting(Options.GameplayOptionSetting.DisableHeroSynergyBonusXP))
             {
                 Properties.RemoveProperty(PropertyEnum.ExperienceBonusAvatarSynergy);
                 return true;

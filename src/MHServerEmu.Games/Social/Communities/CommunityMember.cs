@@ -46,7 +46,6 @@ namespace MHServerEmu.Games.Social.Communities
 
         private ulong _dbId;
         private PrototypeId _regionRef;
-        private PrototypeId _difficultyRef;
 
         private long _lastLogoutTimeAsFileTimeUtc = 0;
 
@@ -83,9 +82,9 @@ namespace MHServerEmu.Games.Social.Communities
             if (archive.IsPersistent == false)
             {
                 success &= Serializer.Transfer(archive, ref _regionRef);
-                success &= Serializer.Transfer(archive, ref _difficultyRef);
-
-                // V48_TODO: Fix this
+                success &= Serializer.Transfer(archive, ref _avatarRef);
+                success &= Serializer.Transfer(archive, ref _characterLevel);
+                success &= Serializer.Transfer(archive, ref _prestigeLevel);
 
                 int isOnline = (int)_isOnline;
                 success &= Serializer.Transfer(archive, ref isOnline);
@@ -439,9 +438,11 @@ namespace MHServerEmu.Games.Social.Communities
             sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
             sb.AppendLine($"{nameof(_dbId)}: 0x{_dbId:X}");
             sb.AppendLine($"{nameof(_regionRef)}: {GameDatabase.GetPrototypeName(_regionRef)}");
-            sb.AppendLine($"{nameof(_difficultyRef)}: {GameDatabase.GetPrototypeName(_difficultyRef)}");
-
-            // V48_TODO
+            sb.AppendLine($"{nameof(_avatarRef)}: {GameDatabase.GetPrototypeName(_avatarRef)}");
+            sb.AppendLine($"{nameof(_costumeRef)}: {GameDatabase.GetPrototypeName(_costumeRef)}");
+            sb.AppendLine($"{nameof(_characterLevel)}: {_characterLevel}");
+            sb.AppendLine($"{nameof(_prestigeLevel)}: {_prestigeLevel}");
+            sb.AppendLine($"{nameof(_isOnline)}: {_isOnline}");
 
             sb.Append($"{nameof(_systemCircles)}: ");
             for (int i = 0; i < _systemCircles.Count; i++)

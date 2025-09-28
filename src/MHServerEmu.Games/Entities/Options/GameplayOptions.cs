@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -17,19 +18,6 @@ namespace MHServerEmu.Games.Entities.Options
         Setting3,
         EnableVaporizeCredits,
         Setting5,
-        ShowPlayerFloatingDamageNumbers,
-        ShowEnemyFloatingDamageNumbers,
-        ShowExperienceFloatingNumbers,
-        ShowBossIndicator,
-        ShowPartyMemberArrows,
-        MusicLevel,
-        SfxLevel,
-        ShowMovieSubtitles,
-        MicLevel,
-        SpeakerLevel,
-        GammaLevel,
-        ShowPlayerHealingNumbers,
-        ShowPlayerIndicator,
         NumSettings
     }
 
@@ -42,32 +30,20 @@ namespace MHServerEmu.Games.Entities.Options
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly long[] GamePlayOptionDefaults = new long[]
+        private static readonly bool[] GamePlayOptionDefaults = new bool[]
         {
-            0,      // AutoPartyEnabled
-            0,      // PreferLowPopulationRegions
-            0,      // DisableHeroSynergyBonusXP
-            0,      // Setting3
-            0,      // EnableVaporizeCredits
-            0,      // Setting5
-            1,      // ShowPlayerFloatingDamageNumbers
-            0,      // ShowEnemyFloatingDamageNumbers
-            1,      // ShowExperienceFloatingNumbers
-            1,      // ShowBossIndicator
-            1,      // ShowPartyMemberArrows
-            100,    // MusicLevel
-            100,    // SfxLevel
-            0,      // ShowMovieSubtitles
-            100,    // MicLevel
-            100,    // SpeakerLevel
-            80,     // GammaLevel
-            0,      // ShowPlayerHealingNumbers
-            1       // ShowPlayerIndicator
+            // V48_REMOVEME: should be all false, this is for testing
+            true,      // AutoPartyEnabled
+            false,      // PreferLowPopulationRegions
+            false,      // DisableHeroSynergyBonusXP
+            false,      // Setting3
+            false,      // EnableVaporizeCredits
+            false,      // Setting5
         };
 
         private Player _owner;
 
-        private long[] _optionSettings = new long[(int)GameplayOptionSetting.NumSettings];                      // Various settings (see enum above)
+        private GBitArray _optionSettings = new();                                                              // Various settings (see enum above)
         private SortedDictionary<PrototypeId, bool> _chatChannelFilterDict = new();                             // Whether the channel is included in the main chat tab 
         private PrototypeId[] _chatTabChannels = new PrototypeId[NumChatTabs];                                  // Chat channels bound to tabs other than the main one
         private SortedDictionary<EquipmentInvUISlot, PrototypeId> _armorRarityVaporizeThresholdDict = new();    // PetTech item vacuum settings
@@ -94,10 +70,8 @@ namespace MHServerEmu.Games.Entities.Options
                 numSettings = (int)GameplayOptionSetting.NumSettings;
             }
 
-            /* V48_TODO: long -> bool
             for (int i = 0; i < numSettings; i++)
-                _optionSettings[i] = (long)netStruct.OptionSettingsList[i];
-            */
+                _optionSettings[i] = netStruct.OptionSettingsList[i];
 
             // Chat channel filters
             foreach (var filter in netStruct.ChatChannelFiltersMapList)
@@ -132,12 +106,9 @@ namespace MHServerEmu.Games.Entities.Options
         {
             bool success = true;
 
-            // NOTE: Archives use a different encoding order from protobufs: filters - tabs - options - thresholds.
-            // The client implementation includes a lot of legacy backward compatibility code that we don't really need.
-
+            success &= Serializer.Transfer(archive, ref _optionSettings);
             success &= Serializer.Transfer(archive, ref _chatChannelFilterDict);
             success &= Serializer.Transfer(archive, ref _chatTabChannels);
-            success &= Serializer.Transfer(archive, ref _optionSettings);
             success &= Serializer.Transfer(archive, ref _armorRarityVaporizeThresholdDict);
 
             return success;
@@ -154,7 +125,7 @@ namespace MHServerEmu.Games.Entities.Options
         /// <summary>
         /// Returns the current value of the specified <see cref="GameplayOptionSetting"/>.
         /// </summary>
-        public long GetOptionSetting(GameplayOptionSetting settingEnum)
+        public bool GetOptionSetting(GameplayOptionSetting settingEnum)
         {
             return _optionSettings[(int)settingEnum];
         }
@@ -162,7 +133,7 @@ namespace MHServerEmu.Games.Entities.Options
         /// <summary>
         /// Returns the default value of the specified <see cref="GameplayOptionSetting"/>.
         /// </summary>
-        public long GetOptionSettingDefault(GameplayOptionSetting settingEnum)
+        public bool GetOptionSettingDefault(GameplayOptionSetting settingEnum)
         {
             return GamePlayOptionDefaults[(int)settingEnum];
         }
@@ -170,18 +141,10 @@ namespace MHServerEmu.Games.Entities.Options
         /// <summary>
         /// Sets the value of the specified <see cref="GameplayOptionSetting"/>.
         /// </summary>
-        public void SetOptionSetting(GameplayOptionSetting setting, long value, bool doUpdate)
+        public void SetOptionSetting(GameplayOptionSetting setting, bool value, bool doUpdate)
         {
             _optionSettings[(int)setting] = value;
             if (doUpdate) DoUpdate();
-        }
-
-        /// <summary>
-        /// Sets the value of the specified <see cref="GameplayOptionSetting"/>.
-        /// </summary>
-        public void SetOptionSetting(GameplayOptionSetting setting, bool value, bool doUpdate)
-        {
-            SetOptionSetting(setting, Convert.ToInt64(value), doUpdate);
         }
 
         /// <summary>
@@ -276,7 +239,7 @@ namespace MHServerEmu.Games.Entities.Options
         public void ResetToDefaults()
         {
             // Option settings
-            Array.Clear(_optionSettings);
+            _optionSettings.Clear();
             for (int i = 0; i < (int)GameplayOptionSetting.NumSettings; i++)
                 _optionSettings[i] = GamePlayOptionDefaults[i];
 
@@ -307,9 +270,8 @@ namespace MHServerEmu.Games.Entities.Options
         {
             var builder = NetStructGameplayOptions.CreateBuilder();
 
-            /* V48_TODO
-            builder.AddRangeOptionSettings(_optionSettings.Select(setting => (ulong)setting));
-            */
+            for (int i = 0; i < (int)GameplayOptionSetting.NumSettings; i++)
+                builder.AddOptionSettings(_optionSettings[i]);
 
             builder.AddRangeChatChannelFiltersMap(_chatChannelFilterDict.Select(kvp => NetStructChatChannelFilterState.CreateBuilder()
                 .SetChannelProtoId((ulong)kvp.Key)
@@ -329,8 +291,8 @@ namespace MHServerEmu.Games.Entities.Options
         {
             StringBuilder sb = new();
 
-            for (int i = 0; i < _optionSettings.Length; i++)
-                sb.AppendLine($"{nameof(_optionSettings)}[{(GameplayOptionSetting)i}]: {_optionSettings[i]}");
+            for (GameplayOptionSetting i = 0; i < GameplayOptionSetting.NumSettings; i++)
+                sb.AppendLine($"{nameof(_optionSettings)}[{i}]: {_optionSettings[(int)i]}");
 
             foreach (var kvp in _chatChannelFilterDict)
                 sb.AppendLine($"{nameof(_chatChannelFilterDict)}[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");

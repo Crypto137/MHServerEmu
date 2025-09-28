@@ -96,8 +96,6 @@ namespace MHServerEmu.Games.Entities
         private ReplicatedPropertyCollection _avatarProperties = new();
         private ulong _shardId;     // This was probably used for database sharding, we don't need this
         private RepVar_string _playerName = new();
-        private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
-        private RepVar_string _secondaryPlayerName = new();
 
         // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that
         // should be sent in the packet right after logging in. NetMessageGetCurrencyBalanceResponse should be
@@ -366,9 +364,6 @@ namespace MHServerEmu.Games.Entities
             {
                 success &= Serializer.Transfer(archive, ref _shardId);
                 success &= Serializer.Transfer(archive, ref _playerName);
-                success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
-                success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
-                success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
                 success &= Serializer.Transfer(archive, MatchQueueStatus);
                 success &= Serializer.Transfer(archive, ref _emailVerified);
                 success &= Serializer.Transfer(archive, ref _accountCreationTimestamp);
@@ -515,28 +510,11 @@ namespace MHServerEmu.Games.Entities
         }
 
         /// <summary>
-        /// Returns the name of the player for the specified <see cref="PlayerAvatarIndex"/>.
+        /// Returns the name of the player.
         /// </summary>
-        public string GetName(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
+        public string GetName()
         {
-            if ((avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count) == false)
-                Logger.Warn("GetName(): avatarIndex out of range");
-
-            if (avatarIndex == PlayerAvatarIndex.Secondary)
-                return _secondaryPlayerName.Get();
-
             return _playerName.Get();
-        }
-
-        /// <summary>
-        /// Returns the console account id for the specified <see cref="PlayerAvatarIndex"/>.
-        /// </summary>
-        public ulong GetConsoleAccountId(PlayerAvatarIndex avatarIndex)
-        {
-            if ((avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count) == false)
-                return 0;
-
-            return _consoleAccountIds[(int)avatarIndex];
         }
 
         public void SetGameplayOptions(NetMessageSetPlayerGameplayOptions clientOptions)
@@ -3785,9 +3763,6 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(_avatarProperties)}: {_avatarProperties}");
             sb.AppendLine($"{nameof(_shardId)}: {_shardId}");
             sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
-            sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
-            sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
-            sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
             sb.AppendLine($"{nameof(MatchQueueStatus)}: {MatchQueueStatus}");
             sb.AppendLine($"{nameof(_emailVerified)}: {_emailVerified}");
             sb.AppendLine($"{nameof(_accountCreationTimestamp)}: {Clock.UnixTimeToDateTime(_accountCreationTimestamp)}");
