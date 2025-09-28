@@ -2952,9 +2952,7 @@ namespace MHServerEmu.Games.Entities
                     indexProperties[PropertyEnum.CombatLevel] = CombatLevel;
                     indexProperties.CopyProperty(Properties, PropertyEnum.ItemLevel);
 
-                    if (modProto is InfinityGemBonusPrototype)
-                        indexProperties.CopyPropertyRange(Properties, PropertyEnum.InfinityGemBonusRank);
-                    else if (modProto is OmegaBonusPrototype)
+                    if (modProto is OmegaBonusPrototype)
                         indexProperties.CopyPropertyRange(Properties, PropertyEnum.OmegaRank);
 
                     AttachProperties(modProto.Type, modRef, 0, modProto.Properties, indexProperties, rank, true);
@@ -4170,7 +4168,7 @@ namespace MHServerEmu.Games.Entities
             if (SpawnSpec != null)
                 return SpawnSpec.RoleKey;
             else
-                return (ScriptRoleKeyEnum)(uint)Properties[PropertyEnum.ScriptRoleKey];
+                return ScriptRoleKeyEnum.Invalid;
         }
 
         public bool CanEntityActionTrigger(EntitySelectorActionEventType eventType)

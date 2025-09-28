@@ -17,9 +17,6 @@
         public AssetId MapImage { get; protected set; }
         public int RecommendedLevelMax { get; protected set; }
         public int RecommendedLevelMin { get; protected set; }
-        public AssetId MapImageConsole { get; protected set; }
-        public AssetId LocationImageConsole { get; protected set; }
-        public LocaleStringId ConsoleDescription { get; protected set; }
     }
 
     public class StoryWarpPrototype : Prototype

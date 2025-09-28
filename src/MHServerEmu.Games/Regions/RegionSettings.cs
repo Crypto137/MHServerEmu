@@ -20,7 +20,6 @@ namespace MHServerEmu.Games.Regions
         // CreateRegionParams
         public int Level { get; set; }
         public NetStructRegionOrigin Origin { get; set; }
-        public PrototypeId DifficultyTierRef { get; set; }
         public int EndlessLevel { get; set; }
         public PrototypeId GameStateId { get; set; }
         public ulong MatchNumber { get; set; }

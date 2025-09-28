@@ -99,7 +99,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId SortCategory { get; protected set; }
         public PrototypeId SortSubCategory { get; protected set; }
         public ItemInstrumentedDropGroup InstrumentedDropGroup { get; protected set; }
-        public bool IsContainer { get; protected set; }
 
         // ---
 
@@ -869,15 +868,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override ItemActionType ActionType { get => ItemActionType.UsePower; }
     }
 
-    public class ItemActionUnlockPermaBuffPrototype : ItemActionPrototype
-    {
-        public PrototypeId PermaBuff { get; protected set; }
-
-        //---
-
-        public override ItemActionType ActionType { get => ItemActionType.UnlockPermaBuff; }
-    }
-
     public class ItemActionAwardTeamUpXPPrototype : ItemActionPrototype
     {
         public int XP { get; protected set; }
@@ -902,18 +892,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override ItemActionType ActionType { get => ItemActionType.OpenUIPanel; }
     }
 
-    public class CategorizedAffixEntryPrototype : Prototype
-    {
-        public PrototypeId Category { get; protected set; }
-        public short MinAffixes { get; protected set; }
-    }
-
     public class AffixLimitsPrototype : Prototype
     {
         public LootContext[] AllowedContexts { get; protected set; }
         public PrototypeId ItemRarity { get; protected set; }
+        public short MaxPrefixPlusSuffixTotal { get; protected set; }   // V48
         public short MaxPrefixes { get; protected set; }
         public short MaxSuffixes { get; protected set; }
+        public short MinPrefixPlusSuffixTotal { get; protected set; }   // V48
         public short MinPrefixes { get; protected set; }
         public short MinSuffixes { get; protected set; }
         public short NumCosmics { get; protected set; }
@@ -932,7 +918,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int RegionDifficultyIndex { get; protected set; }
         public float DamageRegionMobToPlayer { get; protected set; }
         public float DamageRegionPlayerToMob { get; protected set; }
-        public CategorizedAffixEntryPrototype[] CategorizedAffixes { get; protected set; }
 
         // ---
 
@@ -973,29 +958,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public short GetMax(AffixPosition affixPosition, LootRollSettings settings)
         {
             return GetLimit(affixPosition, true, settings);
-        }
-
-        public short GetMax(AffixCategoryPrototype affixCategoryProto, LootRollSettings settings)
-        {
-            if (CategorizedAffixes.IsNullOrEmpty())
-                return short.MaxValue;
-
-            PrototypeId affixCategoryProtoRef = affixCategoryProto.DataRef;
-
-            foreach (CategorizedAffixEntryPrototype entry in CategorizedAffixes)
-            {
-                if (entry.Category != affixCategoryProtoRef)
-                    continue;
-
-                short numAffixes = entry.MinAffixes;
-
-                if (settings != null && settings.AffixLimitByCategoryModifierDict.TryGetValue(affixCategoryProtoRef, out short mod))
-                    numAffixes += mod;
-
-                return numAffixes;
-            }
-
-            return short.MaxValue;
         }
 
         public short GetLimit(AffixPosition affixPosition, bool getMax, LootRollSettings settings)
@@ -1199,7 +1161,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId AvatarDisplayNameShort { get; protected set; }
         public bool EquipTriggersVO { get; protected set; }
         public AssetId PortraitIconPathHiRes { get; protected set; }
-        public PrototypeId FulfillmentDuplicateItem { get; protected set; }
 
         public override bool ApprovedForUse()
         {
@@ -1208,10 +1169,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             AvatarPrototype avatar = GameDatabase.GetPrototype<AvatarPrototype>(UsableBy);
             if (avatar == null) return Logger.WarnReturn(false, $"ApprovedForUse(): avatar == null");
 
-            ItemPrototype itemProto = GameDatabase.GetPrototype<ItemPrototype>(FulfillmentDuplicateItem);
-            if (itemProto == null || itemProto == this) Logger.WarnReturn(false, "ApprovedForUse(): itemProto == null || itemProto == this");
-
-            return avatar.ApprovedForUse() && itemProto.ApprovedForUse();
+            return avatar.ApprovedForUse();
         }
 
         public override bool IsUsableByAgent(AgentPrototype agentProto)

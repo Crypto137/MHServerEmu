@@ -63,9 +63,8 @@ namespace MHServerEmu.Games.GameData
         public static PowerVisualsGlobalsPrototype PowerVisualsGlobalsPrototype { get; private set; }
         public static KeywordGlobalsPrototype KeywordGlobalsPrototype { get; private set; }
         public static CurrencyGlobalsPrototype CurrencyGlobalsPrototype { get; private set; }
-        public static GamepadGlobalsPrototype GamepadGlobalsPrototype { get; private set; }
+        public static ControllerGlobalsPrototype ControllerGlobalsPrototype { get; private set; }
         public static DifficultyGlobalsPrototype DifficultyGlobalsPrototype { get; private set; }
-        public static ConsoleGlobalsPrototype ConsoleGlobalsPrototype { get; private set; }
         
         public static InteractionManager InteractionManager { get; private set; }
 
@@ -116,9 +115,8 @@ namespace MHServerEmu.Games.GameData
             PowerVisualsGlobalsPrototype = GetPrototype<PowerVisualsGlobalsPrototype>(GlobalsPrototype.PowerVisualsGlobals);
             KeywordGlobalsPrototype = GetPrototype<KeywordGlobalsPrototype>(GlobalsPrototype.KeywordGlobals);
             CurrencyGlobalsPrototype = GetPrototype<CurrencyGlobalsPrototype>(GlobalsPrototype.CurrencyGlobals);
-            GamepadGlobalsPrototype = GetPrototype<GamepadGlobalsPrototype>(GlobalsPrototype.GamepadGlobals);
+            ControllerGlobalsPrototype = GetPrototype<ControllerGlobalsPrototype>(GlobalsPrototype.ControllerGlobals);
             DifficultyGlobalsPrototype = GetPrototype<DifficultyGlobalsPrototype>(GlobalsPrototype.DifficultyGlobals);
-            ConsoleGlobalsPrototype = GetPrototype<ConsoleGlobalsPrototype>(GlobalsPrototype.ConsoleGlobals);
 
             // initializeKeywordPrototypes
 

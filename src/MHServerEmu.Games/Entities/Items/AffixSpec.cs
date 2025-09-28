@@ -230,9 +230,6 @@ namespace MHServerEmu.Games.Entities.Items
                 if (Power.IsTravelPower(powerProto))
                     continue;
 
-                if (entryProto.IsTrait)
-                    continue;
-
                 if (affixSet.Contains(new(powerAffixProto.DataRef, powerProto.DataRef)))
                     continue;
 

@@ -3075,7 +3075,7 @@ namespace MHServerEmu.Games.Powers
             RankPrototype rankProto = target?.GetRankPrototype();
             if (rankProto == null) return Logger.WarnReturn(0, "CalculateRegionCCResistScore(): rankProto == null");
 
-            TuningPrototype tuningProto = target.Region?.TuningTable?.Prototype;
+            DifficultyPrototype tuningProto = target.Region?.TuningTable?.Prototype;
             if (tuningProto == null) return Logger.WarnReturn(0, "CalculateRegionCCResistScore(): tuningProto == null");
 
             if (tuningProto.NegativeStatusCurves.HasValue() == false)

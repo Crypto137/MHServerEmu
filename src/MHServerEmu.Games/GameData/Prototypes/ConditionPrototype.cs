@@ -33,16 +33,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     [AssetEnum]
     public enum UIConditionType
     {
-        None = 0,
+        Neither = 0,
         Buff = 1,
         Boost = 2,
         Debuff = 3,
         Raid = 5,
         LiveTune = 6,
         Event = 7,
-        Environment = 8,
-        Team = 9,
-        PlayerPower = 10,
     }
 
     #endregion
@@ -94,9 +91,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype[] EvalPartyBoost { get; protected set; }
         public StackingBehaviorPrototype StackingBehavior { get; protected set; }
         public bool CancelOnIntraRegionTeleport { get; protected set; }
-        public LocaleStringId DisplayName { get; protected set; }
-        public int UrgentTimeMS { get; protected set; }
-        public AssetId IconPathHiRes { get; protected set; }
 
         //---
 

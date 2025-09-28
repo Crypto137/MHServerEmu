@@ -17,6 +17,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PopulationObjectPrototype : Prototype
     {
+        public int DEPAffixCountOverride { get; protected set; }                // V48
         public PrototypeId AllianceOverride { get; protected set; }
         public bool AllowCrossMissionHostility { get; protected set; }
         public PrototypeId EntityActionTimelineScript { get; protected set; }
@@ -31,6 +32,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float LeashDistance { get; protected set; }
         public PrototypeId OnDefeatLootTable { get; protected set; }
         public SpawnOrientationTweak OrientationTweak { get; protected set; }
+        public PrototypeId DEPRankOverrideIfModified { get; protected set; }    // V48
         public PopulationRiderPrototype[] Riders { get; protected set; }
         public bool UseMarkerOrientation { get; protected set; }
         public PrototypeId UsePopulationMarker { get; protected set; }
@@ -525,8 +527,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float Density { get; protected set; }
         public AssetId[] RestrictToCells { get; protected set; }
         public PrototypeId[] RestrictToAreas { get; protected set; }
-        public PrototypeId RestrictToDifficultyMin { get; protected set; }
-        public PrototypeId RestrictToDifficultyMax { get; protected set; }
 
         public PopulationObjectPrototype GetPopObject()
         {
@@ -559,11 +559,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, region.Properties);
             evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Entity, metaGame);
             Eval.RunBool(EvalSpawnProperties, evalContext);
-        }
-
-        public bool AllowedInDifficulty(PrototypeId difficultyRef)
-        {
-            return DifficultyTierPrototype.InRange(difficultyRef, RestrictToDifficultyMin, RestrictToDifficultyMax);
         }
     }
 

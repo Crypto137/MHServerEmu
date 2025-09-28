@@ -81,12 +81,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 var senses = ownerController.Senses;
                 var random = game.Random;
 
-                if (fleeContext.FleeTowardAllies && random.NextFloat() <= fleeContext.FleeTowardAlliesPercentChance)
-                {
-                    if (FleeTowardAllies(agent, fleeContext))
-                        return StaticBehaviorReturnType.Running;
-                }
-
                 var potentialEnemies = senses.PotentialHostileTargetIds;                
                 var averageDirection = Vector3.Zero;
 
@@ -106,23 +100,14 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     }
                 }
 
-                var distance = locomotor.GetCurrentSpeed() * random.NextFloat((float)fleeContext.FleeTime.TotalSeconds - fleeContext.FleeTimeVariance, (float)fleeContext.FleeTime.TotalSeconds + fleeContext.FleeTimeVariance);
+                var distance = locomotor.GetCurrentSpeed() * (float)fleeContext.FleeTime.TotalSeconds;
                 var targetPosition = agentPosition + Vector3.SafeNormalize2D(averageDirection) * distance;
 
-                if (fleeContext.FleeHalfAngle != 0.0f)
-                {
-                    if (FleeTowardsAngle(agent, fleeContext, averageDirection, targetPosition, distance))
-                        return StaticBehaviorReturnType.Running;
-                    return StaticBehaviorReturnType.Failed;
-                }
-                else
-                {
-                    var locomotionOptions = new LocomotionOptions
-                    { PathGenerationFlags = PathGenerationFlags.IncompletedPath };
+                var locomotionOptions = new LocomotionOptions
+                { PathGenerationFlags = PathGenerationFlags.IncompletedPath };
 
-                    if (locomotor.PathTo(targetPosition, locomotionOptions) == false)
-                        return StaticBehaviorReturnType.Failed;
-                }
+                if (locomotor.PathTo(targetPosition, locomotionOptions) == false)
+                    return StaticBehaviorReturnType.Failed;
             }
 
             return StaticBehaviorReturnType.Running;
@@ -147,8 +132,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 var sweepResult = locomotor.SweepFromTo(position, targetPosition, ref resultPosition, ref resultNorm); // debug for sweep On here
                 var fleeDistance = Vector3.Distance2D(position, resultPosition);
 
-                if (sweepResult != SweepResult.Failed && fleeDistance > fleeContext.FleeDistanceMin)
-                    pathResults.Add(new FleePath(targetPosition, fleeDistance));
+                pathResults.Add(new FleePath(targetPosition, fleeDistance));
 
                 GenerateValidFleeAnglePaths(pathResults, owner, direction, distance, fleeContext);
                 if (pathResults.Count == 0)
@@ -182,7 +166,9 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             for (int i = 0; i < 4; i++)
             {
-                float angle = (i + 1) * (fleeContext.FleeHalfAngle / 4);
+                // V48_TODO: fix this
+                //float angle = (i + 1) * (fleeContext.FleeHalfAngle / 4);
+                float angle = 1f;
                 
                 var dirSideA = Vector3.SafeNormalize2D(Vector3.AxisAngleRotate(direction, Vector3.ZAxis, MathHelper.ToRadians(angle)));
                 var dirSideB = Vector3.SafeNormalize2D(Vector3.AxisAngleRotate(direction, Vector3.ZAxis, MathHelper.ToRadians(-angle)));
@@ -196,10 +182,10 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 var distanceSideA = Vector3.Distance2D(position, sideAPos);
                 var distanceSideB = Vector3.Distance2D(position, sideBPos);
 
-                if (sweepSideA != SweepResult.Failed && distanceSideA > fleeContext.FleeDistanceMin)
+                if (sweepSideA != SweepResult.Failed)
                     pathResults.Add(new FleePath(sideAPos, distanceSideA));
 
-                if (sweepSideB != SweepResult.Failed && distanceSideB > fleeContext.FleeDistanceMin)
+                if (sweepSideB != SweepResult.Failed)
                     pathResults.Add(new FleePath(sideBPos, distanceSideB));
             }
         }
@@ -257,7 +243,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     if (entity == null) continue;
 
                     if (locomotor.SweepFromTo(curPosition, entity.RegionLocation.Position, ref resultPosition, ref resultNorm) != SweepResult.Failed
-                        && Vector3.Distance2D(curPosition, resultPosition) > fleeContext.FleeDistanceMin
                         && locomotor.PathTo(resultPosition, locomotionOptions))
                         return true;
                 }
@@ -323,21 +308,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
     {
         public AIController OwnerController { get; set; }
         public TimeSpan FleeTime;
-        public float FleeTimeVariance;
-        public float FleeHalfAngle;
-        public float FleeDistanceMin;
-        public bool FleeTowardAllies;
-        public float FleeTowardAlliesPercentChance;
 
         public FleeContext(AIController ownerController, FleeContextPrototype proto)
         {
             OwnerController = ownerController;
             FleeTime = TimeSpan.FromSeconds(proto.FleeTime);
-            FleeTimeVariance = proto.FleeTimeVariance;
-            FleeHalfAngle = proto.FleeHalfAngle;
-            FleeDistanceMin = proto.FleeDistanceMin;
-            FleeTowardAllies = proto.FleeTowardAllies;
-            FleeTowardAlliesPercentChance = proto.FleeTowardAlliesPercentChance;
         }
     }
 

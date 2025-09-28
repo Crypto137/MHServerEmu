@@ -220,7 +220,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int UnlockAtCrafterRank { get; protected set; }
         public EvalPrototype OnRecipeComplete { get; protected set; }
         public PrototypeId RecipeCategory { get; protected set; }
-        public AssetId RecipeIconPathHiRes { get; protected set; }
 
         //---
 

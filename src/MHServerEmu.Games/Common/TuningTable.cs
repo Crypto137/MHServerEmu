@@ -22,12 +22,12 @@ namespace MHServerEmu.Games.Common
 
         private Region _region;
         private PrototypeId _tuningRef;
-        private TuningPrototype _tuningProto;
+        private DifficultyPrototype _tuningProto;
         private int _difficultyIndexMin;
         private int _difficultyIndexMax;
         private int _difficultyIndex;
 
-        public TuningPrototype Prototype { get => _tuningProto; }
+        public DifficultyPrototype Prototype { get => _tuningProto; }
         public int DifficultyIndex { get => _difficultyIndex > 0 ? _difficultyIndex : 0; set => SetDifficultyIndex(value, true); }
 
         public TuningTable(Region region)
@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.Common
             if (_tuningRef != tuningTable)
             {
                 _tuningRef = tuningTable;
-                _tuningProto = GameDatabase.GetPrototype<TuningPrototype>(tuningTable);
+                _tuningProto = GameDatabase.GetPrototype<DifficultyPrototype>(tuningTable);
             }
         }
 
@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.Common
 
             if (ranks.Any(r => r.Rank != Rank.Popcorn) == false)
             {
-                var picker = _tuningProto.BuildRankPicker(_region.DifficultyTierRef, _region.Game.Random, noAffixes);
+                var picker = _tuningProto.BuildRankPicker(_region.Game.Random, noAffixes);
                 if (picker.Empty() == false) picker.Pick(out rank);
             }
 

@@ -178,25 +178,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         {
             if (Prototype == null) return Logger.WarnReturn(0, "GetCapacity(): Prototype == null");
 
-            int nSoftCap = Prototype.GetSoftCapacityDefaultSlots();
-            if (nSoftCap < 0) return MaxCapacity;
-
-            if (Owner == null) return Logger.WarnReturn(MaxCapacity, "GetCapacity(): Owner == null");
-
-            foreach (PrototypeId slotGroupRef in Prototype.GetSoftCapacitySlotGroups())
-            {
-                var slotGroup = slotGroupRef.As<InventoryExtraSlotsGroupPrototype>();
-                int extraSlots = Owner.Properties[PropertyEnum.InventoryExtraSlotsAvailable, slotGroup.DataRef];
-
-                if (slotGroup.MaxExtraSlotCount > 0)
-                    extraSlots = Math.Min(extraSlots, slotGroup.MaxExtraSlotCount);
-
-                nSoftCap += extraSlots;
-            }
-
-            if (nSoftCap > MaxCapacity) Logger.Warn($"GetCapacity(): Inventory softcap over max inventory limit. INVENTORY={this} OWNER={Owner}");
-
-            return Math.Min(nSoftCap, MaxCapacity);
+            return MaxCapacity;
         }
 
         public bool IsSlotFree(uint slot)

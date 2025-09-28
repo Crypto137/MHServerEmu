@@ -1255,21 +1255,4 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return $"EntityHasKeyword(Context=[{Context}], Keyword={{{(Keyword != PrototypeId.Invalid ? GameDatabase.GetPrototypeName(Keyword) : "!NONE!")}}}";
         }
     }
-
-    public class EntityHasTalentPrototype : EvalPrototype
-    {
-        public EvalContext Context { get; protected set; }
-        public PrototypeId Talent { get; protected set; }
-
-        public override void PostProcess()
-        {
-            base.PostProcess();
-            Op = EvalOp.EntityHasTalent;
-        }
-
-        public override string ExpressionString()
-        {
-            return $"EntityHasTalent(Context=[{Context}], Talent={{{(Talent != PrototypeId.Invalid ? GameDatabase.GetPrototypeName(Talent) : "!NONE!")}}})";
-        }
-    }
 }

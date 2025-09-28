@@ -32,11 +32,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ReplicateForTransfer { get; protected set; }
         public PrototypeId[] ItemSortPreferences { get; protected set; }
         public InventoryUIDataPrototype UIData { get; protected set; }
-        public PrototypeId[] SoftCapacitySlotGroupsPC { get; protected set; }       // VectorPrototypeRefPtr InventoryExtraSlotsGroupPrototype
-        public int SoftCapacityDefaultSlotsPC { get; protected set; }
-        public PrototypeId[] SoftCapacitySlotGroupsConsole { get; protected set; }  // VectorPrototypeRefPtr InventoryExtraSlotsGroupPrototype
-        public int SoftCapacityDefaultSlotsConsole { get; protected set; }
-        public LocaleStringId DisplayName { get; protected set; }
 
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="InventoryPrototype"/> is for a player stash inventory.
@@ -88,33 +83,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return false;
         }
 
-        public int GetSoftCapacityDefaultSlots()
-        {
-            // TODO: consoles
-            return SoftCapacityDefaultSlotsPC;
-        }
-
-        public IEnumerable<PrototypeId> GetSoftCapacitySlotGroups()
-        {
-            // TODO: consoles
-            return SoftCapacitySlotGroupsPC;
-        }
-
         public bool InventoryRequiresFlaggedVisibility()
         {
             return IsEquipmentInventory || IsPlayerStashInventory || IsPlayerCraftingRecipeInventory || IsPlayerVendorInventory || IsPlayerVendorBuybackInventory;
         }
     }
 
-    public class InventoryExtraSlotsGroupPrototype : Prototype
-    {
-        public int MaxExtraSlotCount { get; protected set; }
-    }
-
     public class PlayerStashInventoryPrototype : InventoryPrototype
     {
         public PrototypeId ForAvatar { get; protected set; }
         public AssetId IconPath { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }       // V48
         public LocaleStringId FulfillmentName { get; protected set; }
         public AssetId[] StashTabCustomIcons { get; protected set; }
     }
@@ -130,12 +109,5 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EquipmentInvUISlot UISlot { get; protected set; }
         public int UnlocksAtCharacterLevel { get; protected set; }
         public PrototypeId UIData { get; protected set; }
-    }
-
-    public class InventoryExtraSlotsGrantPrototype : Prototype
-    {
-        public LocaleStringId DisplayName { get; protected set; }
-        public int GrantSlotCount { get; protected set; }
-        public PrototypeId SlotGroup { get; protected set; }
     }
 }

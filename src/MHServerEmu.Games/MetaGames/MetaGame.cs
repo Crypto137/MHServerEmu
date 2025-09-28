@@ -535,6 +535,7 @@ namespace MHServerEmu.Games.MetaGames
                 if (entity is Avatar) DiscoverEntity(entity);
             }
 
+            /* V48_TODO
             // REMOVEME this method of activating AddPlayer is used because OnPlayerEnteredRegion
             // is triggered before MetaState is created. Try fix this and remove.
             if (evt.Entity is Avatar avatar)
@@ -556,6 +557,7 @@ namespace MHServerEmu.Games.MetaGames
                         Region.PopulationManager.DespawnSpawnGroups((PrototypeId)17508547083537161214); 
                 }
             }
+            */
         }
 
         private void DiscoverEntity(WorldEntity entity)
@@ -645,7 +647,7 @@ namespace MHServerEmu.Games.MetaGames
                 uiDataProvider.DeleteWidget(widgetRef);
         }
 
-        public static bool SaveMetaStateProgress(Avatar avatar, PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId stateRef)
+        public static bool SaveMetaStateProgress(Avatar avatar, PrototypeId regionRef, PrototypeId stateRef)
         {
             var regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
             if (regionProto == null) return false;
@@ -656,7 +658,7 @@ namespace MHServerEmu.Games.MetaGames
             TimeSpan currentTime = Clock.UnixTime;
 
             List<PropertyId> oldProperties = new();
-            foreach (var kvp in avatar.Properties.IteratePropertyRange(PropertyEnum.MetaStateProgress, regionRef, difficultyTierRef))
+            foreach (var kvp in avatar.Properties.IteratePropertyRange(PropertyEnum.MetaStateProgress, regionRef))
             {
                 Property.FromParam(kvp.Key, 2, out PrototypeId state);
                 TimeSpan stateTime = kvp.Value;
@@ -673,7 +675,7 @@ namespace MHServerEmu.Games.MetaGames
             foreach (var id in oldProperties)
                 avatar.Properties.RemoveProperty(id);
 
-            var propId = new PropertyId(PropertyEnum.MetaStateProgress, regionRef, difficultyTierRef, stateRef);
+            var propId = new PropertyId(PropertyEnum.MetaStateProgress, regionRef, stateRef);
             avatar.Properties[propId] = currentTime;
 
             return true;

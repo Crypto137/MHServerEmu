@@ -80,12 +80,6 @@ namespace MHServerEmu.Games.Achievements
                     case EventContextType.Pet:
                         eventContext.Pet = prototype;
                         break;
-                    case EventContextType.DifficultyTierMin:
-                        eventContext.DifficultyTierMin = prototype as DifficultyTierPrototype;
-                        break;
-                    case EventContextType.DifficultyTierMax:
-                        eventContext.DifficultyTierMax = prototype as DifficultyTierPrototype;
-                        break;
                     case EventContextType.TeamUp:
                         eventContext.TeamUp = prototype;
                         break;

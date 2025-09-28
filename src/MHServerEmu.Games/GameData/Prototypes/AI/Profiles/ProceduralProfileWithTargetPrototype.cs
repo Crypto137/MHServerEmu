@@ -362,7 +362,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public DelayContextPrototype DelayAfterWander { get; protected set; }
         public WanderContextPrototype Wander { get; protected set; }
-        public WanderContextPrototype WanderInPlace { get; protected set; }
 
         private enum State
         {
@@ -395,7 +394,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                 if (selectedEntity != null && proceduralAI.GetState(0) != UsePower.Instance)
                 {
-                    blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.WanderInPlace;
+                    // V48_TODO
+                    //blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.WanderInPlace;
                     SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
                     senses.NotifyAlliesOnTargetAquired();
                     proceduralAI.ClearOverrideBehavior(OverrideType.Full);
@@ -403,6 +403,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
 
+            /* V48_TODO
             StaticBehaviorReturnType contextResult;
             int stateVal = blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal];
             switch ((State)stateVal)
@@ -426,6 +427,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.Delay;
                     break;
             }
+            */
         }
 
     }
@@ -742,7 +744,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent.GetXPAwarded(out _, out _, false))
                 return false;
 
-            if (properties.HasProperty(PropertyEnum.OmegaXP) || properties.HasProperty(PropertyEnum.InfinityXP))
+            if (properties.HasProperty(PropertyEnum.OmegaXP))
                 return false;
 
             // Do not destroy currency

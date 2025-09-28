@@ -436,28 +436,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class MissionActionShowWaypointNotificationPrototype : MissionActionPrototype
-    {
-        public PrototypeId Waypoint { get; protected set; }
-        public DistributionType SendTo { get; protected set; }
-
-        public override MissionAction AllocateAction(IMissionActionOwner owner)
-        {
-            return new MissionActionShowWaypointNotification(owner, this);
-        }
-    }
-
-    public class MissionActionHideWaypointNotificationPrototype : MissionActionPrototype
-    {
-        public PrototypeId Waypoint { get; protected set; }
-        public DistributionType SendTo { get; protected set; }
-
-        public override MissionAction AllocateAction(IMissionActionOwner owner)
-        {
-            return new MissionActionHideWaypointNotification(owner, this);
-        }
-    }
-
     public class MissionActionEnableRegionAvatarSwapPrototype : MissionActionPrototype
     {
         public override MissionAction AllocateAction(IMissionActionOwner owner)
@@ -477,7 +455,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionSwapAvatarPrototype : MissionActionPrototype
     {
         public PrototypeId AvatarPrototype { get; protected set; }
-        public bool UseAvatarSwapPowers { get; protected set; }
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -586,21 +563,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class MissionActionParticipantPerformPowerPrototype : MissionActionPrototype
-    {
-        public PrototypeId Power { get; protected set; }
-        public DistributionType SendTo { get; protected set; }
-
-        public override MissionAction AllocateAction(IMissionActionOwner owner)
-        {
-            return new MissionActionParticipantPerformPower(owner, this);
-        }
-    }
-
     public class MissionActionOpenUIPanelPrototype : MissionActionPrototype
     {
         public AssetId PanelName { get; protected set; }
         public DistributionType SendTo { get; protected set; }
+        public int TabIndex { get; protected set; } // V48
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {

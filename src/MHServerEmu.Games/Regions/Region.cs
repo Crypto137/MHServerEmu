@@ -85,7 +85,6 @@ namespace MHServerEmu.Games.Regions
         public int RandomSeed { get; private set; }
         public ulong MatchNumber { get => Settings.MatchNumber; }
         public int RegionLevel { get; private set; }
-        public PrototypeId DifficultyTierRef { get => Properties[PropertyEnum.DifficultyTier]; }
 
         public RegionPrototype Prototype { get; private set; }
         public PrototypeId PrototypeDataRef { get => Prototype != null ? Prototype.DataRef : PrototypeId.Invalid; }
@@ -237,7 +236,7 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
-            return $"{PrototypeDataRef.GetName()}, ID=0x{Id:X} ({Id}), DIFF={Settings.DifficultyTierRef.GetNameFormatted()}[{RegionLevel}], SEED={RandomSeed}, GAMEID={Game}";
+            return $"{PrototypeDataRef.GetName()}, ID=0x{Id:X} ({Id}), SEED={RandomSeed}, GAMEID={Game}";
         }
 
         public bool Initialize(RegionSettings settings)
@@ -286,10 +285,12 @@ namespace MHServerEmu.Games.Regions
             RegionDifficultySettingsPrototype difficultySettings = regionProto.GetDifficultySettings();
             if (difficultySettings != null)
             {
-                TuningTable.SetTuningTable(difficultySettings.TuningTable);
+                TuningTable.SetTuningTable(difficultySettings.DifficultyTable);
 
                 if (Properties.HasProperty(PropertyEnum.DifficultyIndex))
                     TuningTable.SetDifficultyIndex(Properties[PropertyEnum.DifficultyIndex], false);
+
+                // V48_TODO: Should we use DifficultyIndex from RegionDifficultySettingsPrototype?
             }
 
             // NOTE: Divided start locations are used only in the Age of Ultron game mode
@@ -335,11 +336,6 @@ namespace MHServerEmu.Games.Regions
                     }
                 }
             }
-
-            if (settings.DifficultyTierRef != PrototypeId.Invalid)
-                Properties[PropertyEnum.DifficultyTier] = settings.DifficultyTierRef;
-            else
-                Logger.Warn("Initialize(): settings.DifficultyTierRef == PrototypeId.Invalid");
 
             Targets = RegionTransition.BuildConnectionEdges(settings.RegionDataRef); // For Teleport system
 
@@ -435,8 +431,6 @@ namespace MHServerEmu.Games.Regions
                     if (metagame == null) Logger.Warn($"Initialize(): metagame [{metaGameRef}] == null");
                 }
             }
-
-            ApplyDifficultyTierProperties(settings.DifficultyTierRef);
 
             IsGenerated = true;
             CreatedTime = Clock.UnixTime;
@@ -905,23 +899,6 @@ namespace MHServerEmu.Games.Regions
                 RegionLevel = regionProto.Level;
             else
                 Logger.Error("RegionLevel <= 0");
-        }
-
-        private void ApplyDifficultyTierProperties(PrototypeId difficultyTierProtoRef)
-        {
-            DifficultyTierPrototype difficultyTierProto = difficultyTierProtoRef.As<DifficultyTierPrototype>();
-            if (difficultyTierProto == null) return;
-
-            Properties.AdjustProperty(difficultyTierProto.BonusExperiencePct, PropertyEnum.ExperienceBonusPct);
-            Properties.AdjustProperty(difficultyTierProto.BonusExperiencePct, PropertyEnum.LootBonusXPPct);
-            Properties.AdjustProperty(difficultyTierProto.ItemFindCreditsPct, PropertyEnum.LootBonusCreditsPct);
-            Properties.AdjustProperty(difficultyTierProto.ItemFindRarePct, PropertyEnum.LootBonusRarityPct);
-            Properties.AdjustProperty(difficultyTierProto.ItemFindSpecialPct, PropertyEnum.LootBonusSpecialPct);
-
-            Properties.AdjustProperty(difficultyTierProto.BonusItemFindBonusDifficultyMult, PropertyEnum.BonusItemFindBonusDifficultyMult);
-
-            Properties[PropertyEnum.DamageRegionMobToPlayer] *= difficultyTierProto.DamageMobToPlayerPct;
-            Properties[PropertyEnum.DamageRegionPlayerToMob] *= difficultyTierProto.DamagePlayerToMobPct;
         }
 
         #endregion

@@ -166,7 +166,6 @@ namespace MHServerEmu.Games.Entities
         public ulong DialogTargetId { get; private set; }
         public ulong DialogInteractorId { get; private set; }
         public PrototypeId CurrentOpenStashPagePrototypeRef { get; set; }
-        public long InfinityXP { get => Properties[PropertyEnum.InfinityXP]; }
         public long OmegaXP { get => Properties[PropertyEnum.OmegaXP]; }
         public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
         public int PowerSpecIndexUnlocked { get => Properties[PropertyEnum.PowerSpecIndexUnlocked]; }
@@ -233,20 +232,6 @@ namespace MHServerEmu.Games.Entities
 
             switch (id.Enum)
             {
-                case PropertyEnum.TeamUpsAtMaxLevelPersistent:
-                    var avatar = CurrentAvatar;
-                    if (avatar != null && avatar.IsInWorld)
-                    {
-                        var teamUpAgent = avatar.CurrentTeamUpAgent;
-                        if (teamUpAgent != null)
-                        {
-                            teamUpAgent.SetTeamUpsAtMaxLevel(this);
-                            if (teamUpAgent.IsInWorld) 
-                                teamUpAgent.UpdateTeamUpSynergyCondition();
-                        }
-                    }
-                    break;
-
                 case PropertyEnum.PowerCooldownDuration:
                     {
                         Property.FromParam(id, 0, out PrototypeId powerProtoRef);
@@ -590,7 +575,7 @@ namespace MHServerEmu.Games.Entities
             return AOI.Region;
         }
 
-        public bool CanEnterRegion(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef, bool isPartyTeleport)
+        public bool CanEnterRegion(PrototypeId regionProtoRef, bool isPartyTeleport)
         {
             RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
             if (regionProto == null) return Logger.WarnReturn(false, "CanEnterRegion(): regionProto == null");
@@ -615,7 +600,7 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            if (regionProto.RunEvalAccessRestriction(this, avatar, difficultyTierProtoRef) == false)
+            if (regionProto.RunEvalAccessRestriction(this, avatar) == false)
             {
                 SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionRestricted.As<BannerMessagePrototype>());
                 return false;
@@ -1435,37 +1420,6 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public bool AwardBonusItemFindPoints(int amount, LootInputSettings settings)
-        {
-            if (amount <= 0)
-                return true;
-
-            Avatar avatar = CurrentAvatar;
-            if (avatar == null) return Logger.WarnReturn(false, "AwardBonusItemFindPoints(): avatar == null");
-
-            int bonusItemFindRating = avatar.Properties[PropertyEnum.BonusItemFindRating];
-            if (bonusItemFindRating <= 0)
-                return true;
-
-            LootGlobalsPrototype lootGlobalsProto = GameDatabase.LootGlobalsPrototype;
-            Curve bonusItemFindCurve = GameDatabase.LootGlobalsPrototype.BonusItemFindCurve.AsCurve();
-            if (bonusItemFindCurve == null) return Logger.WarnReturn(false, "AwardBonusItemFindPoints(): bonusItemFindCurve == null");
-
-            amount = (int)(amount * bonusItemFindCurve.GetAt(bonusItemFindRating));
-            if (amount <= 0)
-                return true;
-
-            int points = Properties[PropertyEnum.BonusItemFindPoints] + amount;
-            if (points >= lootGlobalsProto.BonusItemFindNumPointsForBonus)
-            {
-                Game.LootManager.GiveLootFromTable(lootGlobalsProto.BonusItemFindLootTable, settings);
-                points -= lootGlobalsProto.BonusItemFindNumPointsForBonus;
-            }
-
-            Properties[PropertyEnum.BonusItemFindPoints] = points;
-            return true;
-        }
-
         public bool InitPowerFromCreationItem(Item item)
         {
             // Only the current avatar is in the world and can have powers, so it's pointless to use AvatarIterator here like the client does
@@ -1990,7 +1944,7 @@ namespace MHServerEmu.Games.Entities
                 PrototypeId avatarProtoRef = avatar.PrototypeDataRef;
 
                 // AvatarLibraryLevel will be set by running the level up logic in the avatar (see OnAvatarCharacterLevelChanged())
-                Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarProtoRef] = avatar.Properties[PropertyEnum.CostumeCurrent];
+                Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarProtoRef] = avatar.EquippedCostumeRef;
                 Properties[PropertyEnum.AvatarLibraryTeamUp, 0, avatarProtoRef] = avatar.Properties[PropertyEnum.AvatarTeamUpAgent];
 
                 // Update max level
@@ -2009,35 +1963,6 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.LegendaryMissionsComplete] = legendaryMissionsComplete;
             Properties[PropertyEnum.PvPWins] = pvpWins;
             Properties[PropertyEnum.PvPLosses] = pvpLosses;
-        }
-
-        public void SetTeamUpLibraryProperties()
-        {
-            if (Properties.HasProperty(PropertyEnum.TeamUpsAtMaxLevelPersistent))
-                return;
-
-            Inventory teamUpLibrary = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
-            if (teamUpLibrary == null)
-                return;
-
-            EntityManager entityManager = Game.EntityManager;
-
-            int teamUpsAtMaxLevel = 0;
-            foreach (var entry in teamUpLibrary)
-            {
-                Agent teamUpAgent = entityManager.GetEntity<Agent>(entry.Id);
-                if (teamUpAgent == null)
-                {
-                    Logger.Warn("SetTeamUpLibraryProperties(): teamUpAgent == null");
-                    continue;
-                }
-
-                if (teamUpAgent.IsAtLevelCap)
-                    teamUpsAtMaxLevel++;
-            }
-
-            if (teamUpsAtMaxLevel > 0)
-                Properties[PropertyEnum.TeamUpsAtMaxLevelPersistent] = teamUpsAtMaxLevel;
         }
 
         public void OnChangeActiveAvatar(int avatarIndex, ulong lastCurrentAvatarId)
@@ -2237,7 +2162,7 @@ namespace MHServerEmu.Games.Entities
             RegionPrototype regionProto = region.Prototype;
 
             // Run eval checks
-            if (regionProto.RunEvalAccessRestriction(this, avatarToSwitchTo, region.DifficultyTierRef) == false)
+            if (regionProto.RunEvalAccessRestriction(this, avatarToSwitchTo) == false)
                 return CanSwitchAvatarResult.NotAllowedInRegion;
 
             // Check roster restriction
@@ -2336,7 +2261,9 @@ namespace MHServerEmu.Games.Entities
             if (amount <= 0)
                 return;
 
-            long omegaXP = Math.Min(OmegaXP + amount, GameDatabase.AdvancementGlobalsPrototype.InfinityXPCap);
+            // V48_TODO: OmegaXPCap
+            //long omegaXP = Math.Min(OmegaXP + amount, GameDatabase.AdvancementGlobalsPrototype.InfinityXPCap);
+            long omegaXP = OmegaXP + amount;
             Properties[PropertyEnum.OmegaXP] = omegaXP;
 
             TryOmegaLevelUp(notifyClient);
@@ -2372,59 +2299,6 @@ namespace MHServerEmu.Games.Entities
         {
             int points = MathHelper.RoundToInt(Math.Sqrt(xp / AdvancementGlobalsPrototype.OmegaXPFactor));
             return Math.Min(points, GameDatabase.AdvancementGlobalsPrototype.OmegaPointsCap);
-        }
-
-        #endregion
-
-        #region Difficulty
-
-        public bool CanChangeDifficulty(PrototypeId difficultyTierProtoRef)
-        {
-            DifficultyTierPrototype difficultyTierProto = difficultyTierProtoRef.As<DifficultyTierPrototype>();
-            if (difficultyTierProto == null) return Logger.WarnReturn(false, "CanChangeDifficulty(): difficultyTierProto == null");
-
-            // The game assumes all difficulties to be unlocked if there is no current avatar
-            if (CurrentAvatar != null && CurrentAvatar.CharacterLevel < difficultyTierProto.UnlockLevel)
-                return false;
-
-            return true;
-        }
-
-        public PrototypeId GetDifficultyTierPreference()
-        {
-            Party party = GetParty();
-            if (party != null)
-                return party.DifficultyTierProtoRef;
-
-            if (CurrentAvatar != null)
-                return CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference];
-
-            return GameDatabase.GlobalsPrototype.DifficultyTierDefault;
-        }
-
-        public PrototypeId GetDifficultyTierForRegion(PrototypeId regionProtoRef, PrototypeId preferenceProtoRef = PrototypeId.Invalid)
-        {
-            if (preferenceProtoRef == PrototypeId.Invalid)
-                preferenceProtoRef = GetDifficultyTierPreference();
-
-            PrototypeId difficultyTierProtoRef = RegionPrototype.ConstrainDifficulty(regionProtoRef, preferenceProtoRef);
-            if (difficultyTierProtoRef == preferenceProtoRef)
-                return preferenceProtoRef;
-
-            if (CanChangeDifficulty(difficultyTierProtoRef))
-                return difficultyTierProtoRef;
-
-            return PrototypeId.Invalid;
-        }
-
-        public void SendDifficultyTierPreferenceToPlayerManager()
-        {
-            PrototypeId difficultyTierProtoRef = CurrentAvatar != null
-                ? CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference]
-                : GameDatabase.GlobalsPrototype.DifficultyTierDefault;
-
-            ServiceMessage.SetDifficultyTierPreference message = new(DatabaseUniqueId, (ulong)difficultyTierProtoRef);
-            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         #endregion
@@ -2529,8 +2403,7 @@ namespace MHServerEmu.Games.Entities
         public bool HasBodysliderProperties()
         {
             return Properties[PropertyEnum.BodySliderRegionId] != 0ul &&
-                   Properties[PropertyEnum.BodySliderRegionRef] != PrototypeId.Invalid &&
-                   Properties[PropertyEnum.BodySliderDifficultyRef] != PrototypeId.Invalid;
+                   Properties[PropertyEnum.BodySliderRegionRef] != PrototypeId.Invalid;
         }
 
         public void RemoveBodysliderProperties()
@@ -2792,16 +2665,6 @@ namespace MHServerEmu.Games.Entities
         #endregion
 
         #region Missions and Chapters
-
-        public void InitializeMissionTrackerFilters()
-        {
-            foreach (PrototypeId filterRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionTrackerFilterPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-            {
-                var filterProto = GameDatabase.GetPrototype<MissionTrackerFilterPrototype>(filterRef);
-                if (filterProto.DisplayByDefault)
-                    Properties[PropertyEnum.MissionTrackerFilter, filterRef] = true;
-            }
-        }
 
         public void SetActiveChapter(PrototypeId chapterRef)
         {
@@ -3156,17 +3019,6 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message);
 
             return true;
-        }
-
-        public void SendWaypointNotification(PrototypeId waypointRef, bool show = true)
-        {
-            /* V48_TODO or REMOVEME
-            if (waypointRef == PrototypeId.Invalid) return;
-            var message = NetMessageWaypointNotification.CreateBuilder()
-                .SetWaypointProtoId((ulong)waypointRef)
-                .SetShow(show).Build();
-            SendMessage(message);
-            */
         }
 
         public void SendStoryNotification(StoryNotificationPrototype storyNotification, PrototypeId missionRef = PrototypeId.Invalid)
@@ -3553,17 +3405,13 @@ namespace MHServerEmu.Games.Entities
             Avatar avatar = CurrentAvatar;
 
             ulong currentRegionRefId = 0;
-            ulong currentDifficultyRefId = 0;
             ulong avatarRefId = 0;
             ulong costumeRefId = 0;
             uint level = 0;
             uint prestigeLevel = 0;
 
             if (region != null)
-            {
                 currentRegionRefId = (ulong)region.PrototypeDataRef;
-                currentDifficultyRefId = (ulong)region.DifficultyTierRef;
-            }
 
             if (avatar != null)
             {
@@ -3875,7 +3723,7 @@ namespace MHServerEmu.Games.Entities
                 PrototypeId difficultyProtoRef = PrototypeId.Invalid;
                 if (regionProtoRef != PrototypeId.Invalid && difficultyProtoRef != PrototypeId.Invalid)
                 {
-                    if (CanEnterRegion(regionProtoRef, difficultyProtoRef, true) == false)
+                    if (CanEnterRegion(regionProtoRef, true) == false)
                         return false;
                 }
             }

@@ -12,8 +12,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId ContextRegion { get; protected set; }
         public bool ContextRegionIncludeChildren { get; protected set; }
         public PrototypeId ContextRegionKeyword { get; protected set; }
-        public PrototypeId ContextDifficultyTierMin { get; protected set; }
-        public PrototypeId ContextDifficultyTierMax { get; protected set; }
         public PrototypeId ContextTeamUp { get; protected set; }
         public PrototypeId ContextPublicEventTeam { get; protected set; }
 

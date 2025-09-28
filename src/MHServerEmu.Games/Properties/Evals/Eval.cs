@@ -498,13 +498,6 @@ namespace MHServerEmu.Games.Properties.Evals
                         }
                         break;
 
-                    case EvalOp.EntityHasTalent:
-                        {
-                            var typedProto = (EntityHasTalentPrototype)evalProto;
-                            resultContexts.Add(typedProto.Context);
-                        }
-                        break;
-
                     case EvalOp.GetCombatLevel:
                         {
                             var typedProto = (GetCombatLevelPrototype)evalProto;
@@ -1241,7 +1234,6 @@ namespace MHServerEmu.Games.Properties.Evals
                 EvalOp.LoadEntityToContextVar => RunLoadEntityToContextVar(evalProto, data),
                 EvalOp.LoadConditionCollectionToContext => RunLoadConditionCollectionToContext(evalProto, data),
                 EvalOp.EntityHasKeyword => RunEntityHasKeyword(evalProto, data),
-                EvalOp.EntityHasTalent => RunEntityHasTalent(evalProto, data),
                 EvalOp.GetCombatLevel => RunGetCombatLevel(evalProto, data),
                 EvalOp.GetPowerRank => RunGetPowerRank(evalProto, data),
                 EvalOp.CalcPowerRank => RunCalcPowerRank(evalProto, data),
@@ -1463,6 +1455,7 @@ namespace MHServerEmu.Games.Properties.Evals
             evalVar.SetError();
             if (evalProto is not DifficultyTierRangePrototype DifficultyTierRangeProto) return evalVar;
 
+            /* V48_TODO?
             PrototypeId tierRef = PrototypeId.Invalid;
             EvalVar contextVar = GetEvalVarFromContext(DifficultyTierRangeProto.Context, data, false);
             if (FromValue(contextVar, out Entity entity))
@@ -1487,6 +1480,9 @@ namespace MHServerEmu.Games.Properties.Evals
                 evalVar.SetBool(DifficultyTierPrototype.InRange(tierRef, DifficultyTierRangeProto.Min, DifficultyTierRangeProto.Max));
                 return evalVar;
             }
+            */
+
+            return evalVar;
         }
 
         private static EvalVar RunMissionIsActive(EvalPrototype evalProto, EvalContextData data)
@@ -2949,28 +2945,6 @@ namespace MHServerEmu.Games.Properties.Evals
                     else
                         evalVar.SetBool(worldEntity.HasKeyword(entityHasKeywordProto.Keyword) || worldEntity.HasConditionWithKeyword(entityHasKeywordProto.Keyword));
                 }
-
-            return evalVar;
-        }
-
-        private static EvalVar RunEntityHasTalent(EvalPrototype evalProto, EvalContextData data)
-        {
-            EvalVar evalVar = new ();
-            evalVar.SetError();
-            if (evalProto is not EntityHasTalentPrototype entityHasTalentProto) return evalVar;
-
-            if (entityHasTalentProto.Talent == PrototypeId.Invalid)
-                return Logger.WarnReturn(evalVar, "EntityHasTalent Eval doesn't have a valid Talent to check!");
-
-            EvalVar contextVar = data.ContextVars[(int)entityHasTalentProto.Context].Var;
-            if (contextVar.Type != EvalReturnType.EntityPtr)
-                return Logger.WarnReturn(evalVar, "EntityHasTalent was given a context variable that is not an EntityPtr.");
-
-            evalVar.SetBool(false);
-
-            if (FromValue(contextVar, out Entity entity))
-                if (entity is WorldEntity worldEntity)
-                    evalVar.SetBool(worldEntity.HasPowerInPowerCollection(entityHasTalentProto.Talent));
 
             return evalVar;
         }

@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override bool IsAtLevelCap { get => CharacterLevel >= GetAvatarLevelCap(); }
         public override int Throwability { get => GetThrowability(); }
 
-        public PrototypeId EquippedCostumeRef { get => Properties[PropertyEnum.CostumeCurrent]; }
+        public PrototypeId EquippedCostumeRef { get => PrototypeId.Invalid; }   // V48_TODO
         public CostumePrototype EquippedCostume { get => EquippedCostumeRef.As<CostumePrototype>(); }
 
         public bool IsUsingGamepadInput { get; set; } = false;
@@ -509,8 +509,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                         using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
                         teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Resurrect);
-                        // Ignore player/party difficulty preference and resurrect in the current difficulty for consistency.
-                        teleporter.DifficultyTierRef = region.DifficultyTierRef;
                         return teleporter.TeleportToTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
                     }
                     else 
@@ -736,7 +734,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                     // Set bodyslider properties to be able to return to where we left
                     player.Properties[PropertyEnum.BodySliderRegionId] = region.Id;
                     player.Properties[PropertyEnum.BodySliderRegionRef] = region.PrototypeDataRef;
-                    player.Properties[PropertyEnum.BodySliderDifficultyRef] = region.DifficultyTierRef;
                     player.Properties[PropertyEnum.BodySliderRegionSeed] = region.RandomSeed;
                     player.Properties[PropertyEnum.BodySliderAreaRef] = area.PrototypeDataRef;
                     player.Properties[PropertyEnum.BodySliderRegionPos] = RegionLocation.Position;
@@ -1384,10 +1381,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (power != null)
                 return power.HasKeyword(keywordPrototype);
 
-            // Check if there are any keyword override in our properties
-            int powerKeywordChange = Properties[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
-
-            return powerKeywordChange == (int)TriBool.True || (powerProto.HasKeyword(keywordPrototype) && powerKeywordChange != (int)TriBool.False);
+            return powerProto.HasKeyword(keywordPrototype);
         }
 
         public bool IsValidTargetForCurrentPower(WorldEntity target)
@@ -1557,7 +1551,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             AssignPower(avatarPrototype.ResurrectOtherEntityPower, indexProps);
             AssignPower(avatarPrototype.StatsPower, indexProps);
             ScheduleStatsPowerRefresh();
-            AssignPower(GameDatabase.GlobalsPrototype.AvatarHealPower, indexProps);
 
             return true;
         }
@@ -1944,18 +1937,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         protected override int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int powerSpecIndexActive)
         {
             // Check avatar-specific overrides
-            if (powerInfo.IsInPowerProgression)
-            {
-                // Talents
-                if (powerInfo.IsTalent)
-                {
-                    if (powerInfo.GetRequiredLevel() > CharacterLevel)
-                        return PowerProgressionInfo.RankLocked;
-
-                    return IsTalentPowerEnabledForSpec(powerInfo.PowerRef, powerSpecIndexActive) ? 1 : 0;
-                }
-            }
-            else
+            if (powerInfo.IsInPowerProgression == false)
             {
                 // Mapped powers
                 PrototypeId originalPowerProtoRef = GetOriginalPowerFromMappedPower(powerInfo.PowerRef);
@@ -2029,9 +2011,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (GameDataTables.Instance.PowerOwnerTable.GetPowerProgressionEntry(PrototypeDataRef, powerRef) != null)
                 return true;
 
-            if (GameDataTables.Instance.PowerOwnerTable.GetTalentEntry(PrototypeDataRef, powerRef) != null)
-                return true;
-
             return false;
         }
 
@@ -2076,13 +2055,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             // Case 2 - Talent
-            var talentEntryPair = powerOwnerTable.GetTalentEntryPair(avatarProto.DataRef, progressionInfoPower);
-            var talentGroupPair = powerOwnerTable.GetTalentGroupPair(avatarProto.DataRef, progressionInfoPower);
-            if (talentEntryPair.Item1 != null && talentGroupPair.Item1 != null)
-            {
-                powerInfo.InitForAvatar(talentEntryPair.Item1, talentGroupPair.Item1, talentEntryPair.Item2, talentGroupPair.Item2);
-                return powerInfo.IsValid;
-            }
+            // V48_TODO: Do we need to do anything for specialization powers here?
 
             // Case 3 - Non-Progression Power
             powerInfo.InitNonProgressionPower(powerProtoRef);
@@ -2236,6 +2209,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool EnableTalentPower(PrototypeId talentPowerRef, int specIndex, bool enable)
         {
+            /* V48_TODO: Specialization powers
             if (talentPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "EnableTalentPower(): talentPowerRef == PrototypeId.Invalid");
 
             SpecializationPowerPrototype talentProto = talentPowerRef.As<SpecializationPowerPrototype>();
@@ -2272,12 +2246,14 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // Disable
                 UnassignTalentPower(talentPowerRef, specIndex);
             }
+            */
 
             return true;
         }
 
         public CanToggleTalentResult CanToggleTalentPower(PrototypeId talentPowerRef, int specIndex, bool enteringWorld, bool enable)
         {
+            /* V48_TODO
             SpecializationPowerPrototype talentPowerProto = talentPowerRef.As<SpecializationPowerPrototype>();
             if (talentPowerProto == null)
                 return CanToggleTalentResult.GenericError;
@@ -2313,6 +2289,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 }
             }
 
+            */
             return CanToggleTalentResult.Success;
         }
 
@@ -2543,8 +2520,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool IsStolenPowerAvailable(PrototypeId stolenPowerRef)
         {
-            if (stolenPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "IsStolenPowerAvailable(): stolenPowerRef == PrototypeId.Invalid");
-            return Properties[PropertyEnum.StolenPowerAvailable, stolenPowerRef];
+            // V48_TODO
+            return false;
         }
 
         public bool CanAssignStolenPower(PrototypeId stolenPowerRefToAssign, PrototypeId currentStolenPowerRef)
@@ -2658,7 +2635,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (_travelPowerOverrideProtoRef != PrototypeId.Invalid)
                 return _travelPowerOverrideProtoRef;
 
-            return avatarProto.TravelPower;
+            // V48_TODO
+            return PrototypeId.Invalid;
         }
 
         public void SetTravelPowerOverride(PrototypeId travelPowerOverrideProtoRef)
@@ -2672,6 +2650,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// </summary>
         private bool UpdateTravelPower()
         {
+            /* V48_TODO
             PrototypeId travelPowerRef = GetTravelPowerRef();
             if (travelPowerRef == PrototypeId.Invalid)
                 return true;
@@ -2689,7 +2668,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 UnassignPower(travelPowerRef);
             }
-
+            */
             return true;
         }
 
@@ -4055,7 +4034,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Tuning table modifiers
             if (tuningTable != null)
             {
-                TuningPrototype tuningProto = tuningTable.Prototype;
+                DifficultyPrototype tuningProto = tuningTable.Prototype;
                 if (tuningProto == null) return Logger.WarnReturn(0L, "ApplyXPModifiers(): tuningProto == null");
 
                 // Apply difficulty index modifier
@@ -4290,7 +4269,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool InGamepadInteractRange(WorldEntity interactee)
         {
-            var gamepadGlobals = GameDatabase.GamepadGlobalsPrototype;
+            var gamepadGlobals = GameDatabase.ControllerGlobalsPrototype;
             if (gamepadGlobals == null || RegionLocation.Region == null) return false;
 
             Vector3 direction = Forward;
@@ -4301,6 +4280,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             float minAngle = Math.Abs(MathHelper.ToDegrees(Vector3.Angle2D(direction, velocity)));
             float distance = Vector3.Distance2D(interacteePosition, avatarPosition);
 
+            /* V48_TODO
             if (distance < Bounds.Radius + gamepadGlobals.GamepadInteractBoundsIncrease)
                 return true;
 
@@ -4317,6 +4297,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return false;
+            */
+
+            return true;
         }
 
         #endregion
@@ -4615,7 +4598,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     return Logger.WarnReturn(false, $"ChangeCostume(): {costumeProtoRef} is not a valid costume prototype ref");
             }
 
-            Properties[PropertyEnum.CostumeCurrent] = costumeProtoRef;
+            // V48_TODO Properties[PropertyEnum.CostumeCurrent] = costumeProtoRef;
 
             // Update avatar library
             Player owner = GetOwnerOfType<Player>();
@@ -4704,7 +4687,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             return MathF.Max(-1f, multiplier);
         }
 
-        public float GetPartyXPMultiplier(TuningPrototype tuningProto)
+        public float GetPartyXPMultiplier(DifficultyPrototype tuningProto)
         {
             Party party = Party;
             if (party == null)
@@ -5009,7 +4992,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             SetOwnerTeamUpAgent(currentTeamUp);
             currentTeamUp.AssignTeamUpAgentPowers();
             currentTeamUp.ApplyTeamUpAffixesToAvatar(this);
-            currentTeamUp.SetTeamUpsAtMaxLevel(player);
 
             // event PlayerActivatedTeamUpGameEvent not used in missions
         }
@@ -5668,6 +5650,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (avatarProto.SynergyTable.IsNullOrEmpty())
                 return true;
 
+            /* V48_TODO
             foreach (AvatarSynergyEntryPrototype synergyProto in avatarProto.SynergyTable)
             {
                 if (oldLevel < synergyProto.Level && newLevel >= synergyProto.Level)
@@ -5676,6 +5659,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     break;
                 }
             }
+            */
 
             return true;
         }
@@ -5715,7 +5699,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             player.ResetMapDiscoveryForStoryWarp();
 
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
-            teleporter.DifficultyTierRef = GameDatabase.GlobalsPrototype.DifficultyTierDefault;
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_StoryWarp);
             return teleporter.TeleportToTarget(targetProto.DataRef);
         }
@@ -5752,7 +5735,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Adjust properties
             Properties.AdjustProperty(1, PropertyEnum.AvatarPrestigeLevel);
             Properties[PropertyEnum.NumberOfDeaths] = 0;
-            Properties.RemoveProperty(PropertyEnum.DifficultyTierPreference);
 
             // Get rid of controlled agents
             RemoveAndKillControlledAgent();
@@ -5872,28 +5854,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "AwardPrestigeLoot(): player == null");
 
-            if (Game.CustomGameOptions.UsePrestigeLootTable)
-            {
-                // Award loot from the prestige loot table (same as BIF boxes by default), it appears this was never fully implemented
-                PrototypeId prestigeLootTableProtoRef = prestigeLevelProto.Reward;
-                if (prestigeLootTableProtoRef != PrototypeId.Invalid)
-                {
-                    using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                    settings.Initialize(LootContext.Initialization, player, null, 1);
-
-                    Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
-                    {
-                        (prestigeLootTableProtoRef, LootActionType.Give)
-                    };
-
-                    Game.LootManager.AwardLootFromTables(tables, settings, 1);
-                }
-            }
-            else
-            {
-                // Grant a copy of the starting costume, original behavior
+            if (prestigeLevelProto.GrantStartingCostume)
                 GiveStartingCostume();
-            }
 
             return true;
         }
@@ -5945,7 +5907,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                     break;
 
                 case PropertyEnum.OmegaRank:
-                case PropertyEnum.InfinityGemBonusRank:
                 case PropertyEnum.PvPUpgrades:
                     if (IsSimulated)
                     {
@@ -6052,22 +6013,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                         Properties[PropertyEnum.SecondaryResource] = secondaryResourceMax;
                     break;
 
-                case PropertyEnum.SecondaryResourceMaxBase:
-                    Properties[PropertyEnum.SecondaryResourceMax] = (float)newValue + Properties[PropertyEnum.SecondaryResourceMaxChange];
-                    break;
-
-                case PropertyEnum.SecondaryResourceMaxChange:
-                    Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase] + (float)newValue;
-                    break;
-
-                case PropertyEnum.SecondaryResourceMaxPipsBase:
-                    Properties[PropertyEnum.SecondaryResourceMaxPips] = (int)newValue + Properties[PropertyEnum.SecondaryResourceMaxPipsChg];
-                    break;
-
-                case PropertyEnum.SecondaryResourceMaxPipsChg:
-                    Properties[PropertyEnum.SecondaryResourceMaxPips] = Properties[PropertyEnum.SecondaryResourceMaxPipsBase] + (int)newValue;
-                    break;
-
                 case PropertyEnum.SecondaryResourceOverride:
                     if (oldValue != PrototypeId.Invalid)
                     {
@@ -6095,22 +6040,16 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 case PropertyEnum.StatAllModifier:
                 case PropertyEnum.StatDurability:
-                case PropertyEnum.StatDurabilityDmgPctPerPoint:
                 case PropertyEnum.StatDurabilityModifier:
                 case PropertyEnum.StatStrength:
-                case PropertyEnum.StatStrengthDmgPctPerPoint:
                 case PropertyEnum.StatStrengthModifier:
                 case PropertyEnum.StatFightingSkills:
-                case PropertyEnum.StatFightingSkillsDmgPctPerPoint:
                 case PropertyEnum.StatFightingSkillsModifier:
                 case PropertyEnum.StatSpeed:
-                case PropertyEnum.StatSpeedDmgPctPerPoint:
                 case PropertyEnum.StatSpeedModifier:
                 case PropertyEnum.StatEnergyProjection:
-                case PropertyEnum.StatEnergyDmgPctPerPoint:
                 case PropertyEnum.StatEnergyProjectionModifier:
                 case PropertyEnum.StatIntelligence:
-                case PropertyEnum.StatIntelligenceDmgPctPerPoint:
                 case PropertyEnum.StatIntelligenceModifier:
                     if (IsInWorld)
                         ScheduleStatsPowerRefresh();
@@ -6146,93 +6085,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                         if (power != null && power.IsOnCooldown() == false)
                             power.StartCooldown();
                     }
-
-                    break;
-                }
-
-                case PropertyEnum.PowerChargesMaxBonus:
-                {
-                    Property.FromParam(id, 0, out PrototypeId powerProtoRef);
-
-                    int chargesMaxOld = Properties[PropertyEnum.PowerChargesMax, powerProtoRef];
-                    int chargesMaxNew = chargesMaxOld - oldValue + newValue;
-
-                    Power power = GetPower(powerProtoRef);
-
-                    // This indicates whether this power has charges on its own or all extra charges are coming from bonuses
-                    bool hasBaselineCharges = power != null && power.Properties.HasProperty(PropertyEnum.PowerChargesMax);
-
-                    if (chargesMaxOld == 0)
-                    {
-                        // Initialize charges for powers that don't have baseline charges
-                        PropertyId chargesAvailableProp = new(PropertyEnum.PowerChargesAvailable, powerProtoRef);
-                        if (power != null && power.IsOnCooldown() == false && Properties.HasProperty(chargesAvailableProp) == false)
-                            Properties[chargesAvailableProp] = 1;
-
-                        if (chargesMaxNew == 1 && hasBaselineCharges == false)
-                            chargesMaxNew++;
-                    }
-                    else if (chargesMaxNew == 1 && hasBaselineCharges == false)
-                    {
-                        // Revert to normal behavior if this power doesn't have baseline charges
-                        chargesMaxNew = 0;
-                    }
-
-                    Properties[PropertyEnum.PowerChargesMax, powerProtoRef] = chargesMaxNew;
-                    break;
-                }
-
-                case PropertyEnum.PowerChargesMaxBonusForKwd:
-                {
-                    // These will be applied when the power is assigned if currently not in the world
-                    if (IsAliveInWorld == false)
-                        break;
-
-                    Property.FromParam(id, 0, out PrototypeId keywordProtoRef);
-
-                    // Apply bonus to power progression powers
-                    List<PowerProgressionInfo> powerInfoList = ListPool<PowerProgressionInfo>.Instance.Get();
-                    GetPowerProgressionInfos(powerInfoList);
-
-                    foreach (PowerProgressionInfo powerInfo in powerInfoList)
-                    {
-                        PowerPrototype powerProto = powerInfo.PowerPrototype;
-                        if (powerProto == null)
-                        {
-                            Logger.Warn("OnPropertyChange(): powerProto == null");
-                            continue;
-                        }
-
-                        if (HasPowerWithKeyword(powerProto, keywordProtoRef) == false)
-                            continue;
-
-                        Properties[PropertyEnum.PowerChargesMaxBonus, powerProto.DataRef] = newValue;
-                    }
-
-                    ListPool<PowerProgressionInfo>.Instance.Return(powerInfoList);
-
-                    // Apply bonus to mapped powers
-                    Dictionary<PropertyId, PropertyValue> mappedPowerDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
-
-                    foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
-                        mappedPowerDict.Add(kvp.Key, kvp.Value);
-
-                    foreach (var kvp in mappedPowerDict)
-                    {
-                        PowerPrototype mappedPowerProto = GameDatabase.GetPrototype<PowerPrototype>(kvp.Value);
-                        if (mappedPowerProto == null)
-                        {
-                            Logger.Warn("OnPropertyChange(): mappedPowerProto == null");
-                            continue;
-                        }
-
-                        if (HasPowerWithKeyword(mappedPowerProto, keywordProtoRef) == false)
-                            continue;
-
-                        Properties[PropertyEnum.PowerChargesMaxBonus, mappedPowerProto.DataRef] = newValue;
-                    }
-
-                    DictionaryPool<PropertyId, PropertyValue>.Instance.Return(mappedPowerDict);
 
                     break;
                 }
@@ -6380,7 +6232,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             UpdateAvatarSynergyCondition();
             UpdateAvatarSynergyExperienceBonus();
-            CurrentTeamUpAgent?.SetTeamUpsAtMaxLevel(player);   // Needed to calculate team-up synergies
 
             ApplyLiveTuneServerConditions();
 

@@ -287,9 +287,7 @@ namespace MHServerEmu.Games.Behavior
         public void AddPowersToPicker(Picker<ProceduralUsePowerContextPrototype> powerPicker, ProceduralUsePowerContextPrototype power)
         {
             if (power == null) return;
-            Region region = Owner.Region;
-            if (region != null && power.AllowedInDifficulty(region.DifficultyTierRef))
-                powerPicker.Add(power, power.PickWeight);
+            powerPicker.Add(power, power.PickWeight);
         }
 
         public void ResetCurrentTargetState()

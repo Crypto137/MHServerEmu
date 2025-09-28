@@ -191,9 +191,6 @@ namespace MHServerEmu.Games.Events
         public Prototype Pet { get; set; }
         public Prototype Region { get; set; }
         public bool RegionIncludeChildren { get; set; }
-        public DifficultyTierPrototype DifficultyTier { get; set; }
-        public DifficultyTierPrototype DifficultyTierMin { get; set; }
-        public DifficultyTierPrototype DifficultyTierMax { get; set; }
         public Prototype TeamUp { get; set; }
         public Prototype PublicEventTeam { get; set; }
         public List<PrototypeId> PartyFilters { get; set; }
@@ -211,8 +208,6 @@ namespace MHServerEmu.Games.Events
             Item = prototype.ContextItemEquipped != PrototypeId.Invalid ? prototype.ContextItemEquipped.As<Prototype>() : null;
             Party = prototype.ContextParty != PrototypeId.Invalid ? prototype.ContextParty.As<Prototype>() : null;
             Pet = prototype.ContextPet != PrototypeId.Invalid ? prototype.ContextPet.As<Prototype>() : null;
-            DifficultyTierMin = prototype.ContextDifficultyTierMin != PrototypeId.Invalid ? prototype.ContextDifficultyTierMin.As<DifficultyTierPrototype>() : null;
-            DifficultyTierMax = prototype.ContextDifficultyTierMax != PrototypeId.Invalid ? prototype.ContextDifficultyTierMax.As<DifficultyTierPrototype>() : null;
             TeamUp = prototype.ContextTeamUp != PrototypeId.Invalid ? prototype.ContextTeamUp.As<Prototype>() : null;
             PublicEventTeam = prototype.ContextPublicEventTeam != PrototypeId.Invalid ? prototype.ContextPublicEventTeam.As<Prototype>() : null;
         }
@@ -237,7 +232,6 @@ namespace MHServerEmu.Games.Events
             if (region != null)
             {
                 Region = region.Prototype;
-                DifficultyTier = region.DifficultyTierRef.As<DifficultyTierPrototype>();
             }
 
             PublicEventTeam = player.GetPublicEventTeamPrototype();
@@ -248,7 +242,6 @@ namespace MHServerEmu.Games.Events
         public bool HasContext()
         {
             return Avatar != null || Region != null || Item != null || Pet != null || TeamUp != null 
-                || DifficultyTierMin != null || DifficultyTierMax != null 
                 || Party != null || PublicEventTeam != null;
         }
 
@@ -259,7 +252,6 @@ namespace MHServerEmu.Games.Events
                 && ScoringEvents.FilterPrototype(Pet, ownerContext.Pet, false)
                 && ScoringEvents.FilterPrototype(TeamUp, ownerContext.TeamUp, false)
                 && FilterOwnerItem(owner)
-                && FilterDifficultyTier(ownerContext.DifficultyTier)
                 && FilterParty(ownerContext.PartyFilters)
                 && FilterPublicEventTeam(ownerContext.PublicEventTeam);
         }
@@ -275,12 +267,6 @@ namespace MHServerEmu.Games.Events
             if (Party == null) return true;
             if (partyFilters == null) return false;
             return partyFilters.Contains(Party.DataRef);
-        }
-
-        private bool FilterDifficultyTier(DifficultyTierPrototype difficultyTier)
-        {
-            if (DifficultyTierMin == null && DifficultyTierMax == null) return true;
-            return DifficultyTierPrototype.InRange(difficultyTier, DifficultyTierMin, DifficultyTierMax);
         }
 
         private bool FilterOwnerItem(Player owner)

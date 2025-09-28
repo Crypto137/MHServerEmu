@@ -16,7 +16,6 @@ namespace MHServerEmu.Games
         public bool CommunityNewsV2Enabled { get; private set; } = true;
         public bool LeaderboardsEnabled { get; private set; } = true;
         public bool NewPlayerExperienceEnabled { get; private set; } = true;
-        public bool MissionTrackerV2Enabled { get; private set; } = true;
         public int GiftingAccountAgeInDaysRequired { get; private set; } = 7;
         public int GiftingAvatarLevelRequired { get; private set; } = 20;
         public int GiftingLoginCountRequired { get; private set; } = 5;
@@ -39,10 +38,11 @@ namespace MHServerEmu.Games
                 .SetCharacterSelectV2Enabled(CharacterSelectV2Enabled)
                 .SetCommunityNewsV2Enabled(CommunityNewsV2Enabled)
                 .SetLeaderboardsEnabled(LeaderboardsEnabled)
+                .SetDynamicCombatLevelEnabled(true)
                 .SetNewPlayerExperienceEnabled(NewPlayerExperienceEnabled)
                 .SetServerTimeOffsetUTC(-7)
                 .SetUseServerTimeOffset(true)  // Although originally this was set to false, it needs to be true because auto offset doesn't work past 2019
-                .SetMissionTrackerV2Enabled(MissionTrackerV2Enabled)
+                .SetMissionTrackerV2Enabled(false)  // V48_NOTE: Enabling this crashes the client.
                 .SetGiftingAccountAgeInDaysRequired(GiftingAccountAgeInDaysRequired)
                 .SetGiftingAvatarLevelRequired(GiftingAvatarLevelRequired)
                 .SetGiftingLoginCountRequired(GiftingLoginCountRequired)

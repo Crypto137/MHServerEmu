@@ -44,7 +44,7 @@ namespace MHServerEmu.Games
 
     public class Game
     {
-        public const string Version = "1.52.0.1700";
+        public const string Version = "1.48.0.1712";
 
         [ThreadStatic]
         internal static Game Current;

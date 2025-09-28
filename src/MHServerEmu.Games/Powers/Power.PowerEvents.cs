@@ -1414,6 +1414,7 @@ namespace MHServerEmu.Games.Powers
             PrototypeId stolenPowerRef = stealablePowerInfoProto.Power;
             if (stolenPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): stolenPowerRef == PrototypeId.Invalid");
 
+            /* V48_TODO
             BannerMessagePrototype bannerMessageProto = null;
             if (avatar.IsStolenPowerAvailable(stealablePowerInfoProto.Power) == false)
             {
@@ -1427,6 +1428,7 @@ namespace MHServerEmu.Games.Powers
 
             if (bannerMessageProto == null) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): bannerMessageProto == null");
             player.SendBannerMessage(bannerMessageProto);
+            */
 
             return true;
         }

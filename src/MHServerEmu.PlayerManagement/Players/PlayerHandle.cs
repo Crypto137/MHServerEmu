@@ -61,8 +61,6 @@ namespace MHServerEmu.PlayerManagement.Players
         public RegionHandle ActualRegion { get; private set; }      // The region this player is actually in
         public bool HasVisitedTown { get; private set; }            // This is used to disable party for players who haven't finished the tutorial.
 
-        public PrototypeId DifficultyTierPreference { get; private set; }
-
         public MasterParty PendingParty { get; internal set; }
         public MasterParty CurrentParty { get; internal set; }
 
@@ -80,8 +78,6 @@ namespace MHServerEmu.PlayerManagement.Players
             WorldView = new(this);
             Client = client;
             State = PlayerHandleState.Created;
-
-            DifficultyTierPreference = GameDatabase.GlobalsPrototype.DifficultyTierDefault;
         }
 
         public override string ToString()
@@ -306,7 +302,9 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public bool BeginRegionTransferToStartTarget()
         {
-            PrototypeId targetProtoRef = (PrototypeId)Account.Player.StartTarget;
+            // V48_TODO
+            //PrototypeId targetProtoRef = (PrototypeId)Account.Player.StartTarget;
+            PrototypeId targetProtoRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
             RegionConnectionTargetPrototype targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
             if (targetProto == null)
             {
@@ -575,15 +573,6 @@ namespace MHServerEmu.PlayerManagement.Players
                 return CurrentParty.WorldView;
 
             return WorldView;
-        }
-
-        public void SetDifficultyTierPreference(PrototypeId difficultyTierProtoRef)
-        {
-            if (difficultyTierProtoRef == DifficultyTierPreference)
-                return;
-
-            DifficultyTierPreference = difficultyTierProtoRef;
-            Logger.Trace($"SetDifficultyTierPreference(): player=[{this}], difficulty=[{difficultyTierProtoRef.GetNameFormatted()}]");
         }
 
         /* V48_TODO

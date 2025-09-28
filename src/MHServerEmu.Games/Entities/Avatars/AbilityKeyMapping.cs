@@ -277,6 +277,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgEntryList)
                 {
+                    /* V48_TODO
                     // Skip traits
                     if (powerProgEntry.IsTrait)
                         continue;
@@ -317,6 +318,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     }
 
                     hotkeyDataList.Add(new HotkeyData(abilityToBeSlotted, slot));
+                    */
                 }
             }
 

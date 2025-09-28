@@ -144,12 +144,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] AvatarPowers { get; protected set; }
         public bool IsNPE { get; protected set; }
         public LocaleStringId PresenceStatusText { get; protected set; }
-        public PrototypeId[] AccessDifficulties { get; protected set; }
-        public PrototypeId Tuning { get; protected set; }
-        public int BonusItemFindMultiplier { get; protected set; }
-        public PrototypeId PlayerCameraSettingsOrbis { get; protected set; }
-        public PrototypeId[] LoadingScreensConsole { get; protected set; }
-        public bool AllowLocalCoopMode { get; protected set; }
 
         //---
 
@@ -159,8 +153,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public KeywordsMask KeywordsMask { get; private set; }
         [DoNotCopy]
         public bool HasKeywords { get => Keywords.HasValue(); }
-        [DoNotCopy]
-        public DifficultyTierMask DifficultyTierMask { get; private set; }
         [DoNotCopy]
         public bool HasPvPMetaGame { get; private set; }
         [DoNotCopy]
@@ -233,20 +225,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
 
-            DifficultyTierMask = DifficultyTierMask.None;
-
-            if (AccessDifficulties.HasValue())
-            {
-                foreach (var difficultyTierRef in AccessDifficulties)
-                {
-                    var difficultyTierProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(difficultyTierRef);
-                    if (difficultyTierProto == null) continue;
-                    DifficultyTierMask |= (DifficultyTierMask)(1 << (int)difficultyTierProto.Tier);
-                }
-            }
-            else
-                DifficultyTierMask = DifficultyTierMask.Green | DifficultyTierMask.Red | DifficultyTierMask.Cosmic;
-
             if (RegionQueueStates.HasValue())
             {
                 int index = 0;
@@ -302,43 +280,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // ClientMapOverrides client only
 
             Lifetime = TimeSpan.FromMinutes(LifetimeInMinutes);
-        }
-
-        public static PrototypeId ConstrainDifficulty(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
-        {
-            return ConstrainDifficulty(regionProtoRef.As<RegionPrototype>(), difficultyTierProtoRef.As<DifficultyTierPrototype>());
-        }
-
-        public static PrototypeId ConstrainDifficulty(RegionPrototype regionProto, DifficultyTierPrototype difficultyTierProto)
-        {
-            if (regionProto == null || difficultyTierProto == null)
-                return PrototypeId.Invalid;
-
-            DifficultyTierMask mask = regionProto.DifficultyTierMask;
-            DifficultyTier tier = difficultyTierProto.Tier;
-
-            // First try to downgrade
-            for (DifficultyTier i = tier; i >= 0; i--)
-            {
-                if (mask.HasFlag((DifficultyTierMask)(1 << (int)i)))
-                {
-                    DifficultyTierPrototype constrainedDifficultyProto = GameDatabase.GlobalsPrototype.GetDifficultyTierByEnum(i);
-                    return constrainedDifficultyProto.DataRef;
-                }
-            }
-
-            // Now upgrade
-            for (DifficultyTier i = tier + 1; i < DifficultyTier.NumTiers; i++)
-            {
-                if (mask.HasFlag((DifficultyTierMask)(1 << (int)i)))
-                {
-                    DifficultyTierPrototype constrainedDifficultyProto = GameDatabase.GlobalsPrototype.GetDifficultyTierByEnum(i);
-                    return constrainedDifficultyProto.DataRef;
-                }
-            }
-
-            // No available difficulty
-            return PrototypeId.Invalid;
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)
@@ -522,7 +463,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return Logger.WarnReturn(PrototypeId.Invalid, $"GetLootTableOverride(): Region [{this}] has no overrides for source=[{source}], lootEvent=[{lootEvent}] requested by entity [{worldEntity}]");
         }
 
-        public bool RunEvalAccessRestriction(Player player, Avatar avatar, PrototypeId difficultyProtoRef)
+        public bool RunEvalAccessRestriction(Player player, Avatar avatar)
         {
             // Default to true if no valid avatar
             if (avatar == null) return Logger.WarnReturn(true, "RunEvalAccessRestriction(): avatar == null");
@@ -546,14 +487,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
 
-            DifficultyTierPrototype difficultyProto = difficultyProtoRef.As<DifficultyTierPrototype>();
-            if (success && difficultyProto != null)
-                success &= avatar.CharacterLevel >= difficultyProto.UnlockLevel;
-
             if (success && EvalAccessRestriction != null)
             {
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
-                evalContext.SetReadOnlyVar_ProtoRef(EvalContext.Var1, difficultyProtoRef);
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, avatar);
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Other, player);
                 success = Eval.RunBool(EvalAccessRestriction, evalContext);

@@ -704,19 +704,6 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             return DataDirectory.Instance.GetPrototypeBlueprintDataRef(globalsProto.PublicEventPrototype);
         }
 
-        public static BlueprintId GetMetricsFrequencyBlueprintDataRef()
-        {
-            GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
-
-            if (globalsProto == null)
-                return Logger.WarnReturn(BlueprintId.Invalid, "GetMetricsFrequencyBlueprintDataRef(): globalsProto == null");
-
-            if (globalsProto.MetricsFrequencyPrototype == PrototypeId.Invalid)
-                return Logger.WarnReturn(BlueprintId.Invalid, "GetMetricsFrequencyBlueprintDataRef(): globalsProto.MetricsFrequencyPrototype == PrototypeId.Invalid");
-
-            return DataDirectory.Instance.GetPrototypeBlueprintDataRef(globalsProto.MetricsFrequencyPrototype);
-        }
-
         #endregion
 
         #region Data Init

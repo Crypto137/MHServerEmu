@@ -221,7 +221,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AffixPosition Position { get; protected set; }
         public short ModifyMinBy { get; protected set; }
         public short ModifyMaxBy { get; protected set; }
-        public PrototypeId Category { get; protected set; }
 
         //---
 
@@ -234,11 +233,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 settings.AffixLimitMaxByPositionModifierDict.TryGetValue(Position, out short currentMaxValue);
                 settings.AffixLimitMaxByPositionModifierDict[Position] = (short)(currentMaxValue + ModifyMaxBy);
-            }
-            else if (Category != PrototypeId.Invalid)
-            {
-                settings.AffixLimitByCategoryModifierDict.TryGetValue(Category, out short currentValue);
-                settings.AffixLimitByCategoryModifierDict[Category] = (short)(currentValue + ModifyMinBy);
             }
         }
     }
@@ -302,37 +296,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return;
 
             settings.DropChanceModifiers |= LootDropChanceModifiers.DifficultyTierRestricted;
-        }
-
-        public override bool IsValidForNode(LootNodePrototype node)
-        {
-            return node is LootTablePrototype;
-        }
-    }
-
-    public class LootRollModifyDropByDifficultyTierPrototype : LootRollModifierPrototype
-    {
-        public CurveId ModifierCurve { get; protected set; }
-
-        //---
-
-        public override void Apply(LootRollSettings settings)
-        {
-            if (ModifierCurve == CurveId.Invalid || settings.DifficultyTier == PrototypeId.Invalid)
-                return;
-
-            Curve curve = CurveDirectory.Instance.GetCurve(ModifierCurve);
-            if (curve == null) return;
-
-            var difficultyTierProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(settings.DifficultyTier);
-            DifficultyTier difficultyTierAsset = difficultyTierProto != null ? difficultyTierProto.Tier : DifficultyTier.Green;
-
-            float noDropModifier = curve.GetAt((int)difficultyTierAsset);
-            if (Segment.EpsilonTest(noDropModifier, 1f) == false)
-            {
-                settings.NoDropModifier *= noDropModifier;
-                settings.DropChanceModifiers |= LootDropChanceModifiers.DifficultyTierNoDropModified;
-            }
         }
 
         public override bool IsValidForNode(LootNodePrototype node)
@@ -648,55 +611,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return;
 
             settings.RegionAffixTable = RegionAffixTable;
-        }
-    }
-
-    public class LootRollIncludeCurrencyBonusPrototype : LootRollModifierPrototype
-    {
-        //---
-
-        public override void Apply(LootRollSettings settings)
-        {
-            settings.DropChanceModifiers |= LootDropChanceModifiers.IncludeCurrencyBonus;
-        }
-
-        public override bool IsValidForNode(LootNodePrototype node)
-        {
-            return node is LootDropPrototype || node is LootTablePrototype;
-        }
-    }
-
-    public class LootRollMissionStateRequiredPrototype : LootRollModifierPrototype
-    {
-        public PrototypeId[] Missions { get; protected set; }
-        public MissionState RequiredState { get; protected set; }
-
-        //---
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
-        public override void Apply(LootRollSettings settings)
-        {
-            if (settings.Player == null)
-            {
-                Logger.Warn("Apply(): player == null");
-                return;
-            };
-
-            if (Missions.IsNullOrEmpty())
-                return;
-
-            foreach (PrototypeId missionProtoRef in Missions)
-            {
-                Mission mission = MissionManager.FindMissionForPlayer(settings.Player, missionProtoRef);
-                MissionState state = mission != null ? mission.State : MissionState.Invalid;
-
-                if (state != RequiredState)
-                {
-                    settings.DropChanceModifiers |= LootDropChanceModifiers.MissionRestricted;
-                    break;
-                }
-            }
         }
     }
 }

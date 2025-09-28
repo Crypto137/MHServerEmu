@@ -183,25 +183,6 @@ namespace MHServerEmu.Games.Entities.Items
             return sb.ToString();
         }
 
-        public short NumAffixesOfCategory(AffixCategoryPrototype affixCategoryProto)
-        {
-            short numAffixes = 0;
-
-            foreach (AffixSpec affixSpec in _affixSpecList)
-            {
-                if (affixSpec.AffixProto == null)
-                {
-                    Logger.Warn("NumAffixesOfCategory(): affixSpec.AffixProto == null");
-                    continue;
-                }
-
-                if (affixSpec.AffixProto.HasCategory(affixCategoryProto))
-                    numAffixes++;
-            }
-
-            return numAffixes;
-        }
-
         public short NumAffixesOfPosition(AffixPosition affixPosition)
         {
             short numAffixes = 0;

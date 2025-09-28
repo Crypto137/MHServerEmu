@@ -19,23 +19,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     #endregion
 
-    public class DownloadChunkRegionsPrototype : Prototype
-    {
-        public PrototypeId[] Regions { get; protected set; }  // VectorPrototypeRefPtr RegionPrototype
-        public Platforms Platform { get; protected set; }
-    }
-
     public class DownloadChunkPrototype : Prototype
     {
+        public PrototypeId[] Regions { get; protected set; }
         public PrototypeId Chapter { get; protected set; }
-        public AssetId[] Data { get; protected set; }
-        public DownloadChunkRegionsPrototype[] RegionsPerPlatform { get; protected set; }
     }
 
     public class DownloadChunksPrototype : Prototype
     {
-        public PrototypeId[] ChunksPC { get; protected set; }      // VectorPrototypeRefPtr DownloadChunkPrototype
-        public PrototypeId[] ChunksPS4 { get; protected set; }     // VectorPrototypeRefPtr DownloadChunkPrototype
-        public PrototypeId[] ChunksXboxOne { get; protected set; } // VectorPrototypeRefPtr DownloadChunkPrototype
+        public PrototypeId[] Chunks { get; protected set; }
     }
 }

@@ -208,7 +208,7 @@ namespace MHServerEmu.Games.Loot
 
                     // NOTE: Tuning table bonuses seem to exist only for EndGameWave.prototype (X-Defense / Holo-Sim) in 1.52,
                     TuningTable tuningTable = region.TuningTable;
-                    TuningPrototype tuningProto = tuningTable?.Prototype;
+                    DifficultyPrototype tuningProto = tuningTable?.Prototype;
                     if (tuningProto != null)
                     {
                         // NOTE: Level delta curves appear to be unused, most likely as a result of DCL. Implement them for older versions later if needed.
@@ -363,7 +363,6 @@ namespace MHServerEmu.Games.Loot
             else if (cooldownType == LootCooldownType.TimeHours || cooldownType == LootCooldownType.RolloverWallTime)
             {
                 _cooldownData.OriginProtoRef = sourceEntity.PrototypeDataRef;
-                _cooldownData.DifficultyProtoRef = sourceEntity.Region.DifficultyTierRef;
                 _cooldownData.PropertyEnum = PropertyEnum.LootCooldownTimeStartEntity;
 
                 return true;
@@ -462,7 +461,6 @@ namespace MHServerEmu.Games.Loot
         {
             public PropertyEnum PropertyEnum;
             public PrototypeId OriginProtoRef;
-            public PrototypeId DifficultyProtoRef;
             public bool ActiveOnPlayer;
             public bool ActiveOnAvatar;
             public TimeSpan Time;
@@ -471,7 +469,6 @@ namespace MHServerEmu.Games.Loot
             {
                 PropertyEnum = PropertyEnum.Invalid;
                 OriginProtoRef = default;
-                DifficultyProtoRef = default;
                 ActiveOnPlayer = default;
                 ActiveOnAvatar = default;
                 Time = default;
@@ -483,7 +480,7 @@ namespace MHServerEmu.Games.Loot
                 if (PropertyEnum == PropertyEnum.LootCooldownTimeStartChannel)
                     return new(PropertyEnum, OriginProtoRef);
 
-                return new(PropertyEnum, OriginProtoRef, DifficultyProtoRef);
+                return new(PropertyEnum, OriginProtoRef);
             }
         }
     }

@@ -151,7 +151,6 @@ namespace MHServerEmu.Games.Properties
             PropertyEnum.BodySliderRegionId,
             PropertyEnum.BodySliderRegionPos,
             PropertyEnum.BodySliderRegionRef,
-            PropertyEnum.BodySliderDifficultyRef,
             PropertyEnum.BodySliderRegionSeed
         };
 

@@ -174,9 +174,6 @@ namespace MHServerEmu.Games.Network
             // TODO: Improve new player detection
             if (_dbAccount.Player.ArchiveData.IsNullOrEmpty())
             {
-                Player.InitializeMissionTrackerFilters();
-                Logger.Trace($"Initialized default mission filters for {Player}");
-
                 // HACK: Unlock chat by default for accounts with elevated permissions to allow them to use chat commands during the tutorial
                 if (_dbAccount.UserLevel > AccountUserLevel.User)
                     Player.Properties[PropertyEnum.UISystemLock, UIGlobalsPrototype.ChatSystemLock] = 1;
@@ -206,7 +203,6 @@ namespace MHServerEmu.Games.Network
                 return false;
 
             Player.SetAvatarLibraryProperties();
-            Player.SetTeamUpLibraryProperties();
 
             return true;
         }
@@ -1735,7 +1731,6 @@ namespace MHServerEmu.Games.Network
                 }
 
                 avatar.Properties[PropertyEnum.AvatarSynergySelected, avatarProtoRef] = true;
-                Player.Properties.RemoveProperty(new(PropertyEnum.AvatarSynergyNewUnlock, avatarProtoRef));
             }
 
             // Update the synergy condition

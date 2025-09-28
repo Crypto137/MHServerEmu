@@ -155,11 +155,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId CharacterSelectIconPath { get; protected set; }
         public ManaType[] DisableEnduranceRegenTypes { get; protected set; }
         public bool CanCauseCancelOnDamage { get; protected set; }
+        public float RangeGamepad { get; protected set; }  // V48
         public AssetId IconPathHiRes { get; protected set; }
         public bool PrefetchAsset { get; protected set; }
         public bool IsTravelPower { get; protected set; }
-        public PrototypeId GamepadSettings { get; protected set; }
-        public EvalPrototype BreaksStealthOverrideEval { get; protected set; }
 
         //---
 
@@ -183,8 +182,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool LooksAtMousePosition { get; private set; }
         [DoNotCopy]
         public bool IsControlPower { get; private set; }
-        [DoNotCopy]
-        public bool IsStealingPower { get; private set; }
         [DoNotCopy]
         public virtual bool IsHighFlyingPower { get => false; }
 
@@ -355,7 +352,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             KeywordGlobalsPrototype keywordGlobalsProto = GameDatabase.KeywordGlobalsPrototype;
             IsControlPower = HasKeyword(keywordGlobalsProto.ControlPowerKeywordPrototype.As<KeywordPrototype>());
-            IsStealingPower = HasKeyword(keywordGlobalsProto.StealingPowerKeyword.As<KeywordPrototype>());
 
             PowerPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetPowerBlueprintDataRef());
 
@@ -683,9 +679,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+    public class PowerReplacementPowerPrototype : PowerPrototype
+    {
+        // V48
+        public PrototypeId[] PowerReplacements { get; protected set; }
+    }
+
     public class SpecializationPowerPrototype : PowerPrototype
     {
-        public PrototypeId MasterPowerDEPRECATED { get; protected set; }
+        public PrototypeId MasterPower { get; protected set; }
         public EvalPrototype[] EvalCanEnable { get; protected set; }
     }
 
@@ -767,17 +769,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AbilityAssignmentPrototype : Prototype
     {
         public PrototypeId Ability { get; protected set; }
-
-        //---
-
-        [DoNotCopy]
-        public int Rank { get => 1; }  // NOTE: This was a real prototype field in 1.48
-    }
-
-    public class AbilityAutoAssignmentSlotPrototype : Prototype
-    {
-        public PrototypeId Ability { get; protected set; }
-        public PrototypeId Slot { get; protected set; }
+        public int Rank { get; protected set; }
     }
 
     public class PowerEventContextCallbackPrototype : PowerEventContextPrototype
@@ -1114,15 +1106,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId[] AllowedPowers { get; protected set; }
         public PrototypeId TransformMode { get; protected set; }
-    }
-
-    public class GamepadSettingsPrototype : Prototype
-    {
-        public bool ClearContinuousInitialTarget { get; protected set; }
-        public float Range { get; protected set; }
-        public bool TeleportToTarget { get; protected set; }
-        public bool MeleeMoveIntoRange { get; protected set; }
-        public bool ChannelPowerOrientToEnemy { get; protected set; }
     }
 
     public class TargetingStylePrototype : Prototype

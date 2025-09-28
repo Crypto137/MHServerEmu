@@ -50,10 +50,7 @@ namespace MHServerEmu.Games.Loot
                 LootRollSettings.UsableTeamUp = avatar.CurrentTeamUpAgent.AgentPrototype;
 
             if (region != null)
-            {
-                LootRollSettings.DifficultyTier = region.DifficultyTierRef;
                 LootRollSettings.RegionScenarioRarity = region.Settings.ItemRarity;
-            }
 
             if (sourceEntity != null)
             {

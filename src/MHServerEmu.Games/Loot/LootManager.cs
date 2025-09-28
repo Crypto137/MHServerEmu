@@ -250,7 +250,7 @@ namespace MHServerEmu.Games.Loot
                     if (currencySpec.IsItem)
                     {
                         // LootUtilities::FillItemSpecFromCurrencySpec()
-                        ItemSpec itemSpec = new(currencySpec.AgentOrItemProtoRef, GameDatabase.LootGlobalsPrototype.RarityDefault, 1);
+                        ItemSpec itemSpec = new(currencySpec.AgentOrItemProtoRef, (PrototypeId)10195041726035595077, 1);  // V48_TODO: Fix rarity
                         SpawnItemInternal(itemSpec, player, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
                     }
                     else if (currencySpec.IsAgent)
@@ -331,7 +331,7 @@ namespace MHServerEmu.Games.Loot
                     if (currencySpec.IsItem)
                     {
                         // Create currency item
-                        ItemSpec itemSpec = new(currencySpec.AgentOrItemProtoRef, GameDatabase.LootGlobalsPrototype.RarityDefault, 1);
+                        ItemSpec itemSpec = new(currencySpec.AgentOrItemProtoRef, (PrototypeId)10195041726035595077, 1);  // V48_TODO: Fix rarity
 
                         using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
                         settings.EntityRef = currencySpec.AgentOrItemProtoRef;

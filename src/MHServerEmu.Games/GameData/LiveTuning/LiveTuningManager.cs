@@ -24,6 +24,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public bool LoadLiveTuningDataFromDisk()
         {
+            /* V48_TODO
             string liveTuningDirectory = Path.Combine(FileHelper.DataDirectory, "Game");
             if (Directory.Exists(liveTuningDirectory) == false)
                 return Logger.WarnReturn(false, "LoadLiveTuningDataFromDisk(): Game data directory not found");
@@ -55,6 +56,8 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
             UpdateLiveTuningData(protobufList, true);
             return Logger.InfoReturn(true, $"Loaded {protobufList.Count} live tuning settings");
+            */
+            return true;
         }
 
         public void UpdateLiveTuningData(IEnumerable<NetStructLiveTuningSettingProtoEnumValue> protoEnumValues, bool resetToDefaults)

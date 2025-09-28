@@ -295,7 +295,6 @@ namespace MHServerEmu.Games.Populations
             bool notOpen = missionProto is not OpenMissionPrototype;
             bool spawnCleanup = notOpen;
             bool critical = notOpen || missionProto.PopulationRequired;
-            var difficultyRef = Region.DifficultyTierRef;
 
             var time = TimeSpan.Zero;
 
@@ -305,7 +304,6 @@ namespace MHServerEmu.Games.Populations
             if (missionProto.PopulationSpawns.HasValue())            
                 foreach (var entry in missionProto.PopulationSpawns)
                 {
-                    if (entry.AllowedInDifficulty(difficultyRef) == false) continue;
                     if (entry.FilterRegion(Region.Prototype) == false) continue;
                     if (entry.RestrictToAreas.HasValue()) // check areas
                     {
@@ -363,11 +361,9 @@ namespace MHServerEmu.Games.Populations
             bool spawnCleanup, bool removeOnSpawnFail, TimeSpan time = default)
         {
             float spawnableArea = spawnLocation.CalcSpawnableArea();
-            var difficultyRef = Region.DifficultyTierRef;
 
             foreach (var reqObject in populationObjects)
             {
-                if (reqObject.AllowedInDifficulty(difficultyRef) == false) continue;
                 int count = reqObject.Count;
                 var objectProto = reqObject.GetPopObject();
                 if (count <= 0 && reqObject.Density > 0.0f)

@@ -527,7 +527,7 @@ namespace MHServerEmu.Games.Populations
 
             foreach (var rankProto in ranks)
             {
-                var rankEntryProto = tuningProto.GetDifficultyRankEntry(Region.DifficultyTierRef, rankProto);
+                var rankEntryProto = tuningProto.GetDifficultyRankEntry(rankProto);
 
                 GetMobAffixesFromProperties(overrides);
                 Region.ApplyRegionAffixesEnemyBoosts(rankProto.DataRef, overrides);
@@ -970,8 +970,8 @@ namespace MHServerEmu.Games.Populations
                 RankProto = RankPrototype.DoOverride(RankProto, rankRef.As<RankPrototype>());
             }
 
-            if ((EntityProto.ModifierSetEnable
-                || EntityProto.ModifiersGuaranteed.HasValue())
+            // V48_TODO: Modifier set
+            if (EntityProto.ModifiersGuaranteed.HasValue()
                 && Flags.HasFlag(ClusterObjectFlag.Hostile))
             {
                 Flags |= ClusterObjectFlag.HasModifiers;

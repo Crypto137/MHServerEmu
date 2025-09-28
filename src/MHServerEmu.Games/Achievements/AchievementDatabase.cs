@@ -62,7 +62,9 @@ namespace MHServerEmu.Games.Achievements
 
                 foreach (string filePath in achievementInfoMapFiles)
                 {
-                    string achievementInfoMapJson = File.ReadAllText(filePath);
+                    // V48_TODO
+                    //string achievementInfoMapJson = File.ReadAllText(filePath);
+                    string achievementInfoMapJson = "[]";
                     var infos = JsonSerializer.Deserialize<IEnumerable<AchievementInfo>>(achievementInfoMapJson, options);
 
                     foreach (AchievementInfo info in infos)
@@ -79,7 +81,9 @@ namespace MHServerEmu.Games.Achievements
             if (File.Exists(achievementContextMapPath) == false)
                 return Logger.WarnReturn(false, $"Initialize(): Achievement context map not found at {achievementContextMapPath}");
 
-            string achievementContextMapJson = File.ReadAllText(achievementContextMapPath);
+            // V48_TODO
+            //string achievementContextMapJson = File.ReadAllText(achievementContextMapPath);
+            string achievementContextMapJson = "[]";
 
             try
             {

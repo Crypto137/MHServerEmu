@@ -69,7 +69,6 @@ namespace MHServerEmu.Games.Powers
         public PrototypeId PrototypeDataRef { get; }
         public PowerPrototype Prototype { get; }
         public TargetingStylePrototype TargetingStylePrototype { get; }
-        public GamepadSettingsPrototype GamepadSettingsPrototype { get; }
 
         public WorldEntity Owner { get; private set; }
         public bool IsTeamUpPassivePowerWhileAway { get; private set; }
@@ -99,7 +98,6 @@ namespace MHServerEmu.Games.Powers
             Prototype = prototypeDataRef.As<PowerPrototype>();
 
             TargetingStylePrototype = Prototype.TargetingStyle.As<TargetingStylePrototype>();
-            GamepadSettingsPrototype = Prototype.GamepadSettings.As<GamepadSettingsPrototype>();
         }
 
         public override string ToString()
@@ -145,15 +143,7 @@ namespace MHServerEmu.Games.Powers
                     return true;
             }
 
-            foreach (var kvp in owner.Properties.IteratePropertyRange(PropertyEnum.PowerKeywordChange, powerProto.DataRef))
-            {
-                Property.FromParam(kvp.Key, 1, out PrototypeId keywordProtoRef);
-
-                if (kvp.Value == (int)TriBool.True)
-                    AddKeyword(keywordProtoRef);
-                else
-                    RemoveKeyword(keywordProtoRef);
-            }
+            // V48_TODO: Can we remove this section since there are no keyword changes?
 
             TimeSpan cooldownTimeRemaining = GetCooldownTimeRemaining();
             if (cooldownTimeRemaining > TimeSpan.Zero)
@@ -190,32 +180,6 @@ namespace MHServerEmu.Games.Powers
                         StartCooldown(cooldownDuration);
                     }
                 }
-            }
-
-            if (Owner is Avatar avatar && (avatar.HasPowerInPowerProgression(PrototypeDataRef) || avatar.HasMappedPower(PrototypeDataRef)))
-            {
-                Dictionary<PropertyId, PropertyValue> bonusDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
-
-                foreach (var kvp in avatar.Properties.IteratePropertyRange(PropertyEnum.PowerChargesMaxBonusForKwd))
-                    bonusDict.Add(kvp.Key, kvp.Value);
-
-                foreach (var kvp in bonusDict)
-                {
-                    Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
-                    KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
-                    if (keywordProto == null)
-                    {
-                        Logger.Warn("OnAssign(): keywordProto == null");
-                        continue;
-                    }
-
-                    if (HasKeyword(keywordProto) == false)
-                        continue;
-
-                    avatar.Properties[PropertyEnum.PowerChargesMaxBonus, PrototypeDataRef] = kvp.Value;
-                }
-
-                DictionaryPool<PropertyId, PropertyValue>.Instance.Return(bonusDict);
             }
 
             return true;
@@ -570,13 +534,8 @@ namespace MHServerEmu.Games.Powers
                 Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
                 if (keywordProtoRef == PrototypeId.Invalid) continue;
 
-                int powerKeywordChange = properties2[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
-
-                if ((powerKeywordChange != (int)TriBool.False && powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>())) ||
-                   powerKeywordChange == (int)TriBool.True)
-                {
+                if (powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>()))
                     value += kvp.Value;
-                }
             }
         }
 
@@ -589,13 +548,8 @@ namespace MHServerEmu.Games.Powers
                 Property.FromParam(kvp.Key, 1, out PrototypeId keywordProtoRef);
                 if (keywordProtoRef == PrototypeId.Invalid) continue;
 
-                int powerKeywordChange = properties2[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
-
-                if ((powerKeywordChange != (int)TriBool.False && powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>())) ||
-                   powerKeywordChange == (int)TriBool.True)
-                {
+                if (powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>()))
                     value += kvp.Value;
-                }
             }
         }
 
@@ -607,13 +561,8 @@ namespace MHServerEmu.Games.Powers
                 Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
                 if (keywordProtoRef == PrototypeId.Invalid) continue;
 
-                int powerKeywordChange = properties2[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
-
-                if ((powerKeywordChange != (int)TriBool.False && powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>())) ||
-                   powerKeywordChange == (int)TriBool.True)
-                {
+                if (powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>()))
                     value += kvp.Value;
-                }
             }
         }
 
@@ -1244,15 +1193,6 @@ namespace MHServerEmu.Games.Powers
             // Validate our stealthed entity
             if (stealthedEntity == null || stealthedEntity.IsInWorld == false || stealthedEntity.TestStatus(EntityStatus.Destroyed))
                 return false;
-
-            // Check stealth break override eval (e.g. talents that remove stealth break)
-            if (powerProto.BreaksStealthOverrideEval != null)
-            {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
-                evalContext.SetVar_EntityPtr(EvalContext.Default, stealthedEntity);
-                if (Eval.RunBool(powerProto.BreaksStealthOverrideEval, evalContext) == false)
-                    return false;
-            }
 
             // Check if our potentially stealthed entity is actually stealthed
             KeywordPrototype stealthPowerKeyword = GameDatabase.KeywordGlobalsPrototype.StealthPowerKeywordPrototype;
@@ -2125,7 +2065,7 @@ namespace MHServerEmu.Games.Powers
         {
             if (region == null) return Logger.WarnReturn(numPlayersMin, "ComputeNearbyPlayersInternal(): region == null");
 
-            TuningPrototype difficultyProto = region.TuningTable?.Prototype;
+            DifficultyPrototype difficultyProto = region.TuningTable?.Prototype;
             if (difficultyProto == null) return Logger.WarnReturn(numPlayersMin, "ComputeNearbyPlayersInternal(): difficultyProto == null");
 
             // "Nearby" depends on the region: in private regions like terminals this covers the entire region (100000),
@@ -2708,7 +2648,8 @@ namespace MHServerEmu.Games.Powers
 
         public bool IsGamepadMeleeMoveIntoRangePower()
         {
-            return GamepadSettingsPrototype != null && GamepadSettingsPrototype.MeleeMoveIntoRange;
+            // V48_TODO: Remove this?
+            return false;
         }
 
         public float GetRange()
@@ -2750,10 +2691,8 @@ namespace MHServerEmu.Games.Powers
 
         public float GetGamepadRange()
         {
-            if (GamepadSettingsPrototype == null)
-                return 0f;
-
-            return GamepadSettingsPrototype.Range;
+            // V48_TODO: Remove this?
+            return 0f;
         }
 
         public float GetApplicationRange()

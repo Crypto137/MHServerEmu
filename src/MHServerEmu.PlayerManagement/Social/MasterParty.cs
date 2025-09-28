@@ -22,7 +22,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public ulong Id { get; }
         public GroupType Type { get; private set; } = GroupType.GroupType_Party;
-        public PrototypeId DifficultyTierProtoRef { get; private set; }
         public PlayerHandle Leader { get; private set; }
 
         public WorldView WorldView { get; } = new();
@@ -33,7 +32,6 @@ namespace MHServerEmu.PlayerManagement.Social
         public MasterParty(ulong id, PlayerHandle creator)
         {
             Id = id;
-            DifficultyTierProtoRef = creator.DifficultyTierPreference;
 
             WorldView.AddRegionsFrom(creator.WorldView);
 
@@ -200,17 +198,6 @@ namespace MHServerEmu.PlayerManagement.Social
                 return false;
 
             Type = type;
-            SendPartyInfo(false, _members);
-
-            return true;
-        }
-
-        public bool SetDifficultyTier(PrototypeId difficultyTierProtoRef)
-        {
-            if (difficultyTierProtoRef == DifficultyTierProtoRef)
-                return false;
-
-            DifficultyTierProtoRef = difficultyTierProtoRef;
             SendPartyInfo(false, _members);
 
             return true;

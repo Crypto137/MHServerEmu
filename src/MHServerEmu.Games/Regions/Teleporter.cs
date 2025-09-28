@@ -34,7 +34,6 @@ namespace MHServerEmu.Games.Regions
         // Additional region creation data (see NetStructCreateRegionParams), used primarily for Danger Room and bonus level (Cow/Doop) regions
         public int Level { get; set; }
         public bool Cheat { get; set; }
-        public PrototypeId DifficultyTierRef { get; set; }
         public int EndlessLevel { get; set; }
         public int Seed { get; set; }
         public ulong ParentRegionId { get; set; }
@@ -61,7 +60,6 @@ namespace MHServerEmu.Games.Regions
 
             Level = default;
             Cheat = default;
-            DifficultyTierRef = default;
             EndlessLevel = default;
             Seed = default;
             ParentRegionId = default;
@@ -131,7 +129,6 @@ namespace MHServerEmu.Games.Regions
 
             RegionSettings settings = region.Settings;
 
-            DifficultyTierRef = settings.DifficultyTierRef;
             EndlessLevel = settings.EndlessLevel;
             if (incrementEndlessLevel)
                 EndlessLevel++;
@@ -203,16 +200,13 @@ namespace MHServerEmu.Games.Regions
                     EndlessLevel = 1;
             }
 
-            // Clamp target region's difficulty to the available range
-            DifficultyTierRef = Player.GetDifficultyTierForRegion(regionProtoRef, DifficultyTierRef);
-
             if (IsLocalTeleport(region, destinationRegionProto))
             {
                 return TeleportToLocalTarget(areaProtoRef, cellProtoRef, entityProtoRef);
             }
             else
             {
-                if (Player.CanEnterRegion(regionProtoRef, DifficultyTierRef, false) == false)
+                if (Player.CanEnterRegion(regionProtoRef, false) == false)
                     return false;
 
                 return TeleportToRemoteTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
@@ -245,8 +239,6 @@ namespace MHServerEmu.Games.Regions
 
             RegionConnectionTargetPrototype targetProto = waypointProto.Destination.As<RegionConnectionTargetPrototype>();
             if (targetProto == null) return Logger.WarnReturn(false, "TeleportToWaypoint(): targetProto == null");
-
-            DifficultyTierRef = difficultyProtoRef;
 
             PrototypeId regionProtoRef = regionOverrideProtoRef != PrototypeId.Invalid ? regionOverrideProtoRef : targetProto.Region;
             PrototypeId areaProtoRef = targetProto.Area;
@@ -373,10 +365,6 @@ namespace MHServerEmu.Games.Regions
 
             // RegionPrototype
             if (RegionPrototype.Equivalent(destinationRegionProto, currentRegionProto) == false)
-                return false;
-
-            // DifficultyTier
-            if (DifficultyTierRef != PrototypeId.Invalid && currentRegion.DifficultyTierRef != DifficultyTierRef)
                 return false;
 
             // EndlessLevel

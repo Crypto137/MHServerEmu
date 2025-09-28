@@ -471,6 +471,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootDropXPPrototype : LootNodePrototype
     {
         public CurveId XPCurve { get; protected set; }
+        public float Scalar { get; protected set; }     // V48
 
         //---
 
@@ -585,50 +586,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             PowerUseResult result = dropper.ActivatePower(Power, ref settings);
             if (result != PowerUseResult.Success)
                 Logger.Warn($"OnResultsEvaluation(): Failed to activate power!\nPowerUseResult: {result}\nPower: {Power.GetName()}\nDropper: {dropper}\nNode: {this}");
-        }
-
-        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
-        {
-            return PushLootNodeCallback(settings, resolver);
-        }
-    }
-
-    public class LootDropPlayVisualEffectPrototype : LootNodePrototype
-    {
-        public AssetId RecipientVisualEffect { get; protected set; }
-        public AssetId DropperVisualEffect { get; protected set; }
-
-        //---
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
-        public override void OnResultsEvaluation(Player player, WorldEntity dropper)
-        {
-            Game game = player?.Game;
-            if (game == null) return;
-
-            Avatar avatar = player.CurrentAvatar;
-            if (avatar == null) return;
-
-            if (RecipientVisualEffect != AssetId.Invalid)
-            {
-                NetMessagePlayPowerVisuals avatarVisualsMessage = NetMessagePlayPowerVisuals.CreateBuilder()
-                    .SetEntityId(avatar.Id)
-                    .SetPowerAssetRef((ulong)RecipientVisualEffect)
-                    .Build();
-
-                game.NetworkManager.SendMessageToInterested(avatarVisualsMessage, avatar, AOINetworkPolicyValues.AOIChannelProximity);
-            }
-
-            if (dropper != null && DropperVisualEffect != AssetId.Invalid)
-            {
-                NetMessagePlayPowerVisuals dropperVisualsMessage = NetMessagePlayPowerVisuals.CreateBuilder()
-                    .SetEntityId(dropper.Id)
-                    .SetPowerAssetRef((ulong)DropperVisualEffect)
-                    .Build();
-
-                game.NetworkManager.SendMessageToInterested(dropperVisualsMessage, dropper, AOINetworkPolicyValues.AOIChannelProximity);
-            }
         }
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)

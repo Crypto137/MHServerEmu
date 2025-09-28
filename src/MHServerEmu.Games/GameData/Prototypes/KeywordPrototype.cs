@@ -135,10 +135,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
     }
 
-    public class AffixCategoryPrototype : KeywordPrototype
-    {
-    }
-
     public class FulfillablePrototype : Prototype
     {
     }

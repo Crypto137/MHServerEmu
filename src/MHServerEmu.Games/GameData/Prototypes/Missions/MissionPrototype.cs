@@ -103,7 +103,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public DailyMissionBannerImageType DailyMissionBannerTuesday { get; protected set; }
         public DailyMissionBannerImageType DailyMissionBannerWednesday { get; protected set; }
         public PrototypeId EventMissionsChapter { get; protected set; }
-        public PrototypeId AccountMissionsChapter { get; protected set; }
     }
 
     public class MissionTypePrototype : Prototype
@@ -131,11 +130,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId[] RestrictToCells { get; protected set; }
         public PrototypeId RestrictToDifficultyMin { get; protected set; }
         public PrototypeId RestrictToDifficultyMax { get; protected set; }
-
-        public bool AllowedInDifficulty(PrototypeId difficultyRef)
-        {
-            return DifficultyTierPrototype.InRange(difficultyRef, RestrictToDifficultyMin, RestrictToDifficultyMax);
-        }
 
         public bool FilterRegion(RegionPrototype regionPrototype)
         {
@@ -317,6 +311,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool PlayerHUDShowObjsOnScreenEdge { get; protected set; }
         public bool PlayerHUDShowObjsOnEntityFloor { get; protected set; }
         public bool PlayerHUDShowObjsNoActivateCond { get; protected set; }
+        public MissionPerEntityRewardPrototype[] RewardsPerEntity { get; protected set; }   // V48
         public DesignWorkflowState DesignState { get; protected set; }
         public long ResetTimeSeconds { get; protected set; }
         public bool ShowInMissionTrackerFilterByChap { get; protected set; }
@@ -325,7 +320,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SaveStatePerAvatar { get; protected set; }
         public MissionTrackerFilterType ShowInMissionTrackerFilterType { get; protected set; }
         public int Version { get; protected set; }
-        public bool DEPRewardLevelBasedOnAvatarLevel { get; protected set; }
+        public bool RewardLevelBasedOnAvatarLevel { get; protected set; }
         public LocaleStringId MissionLogHint { get; protected set; }
         public PrototypeId LootCooldownChannel { get; protected set; }
         public LocaleStringId MetaGameDetails { get; protected set; }
@@ -346,9 +341,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SuspendIfNoMatchingKeyword { get; protected set; }
         public MissionActionPrototype[] OnAvailableActions { get; protected set; }
         public MissionConditionListPrototype CompleteNowConditions { get; protected set; }
-        public LootTablePrototype[] CompleteNowRewards { get; protected set; }
-        public DesignWorkflowState DesignStatePS4 { get; protected set; }
-        public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+        public bool CompleteNowNoRewards { get; protected set; }    // V48
 
         //---
 
@@ -700,6 +693,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+    public class MissionPerEntityRewardPrototype : Prototype
+    {
+        // V48
+        public EntityFilterFilterListPrototype EntityFilter { get; protected set; }
+        public LootTablePrototype[] Rewards { get; protected set; }
+    }
+
     public class OpenMissionPrototype : MissionPrototype
     {
         public bool ParticipationBasedOnAreaCell { get; protected set; }
@@ -718,7 +718,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int IdleTimeoutSeconds { get; protected set; }
         public double ParticipationContributionValue { get; protected set; }
         public long AchievementTimeLimitSeconds { get; protected set; }
-        public bool ShowToastMessages { get; protected set; }
 
         //---
 

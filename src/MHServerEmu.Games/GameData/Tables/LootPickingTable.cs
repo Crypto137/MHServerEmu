@@ -17,8 +17,6 @@ namespace MHServerEmu.Games.GameData.Tables
         // even though in affix prototypes keywords are stored as AssetRefs. Is this a mistake?
         private readonly Dictionary<AssetId, List<AffixPrototype>> _affixKeywordDict = new();
 
-        private readonly Dictionary<PrototypeId, List<AffixPrototype>> _affixCategoryDict = new();
-
         private readonly Dictionary<LootPickingPair, List<PickerElement>> _pickerDict = new();
 
         public LootPickingTable()
@@ -50,21 +48,6 @@ namespace MHServerEmu.Games.GameData.Tables
                     keywordAffixList.Add(affixProto);
                 }
             }
-
-            // Populate category -> AffixPrototype collection lookup
-            LootGlobalsPrototype lootGlobalsProto = GameDatabase.LootGlobalsPrototype;
-            foreach (AffixCategoryTableEntryPrototype affixCategoryTableEntry in lootGlobalsProto.AffixCategoryTable)
-            {
-                // We skip a lot of client checks here by assuming our data is valid
-                List<AffixPrototype> categoryAffixList = new();
-                _affixCategoryDict.Add(affixCategoryTableEntry.Category, categoryAffixList);
-
-                foreach (var affixRef in affixCategoryTableEntry.Affixes)
-                {
-                    var affixProto = affixRef.As<AffixPrototype>();
-                    categoryAffixList.Add(affixProto);
-                }
-            }
         }
 
         public IReadOnlyList<AffixPrototype> GetAffixesByPosition(AffixPosition position)
@@ -78,14 +61,6 @@ namespace MHServerEmu.Games.GameData.Tables
         public IReadOnlyList<AffixPrototype> GetAffixesByKeyword(AssetId keywordAssetRef)
         {
             if (_affixKeywordDict.TryGetValue(keywordAssetRef, out List<AffixPrototype> affixList) == false)
-                return null;
-
-            return affixList;
-        }
-
-        public IReadOnlyList<AffixPrototype> GetAffixesByCategory(AffixCategoryPrototype categoryProto)
-        {
-            if (_affixCategoryDict.TryGetValue(categoryProto.DataRef, out List<AffixPrototype> affixList) == false)
                 return null;
 
             return affixList;

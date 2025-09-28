@@ -15,6 +15,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId BioText { get; protected set; }
         public AbilityAssignmentPrototype[] HiddenPassivePowers { get; protected set; }
         public AssetId PortraitPath { get; protected set; }
+        public PrototypeId[] Skills { get; protected set; }                                     // V48
+        public AbilityAssignmentPrototype[] StartingEquippedAbilities { get; protected set; }   // V48
         public PrototypeId StartingLootTable { get; protected set; }
         public AssetId UnlockDialogImage { get; protected set; }
         public AssetId HUDTheme { get; protected set; }
@@ -48,12 +50,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsStarterAvatar { get; protected set; }
         public int CharacterSelectDisplayOrder { get; protected set; }
         public PrototypeId CostumeCore { get; protected set; }
-        public TalentGroupPrototype[] TalentGroups { get; protected set; }
-        public PrototypeId TravelPower { get; protected set; }
-        public AbilityAutoAssignmentSlotPrototype[] AbilityAutoAssignmentSlot { get; protected set; }
-        public PrototypeId[] LoadingScreensConsole { get; protected set; }
-        public ItemAssignmentPrototype StartingCostumePS4 { get; protected set; }
-        public ItemAssignmentPrototype StartingCostumeXboxOne { get; protected set; }
 
         //---
 
@@ -157,11 +153,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         /// </summary>
         public PrototypeId GetStartingCostumeForPlatform(Platforms platform)
         {
-            if (platform == Platforms.PS4 && StartingCostumePS4 != null)
-                return StartingCostumePS4.Item;
-            else if (platform == Platforms.XboxOne && StartingCostumeXboxOne != null)
-                return StartingCostumeXboxOne.Item;
-
             if (StartingCostume == null)
                 return Logger.WarnReturn(PrototypeId.Invalid, $"GetStartingCostumeForPlatform(): failed to get starting costume for {platform}");
 
@@ -218,23 +209,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             return powerProgEntryList.Count > 0;
-        }
-
-        /// <summary>
-        /// Returns the <see cref="AbilityAutoAssignmentSlotPrototype"/> for the specified power <see cref="PrototypeId"/> if there is one.
-        /// Otherwise, returns <see langword="null"/>.
-        /// </summary>
-        public AbilityAutoAssignmentSlotPrototype GetPowerInAbilityAutoAssignmentSlot(PrototypeId powerProtoId)
-        {
-            if (AbilityAutoAssignmentSlot == null) return null;
-
-            foreach (var abilityAutoAssignmentSlot in AbilityAutoAssignmentSlot)
-            {
-                if (abilityAutoAssignmentSlot.Ability == powerProtoId)
-                    return abilityAutoAssignmentSlot;
-            }
-
-            return null;
         }
 
         public PowerProgressionTablePrototype GetPowerProgressionTableAtIndex(int index)
@@ -421,19 +395,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int Index { get; protected set; }
     }
 
-    public class TalentEntryPrototype : Prototype
-    {
-        public PrototypeId Talent { get; protected set; }
-        public int UnlockLevel { get; protected set; }
-    }
-
-    public class TalentGroupPrototype : Prototype
-    {
-        public TalentEntryPrototype[] Talents { get; protected set; }
-        public float UIPositionPctX { get; protected set; }
-        public float UIPositionPctY { get; protected set; }
-    }
-
     public class AvatarModePrototype : Prototype
     {
         public AvatarMode AvatarModeEnum { get; protected set; }
@@ -487,7 +448,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int UIFanSortNumber { get; protected set; }
         public int UIFanTier { get; protected set; }
         public PrototypeId[] Antirequisites { get; protected set; }
-        public bool IsTrait { get; protected set; }
 
         public override int GetRequiredLevel() => Level;
         public override int GetStartingRank() => PowerAssignment != null ? PowerAssignment.Rank : 0;

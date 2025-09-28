@@ -23,7 +23,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RegionDifficultySettingsPrototype : Prototype
     {
-        public PrototypeId TuningTable { get; protected set; }
+        public PrototypeId DifficultyTable { get; protected set; }
+        public int DifficultyIndex { get; protected set; }          // V48
     }
 
     public class NumNearbyPlayersDmgByRankPrototype : Prototype
@@ -74,19 +75,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class RankAffixTableByDifficultyEntryPrototype : Prototype
-    {
-        public PrototypeId DifficultyMin { get; protected set; }
-        public PrototypeId DifficultyMax { get; protected set; }
-        public RankAffixEntryPrototype[] RankAffixTable { get; protected set; }
-    }
-
-    public class TuningPrototype : Prototype
+    public class DifficultyPrototype : Prototype
     {
         public LocaleStringId Name { get; protected set; }
         public float PlayerInflictedDamageTimerSec { get; protected set; }
         public float PlayerNearbyRange { get; protected set; }
         public NegStatusPropCurveEntryPrototype[] NegativeStatusCurves { get; protected set; }
+        public float PlayerXPNearbyRange { get; protected set; }    // V48
         public CurveId LootFindByLevelDeltaCurve { get; protected set; }
         public CurveId SpecialItemFindByLevelDeltaCurve { get; protected set; }
         public CurveId LootFindByDifficultyIndexCurve { get; protected set; }
@@ -96,7 +91,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId PctXPFromRaid { get; protected set; }
         public PrototypeId Tier { get; protected set; }
         public bool UseTierMinimapColor { get; protected set; }
-        public RankAffixEntryPrototype[] RankAffixTable { get; protected set; }
+        public DifficultyRankEntryPrototype[] RankAffixTable { get; protected set; }
         public float PctXPMultiplier { get; protected set; }
         public bool NumNearbyPlayersScalingEnabled { get; protected set; }
         public float TuningDamageMobToPlayer { get; protected set; }
@@ -105,12 +100,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float TuningDamagePlayerToMobDCL { get; protected set; }
         public TuningDamageByRankPrototype[] TuningDamageByRank { get; protected set; }
         public TuningDamageByRankPrototype[] TuningDamageByRankDCL { get; protected set; }
-        public RankAffixTableByDifficultyEntryPrototype[] RankAffixTableByDifficulty { get; protected set; }
 
-        public Picker<RankPrototype> BuildRankPicker(PrototypeId difficultyTierRef, GRandom random, bool noAffixes)
+        public Picker<RankPrototype> BuildRankPicker(GRandom random, bool noAffixes)
         {
             Picker<RankPrototype> picker = new(random);
-            var table = GetRankAffixTable(difficultyTierRef);
+            var table = GetRankAffixTable();
 
             if (table != null)
                 foreach (var entry in table)
@@ -120,19 +114,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return picker;
         }
 
-        public RankAffixEntryPrototype[] GetRankAffixTable(PrototypeId difficultyTierRef)
+        public DifficultyRankEntryPrototype[] GetRankAffixTable()
         {
-            if (RankAffixTableByDifficulty.HasValue())
-                foreach (var entry in RankAffixTableByDifficulty)
-                    if (DifficultyTierPrototype.InRange(difficultyTierRef, entry.DifficultyMin, entry.DifficultyMax))
-                        return entry.RankAffixTable;
-
             return RankAffixTable;
         }
 
-        public RankAffixEntryPrototype GetDifficultyRankEntry(PrototypeId difficultyTierRef, RankPrototype rankProto)
+        public DifficultyRankEntryPrototype GetDifficultyRankEntry(RankPrototype rankProto)
         {
-            var table = GetRankAffixTable(difficultyTierRef);
+            var table = GetRankAffixTable();
             if (table != null)
                 foreach (var entry in table)
                 {
@@ -156,41 +145,43 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class DifficultyTierPrototype : Prototype
     {
-        public int DEPTier { get; protected set; }
-        public DifficultyTier Tier { get; protected set; }
-        public float BonusExperiencePct { get; protected set; }
-        public float DamageMobToPlayerPct { get; protected set; }
-        public float DamagePlayerToMobPct { get; protected set; }
-        public float ItemFindCreditsPct { get; protected set; }
-        public float ItemFindRarePct { get; protected set; }
-        public float ItemFindSpecialPct { get; protected set; }
-        public int UnlockLevel { get; protected set; }
-        public AssetId UIColor { get; protected set; }
-        public LocaleStringId UIDisplayName { get; protected set; }
-        public int BonusItemFindBonusDifficultyMult { get; protected set; }
+        public int Tier { get; protected set; }
+        public AssetId MinimapNameColor { get; protected set; }
+    }
 
-        public static bool InRange(PrototypeId value, PrototypeId min, PrototypeId max)
+    public class RankAffixEntryPrototype : Prototype
+    {
+        public PrototypeId AffixTable { get; protected set; }
+        public int ChancePct { get; protected set; }
+
+        [DoNotCopy]
+        public EnemyBoostSetPrototype AffixTablePrototype { get => AffixTable.As<EnemyBoostSetPrototype>(); }
+
+        public PrototypeId RollAffix(GRandom random, HashSet<PrototypeId> affixes, HashSet<PrototypeId> exclude)
         {
-            if (min == PrototypeId.Invalid && max == PrototypeId.Invalid) return true;
+            var affixTableProto = AffixTablePrototype;
+            if (affixTableProto != null && random.NextPct(ChancePct))
+            {
+                Picker<PrototypeId> picker = new(random);
 
-            var valueProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(value);
-            if (valueProto == null) return false;
+                if (affixes.Count > 0)
+                    foreach (var affixRef in affixes)
+                        if (affixTableProto.Contains(affixRef))
+                            picker.Add(affixRef);
 
-            var minProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(min);
-            if (minProto != null && valueProto.Tier < minProto.Tier) return false;
-            var maxProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(max);
-            if (maxProto != null && valueProto.Tier > maxProto.Tier) return false;
+                if (picker.Pick(out PrototypeId pickRef))
+                    return pickRef;
 
-            return true;
-        }
+                if (affixTableProto.Modifiers.HasValue())
+                    foreach (var affix in affixTableProto.Modifiers)
+                        if (exclude.Contains(affix) == false)
+                            picker.Add(affix);
 
-        public static bool InRange(DifficultyTierPrototype valueProto, DifficultyTierPrototype minProto, DifficultyTierPrototype maxProto)
-        {
-            if (valueProto == null) return false;
-            if (minProto == null && maxProto == null) return true;
-            if (minProto != null && valueProto.Tier < minProto.Tier) return false;
-            if (maxProto != null && valueProto.Tier > maxProto.Tier) return false;
-            return true;
+                if (picker.Pick(out pickRef))
+                    return pickRef;
+            }
+
+            return PrototypeId.Invalid;
         }
     }
 

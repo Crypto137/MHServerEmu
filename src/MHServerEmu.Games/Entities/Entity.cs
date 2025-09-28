@@ -55,7 +55,7 @@ namespace MHServerEmu.Games.Entities
         HasNoCollideException           = 1ul << 26,
         Intangible                      = 1ul << 27,
         PowerUserOverrideId             = 1ul << 28,
-        MissileOwnedByPlayer            = 1ul << 29,
+        //MissileOwnedByPlayer            = 1ul << 29,
         HasMissionPrototype             = 1ul << 30,
         Flag31                          = 1ul << 31,
         IsPopulation                    = 1ul << 32,
@@ -178,7 +178,6 @@ namespace MHServerEmu.Games.Entities
         public bool HasNoCollideException { get => _flags.HasFlag(EntityFlags.HasNoCollideException); }
         public bool IsIntangible { get => _flags.HasFlag(EntityFlags.Intangible); }
         public bool HasPowerUserOverride { get => _flags.HasFlag(EntityFlags.PowerUserOverrideId); }
-        public bool IsMissilePlayerOwned { get => _flags.HasFlag(EntityFlags.MissileOwnedByPlayer); }
         public bool HasMissionPrototype { get => _flags.HasFlag(EntityFlags.HasMissionPrototype); }
         public bool IsPopulation { get => _flags.HasFlag(EntityFlags.IsPopulation); }
         public bool IsAttachedToEntity { get => _flags.HasFlag(EntityFlags.AttachedToEntityId); }
@@ -658,10 +657,6 @@ namespace MHServerEmu.Games.Entities
                     OnMovementPreventionPropertyChange(newValue);
                     break;
 
-                case PropertyEnum.MissileOwnedByPlayer:
-                    SetFlag(EntityFlags.MissileOwnedByPlayer, newValue);
-                    break;
-
                 case PropertyEnum.MissionAllyOfAvatarDbGuid:
                     Properties[PropertyEnum.MissionAllyOfAvatar] = newValue != 0;
                     break;
@@ -1094,7 +1089,6 @@ namespace MHServerEmu.Games.Entities
             var prototype = Prototype;
             if (prototype is AvatarPrototype) return true;
             if (prototype is AgentTeamUpPrototype) return true;
-            if (prototype is MissilePrototype) return IsMissilePlayerOwned;
 
             ulong ownerId = PowerUserOverrideId;
             if (ownerId != 0)

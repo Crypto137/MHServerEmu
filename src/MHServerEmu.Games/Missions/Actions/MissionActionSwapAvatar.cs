@@ -28,13 +28,10 @@ namespace MHServerEmu.Games.Missions.Actions
                         if (avatar != null && player.CurrentHUDTutorial != null)
                             avatar.TryRestoreThrowable();
 
-                        if (_proto.UseAvatarSwapPowers)
-                            player.BeginAvatarSwitch(_proto.AvatarPrototype);
-                        else
-                        {
-                            player.Properties[PropertyEnum.AvatarSwitchPending, _proto.AvatarPrototype] = true;
-                            player.SwitchAvatar();
-                        }
+                        player.BeginAvatarSwitch(_proto.AvatarPrototype);
+                        // V48_TODO: Check which behavior should be used.
+                        //player.Properties[PropertyEnum.AvatarSwitchPending, _proto.AvatarPrototype] = true;
+                        //player.SwitchAvatar();
                     }
                 }
             }

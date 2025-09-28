@@ -205,7 +205,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ReplicateToTrader { get; protected set; }
         public int LifespanMS { get; protected set; }
         public AssetId IconPathTooltipHeader { get; protected set; }                     // A Entity/Types/EntityIconPathType.type
-        public AssetId IconPathHiRes { get; protected set; }                             // A Entity/Types/EntityIconPathType.type
 
         [DoNotCopy]
         public AOINetworkPolicyValues RepNetwork { get; protected set; } = AOINetworkPolicyValues.AOIChannelNone;
@@ -265,8 +264,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] ModifiersGuaranteed { get; protected set; }
         public float InteractRangeBonus { get; protected set; }
         public bool ShouldIgnoreMaxDeadBodies { get; protected set; }
-        public bool ModifierSetEnable { get; protected set; }
+        public PrototypeId ModifierSet { get; protected set; }          // V48
         public bool LiveTuningDefaultEnabled { get; protected set; }
+        public bool UpdatePositionWithParent { get; protected set; }    // V48
         public bool UpdateOrientationWithParent { get; protected set; }
         public bool MissionEntityDeathCredit { get; protected set; }
         public bool HACKDiscoverInRegion { get; protected set; }
@@ -278,10 +278,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool OverheadIndicator { get; protected set; }
         public bool RequireCombatActiveForKillCredit { get; protected set; }
         public bool ClonePerPlayer { get; protected set; }
-        public bool PrefetchMarkedAssets { get; protected set; }
-        public AssetId MarvelModelRenderClass { get; protected set; }
-        public DesignWorkflowState DesignStatePS4 { get; protected set; }
-        public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+        public bool PrefectchMarkedAssets { get; protected set; }       // mistyped named in 1.48
 
         // ---
 
@@ -702,9 +699,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ShowConfirmationDialog { get; protected set; }
         public PrototypeId DirectTarget { get; protected set; }
         public PrototypeId[] RegionAffixesBySummonerRarity { get; protected set; }
-        public LocaleStringId ShowConfirmationDialogOverride { get; protected set; }
-        public PrototypeId ShowConfirmationDialogTemplate { get; protected set; }
-        public PrototypeId ShowConfirmationDialogEnemy { get; protected set; }
 
         //---
 
@@ -956,14 +950,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float MapPOIYCoord { get; protected set; }
         public AssetId MapImage { get; protected set; }
         public PrototypeId OpenToWaypointGraph { get; protected set; }
-        public AssetId MapImageConsole { get; protected set; }
-        public AssetId LocationImageConsole { get; protected set; }
-        public LocaleStringId ConsoleRegionDescription { get; protected set; }
-        public LocaleStringId ConsoleLocationName { get; protected set; }
-        public LocaleStringId ConsoleRegionType { get; protected set; }
-        public LocaleStringId ConsoleLevelRange { get; protected set; }
-        public LocalizedTextAndImagePrototype[] ConsoleRegionItems { get; protected set; }
-        public PrototypeId[] ConsoleWaypointGraphList { get; protected set; }
     }
 
     public class WaypointChapterPrototype : Prototype

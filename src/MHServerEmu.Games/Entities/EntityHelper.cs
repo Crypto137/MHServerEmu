@@ -66,7 +66,6 @@ namespace MHServerEmu.Games.Entities
             entitySettings.IsPopulation = true;
 
             using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
-            settingsProperties[PropertyEnum.DifficultyTier] = region.DifficultyTierRef;
             settingsProperties[PropertyEnum.Rank] = agentProto.Rank;
             settingsProperties[PropertyEnum.CharacterLevel] = avatar.CharacterLevel;
             settingsProperties[PropertyEnum.CombatLevel] = avatar.CharacterLevel;

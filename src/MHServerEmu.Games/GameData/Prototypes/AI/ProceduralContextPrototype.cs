@@ -48,13 +48,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int PickWeight { get; protected set; }
         public ProceduralUsePowerContextSwitchTargetPrototype TargetSwitch { get; protected set; }
         public int InitialCooldownMaxMS { get; protected set; }
-        public PrototypeId RestrictToDifficultyMin { get; protected set; }
-        public PrototypeId RestrictToDifficultyMax { get; protected set; }
-
-        public bool AllowedInDifficulty(PrototypeId difficultyRef)
-        {
-            return DifficultyTierPrototype.InRange(difficultyRef, RestrictToDifficultyMin, RestrictToDifficultyMax);
-        }
 
         public override void OnStart(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
         {

@@ -1613,6 +1613,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype DisappearPower { get; protected set; }
         public int LifeTimeMinMS { get; protected set; }
         public int LifeTimeMaxMS { get; protected set; }
+        public WanderContextPrototype WanderWhenFleeFails { get; protected set; }   // V48
+        public float DisappearTimerAvatarSearchRadius { get; protected set; }       // V48
 
         public override void Init(Agent agent)
         {
@@ -2829,7 +2831,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     return;
                 }
 
-                TuningPrototype difficultyProto = region.TuningTable?.Prototype;
+                DifficultyPrototype difficultyProto = region.TuningTable?.Prototype;
                 if (difficultyProto == null) return;
                 var volume = new Sphere(agent.RegionLocation.Position, difficultyProto.PlayerNearbyRange);
 
@@ -5480,82 +5482,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (broadcaster.PrototypeDataRef == Cauldron)
                 ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = (int)State.DeathPreventer;
-        }
-    }
-
-    public class ProceduralProfileVulturePrototype : ProceduralProfileWithAttackPrototype
-    {
-        public MoveToContextPrototype MoveToTarget { get; protected set; }
-        public OrbitContextPrototype OrbitTarget { get; protected set; }
-        public ProceduralUsePowerContextPrototype LungePower { get; protected set; }
-        public int MaxLungeActivations { get; protected set; }
-
-        private enum State
-        {
-            Default,
-            LungePower
-        }
-
-        public override void Init(Agent agent)
-        {
-            base.Init(agent);
-            InitPower(agent, LungePower);
-        }
-
-        public override void Think(AIController ownerController)
-        {
-            ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
-            Agent agent = ownerController.Owner;
-            if (agent == null) return;
-            Game game = agent.Game;
-            if (game == null) return;
-            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
-
-            if (HandleOverrideBehavior(ownerController)) return;
-
-            WorldEntity target = ownerController.TargetEntity;
-            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
-                && proceduralAI.PartialOverrideBehavior == null) return;
-
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
-            if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] == (int)State.Default)
-            {
-                GRandom random = game.Random;
-                Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
-                PopulatePowerPicker(ownerController, powerPicker);
-                if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
-
-                DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
-            }
-            else
-            {
-                var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, LungePower.PowerContext, LungePower);
-                if (powerResult == StaticBehaviorReturnType.Running) return;
-                if (powerResult == StaticBehaviorReturnType.Failed
-                    && IsProceduralPowerContextOnCooldown(ownerController.Blackboard, LungePower, currentTime)) return;
-
-                blackboard.PropertyCollection.AdjustProperty(1, PropertyEnum.AICustomStateVal2);
-                if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] >= MaxLungeActivations)
-                {
-                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
-                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = 0;
-                }
-            }
-        }
-
-        public override bool OnPowerPicked(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
-        {
-            if (base.OnPowerPicked(ownerController, powerContext) == false) return false;
-            if (powerContext == LungePower)
-                ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.LungePower;
-            return true;
-        }
-
-        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
-        {
-            ownerController.AddPowersToPicker(powerPicker, LungePower);
-            base.PopulatePowerPicker(ownerController, powerPicker);
         }
     }
 

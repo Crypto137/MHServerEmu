@@ -1805,11 +1805,14 @@ namespace MHServerEmu.Games.Missions
 
         public bool HasAccountMissionsChapter()
         {
+            /* V48_TODO
             var missionProto = Prototype;
             if (missionProto == null) return false;
             var missionGlobals = GameDatabase.MissionGlobalsPrototype;
             if (missionGlobals == null) return false;
             return missionProto.Chapter == missionGlobals.AccountMissionsChapter;
+            */
+            return false;
         }
 
         public bool ShouldShowInteractIndicators()
@@ -2227,8 +2230,7 @@ namespace MHServerEmu.Games.Missions
         {
             MissionPrototype missionProto = Prototype;
 
-            if (CompleteNowRewards && missionProto.CompleteNowRewards.HasValue())
-                return missionProto.CompleteNowRewards;
+            // V48_TODO: CompleteNowRewards
 
             if (missionProto.Rewards.HasValue())
                 return missionProto.Rewards;

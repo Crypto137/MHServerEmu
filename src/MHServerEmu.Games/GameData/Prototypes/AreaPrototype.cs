@@ -38,7 +38,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] Keywords { get; protected set; }
         public int LevelOffset { get; protected set; }
         public RespawnCellOverridePrototype[] RespawnCellOverrides { get; protected set; }
-        public PrototypeId PlayerCameraSettingsOrbis { get; protected set; }
 
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; protected set; }

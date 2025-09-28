@@ -1087,8 +1087,6 @@ namespace MHServerEmu.Games.Entities
             PowerPrototype powerProto = powerInfo.PowerPrototype;
             if (powerProto == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerProto == null");
 
-            if (powerInfo.IsTalent) return Logger.WarnReturn(false, "UpdatePowerRank(): powerInfo.IsTalent");
-
             // Check if this is a team-up passive that applies to the owner avatar
             Agent powerOwner = this;
             bool computeRank = true;
@@ -1213,7 +1211,7 @@ namespace MHServerEmu.Games.Entities
                 GetPowerProgressionInfo(boostParamProtoRef, out PowerProgressionInfo powerInfo);
 
                 // Non-power progression powers and talents are not affected by boosts
-                if (powerInfo.IsInPowerProgression && powerInfo.IsTalent == false)
+                if (powerInfo.IsInPowerProgression)
                     UpdatePowerRank(ref powerInfo, false);
 
                 return true;
@@ -1438,14 +1436,6 @@ namespace MHServerEmu.Games.Entities
             for (int i = 0; i < powerInfoList.Count; i++)
             {
                 PowerProgressionInfo powerInfo = powerInfoList[i];
-
-                // Talents have their own thing
-                if (powerInfo.IsTalent)
-                {
-                    Logger.Warn("UpdatePowerProgressionPowers(): powerInfo.IsTalent");
-                    continue;
-                }
-
                 UpdatePowerRank(ref powerInfo, forceUnassign);
             }
 
@@ -1684,11 +1674,6 @@ namespace MHServerEmu.Games.Entities
             // Unlock new powers
             if (TeamUpOwner != null)
                 UpdatePowerProgressionPowers(false);
-
-            // Update player owner property if reached level cap
-            Player owner = GetOwnerOfType<Player>();
-            if (owner != null && IsAtLevelCap)
-                owner.Properties.AdjustProperty(1, PropertyEnum.TeamUpsAtMaxLevelPersistent);
 
             // Notify the client
             SendLevelUpMessage();
@@ -2220,9 +2205,6 @@ namespace MHServerEmu.Games.Entities
                 AssignPower(onResurrectedPowerRef, indexProps);
             }
 
-            // TeamUp synergy
-            UpdateTeamUpSynergyCondition();
-
             // AI
             // if (TestAI() == false) return;
 
@@ -2317,21 +2299,6 @@ namespace MHServerEmu.Games.Entities
 
             if (this is Avatar || IsTeamUpAgent)
                 Properties.RemovePropertyRange(PropertyEnum.PowerRankBase);
-
-            // Remove the team-up synergy condition
-            if (IsTeamUpAgent)
-            {
-                Player player = GetOwnerOfType<Player>();
-                if (player != null)
-                {
-                    ulong teamUpSynergyConditionId = player.TeamUpSynergyConditionId;
-                    if (teamUpSynergyConditionId != ConditionCollection.InvalidConditionId)
-                    {
-                        ConditionCollection.RemoveCondition(teamUpSynergyConditionId);
-                        player.TeamUpSynergyConditionId = ConditionCollection.InvalidConditionId;
-                    }
-                }
-            }
 
             TeamUpOwner?.OnExitedWorldTeamUpAgent(this);
         }
@@ -2602,54 +2569,6 @@ namespace MHServerEmu.Games.Entities
 
         #region Team-Ups
 
-        public bool UpdateTeamUpSynergyCondition()
-        {
-            // Non-team-up agents do not have team-up synergies
-            if (IsTeamUpAgent == false)
-                return true;
-            
-            // Need a player owner to get condition synergy data from
-            Player player = GetOwnerOfType<Player>();
-            if (player == null)
-                return true;
-
-            // See if there is a synergy condition to add
-            PrototypeId teamUpSynergyConditionRef = GameDatabase.GlobalsPrototype.TeamUpSynergyCondition;
-            if (teamUpSynergyConditionRef == PrototypeId.Invalid)
-                return true;
-
-            ConditionPrototype teamUpSynergyConditionProto = teamUpSynergyConditionRef.As<ConditionPrototype>();
-            if (teamUpSynergyConditionProto == null) return Logger.WarnReturn(false, "UpdateTeamUpSynergyCondition(): teamUpSynergyConditionProto == null");
-
-            // See if there is a synergy condition we don't know about
-            ulong teamUpSynergyConditionId = player.TeamUpSynergyConditionId;
-            if (teamUpSynergyConditionId == ConditionCollection.InvalidConditionId)
-                ConditionCollection.GetConditionIdByRef(teamUpSynergyConditionRef);
-
-            // Remove the existing synergy condition
-            if (teamUpSynergyConditionId != ConditionCollection.InvalidConditionId)
-            {
-                ConditionCollection.RemoveCondition(teamUpSynergyConditionId);
-                player.TeamUpSynergyConditionId = ConditionCollection.InvalidConditionId;
-            }
-
-            // Add a new synergy condition
-            Condition teamUpSynergyCondition = ConditionCollection.AllocateCondition();
-
-            if (teamUpSynergyCondition.InitializeFromConditionPrototype(ConditionCollection.NextConditionId, Game,
-                Id, Id, Id, teamUpSynergyConditionProto, TimeSpan.Zero))
-            {
-                ConditionCollection.AddCondition(teamUpSynergyCondition);
-                player.TeamUpSynergyConditionId = teamUpSynergyCondition.Id;
-            }
-            else
-            {
-                ConditionCollection.DeleteCondition(teamUpSynergyCondition);
-            }
-
-            return true;
-        }
-
         public void AssignTeamUpAgentPowers()
         {
             if (IsTeamUpAgent == false) return;
@@ -2738,14 +2657,6 @@ namespace MHServerEmu.Games.Entities
                     item.RemoveTeamUpAffixesFromAvatar(avatar);
                 }
             }
-        }
-
-        public void SetTeamUpsAtMaxLevel(Player player)
-        {
-            if (IsTeamUpAgent == false || player == null) return;
-
-            int maxLevel = player.Properties[PropertyEnum.TeamUpsAtMaxLevelPersistent];
-            if (maxLevel > 0) Properties[PropertyEnum.TeamUpsAtMaxLevel] = maxLevel;
         }
 
         public bool IsPermanentTeamUpStyle()

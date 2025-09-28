@@ -130,8 +130,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private KeywordsMask _categoryKeywordsMask;
-
         [DoNotCopy]
         public virtual bool HasBonusPropertiesToApply { get => Properties != null || PropertyEntries != null; }
 
@@ -145,46 +143,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
 
-            List<PrototypeId> categoryList = ListPool<PrototypeId>.Instance.Get();
-            foreach (var affixCategoryTableEntry in GameDatabase.LootGlobalsPrototype.AffixCategoryTable)
-            {
-                foreach (PrototypeId affixProtoRef in affixCategoryTableEntry.Affixes)
-                {
-                    if (affixProtoRef == DataRef)
-                        categoryList.Add(affixCategoryTableEntry.Category);
-                }
-            }
-
-            _categoryKeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(categoryList);
-            ListPool<PrototypeId>.Instance.Return(categoryList);
-
-            // Skipping UI stuff since we probably don't need it server-side
-        }
-
-        public bool HasCategory(AffixCategoryPrototype affixCategoryProto)
-        {
-            return KeywordPrototype.TestKeywordBit(_categoryKeywordsMask, affixCategoryProto);
-        }
-
-        public AffixCategoryPrototype GetFirstCategoryMatch(PrototypeId[] affixCategoryProtos)
-        {
-            foreach (PrototypeId affixCategoryProtoRef in affixCategoryProtos)
-            {
-                AffixCategoryPrototype affixCategoryProto = affixCategoryProtoRef.As<AffixCategoryPrototype>();
-
-                if (HasCategory(affixCategoryProto))
-                    return affixCategoryProto;
-            }
-
-            return null;
-        }
-
-        public bool HasAnyCategory(PrototypeId[] affixCategoryProtos)
-        {
-            if (affixCategoryProtos.IsNullOrEmpty())
-                return true;
-
-            return GetFirstCategoryMatch(affixCategoryProtos) != null;
+            // V48_TODO: Check if there should be anything here
         }
 
         public virtual bool AllowAttachment(DropFilterArguments args)
@@ -363,11 +322,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Type { get; protected set; }
         public int RanksMax { get; protected set; }
         public CurveId RankCostCurve { get; protected set; }
+        public ModDisableByBasePrototype[] DisableBy { get; protected set; }    // V48
         public PrototypeId TooltipTemplateCurrentRank { get; protected set; }
         public EvalPrototype[] EvalOnCreate { get; protected set; }
         public PrototypeId TooltipTemplateNextRank { get; protected set; }
         public PropertySetEntryPrototype[] PropertiesForTooltips { get; protected set; }
-        public AssetId UIIconHiRes { get; protected set; }
 
         //---
 
@@ -465,7 +424,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId TalentModType { get; protected set; }
         public PrototypeId OmegaBonusModType { get; protected set; }
         public PrototypeId OmegaHowToTooltipTemplate { get; protected set; }
-        public PrototypeId InfinityHowToTooltipTemplate { get; protected set; }
     }
 
     public class SkillPrototype : ModPrototype
@@ -499,25 +457,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId UIBackgroundImage { get; protected set; }
     }
 
-    public class InfinityGemBonusPrototype : ModPrototype
-    {
-        public PrototypeId[] Prerequisites { get; protected set; }
-    }
-
-    public class InfinityGemSetPrototype : ModPrototype
-    {
-        public LocaleStringId UITitle { get; protected set; }
-        public PrototypeId[] Bonuses { get; protected set; }    // VectorPrototypeRefPtr InfinityGemBonusPrototype
-        public InfinityGem Gem { get; protected set; }
-        public bool Unlocked { get; protected set; }
-        public AssetId UIColor { get; protected set; }
-        public AssetId UIBackgroundImage { get; protected set; }
-        public LocaleStringId UIDescription { get; protected set; }
-        public new AssetId UIIcon { get; protected set; }
-        public AssetId UIIconRadialNormal { get; protected set; }
-        public AssetId UIIconRadialSelected { get; protected set; }
-    }
-
     public class RankPrototype : ModPrototype
     {
         public Rank Rank { get; protected set; }
@@ -526,7 +465,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LootDropEventType LootTableParam { get; protected set; }
         public OverheadInfoDisplayType OverheadInfoDisplayType { get; protected set; }
         public PrototypeId[] Keywords { get; protected set; }
-        public int BonusItemFindPoints { get; protected set; }
 
         //---
 
@@ -586,48 +524,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CountsAsAffixSlot { get; protected set; }
     }
 
-    public class AffixTableEntryPrototype : Prototype
+    public class DifficultyRankEntryPrototype : Prototype
     {
-        public PrototypeId AffixTable { get; protected set; }
-        public int ChancePct { get; protected set; }
-        [DoNotCopy]
-        public EnemyBoostSetPrototype AffixTablePrototype { get => AffixTable.As<EnemyBoostSetPrototype>(); }
-
-        public PrototypeId RollAffix(GRandom random, HashSet<PrototypeId> affixes, HashSet<PrototypeId> exclude)
-        {
-            var affixTableProto = AffixTablePrototype;
-            if (affixTableProto != null && random.NextPct(ChancePct))
-            {
-                Picker<PrototypeId> picker = new(random);
-
-                if (affixes.Count > 0)
-                    foreach (var affixRef in affixes)
-                        if (affixTableProto.Contains(affixRef))
-                            picker.Add(affixRef);
-
-                if (picker.Pick(out PrototypeId pickRef))
-                    return pickRef;
-
-                if (affixTableProto.Modifiers.HasValue())
-                    foreach (var affix in affixTableProto.Modifiers)
-                        if (exclude.Contains(affix) == false)
-                            picker.Add(affix);
-
-                if (picker.Pick(out pickRef))
-                    return pickRef;
-            }
-
-            return PrototypeId.Invalid;
-        }
-    }
-
-    public class RankAffixEntryPrototype : Prototype
-    {
-        public AffixTableEntryPrototype[] Affixes { get; protected set; }
+        public RankAffixEntryPrototype[] Affixes { get; protected set; }
         public PrototypeId Rank { get; protected set; }
         public int Weight { get; protected set; }
 
-        public AffixTableEntryPrototype GetAffixSlot(int slot)
+        public RankAffixEntryPrototype GetAffixSlot(int slot)
         {
             if (Affixes.HasValue() && slot >= 0 && slot < Affixes.Length)
                 return Affixes[slot];
@@ -684,5 +587,43 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return curve.GetAt(Math.Clamp(level, curve.MinPosition, curve.MaxPosition));
         }
+    }
+
+    // V48
+
+    public class ModDisableByBasePrototype : Prototype
+    {
+    }
+
+    public class ModDisableByMissionRequirementPrototype : ModDisableByBasePrototype
+    {
+        public PrototypeId Mission { get; protected set; }
+    }
+
+    public class ModDisableByModSelectedPrototype : ModDisableByBasePrototype
+    {
+        public PrototypeId Mod { get; protected set; }
+    }
+
+    public class ModDisableByModTypeRequirementPrototype : ModDisableByBasePrototype
+    {
+        public PrototypeId ModType { get; protected set; }
+        public int RanksMin { get; protected set; }
+    }
+
+    public class ModDisableBySetPointRequirementPrototype : ModDisableByBasePrototype
+    {
+        public PrototypeId TalentSet { get; protected set; }
+        public int PointsRequired { get; protected set; }
+    }
+
+    public class ModDisableByUniqueRequirementPrototype : ModDisableByBasePrototype
+    {
+        public PrototypeId UniqueSet { get; protected set; }
+    }
+
+    public class ModUniqueSetPrototype : Prototype
+    {
+        public PrototypeId[] Set { get; protected set; }
     }
 }

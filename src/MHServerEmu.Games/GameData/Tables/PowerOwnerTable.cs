@@ -10,8 +10,6 @@ namespace MHServerEmu.Games.GameData.Tables
         private readonly Dictionary<PrototypeId, PrototypeId> _powerOwnerDict = new();
         private readonly Dictionary<(PrototypeId, PrototypeId), PrototypeId> _powerProgressionTabDict = new();
         private readonly Dictionary<(PrototypeId, PrototypeId), PowerProgressionEntryPrototype> _powerProgressionEntryDict = new();
-        private readonly Dictionary<(PrototypeId, PrototypeId), (TalentEntryPrototype, uint)> _talentEntryDict = new();
-        private readonly Dictionary<(PrototypeId, PrototypeId), (TalentGroupPrototype, uint)> _talentGroupDict = new();
         private readonly Dictionary<(PrototypeId, PrototypeId), TeamUpPowerProgressionEntryPrototype> _teamUpPowerProgressionEntryDict = new();
 
         public PowerOwnerTable()
@@ -32,26 +30,6 @@ namespace MHServerEmu.Games.GameData.Tables
                         _powerProgressionTabDict[(avatarProto.DataRef, abilityAssignmentProto.Ability)] = powerProgTableProto.PowerProgTableTabRef;
                         _powerProgressionEntryDict[(avatarProto.DataRef, abilityAssignmentProto.Ability)] = powerProgEntry;
                     }
-                }
-
-                // Get data from talent groups
-                uint talentGroupIndex = 1;
-
-                foreach (TalentGroupPrototype talentGroupProto in avatarProto.TalentGroups)
-                {
-                    uint talentIndex = 0;
-
-                    foreach (TalentEntryPrototype talentEntry in talentGroupProto.Talents)
-                    {
-                        _powerOwnerDict[talentEntry.Talent] = avatarProto.DataRef;
-
-                        (PrototypeId, PrototypeId) avatarTalent = (avatarProto.DataRef, talentEntry.Talent);
-                        
-                        _talentEntryDict[avatarTalent] = (talentEntry, talentIndex++);
-                        _talentGroupDict[avatarTalent] = (talentGroupProto, talentGroupIndex);
-                    }
-
-                    talentGroupIndex++;
                 }
             }
 
@@ -99,38 +77,6 @@ namespace MHServerEmu.Games.GameData.Tables
         {
             if (_teamUpPowerProgressionEntryDict.TryGetValue((ownerRef, powerRef), out var entry) == false)
                 return null;
-
-            return entry;
-        }
-
-        public TalentEntryPrototype GetTalentEntry(PrototypeId ownerRef, PrototypeId powerRef)
-        {
-            if (_talentEntryDict.TryGetValue((ownerRef, powerRef), out var entry) == false)
-                return null;
-
-            return entry.Item1;
-        }
-
-        public uint GetTalentGroupIndex(PrototypeId ownerRef, PrototypeId powerRef)
-        {
-            if (_talentGroupDict.TryGetValue((ownerRef, powerRef), out var group) == false)
-                return 0;
-
-            return group.Item2;
-        }
-
-        public (TalentEntryPrototype, uint) GetTalentEntryPair(PrototypeId ownerRef, PrototypeId powerRef)
-        {
-            if (_talentEntryDict.TryGetValue((ownerRef, powerRef), out var entry) == false)
-                return default;
-
-            return entry;
-        }
-
-        public (TalentGroupPrototype, uint) GetTalentGroupPair(PrototypeId ownerRef, PrototypeId powerRef)
-        {
-            if (_talentGroupDict.TryGetValue((ownerRef, powerRef), out var entry) == false)
-                return default;
 
             return entry;
         }

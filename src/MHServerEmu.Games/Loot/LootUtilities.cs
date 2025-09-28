@@ -159,46 +159,6 @@ namespace MHServerEmu.Games.Loot
 
             AffixLimitsPrototype affixLimits = itemProto.GetAffixLimits(args.Rarity, args.LootContext);
 
-            // Apply affixes by category
-            if ((affixLimits != null && affixLimits.CategorizedAffixes.HasValue()) ||
-                (settings != null && settings.AffixLimitByCategoryModifierDict.Count > 0))
-            {
-                Dictionary<PrototypeId, short> affixCategoryDict = DictionaryPool<PrototypeId, short>.Instance.Get();
-
-                // Get category limits from the prototype
-                if (affixLimits != null)
-                {
-                    foreach (CategorizedAffixEntryPrototype entry in affixLimits.CategorizedAffixes)
-                    {
-                        affixCategoryDict.TryGetValue(entry.Category, out short numAffixes);
-                        affixCategoryDict[entry.Category] = (short)(numAffixes + entry.MinAffixes);
-                    }
-                }
-
-                // Apply modifiers from loot roll settings
-                if (settings != null)
-                {
-                    foreach (var kvp in settings.AffixLimitByCategoryModifierDict)
-                    {
-                        affixCategoryDict.TryGetValue(kvp.Key, out short numAffixes);
-                        affixCategoryDict[kvp.Key] = (short)Math.Max(0, numAffixes + kvp.Value);
-                    }
-                }
-
-                // Add categorized affixes
-                foreach (var kvp in affixCategoryDict)
-                {
-                    AffixCategoryPrototype categoryProto = kvp.Key.As<AffixCategoryPrototype>();
-
-                    short numAffixesCurrent = itemSpec.NumAffixesOfCategory(categoryProto);
-                    int numAffixesNeeded = kvp.Value - numAffixesCurrent;
-                    if (numAffixesNeeded > 0)
-                        result |= AddCategorizedAffixesToItemSpec(resolver, args, categoryProto, numAffixesNeeded, itemSpec, affixSet);
-                }
-
-                DictionaryPool<PrototypeId, short>.Instance.Return(affixCategoryDict);
-            }
-
             // Apply affixes by position
             if (affixLimits == null)
                 return result;
@@ -234,7 +194,7 @@ namespace MHServerEmu.Games.Loot
         }
 
         public static MutationResults AddAffixes(IItemResolver resolver, DropFilterArguments args, short affixCountNeeded,
-            ItemSpec itemSpec, AffixPosition position, PrototypeId[] categories, AssetId[] keywords, LootRollSettings settings)
+            ItemSpec itemSpec, AffixPosition position, AssetId[] keywords, LootRollSettings settings)
         {
             if (affixCountNeeded <= 0)
                 return Logger.WarnReturn(MutationResults.Error, $"AddAffixes(): Trying to add 0 affixes! args: {args}");
@@ -272,22 +232,7 @@ namespace MHServerEmu.Games.Loot
                             return MutationResults.Error;
                     }
 
-                    result |= AddPositionAffixesToItemSpec(resolver, args, position, affixCountNeeded, itemSpec, affixSet, keywords, categories);
-                }
-                else if (categories.HasValue())
-                {
-                    // Check limits
-                    if (affixLimits != null)
-                    {
-                        foreach (PrototypeId categoryProtoRef in categories)
-                        {
-                            AffixCategoryPrototype categoryProto = categoryProtoRef.As<AffixCategoryPrototype>();
-                            if (itemSpec.NumAffixesOfCategory(categoryProto) + affixCountNeeded > affixLimits.GetMax(categoryProto, settings))
-                                return MutationResults.Error;
-                        }
-                    }
-
-                    result |= AddCategorizedAffixesToItemSpec(resolver, args, categories, affixCountNeeded, itemSpec, affixSet, keywords);
+                    result |= AddPositionAffixesToItemSpec(resolver, args, position, affixCountNeeded, itemSpec, affixSet, keywords);
                 }
                 else if (keywords.HasValue())
                 {
@@ -340,11 +285,11 @@ namespace MHServerEmu.Games.Loot
         }
 
         public static MutationResults DropAffixes(IItemResolver resolver, DropFilterArguments args,
-            ItemSpec itemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories)
+            ItemSpec itemSpec, AffixPosition position, AssetId[] keywords)
         {
             if (itemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, "DropAffixes(): itemSpec.IsValid == false");
 
-            MutationResults result = DropAffixes(resolver, itemSpec, position, keywords, categories);
+            MutationResults result = DropAffixes(resolver, itemSpec, position, keywords);
             if (result.HasFlag(MutationResults.Error))
                 return result;
 
@@ -354,7 +299,7 @@ namespace MHServerEmu.Games.Loot
         }
 
         public static MutationResults CopyAffixes(IItemResolver resolver, DropFilterArguments args, ItemSpec sourceItemSpec,
-            ItemSpec destItemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories, bool enforceAffixLimits)
+            ItemSpec destItemSpec, AffixPosition position, AssetId[] keywords, bool enforceAffixLimits)
         {
             if (destItemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, "CopyAffixes(): destItemSpec.IsValid == false");
             if (args.ItemProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyAffixes(): args.ItemProto == null");
@@ -384,7 +329,7 @@ namespace MHServerEmu.Games.Loot
                         return Logger.WarnReturn(MutationResults.Error, $"CopyAffixes(): Trying to EnforceAffixLimits where there is no affix limits available! args {args}");
                 }
 
-                return CopyAffixSpecs(resolver, sourceItemSpec, destItemSpec, affixLimits, args.RollFor, keywords, position, categories, affixCounts, affixSet);
+                return CopyAffixSpecs(resolver, sourceItemSpec, destItemSpec, affixLimits, args.RollFor, keywords, position, affixCounts, affixSet);
             }
             finally
             {
@@ -394,7 +339,7 @@ namespace MHServerEmu.Games.Loot
         }
 
         public static MutationResults CopyBuiltinAffixes(IItemResolver resolver, DropFilterArguments args, ItemSpec sourceItemSpec,
-            ItemSpec destItemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories, bool enforceAffixLimits)
+            ItemSpec destItemSpec, AffixPosition position, AssetId[] keywords, bool enforceAffixLimits)
         {
             if (destItemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, "CopyBuiltinAffixes(): destItemSpec.IsValid == false");
             if (destItemSpec.ItemProtoRef != args.ItemProto.DataRef) return Logger.WarnReturn(MutationResults.Error, "CopyBuiltinAffixes(): destItemSpec.ItemProtoRef != args.ItemProto.DataRef");
@@ -454,7 +399,7 @@ namespace MHServerEmu.Games.Loot
 
                 }
 
-                return CopyAffixSpecs(resolver, sourceItemSpec, destItemSpec, affixLimits, args.RollFor, keywords, position, categories, affixCounts, affixSet);
+                return CopyAffixSpecs(resolver, sourceItemSpec, destItemSpec, affixLimits, args.RollFor, keywords, position, affixCounts, affixSet);
             }
             finally
             {
@@ -466,15 +411,15 @@ namespace MHServerEmu.Games.Loot
         }
 
         public static MutationResults ReplaceAffixes(IItemResolver resolver, DropFilterArguments args, ItemSpec sourceItemSpec,
-            ItemSpec destItemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories, bool enforceAffixLimits)
+            ItemSpec destItemSpec, AffixPosition position, AssetId[] keywords, bool enforceAffixLimits)
         {
             if (destItemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, "ReplaceAffixes(): destItemSpec.IsValid == false");
 
-            MutationResults result = DropAffixes(resolver, destItemSpec, position, keywords, categories);
+            MutationResults result = DropAffixes(resolver, destItemSpec, position, keywords);
             if (result.HasFlag(MutationResults.Error))
                 return result;
 
-            result |= CopyAffixes(resolver, args, sourceItemSpec, destItemSpec, position, keywords, categories, enforceAffixLimits);
+            result |= CopyAffixes(resolver, args, sourceItemSpec, destItemSpec, position, keywords, enforceAffixLimits);
 
             return result;
         }
@@ -522,59 +467,8 @@ namespace MHServerEmu.Games.Loot
             return duplicateMask;
         }
 
-        private static MutationResults AddCategorizedAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixCategoryPrototype categoryProto, 
-            int affixCountNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, AssetId[] keywords = null)
-        {
-            //Logger.Trace($"AddCategorizedAffixesToItemSpec(): {categoryProto} (x{numAffixesNeeded})");
-
-            IReadOnlyList<AffixPrototype> affixPool = GameDataTables.Instance.LootPickingTable.GetAffixesByCategory(categoryProto);
-            if (affixPool == null)
-                return Logger.WarnReturn(MutationResults.Error, $"AddCategorizedAffixesToItemSpec(): Failed to get available affixes in category: {categoryProto}.");
-
-            Picker<AffixPrototype> affixPicker = new(resolver.Random);
-            TryAddAffixesToPicker(args, null, keywords, resolver.Region, affixPool, affixPicker);
-
-            MutationResults result = MutationResults.None;
-            int affixCountAdded = 0;
-
-            for (int i = 0; i < affixCountNeeded; i++)
-            {
-                AffixSpec affixSpec = new();
-                result |= affixSpec.RollAffix(resolver.Random, args.RollFor, itemSpec, affixPicker, affixSet);
-
-                if (result.HasFlag(MutationResults.Error) == false)
-                {
-                    itemSpec.AddAffixSpec(affixSpec);
-                    affixCountAdded++;
-                }
-            }
-
-            ValidateAddAffixCount(affixCountAdded, affixCountNeeded);
-            return result;
-        }
-
-        private static MutationResults AddCategorizedAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, PrototypeId[] categories,
-            int affixCountNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, AssetId[] keywords = null)
-        {
-            MutationResults result = MutationResults.None;
-
-            foreach (PrototypeId categoryProtoRef in categories)
-            {
-                AffixCategoryPrototype categoryIt = categoryProtoRef.As<AffixCategoryPrototype>();
-                if (categoryIt == null)
-                {
-                    Logger.Warn("AddCategorizedAffixesToItemSpec(): categoryIt == null");
-                    continue;
-                }
-
-                result |= AddCategorizedAffixesToItemSpec(resolver, args, categoryIt, affixCountNeeded, itemSpec, affixSet, keywords);
-            }
-
-            return result;
-        }
-
         private static MutationResults AddPositionAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixPosition affixPosition,
-            int affixCountNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, AssetId[] keywords = null, PrototypeId[] categories = null)
+            int affixCountNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, AssetId[] keywords = null)
         {
             //Logger.Trace($"AddPositionAffixesToItemSpec(): {affixPosition} (x{numAffixesNeeded})");
 
@@ -583,7 +477,7 @@ namespace MHServerEmu.Games.Loot
                 return Logger.WarnReturn(MutationResults.Error, $"AddCategorizedAffixesToItemSpec(): Failed to get available affixes in position: {affixPosition}.");
 
             Picker<AffixPrototype> affixPicker = new(resolver.Random);
-            TryAddAffixesToPicker(args, categories, keywords, resolver.Region, affixPool, affixPicker);
+            TryAddAffixesToPicker(args, keywords, resolver.Region, affixPool, affixPicker);
 
             MutationResults result = MutationResults.None;
             int affixCountAdded = 0;
@@ -615,7 +509,7 @@ namespace MHServerEmu.Games.Loot
                 if (affixPool == null)
                     return Logger.WarnReturn(MutationResults.Error, $"AddKeywordAffixesToItemSpec(): Failed to get available affixes for keyword: {keywordIt.GetName()}.");
 
-                TryAddAffixesToPicker(args, null, keywords, resolver.Region, affixPool, affixPicker);
+                TryAddAffixesToPicker(args, keywords, resolver.Region, affixPool, affixPicker);
             }
 
             MutationResults result = MutationResults.None;
@@ -637,7 +531,7 @@ namespace MHServerEmu.Games.Loot
             return result;
         }
 
-        private static void TryAddAffixesToPicker(DropFilterArguments args, PrototypeId[] categories, AssetId[] keywords,
+        private static void TryAddAffixesToPicker(DropFilterArguments args, AssetId[] keywords,
             Region region, IReadOnlyList<AffixPrototype> affixPool, Picker<AffixPrototype> affixPicker)
         {
             int count = affixPool.Count;
@@ -653,9 +547,6 @@ namespace MHServerEmu.Games.Loot
                     continue;
 
                 if (affixProto.HasKeywords(keywords, true) == false)
-                    continue;
-
-                if (affixProto.HasAnyCategory(categories) == false)
                     continue;
 
                 if (affixProto is AffixRegionRestrictedPrototype regionRestrictedAffixProto)
@@ -677,7 +568,7 @@ namespace MHServerEmu.Games.Loot
                 Logger.Warn($"ValidateAddAffixCount(): The pool of affixes is too small for these parameters! affixCountAdded={affixCountAdded}, affixCountNeeded={affixCountNeeded}");
         }
 
-        private static MutationResults DropAffixes(IItemResolver resolver, ItemSpec itemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories)
+        private static MutationResults DropAffixes(IItemResolver resolver, ItemSpec itemSpec, AffixPosition position, AssetId[] keywords)
         {
             // NOTE: This is used by public DropAffixes() and ReplaceAffixes() functions.
 
@@ -686,7 +577,6 @@ namespace MHServerEmu.Games.Loot
             List<AffixSpec> filteredAffixSpecs = ListPool<AffixSpec>.Instance.Get();
 
             bool hasKeywords = keywords.HasValue();
-            bool hasCategories = categories.HasValue();
 
             IReadOnlyList<AffixSpec> affixSpecs = itemSpec.AffixSpecs;
             for (int i = 0; i < affixSpecs.Count; i++)
@@ -714,10 +604,6 @@ namespace MHServerEmu.Games.Loot
                 if (shouldDrop && hasKeywords && affixSpec.AffixProto.HasKeywords(keywords, true) == false)
                     shouldDrop = false;
 
-                // Check categories
-                if (shouldDrop && hasCategories && affixSpec.AffixProto.HasAnyCategory(categories) == false)
-                    shouldDrop = false;
-
                 // Not adding the affix to the filtered list drops it
                 if (shouldDrop)
                     result |= MutationResults.AffixChange;
@@ -734,17 +620,15 @@ namespace MHServerEmu.Games.Loot
         }
 
         private static MutationResults CopyAffixSpecs(IItemResolver resolver, ItemSpec sourceItemSpec, ItemSpec destItemSpec,
-            AffixLimitsPrototype affixLimits, PrototypeId rollFor, AssetId[] keywords, AffixPosition position, PrototypeId[] categories,
+            AffixLimitsPrototype affixLimits, PrototypeId rollFor, AssetId[] keywords, AffixPosition position,
             List<AffixCountData> affixCounts, HashSet<ScopedAffixRef> affixSet)
         {
             bool hasKeywords = keywords.HasValue();
-            bool hasCategories = categories.HasValue();
 
             MutationResults result = MutationResults.None;
 
             List<AffixSpec> affixSpecsToAdd = ListPool<AffixSpec>.Instance.Get();
             List<int> addedPositionCounts = ListPool<int>.Instance.Get();
-            Dictionary<AffixCategoryPrototype, int> addedCategoryCounts = DictionaryPool<AffixCategoryPrototype, int>.Instance.Get();
 
             addedPositionCounts.Fill(0, (int)AffixPosition.NumPositions);
 
@@ -767,14 +651,6 @@ namespace MHServerEmu.Games.Loot
 
                 if (hasKeywords && affixProto.HasKeywords(keywords, true) == false)
                     continue;
-
-                AffixCategoryPrototype categoryProto = null;
-                if (hasCategories)
-                {
-                    categoryProto = affixProto.GetFirstCategoryMatch(categories);
-                    if (categoryProto == null)
-                        continue;
-                }
 
                 // Copy the affix
                 AffixSpec affixSpecCopy = new(sourceAffixSpecIt);
@@ -812,15 +688,7 @@ namespace MHServerEmu.Games.Loot
                     affixSet.Add(new(affixSpecCopy.AffixProto.DataRef, affixSpecCopy.ScopeProtoRef));
                     affixSpecsToAdd.Add(affixSpecCopy);
 
-                    if (categoryProto != null)
-                    {
-                        addedCategoryCounts.TryGetValue(categoryProto, out int count);
-                        addedCategoryCounts[categoryProto] = count + 1;
-                    }
-                    else
-                    {
-                        addedPositionCounts[(int)affixProto.Position]++;
-                    }
+                    addedPositionCounts[(int)affixProto.Position]++;
                 }
             }
 
@@ -841,19 +709,6 @@ namespace MHServerEmu.Games.Loot
                         break;
                     }
                 }
-
-                // Category limits
-                if (addedCategoryCounts.Count > 0)
-                {
-                    foreach (var kvp in addedCategoryCounts)
-                    {
-                        if (destItemSpec.NumAffixesOfCategory(kvp.Key) + kvp.Value > affixLimits.GetMax(kvp.Key, null))
-                        {
-                            result |= MutationResults.Error;
-                            break;
-                        }
-                    }
-                }
             }
 
             // Add affix copies if there are no issues
@@ -863,7 +718,6 @@ namespace MHServerEmu.Games.Loot
             end:
             ListPool<AffixSpec>.Instance.Return(affixSpecsToAdd);
             ListPool<int>.Instance.Return(addedPositionCounts);
-            DictionaryPool<AffixCategoryPrototype, int>.Instance.Return(addedCategoryCounts);
             return result;
         }
 

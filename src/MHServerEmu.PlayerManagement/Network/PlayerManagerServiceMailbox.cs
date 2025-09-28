@@ -63,10 +63,6 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnClearPrivateStoryRegions(clearPrivateStoryRegions);
                     break;
 
-                case ServiceMessage.SetDifficultyTierPreference setDifficultyTierPreference:
-                    OnSetDifficultyTierPreference(setDifficultyTierPreference);
-                    break;
-
                 case ServiceMessage.PlayerLookupByNameRequest playerLookupByNameRequest:
                     OnPlayerLookupByNameRequest(playerLookupByNameRequest);
                     break;
@@ -227,19 +223,6 @@ namespace MHServerEmu.PlayerManagement.Network
                 return Logger.WarnReturn(false, $"OnClearPrivateStoryRegions(): No handle found for playerDbId 0x{playerDbId:X}");
 
             player.WorldView.ClearPrivateStoryRegions();
-            return true;
-        }
-
-        private bool OnSetDifficultyTierPreference(in ServiceMessage.SetDifficultyTierPreference setDifficultyTierPreference)
-        {
-            ulong playerDbId = setDifficultyTierPreference.PlayerDbId;
-            PrototypeId difficultyTierProtoRef = (PrototypeId)setDifficultyTierPreference.DifficultyTierProtoId;
-
-            PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
-            if (player == null)
-                return Logger.WarnReturn(false, $"OnSetDifficultyTierPreference(): No handle found for playerDbId 0x{playerDbId:X}");
-
-            player.SetDifficultyTierPreference(difficultyTierProtoRef);
             return true;
         }
 

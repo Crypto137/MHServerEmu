@@ -407,7 +407,7 @@ namespace MHServerEmu.Games.Entities.Items
 
                     using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
                     settings.EntityRef = currencySpec.AgentOrItemProtoRef;
-                    settings.ItemSpec = new(currencySpec.AgentOrItemProtoRef, GameDatabase.LootGlobalsPrototype.RarityDefault, 1);
+                    settings.ItemSpec = new(currencySpec.AgentOrItemProtoRef, (PrototypeId)10195041726035595077, 1);  // V48_TODO: Fix rarity
                     settings.Properties = replacementCurrencyProperties;
 
                     Item currencyItem = entityManager.CreateEntity(settings) as Item;

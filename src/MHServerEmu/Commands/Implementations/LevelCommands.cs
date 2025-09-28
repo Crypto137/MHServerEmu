@@ -73,7 +73,8 @@ namespace MHServerEmu.Commands.Implementations
             PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
-            player.Properties[PropertyEnum.OmegaXP] = GameDatabase.AdvancementGlobalsPrototype.InfinityXPCap;
+            // V48_TODO
+            //player.Properties[PropertyEnum.OmegaXP] = GameDatabase.AdvancementGlobalsPrototype.InfinityXPCap;
             player.TryOmegaLevelUp(true);
 
             return $"Omega experience maxed out.";

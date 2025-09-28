@@ -39,8 +39,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] RemoveStates { get; protected set; }
         public PrototypeId[] SubStates { get; protected set; }
         public PrototypeId UIWidget { get; protected set; }
-        public DesignWorkflowState DesignStatePS4 { get; protected set; }
-        public DesignWorkflowState DesignStateXboxOne { get; protected set; }
 
         public virtual bool CanApplyState()
         {
