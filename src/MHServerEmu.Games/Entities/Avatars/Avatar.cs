@@ -139,6 +139,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                     _ownerPlayerDbId = player.DatabaseUniqueId;
             }
 
+            // V48_REMOVEME: Grant all powers until we get power points working.
+            Properties[PropertyEnum.PowerGrantRank] = 20;
+
             return true;
         }
 

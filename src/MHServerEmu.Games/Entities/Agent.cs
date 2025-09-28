@@ -1273,9 +1273,6 @@ namespace MHServerEmu.Games.Entities
         {
             if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "UpdatePowerGrant(): this is not Avatar && IsTeamUpAgent == false");
 
-            // This probably shouldn't be happening in 1.52
-            Logger.Debug($"UpdatePowerGrant(): {grantParamProtoRef.GetName()} for [{this}]");
-
             Prototype grantParamProto = grantParamProtoRef.As<Prototype>();
 
             bool isGrantAll = grantParamProtoRef == PrototypeId.Invalid;
