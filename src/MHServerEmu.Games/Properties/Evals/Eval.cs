@@ -1455,7 +1455,6 @@ namespace MHServerEmu.Games.Properties.Evals
             evalVar.SetError();
             if (evalProto is not DifficultyTierRangePrototype DifficultyTierRangeProto) return evalVar;
 
-            /* V48_TODO?
             PrototypeId tierRef = PrototypeId.Invalid;
             EvalVar contextVar = GetEvalVarFromContext(DifficultyTierRangeProto.Context, data, false);
             if (FromValue(contextVar, out Entity entity))
@@ -1480,9 +1479,6 @@ namespace MHServerEmu.Games.Properties.Evals
                 evalVar.SetBool(DifficultyTierPrototype.InRange(tierRef, DifficultyTierRangeProto.Min, DifficultyTierRangeProto.Max));
                 return evalVar;
             }
-            */
-
-            return evalVar;
         }
 
         private static EvalVar RunMissionIsActive(EvalPrototype evalProto, EvalContextData data)

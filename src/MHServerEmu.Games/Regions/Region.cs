@@ -85,6 +85,7 @@ namespace MHServerEmu.Games.Regions
         public int RandomSeed { get; private set; }
         public ulong MatchNumber { get => Settings.MatchNumber; }
         public int RegionLevel { get; private set; }
+        public PrototypeId DifficultyTierRef { get => TuningTable?.Prototype != null ? TuningTable.Prototype.Tier : PrototypeId.Invalid; }
 
         public RegionPrototype Prototype { get; private set; }
         public PrototypeId PrototypeDataRef { get => Prototype != null ? Prototype.DataRef : PrototypeId.Invalid; }
