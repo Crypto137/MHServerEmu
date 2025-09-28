@@ -327,6 +327,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SendToChat { get; protected set; }
         public bool ShowForEachAvatar { get; protected set; }
         public bool AlwaysShow { get; protected set; }
+
+        // V48_TODO: TutorialSystem::ShouldShowTip()
     }
 
     public class GenericTipEntryCollectionPrototype : TipEntryCollectionPrototype
@@ -630,11 +632,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SkipIfUsingGamepad { get; protected set; }
         public bool SkipIfUsingKeyboardMouse { get; protected set; }
         public int FlashDelayMS { get; protected set; }
-
-        public bool ShouldShowTip(Player player)
-        {
-            return player.Properties[PropertyEnum.TutorialHasSeenTip, DataRef] == false;
-        }
     }
 
     public class CurrencyDisplayPrototype : Prototype

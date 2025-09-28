@@ -3219,10 +3219,10 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.TutorialHasSeenTip, tipDataRef] = true;
         }
 
+        // V48_TODO: TutorialSystem::ShowTip() for TipPrototype separate from ShowHUDTutorial
+
         public void ShowHUDTutorial(HUDTutorialPrototype hudTutorialProto)
         {
-            if (hudTutorialProto != null && hudTutorialProto.ShouldShowTip(this) == false) return;
-
             if (CurrentHUDTutorial != hudTutorialProto)
             {
                 var manager = Game.EntityManager;
