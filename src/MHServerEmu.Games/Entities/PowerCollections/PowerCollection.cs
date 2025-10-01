@@ -197,6 +197,10 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
             if (_owner == null) return Logger.WarnReturn(false, "SendEntireCollection(): _owner == null");
 
+            // Missile powers are assigned in parallel by the client when MissileCreationContext is applied in OnEnteredWorld().
+            if (_owner is Missile)
+                return true;
+
             // Make sure the provided player is actually interested in our owner
             AreaOfInterest aoi = player.AOI;
             if (aoi.InterestedInEntity(_owner.Id, AOINetworkPolicyValues.AOIChannelProximity) == false)
@@ -206,14 +210,20 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
             foreach (PowerCollectionRecord record in _powerDict.Values)
             {
-                assignCollectionBuilder.AddPower(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                    .SetEntityId(_owner.Id)
-                    .SetPowerProtoId((ulong)record.PowerPrototypeRef)
-                    .SetPowerRank(record.IndexProps.PowerRank)
-                    .SetCharacterLevel(record.IndexProps.CharacterLevel)
-                    .SetCombatLevel(record.IndexProps.CombatLevel)
-                    .SetItemLevel(record.IndexProps.ItemLevel)
-                    .SetItemVariation(record.IndexProps.ItemVariation));
+                if (record.Power.GetPowerCategory() == PowerCategoryType.ComboEffect)
+                    continue;
+
+                for (int i = 0; i < record.PowerRefCount; i++)
+                {
+                    assignCollectionBuilder.AddPower(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                        .SetEntityId(_owner.Id)
+                        .SetPowerProtoId((ulong)record.PowerPrototypeRef)
+                        .SetPowerRank(record.IndexProps.PowerRank)
+                        .SetCharacterLevel(record.IndexProps.CharacterLevel)
+                        .SetCombatLevel(record.IndexProps.CombatLevel)
+                        .SetItemLevel(record.IndexProps.ItemLevel)
+                        .SetItemVariation(record.IndexProps.ItemVariation));
+                }
             }
 
             player.SendMessage(assignCollectionBuilder.Build());
@@ -236,26 +246,31 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
             // Copy to a temporary list to be able to remove entries while iterating
             var records = ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Instance.Get();
-            records.AddRange(_powerDict);
 
-            foreach (var kvp in records)
+            // This needs to be done in a loop to remove all copies of powers with RefCount higher than 0.
+            while (_powerDict.Count > 0)
             {
-                Power power = kvp.Value.Power;
+                records.Set(_powerDict);
 
-                // Simply remove records that have no valid powers
-                if (power == null)
+                foreach (var kvp in records)
                 {
-                    Logger.Warn("OnOwnerExitedWorld(): power == null");
-                    _powerDict.Remove(kvp.Key);
-                    continue;
+                    Power power = kvp.Value.Power;
+
+                    // Simply remove records that have no valid powers
+                    if (power == null)
+                    {
+                        Logger.Warn("OnOwnerExitedWorld(): power == null");
+                        _powerDict.Remove(kvp.Key);
+                        continue;
+                    }
+
+                    // Combo effects are unassigned separately
+                    if (power.IsComboEffect())
+                        continue;
+
+                    // Unassign power
+                    UnassignPower(kvp.Value.PowerPrototypeRef, false);
                 }
-
-                // Combo effects are unassigned separately
-                if (power.IsComboEffect())
-                    continue;
-
-                // Unassign power
-                UnassignPower(kvp.Value.PowerPrototypeRef, false);
             }
 
             ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Instance.Return(records);
