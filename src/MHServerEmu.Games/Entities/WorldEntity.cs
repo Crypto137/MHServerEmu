@@ -1745,7 +1745,9 @@ namespace MHServerEmu.Games.Entities
 
             Avatar avatar = powerOwner.GetMostResponsiblePowerUser<Avatar>(true);
 
-            // TODO: Set LastInflictedDamageTime for avatars
+            // Set LastInflictedDamageTime for IsCombatActive checks (e.g. when spawning kill loot).
+            if (avatar != null && avatar.IsInWorld)
+                avatar.Properties[PropertyEnum.LastInflictedDamageTime] = Game.CurrentTime;
 
             // Enter combat if this is not an over time effect
             if (powerResults.TestFlag(PowerResultFlags.OverTime) == false)

@@ -1367,8 +1367,20 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool IsCombatActive()
         {
-            // TODO: Check PropertyEnum.LastInflictedDamageTime
-            return true;
+            if (Properties.HasProperty(PropertyEnum.LastInflictedDamageTime) == false)
+                return false;
+
+            Region region = Region;
+            if (region == null)
+                return false;
+
+            TuningPrototype difficultyProto = region.TuningTable?.Prototype;
+            if (difficultyProto == null) return Logger.WarnReturn(false, "IsCombatActive(): difficultyProto == null");
+
+            TimeSpan timeSinceInflictedDamage = Game.CurrentTime - Properties[PropertyEnum.LastInflictedDamageTime];
+            TimeSpan inflictedDamageTimer = TimeSpan.FromSeconds(difficultyProto.PlayerInflictedDamageTimerSec);
+
+            return timeSinceInflictedDamage <= inflictedDamageTimer;
         }
 
         public override TimeSpan GetPowerInterruptCooldown(PowerPrototype powerProto)
