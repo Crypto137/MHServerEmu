@@ -234,8 +234,11 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             foreach (PowerCollectionRecord record in _powerDict.Values)
                 record.Power?.OnOwnerExitedWorld();
 
-            // Convert dict to array to be able to remove entries while iterating
-            foreach (var kvp in _powerDict.ToArray())
+            // Copy to a temporary list to be able to remove entries while iterating
+            var records = ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Instance.Get();
+            records.AddRange(_powerDict);
+
+            foreach (var kvp in records)
             {
                 Power power = kvp.Value.Power;
 
@@ -248,11 +251,14 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 }
 
                 // Combo effects are unassigned separately
-                if (power.IsComboEffect()) continue;
+                if (power.IsComboEffect())
+                    continue;
 
                 // Unassign power
                 UnassignPower(kvp.Value.PowerPrototypeRef, false);
             }
+
+            ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Instance.Return(records);
         }
 
         public void OnOwnerCastSpeedChange(PrototypeId keywordProtoRef)

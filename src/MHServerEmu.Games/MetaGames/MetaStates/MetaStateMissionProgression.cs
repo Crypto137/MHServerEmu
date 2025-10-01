@@ -1,5 +1,6 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -155,8 +156,11 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
         private void TeleportPlayersToStart()
         {
-            var players = MetaGame.Players;
-            foreach (var player in players.ToArray())   // FIXME: Use pooled list here
+            List<Player> players = ListPool<Player>.Instance.Get();
+            foreach (Player player in MetaGame.Players)
+                players.Add(player);
+
+            foreach (var player in players)
             {
                 var avatar = player.CurrentAvatar;
                 if (avatar == null) continue;
@@ -181,6 +185,8 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     teleporter.TeleportToTarget(startTarget);
                 }
             }
+
+            ListPool<Player>.Instance.Return(players);
         }
 
         private void ScheduleStateInterval(TimeSpan interval)

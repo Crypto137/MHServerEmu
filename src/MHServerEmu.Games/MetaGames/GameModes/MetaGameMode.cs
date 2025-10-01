@@ -141,13 +141,18 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         public void TeleportPlayersToTarget(PrototypeId targetRef)
         {
-            var players = MetaGame.Players;
-            foreach (var player in players.ToArray())   // FIXME: use a pooled list here
+            List<Player> players = ListPool<Player>.Instance.Get();
+            foreach (Player player in MetaGame.Players)
+                players.Add(player);
+
+            foreach (var player in players)
             {
                 using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
                 teleporter.Initialize(player, TeleportContextEnum.TeleportContext_MetaGame);
                 teleporter.TeleportToTarget(targetRef);
             }
+
+            ListPool<Player>.Instance.Return(players);
         }
 
         public void ResetStates()

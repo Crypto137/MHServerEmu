@@ -88,15 +88,23 @@ namespace MHServerEmu.Games.Entities.Physics
             {
                 var entityPhysics = worldEntity.Physics;
                 var manager = _game.EntityManager;
-                foreach (var overlappedEntry in entityPhysics.OverlappedEntities.ToArray())
+
+                var overlappedEntities = ListPool<KeyValuePair<ulong, OverlapEntityEntry>>.Instance.Get();
+                overlappedEntities.AddRange(entityPhysics.OverlappedEntities);
+
+                foreach (var overlappedEntry in overlappedEntities)
+                {
                     if (overlappedEntry.Value.Frame != _physicsFrames)
                     {
                         var overlappedEntity = manager.GetEntity<WorldEntity>(overlappedEntry.Key);
                         if (overlappedEntity != null)
-                            overlapEvents.Enqueue(new (OverlapEventType.Remove, worldEntity, overlappedEntity));
+                            overlapEvents.Enqueue(new(OverlapEventType.Remove, worldEntity, overlappedEntity));
                         else
                             entityPhysics.OverlappedEntities.Remove(overlappedEntry.Key);
                     }
+                }
+
+                ListPool<KeyValuePair<ulong, OverlapEntityEntry>>.Instance.Return(overlappedEntities);
             }
         }
 

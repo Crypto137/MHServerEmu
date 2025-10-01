@@ -7,7 +7,7 @@ namespace MHServerEmu.Games.Entities
     /// <summary>
     /// Iterates <see cref="Player"/> instances in the specified <see cref="Game"/> or <see cref="Region"/>.
     /// </summary>
-    public readonly struct PlayerIterator : IEnumerable<Player>
+    public readonly struct PlayerIterator
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -35,18 +35,6 @@ namespace MHServerEmu.Games.Entities
         public Enumerator GetEnumerator()
         {
             return new(_game?.EntityManager.Players, _region);
-        }
-
-        // NOTE: Missions and MetaGames rely on PlayerIterator being IEnumerable for things like ToArray(). Consider optimizing this.
-
-        IEnumerator<Player> IEnumerable<Player>.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
 
         public struct Enumerator : IEnumerator<Player>

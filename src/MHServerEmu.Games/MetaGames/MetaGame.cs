@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.MetaGames
         public GRandom Random { get; }
         public MetaGameMode CurrentMode => (_modeIndex > -1 && _modeIndex < GameModes.Count) ? GameModes[_modeIndex] : null;
 
-        public IEnumerable<Player> Players { get => new PlayerIterator(GetRegion()); }
+        public PlayerIterator Players { get => new PlayerIterator(GetRegion()); }
         public UIDataProvider UIDataProvider { get => GetRegion()?.UIDataProvider; }
 
         private readonly HashSet<ulong> _discoveredEntities = new();
