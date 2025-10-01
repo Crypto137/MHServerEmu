@@ -683,30 +683,6 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        protected override void InitializeProcEffectPowers()
-        {
-            base.InitializeProcEffectPowers();
-
-            // Initialize equipment procs
-            EntityManager entityManager = Game.EntityManager;
-
-            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
-            {
-                foreach (var entry in inventory)
-                {
-                    Item item = entityManager.GetEntity<Item>(entry.Id);
-                    if (item == null)
-                    {
-                        Logger.Warn("InitializeProcEffectPowers(): item == null");
-                        continue;
-                    }
-
-                    if (UpdateProcEffectPowers(item.Properties, true) == false)
-                        Logger.Warn($"InitializeProcEffectPowers(): UpdateProcEffectPowers failed when initializing item=[{item}] owner=[{this}]");
-                }
-            }
-        }
-
         protected override PowerUseResult ActivatePower(Power power, ref PowerActivationSettings settings)
         {
             PowerUseResult result = base.ActivatePower(power, ref settings);

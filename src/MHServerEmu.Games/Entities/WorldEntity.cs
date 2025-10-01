@@ -1645,6 +1645,8 @@ namespace MHServerEmu.Games.Entities
 
         protected virtual void InitializeProcEffectPowers()
         {
+            // NOTE: This should also initialize procs granted by equipment because
+            // equipment proc properties should already be aggregated with the owner.
             if (UpdateProcEffectPowers(Properties, true) == false)
                 Logger.Warn($"InitializeProcEffectPowers(): UpdateProcEffectPowers failed when initializing entity=[{this}]");
         }
