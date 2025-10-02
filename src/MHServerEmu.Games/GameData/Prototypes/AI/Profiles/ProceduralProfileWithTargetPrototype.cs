@@ -513,11 +513,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Destroy this orb if it has finished shrinking
             if (ShrinkageDurationMS > 0)
             {
-                TimeSpan shrinkageEndTime = agent.Properties[PropertyEnum.AICustomTimeVal1] 
-                    + TimeSpan.FromMilliseconds(ShrinkageDelayMS) 
-                    + TimeSpan.FromMilliseconds(ShrinkageDurationMS);
-
-                if (game.CurrentTime >= shrinkageEndTime)
+                TimeSpan shrinkageDurationRemaining = GetShrinkageDurationRemaining(agent);
+                if (shrinkageDurationRemaining <= TimeSpan.Zero)
                 {
                     agent.Kill(null, KillFlags.NoDeadEvent | KillFlags.NoExp | KillFlags.NoLoot);
                     return;
@@ -616,8 +613,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private bool TryGetPickedUp(Agent agent, Avatar avatar)
         {
-            // TODO: Orbs should shrink and have their effect be reduced over time, see CAgent::onEnterWorldScheduleOrbShrink for reference.
-
             OrbPrototype orbProto = agent.Prototype as OrbPrototype;
             if (orbProto == null) return Logger.WarnReturn(false, "TryGetPickedUp(): orbProto == null");
 
@@ -626,6 +621,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             Player player = avatar.GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "TryGetPickedUp(): player == null");
+
+            // Reduce the orb's effect based on its shrinkage progress if needed. XP rewards are reduced by lowering the orb's level.
+            DoOrbShrink(agent);
+            int levelDelta = agent.CharacterLevel - agent.Properties[PropertyEnum.InitialCharacterLevel];
 
             // Power (healing, endurance, boons)
             if (EffectPower != PrototypeId.Invalid)
@@ -637,8 +636,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 avatar.TryActivateOnOrbPickupProcs(agent);
 
             // Experience
-            // Scale exp based on avatar level rather than orb level
-            if (orbProto.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, player.CanUseLiveTuneBonuses()))
+            // Scale exp based on avatar level rather than orb level, but apply the delta from orb shrinkage.
+            if (orbProto.GetXPAwarded(avatar.CharacterLevel + levelDelta, out long xp, out long minXP, player.CanUseLiveTuneBonuses()))
             {
                 TuningTable tuningTable = orbProto.IgnoreRegionDifficultyForXPCalc == false ? agent.Region?.TuningTable : null;
                 xp = avatar.ApplyXPModifiers(xp, false, tuningTable);
@@ -761,6 +760,58 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // We can add more filters here if needed
 
             return DestroyOrbOnUnSimOrTargetLoss;
+        }
+
+        private void DoOrbShrink(Agent agent)
+        {
+            // No shrinkage duration indicates that the orb does not shrink.
+            if (ShrinkageDurationMS == 0)
+                return;
+
+            float shrinkageDurationRemainingMS = (float)GetShrinkageDurationRemaining(agent).TotalMilliseconds;
+
+            // ShrinkageDurationRemaining can be higher than ShrinkageDuration because of ShrinkageDelay.
+            if (shrinkageDurationRemainingMS >= ShrinkageDurationMS)
+                return;
+
+            float shrinkRatio = shrinkageDurationRemainingMS / ShrinkageDurationMS;
+
+            // Update level
+            int level = agent.Properties[PropertyEnum.InitialCharacterLevel];
+            level = Math.Max((int)(level * shrinkRatio), 1);
+
+            agent.CharacterLevel = level;
+            agent.CombatLevel = level;
+
+            // Update proc ranks
+            const int MaxProcRank = 100;
+            int procRank = (int)(MaxProcRank * shrinkRatio);
+
+            List<PrototypeId> procPowerRefs = ListPool<PrototypeId>.Instance.Get();
+            foreach (var kvp in agent.Properties.IteratePropertyRange(PropertyEnum.Proc))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId procPowerRef);
+                if (procPowerRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn("DoOrbShrink(): procPowerRef == PrototypeId.Invalid");
+                    continue;
+                }
+
+                procPowerRefs.Add(procPowerRef);
+            }
+
+            foreach (PrototypeId procPowerRef in procPowerRefs)
+                agent.Properties[PropertyEnum.ProcPowerRank, procPowerRef] = procRank;
+
+            ListPool<PrototypeId>.Instance.Return(procPowerRefs);
+        }
+
+        private TimeSpan GetShrinkageDurationRemaining(Agent agent)
+        {
+            return agent.Properties[PropertyEnum.AICustomTimeVal1]
+                + TimeSpan.FromMilliseconds(ShrinkageDelayMS)
+                + TimeSpan.FromMilliseconds(ShrinkageDurationMS)
+                - agent.Game.CurrentTime;
         }
 
         private static Avatar FindNearestAvatar(Agent agent)
