@@ -23,6 +23,7 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
@@ -3796,7 +3797,10 @@ namespace MHServerEmu.Games.Entities
             if (killFlags.HasFlag(KillFlags.NoLoot) == false && Properties[PropertyEnum.NoLootDrop] == false)
             {
                 Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, requireCombatActive, playerList);
-                // TODO: Manually add faraway mission participants if needed
+
+                // Add faraway mission participants if needed
+                if (this is Agent agent)
+                    Mission.AddContributorsForLootSpawn(agent, playerList);
 
                 // OnKilled loot table is different based on the rank of this entity
                 RankPrototype rankProto = GetRankPrototype();

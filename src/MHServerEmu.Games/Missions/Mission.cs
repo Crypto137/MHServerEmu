@@ -1896,6 +1896,37 @@ namespace MHServerEmu.Games.Missions
             return contributors.Count > 0;
         }
 
+        public static bool AddContributorsForLootSpawn(Agent source, List<Player> playerList)
+        {
+            if (source == null) return Logger.WarnReturn(false, "AddContributorsForLootSpawn(): source == null");
+
+            if (source.AgentPrototype.SpawnLootForMissionContributors == false)
+                return true;
+
+            PrototypeId missionProtoRef = source.MissionPrototype;
+            if (missionProtoRef == PrototypeId.Invalid)
+                return true;
+
+            MissionManager missionManager = source.Region?.MissionManager;
+            if (missionManager == null) return Logger.WarnReturn(false, "AddContributorsForLootSpawn(): missionManager == null");
+
+            Mission mission = missionManager.MissionByDataRef(missionProtoRef);
+            if (mission == null) return Logger.WarnReturn(false, "AddContributorsForLootSpawn(): mission == null");
+
+            // This is used for SpawnLootForMissionContributors, we may want to use a set for this instead.
+            List<Player> contributors = ListPool<Player>.Instance.Get();
+            mission.GetContributors(contributors);
+
+            foreach (Player contributor in contributors)
+            {
+                if (playerList.Contains(contributor) == false)
+                    playerList.Add(contributor);
+            }
+
+            ListPool<Player>.Instance.Return(contributors);
+            return true;
+        }
+
         public bool GetRegionPlayers(List<Player> regionPlayers)
         {
             regionPlayers.Clear();
