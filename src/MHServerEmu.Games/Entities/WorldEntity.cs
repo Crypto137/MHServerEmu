@@ -1870,6 +1870,9 @@ namespace MHServerEmu.Games.Entities
                 // Agent-only: interrupt on cancel on damaged powers
                 OnDamaged(powerResults);
 
+                if (powerOwner != null && powerOwner.CanBePlayerOwned())
+                    AwardHitLoot(healthDelta, powerResults.TestFlag(PowerResultFlags.OverTime));
+
                 TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamaged, powerResults, healthDelta);
                 TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedForPctHealth, powerResults, healthDelta);
                 TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedHealthBelowPct, powerResults, healthDelta);
@@ -3821,6 +3824,27 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        private void AwardHitLoot(float healthDelta, bool isOverTime)
+        {
+            bool requireCombatActive = WorldEntityPrototype.RequireCombatActiveForKillCredit;
+
+            List<Player> playerList = ListPool<Player>.Instance.Get();
+            Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, requireCombatActive, playerList);
+            if (playerList.Count > 0)
+            {
+                // NOTE: Only OnDamagedForPctHealth is used in 1.52, and only for Doop credit drops,
+                // so the vast majority of time this function is not going to do anything.
+                if (isOverTime == false)
+                    AwardLootForDropEvent(LootDropEventType.OnHealthBelowPctHit, playerList);
+
+                AwardLootForDropEvent(LootDropEventType.OnHealthBelowPct, playerList);
+                AwardLootForDropEvent(LootDropEventType.OnHit, playerList);
+                AwardLootForDropEvent(LootDropEventType.OnDamagedForPctHealth, playerList, healthDelta);
+            }
+
+            ListPool<Player>.Instance.Return(playerList);
+        }
+
         private bool AwardInteractionLoot(ulong interactorEntityId)
         {
             WorldEntity interactorEntity = Game.EntityManager.GetEntity<WorldEntity>(interactorEntityId);
@@ -3849,7 +3873,7 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private bool AwardLootForDropEvent(LootDropEventType eventType, List<Player> playerList)
+        private bool AwardLootForDropEvent(LootDropEventType eventType, List<Player> playerList, float healthDelta = 0f)
         {
             const int MaxTables = 8;    // The maximum we've seen in 1.52 prototypes is 4, double this just in case
 
@@ -3857,7 +3881,9 @@ namespace MHServerEmu.Games.Entities
             if (playerList.Count == 0)
                 return true;
 
+            // TODO: Change Span to a pooled list?
             Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[MaxTables];
+            List<PropertyId> tablesToRemove = ListPool<PropertyId>.Instance.Get();
             int numTables = 0;
 
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.LootTablePrototype, (int)eventType))
@@ -3866,6 +3892,41 @@ namespace MHServerEmu.Games.Entities
                 {
                     Logger.Warn($"AwardLootForDropEvent(): Exceeded the maximum number of loot tables in {this}");
                     break;
+                }
+
+                switch (eventType)
+                {
+                    case LootDropEventType.OnHealthBelowPctHit:
+                    case LootDropEventType.OnHealthBelowPct:
+                    {
+                        Property.FromParam(kvp.Key, 1, out int threshold);
+
+                        float healthPct = MathHelper.Ratio((long)Properties[PropertyEnum.Health], (long)Properties[PropertyEnum.HealthMax]) * 100f;
+                        if (healthPct > threshold)
+                            continue;
+                        
+                        // Remove this table after this drop
+                        tablesToRemove.Add(kvp.Key);
+                        break;
+                    }
+
+                    case LootDropEventType.OnDamagedForPctHealth:
+                    {
+                        if (healthDelta >= 0f)
+                            continue;
+
+                        Property.FromParam(kvp.Key, 1, out int threshold);
+
+                        long healthMax = Properties[PropertyEnum.HealthMax];
+                        if (healthMax == 0) // potential div by 0
+                            continue;
+
+                        float pctDamaged = -healthDelta / healthMax * 100f;
+                        if (pctDamaged < threshold)
+                            continue;
+
+                        break;
+                    }
                 }
 
                 Property.FromParam(kvp.Key, 2, out int actionTypeInt);
@@ -3881,18 +3942,25 @@ namespace MHServerEmu.Games.Entities
                 tables[numTables++] = (lootTableProtoRef, actionType);
             }
 
-            tables = tables[..numTables];
-
-            // Roll and distribute the rewards
-            int recipientId = 1;
-            foreach (Player player in playerList)
+            if (numTables > 0)
             {
-                using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                inputSettings.Initialize(LootContext.Drop, player, this);
-                inputSettings.EventType = eventType;
-                Game.LootManager.AwardLootFromTables(tables, inputSettings, recipientId++);
+                tables = tables[..numTables];
+
+                // Roll and distribute the rewards
+                int recipientId = 1;
+                foreach (Player player in playerList)
+                {
+                    using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    inputSettings.Initialize(LootContext.Drop, player, this);
+                    inputSettings.EventType = eventType;
+                    Game.LootManager.AwardLootFromTables(tables, inputSettings, recipientId++);
+                }
+
+                foreach (PropertyId tableProp in tablesToRemove)
+                    Properties.RemoveProperty(tableProp);
             }
 
+            ListPool<PropertyId>.Instance.Return(tablesToRemove);
             return true;
         }
 
