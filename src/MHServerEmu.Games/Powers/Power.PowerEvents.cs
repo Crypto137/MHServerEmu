@@ -994,7 +994,9 @@ namespace MHServerEmu.Games.Powers
             if (lootTableContext.IncludeNearbyAvatars)
             {
                 List<Player> nearbyPlayerList = ListPool<Player>.Instance.Get();
-                ComputeNearbyPlayers(Owner.Region, Owner.RegionLocation.Position, 0, false, nearbyPlayerList);
+
+                bool requireCombatActive = avatar.AvatarPrototype.RequireCombatActiveForKillCredit;
+                ComputeNearbyPlayers(Owner.Region, Owner.RegionLocation.Position, 0, requireCombatActive, nearbyPlayerList);
 
                 foreach (Player player in nearbyPlayerList)
                     recipientPlayers.Add(player);

@@ -3784,13 +3784,15 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld == false)
                 return false;
 
+            bool requireCombatActive = WorldEntityPrototype.RequireCombatActiveForKillCredit;
+
             List<Player> playerList = ListPool<Player>.Instance.Get();
             // NOTE: Compute nearby players on demand for performance reasons
 
             // Loot Tables
             if (killFlags.HasFlag(KillFlags.NoLoot) == false && Properties[PropertyEnum.NoLootDrop] == false)
             {
-                Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, true, playerList);
+                Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, requireCombatActive, playerList);
                 // TODO: Manually add faraway mission participants if needed
 
                 // OnKilled loot table is different based on the rank of this entity
@@ -3810,7 +3812,7 @@ namespace MHServerEmu.Games.Entities
             {
                 // Compute player count if we haven't done so already for loot tables
                 if (playerList.Count == 0)
-                    Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, true, playerList);
+                    Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, requireCombatActive, playerList);
 
                 AwardKillXP(playerList);
             }
