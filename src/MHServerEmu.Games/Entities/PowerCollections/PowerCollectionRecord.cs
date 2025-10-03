@@ -64,8 +64,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             if (archive.IsPacking == false)
                 return Logger.WarnReturn(false, "ShouldSerializeRecordForPacking(): archive.IsPacking == false");
 
-            // TODO: Disable record serialization for non-replication archives
-            //if (archive.IsReplication == false) return false;
+            if (archive.IsReplication == false)
+                return false;
 
             if (_powerProto == null)
                 return Logger.WarnReturn(false, "ShouldSerializeRecordForPacking(): _powerProto == null");
@@ -78,8 +78,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public bool SerializeTo(Archive archive, PowerCollectionRecord previousRecord)
         {
-            // TODO: Also check for replication mode
             if (archive.IsPacking == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsPacking == false");
+            if (archive.IsReplication == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsReplication == false");
 
             bool success = true;
 

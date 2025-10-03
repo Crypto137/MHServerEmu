@@ -38,9 +38,10 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         {
             bool success = true;
 
+            // In very old versions of the game (before archive version 15) power collections were serialized to persistent archives.
+            // We don't need a code path for persistent archives here like the client does because we don't have this kind of legacy data.
             if (archive.IsPacking)
             {
-                // TODO: archive.IsPersistent
                 if (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelProximity))
                 {
                     numberOfRecords = 0;
@@ -48,16 +49,16 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     {
                         foreach (PowerCollectionRecord record in powerCollection._powerDict.Values)
                         {
-                            if (record.ShouldSerializeRecordForPacking(archive))
-                            {
-                                if (numberOfRecords >= MaxNumRecordsToSerialize)
-                                {
-                                    Logger.Warn("SerializeRecordCount(): numberOfRecords >= MaxNumRecordsToSerialize");
-                                    break;
-                                }
+                            if (record.ShouldSerializeRecordForPacking(archive) == false)
+                                continue;
 
-                                numberOfRecords++;
+                            if (numberOfRecords >= MaxNumRecordsToSerialize)
+                            {
+                                Logger.Warn("SerializeRecordCount(): numberOfRecords >= MaxNumRecordsToSerialize");
+                                break;
                             }
+
+                            numberOfRecords++;
                         }
                     }
                     success &= Serializer.Transfer(archive, ref numberOfRecords);
@@ -65,7 +66,6 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             }
             else
             {
-                // TODO: archive.IsPersistent
                 if (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelProximity))
                     success &= Serializer.Transfer(archive, ref numberOfRecords);
             }
@@ -75,8 +75,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public static bool SerializeTo(Archive archive, PowerCollection powerCollection, uint numberOfRecords)
         {
-            // TODO: Also check for replication mode
             if (archive.IsPacking == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsPacking == false");
+            if (archive.IsReplication == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsReplication == false");
 
             bool success = true;
 
