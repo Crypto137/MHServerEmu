@@ -131,10 +131,18 @@ namespace MHServerEmu.Auth.Handlers
                 return false;
             }
 
-            (bool result, string text) = AccountManager.CreateAccount(bodyQueryString["email"].ToLower(), bodyQueryString["playerName"], bodyQueryString["password"]);
-            if (HideSensitiveInformation == false) Logger.Trace(text);
+            string email = bodyQueryString["email"].ToLower();
+            string playerName = bodyQueryString["playerName"];
+            string password = bodyQueryString["password"];
 
-            ResponseData responseData = new(result, result ? "Success" : "Error", text);
+            AccountOperationResult result = AccountManager.CreateAccount(email, playerName, password);
+            string resultString = AccountManager.GetOperationResultString(result, email, playerName);
+            bool isSuccess = result == AccountOperationResult.Success;
+
+            if (HideSensitiveInformation == false)
+                Logger.Trace(resultString);
+
+            ResponseData responseData = new(isSuccess, isSuccess ? "Success" : "Error", resultString);
 
             await SendResponseAsync(responseData, httpResponse, outputFormat);
             return true;

@@ -22,8 +22,12 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(3)]
         public string Create(string[] @params, NetClient client)
         {
-            (bool, string) result = AccountManager.CreateAccount(@params[0].ToLower(), @params[1], @params[2]);
-            return result.Item2;
+            string email = @params[0].ToLower();
+            string playerName = @params[1];
+            string password = @params[2];
+
+            AccountOperationResult result = AccountManager.CreateAccount(email, playerName, password);
+            return AccountManager.GetOperationResultString(result, email, playerName);
         }
 
         [Command("playername")]
@@ -33,13 +37,15 @@ namespace MHServerEmu.Commands.Implementations
         public string PlayerName(string[] @params, NetClient client)
         {
             string email = @params[0].ToLower();
+            string playerName = @params[1];
+
             DBAccount account = CommandHelper.GetClientAccount(client);
 
             if (client != null && account.UserLevel < AccountUserLevel.Moderator && email != account.Email)
                 return "You are allowed to change player name only for your own account.";
 
-            (bool, string) result = AccountManager.ChangeAccountPlayerName(email, @params[1]);
-            return result.Item2;
+            AccountOperationResult result = AccountManager.ChangeAccountPlayerName(email, playerName);
+            return AccountManager.GetOperationResultString(result, email, playerName);
         }
 
         [Command("password")]
@@ -49,13 +55,15 @@ namespace MHServerEmu.Commands.Implementations
         public string Password(string[] @params, NetClient client)
         {
             string email = @params[0].ToLower();
+            string password = @params[1];
+
             DBAccount account = CommandHelper.GetClientAccount(client);
 
             if (client != null && account.UserLevel < AccountUserLevel.Moderator && email != account.Email)
                 return "You are allowed to change password only for your own account.";
 
-            (bool, string) result = AccountManager.ChangeAccountPassword(email, @params[1]);
-            return result.Item2;
+            AccountOperationResult result = AccountManager.ChangeAccountPassword(email, password);
+            return AccountManager.GetOperationResultString(result, email);
         }
 
         [Command("userlevel")]
@@ -65,6 +73,8 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(2)]
         public string UserLevel(string[] @params, NetClient client)
         {
+            string email = @params[0].ToLower();
+
             if (uint.TryParse(@params[1], out uint userLevelValue) == false)
                 return "Failed to parse user level.";
 
@@ -73,8 +83,8 @@ namespace MHServerEmu.Commands.Implementations
             if (userLevel > AccountUserLevel.Admin)
                 return "Invalid arguments. Type 'help account userlevel' to get help.";
 
-            (bool, string) result = AccountManager.SetAccountUserLevel(@params[0].ToLower(), userLevel);
-            return result.Item2;
+            AccountOperationResult result = AccountManager.SetAccountUserLevel(email, userLevel);
+            return AccountManager.GetOperationResultString(result, email);
         }
 
         [Command("verify")]
@@ -100,8 +110,10 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Ban(string[] @params, NetClient client)
         {
-            (_, string message) = AccountManager.SetFlag(@params[0].ToLower(), AccountFlags.IsBanned);
-            return message;
+            string email = @params[0].ToLower();
+
+            AccountOperationResult result = AccountManager.SetFlag(email, AccountFlags.IsBanned);
+            return AccountManager.GetOperationResultString(result, email);
         }
 
         [Command("unban")]
@@ -111,8 +123,10 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Unban(string[] @params, NetClient client)
         {
-            (_, string message) = AccountManager.ClearFlag(@params[0].ToLower(), AccountFlags.IsBanned);
-            return message;
+            string email = @params[0].ToLower();
+
+            AccountOperationResult result = AccountManager.ClearFlag(email, AccountFlags.IsBanned);
+            return AccountManager.GetOperationResultString(result, email);
         }
 
         [Command("whitelist")]
@@ -122,8 +136,10 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Whitelist(string[] @params, NetClient client)
         {
-            (_, string message) = AccountManager.SetFlag(@params[0].ToLower(), AccountFlags.IsWhitelisted);
-            return message;
+            string email = @params[0].ToLower();
+
+            AccountOperationResult result = AccountManager.SetFlag(email, AccountFlags.IsWhitelisted);
+            return AccountManager.GetOperationResultString(result, email);
         }
 
         [Command("unwhitelist")]
@@ -133,8 +149,10 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Unwhitelist(string[] @params, NetClient client)
         {
-            (_, string message) = AccountManager.ClearFlag(@params[0].ToLower(), AccountFlags.IsWhitelisted);
-            return message;
+            string email = @params[0].ToLower();
+
+            AccountOperationResult result = AccountManager.ClearFlag(email, AccountFlags.IsWhitelisted);
+            return AccountManager.GetOperationResultString(result, email);
         }
 
         [Command("info")]
