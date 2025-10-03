@@ -25,8 +25,9 @@ namespace MHServerEmu.Games.Network
         public NetStructRegionTarget DestTarget { get; private set; }
         public ulong DestEntityDbId { get; set; }
 
+        public int DestTeamIndex { get; set; }
+
         // TODO
-        // int32 DestTeamIndex
         // bool HasInvite
         // NetStructRegionOrigin Origin
 
@@ -43,6 +44,8 @@ namespace MHServerEmu.Games.Network
             DestLocation = transferParams.HasDestLocation ? transferParams.DestLocation : null;
             DestTarget = transferParams.HasDestTarget ? transferParams.DestTarget : null;
             DestEntityDbId = transferParams.HasDestEntityDbId ? transferParams.DestEntityDbId : 0;
+
+            DestTeamIndex = transferParams.HasDestTeamIndex ? transferParams.DestTeamIndex : -1;
         }
         
         public bool FindStartLocation(out Vector3 position, out Orientation orientation)

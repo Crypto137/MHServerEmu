@@ -86,6 +86,7 @@ namespace MHServerEmu.Games.MetaGames
                 _metaStateSpawnEvents = new();
                 _regionId = region.Id;
                 region.RegisterMetaGame(this);
+                region.PlayerRegionChangeEvent.AddActionBack(_playerRegionChangeAction);
                 region.PlayerEnteredRegionEvent.AddActionBack(_playerEnteredRegionAction);
                 region.EntityEnteredWorldEvent.AddActionBack(_entityEnteredWorldAction);
                 region.EntityExitedWorldEvent.AddActionBack(_entityExitedWorldAction);
@@ -477,11 +478,45 @@ namespace MHServerEmu.Games.MetaGames
         public bool InitializePlayer(Player player)
         {
             if (Debug) Logger.Info($"InitializePlayer {player.Id}");
-            var team = GetTeamByPlayer(player);
-            // TODO crate team?
-            team?.AddPlayer(player);
 
-            return true;
+            var team = GetTeamByPlayer(player);
+            team ??= GetTeamForPlayer(player);
+
+            if (team != null) 
+                return team.AddPlayer(player);
+
+            return false;
+        }
+
+        private MetaGameTeam GetTeamForPlayer(Player player)
+        {
+            var transferParams = player.PlayerConnection?.TransferParams;
+            if (transferParams == null) return null;
+
+            MetaGameTeam team = null;
+            int index = transferParams.DestTeamIndex;
+
+            if (index >= 0 && index < Teams.Count)
+            {
+                team = Teams[index];
+            }
+            else
+            {
+                float bestRatio = float.MaxValue;
+                foreach (var currentTeam in Teams)
+                {
+                    if (currentTeam == null) continue;
+
+                    float fillRatio = (float)currentTeam.TeamSize / Math.Max(currentTeam.MaxPlayers, 1);
+                    if (fillRatio < bestRatio)
+                    {
+                        team = currentTeam;
+                        bestRatio = fillRatio;
+                    }
+                }
+            }
+
+            return team;
         }
 
         public bool UpdatePlayer(Player player, MetaGameTeam team)

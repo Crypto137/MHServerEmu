@@ -33,6 +33,8 @@ namespace MHServerEmu.Games.MetaGames
 
             CreateGameModes(pvpProto.GameModes);
 
+            // TODO RevalMap for players
+
             return true;
         }
 
