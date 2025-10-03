@@ -180,7 +180,7 @@ namespace MHServerEmu.PlayerManagement.Players
                 if (IsConnected == false)
                     account.Player.LastLogoutTime = (long)Clock.UnixTime.TotalMilliseconds;
 
-                if (AccountManager.DBManager.SavePlayerData(account) == false)
+                if (IDBManager.Instance.SavePlayerData(account) == false)
                     return Logger.WarnReturn(false, $"SavePlayerData(): Failed to save player data for account [{account}] to the database");
             }
 

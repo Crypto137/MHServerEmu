@@ -250,8 +250,7 @@ namespace MHServerEmu
                 && GameDatabase.IsInitialized
                 && LiveTuningManager.Instance.Initialize()
                 && CatalogManager.Instance.Initialize()
-                && IDBManager.Instance.Initialize()
-                && AccountManager.Initialize();
+                && IDBManager.Instance.Initialize();
         }
     }
 }

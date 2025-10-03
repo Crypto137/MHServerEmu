@@ -95,7 +95,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Verify(string[] @params, NetClient client)
         {
             var loginDataPB = LoginDataPB.CreateBuilder().SetEmailAddress(@params[0].ToLower()).SetPassword(@params[1]).Build();
-            AuthStatusCode statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, out _);
+            AuthStatusCode statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, false, out _);
 
             if (statusCode == AuthStatusCode.Success)
                 return "Account credentials are valid.";

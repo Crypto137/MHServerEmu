@@ -75,7 +75,7 @@ namespace MHServerEmu.PlayerManagement.Players
             }
 
             // Verify credentials
-            AuthStatusCode statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, out DBAccount account);
+            AuthStatusCode statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, _playerManager.Config.UseWhitelist, out DBAccount account);
 
             if (statusCode != AuthStatusCode.Success)
                 return statusCode;
