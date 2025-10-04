@@ -1,16 +1,24 @@
-﻿using System.Text;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MHServerEmu.Games.MetaGames
 {
     public class PvP : MetaGame
     {
+
+        private Dictionary<ulong, PropertyCollection> _playersCollection = [];
+
         private RepVar_int _team1 = new();
         private RepVar_int _team2 = new();
 
@@ -33,7 +41,8 @@ namespace MHServerEmu.Games.MetaGames
 
             CreateGameModes(pvpProto.GameModes);
 
-            // TODO RevalMap for players
+            // foreach (var player in new PlayerIterator(Region))
+            //    player.RevealDiscoveryMap();
 
             return true;
         }
@@ -81,6 +90,22 @@ namespace MHServerEmu.Games.MetaGames
         {
             if (base.AddPlayer(player) == false) return false;
 
+            UpdatePlayerCollection(player);
+
+            if (PvPPrototype.EvalOnPlayerAdded != null)
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Entity, player.CurrentAvatar.Properties);
+                Eval.RunBool(PvPPrototype.EvalOnPlayerAdded, evalContext);
+            }
+
+            if (PvPPrototype.RefreshVendorTypes.HasValue())
+                foreach (var vendorRef in PvPPrototype.RefreshVendorTypes)
+                    player.RefreshVendorInventory(vendorRef);
+
+            PvPScore?.AddNewPlayer(player);
+
             var mode = CurrentMode;
             if (mode == null) return false;
             mode.OnAddPlayer(player);
@@ -90,11 +115,42 @@ namespace MHServerEmu.Games.MetaGames
             foreach (var state in MetaStates)
                 state.OnAddPlayer(player);
 
-            // TODO MiniMap update
+            // player.RevealDiscoveryMap();
 
             player.Properties[PropertyEnum.PvPMode] = mode.PrototypeDataRef;
 
             return true;
+        }
+
+        private void UpdatePlayerCollection(Player player)
+        {
+            if (!_playersCollection.TryGetValue(player.DatabaseUniqueId, out PropertyCollection collection))
+            {
+                collection = new();
+                _playersCollection[player.DatabaseUniqueId] = collection;
+            }
+
+            if (collection.IsEmpty)
+            {
+                var avatarProperties = player.CurrentAvatar?.Properties;
+                if (avatarProperties == null) return;
+
+                avatarProperties.AdjustProperty(1, PropertyEnum.PvPMatchCount);
+
+                // not used
+                // PvPDamageBoostForKDPct.curve table set to 1.0
+                // PvPDamageReductionForKDPct.curve table set to 0.0
+                /*
+                avatarProperties[PropertyEnum.PvPRecentKDRatio] = 0.0f;
+                avatarProperties[PropertyEnum.PvPLastMatchIndex] = newMatch;
+                avatarProperties[PropertyEnum.PvPKillsDuringMatch, newMatch] = 0;
+                avatarProperties[PropertyEnum.PvPDeathsDuringMatch, newMatch] = 0;
+                */
+            }
+            else
+            {
+                player.AvatarProperties.FlattenCopyFrom(collection, false);
+            }
         }
 
         public override bool RemovePlayer(Player player)

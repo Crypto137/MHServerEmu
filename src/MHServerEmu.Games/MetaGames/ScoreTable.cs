@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -57,6 +58,11 @@ namespace MHServerEmu.Games.MetaGames
                 }
 
             return schema.Count;
+        }
+
+        public void AddNewPlayer(Player player)
+        {
+            throw new NotImplementedException();
         }
     }
 

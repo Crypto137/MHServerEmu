@@ -343,6 +343,16 @@ namespace MHServerEmu.Games.Entities
             return RefreshVendorInventoryInternal(vendorTypeProtoRef);
         }
 
+        public bool RefreshVendorInventory(PrototypeId vendorTypeProtoRef)
+        {
+            if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "RefreshVendorInventory(): vendorTypeProtoRef == PrototypeId.Invalid");
+
+            if (CanRefreshVendorInventory(vendorTypeProtoRef, false) != VendorResult.RefreshSuccess)
+                return false;
+
+            return RefreshVendorInventoryInternal(vendorTypeProtoRef);
+        }
+
         public PurchaseUnlockResult CanPurchaseUnlock(PrototypeId agentProtoRef)
         {
             AgentPrototype agentProto = agentProtoRef.As<AgentPrototype>();

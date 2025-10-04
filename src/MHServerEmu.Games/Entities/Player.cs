@@ -171,6 +171,7 @@ namespace MHServerEmu.Games.Entities
         public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
         public int PowerSpecIndexUnlocked { get => Properties[PropertyEnum.PowerSpecIndexUnlocked]; }
         public ulong TeamUpSynergyConditionId { get; set; }
+        public PropertyCollection AvatarProperties { get => _avatarProperties; }
 
         public override ulong PartyId { get => _partyId.Get(); }
         public bool IsInParty { get => PartyId != 0; }
