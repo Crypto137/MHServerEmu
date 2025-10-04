@@ -261,6 +261,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
                 records.Set(_powerDict);
 
+                bool unassignedAny = false;
                 foreach (var kvp in records)
                 {
                     Power power = kvp.Value.Power;
@@ -279,6 +280,15 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
                     // Unassign power
                     UnassignPower(kvp.Value.PowerPrototypeRef, false);
+                    unassignedAny = true;
+                }
+
+                if (unassignedAny == false && _powerDict.Count > 0)
+                {
+                    Logger.Warn($"OnOwnerExitedWorld(): Failed to unassign {_powerDict.Count} power(s) from [{_owner}]");
+                    foreach (var kvp in _powerDict)
+                        Logger.Warn($"{kvp.Value.PowerPrototypeRef.GetName()}");
+                    break;
                 }
             }
 
