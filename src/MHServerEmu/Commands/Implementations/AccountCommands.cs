@@ -27,7 +27,13 @@ namespace MHServerEmu.Commands.Implementations
             string password = @params[2];
 
             AccountOperationResult result = AccountManager.CreateAccount(email, playerName, password);
-            return AccountManager.GetOperationResultString(result, email, playerName);
+            if (result != AccountOperationResult.Success)
+            {
+                string errorText = AccountManager.GetOperationResultString(result, email, playerName);
+                return $"Failed to create account: {errorText}";
+            }
+
+            return $"Created a new account: {email} ({playerName}).";
         }
 
         [Command("playername")]
@@ -45,7 +51,13 @@ namespace MHServerEmu.Commands.Implementations
                 return "You are allowed to change player name only for your own account.";
 
             AccountOperationResult result = AccountManager.ChangeAccountPlayerName(email, playerName);
-            return AccountManager.GetOperationResultString(result, email, playerName);
+            if (result != AccountOperationResult.Success)
+            {
+                string errorText = AccountManager.GetOperationResultString(result, email, playerName);
+                return $"Failed to change player name: {errorText}";
+            }
+
+            return $"Successfully changed player name for account {email} to {playerName}.";
         }
 
         [Command("password")]
@@ -63,7 +75,13 @@ namespace MHServerEmu.Commands.Implementations
                 return "You are allowed to change password only for your own account.";
 
             AccountOperationResult result = AccountManager.ChangeAccountPassword(email, password);
-            return AccountManager.GetOperationResultString(result, email);
+            if (result != AccountOperationResult.Success)
+            {
+                string errorText = AccountManager.GetOperationResultString(result, email);
+                return $"Failed to change password: {errorText}";
+            }
+
+            return $"Successfully changed password for account {email}.";
         }
 
         [Command("userlevel")]
@@ -84,7 +102,13 @@ namespace MHServerEmu.Commands.Implementations
                 return "Invalid arguments. Type 'help account userlevel' to get help.";
 
             AccountOperationResult result = AccountManager.SetAccountUserLevel(email, userLevel);
-            return AccountManager.GetOperationResultString(result, email);
+            if (result != AccountOperationResult.Success)
+            {
+                string errorText = AccountManager.GetOperationResultString(result, email);
+                return $"Failed to set user level: {errorText}";
+            }
+
+            return $"Successfully set user level for account {email} to {userLevel}.";
         }
 
         [Command("verify")]
@@ -111,9 +135,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Ban(string[] @params, NetClient client)
         {
             string email = @params[0].ToLower();
-
-            AccountOperationResult result = AccountManager.SetFlag(email, AccountFlags.IsBanned);
-            return AccountManager.GetOperationResultString(result, email);
+            return SetAccountFlag(email, AccountFlags.IsBanned);
         }
 
         [Command("unban")]
@@ -124,9 +146,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Unban(string[] @params, NetClient client)
         {
             string email = @params[0].ToLower();
-
-            AccountOperationResult result = AccountManager.ClearFlag(email, AccountFlags.IsBanned);
-            return AccountManager.GetOperationResultString(result, email);
+            return ClearAccountFlag(email, AccountFlags.IsBanned);
         }
 
         [Command("whitelist")]
@@ -137,9 +157,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Whitelist(string[] @params, NetClient client)
         {
             string email = @params[0].ToLower();
-
-            AccountOperationResult result = AccountManager.SetFlag(email, AccountFlags.IsWhitelisted);
-            return AccountManager.GetOperationResultString(result, email);
+            return SetAccountFlag(email, AccountFlags.IsWhitelisted);
         }
 
         [Command("unwhitelist")]
@@ -150,9 +168,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Unwhitelist(string[] @params, NetClient client)
         {
             string email = @params[0].ToLower();
-
-            AccountOperationResult result = AccountManager.ClearFlag(email, AccountFlags.IsWhitelisted);
-            return AccountManager.GetOperationResultString(result, email);
+            return ClearAccountFlag(email, AccountFlags.IsWhitelisted);
         }
 
         [Command("info")]
@@ -195,6 +211,30 @@ namespace MHServerEmu.Commands.Implementations
                 .Build());
 
             return string.Empty;
+        }
+
+        private static string SetAccountFlag(string email, AccountFlags flag)
+        {
+            AccountOperationResult result = AccountManager.SetFlag(email, flag);
+            if (result != AccountOperationResult.Success)
+            {
+                string errorText = AccountManager.GetOperationResultString(result, email);
+                return $"Failed to set flag {flag}: {errorText}";
+            }
+
+            return $"Successfully set flag {flag} for account {email}.";
+        }
+
+        private static string ClearAccountFlag(string email, AccountFlags flag)
+        {
+            AccountOperationResult result = AccountManager.ClearFlag(email, flag);
+            if (result != AccountOperationResult.Success)
+            {
+                string errorText = AccountManager.GetOperationResultString(result, email);
+                return $"Failed to clear flag {flag}: {errorText}";
+            }
+
+            return $"Successfully cleared flag {flag} from account {email}.";
         }
     }
 }
