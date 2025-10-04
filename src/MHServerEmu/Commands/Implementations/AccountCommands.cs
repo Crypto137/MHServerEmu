@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using System.Text.Json;
 using Gazillion;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Helpers;
@@ -174,6 +173,7 @@ namespace MHServerEmu.Commands.Implementations
         [Command("info")]
         [CommandDescription("Shows information for the logged in account.")]
         [CommandUsage("account info")]
+        [CommandUserLevel(AccountUserLevel.Moderator)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Info(string[] @params, NetClient client)
         {
@@ -200,9 +200,10 @@ namespace MHServerEmu.Commands.Implementations
             DBAccount account = CommandHelper.GetClientAccount(client);
             PlayerConnection playerConnection = (PlayerConnection)client;
 
-            JsonSerializerOptions options = new();
-            options.Converters.Add(new DBEntityCollectionJsonConverter());
-            string json = JsonSerializer.Serialize(account, options);
+            bool checkRateLimit = account.UserLevel == AccountUserLevel.User;
+
+            if (DBAccountJsonSerializer.Instance.TrySerializeAccount(account, checkRateLimit, out string json) == false)
+                return "Unable to download account. Please try again later.";
 
             playerConnection.SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
                 .SetResponse($"Downloaded account data for {account}")
