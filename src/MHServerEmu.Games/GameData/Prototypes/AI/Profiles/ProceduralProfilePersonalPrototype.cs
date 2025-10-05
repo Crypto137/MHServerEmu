@@ -4197,6 +4197,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int state = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
             switch ((State)state)
             {
+                case State.Ready: // DEBUG
+                    if (agent.Properties[PropertyEnum.Interactable] == false)
+                    {
+                        ProceduralAI.Logger.Warn($"[ProceduralProfileNullifierPrototype] The nullifier not interactable for {agent}");
+                        agent.Properties[PropertyEnum.Interactable] = true;
+                        SetNullifierEntityState(ownerController, true);
+                    }
+                    break;
+
                 case State.Charging:
 
                     long health = agent.Properties[PropertyEnum.Health];
@@ -4281,7 +4290,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 SetNullifierEntityState(ownerController, false);
             } 
             else if(deadEvent.Defender.PrototypeDataRef == NullifierAntiShield)
-            {                    
+            {
                 agent.ConditionCollection.RemoveConditionsOfPower(BeamPower.PowerContext.Power);
                 SetNullifierEntityState(ownerController, false);
                 ProceduralAI proceduralAI = ownerController.Brain;
