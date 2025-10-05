@@ -694,6 +694,11 @@ namespace MHServerEmu.Games.Entities
             RemoveConditionsFiltered(ConditionFilter.IsConditionWithPrototypeFunc, protoRef);
         }
 
+        public void RemoveConditionsOfPower(PrototypeId powerProtoRef)
+        {
+            RemoveConditionsFiltered(ConditionFilter.IsConditionOfPowerFunc, powerProtoRef);
+        }
+
         public void RemoveConditionsWithKeyword(PrototypeId keywordProtoRef)
         {
             KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
