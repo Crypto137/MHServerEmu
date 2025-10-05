@@ -5079,7 +5079,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (powerContext == OpenRocketCratePower || powerContext == OpenMinigunCratePower)
             {
-                // TODO CrateUsedState
+                var target = ownerController.TargetEntity;
+                if (target == null || target == ownerController.Owner || target.CanBePlayerOwned()) return;
+                target.SetState(CrateUsedState);
             }
         }
 
@@ -5100,13 +5102,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] <= 0) return;
 
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2]--;
+                blackboard.PropertyCollection.AdjustProperty(-1, PropertyEnum.AICustomStateVal2);
                 int count = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2];
                 if (count == 0)
                     blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.DiscardWeapon;
             }
             else if (powerContext == DiscardWeaponPower)
             {
+                var agent = ownerController.Owner;
+                if (agent == null) return;
+                var conditions = agent.ConditionCollection;
+                conditions.RemoveConditionsOfPower(OpenRocketCratePower.PowerContext.Power);
+                conditions.RemoveConditionsOfPower(OpenMinigunCratePower.PowerContext.Power);
                 blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
             }
             else if (powerContext == CommandTurretPower)
