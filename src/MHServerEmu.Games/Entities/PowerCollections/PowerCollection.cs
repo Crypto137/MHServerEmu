@@ -248,7 +248,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             var records = ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Instance.Get();
 
             // This needs to be done in a loop to remove all copies of powers with RefCount higher than 0.
-            const int MaxCount = 500;
+            const int MaxCount = 100;
             int count = 0;
 
             while (_powerDict.Count > 0)
@@ -257,7 +257,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 {
                     Logger.Error($"OnOwnerExitedWorld(): Infinite loop detected when unassigning powers from [{_owner}]");
                     foreach (var kvp in _powerDict)
-                        Logger.Warn($"{kvp.Value.PowerPrototypeRef.GetName()}");
+                        Logger.Warn($"{kvp.Value.PowerPrototypeRef.GetName()} x{kvp.Value.PowerRefCount}");
                     break;
                 }
 
