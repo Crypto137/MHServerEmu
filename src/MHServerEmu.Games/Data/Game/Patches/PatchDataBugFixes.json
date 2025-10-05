@@ -110,5 +110,21 @@
         "Description": "Fix reward for ICPPhaseMissionDay1-7.",
         "ValueType": "Enum",
         "Value": "PickWeightTryAll"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Achievements/Challenges/AchievementPunisherMidtownTimed.prototype",
+        "Path": "Objectives[1].Required",
+        "Description": "Fix for AchievementPunisherMidtownTimed",
+        "ValueType": "Boolean",
+        "Value": false
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Achievements/Challenges/AchievementPunisherMidtownTimed.prototype",
+        "Path": "Objectives[2].Required",
+        "Description": "Fix for AchievementPunisherMidtownTimed",
+        "ValueType": "Boolean",
+        "Value": false
     }
 ]
