@@ -1611,13 +1611,13 @@ namespace MHServerEmu.Games.Entities
 
                     if (caster.AssignPower(procPowerProtoRef, indexProps, true, triggeringPowerRef) == null)
                     {
-                        Logger.Warn($"UpdateProcEffectPowers(): Failed to assign {procPowerProtoRef.GetName()} to [{this}]");
+                        Logger.Warn($"UpdateProcEffectPowers(): Failed to assign {procPowerProtoRef.GetName()} to [{caster}]");
                         success = false;
                     }
                 }
                 else
                 {
-                    UnassignPower(procPowerProtoRef);
+                    caster.UnassignPower(procPowerProtoRef);
                 }
 
                 // Try to active certain proc trigger types right away
