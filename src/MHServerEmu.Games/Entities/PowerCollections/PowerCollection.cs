@@ -248,10 +248,22 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             var records = ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Instance.Get();
 
             // This needs to be done in a loop to remove all copies of powers with RefCount higher than 0.
+            const int MaxCount = 100;
+            int count = 0;
+
             while (_powerDict.Count > 0)
             {
+                if (++count >= MaxCount)
+                {
+                    Logger.Error($"OnOwnerExitedWorld(): Infinite loop detected when unassigning powers from [{_owner}]");
+                    foreach (var kvp in _powerDict)
+                        Logger.Warn($"{kvp.Value.PowerPrototypeRef.GetName()} x{kvp.Value.PowerRefCount}");
+                    break;
+                }
+
                 records.Set(_powerDict);
 
+                bool unassignedAny = false;
                 foreach (var kvp in records)
                 {
                     Power power = kvp.Value.Power;
@@ -270,6 +282,15 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
                     // Unassign power
                     UnassignPower(kvp.Value.PowerPrototypeRef, false);
+                    unassignedAny = true;
+                }
+
+                if (unassignedAny == false && _powerDict.Count > 0)
+                {
+                    Logger.Warn($"OnOwnerExitedWorld(): Failed to unassign {_powerDict.Count} power(s) from [{_owner}]");
+                    foreach (var kvp in _powerDict)
+                        Logger.Warn($"{kvp.Value.PowerPrototypeRef.GetName()}");
+                    break;
                 }
             }
 

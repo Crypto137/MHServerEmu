@@ -4216,7 +4216,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         if (powerResult == StaticBehaviorReturnType.Failed)
                             ProceduralAI.Logger.Warn($"The nullifier failed activating his BeamPower {agent}");
                         agent.Properties[PropertyEnum.Health] = 1;
-                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default; 
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Charging; 
                     }
                     break;
             }
@@ -4255,9 +4255,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ulong engineerId = broadcaster.Properties[PropertyEnum.AICustomEntityId1];
             ulong nullifierId = broadcasterBlackboard.PropertyCollection[PropertyEnum.AICustomEntityId1];
 
-            if (engineerId == 0 && nullifierId == agent.Id && broadcaster.HasKeyword(ShieldEngineerKeyword.As<KeywordPrototype>()))
+            if (engineerId == Entity.InvalidId && nullifierId == agent.Id && broadcaster.HasKeyword(ShieldEngineerKeyword))
             {
-                if (broadcaster.Id == 0) return;
+                if (broadcaster.Id == Entity.InvalidId) return;
                 blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Charging;
                 blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = broadcaster.Id;
             }
@@ -4269,24 +4269,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
             var agent = ownerController.Owner;
             if (agent == null) return;
             ulong deadEntityId = deadEvent.Defender.Id;
-            if (deadEntityId == 0) return;
+            if (deadEntityId == Entity.InvalidId) return;
 
             var blackboard = ownerController.Blackboard;
             if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1])
             {
                 blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = 0;
+                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = Entity.InvalidId;
                 agent.Properties[PropertyEnum.Interactable] = false;
+                agent.Properties[PropertyEnum.Enabled] = false;
                 SetNullifierEntityState(ownerController, false);
             } 
             else if(deadEvent.Defender.PrototypeDataRef == NullifierAntiShield)
             {
-                // TODO check BeamPower
+                agent.ConditionCollection.RemoveConditionsOfPower(BeamPower.PowerContext.Power);
                 SetNullifierEntityState(ownerController, false);
                 ProceduralAI proceduralAI = ownerController.Brain;
                 if (proceduralAI == null) return;
                 proceduralAI.SwitchProceduralState(null, null, StaticBehaviorReturnType.Interrupted);
                 agent.Properties[PropertyEnum.Interactable] = false;
+                agent.Properties[PropertyEnum.Enabled] = false;
+                agent.Properties[PropertyEnum.Untargetable] = true;
             }
         }
 
@@ -5076,7 +5079,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (powerContext == OpenRocketCratePower || powerContext == OpenMinigunCratePower)
             {
-                // TODO CrateUsedState
+                var target = ownerController.TargetEntity;
+                if (target == null || target == ownerController.Owner || target.CanBePlayerOwned()) return;
+                target.SetState(CrateUsedState);
             }
         }
 
@@ -5097,13 +5102,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] <= 0) return;
 
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2]--;
+                blackboard.PropertyCollection.AdjustProperty(-1, PropertyEnum.AICustomStateVal2);
                 int count = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2];
                 if (count == 0)
                     blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.DiscardWeapon;
             }
             else if (powerContext == DiscardWeaponPower)
             {
+                var agent = ownerController.Owner;
+                if (agent == null) return;
+                var conditions = agent.ConditionCollection;
+                conditions.RemoveConditionsOfPower(OpenRocketCratePower.PowerContext.Power);
+                conditions.RemoveConditionsOfPower(OpenMinigunCratePower.PowerContext.Power);
                 blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
             }
             else if (powerContext == CommandTurretPower)
