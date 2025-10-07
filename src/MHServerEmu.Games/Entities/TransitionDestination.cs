@@ -94,19 +94,39 @@ namespace MHServerEmu.Games.Entities
 
         public static TransitionDestination Find(Cell cell, TransitionPrototype transitionProto)
         {
-            if (cell == null) return null;
+            if (cell == null)
+                return null;
 
             // NOTE: Adding a destination to some waypoints makes them unusable
-            if (transitionProto.Type == RegionTransitionType.Waypoint) return null;
+            if (transitionProto.Type == RegionTransitionType.Waypoint || transitionProto.Type == RegionTransitionType.Marker)
+                return null;
 
+            PrototypeId cellRef = cell.PrototypeDataRef;
             PrototypeId area = cell.Area.PrototypeDataRef;
             Region region = cell.Region;
             PrototypeGuid entityGuid = GameDatabase.GetPrototypeGuid(transitionProto.DataRef);
 
-            TargetObject node = RegionTransition.GetTargetNode(region.Targets, area, cell.PrototypeDataRef, entityGuid);
-            if (node == null) return null;
+            TargetObject selectedTargetNode = null;
+            
+            foreach (TargetObject targetNode in region.Targets)
+            {
+                if (targetNode.Entity != entityGuid)
+                    continue;
 
-            return FromTarget(node.TargetId, region, transitionProto);
+                if (targetNode.Area != PrototypeId.Invalid && targetNode.Area != area)
+                    continue;
+
+                if (targetNode.Cell != PrototypeId.Invalid && targetNode.Cell != cellRef)
+                    continue;
+
+                selectedTargetNode = targetNode;
+                // Continue iteration and use the last found node. This fixes regions with deprecated targets (e.g. CH0402 entrance).
+            }
+
+            if (selectedTargetNode == null)
+                return null;
+
+            return FromTarget(selectedTargetNode.TargetId, region, transitionProto);
         }
 
         public static TransitionDestination FromTarget(PrototypeId targetRef, Region region, TransitionPrototype transitionProto)
