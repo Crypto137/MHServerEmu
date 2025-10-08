@@ -86,5 +86,13 @@ namespace MHServerEmu.Games.UI
             _dialogs[serverId] = instance;
             return instance;
         }
+
+        public GameDialogInstance GetInstance(ulong serverId)
+        {
+            if (_dialogs.TryGetValue(serverId, out GameDialogInstance instance) == false)
+                return null;
+
+            return instance;
+        }
     }
 }
