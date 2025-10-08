@@ -28,19 +28,6 @@ namespace MHServerEmu.Games.Entities
             SetFlag(EntityFlags.IsNeverAffectedByPowers, true);
         }
 
-        public override bool Initialize(EntitySettings settings)
-        {
-            base.Initialize(settings);
-
-            // old
-            var destination = TransitionDestination.Find(settings.Cell, TransitionPrototype);
-
-            if (destination != null)
-                _destinationList.Add(destination);
-
-            return true;
-        }
-
         public override void OnEnteredWorld(EntitySettings settings)
         {
             var transProto = TransitionPrototype;
@@ -73,6 +60,18 @@ namespace MHServerEmu.Games.Entities
                     var cellRef = Cell.PrototypeDataRef;
                     var region = Region;
                     bool noDest = _destinationList.Count == 0;
+
+                    if (noDest)
+                    {
+                        // TODO: Multiple destinations
+                        destination = TransitionDestination.FromRegionConnection(settings.Cell, TransitionPrototype);
+                        if (destination != null)
+                        {
+                            _destinationList.Add(destination);
+                            noDest = false;
+                        }
+                    }
+
                     if (noDest && area.RandomInstances.Count > 0)
                         foreach(var instance in area.RandomInstances)
                         {

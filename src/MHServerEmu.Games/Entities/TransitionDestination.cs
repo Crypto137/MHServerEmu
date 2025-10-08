@@ -92,13 +92,9 @@ namespace MHServerEmu.Games.Entities
             return sb.ToString();
         }
 
-        public static TransitionDestination Find(Cell cell, TransitionPrototype transitionProto)
+        public static TransitionDestination FromRegionConnection(Cell cell, TransitionPrototype transitionProto)
         {
             if (cell == null)
-                return null;
-
-            // NOTE: Adding a destination to some waypoints makes them unusable
-            if (transitionProto.Type == RegionTransitionType.Waypoint || transitionProto.Type == RegionTransitionType.Marker)
                 return null;
 
             PrototypeId cellRef = cell.PrototypeDataRef;
@@ -120,7 +116,7 @@ namespace MHServerEmu.Games.Entities
                     continue;
 
                 selectedTargetNode = targetNode;
-                // Continue iteration and use the last found node. This fixes regions with deprecated targets (e.g. CH0402 entrance).
+                break;  // TODO: Multiple destinations.
             }
 
             if (selectedTargetNode == null)
