@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -12,6 +13,8 @@ namespace MHServerEmu.Games.Entities
 {
     public class TransitionDestination : ISerialize
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private RegionTransitionType _type;
         private PrototypeId _regionRef;
         private PrototypeId _areaRef;
@@ -90,6 +93,22 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(_unkId2)}: {_unkId2}");
 
             return sb.ToString();
+        }
+
+        public bool IsAvailable(Player player)
+        {
+            // Non-target based destinations are always available.
+            if (_targetRef == PrototypeId.Invalid)
+                return true;
+
+            // Check interaction manager for mission-based availability.
+            if (GameDatabase.InteractionManager.GetRegionTargetAvailability(player, _targetRef, out bool isAvailable))
+                return isAvailable;
+
+            // Default to target prototype data.
+            RegionConnectionTargetPrototype targetProto = _targetRef.As<RegionConnectionTargetPrototype>();
+            if (targetProto == null) return Logger.WarnReturn(false, "IsAvailable(): targetProto == null");
+            return targetProto.EnabledByDefault;
         }
 
         public static TransitionDestination FromRegionConnection(Cell cell, TransitionPrototype transitionProto)

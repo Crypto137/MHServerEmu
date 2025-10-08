@@ -202,10 +202,14 @@ namespace MHServerEmu.Games.Entities
             if (_destinationList.Count > 1)
                 Logger.Debug("UseTransitionDefault(): _destinationList.Count > 1");
 
+            // TODO: Multiple destinations
             TransitionDestination destination = _destinationList[0];
 
             PrototypeId destinationRegionRef = destination.RegionRef;
             if (destinationRegionRef == PrototypeId.Invalid)
+                return false;
+
+            if (destination.IsAvailable(player) == false)
                 return false;
 
             RegionPrototype destinationRegionProto = destinationRegionRef.As<RegionPrototype>();
