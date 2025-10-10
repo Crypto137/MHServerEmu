@@ -203,6 +203,19 @@ namespace MHServerEmu.Games.Regions
                     EndlessLevel = 1;
             }
 
+            // Keep difficulty consistent for teleports that are expected to be local (e.g. resurrect, Surtur raid teleport).
+            if (DifficultyTierRef == PrototypeId.Invalid)
+            {
+                switch (Context)
+                {
+                    case TeleportContextEnum.TeleportContext_Mission:
+                    case TeleportContextEnum.TeleportContext_Power:
+                    case TeleportContextEnum.TeleportContext_Resurrect:
+                        DifficultyTierRef = region.DifficultyTierRef;
+                        break;
+                }
+            }
+
             // Clamp target region's difficulty to the available range
             DifficultyTierRef = Player.GetDifficultyTierForRegion(regionProtoRef, DifficultyTierRef);
 

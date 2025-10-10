@@ -11,12 +11,12 @@ namespace MHServerEmu.Games.UI
         public ButtonStyle Style { get; }
         public bool Enabled { get; set; }
 
-        public DialogButton(GameDialogResultEnum type, LocaleStringId buttonText, ButtonStyle style)
+        public DialogButton(GameDialogResultEnum type, LocaleStringId buttonText, ButtonStyle style, bool enabled)
         {
             Type = type;
             ButtonText = new(buttonText);
             Style = style;
-            Enabled = true;
+            Enabled = enabled;
         }
 
         public NetStructDialogButton ToProtobuf()
