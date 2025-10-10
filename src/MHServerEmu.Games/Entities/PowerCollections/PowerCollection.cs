@@ -285,11 +285,18 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     unassignedAny = true;
                 }
 
-                if (unassignedAny == false && _powerDict.Count > 0)
+                if (unassignedAny == false)
                 {
-                    Logger.Warn($"OnOwnerExitedWorld(): Failed to unassign {_powerDict.Count} power(s) from [{_owner}]");
-                    foreach (var kvp in _powerDict)
-                        Logger.Warn($"{kvp.Value.PowerPrototypeRef.GetName()}");
+                    // Combo powers that are used to enter/exit a transform mode are not unassigned along with their triggering power.
+                    // Because of this, there may still be powers left in the collection when a transformed owner avatar exits world.
+                    // This is not a bug, but rather a questionable design decision made by Gazillion.
+                    if (_powerDict.Count > 0 && _owner is Avatar avatar && avatar.CurrentTransformMode == PrototypeId.Invalid)
+                    {
+                        Logger.Warn($"OnOwnerExitedWorld(): Failed to unassign {_powerDict.Count} power(s) from [{_owner}]");
+                        foreach (var kvp in _powerDict)
+                            Logger.Warn($"{kvp.Value.PowerPrototypeRef.GetName()}");
+                    }
+
                     break;
                 }
             }
@@ -628,8 +635,6 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     if (triggeredPowerRef == powerProtoRef)
                         continue;
 
-                    //Logger.Trace($"AssignTriggeredPowers(): {GameDatabase.GetPrototypeName(triggeredPowerRef)} for {powerProto}");
-
                     if (AssignPower(triggeredPowerRef, indexProps, powerProtoRef, false) == null)
                     {
                         ListPool<PrototypeId>.Instance.Return(triggeredPowerRefList);
@@ -651,11 +656,16 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
             // Find and validate the record for our powerProtoRef
             PowerCollectionRecord powerRecord = GetPowerRecordByRef(powerProtoRef);
-            if (powerRecord == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): powerRecord == null");
-            if (powerRecord.Power == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): powerRecord.Power == null");
+            if (powerRecord == null)
+                return Logger.WarnReturn(false, $"UnassignPowerInternal(): When unassigning, failed to find power record for {powerProtoRef.GetName()}\n  Owner:[{_owner}]\n  NumRecordsInCollection:{_powerDict.Count} NumCondemnedPowers:{_condemnedPowers.Count}");
+
+            if (powerRecord.Power == null)
+                return Logger.WarnReturn(false, $"UnassignPowerInternal(): When unassigning, the power record was found but had no power instance! Power: [{powerProtoRef.GetName()}], RefCount: [{powerRecord.PowerRefCount}], Owner: [{_owner}]");
+
+            if (powerRecord.PowerRefCount < 1)
+                return Logger.WarnReturn(false, $"UnassignPowerInternal(): When unassigned, the power record had an invalid refcount! Power: [{powerProtoRef.GetName()}], RefCount: [{powerRecord.PowerRefCount}], Owner: [{_owner}]");
 
             // Start by subtracting from the PowerRefCount
-            if (powerRecord.PowerRefCount < 1) return Logger.WarnReturn(false, "UnassignPowerInternal(): powerRecord.PowerRefCount < 1");
             powerRecord.PowerRefCount--;
 
             // Remove the record when our PowerRefCount reaches 0
@@ -829,8 +839,6 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     // Some powers apparently can trigger themselves, no need to unassign them
                     if (triggeredPowerRef == powerProtoRef)
                         continue;
-
-                    //Logger.Trace($"UnassignTriggeredPowers(): {GameDatabase.GetPrototypeName(triggeredPowerRef)} for {powerProto}");
 
                     UnassignPower(triggeredPowerRef, false);
                 }
