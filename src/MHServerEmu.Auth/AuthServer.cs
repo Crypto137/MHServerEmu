@@ -36,7 +36,10 @@ namespace MHServerEmu.Auth
 
             if (config.EnableWebApi)
             {
-                // TODO: Register other handlers
+                _webService.RegisterHandler("/AccountManagement/Create",    new AccountCreateWebHandler());
+                _webService.RegisterHandler("/ServerStatus",                new ServerStatusWebHandler());
+                _webService.RegisterHandler("/RegionReport",                new RegionReportWebHandler());
+                _webService.RegisterHandler("/Metrics/Performance",         new MetricsPerformanceWebHandler());
             }
         }
 

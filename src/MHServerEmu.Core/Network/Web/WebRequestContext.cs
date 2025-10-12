@@ -1,6 +1,7 @@
 ﻿using System.Collections.Specialized;
 using System.Net;
 using System.Text;
+using System.Web;
 using Google.ProtocolBuffers;
 
 namespace MHServerEmu.Core.Network.Web
@@ -16,6 +17,7 @@ namespace MHServerEmu.Core.Network.Web
         public string UserAgent { get => _httpRequest.UserAgent; }
         public IPEndPoint RemoteEndPoint { get => _httpRequest.RemoteEndPoint; }
         public NameValueCollection RequestHeaders { get => _httpRequest.Headers; }
+        public NameValueCollection RequestQueryString { get => _httpRequest.QueryString; }
         public string LocalPath { get => _httpRequest.Url.LocalPath; }
         public string HttpMethod { get => _httpRequest.HttpMethod; }
 
@@ -39,6 +41,15 @@ namespace MHServerEmu.Core.Network.Web
         }
 
         // TODO: Optimize heap allocations here.
+
+        public NameValueCollection ReadQueryString()
+        {
+            // TODO: Replace this with JSON
+            using StreamReader reader = new(_httpRequest.InputStream);
+            string queryString = reader.ReadToEnd();
+            NameValueCollection query = HttpUtility.ParseQueryString(queryString);
+            return query;
+        }
 
         public IMessage ReadProtobuf<T>() where T: Enum
         {
