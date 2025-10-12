@@ -17,14 +17,35 @@ namespace MHServerEmu.Auth
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        // REMOVEME
+        private const string AccountCreateFormBody = @"
+<p class=""disclaimer"">
+	MHServerEmu is beta software in active development, and it may not be completely secure.<br/>
+	Please avoid using your real email / password combinations on public servers.
+</p>
+<form method=""POST"">
+	<label for=""email"">Email</label><br>
+	<input type=""text"" id=""email"" name=""email"" maxlength=""320"" required><br><br>
+	<label for=""playerName"">Player Name</label><br>
+	<input type=""text"" id=""playerName"" name=""playerName"" maxlength=""16"" required><br><br>
+	<label for=""password"">Password</label><br>
+	<input type=""password"" id=""password"" name=""password"" minlength=""3"" maxlength=""64"" required><br><br>
+	<input type=""submit"" value=""Submit"">
+</form>
+";
+
         public static readonly string ResponseHtml;
         public static readonly string AccountCreateFormHtml;
 
         static WebFrontendHelper()
         {
-            string assetDirectory = Path.Combine(FileHelper.DataDirectory, "Auth");
+            string assetDirectory = Path.Combine(FileHelper.DataDirectory, "Web");
             ResponseHtml = File.ReadAllText(Path.Combine(assetDirectory, "Response.html"));
-            AccountCreateFormHtml = File.ReadAllText(Path.Combine(assetDirectory, "AccountCreateForm.html"));
+
+            StringBuilder sb = new(ResponseHtml);
+            sb.Replace("%RESPONSE_TITLE%", "Create Account");
+            sb.Replace("%RESPONSE_BODY%", AccountCreateFormBody);
+            AccountCreateFormHtml = sb.ToString();
         }
 
         public static WebFrontendOutputFormat GetOutputFormat(WebRequestContext context)
@@ -62,7 +83,7 @@ namespace MHServerEmu.Auth
                 case WebFrontendOutputFormat.Html:
                     StringBuilder sb = new(ResponseHtml);
                     sb.Replace("%RESPONSE_TITLE%", responseData.Title);
-                    sb.Replace("%RESPONSE_TEXT%", responseData.Text);
+                    sb.Replace("%RESPONSE_BODY%", $"<p>{responseData.Text}</p>");
                     return sb.ToString();
 
                 case WebFrontendOutputFormat.Json:

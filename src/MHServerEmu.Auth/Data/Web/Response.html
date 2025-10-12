@@ -32,6 +32,25 @@
 			font: 12px/1.385 Verdana;
 		}
 
+		div.content p.disclaimer {
+			color: red;
+		}
+
+		div.content input {
+			border: 1px solid black;
+			background: rgb(28, 28, 28);
+			box-shadow: 0 0 1px 1px #00aaff;
+			color: #d7d7d7;
+			font: 12px/1.385 Verdana;
+		}
+		
+		div.content label {
+			color: #d7d7d7;
+			font-family: "Bebas Neue", "Trebuchet MS", Verdana, sans-serif;
+			font-size: x-large;
+			font-weight: normal;
+		}
+
 		li {
 			color: #d7d7d7;
 			font: 12px/1.385 Verdana;
@@ -52,7 +71,7 @@
 <body>
 	<div class="content">
 		<h1>%RESPONSE_TITLE%</h1>
-		<p>%RESPONSE_TEXT%</p>
+		%RESPONSE_BODY%
 	</div>
 </body>
 </html>

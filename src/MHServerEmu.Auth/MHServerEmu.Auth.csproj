@@ -25,10 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Data\Auth\AccountCreateForm.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Auth\Response.html">
+    <None Update="Data\Web\Response.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
