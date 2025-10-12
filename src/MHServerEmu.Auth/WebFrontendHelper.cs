@@ -19,7 +19,7 @@ namespace MHServerEmu.Auth
 
         // REMOVEME
         private const string AccountCreateFormBody = @"
-<p class=""disclaimer"">
+<p style=""color: red;"">
 	MHServerEmu is beta software in active development, and it may not be completely secure.<br/>
 	Please avoid using your real email / password combinations on public servers.
 </p>
