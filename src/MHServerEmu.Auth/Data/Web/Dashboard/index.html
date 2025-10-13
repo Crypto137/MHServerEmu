@@ -15,8 +15,7 @@
 		/* content */
 		div.content {
 			max-width: 800px;
-			margin-left: auto;
-			margin-right: auto;
+			margin: 10px auto;
 			border: 1px solid #00717c;
 			background-color: #00090e;
 			padding: 20px;
@@ -95,56 +94,63 @@
 		<h1>MHServerEmu Dashboard</h1>
 
 		<div class="tab-button-container">
-			<button onclick="tabManager.openTab(event, 'server-status-tab')">Server Status</button>
-			<button onclick="tabManager.openTab(event, 'metrics-tab')">Metrics</button>
-			<button onclick="tabManager.openTab(event, 'region-report-tab')">Region Report</button>
-			<button id="default-tab-button" onclick="tabManager.openTab(event, 'create-account-tab')">Create Account</button>
+			<button onclick="tabManager.openTab('server-status-tab')">Server Status</button>
+			<button onclick="tabManager.openTab('metrics-tab')">Metrics</button>
+			<button onclick="tabManager.openTab('region-report-tab')">Region Report</button>
+			<button onclick="tabManager.openTab('create-account-tab')">Create Account</button>
 		</div>
-		
-		<div class="tab-content" id="server-status-tab">
-			<h2>Server Status</h2>
-			<p>Coming soon...</p>
-		</div>
+	</div>
 
-		<div class="tab-content" id="metrics-tab">
-			<h2>Metrics</h2>
-			<p>Coming soon...</p>
-		</div>
+	<div class="content tab-content" id="server-status-tab">
+		<h2>Server Status</h2>
+		<p>Coming soon...</p>
+	</div>
 
-		<div class="tab-content" id="region-report-tab">
-			<h2>Region Report</h2>
-			<p>Coming soon...</p>
-		</div>
+	<div class="content tab-content" id="metrics-tab">
+		<h2>Metrics</h2>
+		<p>Coming soon...</p>
+	</div>
 
-		<div class="tab-content" id="create-account-tab">
-			<h2>Create Account</h2>
-			<div class="account-form" id="account-form">
-				<label for="email">Email Address</label><br>
-				<input type="text" id="email" name="email" maxlength="320" placeholder="Email Address" required><br><br>
-				<label for="player-name">Player Name</label><br>
-				<input type="text" id="player-name" name="player-name" placeholder="Player Name" maxlength="16" required><br><br>
-				<label for="password">Password</label><br>
-				<input type="password" id="password" name="password" placeholder="Password" minlength="3" maxlength="64" required><br><br>
-				<label for="confirm-password">Confirm Password</label><br>
-				<input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm Password" minlength="3" maxlength="64" required><br><br>
-				<button type="submit" onclick="accountManager.createAccount(event)">Submit</button>
-			</div>
+	<div class="content tab-content" id="region-report-tab">
+		<h2>Region Report</h2>
+		<p>Coming soon...</p>
+	</div>
+
+	<div class="content tab-content" id="create-account-tab">
+		<h2>Create Account</h2>
+		<div class="account-form" id="account-form">
+			<label for="email">Email Address</label><br>
+			<input type="text" id="email" name="email" maxlength="320" placeholder="Email Address" required><br><br>
+			<label for="player-name">Player Name</label><br>
+			<input type="text" id="player-name" name="player-name" placeholder="Player Name" maxlength="16" required><br><br>
+			<label for="password">Password</label><br>
+			<input type="password" id="password" name="password" placeholder="Password" minlength="3" maxlength="64" required><br><br>
+			<label for="confirm-password">Confirm Password</label><br>
+			<input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm Password" minlength="3" maxlength="64" required><br><br>
+			<button type="submit" onclick="accountManager.createAccount(event)">Submit</button>
 		</div>
 	</div>
 
 	<script>
 		const tabManager = {
-			openTab(evt, tabId) {
+			currentTabId: "",
+
+			openTab(tabId) {
 				var tabs = document.getElementsByClassName("tab-content");
 				for (var i = 0; i < tabs.length; i++) {
 					tabs[i].style.display = "none";
 				}
+				
+				if (tabId == "") {
+					return;
+				}
+				else if (tabId == this.currentTabId) {
+					this.currentTabId = "";
+					return;
+				}
 
+				this.currentTabId = tabId;
 				document.getElementById(tabId).style.display = "block";
-			},
-
-			openDefaultTab() {
-				document.getElementById("default-tab-button").click();
 			}
 		}
 
@@ -196,7 +202,7 @@
 			}
 		}
 
-		tabManager.openDefaultTab();
+		tabManager.openTab("");
 	</script>
 </body>
 </html>
