@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MHServerEmu.Auth;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
@@ -56,6 +57,18 @@ namespace MHServerEmu.Commands.Implementations
         public string ReloadLiveTuning(string[] @params, NetClient client)
         {
             LiveTuningManager.Instance.LoadLiveTuningDataFromDisk();
+            return string.Empty;
+        }
+
+        [Command("reloaddashboard")]
+        [CommandDescription("Reloads the web dashboard.")]
+        [CommandUsage("server reloaddashboard")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.ServerConsole)]
+        public string ReloadDashboard(string[] @params, NetClient client)
+        {
+            AuthServer authServer = ServerManager.Instance.GetGameService(GameServiceType.Auth) as AuthServer;
+            authServer?.ReloadDashboard();
             return string.Empty;
         }
 

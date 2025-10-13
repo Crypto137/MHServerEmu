@@ -45,6 +45,9 @@ namespace MHServerEmu.Auth
                 _webService.RegisterHandler("/ServerStatus",                new ServerStatusWebHandler());
                 _webService.RegisterHandler("/RegionReport",                new RegionReportWebHandler());
                 _webService.RegisterHandler("/Metrics/Performance",         new MetricsPerformanceWebHandler());
+
+                if (config.EnableDashboard)
+                    _webService.RegisterHandler("/Dashboard",               new DashboardWebHandler());
             }
         }
 
@@ -89,5 +92,11 @@ namespace MHServerEmu.Auth
         }
 
         #endregion
+
+        public void ReloadDashboard()
+        {
+            DashboardWebHandler dashboard = _webService.GetHandler("/Dashboard") as DashboardWebHandler;
+            dashboard.Load();
+        }
     }
 }

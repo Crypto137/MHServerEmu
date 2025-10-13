@@ -7,5 +7,6 @@ namespace MHServerEmu.Auth
         public string Address { get; private set; } = "localhost";
         public string Port { get; private set; } = "8080";
         public bool EnableWebApi { get; private set; } = true;
+        public bool EnableDashboard { get; private set; } = true;
     }
 }
