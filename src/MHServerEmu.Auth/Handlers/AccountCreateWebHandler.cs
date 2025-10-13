@@ -35,11 +35,24 @@ namespace MHServerEmu.Auth.Handlers
             WebFrontendOutputFormat outputFormat = WebFrontendHelper.GetOutputFormat(context);  // REMOVEME
 
             // TODO: Use JSON for all request bodies.
-            NameValueCollection query = context.ReadQueryString();
+            string email, playerName, password;
 
-            string email = query["email"];
-            string playerName = query["playerName"];
-            string password = query["password"];
+            if (outputFormat == WebFrontendOutputFormat.Html)
+            {
+                NameValueCollection query = context.ReadQueryString();
+
+                email = query["email"];
+                playerName = query["playerName"];
+                password = query["password"];
+            }
+            else
+            {
+                AccountCreateQuery query = context.ReadJson<AccountCreateQuery>();
+
+                email = query.Email;
+                playerName = query.PlayerName;
+                password = query.Password;
+            }
 
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(playerName) || string.IsNullOrWhiteSpace(password))
             {
@@ -57,6 +70,13 @@ namespace MHServerEmu.Auth.Handlers
                 Logger.Trace($"Post(): {resultString}");
 
             await context.SendAsync(isSuccess, "Create Account Result", resultString, outputFormat);
+        }
+
+        private class AccountCreateQuery
+        {
+            public string Email { get; init; }
+            public string PlayerName { get; init; }
+            public string Password { get; init; }
         }
     }
 }

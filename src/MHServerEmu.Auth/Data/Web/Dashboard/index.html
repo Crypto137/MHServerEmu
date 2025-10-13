@@ -12,6 +12,7 @@
 			background-color: #0d0d0b;
 		}
 
+		/* content */
 		div.content {
 			max-width: 800px;
 			margin-left: auto;
@@ -32,32 +33,170 @@
 			color: #00aaff;
 		}
 
+		div.content table {
+			overflow-x: auto;
+			display: block;
+		}
+
+		div.content td {
+			padding: 4px;
+		}
+
+		div.content button {
+			border: 1px solid black;
+			background: #1c1c1c;
+			box-shadow: 0 0 1px 1px #00aaff;
+			color: inherit;
+			padding: 8px;
+		}
+
+		div.content button:hover {
+			box-shadow: 0 0 1px 1px white;
+		}
+
+		div.content label {
+			font-size: x-large;
+			color: revert;
+		}
+
 		div.content input {
 			border: 1px solid black;
 			background: #1c1c1c;
 			box-shadow: 0 0 1px 1px #00aaff;
 			color: inherit;
 		}
-		
-		div.content label {
-			font-size: x-large;
-			color: revert;
+
+		/* tab-button-container */
+		div.tab-button-container {
+			display: flex;
+			justify-content: center;
 		}
 
-		table {
-			overflow-x: auto;
-			display: block;
+		div.tab-button-container button {
+			margin: 0px 4px;
+			width: 160px;
 		}
 
-		td {
-			padding: 4px;
+		/* account-form */
+		div.account-form {
+			max-width: 280px;
+			margin-left: auto;
+			margin-right: auto;
+		}
+
+		div.account-form input, button {
+			width: 100%;
+			box-sizing: border-box;
 		}
 	</style>
 </head>
 <body>
 	<div class="content">
 		<h1>MHServerEmu Dashboard</h1>
-		<p>Coming soon...</p>
+
+		<div class="tab-button-container">
+			<button onclick="tabManager.openTab(event, 'server-status-tab')">Server Status</button>
+			<button onclick="tabManager.openTab(event, 'metrics-tab')">Metrics</button>
+			<button onclick="tabManager.openTab(event, 'region-report-tab')">Region Report</button>
+			<button id="default-tab-button" onclick="tabManager.openTab(event, 'create-account-tab')">Create Account</button>
+		</div>
+		
+		<div class="tab-content" id="server-status-tab">
+			<h2>Server Status</h2>
+			<p>Coming soon...</p>
+		</div>
+
+		<div class="tab-content" id="metrics-tab">
+			<h2>Metrics</h2>
+			<p>Coming soon...</p>
+		</div>
+
+		<div class="tab-content" id="region-report-tab">
+			<h2>Region Report</h2>
+			<p>Coming soon...</p>
+		</div>
+
+		<div class="tab-content" id="create-account-tab">
+			<h2>Create Account</h2>
+			<div class="account-form" id="account-form">
+				<label for="email">Email Address</label><br>
+				<input type="text" id="email" name="email" maxlength="320" placeholder="Email Address" required><br><br>
+				<label for="player-name">Player Name</label><br>
+				<input type="text" id="player-name" name="player-name" placeholder="Player Name" maxlength="16" required><br><br>
+				<label for="password">Password</label><br>
+				<input type="password" id="password" name="password" placeholder="Password" minlength="3" maxlength="64" required><br><br>
+				<label for="confirm-password">Confirm Password</label><br>
+				<input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm Password" minlength="3" maxlength="64" required><br><br>
+				<button type="submit" onclick="accountManager.createAccount(event)">Submit</button>
+			</div>
+		</div>
 	</div>
+
+	<script>
+		const tabManager = {
+			openTab(evt, tabId) {
+				var tabs = document.getElementsByClassName("tab-content");
+				for (var i = 0; i < tabs.length; i++) {
+					tabs[i].style.display = "none";
+				}
+
+				document.getElementById(tabId).style.display = "block";
+			},
+
+			openDefaultTab() {
+				document.getElementById("default-tab-button").click();
+			}
+		}
+
+		const apiUtil = {
+			postJson(path, data) {
+				const url = window.location.origin + path + "?outputFormat=json";	// Remove outputFormat when we deprecate the old web frontend
+				const json = JSON.stringify(data);
+
+				var xhr = new XMLHttpRequest();
+				xhr.open("POST", url, true);
+				xhr.setRequestHeader("Content-Type", "application/json");
+				xhr.onreadystatechange = function () {
+					if (xhr.readyState == 4 && xhr.status == 200) {
+						const response = JSON.parse(xhr.responseText);
+						window.alert(response.Text);
+					}
+				};
+
+				xhr.send(json);
+			}
+		}
+
+		const accountManager = {
+			createAccount(evt) {
+				const email = document.getElementById("email");
+				const playerName = document.getElementById("player-name");
+				const password = document.getElementById("password");
+				const confirmPassword = document.getElementById("confirm-password");
+
+				confirmPassword.setCustomValidity("");
+
+				if (email.reportValidity() == false || playerName.reportValidity() == false || password.reportValidity() == false) {
+					return;
+				}
+
+				if (password.value != confirmPassword.value) {
+					confirmPassword.setCustomValidity("Your passwords do not match.");
+					confirmPassword.reportValidity();
+					return;
+				}
+
+				const accountData = {
+					Email: email.value,
+					PlayerName: playerName.value,
+					Password: password.value
+				};
+
+				apiUtil.postJson("/AccountManagement/Create", accountData);
+			}
+		}
+
+		tabManager.openDefaultTab();
+	</script>
 </body>
 </html>

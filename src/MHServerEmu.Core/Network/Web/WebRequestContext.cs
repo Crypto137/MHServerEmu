@@ -1,6 +1,7 @@
 ﻿using System.Collections.Specialized;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using System.Web;
 using Google.ProtocolBuffers;
 
@@ -49,6 +50,13 @@ namespace MHServerEmu.Core.Network.Web
             string queryString = reader.ReadToEnd();
             NameValueCollection query = HttpUtility.ParseQueryString(queryString);
             return query;
+        }
+
+        public T ReadJson<T>()
+        {
+            using StreamReader reader = new(_httpRequest.InputStream);
+            string json = reader.ReadToEnd();
+            return JsonSerializer.Deserialize<T>(json);
         }
 
         public IMessage ReadProtobuf<T>() where T: Enum
