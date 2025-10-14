@@ -1,0 +1,79 @@
+html {
+    background-color: #0d0d0b;
+}
+
+/* content */
+div.content {
+    max-width: 800px;
+    margin: 10px auto;
+    border: 1px solid #00717c;
+    background-color: #00090e;
+    padding: 20px;
+    color: #d7d7d7;
+}
+
+div.content p, li, td {
+    font: 12px/1.385 Verdana;
+}
+
+div.content h1, h2, h3, h4, h5, h6, label {
+    font-family: "Bebas Neue", "Trebuchet MS", Verdana, sans-serif;
+    font-weight: normal;
+    color: #00aaff;
+}
+
+div.content table {
+    overflow-x: auto;
+    display: block;
+}
+
+div.content td {
+    padding: 4px;
+}
+
+div.content button {
+    border: 1px solid black;
+    background: #1c1c1c;
+    box-shadow: 0 0 1px 1px #00aaff;
+    color: inherit;
+    padding: 8px;
+}
+
+div.content button:hover {
+    box-shadow: 0 0 1px 1px white;
+}
+
+div.content label {
+    font-size: x-large;
+    color: revert;
+}
+
+div.content input {
+    border: 1px solid black;
+    background: #1c1c1c;
+    box-shadow: 0 0 1px 1px #00aaff;
+    color: inherit;
+}
+
+/* tab-button-container */
+div.tab-button-container {
+    display: flex;
+    justify-content: center;
+}
+
+div.tab-button-container button {
+    margin: 0px 4px;
+    width: 160px;
+}
+
+/* account-form */
+div.account-form {
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+div.account-form input, button {
+    width: 100%;
+    box-sizing: border-box;
+}
