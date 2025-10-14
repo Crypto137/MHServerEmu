@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Auth.Handlers;
 using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Web;
@@ -14,6 +15,7 @@ namespace MHServerEmu.Auth
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly WebService _webService;
+        private List<string> _dashboardEndpoints;
 
         public GameServiceState State { get; private set; } = GameServiceState.Created;
 
@@ -41,13 +43,10 @@ namespace MHServerEmu.Auth
 
             if (config.EnableWebApi)
             {
-                _webService.RegisterHandler("/AccountManagement/Create",    new AccountCreateWebHandler());
-                _webService.RegisterHandler("/ServerStatus",                new ServerStatusWebHandler());
-                _webService.RegisterHandler("/RegionReport",                new RegionReportWebHandler());
-                _webService.RegisterHandler("/Metrics/Performance",         new MetricsPerformanceWebHandler());
+                InitializeWebBackend();
 
                 if (config.EnableDashboard)
-                    _webService.RegisterHandler("/Dashboard",               new DashboardWebHandler());
+                    InitializeWebDashboard(config.DashboardFileDirectory, config.DashboardUrlDirectory);
             }
         }
 
@@ -95,8 +94,60 @@ namespace MHServerEmu.Auth
 
         public void ReloadDashboard()
         {
-            DashboardWebHandler dashboard = _webService.GetHandler("/Dashboard") as DashboardWebHandler;
-            dashboard.Load();
+            if (_dashboardEndpoints == null)
+                return;
+
+            foreach (string localPath in _dashboardEndpoints)
+            {
+                StaticFileWebHandler fileHandler = _webService.GetHandler(localPath) as StaticFileWebHandler;
+                fileHandler?.Load();
+            }
+        }
+
+        private void InitializeWebBackend()
+        {
+            _webService.RegisterHandler("/AccountManagement/Create", new AccountCreateWebHandler());
+            _webService.RegisterHandler("/ServerStatus", new ServerStatusWebHandler());
+            _webService.RegisterHandler("/RegionReport", new RegionReportWebHandler());
+            _webService.RegisterHandler("/Metrics/Performance", new MetricsPerformanceWebHandler());
+        }
+
+        private void InitializeWebDashboard(string dashboardDirectoryName, string endpointPath)
+        {
+            string dashboardDirectory = Path.Combine(FileHelper.DataDirectory, "Web", dashboardDirectoryName);
+            if (Directory.Exists(dashboardDirectory) == false)
+            {
+                Logger.Warn($"InitializeWebDashboard(): Dashboard directory '{dashboardDirectoryName}' does not exist");
+                return;
+            }
+
+            string indexFilePath = Path.Combine(dashboardDirectory, "index.html");
+            if (File.Exists(indexFilePath) == false)
+            {
+                Logger.Warn($"InitializeWebDashboard(): Index file not found at '{indexFilePath}'");
+                return;
+            }
+
+            _dashboardEndpoints = new();
+
+            _webService.RegisterHandler(endpointPath, new StaticFileWebHandler(indexFilePath));
+            _dashboardEndpoints.Add(endpointPath);
+
+            foreach (string filePath in Directory.GetFiles(dashboardDirectory))
+            {
+                ReadOnlySpan<char> fileName = Path.GetFileName(filePath.AsSpan());
+                if (fileName.Equals("index.html", StringComparison.InvariantCultureIgnoreCase))
+                    continue;
+
+                string subFilePath = endpointPath.EndsWith('/')
+                    ? $"{endpointPath}{fileName}"
+                    : $"{endpointPath}/{fileName}";
+
+                _webService.RegisterHandler(subFilePath, new StaticFileWebHandler(filePath));
+                _dashboardEndpoints.Add(subFilePath);
+            }
+
+            Logger.Info($"Initialized web dashboard at {endpointPath}");
         }
     }
 }

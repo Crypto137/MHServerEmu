@@ -65,14 +65,18 @@ namespace MHServerEmu.Core.Network.Web
             return messageBuffer.Deserialize<T>();
         }
 
-        public async Task SendAsync(string message, string contentType = "text/plain")
+        public async Task SendAsync(byte[] payload, string contentType)
         {
-            byte[] payload = Encoding.UTF8.GetBytes(message);
-
             _httpResponse.ContentType = contentType;
             _httpResponse.ContentLength64 = payload.Length;
 
             await _httpResponse.OutputStream.WriteAsync(payload);
+        }
+
+        public async Task SendAsync(string message, string contentType = "text/plain")
+        {
+            byte[] payload = Encoding.UTF8.GetBytes(message);
+            await SendAsync(payload, contentType);
         }
 
         public async Task SendAsync(IMessage message)
@@ -82,6 +86,7 @@ namespace MHServerEmu.Core.Network.Web
             _httpResponse.ContentType = "application/octet-stream";
             _httpResponse.ContentLength64 = payload.GetSerializedSize();
 
+            // We should probably serialize synchronously and use async only for writing to the http output stream.
             await Task.Run(() =>
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(_httpResponse.OutputStream);
