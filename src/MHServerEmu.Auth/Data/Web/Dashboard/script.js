@@ -1,3 +1,46 @@
+const apiUtil = {
+	handleReadyStateChange(xhr, callback) {
+		if (xhr.readyState == 4 && xhr.status == 200) {
+			const response = JSON.parse(xhr.responseText);
+			callback(response);
+		}
+	},
+	
+	get(path, callback) {
+		const url = window.location.origin + path + "?outputFormat=json";	// Remove outputFormat when we deprecate the old web frontend
+
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", url, true);
+		xhr.onreadystatechange = function () { apiUtil.handleReadyStateChange(xhr, callback) };
+		xhr.send();
+	},
+
+	post(path, data, callback) {
+		const url = window.location.origin + path + "?outputFormat=json";	// Remove outputFormat when we deprecate the old web frontend
+		const json = JSON.stringify(data);
+
+		var xhr = new XMLHttpRequest();
+		xhr.open("POST", url, true);
+		xhr.onreadystatechange = function () { apiUtil.handleReadyStateChange(xhr, callback) };
+		xhr.setRequestHeader("Content-Type", "application/json");
+		xhr.send(json);
+	},
+}
+
+const htmlUtil = {
+	createAndAppendChild(parent, tagName, text = "") {
+		var child = document.createElement(tagName);
+
+		if (text != "") {
+			const textNode = document.createTextNode(text);
+			child.appendChild(textNode);
+		}
+
+		parent.appendChild(child);
+		return child;
+	}
+}
+
 const tabManager = {
 	currentTabId: "",
 
@@ -29,22 +72,36 @@ const tabManager = {
 	}
 }
 
-const apiUtil = {
-	postJson(path, data) {
-		const url = window.location.origin + path + "?outputFormat=json";	// Remove outputFormat when we deprecate the old web frontend
-		const json = JSON.stringify(data);
+const regionManager = {
+	initialize() {
+		document.getElementById("region-report-button").onclick = this.requestData;	
+	},
 
-		var xhr = new XMLHttpRequest();
-		xhr.open("POST", url, true);
-		xhr.setRequestHeader("Content-Type", "application/json");
-		xhr.onreadystatechange = function () {
-			if (xhr.readyState == 4 && xhr.status == 200) {
-				const response = JSON.parse(xhr.responseText);
-				window.alert(response.Text);
+	requestData() {
+		console.log("request");
+		apiUtil.get("/RegionReport", function(data) { regionManager.onDataReceived(data); })
+	},
+
+	onDataReceived(data) {
+		var list = document.getElementById("region-report-list");
+		list.innerHTML = "";
+
+		var gameId = 0;
+		var gameSublist = null;
+
+		for (var i = 0; i < data.Regions.length; i++) {
+			const region = data.Regions[i];
+			const regionText = `[0x${region.RegionId}] ${region.Name} (${region.DifficultyTier}) - ${region.Uptime}`;
+
+			if (gameId != region.GameId) {
+				const gameText = `Game [0x${region.GameId}]`;
+				htmlUtil.createAndAppendChild(list, "li", gameText);
+				gameSublist = htmlUtil.createAndAppendChild(list, "ul");
+				gameId = region.GameId;
 			}
-		};
 
-		xhr.send(json);
+			htmlUtil.createAndAppendChild(gameSublist, "li", regionText);
+		}
 	}
 }
 
@@ -77,9 +134,14 @@ const accountManager = {
 			Password: password.value
 		};
 
-		apiUtil.postJson("/AccountManagement/Create", accountData);
+		apiUtil.post("/AccountManagement/Create", accountData, function(result) { accountManager.onCreateAccountResult(result); });
+	},
+
+	onCreateAccountResult(result) {
+		window.alert(result.Text);
 	}
 }
 
 tabManager.initialize();
+regionManager.initialize();
 accountManager.initialize();

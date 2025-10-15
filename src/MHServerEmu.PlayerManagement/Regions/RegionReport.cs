@@ -1,6 +1,8 @@
 ﻿using System.Text;
+using System.Text.Json.Serialization;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.PlayerManagement.Regions
@@ -67,7 +69,9 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public readonly struct Entry : IComparable<Entry>
         {
+            [JsonConverter(typeof(UInt64ToHexStringJsonConverter))]
             public ulong GameId { get; }
+            [JsonConverter(typeof(UInt64ToHexStringJsonConverter))]
             public ulong RegionId { get; }
             public string Name { get; }
             public string DifficultyTier { get; }
@@ -79,7 +83,7 @@ namespace MHServerEmu.PlayerManagement.Regions
                 RegionId = region.Id;
                 Name = region.RegionProtoRef.GetNameFormatted();
                 DifficultyTier = region.DifficultyTierProtoRef.GetNameFormatted();
-                Uptime = region.Uptime;
+                Uptime = TimeSpan.FromSeconds((long)region.Uptime.TotalSeconds);
             }
 
             public override string ToString()
