@@ -12,12 +12,11 @@
 <body>
 	<div class="content">
 		<h1>MHServerEmu Dashboard</h1>
-
 		<div class="tab-button-container">
-			<button onclick="tabManager.openTab('server-status-tab')">Server Status</button>
-			<button onclick="tabManager.openTab('metrics-tab')">Metrics</button>
-			<button onclick="tabManager.openTab('region-report-tab')">Region Report</button>
-			<button onclick="tabManager.openTab('create-account-tab')">Create Account</button>
+			<button id="server-status-tab-button">Server Status</button>
+			<button id="metrics-tab-button">Metrics</button>
+			<button id="region-report-tab-button">Region Report</button>
+			<button id="create-account-tab-button">Create Account</button>
 		</div>
 	</div>
 
@@ -39,15 +38,15 @@
 	<div class="content tab-content" id="create-account-tab">
 		<h2>Create Account</h2>
 		<div class="account-form" id="account-form">
-			<label for="email">Email Address</label><br>
-			<input type="text" id="email" name="email" maxlength="320" placeholder="Email Address" required><br><br>
-			<label for="player-name">Player Name</label><br>
-			<input type="text" id="player-name" name="player-name" placeholder="Player Name" maxlength="16" required><br><br>
-			<label for="password">Password</label><br>
-			<input type="password" id="password" name="password" placeholder="Password" minlength="3" maxlength="64" required><br><br>
-			<label for="confirm-password">Confirm Password</label><br>
-			<input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm Password" minlength="3" maxlength="64" required><br><br>
-			<button type="submit" onclick="accountManager.createAccount(event)">Submit</button>
+			<label for="create-account-email">Email Address</label><br>
+			<input type="text" id="create-account-email" name="email" maxlength="320" placeholder="Email Address" required><br><br>
+			<label for="create-account-player-name">Player Name</label><br>
+			<input type="text" id="create-account-player-name" name="player-name" placeholder="Player Name" maxlength="16" required><br><br>
+			<label for="create-account-password">Password</label><br>
+			<input type="password" id="create-account-password" name="password" placeholder="Password" minlength="3" maxlength="64" required><br><br>
+			<label for="create-account-confirm-password">Confirm Password</label><br>
+			<input type="password" id="create-account-confirm-password" name="confirm-password" placeholder="Confirm Password" minlength="3" maxlength="64" required><br><br>
+			<button type="submit" id="create-account-submit">Submit</button>
 		</div>
 	</div>
 

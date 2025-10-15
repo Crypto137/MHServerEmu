@@ -1,6 +1,15 @@
 const tabManager = {
 	currentTabId: "",
 
+	initialize() {
+		document.getElementById("server-status-tab-button").onclick = function() { tabManager.openTab('server-status-tab'); }
+		document.getElementById("metrics-tab-button").onclick = function() { tabManager.openTab('metrics-tab'); }
+		document.getElementById("region-report-tab-button").onclick = function() { tabManager.openTab('region-report-tab'); }
+		document.getElementById("create-account-tab-button").onclick = function() { tabManager.openTab('create-account-tab'); }
+
+		tabManager.openTab("");
+	},
+
 	openTab(tabId) {
 		var tabs = document.getElementsByClassName("tab-content");
 		for (var i = 0; i < tabs.length; i++) {
@@ -40,11 +49,15 @@ const apiUtil = {
 }
 
 const accountManager = {
-	createAccount(evt) {
-		const email = document.getElementById("email");
-		const playerName = document.getElementById("player-name");
-		const password = document.getElementById("password");
-		const confirmPassword = document.getElementById("confirm-password");
+	initialize() {
+		document.getElementById("create-account-submit").onclick = this.createAccount;
+	},
+
+	createAccount() {
+		const email = document.getElementById("create-account-email");
+		const playerName = document.getElementById("create-account-player-name");
+		const password = document.getElementById("create-account-password");
+		const confirmPassword = document.getElementById("create-account-confirm-password");
 
 		confirmPassword.setCustomValidity("");
 
@@ -68,4 +81,5 @@ const accountManager = {
 	}
 }
 
-tabManager.openTab("");
+tabManager.initialize();
+accountManager.initialize();
