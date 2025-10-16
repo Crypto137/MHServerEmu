@@ -44,16 +44,21 @@ const htmlUtil = {
 const tabManager = {
 	currentTabId: "",
 
-	initialize() {
-		document.getElementById("server-status-tab-button").onclick = function() { tabManager.openTab('server-status-tab'); }
-		document.getElementById("metrics-tab-button").onclick = function() { tabManager.openTab('metrics-tab'); }
-		document.getElementById("region-report-tab-button").onclick = function() { tabManager.openTab('region-report-tab'); }
-		document.getElementById("create-account-tab-button").onclick = function() { tabManager.openTab('create-account-tab'); }
+	initialize(tabs) {
+		var self = this;
 
-		tabManager.openTab("");
+		for (var i = 0; i < tabs.length; i++) {
+			const tab = tabs[i];
+			document.getElementById(tab.tabName + "-tab-button").onclick = function() { self.openTab(tab); }
+			tab.initialize();
+		}
+
+		this.openTab("");
 	},
 
-	openTab(tabId) {
+	openTab(tab) {
+		const tabId = tab.tabName + "-tab";
+		
 		var tabs = document.getElementsByClassName("tab-content");
 		for (var i = 0; i < tabs.length; i++) {
 			tabs[i].style.display = "none";
@@ -69,17 +74,35 @@ const tabManager = {
 
 		this.currentTabId = tabId;
 		document.getElementById(tabId).style.display = "block";
-	}
+	},
 }
 
-const regionManager = {
+const serverStatusTab = {
+	tabName: "server-status",
+
+	initialize() {
+
+	},
+}
+
+const metricsTab = {
+	tabName: "metrics",
+
+	initialize() {
+
+	},
+}
+
+const regionReportTab = {
+	tabName: "region-report",
+
 	initialize() {
 		document.getElementById("region-report-button").onclick = this.requestData;	
 	},
 
 	requestData() {
 		console.log("request");
-		apiUtil.get("/RegionReport", function(data) { regionManager.onDataReceived(data); })
+		apiUtil.get("/RegionReport", function(data) { regionReportTab.onDataReceived(data); })
 	},
 
 	onDataReceived(data) {
@@ -105,7 +128,9 @@ const regionManager = {
 	}
 }
 
-const accountManager = {
+const createAccountTab = {
+	tabName: "create-account",
+
 	initialize() {
 		document.getElementById("create-account-submit").onclick = this.createAccount;
 	},
@@ -134,7 +159,7 @@ const accountManager = {
 			Password: password.value
 		};
 
-		apiUtil.post("/AccountManagement/Create", accountData, function(result) { accountManager.onCreateAccountResult(result); });
+		apiUtil.post("/AccountManagement/Create", accountData, function(result) { createAccountTab.onCreateAccountResult(result); });
 	},
 
 	onCreateAccountResult(result) {
@@ -142,6 +167,9 @@ const accountManager = {
 	}
 }
 
-tabManager.initialize();
-regionManager.initialize();
-accountManager.initialize();
+tabManager.initialize([
+	serverStatusTab,
+	metricsTab,
+	regionReportTab,
+	createAccountTab
+]);
