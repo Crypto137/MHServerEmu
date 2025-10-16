@@ -1,9 +1,11 @@
 ﻿using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Metrics.Categories;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Metrics
@@ -14,10 +16,12 @@ namespace MHServerEmu.Core.Metrics
 
         private static uint _currentReportId = 0;
 
+        [JsonConverter(typeof(UInt64ToHexStringJsonConverter))]
         public ulong Id { get; private set; }
         public MemoryMetrics.Report Memory { get; private set; }
         public Dictionary<ulong, GamePerformanceMetrics.Report> Games { get; } = new();
 
+        [JsonIgnore]
         public bool IsInPool { get; set; }
 
         public PerformanceReport() { }

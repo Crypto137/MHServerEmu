@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json.Serialization;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
@@ -62,6 +63,7 @@ namespace MHServerEmu.Core.Metrics
         /// </summary>
         public readonly struct ReportEntry : IHtmlDataStructure
         {
+            [JsonIgnore]
             public string Name { get; }
             public float Average { get; }
             public float Median { get; }

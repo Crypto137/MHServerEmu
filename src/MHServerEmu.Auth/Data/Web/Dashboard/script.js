@@ -9,7 +9,7 @@ const apiUtil = {
 	get(path, callback) {
 		const url = window.location.origin + path + "?outputFormat=json";	// Remove outputFormat when we deprecate the old web frontend
 
-		var xhr = new XMLHttpRequest();
+		const xhr = new XMLHttpRequest();
 		xhr.open("GET", url, true);
 		xhr.onreadystatechange = () => this.handleReadyStateChange(xhr, callback);
 		xhr.send();
@@ -19,7 +19,7 @@ const apiUtil = {
 		const url = window.location.origin + path + "?outputFormat=json";	// Remove outputFormat when we deprecate the old web frontend
 		const json = JSON.stringify(data);
 
-		var xhr = new XMLHttpRequest();
+		const xhr = new XMLHttpRequest();
 		xhr.open("POST", url, true);
 		xhr.onreadystatechange = () => this.handleReadyStateChange(xhr, callback);
 		xhr.setRequestHeader("Content-Type", "application/json");
@@ -45,7 +45,7 @@ const tabManager = {
 	currentTabId: "",
 
 	initialize(tabs) {
-		for (var i = 0; i < tabs.length; i++) {
+		for (let i = 0; i < tabs.length; i++) {
 			const tab = tabs[i];
 			document.getElementById(tab.tabName + "-tab-button").onclick = () => this.openTab(tab);
 			tab.initialize();
@@ -57,8 +57,8 @@ const tabManager = {
 	openTab(tab) {
 		const tabId = tab != null ? tab.tabName + "-tab" : "";
 		
-		var tabs = document.getElementsByClassName("tab-content");
-		for (var i = 0; i < tabs.length; i++) {
+		const tabs = document.getElementsByClassName("tab-content");
+		for (let i = 0; i < tabs.length; i++) {
 			tabs[i].style.display = "none";
 		}
 		
@@ -87,8 +87,41 @@ const metricsTab = {
 	tabName: "metrics",
 
 	initialize() {
-
+		document.getElementById("metrics-button").onclick = () => this.requestData();
 	},
+
+	requestData() {
+		apiUtil.get("/Metrics/Performance", (data) => this.onDataReceived(data));
+	},
+
+	onDataReceived(data) {
+		this.updateMemoryMetrics(data.Memory);
+		this.updateGameMetrics(data.Games);
+	},
+
+	updateMemoryMetrics(data) {
+		const memoryContainer = document.getElementById("metrics-memory-container");
+		memoryContainer.innerHTML = "";
+		
+		const memoryList = htmlUtil.createAndAppendChild(memoryContainer, "ul");
+		htmlUtil.createAndAppendChild(memoryList, "li", `GCIndex: ${data.GCIndex}`)
+		htmlUtil.createAndAppendChild(memoryList, "li", `GCCounts: Gen0=${data.GCCountGen0}, Gen1=${data.GCCountGen1}, Gen2=${data.GCCountGen2}`)
+		htmlUtil.createAndAppendChild(memoryList, "li", `HeapSizeBytes: ${data.HeapSizeBytes} / ${data.TotalCommittedBytes}`)
+		htmlUtil.createAndAppendChild(memoryList, "li", `PauseTimePercentage: ${data.PauseTimePercentage * 100}%`)
+		htmlUtil.createAndAppendChild(memoryList, "li", `PauseDuration: ${this.formatTracker(data.PauseDuration)}`)
+	},
+
+	updateGameMetrics(data) {
+		const gamesContainer = document.getElementById("metrics-game-container");
+		gamesContainer.innerHTML = "";
+
+		// TODO: restore table formatting
+		htmlUtil.createAndAppendChild(gamesContainer, "pre", JSON.stringify(data, null, 2));
+	},
+
+	formatTracker(tracker) {
+		return `avg=${tracker.Average}, mdn=${tracker.Median}, last=${tracker.Last}, min=${tracker.Min}, max=${tracker.Max}`;
+	}
 }
 
 const regionReportTab = {
@@ -103,13 +136,13 @@ const regionReportTab = {
 	},
 
 	onDataReceived(data) {
-		var list = document.getElementById("region-report-list");
+		const list = document.getElementById("region-report-list");
 		list.innerHTML = "";
 
-		var gameId = 0;
-		var gameSublist = null;
+		let gameId = 0;
+		let gameSublist = null;
 
-		for (var i = 0; i < data.Regions.length; i++) {
+		for (let i = 0; i < data.Regions.length; i++) {
 			const region = data.Regions[i];
 			const regionText = `[0x${region.RegionId}] ${region.Name} (${region.DifficultyTier}) - ${region.Uptime}`;
 
