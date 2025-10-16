@@ -1,6 +1,19 @@
 # Embedded Browser
 
-Some of the in-game UI panels (TOS popup on login, store, community news) use a CEF-based web browser that can load HTML pages. These pages can interact with the UI via a JavaScript API.
+Some of the in-game UI panels (TOS popup on login, store, community news) use an embedded web browser that can load HTML pages. These pages can interact with the client UI via a JavaScript API.
+
+## Browser Versions
+
+Originally the client used Awesomium as the browser backend, but it was replaced with Chromium Embedded Framework (CEF) in game version 1.22. Below is a list of known browser versions used by the client.
+
+| Game Version | Browser Version          | Browser Release Date |
+| ------------ | ------------------------ | -------------------- |
+| 1.9-1.21     | Awesomium 1.6.5          | 2012-02-23           |
+| 1.22-1.32    | CEF 3.1650.1544          | 2013-12-08           |
+| 1.33         | CEF 3.2272.2035          | 2015-02-26           |
+| 1.34         | CEF 3.2272.2077          | 2015-04-13           |
+| 1.35-1.52    | CEF 3.1650.1639          | 2014-03-13           |
+| 1.53         | CEF 3.3112.1656.g9ec3e42 | 2017-08-10           |
 
 ## API Calls
 
