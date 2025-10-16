@@ -11,7 +11,7 @@ const apiUtil = {
 
 		var xhr = new XMLHttpRequest();
 		xhr.open("GET", url, true);
-		xhr.onreadystatechange = function () { apiUtil.handleReadyStateChange(xhr, callback) };
+		xhr.onreadystatechange = () => this.handleReadyStateChange(xhr, callback);
 		xhr.send();
 	},
 
@@ -21,7 +21,7 @@ const apiUtil = {
 
 		var xhr = new XMLHttpRequest();
 		xhr.open("POST", url, true);
-		xhr.onreadystatechange = function () { apiUtil.handleReadyStateChange(xhr, callback) };
+		xhr.onreadystatechange = () => this.handleReadyStateChange(xhr, callback);
 		xhr.setRequestHeader("Content-Type", "application/json");
 		xhr.send(json);
 	},
@@ -45,19 +45,17 @@ const tabManager = {
 	currentTabId: "",
 
 	initialize(tabs) {
-		var self = this;
-
 		for (var i = 0; i < tabs.length; i++) {
 			const tab = tabs[i];
-			document.getElementById(tab.tabName + "-tab-button").onclick = function() { self.openTab(tab); }
+			document.getElementById(tab.tabName + "-tab-button").onclick = () => this.openTab(tab);
 			tab.initialize();
 		}
 
-		this.openTab("");
+		this.openTab(null);
 	},
 
 	openTab(tab) {
-		const tabId = tab.tabName + "-tab";
+		const tabId = tab != null ? tab.tabName + "-tab" : "";
 		
 		var tabs = document.getElementsByClassName("tab-content");
 		for (var i = 0; i < tabs.length; i++) {
@@ -97,12 +95,11 @@ const regionReportTab = {
 	tabName: "region-report",
 
 	initialize() {
-		document.getElementById("region-report-button").onclick = this.requestData;	
+		document.getElementById("region-report-button").onclick = () => this.requestData();	
 	},
 
 	requestData() {
-		console.log("request");
-		apiUtil.get("/RegionReport", function(data) { regionReportTab.onDataReceived(data); })
+		apiUtil.get("/RegionReport", (data) => this.onDataReceived(data));
 	},
 
 	onDataReceived(data) {
@@ -132,7 +129,7 @@ const createAccountTab = {
 	tabName: "create-account",
 
 	initialize() {
-		document.getElementById("create-account-submit").onclick = this.createAccount;
+		document.getElementById("create-account-submit").onclick = () => this.createAccount();
 	},
 
 	createAccount() {
@@ -159,7 +156,7 @@ const createAccountTab = {
 			Password: password.value
 		};
 
-		apiUtil.post("/AccountManagement/Create", accountData, function(result) { createAccountTab.onCreateAccountResult(result); });
+		apiUtil.post("/AccountManagement/Create", accountData, (result) => this.onCreateAccountResult(result));
 	},
 
 	onCreateAccountResult(result) {
