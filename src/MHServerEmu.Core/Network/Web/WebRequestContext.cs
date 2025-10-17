@@ -2,7 +2,6 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using System.Web;
 using Google.ProtocolBuffers;
 
 namespace MHServerEmu.Core.Network.Web
@@ -42,15 +41,6 @@ namespace MHServerEmu.Core.Network.Web
         }
 
         // TODO: Optimize heap allocations here.
-
-        public NameValueCollection ReadQueryString()
-        {
-            // TODO: Replace this with JSON
-            using StreamReader reader = new(_httpRequest.InputStream);
-            string queryString = reader.ReadToEnd();
-            NameValueCollection query = HttpUtility.ParseQueryString(queryString);
-            return query;
-        }
 
         public T ReadJson<T>()
         {
@@ -93,6 +83,15 @@ namespace MHServerEmu.Core.Network.Web
                 payload.WriteTo(cos);
                 cos.Flush();
             });
+        }
+
+        /// <summary>
+        /// Serializes <typeparamref name="T"/> to JSON and sends it asynchronously.
+        /// </summary>
+        public async Task SendJsonAsync<T>(T @object)
+        {
+            string json = JsonSerializer.Serialize(@object);
+            await SendAsync(json, "application/json");
         }
     }
 }

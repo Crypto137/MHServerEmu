@@ -1,13 +1,10 @@
-﻿using System.Text;
-using System.Text.Json.Serialization;
-using MHServerEmu.Core.Helpers;
+﻿using System.Text.Json.Serialization;
 using MHServerEmu.Core.Memory;
-using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.PlayerManagement.Regions
 {
-    public readonly struct RegionReport : IDisposable, IHtmlDataStructure
+    public readonly struct RegionReport : IDisposable
     {
         public List<Entry> Regions { get; }
 
@@ -33,38 +30,6 @@ namespace MHServerEmu.PlayerManagement.Regions
         public void Dispose()
         {
             ListPool<Entry>.Instance.Return(Regions);
-        }
-
-        public void BuildHtml(StringBuilder sb)
-        {
-            ulong currentGameId = 0;
-            bool isInSubList = false;
-            foreach (Entry entry in Regions)
-            {
-                ulong gameId = entry.GameId;
-                if (gameId != currentGameId)
-                {
-                    if (isInSubList)
-                    {
-                        HtmlBuilder.EndUnorderedList(sb);
-                        isInSubList = false;
-                    }
-
-                    HtmlBuilder.AppendListItem(sb, $"Game [0x{gameId:X}]");
-                    currentGameId = gameId;
-
-                    HtmlBuilder.BeginUnorderedList(sb);
-                    isInSubList = true;
-                }
-
-                HtmlBuilder.AppendListItem(sb, entry.ToString());
-            }
-
-            if (isInSubList)
-            {
-                HtmlBuilder.EndUnorderedList(sb);
-                isInSubList = false;
-            }
         }
 
         public readonly struct Entry : IComparable<Entry>

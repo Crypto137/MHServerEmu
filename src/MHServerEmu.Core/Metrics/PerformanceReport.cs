@@ -1,11 +1,9 @@
 ﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Metrics.Categories;
-using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Metrics
@@ -53,9 +51,6 @@ namespace MHServerEmu.Core.Metrics
                 case MetricsReportFormat.Json:
                     return JsonSerializer.Serialize(this);
 
-                case MetricsReportFormat.Html:
-                    return AsHtml();
-
                 default:
                     return Logger.WarnReturn(string.Empty, $"ToString(): Unsupported format {format}");
             }
@@ -85,25 +80,6 @@ namespace MHServerEmu.Core.Metrics
             {
                 sb.AppendLine($"Game [0x{kvp.Key:X}]:");
                 sb.AppendLine(kvp.Value.ToString());
-            }
-
-            return sb.ToString();
-        }
-
-        private string AsHtml()
-        {
-            StringBuilder sb = new();
-
-            HtmlBuilder.AppendParagraph(sb, $"Report 0x{Id:X}");
-
-            HtmlBuilder.AppendHeader2(sb, "Memory");
-            HtmlBuilder.AppendDataStructure(sb, Memory);
-
-            HtmlBuilder.AppendHeader2(sb, "Games");
-            foreach (var kvp in Games.OrderBy(kvp => kvp.Key))
-            {
-                HtmlBuilder.AppendHeader3(sb, $"0x{kvp.Key:X}");
-                HtmlBuilder.AppendDataStructure(sb, kvp.Value);
             }
 
             return sb.ToString();

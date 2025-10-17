@@ -7,15 +7,15 @@ namespace MHServerEmu.Auth.Handlers
     {
         protected override async Task Get(WebRequestContext context)
         {
-            WebFrontendOutputFormat outputFormat = WebFrontendHelper.GetOutputFormat(context);  // REMOVEME
-
             string serverStatus = ServerManager.Instance.GetServerStatus(false);
+            await context.SendJsonAsync(new ResponseData(true, "Server Status", serverStatus));
+        }
 
-            // Fix line breaks for display in browsers
-            if (outputFormat == WebFrontendOutputFormat.Html)
-                serverStatus = serverStatus.Replace("\n", "<br/>");
-
-            await context.SendAsync(true, "Server Status", serverStatus, outputFormat);
+        private readonly struct ResponseData(bool result, string title, string text)
+        {
+            public bool Result { get; } = result;
+            public string Title { get; } = title;
+            public string Text { get; } = text;
         }
     }
 }
