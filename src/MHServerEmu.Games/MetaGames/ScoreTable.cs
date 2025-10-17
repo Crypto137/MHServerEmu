@@ -1,8 +1,13 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using Gazillion;
+using Google.ProtocolBuffers;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.MetaGames
@@ -22,12 +27,14 @@ namespace MHServerEmu.Games.MetaGames
         private int _playerSchemaSize;
         private int _regionSchemaSize;
         private ScoreTableRow _regionTableRow;
+        private readonly Dictionary<ulong, ScoreTableRowPlayer> _playerRows;
 
         public ScoreTable(MetaGame metagame)
         {
             MetaGame = metagame;
             PlayerSchema = new();
             RegionSchema = new();
+            _playerRows = [];
         }
 
         public void Initialize(PrototypeId scoreSchemaRegion, PrototypeId scoreSchemaPlayer)
@@ -62,7 +69,144 @@ namespace MHServerEmu.Games.MetaGames
 
         public void AddNewPlayer(Player player)
         {
-            throw new NotImplementedException();
+            ulong guid = player.DatabaseUniqueId;
+            if (_playerRows.ContainsKey(guid)) return;
+           
+            var row = new ScoreTableRowPlayer(_playerSchemaSize);
+            _playerRows.Add(guid, row);
+
+            var team = MetaGame.GetTeamByPlayer(player);
+            row.Team = team != null ? team.ProtoRef : PrototypeId.Invalid;
+
+            var avatar = player.CurrentAvatar;
+            var avatarRef = avatar != null ? avatar.PrototypeDataRef : PrototypeId.Invalid;
+            row.Avatar = avatarRef;
+
+            var message = NetMessagePvPScorePlayerNewId.CreateBuilder()
+                .SetPvpEntityId(MetaGame.Id)
+                .SetPlayerDbGuid(guid)
+                .SetPlayerName(player.GetName())
+                .SetTeamProtoId((ulong)row.Team)
+                .SetAvatarProtoId((ulong)avatarRef)
+                .Build();
+
+            SendMessageToInterested(message);
+
+            for (int category = 0; category < PlayerSchema.Count; category++)
+                UpdatePlayerScoreByCategory(player, category);
+
+            var updMessage = NetMessagePvPScorePlayerUpdate.CreateBuilder()
+                .SetPvpEntityId(MetaGame.Id)
+                .SetPlayerDbGuid(guid);
+
+            for (int category = 0; category < row.CategoriesNum; category++) 
+            {
+                var scoreValue = row.GetValueByCategory(category);
+                if (scoreValue == null) continue;
+                updMessage.AddUpdates(GetUpdates(category, scoreValue));
+            }
+
+            SendMessageToInterested(updMessage.Build());
+
+            SendPlayersScoreToPlayer(player);            
+        }
+
+        private void SendPlayersScoreToPlayer(Player updatePlayer)
+        {
+            foreach (var player in new PlayerIterator(MetaGame.Region))
+            {
+                ulong guid = player.DatabaseUniqueId;
+                var avatar = player.CurrentAvatar;
+                var avatarRef = avatar != null ? avatar.PrototypeDataRef : PrototypeId.Invalid;
+                if (_playerRows.TryGetValue(guid, out var row) == false) continue;
+
+                if (row == null) return;
+
+                var message = NetMessagePvPScorePlayerNewId.CreateBuilder()
+                    .SetPvpEntityId(MetaGame.Id)
+                    .SetPlayerDbGuid(guid)
+                    .SetPlayerName(player.GetName())
+                    .SetTeamProtoId((ulong)row.Team)
+                    .SetAvatarProtoId((ulong)avatarRef)
+                    .Build();
+
+                updatePlayer.SendMessage(message);
+
+                var updMessage = NetMessagePvPScorePlayerUpdate.CreateBuilder()
+                    .SetPvpEntityId(MetaGame.Id)
+                    .SetPlayerDbGuid(guid);
+
+                for (int category = 0; category < row.CategoriesNum; category++)
+                {
+                    var scoreValue = row.GetValueByCategory(category);
+                    if (scoreValue == null) continue;
+                    updMessage.AddUpdates(GetUpdates(category, scoreValue));
+                }
+
+                updatePlayer.SendMessage(updMessage.Build());
+            }
+        }
+
+        private void SendMessageToInterested(IMessage message)
+        {
+            MetaGame.Game.NetworkManager.SendMessageToInterested(message, MetaGame, AOINetworkPolicyValues.AOIChannelProximity);
+        }
+
+        private void UpdatePlayerScoreByCategory(Player player, int category)
+        {
+            var schema = PlayerSchema[category];
+            if (schema == null) return;
+            int value = schema.GetEvalValue(player);
+            UpdatePlayerScoreValue(player, value, category);
+        }
+
+        private void UpdatePlayerScoreValue(Player player, int value, int category)
+        {
+            var scoreValue = GetScoreValueByCategory(player, category);
+            if (scoreValue == null) return;
+
+            scoreValue.IntValue = value;
+            scoreValue.Type = ScoreTableValueType.Int; // float used?
+            SendPvPScorePlayerUpdateValue(player, category, scoreValue);
+        }
+
+        private void SendPvPScorePlayerUpdateValue(Player player, int category, ScoreTableValue scoreValue)
+        {
+            var message = NetMessagePvPScorePlayerUpdate.CreateBuilder()
+                .SetPvpEntityId(MetaGame.Id)
+                .SetPlayerDbGuid(player.DatabaseUniqueId)
+                .AddUpdates(GetUpdates(category, scoreValue))
+                .Build();
+
+            SendMessageToInterested(message);
+        }
+
+        private static NetMessagePvPScoreScoreUpdateEntry GetUpdates(int category, ScoreTableValue scoreValue)
+        {
+            var updates = NetMessagePvPScoreScoreUpdateEntry.CreateBuilder()
+                .SetCategory((uint)category);
+
+            if (scoreValue.Type == ScoreTableValueType.Int)
+                updates.SetIvalue(scoreValue.IntValue);
+            else if (scoreValue.Type == ScoreTableValueType.Float)
+                updates.SetFvalue(scoreValue.FloatValue);
+
+            return updates.Build();
+        }
+
+        private ScoreTableValue GetScoreValueByCategory(Player player, int category)
+        {
+            if (player != null && category < _playerSchemaSize)
+            {
+                var guid = player.DatabaseUniqueId;
+                if (_playerRows.TryGetValue(guid, out var row)) 
+                    return row.GetValueByCategory(category);
+            }
+            else if (_regionTableRow != null && category < _regionSchemaSize)
+            {
+                return _regionTableRow.GetValueByCategory(category);
+            }
+            return null;
         }
     }
 
@@ -121,20 +265,42 @@ namespace MHServerEmu.Games.MetaGames
 
             // TODO proto.EvalAuto
         }
+
+        public int GetEvalValue(Player player)
+        {
+            if (Prototype.EvalOnPlayerAdd == null || player == null) return 0;
+
+            using var evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.Game = player.Game;
+            evalContext.SetVar_EntityPtr(EvalContext.Default, player);
+            evalContext.SetVar_EntityPtr(EvalContext.Entity, player.CurrentAvatar);
+            return Eval.RunInt(Prototype.EvalOnPlayerAdd, evalContext);
+        }
     }
 
     public class ScoreTableRow
     {
-        public string Name;
+        private readonly List<ScoreTableValue> _scores = [];
 
-        private List<ScoreTableValue> _scores = new();
+        public string Name;
+        public int CategoriesNum { get => _scores.Count; }
 
         public ScoreTableRow(int size)
         {
             _scores.Capacity = size;
         }
 
-        public int GetCategoriesNum() => _scores.Count;
+        public ScoreTableValue GetValueByCategory(int category)
+        {
+            if (category < 0 || category >= _scores.Count) return null;
+            return _scores[category];
+        }
+    }
+
+    public class ScoreTableRowPlayer(int size) : ScoreTableRow(size)
+    {
+        public PrototypeId Team { get; set; }
+        public PrototypeId Avatar { get; set; }
     }
 
     public class ScoreTableValue
