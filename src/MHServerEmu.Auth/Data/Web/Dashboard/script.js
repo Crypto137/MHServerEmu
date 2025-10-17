@@ -38,6 +38,31 @@ const htmlUtil = {
 
 		parent.appendChild(child);
 		return child;
+	},
+
+	createAndAppendTable(parent, tableData) {
+		const table = this.createAndAppendChild(parent, "table");
+
+		for (let i = 0; i < tableData.length; i++) {
+			const rowData = tableData[i];
+			const row = this.createAndAppendChild(table, "tr");
+
+			for (let j = 0; j < rowData.length; j++) {
+				const cellData = rowData[j];
+				this.createAndAppendChild(row, "td", cellData);
+			}
+		}
+	}
+}
+
+const stringUtil = {
+	bigIntToHexString(value, upper = true) {
+		let str = BigInt(value).toString(16);
+
+		if (upper)
+			str = str.toUpperCase();
+
+		return str;
 	}
 }
 
@@ -106,8 +131,8 @@ const metricsTab = {
 		const memoryList = htmlUtil.createAndAppendChild(memoryContainer, "ul");
 		htmlUtil.createAndAppendChild(memoryList, "li", `GCIndex: ${data.GCIndex}`)
 		htmlUtil.createAndAppendChild(memoryList, "li", `GCCounts: Gen0=${data.GCCountGen0}, Gen1=${data.GCCountGen1}, Gen2=${data.GCCountGen2}`)
-		htmlUtil.createAndAppendChild(memoryList, "li", `HeapSizeBytes: ${data.HeapSizeBytes} / ${data.TotalCommittedBytes}`)
-		htmlUtil.createAndAppendChild(memoryList, "li", `PauseTimePercentage: ${data.PauseTimePercentage * 100}%`)
+		htmlUtil.createAndAppendChild(memoryList, "li", `HeapSizeBytes: ${data.HeapSizeBytes.toLocaleString()} / ${data.TotalCommittedBytes.toLocaleString()}`)
+		htmlUtil.createAndAppendChild(memoryList, "li", `PauseTimePercentage: ${data.PauseTimePercentage}%`)
 		htmlUtil.createAndAppendChild(memoryList, "li", `PauseDuration: ${this.formatTracker(data.PauseDuration)}`)
 	},
 
@@ -115,12 +140,25 @@ const metricsTab = {
 		const gamesContainer = document.getElementById("metrics-game-container");
 		gamesContainer.innerHTML = "";
 
-		// TODO: restore table formatting
-		htmlUtil.createAndAppendChild(gamesContainer, "pre", JSON.stringify(data, null, 2));
+		for (const key in data) {
+			const entry = data[key];
+
+			htmlUtil.createAndAppendChild(gamesContainer, "h4", `0x${stringUtil.bigIntToHexString(key)}`);
+
+			const tableData = [];
+			tableData.push(["Metric", "Avg", "Mdn", "Last", "Min", "Max"]);
+
+			for (const metric in entry) {
+				const value = entry[metric];
+				tableData.push([metric, value.Average.toFixed(2), value.Median.toFixed(2), value.Last.toFixed(2), value.Min.toFixed(2), value.Max.toFixed(2)]);
+			}
+
+			htmlUtil.createAndAppendTable(gamesContainer, tableData);
+		}
 	},
 
 	formatTracker(tracker) {
-		return `avg=${tracker.Average}, mdn=${tracker.Median}, last=${tracker.Last}, min=${tracker.Min}, max=${tracker.Max}`;
+		return `avg=${tracker.Average.toFixed(2)}, mdn=${tracker.Median.toFixed(2)}, last=${tracker.Last.toFixed(2)}, min=${tracker.Min.toFixed(2)}, max=${tracker.Max.toFixed(2)}`;
 	}
 }
 
