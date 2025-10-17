@@ -120,8 +120,16 @@ const metricsTab = {
 	},
 
 	onDataReceived(data) {
+		this.updateReportMetadata(data);
 		this.updateMemoryMetrics(data.Memory);
 		this.updateGameMetrics(data.Games);
+	},
+
+	updateReportMetadata(data) {
+		const metadataContainer = document.getElementById("metrics-report-metadata");
+		metadataContainer.innerHTML = "";
+
+		htmlUtil.createAndAppendChild(metadataContainer, "p", `Report 0x${stringUtil.bigIntToHexString(data.Id)}`);
 	},
 
 	updateMemoryMetrics(data) {
@@ -182,10 +190,10 @@ const regionReportTab = {
 
 		for (let i = 0; i < data.Regions.length; i++) {
 			const region = data.Regions[i];
-			const regionText = `[0x${region.RegionId}] ${region.Name} (${region.DifficultyTier}) - ${region.Uptime}`;
+			const regionText = `[0x${stringUtil.bigIntToHexString(region.RegionId)}] ${region.Name} (${region.DifficultyTier}) - ${region.Uptime}`;
 
 			if (gameId != region.GameId) {
-				const gameText = `Game [0x${region.GameId}]`;
+				const gameText = `Game [0x${stringUtil.bigIntToHexString(region.GameId)}]`;
 				htmlUtil.createAndAppendChild(list, "li", gameText);
 				gameSublist = htmlUtil.createAndAppendChild(list, "ul");
 				gameId = region.GameId;

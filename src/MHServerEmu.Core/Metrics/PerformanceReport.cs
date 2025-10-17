@@ -16,7 +16,7 @@ namespace MHServerEmu.Core.Metrics
 
         private static uint _currentReportId = 0;
 
-        [JsonConverter(typeof(UInt64ToHexStringJsonConverter))]
+        [JsonNumberHandling(JsonNumberHandling.WriteAsString)]
         public ulong Id { get; private set; }
         public MemoryMetrics.Report Memory { get; private set; }
         public Dictionary<ulong, GamePerformanceMetrics.Report> Games { get; } = new();

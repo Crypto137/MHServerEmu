@@ -69,9 +69,9 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public readonly struct Entry : IComparable<Entry>
         {
-            [JsonConverter(typeof(UInt64ToHexStringJsonConverter))]
+            [JsonNumberHandling(JsonNumberHandling.WriteAsString)]
             public ulong GameId { get; }
-            [JsonConverter(typeof(UInt64ToHexStringJsonConverter))]
+            [JsonNumberHandling(JsonNumberHandling.WriteAsString)]
             public ulong RegionId { get; }
             public string Name { get; }
             public string DifficultyTier { get; }
