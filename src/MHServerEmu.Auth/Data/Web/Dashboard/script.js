@@ -104,8 +104,19 @@ const serverStatusTab = {
 	tabName: "server-status",
 
 	initialize() {
-
+		document.getElementById("server-status-button").onclick = () => this.requestData();
 	},
+
+	requestData() {
+		apiUtil.get("/ServerStatus", (data) => this.onDataReceived(data));
+	},
+
+	onDataReceived(data) {
+		const serverStatusContainer = document.getElementById("server-status-container");
+		serverStatusContainer.innerHTML = "";
+
+		htmlUtil.createAndAppendChild(serverStatusContainer, "pre", data.Text);
+	}
 }
 
 const metricsTab = {
