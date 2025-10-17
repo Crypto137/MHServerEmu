@@ -1340,6 +1340,55 @@ namespace MHServerEmu.Games.Dialog
                 return isAssociated;
             }
         }
+
+        public bool GetRegionTargetAvailability(Player player, PrototypeId targetRef, out bool isAvailable)
+        {
+            isAvailable = false;
+
+            if (targetRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "GetRegionTargetAvailability(): targetRef == PrototypeId.Invalid");
+
+            bool hasAvailabilityData = false;
+
+            if (_interaсtionMap.TryGetValue(targetRef, out InteractionData interactionData) && interactionData.HasAnyOptionFlags())
+            {
+                foreach (InteractionOption option in interactionData.Options)
+                {
+                    if (option is not MissionConnectionTargetEnableOption targetEnableOption)
+                    {
+                        Logger.Warn($"GetRegionTargetAvailability(): Incompatible interaction option {option.GetType()} for target {targetRef.GetName()}");
+                        continue;
+                    }
+
+                    hasAvailabilityData |= ParseRegionTargetAvailability(player, targetEnableOption, ref isAvailable);
+                }
+            }
+
+            return hasAvailabilityData;
+        }
+
+        private static bool ParseRegionTargetAvailability(Player player, MissionConnectionTargetEnableOption option, ref bool outIsAvailable)
+        {
+            Region region = player.GetRegion();
+            if (region == null) return Logger.WarnReturn(false, "ParseRegionTargetAvailability(): region == null");
+
+            MissionPrototype missionProto = option.MissionProto;
+            if (missionProto == null) return Logger.WarnReturn(false, "ParseRegionTargetAvailability(): missionProto == null");
+
+            MissionManager missionManager = MissionManager.FindMissionManagerForMission(player, region, missionProto);
+            Mission mission = missionManager?.FindMissionByDataRef(missionProto.DataRef);
+
+            if (mission == null)
+                return false;
+
+            if (option.IsActiveForMissionAndEntity(mission, null) == false)
+                return false;
+
+            ConnectionTargetEnableSpecPrototype enableSpecProto = option.Proto;
+            if (enableSpecProto == null) return Logger.WarnReturn(false, "ParseRegionTargetAvailability(): enableSpecProto == null");
+
+            outIsAvailable = enableSpecProto.Enabled;
+            return true;
+        }
     }
 
     public class InteractData

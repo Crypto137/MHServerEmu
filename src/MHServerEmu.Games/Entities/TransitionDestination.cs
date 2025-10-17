@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -12,7 +13,9 @@ namespace MHServerEmu.Games.Entities
 {
     public class TransitionDestination : ISerialize
     {
-        private RegionTransitionType _type;
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private int _type;     // This is some other type enum, not RegionTransitionType.
         private PrototypeId _regionRef;
         private PrototypeId _areaRef;
         private PrototypeId _cellRef;
@@ -26,20 +29,15 @@ namespace MHServerEmu.Games.Entities
         private ulong _entityId;
         private ulong _unkId2;
 
-        // TODO: Remove unnecessary accessors
-        public RegionTransitionType Type { get => _type; set => _type = value; }
-        public PrototypeId RegionRef { get => _regionRef; set => _regionRef = value; }
-        public PrototypeId AreaRef { get => _areaRef; set => _areaRef = value; }
-        public PrototypeId CellRef { get => _cellRef; set => _cellRef = value; }
-        public PrototypeId EntityRef { get => _entityRef; set => _entityRef = value; }
-        public PrototypeId TargetRef { get => _targetRef; set => _targetRef = value; }
-        public int UISortOrder { get => _uiSortOrder; set => _uiSortOrder = value; }
-        public string Name { get => _name; set => _name = value; }
-        public LocaleStringId NameId { get => _nameId; set => _nameId = value; }
-        public ulong RegionId { get => _regionId; set => _regionId = value; }
-        public Vector3 Position { get => _position; set => _position = value; }
-        public ulong EntityId { get => _entityId; set => _entityId = value; }
-        public ulong UnkId2 { get => _unkId2; set => _unkId2 = value; }
+        public PrototypeId RegionRef { get => _regionRef; }
+        public PrototypeId AreaRef { get => _areaRef; }
+        public PrototypeId CellRef { get => _cellRef; }
+        public PrototypeId EntityRef { get => _entityRef; }
+        public PrototypeId TargetRef { get => _targetRef; }
+        public int UISortOrder { get => _uiSortOrder; }
+        public ulong RegionId { get => _regionId; }
+        public Vector3 Position { get => _position; }
+        public ulong EntityId { get => _entityId; }
 
         public TransitionDestination()
         {
@@ -51,10 +49,7 @@ namespace MHServerEmu.Games.Entities
         {
             bool success = true;
 
-            int type = (int)_type;
-            success &= Serializer.Transfer(archive, ref type);
-            _type = (RegionTransitionType)type;
-
+            success &= Serializer.Transfer(archive, ref _type);
             success &= Serializer.Transfer(archive, ref _regionRef);
             success &= Serializer.Transfer(archive, ref _areaRef);
             success &= Serializer.Transfer(archive, ref _cellRef);
@@ -92,21 +87,79 @@ namespace MHServerEmu.Games.Entities
             return sb.ToString();
         }
 
-        public static TransitionDestination Find(Cell cell, TransitionPrototype transitionProto)
+        public LocaleStringId GetDisplayName()
         {
-            if (cell == null) return null;
+            if (_nameId != LocaleStringId.Invalid)
+                return _nameId;
 
-            // NOTE: Adding a destination to some waypoints makes them unusable
-            if (transitionProto.Type == RegionTransitionType.Waypoint) return null;
+            if (_areaRef != PrototypeId.Invalid)
+            {
+                AreaPrototype areaProto = _areaRef.As<AreaPrototype>();
+                if (areaProto != null && areaProto.AreaName != LocaleStringId.Invalid)
+                    return areaProto.AreaName;
+            }
 
+            if (_regionRef != PrototypeId.Invalid)
+            {
+                RegionPrototype regionProto = _regionRef.As<RegionPrototype>();
+                if (regionProto != null && regionProto.RegionName != LocaleStringId.Invalid)
+                    return regionProto.RegionName;
+            }
+
+            return LocaleStringId.Invalid;
+        }
+
+        public void SetEntity(Entity entity)
+        {
+            _entityRef = entity.PrototypeDataRef;
+            _entityId = entity.Id;
+        }
+
+        public bool IsAvailable(Player player)
+        {
+            // Non-target based destinations are always available.
+            if (_targetRef == PrototypeId.Invalid)
+                return true;
+
+            // Check interaction manager for mission-based availability.
+            if (GameDatabase.InteractionManager.GetRegionTargetAvailability(player, _targetRef, out bool isAvailable))
+                return isAvailable;
+
+            // Default to target prototype data.
+            RegionConnectionTargetPrototype targetProto = _targetRef.As<RegionConnectionTargetPrototype>();
+            if (targetProto == null) return Logger.WarnReturn(false, "IsAvailable(): targetProto == null");
+            return targetProto.EnabledByDefault;
+        }
+
+        public static bool AddDestinationsFromConnectionTargets(Cell cell, TransitionPrototype transitionProto, List<TransitionDestination> outDestinations)
+        {
+            if (cell == null)
+                return false;
+
+            PrototypeId cellRef = cell.PrototypeDataRef;
             PrototypeId area = cell.Area.PrototypeDataRef;
             Region region = cell.Region;
             PrototypeGuid entityGuid = GameDatabase.GetPrototypeGuid(transitionProto.DataRef);
 
-            TargetObject node = RegionTransition.GetTargetNode(region.Targets, area, cell.PrototypeDataRef, entityGuid);
-            if (node == null) return null;
+            bool added = false;
 
-            return FromTarget(node.TargetId, region, transitionProto);
+            foreach (TargetObject targetNode in region.Targets)
+            {
+                if (targetNode.Entity != entityGuid)
+                    continue;
+
+                if (targetNode.Area != PrototypeId.Invalid && targetNode.Area != area)
+                    continue;
+
+                if (targetNode.Cell != PrototypeId.Invalid && targetNode.Cell != cellRef)
+                    continue;
+
+                TransitionDestination destination = FromTarget(targetNode.TargetId, region, transitionProto);
+                outDestinations.Add(destination);
+                added = true;
+            }
+
+            return added;
         }
 
         public static TransitionDestination FromTarget(PrototypeId targetRef, Region region, TransitionPrototype transitionProto)
@@ -124,13 +177,13 @@ namespace MHServerEmu.Games.Entities
 
             TransitionDestination destination = new()
             {
-                _type = transitionProto.Type,
                 _regionRef = targetRegionRef,
                 _areaRef = regionConnectionTarget.Area,
                 _cellRef = cellPrototypeId,
                 _entityRef = regionConnectionTarget.Entity,
                 _nameId = regionConnectionTarget.Name,
-                _targetRef = targetRef
+                _targetRef = targetRef,
+                _uiSortOrder = regionConnectionTarget.UISortOrder,
             };
 
             return destination;
@@ -144,13 +197,13 @@ namespace MHServerEmu.Games.Entities
 
             TransitionDestination destination = new()
             {
-                _type = RegionTransitionType.TransitionDirect,
                 _regionRef = proto.Region,
                 _areaRef = proto.Area,
                 _cellRef = cellPrototypeId,
                 _entityRef = proto.Entity,
                 _nameId = proto.Name,
-                _targetRef = targetRef
+                _targetRef = targetRef,
+                _uiSortOrder = proto.UISortOrder,
             };
 
             return destination;
@@ -158,20 +211,22 @@ namespace MHServerEmu.Games.Entities
 
         public static TransitionDestination FromRegionOrigin(NetStructRegionOrigin origin)
         {
+            // Null is potentially valid input here.
+            if (origin == null)
+                return null;
+
             NetStructRegionTarget target = origin.Target;
             NetStructRegionLocation location = origin.Location;
 
             TransitionDestination destination = new()
             {
-                _type = RegionTransitionType.TransitionDirectReturn,
+                _regionRef = (PrototypeId)target.RegionProtoId,
+                _areaRef = (PrototypeId)target.AreaProtoId,
+                _cellRef = (PrototypeId)target.CellProtoId,
+                _entityRef = (PrototypeId)target.EntityProtoId,
 
-                RegionRef = (PrototypeId)target.RegionProtoId,
-                AreaRef = (PrototypeId)target.AreaProtoId,
-                CellRef = (PrototypeId)target.CellProtoId,
-                EntityRef = (PrototypeId)target.EntityProtoId,
-
-                RegionId = location.RegionId,
-                Position = new(location.Position),
+                _regionId = location.RegionId,
+                _position = new(location.Position),
             };
 
             return destination;

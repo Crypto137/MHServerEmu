@@ -995,7 +995,7 @@ namespace MHServerEmu.Games.Powers
             {
                 List<Player> nearbyPlayerList = ListPool<Player>.Instance.Get();
 
-                bool requireCombatActive = avatar.AvatarPrototype.RequireCombatActiveForKillCredit;
+                bool requireCombatActive = Owner.WorldEntityPrototype.RequireCombatActiveForKillCredit;
                 ComputeNearbyPlayers(Owner.Region, Owner.RegionLocation.Position, 0, requireCombatActive, nearbyPlayerList);
 
                 foreach (Player player in nearbyPlayerList)

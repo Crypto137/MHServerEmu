@@ -512,8 +512,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                         using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
                         teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Resurrect);
-                        // Ignore player/party difficulty preference and resurrect in the current difficulty for consistency.
-                        teleporter.DifficultyTierRef = region.DifficultyTierRef;
                         return teleporter.TeleportToTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
                     }
                     else 

@@ -38,9 +38,10 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         {
             bool success = true;
 
+            // In very old versions of the game (before archive version 15) power collections were serialized to persistent archives.
+            // We don't need a code path for persistent archives here like the client does because we don't have this kind of legacy data.
             if (archive.IsPacking)
             {
-                // TODO: archive.IsPersistent
                 if (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelProximity))
                 {
                     numberOfRecords = 0;
@@ -48,16 +49,16 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     {
                         foreach (PowerCollectionRecord record in powerCollection._powerDict.Values)
                         {
-                            if (record.ShouldSerializeRecordForPacking(archive))
-                            {
-                                if (numberOfRecords >= MaxNumRecordsToSerialize)
-                                {
-                                    Logger.Warn("SerializeRecordCount(): numberOfRecords >= MaxNumRecordsToSerialize");
-                                    break;
-                                }
+                            if (record.ShouldSerializeRecordForPacking(archive) == false)
+                                continue;
 
-                                numberOfRecords++;
+                            if (numberOfRecords >= MaxNumRecordsToSerialize)
+                            {
+                                Logger.Warn("SerializeRecordCount(): numberOfRecords >= MaxNumRecordsToSerialize");
+                                break;
                             }
+
+                            numberOfRecords++;
                         }
                     }
                     success &= Serializer.Transfer(archive, ref numberOfRecords);
@@ -65,7 +66,6 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             }
             else
             {
-                // TODO: archive.IsPersistent
                 if (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelProximity))
                     success &= Serializer.Transfer(archive, ref numberOfRecords);
             }
@@ -75,8 +75,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public static bool SerializeTo(Archive archive, PowerCollection powerCollection, uint numberOfRecords)
         {
-            // TODO: Also check for replication mode
             if (archive.IsPacking == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsPacking == false");
+            if (archive.IsReplication == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsReplication == false");
 
             bool success = true;
 
@@ -248,10 +248,22 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             var records = ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Instance.Get();
 
             // This needs to be done in a loop to remove all copies of powers with RefCount higher than 0.
+            const int MaxCount = 100;
+            int count = 0;
+
             while (_powerDict.Count > 0)
             {
+                if (++count >= MaxCount)
+                {
+                    Logger.Error($"OnOwnerExitedWorld(): Infinite loop detected when unassigning powers from [{_owner}]");
+                    foreach (var kvp in _powerDict)
+                        Logger.Warn($"{kvp.Value.PowerPrototypeRef.GetName()} x{kvp.Value.PowerRefCount}");
+                    break;
+                }
+
                 records.Set(_powerDict);
 
+                bool unassignedAny = false;
                 foreach (var kvp in records)
                 {
                     Power power = kvp.Value.Power;
@@ -270,6 +282,22 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
                     // Unassign power
                     UnassignPower(kvp.Value.PowerPrototypeRef, false);
+                    unassignedAny = true;
+                }
+
+                if (unassignedAny == false)
+                {
+                    // Combo powers that are used to enter/exit a transform mode are not unassigned along with their triggering power.
+                    // Because of this, there may still be powers left in the collection when a transformed owner avatar exits world.
+                    // This is not a bug, but rather a questionable design decision made by Gazillion.
+                    if (_powerDict.Count > 0 && _owner is Avatar avatar && avatar.CurrentTransformMode == PrototypeId.Invalid)
+                    {
+                        Logger.Warn($"OnOwnerExitedWorld(): Failed to unassign {_powerDict.Count} power(s) from [{_owner}]");
+                        foreach (var kvp in _powerDict)
+                            Logger.Warn($"{kvp.Value.PowerPrototypeRef.GetName()}");
+                    }
+
+                    break;
                 }
             }
 
@@ -607,8 +635,6 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     if (triggeredPowerRef == powerProtoRef)
                         continue;
 
-                    //Logger.Trace($"AssignTriggeredPowers(): {GameDatabase.GetPrototypeName(triggeredPowerRef)} for {powerProto}");
-
                     if (AssignPower(triggeredPowerRef, indexProps, powerProtoRef, false) == null)
                     {
                         ListPool<PrototypeId>.Instance.Return(triggeredPowerRefList);
@@ -630,11 +656,16 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
             // Find and validate the record for our powerProtoRef
             PowerCollectionRecord powerRecord = GetPowerRecordByRef(powerProtoRef);
-            if (powerRecord == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): powerRecord == null");
-            if (powerRecord.Power == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): powerRecord.Power == null");
+            if (powerRecord == null)
+                return Logger.WarnReturn(false, $"UnassignPowerInternal(): When unassigning, failed to find power record for {powerProtoRef.GetName()}\n  Owner:[{_owner}]\n  NumRecordsInCollection:{_powerDict.Count} NumCondemnedPowers:{_condemnedPowers.Count}");
+
+            if (powerRecord.Power == null)
+                return Logger.WarnReturn(false, $"UnassignPowerInternal(): When unassigning, the power record was found but had no power instance! Power: [{powerProtoRef.GetName()}], RefCount: [{powerRecord.PowerRefCount}], Owner: [{_owner}]");
+
+            if (powerRecord.PowerRefCount < 1)
+                return Logger.WarnReturn(false, $"UnassignPowerInternal(): When unassigned, the power record had an invalid refcount! Power: [{powerProtoRef.GetName()}], RefCount: [{powerRecord.PowerRefCount}], Owner: [{_owner}]");
 
             // Start by subtracting from the PowerRefCount
-            if (powerRecord.PowerRefCount < 1) return Logger.WarnReturn(false, "UnassignPowerInternal(): powerRecord.PowerRefCount < 1");
             powerRecord.PowerRefCount--;
 
             // Remove the record when our PowerRefCount reaches 0
@@ -808,8 +839,6 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     // Some powers apparently can trigger themselves, no need to unassign them
                     if (triggeredPowerRef == powerProtoRef)
                         continue;
-
-                    //Logger.Trace($"UnassignTriggeredPowers(): {GameDatabase.GetPrototypeName(triggeredPowerRef)} for {powerProto}");
 
                     UnassignPower(triggeredPowerRef, false);
                 }

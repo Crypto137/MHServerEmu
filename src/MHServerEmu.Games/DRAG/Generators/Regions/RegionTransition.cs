@@ -17,18 +17,6 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
     {
         public RegionTransition() { }
 
-        public static TargetObject GetTargetNode(ConnectionNodeList targets, PrototypeId area, PrototypeId cell, PrototypeGuid entity)
-        {
-            foreach (var targetNode in targets)
-            {
-                if (targetNode.Entity == entity
-                    && (targetNode.Area == PrototypeId.Invalid || targetNode.Area == area)
-                    && (targetNode.Cell == PrototypeId.Invalid || targetNode.Cell == cell))
-                    return targetNode;
-            }
-            return null;
-        }
-
         public static ConnectionNodeList BuildConnectionEdges(PrototypeId region)
         {
             var nodes = new ConnectionNodeList();

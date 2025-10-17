@@ -5,16 +5,21 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.UI;
 
 namespace MHServerEmu.Games.Entities
 {
     public class Transition : WorldEntity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private Dictionary<ulong, ulong> _dialogs;
+        private Action<ulong, DialogResponse> _onDialogResponse;
 
         private string _transitionName = string.Empty;          // Seemingly unused
         private List<TransitionDestination> _destinationList = new();
@@ -28,99 +33,106 @@ namespace MHServerEmu.Games.Entities
             SetFlag(EntityFlags.IsNeverAffectedByPowers, true);
         }
 
-        public override bool Initialize(EntitySettings settings)
-        {
-            base.Initialize(settings);
-
-            // old
-            var destination = TransitionDestination.Find(settings.Cell, TransitionPrototype);
-
-            if (destination != null)
-                _destinationList.Add(destination);
-
-            return true;
-        }
-
         public override void OnEnteredWorld(EntitySettings settings)
         {
-            var transProto = TransitionPrototype;
-            if (transProto.Waypoint != PrototypeId.Invalid)
+            TransitionPrototype transitionProto = TransitionPrototype;
+            
+            // Create waypoint hotspot if needed.
+            if (transitionProto.Waypoint != PrototypeId.Invalid)
             {
-                var waypointHotspotRef = GameDatabase.GlobalsPrototype.WaypointHotspot;
+                PrototypeId waypointHotspotRef = GameDatabase.GlobalsPrototype.WaypointHotspot;
 
                 using EntitySettings hotspotSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
                 hotspotSettings.EntityRef = waypointHotspotRef;
                 hotspotSettings.RegionId = Region.Id;
                 hotspotSettings.Position = RegionLocation.Position;
 
-                var inventory = SummonedInventory;
-                if (inventory != null) hotspotSettings.InventoryLocation = new(Id, inventory.PrototypeDataRef);
+                Inventory inventory = SummonedInventory;
+                if (inventory != null)
+                    hotspotSettings.InventoryLocation = new(Id, inventory.PrototypeDataRef);
 
-                var hotspot = Game.EntityManager.CreateEntity(hotspotSettings);
-                if (hotspot != null) hotspot.Properties[PropertyEnum.WaypointHotspotUnlock] = transProto.Waypoint;
+                Entity hotspot = Game.EntityManager.CreateEntity(hotspotSettings);
+                if (hotspot != null)
+                    hotspot.Properties[PropertyEnum.WaypointHotspotUnlock] = transitionProto.Waypoint;
             }
 
+            // Populate destinations
             TransitionDestination destination;
             PrototypeId targetRef;
 
-            switch (transProto.Type) 
+            switch (transitionProto.Type) 
             {
                 case RegionTransitionType.Transition:
                 case RegionTransitionType.TransitionDirectReturn:
+                    Area area = Area;
+                    PrototypeId entityRef = PrototypeDataRef;
+                    PrototypeId cellRef = Cell.PrototypeDataRef;
+                    Region region = Region;
 
-                    var area = Area;
-                    var entityRef = PrototypeDataRef;
-                    var cellRef = Cell.PrototypeDataRef;
-                    var region = Region;
-                    bool noDest = _destinationList.Count == 0;
-                    if (noDest && area.RandomInstances.Count > 0)
-                        foreach(var instance in area.RandomInstances)
+                    // Early out if we already have destinations for whatever reason.
+                    if (_destinationList.Count > 0)
+                        break;
+
+                    // Region connection targets have the highest priority (if there are any).
+                    if (TransitionDestination.AddDestinationsFromConnectionTargets(settings.Cell, transitionProto, _destinationList))
+                        break;
+
+                    // Then check random instances.
+                    if (area.RandomInstances.Count > 0)
+                    {
+                        foreach (RandomInstanceRegionPrototype instance in area.RandomInstances)
                         {
-                            var instanceCell = GameDatabase.GetDataRefByAsset(instance.OriginCell);
-                            if (instanceCell == PrototypeId.Invalid || cellRef != instanceCell) continue;
-                            if (instance.OriginEntity != entityRef) continue;
-                            destination = TransitionDestination.FromTarget(instance.Target, region, transProto);
-                            if (destination == null) continue;
+                            PrototypeId instanceCell = GameDatabase.GetDataRefByAsset(instance.OriginCell);
+                            if (instanceCell == PrototypeId.Invalid || cellRef != instanceCell)
+                                continue;
+
+                            if (instance.OriginEntity != entityRef)
+                                continue;
+
+                            destination = TransitionDestination.FromTarget(instance.Target, region, transitionProto);
+                            if (destination == null)
+                                continue;
+
                             _destinationList.Add(destination);
-                            noDest = false;
                         }
 
-                    // Try constructing a return to region origin 
-                    if (noDest)
-                    {
-                        NetStructRegionOrigin origin = region.Settings.Origin;
-                        if (origin != null)
-                        {
-                            destination = TransitionDestination.FromRegionOrigin(origin);
-                            if (destination != null)
-                            {
-                                _destinationList.Add(destination);
-                                noDest = false;
-                            }
-                        }
+                        if (_destinationList.Count > 0)
+                            break;
                     }
 
-                    // Fall back to the default region
-                    if (noDest)
+                    // Try constructing a return to region origin if we still don't have a destination.
+                    destination = TransitionDestination.FromRegionOrigin(region.Settings.Origin);
+                    if (destination != null)
                     {
-                        targetRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
-                        destination = TransitionDestination.FromTarget(targetRef, region, TransitionPrototype);
-                        if (destination != null) _destinationList.Add(destination);
+                        _destinationList.Add(destination);
+                        break;
                     }
+
+                    // Fall back to the default region if all else fails.
+                    targetRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
+                    destination = TransitionDestination.FromTarget(targetRef, region, TransitionPrototype);
+                    if (destination != null)
+                        _destinationList.Add(destination);
+
                     break;
 
                 case RegionTransitionType.TransitionDirect:
-            
-                    var avatar = Game.EntityManager.GetEntity<Avatar>(settings.SourceEntityId);
-                    var player = avatar?.GetOwnerOfType<Player>();
-                    if (player == null) break;
+                    // Restrict direct transitions (e.g. Cow Level portals) to specific players/parties.
+                    Avatar avatar = Game.EntityManager.GetEntity<Avatar>(settings.SourceEntityId);
+                    Player player = avatar?.GetOwnerOfType<Player>();
+                    if (player == null)
+                        break;
                     Properties[PropertyEnum.RestrictedToPlayerGuidParty] = player.DatabaseUniqueId;
 
-                    targetRef = transProto.DirectTarget;
+                    targetRef = transitionProto.DirectTarget;
                     destination = TransitionDestination.FromTargetRef(targetRef);
-                    if (destination != null) _destinationList.Add(destination);
+                    if (destination != null)
+                        _destinationList.Add(destination);
+
                     break;
             }
+
+            _destinationList.Sort((destA, destB) => destA.UISortOrder.CompareTo(destB.UISortOrder));
 
             base.OnEnteredWorld(settings);
         }
@@ -129,9 +141,11 @@ namespace MHServerEmu.Games.Entities
         {
             bool success = base.Serialize(archive);
 
-            //if (archive.IsTransient)
-            success &= Serializer.Transfer(archive, ref _transitionName);
-            success &= Serializer.Transfer(archive, ref _destinationList);
+            if (archive.IsTransient)
+            {
+                success &= Serializer.Transfer(archive, ref _transitionName);
+                success &= Serializer.Transfer(archive, ref _destinationList);
+            }
 
             return success;
         }
@@ -159,9 +173,7 @@ namespace MHServerEmu.Games.Entities
                 destination = _destinationList[0];
             }
 
-            destination.EntityId = transition.Id;
-            destination.EntityRef = transition.PrototypeDataRef;
-            destination.Type = TransitionPrototype.Type;
+            destination.SetEntity(transition);
         }
 
         public bool UseTransition(Player player)
@@ -190,7 +202,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private bool UseTransitionDefault(Player player)
+        private bool UseTransitionDefault(Player player, int destinationIndex = -1)
         {
             TransitionPrototype transitionProto = TransitionPrototype;
 
@@ -198,15 +210,28 @@ namespace MHServerEmu.Games.Entities
             if (region == null) return Logger.WarnReturn(false, "UseTransitionDefault(): region == null");
 
             if (_destinationList.Count == 0)
-                return Logger.WarnReturn(false, "UseTransitionDefault(): No available destinations!");
+                return Logger.WarnReturn(false, $"UseTransitionDefault(): No available destinations for [{this}]");
 
-            if (_destinationList.Count > 1)
-                Logger.Debug("UseTransitionDefault(): _destinationList.Count > 1");
+            if (_destinationList.Count == 1)
+            {
+                destinationIndex = 0;
+            }
+            else if (_destinationList.Count > 1 && destinationIndex == -1)
+            {
+                ShowDestinationDialog(player);
+                return true;
+            }
 
-            TransitionDestination destination = _destinationList[0];
+            if (destinationIndex < 0 || destinationIndex >= _destinationList.Count)
+                return Logger.WarnReturn(false, $"UseTransitionDefault(): Destination index out of range for [{this}]");
+            
+            TransitionDestination destination = _destinationList[destinationIndex];
 
             PrototypeId destinationRegionRef = destination.RegionRef;
             if (destinationRegionRef == PrototypeId.Invalid)
+                return false;
+
+            if (destination.IsAvailable(player) == false)
                 return false;
 
             RegionPrototype destinationRegionProto = destinationRegionRef.As<RegionPrototype>();
@@ -309,6 +334,99 @@ namespace MHServerEmu.Games.Entities
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Transition);
             teleporter.TransitionEntity = this;
             return teleporter.TeleportToLastTown();
+        }
+
+        private void ShowDestinationDialog(Player player)
+        {
+            ulong playerDbId = player.DatabaseUniqueId;
+
+            GameDialogInstance dialog = null;
+
+            // Allocate dialog data structures on demand because the vast majority of transitions don't use them.
+            _dialogs ??= new();
+            _onDialogResponse ??= OnDialogResponse;
+
+            // Create a new dialog if we don't have one or the one we had is no longer valid.
+            if (_dialogs.TryGetValue(playerDbId, out ulong dialogServerId))
+                dialog = Game.GameDialogManager.GetInstance(dialogServerId);
+
+            if (dialog == null)
+            {
+                dialog = Game.GameDialogManager.CreateInstance(playerDbId);
+                dialog.OnResponse = _onDialogResponse;
+                dialog.Options |= DialogOptionEnum.ScreenBottom | DialogOptionEnum.WorldClick;
+                dialog.InteractorId = player.CurrentAvatar.Id;
+                dialog.TargetId = Id;
+
+                _dialogs[playerDbId] = dialog.ServerId;
+            }
+
+            if (dialog == null)
+                return;
+
+            dialog.Buttons.Clear();
+
+            if (_destinationList.Count > 0)
+            {
+                TransitionDestination destination = _destinationList[0];
+                LocaleStringId text = destination.GetDisplayName();
+                bool isEnabled = destination.IsAvailable(player);
+                dialog.AddButton(GameDialogResultEnum.eGDR_Option1, text, ButtonStyle.SecondaryPositive, isEnabled);
+            }
+
+            if (_destinationList.Count > 1)
+            {
+                TransitionDestination destination = _destinationList[1];
+                LocaleStringId text = destination.GetDisplayName();
+                bool isEnabled = destination.IsAvailable(player);
+                dialog.AddButton(GameDialogResultEnum.eGDR_Option2, text, ButtonStyle.SecondaryPositive, isEnabled);
+            }
+
+            if (_destinationList.Count > 2)
+                Logger.Warn($"ShowDestinationDialog(): Transition [{this}] has more than 2 destinations, the remaining destinations will not be included in the dialog");
+
+            Game.GameDialogManager.ShowDialog(dialog);            
+        }
+
+        private void OnDialogResponse(ulong playerDbId, DialogResponse response)
+        {
+            if (response.ButtonIndex < GameDialogResultEnum.eGDR_Option1)
+                return;
+
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
+            if (player == null)
+            {
+                Logger.Warn("OnDialogResponse(): player == null");
+                return;
+            }
+
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar == null)
+            {
+                Logger.Warn("OnDialogResponse(): avatar == null");
+                return;
+            }
+
+            if (avatar.InInteractRange(this, Dialog.InteractionMethod.Use) == false)
+            {
+                Logger.Warn($"OnDialogResponse(): Avatar [{avatar}] is outside of interact range of [{this}]");
+                return;
+            }
+
+            int destinationIndex = response.ButtonIndex switch
+            {
+                GameDialogResultEnum.eGDR_Option1 => 0,
+                GameDialogResultEnum.eGDR_Option2 => 1,
+                _                                 => -1,
+            };
+
+            if (destinationIndex == -1)
+            {
+                Logger.Warn("OnDialogResponse(): destinationIndex == -1");
+                return;
+            }
+
+            UseTransitionDefault(player, destinationIndex);
         }
     }
 }
