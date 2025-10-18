@@ -40,7 +40,8 @@ namespace MHServerEmu.Games.MetaGames
         public void Initialize(PrototypeId scoreSchemaRegion, PrototypeId scoreSchemaPlayer)
         {
             _playerSchemaSize = BuildSchema(PlayerSchema, scoreSchemaPlayer, DataType.Player);
-            if (scoreSchemaRegion != PrototypeId.Invalid)
+
+            if (scoreSchemaRegion != PrototypeId.Invalid) // not used in game
             {
                 _regionSchemaSize = BuildSchema(RegionSchema, scoreSchemaPlayer, DataType.Region);
                 _regionTableRow = new(_regionSchemaSize);
@@ -160,7 +161,7 @@ namespace MHServerEmu.Games.MetaGames
             UpdatePlayerScoreValue(player, value, category);
         }
 
-        private void UpdatePlayerScoreValue(Player player, int value, int category)
+        public void UpdatePlayerScoreValue(Player player, int value, int category)
         {
             var scoreValue = GetScoreValueByCategory(player, category);
             if (scoreValue == null) return;
@@ -192,6 +193,16 @@ namespace MHServerEmu.Games.MetaGames
                 updates.SetFvalue(scoreValue.FloatValue);
 
             return updates.Build();
+        }
+
+        public bool TryGetPlayerScore(Player player, int category, out int score)
+        {
+            score = 0;
+            var scoreValue = GetScoreValueByCategory(player, category);
+            if (scoreValue == null) return false;
+
+            score = scoreValue.IntValue;
+            return true;
         }
 
         private ScoreTableValue GetScoreValueByCategory(Player player, int category)
@@ -228,18 +239,6 @@ namespace MHServerEmu.Games.MetaGames
             _table = table;
             _type = type;
             _index = index;
-            _adjustHealthAction = OnAdjustHealth;
-            _entityDeadAction = OnEntityDead;
-        }
-
-        private void OnEntityDead(in EntityDeadGameEvent evt)
-        {
-            // TODO
-        }
-
-        private void OnAdjustHealth(in AdjustHealthGameEvent evt)
-        {
-            // TODO
         }
 
         public void Initialize(ScoreTableSchemaEntryPrototype proto)
@@ -248,6 +247,8 @@ namespace MHServerEmu.Games.MetaGames
             Prototype = proto;
             Name = proto.Name;
 
+            /* Not used in game
+            
             var metaGame = _table.MetaGame;
             var region = metaGame.Region;
             if (region == null) return;
@@ -258,12 +259,16 @@ namespace MHServerEmu.Games.MetaGames
                 || proto.Event == ScoreTableValueEvent.PlayerKills)
                 region.EntityDeadEvent.AddActionBack(_entityDeadAction);
 
-            if (proto.Event == ScoreTableValueEvent.DamageTaken
+            if (proto.Event == ScoreTableValueEvent.DamageTaken 
                 || proto.Event == ScoreTableValueEvent.DamageDealt
                 || proto.Event == ScoreTableValueEvent.PlayerDamageDealt)
                 region.AdjustHealthEvent.AddActionBack(_adjustHealthAction);
 
-            // TODO proto.EvalAuto
+            if (proto.EvalAuto != null && _type == ScoreTable.DataType.Region)
+            {
+                // only HoloSimScoreSchemaRegion, XDefenseRegionScoreSchema
+            }
+            */
         }
 
         public int GetEvalValue(Player player)

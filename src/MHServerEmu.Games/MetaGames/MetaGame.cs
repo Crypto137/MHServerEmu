@@ -44,6 +44,8 @@ namespace MHServerEmu.Games.MetaGames
         public PlayerIterator Players { get => new PlayerIterator(GetRegion()); }
         public UIDataProvider UIDataProvider { get => GetRegion()?.UIDataProvider; }
 
+        public MetaGameEventHandler EventHandler { get; private set; }
+
         private readonly HashSet<ulong> _discoveredEntities = new();
         private readonly Queue<ApplyStateRecord> _applyStateStack = new();
         private readonly Queue<PrototypeId> _removeStateStack = new();
@@ -124,6 +126,7 @@ namespace MHServerEmu.Games.MetaGames
             var region = Region;
             if (region != null)
             {
+                EventHandler?.UnRegisterEvents();
                 region.PlayerRegionChangeEvent.RemoveAction(_playerRegionChangeAction);
                 region.PlayerEnteredRegionEvent.RemoveAction(_playerEnteredRegionAction);
                 region.EntityEnteredWorldEvent.RemoveAction(_entityEnteredWorldAction);
@@ -233,8 +236,13 @@ namespace MHServerEmu.Games.MetaGames
             // deactivate old mode
             CurrentMode?.OnDeactivate();
 
-            // TODO modeProto.EventHandler
-            // TODO lock for proto.SoftLockRegionMode
+            InitializeEventHandler(modeProto.EventHandler);
+
+            int softLock = proto.SoftLockRegionMode;
+            if (softLock >= 0 && _modeIndex < softLock && softLock <= index)
+            {
+                // TODO Set region as closed
+            }
 
             _modeIndex = index;
             Random.Seed(region.RandomSeed + index);
@@ -244,6 +252,23 @@ namespace MHServerEmu.Games.MetaGames
 
             foreach (var player in Players)
                 player.Properties[PropertyEnum.PvPMode] = modeProto.DataRef;
+        }
+
+        private void InitializeEventHandler(PrototypeId eventHandlerRef)
+        {
+            if (eventHandlerRef == PrototypeId.Invalid) return;
+
+            if (EventHandler != null)
+            {
+                if (EventHandler.PrototypeRef == eventHandlerRef) return;
+                else EventHandler.UnRegisterEvents();
+            }
+
+            var eventHandlerProto = GameDatabase.GetPrototype<MetaGameEventHandlerPrototype>(eventHandlerRef);
+            if (eventHandlerProto is PvPScoreEventHandlerPrototype)
+                EventHandler = new PvPScoreEventHandler(this, eventHandlerProto);
+            else if (eventHandlerProto is PvEScoreEventHandlerPrototype)
+                EventHandler = new PvEScoreEventHandler(this, eventHandlerProto);
         }
 
         public void ScheduleActivateGameMode(PrototypeId modeRef)

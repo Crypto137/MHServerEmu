@@ -201,7 +201,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                 player.SendMessage(message);
         }
 
-        private void SendPlayUISoundTheme(AssetId soundThemeAssetRef, Player player = null)
+        public void SendPlayUISoundTheme(AssetId soundThemeAssetRef, Player player = null)
         {
             if (soundThemeAssetRef == AssetId.Invalid) return;
             var message = NetMessagePlayUISoundTheme.CreateBuilder().SetSoundThemeAssetId((ulong)soundThemeAssetRef).Build();
