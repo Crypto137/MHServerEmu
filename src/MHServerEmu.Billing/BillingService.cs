@@ -36,9 +36,8 @@ namespace MHServerEmu.Billing
             }
         }
 
-        public string GetStatus()
+        public void GetStatus(Dictionary<string, long> statusDict)
         {
-            return "Running";
         }
 
         #endregion

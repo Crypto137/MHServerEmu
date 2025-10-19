@@ -52,9 +52,10 @@ namespace MHServerEmu.Frontend
             }
         }
 
-        public string GetStatus()
+        public void GetStatus(Dictionary<string, long> statusDict)
         {
-            return $"Connections: {ConnectionCount} | Clients: {_clients.Count}";
+            statusDict["FrontendConnections"] = ConnectionCount;
+            statusDict["FrontendClients"] = _clients.Count;
         }
 
         #endregion

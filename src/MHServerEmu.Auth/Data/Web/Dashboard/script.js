@@ -115,7 +115,7 @@ const serverStatusTab = {
 		const serverStatusContainer = document.getElementById("server-status-container");
 		serverStatusContainer.innerHTML = "";
 
-		htmlUtil.createAndAppendChild(serverStatusContainer, "pre", data.Text);
+		htmlUtil.createAndAppendChild(serverStatusContainer, "pre", JSON.stringify(data, null, 2));
 	}
 }
 

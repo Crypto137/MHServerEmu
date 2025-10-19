@@ -146,9 +146,12 @@ namespace MHServerEmu.PlayerManagement
             }
         }
 
-        public string GetStatus()
+        public void GetStatus(Dictionary<string, long> statusDict)
         {
-            return $"Games: {GameHandleManager.GameCount} | Players: {ClientManager.PlayerCount} | Sessions: {SessionManager.ActiveSessionCount} [{SessionManager.PendingSessionCount}]";
+            statusDict["PlayerManagerGames"] = GameHandleManager.GameCount;
+            statusDict["PlayerManagerPlayers"] = ClientManager.PlayerCount;
+            statusDict["PlayerManagerActiveSessions"] = SessionManager.ActiveSessionCount;
+            statusDict["PlayerManagerPendingSessions"] = SessionManager.PendingSessionCount;
         }
 
         private void OnRouteMessageBuffer(in ServiceMessage.RouteMessageBuffer routeMessageBuffer)

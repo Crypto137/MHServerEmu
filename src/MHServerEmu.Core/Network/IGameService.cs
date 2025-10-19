@@ -23,8 +23,8 @@
         public void ReceiveServiceMessage<T>(in T message) where T: struct, IGameServiceMessage;
 
         /// <summary>
-        /// Returns a <see cref="string"/> representing the status of this <see cref="IGameService"/>.
+        /// Adds the status of this <see cref="IGameService"/> to the provided dictionary.
         /// </summary>
-        public string GetStatus();
+        public void GetStatus(Dictionary<string, long> statusDict);
     }
 }

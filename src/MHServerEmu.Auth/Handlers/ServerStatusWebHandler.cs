@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Network;
+﻿using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Web;
 
 namespace MHServerEmu.Auth.Handlers
@@ -7,15 +8,12 @@ namespace MHServerEmu.Auth.Handlers
     {
         protected override async Task Get(WebRequestContext context)
         {
-            string serverStatus = ServerManager.Instance.GetServerStatus(false);
-            await context.SendJsonAsync(new ResponseData(true, "Server Status", serverStatus));
-        }
+            Dictionary<string, long> statusDict = DictionaryPool<string, long>.Instance.Get();
+            ServerManager.Instance.GetServerStatus(statusDict);
 
-        private readonly struct ResponseData(bool result, string title, string text)
-        {
-            public bool Result { get; } = result;
-            public string Title { get; } = title;
-            public string Text { get; } = text;
+            await context.SendJsonAsync(statusDict);
+
+            DictionaryPool<string, long>.Instance.Return(statusDict);
         }
     }
 }

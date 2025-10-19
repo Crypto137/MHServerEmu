@@ -85,9 +85,8 @@ namespace MHServerEmu.Auth
             }
         }
 
-        public string GetStatus()
+        public void GetStatus(Dictionary<string, long> statusDict)
         {
-            return $"IsRunning = {_webService.IsRunning}, ListenUrl = {_webService.Settings.ListenUrl}";
         }
 
         #endregion

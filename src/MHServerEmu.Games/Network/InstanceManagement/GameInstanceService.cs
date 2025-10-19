@@ -126,9 +126,10 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             }
         }
 
-        public string GetStatus()
+        public void GetStatus(Dictionary<string, long> statusDict)
         {
-            return $"Games: {GameManager.GameCount} | Players: {GameManager.PlayerCount}";
+            statusDict["GisGames"] = GameManager.GameCount;
+            statusDict["GisPlayers"] = GameManager.PlayerCount;
         }
 
         private bool RouteMessageToGame<T>(ulong gameId, T message) where T: struct, IGameServiceMessage
