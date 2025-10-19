@@ -39,7 +39,8 @@ div.content td {
     padding: 4px;
 }
 
-div.content button {
+div.content button,
+div.content select {
     border: 1px solid black;
     background: #1c1c1c;
     box-shadow: 0 0 1px 1px #00aaff;
@@ -49,6 +50,11 @@ div.content button {
 
 div.content button:hover {
     box-shadow: 0 0 1px 1px white;
+}
+
+div.content select {
+    min-width: 160px;
+    padding: 4px;
 }
 
 div.content label {

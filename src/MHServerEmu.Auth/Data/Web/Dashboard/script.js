@@ -7,7 +7,7 @@ const apiUtil = {
 	},
 	
 	get(path, callback) {
-		const url = window.location.origin + path + "?outputFormat=json";	// Remove outputFormat when we deprecate the old web frontend
+		const url = window.location.origin + path;
 
 		const xhr = new XMLHttpRequest();
 		xhr.open("GET", url, true);
@@ -16,7 +16,7 @@ const apiUtil = {
 	},
 
 	post(path, data, callback) {
-		const url = window.location.origin + path + "?outputFormat=json";	// Remove outputFormat when we deprecate the old web frontend
+		const url = window.location.origin + path;
 		const json = JSON.stringify(data);
 
 		const xhr = new XMLHttpRequest();
@@ -80,7 +80,7 @@ const tabManager = {
 	},
 
 	openTab(tab) {
-		const tabId = tab != null ? tab.tabName + "-tab" : "";
+		const tabId = tab != null ? `${tab.tabName}-tab` : "";
 		
 		const tabs = document.getElementsByClassName("tab-content");
 		for (let i = 0; i < tabs.length; i++) {
@@ -124,6 +124,7 @@ const metricsTab = {
 
 	initialize() {
 		document.getElementById("metrics-button").onclick = () => this.requestData();
+		document.getElementById("metrics-game-select").onchange = () => this.onGameMetricSelectChanged();
 	},
 
 	requestData() {
@@ -134,6 +135,12 @@ const metricsTab = {
 		this.updateReportMetadata(data);
 		this.updateMemoryMetrics(data.Memory);
 		this.updateGameMetrics(data.Games);
+	},
+
+	onGameMetricSelectChanged() {
+		const select = document.getElementById("metrics-game-select");
+		const metric = select.options[select.selectedIndex].value;
+		this.selectGameMetric(metric);
 	},
 
 	updateReportMetadata(data) {
@@ -156,24 +163,72 @@ const metricsTab = {
 	},
 
 	updateGameMetrics(data) {
-		const gamesContainer = document.getElementById("metrics-game-container");
-		gamesContainer.innerHTML = "";
+		const gameMetricSelect = document.getElementById("metrics-game-select");
+		let prevSelectedIndex = gameMetricSelect.selectedIndex;
+		gameMetricSelect.innerHTML = "";
 
+		const gameMetricContainer = document.getElementById("metrics-game-container");
+		gameMetricContainer.innerHTML = "";
+
+		const dataMap = new Map();
+
+		// Bucket data by metric
 		for (const key in data) {
 			const entry = data[key];
 
-			htmlUtil.createAndAppendChild(gamesContainer, "h4", `0x${stringUtil.bigIntToHexString(key)}`);
-
-			const tableData = [];
-			tableData.push(["Metric", "Avg", "Mdn", "Last", "Min", "Max"]);
-
 			for (const metric in entry) {
 				const value = entry[metric];
-				tableData.push([metric, value.Average.toFixed(2), value.Median.toFixed(2), value.Last.toFixed(2), value.Min.toFixed(2), value.Max.toFixed(2)]);
+
+				if (dataMap.has(metric) == false) {
+					dataMap.set(metric, [["GameId", "Avg", "Mdn", "Last", "Min", "Max"]]);
+				}
+
+				dataMap.get(metric).push([
+					`0x${stringUtil.bigIntToHexString(key)}`,
+					value.Average.toFixed(2),
+					value.Median.toFixed(2),
+					value.Last.toFixed(2),
+					value.Min.toFixed(2),
+					value.Max.toFixed(2)]);
+			}
+		}
+		
+		// Populate html with bucketed data
+		dataMap.forEach((value, key) => {
+			const selectOption = htmlUtil.createAndAppendChild(gameMetricSelect, "option", key);
+			selectOption.value = key;
+
+			const subcontainer = htmlUtil.createAndAppendChild(gameMetricContainer, "div");
+			subcontainer.id = `${key}-subcontainer`;
+			subcontainer.className = "game-metric-subcontainer";
+
+			htmlUtil.createAndAppendTable(subcontainer, value);
+		});
+
+		// Reselect the previously selected metric
+		if (dataMap.size > 0) {
+			if (prevSelectedIndex == -1) {
+				prevSelectedIndex = 0;
 			}
 
-			htmlUtil.createAndAppendTable(gamesContainer, tableData);
+			gameMetricSelect.selectedIndex = prevSelectedIndex;
+			this.onGameMetricSelectChanged();
 		}
+	},
+
+	selectGameMetric(metric) {
+		const metricSubcontainerId = metric != "" ? `${metric}-subcontainer` : "";
+		
+		const subcontainers = document.getElementsByClassName("game-metric-subcontainer");
+		for (let i = 0; i < subcontainers.length; i++) {
+			subcontainers[i].style.display = "none";
+		}
+		
+		if (metricSubcontainerId == "") {
+			return;
+		}
+
+		document.getElementById(metricSubcontainerId).style.display = "block";
 	},
 
 	formatTracker(tracker) {
