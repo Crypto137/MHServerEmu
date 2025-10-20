@@ -1,5 +1,7 @@
-const dashboardConfig = {
-	originSuffix: "",
+if (dashboardConfig == null) {
+	const dashboardConfig = {
+		originSuffix: "",
+	}
 }
 
 const apiUtil = {
