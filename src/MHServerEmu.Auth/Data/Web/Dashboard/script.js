@@ -4,6 +4,8 @@ if (dashboardConfig == null) {
 	}
 }
 
+(function() {
+
 const apiUtil = {
 	handleReadyStateChange(xhr, callback) {
 		if (xhr.readyState == 4 && xhr.status == 200) {
@@ -46,8 +48,11 @@ const htmlUtil = {
 		return child;
 	},
 
-	createAndAppendTable(parent, tableData) {
-		const table = this.createAndAppendChild(parent, "table");
+	createAndAppendTable(parent, tableData, useHeader = true) {
+		const tableContainer = this.createAndAppendChild(parent, "div");
+		tableContainer.className = "table-container";
+
+		const table = this.createAndAppendChild(tableContainer, "table");
 
 		for (let i = 0; i < tableData.length; i++) {
 			const rowData = tableData[i];
@@ -55,9 +60,12 @@ const htmlUtil = {
 
 			for (let j = 0; j < rowData.length; j++) {
 				const cellData = rowData[j];
-				this.createAndAppendChild(row, "td", cellData);
+				const cellTag = useHeader && i == 0 ? "th": "td";
+				this.createAndAppendChild(row, cellTag, cellData);
 			}
 		}
+
+		return table;
 	}
 }
 
@@ -195,7 +203,8 @@ const metricsTab = {
 					value.Median.toFixed(2),
 					value.Last.toFixed(2),
 					value.Min.toFixed(2),
-					value.Max.toFixed(2)]);
+					value.Max.toFixed(2),
+				]);
 			}
 		}
 		
@@ -254,25 +263,31 @@ const regionReportTab = {
 	},
 
 	onDataReceived(data) {
-		const list = document.getElementById("region-report-list");
-		list.innerHTML = "";
+		const regionReportContainer = document.getElementById("region-report-container");
+		regionReportContainer.innerHTML = "";
 
+		const tableData = [["GameId", "RegionId", "Name", "DifficultyTier", "Uptime"]];
 		let gameId = 0;
-		let gameSublist = null;
 
 		for (let i = 0; i < data.Regions.length; i++) {
 			const region = data.Regions[i];
-			const regionText = `[0x${stringUtil.bigIntToHexString(region.RegionId)}] ${region.Name} (${region.DifficultyTier}) - ${region.Uptime}`;
 
+			let gameText = "";
 			if (gameId != region.GameId) {
-				const gameText = `Game [0x${stringUtil.bigIntToHexString(region.GameId)}]`;
-				htmlUtil.createAndAppendChild(list, "li", gameText);
-				gameSublist = htmlUtil.createAndAppendChild(list, "ul");
 				gameId = region.GameId;
+				gameText = `0x${stringUtil.bigIntToHexString(gameId)}`;
 			}
 
-			htmlUtil.createAndAppendChild(gameSublist, "li", regionText);
+			tableData.push([
+				gameText,
+				`0x${stringUtil.bigIntToHexString(region.RegionId)}`,
+				region.Name,
+				region.DifficultyTier,
+				region.Uptime,
+			]);
 		}
+
+		htmlUtil.createAndAppendTable(regionReportContainer, tableData);
 	}
 }
 
@@ -321,3 +336,5 @@ tabManager.initialize([
 	regionReportTab,
 	createAccountTab
 ]);
+
+})();

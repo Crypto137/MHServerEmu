@@ -14,6 +14,7 @@ div.content {
 
 div.content p,
 div.content li,
+div.content th,
 div.content td {
     font: 12px/1.385 Verdana;
 }
@@ -30,13 +31,34 @@ div.content label {
     color: #00aaff;
 }
 
-div.content table {
+div.table-container {
     overflow-x: auto;
     display: block;
 }
 
+div.content table {
+    width: 100%;
+    border: 1px solid #00717c;
+    border-collapse: collapse;
+    margin: 4px 0px;
+}
+
+div.content tr:nth-child(odd) {
+    background: #1c1c1c;
+}
+
+div.content tr:nth-child(even) {
+    background: #111111;
+}
+
+div.content th,
 div.content td {
-    padding: 4px;
+    padding: 8px;
+}
+
+div.content th {
+    font-weight: bold;
+    text-align: left;
 }
 
 div.content button,
