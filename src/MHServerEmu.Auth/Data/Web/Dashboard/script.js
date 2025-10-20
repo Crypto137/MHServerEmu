@@ -1,3 +1,7 @@
+const dashboardConfig = {
+	originSuffix: "",
+}
+
 const apiUtil = {
 	handleReadyStateChange(xhr, callback) {
 		if (xhr.readyState == 4 && xhr.status == 200) {
@@ -7,7 +11,7 @@ const apiUtil = {
 	},
 	
 	get(path, callback) {
-		const url = window.location.origin + path;
+		const url = window.location.origin + dashboardConfig.originSuffix + path;
 
 		const xhr = new XMLHttpRequest();
 		xhr.open("GET", url, true);
@@ -16,7 +20,7 @@ const apiUtil = {
 	},
 
 	post(path, data, callback) {
-		const url = window.location.origin + path;
+		const url = window.location.origin + dashboardConfig.originSuffix + path;
 		const json = JSON.stringify(data);
 
 		const xhr = new XMLHttpRequest();
