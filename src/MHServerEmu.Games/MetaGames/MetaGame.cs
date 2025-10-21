@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.MetaGames
         public Region Region { get => GetRegion(); }
         public MetaGamePrototype MetaGamePrototype { get => Prototype as MetaGamePrototype; }
         public List<MetaState> MetaStates { get; }
-        protected List<MetaGameTeam> Teams { get; }
+        public List<MetaGameTeam> Teams { get; }
         protected List<MetaGameMode> GameModes { get; }
         public GRandom Random { get; }
         public MetaGameMode CurrentMode => (_modeIndex > -1 && _modeIndex < GameModes.Count) ? GameModes[_modeIndex] : null;
@@ -164,7 +164,7 @@ namespace MHServerEmu.Games.MetaGames
             }
         }
 
-        public MetaGameTeam CreateTeam(PrototypeId teamRef)
+        public virtual MetaGameTeam CreateTeam(PrototypeId teamRef)
         {
             var teamProto = GameDatabase.GetPrototype<MetaGameTeamPrototype>(teamRef);
             if (teamProto == null) return null;
@@ -241,7 +241,7 @@ namespace MHServerEmu.Games.MetaGames
             int softLock = proto.SoftLockRegionMode;
             if (softLock >= 0 && _modeIndex < softLock && softLock <= index)
             {
-                // TODO Set region as closed
+                SetSoftLockRegion(RegionPlayerAccess.Closed);
             }
 
             _modeIndex = index;
@@ -252,6 +252,11 @@ namespace MHServerEmu.Games.MetaGames
 
             foreach (var player in Players)
                 player.Properties[PropertyEnum.PvPMode] = modeProto.DataRef;
+        }
+
+        public void SetSoftLockRegion(RegionPlayerAccess access)
+        {
+            // TODO Set Player Access for Region
         }
 
         private void InitializeEventHandler(PrototypeId eventHandlerRef)
@@ -618,7 +623,7 @@ namespace MHServerEmu.Games.MetaGames
             }
         }
 
-        private void DiscoverEntity(WorldEntity entity)
+        public void DiscoverEntity(WorldEntity entity)
         {
             if (entity.IsDiscoverable && _discoveredEntities.Contains(entity.Id) == false)
             {

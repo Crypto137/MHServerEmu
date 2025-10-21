@@ -29,7 +29,6 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             _playerCount = 0;
         }
 
-
         public override void OnActivate()
         {
             var region = Region;
@@ -96,6 +95,12 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             _playerCount--;
         }
 
+        public override bool OnResurrect(Player player)
+        {
+            // _proto.DeathRegionTarget PvEScale only!!!
+            return false;
+        }
+
         private void ScheduleNextMode(TimeSpan timeOffset)
         {
             var scheduler = Game.GameEventScheduler;
@@ -111,10 +116,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             var avatar = player.CurrentAvatar;
             if (avatar == null) return;
 
-            if (_proto.TeleportPlayersToStartOnActivate && avatar.IsInWorld)
-            {
-                // TODO teleport to start Location
-            }
+            // _proto.TeleportPlayersToStartOnActivate // Not used
 
             if (_proto.PlayersCanMove == false)
             {

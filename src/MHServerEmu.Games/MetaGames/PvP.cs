@@ -1,16 +1,16 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Regions;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace MHServerEmu.Games.MetaGames
 {
@@ -45,6 +45,13 @@ namespace MHServerEmu.Games.MetaGames
             //    player.RevealDiscoveryMap();
 
             return true;
+        }
+
+        public override MetaGameTeam CreateTeam(PrototypeId teamRef)
+        {
+            var teamProto = GameDatabase.GetPrototype<PvPTeamPrototype>(teamRef);
+            if (teamProto == null) return null;
+            return new PvPTeam(this, teamProto);
         }
 
         public override bool Serialize(Archive archive)
@@ -163,6 +170,33 @@ namespace MHServerEmu.Games.MetaGames
             player.Properties[PropertyEnum.PvPMode] = PrototypeId.Invalid;
 
             return true;
+        }
+
+        public bool OnResurrect(Player player)
+        {
+            bool result = false;
+
+            var mode = CurrentMode;
+            if (mode != null) result = mode.OnResurrect(player);
+
+            if (result) return true;
+            
+            if (GetTeamByPlayer(player) is not PvPTeam pvpTeam) return false;
+
+            PrototypeId targetRef = PrototypeId.Invalid;
+            if (mode != null) targetRef = mode.GetStartTargetOverride(player);
+
+            if (targetRef == PrototypeId.Invalid) targetRef = pvpTeam.StartTarget;
+
+            if (targetRef != PrototypeId.Invalid)
+            {
+                using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Resurrect);
+                teleporter.TeleportToTarget(targetRef);
+                result = true;
+            }            
+
+            return result;
         }
     }
 }

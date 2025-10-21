@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         public MetaGameModePrototype Prototype { get; }
         public PrototypeId PrototypeDataRef { get; }
 
-        private TimeSpan _startTime;
+        protected TimeSpan _startTime;
         private EventGroup _timedGroup = new();
         protected EventGroup _pendingEvents = new();
         private EventPointer<ActiveGoalRepeatEvent> _activeGoalRepeatEvent = new();
@@ -117,7 +117,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             region.EntityEnteredWorldEvent.RemoveAction(_entityEnteredWorldAction);
         }
-
+        public virtual PrototypeId GetStartTargetOverride(Player player) => PrototypeId.Invalid;
+        public virtual bool OnResurrect(Player player) => false;
         public virtual void OnRemovePlayer(Player player) { }
         public virtual void OnRemoveState(PrototypeId removeStateRef) { }
         public virtual void OnUpdatePlayerNotification(Player player)
@@ -253,6 +254,11 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         {
             if (uiNotificationRef == PrototypeId.Invalid) return;
             SendMessage(NetMessageUINotificationMessage.CreateBuilder().SetUiNotificationRef((ulong)uiNotificationRef).Build());
+        }
+
+        public void SetUITrackedEntityId(ulong entityId, Player player)
+        {           
+            SendMessage(NetMessageSetUITrackedEntityId.CreateBuilder().SetEntityId(entityId).Build(), player);
         }
 
         private void SendAvatarOnKilledInfoOverride(PrototypeId avatarOnKilledInfoRef, Player player = null)

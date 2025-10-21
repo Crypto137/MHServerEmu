@@ -2049,6 +2049,26 @@ namespace MHServerEmu.Games.Entities
                 .SetAvatarIndex(avatarIndex)
                 .SetLastCurrentEntityId(lastCurrentAvatarId)
                 .Build());
+
+            UpdateAvatarAlliance();
+        }
+
+        private void UpdateAvatarAlliance()
+        {
+            var avatar = CurrentAvatar;
+            if (avatar == null) return;
+
+            avatar.Properties[PropertyEnum.AllianceOverride] = AvatarProperties[PropertyEnum.AllianceOverride];
+        }
+
+        public void SetAllianceOverride(AlliancePrototype allianceProto)
+        {
+            if (allianceProto == null)
+                AvatarProperties.RemoveProperty(PropertyEnum.AllianceOverride);
+            else
+                AvatarProperties[PropertyEnum.AllianceOverride] = allianceProto.DataRef;
+
+            UpdateAvatarAlliance();
         }
 
         public void OnAvatarCharacterLevelChanged(Avatar avatar)
