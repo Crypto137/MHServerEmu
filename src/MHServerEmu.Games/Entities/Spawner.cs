@@ -186,6 +186,9 @@ namespace MHServerEmu.Games.Entities
                 properties[PropertyEnum.DetachOnContainerDestroyed] = true;
             if (spawnerProto.SpawnsInheritMissionPrototype)
                 properties[PropertyEnum.MissionPrototype] = Properties[PropertyEnum.MissionPrototype];
+
+            properties[PropertyEnum.MissionXEncounterHostilityOk] = Properties[PropertyEnum.MissionXEncounterHostilityOk];
+
             if (SpawnGroup != null)
                 properties[PropertyEnum.ParentSpawnerGroupId] = SpawnGroup.SpawnerId;
 
