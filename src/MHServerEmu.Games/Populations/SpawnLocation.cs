@@ -17,6 +17,13 @@ namespace MHServerEmu.Games.Populations
             SpawnCells = new();
         }
 
+        public SpawnLocation(Region region)
+        {
+            Region = region;
+            SpawnAreas = new();
+            SpawnCells = new();
+        }
+
         public SpawnLocation(Region region, PrototypeId[] restrictToAreas, AssetId[] restrictToCells)
         {
             Region = region;

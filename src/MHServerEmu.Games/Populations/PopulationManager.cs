@@ -349,6 +349,26 @@ namespace MHServerEmu.Games.Populations
             populationObject.SpawnObject(spawnTarget, entities);
         }
 
+        public void SpawnObjectUsePopulationMarker(PopulationObjectPrototype popObject, List<WorldEntity> entities)
+        {
+            if (popObject.UsePopulationMarker == PrototypeId.Invalid) return;
+
+            GRandom random = Game.Random;
+            SpawnTarget spawnTarget = new(Region);        
+            spawnTarget.Type = SpawnTargetType.Marker;
+
+            var spawnLocation = new SpawnLocation(Region);
+
+            PopulationObject populationObject = new()
+            {
+                MarkerRef = popObject.UsePopulationMarker,
+                Random = random,
+                Object = popObject,
+                SpawnLocation = spawnLocation,
+            };
+            populationObject.SpawnObject(spawnTarget, entities);
+        }
+
         #region BlackOutZone
 
         public void SpawnBlackOutZoneForGroup(SpawnGroup group, PrototypeId blackOutZone)
