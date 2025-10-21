@@ -99,6 +99,12 @@ div.tab-button-container button {
     margin: 0px 4px;
 }
 
+/* tab-controls-container */
+div.tab-controls-container {
+    float: right;
+    margin-top: 16px;
+}
+
 /* account-form */
 div.account-form {
     max-width: 280px;
