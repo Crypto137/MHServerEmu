@@ -16,6 +16,9 @@ namespace MHServerEmu.Core.Network.Web
         public WebServiceSettings Settings { get; }
         public bool IsRunning { get; private set; }
 
+        public int HandlerCount { get => _handlers.Count; }
+        public int HandledRequests { get; private set; }
+
         public WebService(WebServiceSettings settings)
         {
             Settings = settings;
@@ -135,6 +138,8 @@ namespace MHServerEmu.Core.Network.Web
                     await handler?.HandleAsync(requestContext);
 
                     httpContext.Response.Close();
+
+                    HandledRequests++;
                 }
                 catch (TaskCanceledException)
                 {

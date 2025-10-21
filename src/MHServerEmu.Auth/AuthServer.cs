@@ -87,6 +87,8 @@ namespace MHServerEmu.Auth
 
         public void GetStatus(Dictionary<string, long> statusDict)
         {
+            statusDict["WebFrontendHandlers"] = _webService.HandlerCount;
+            statusDict["WebFrontendHandledRequests"] = _webService.HandledRequests;
         }
 
         #endregion

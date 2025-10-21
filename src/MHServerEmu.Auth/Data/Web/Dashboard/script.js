@@ -48,6 +48,16 @@ const htmlUtil = {
 		return child;
 	},
 
+	createAndAppendList(parent, listData, isOrdered = false) {
+		const list = this.createAndAppendChild(parent, isOrdered ? "ol": "ul");
+
+		for (let i = 0; i < listData.length; i++) {
+			this.createAndAppendChild(list, "li", listData[i]);
+		}
+
+		return list;
+	},
+
 	createAndAppendTable(parent, tableData, useHeader = true) {
 		const tableContainer = this.createAndAppendChild(parent, "div");
 		tableContainer.className = "table-container";
@@ -77,6 +87,25 @@ const stringUtil = {
 			str = str.toUpperCase();
 
 		return str;
+	},
+
+	formatTimeDiff(dateA, dateB)
+	{
+		const MS_PER_SECOND = 1000;
+		const MS_PER_MINUTE = MS_PER_SECOND * 60;
+		const MS_PER_HOUR = MS_PER_MINUTE * 60;
+
+		const timeMS = Math.abs(dateB - dateA);
+
+		const hours = Math.floor(timeMS / MS_PER_HOUR);
+		const minutes = Math.floor((timeMS % MS_PER_HOUR) / MS_PER_MINUTE);
+		const seconds = Math.floor((timeMS % MS_PER_MINUTE) / MS_PER_SECOND);
+
+		return [
+			hours.toString().padStart(2, '0'),
+			minutes.toString().padStart(2, '0'),
+			seconds.toString().padStart(2, '0'),
+    	].join(':');
 	}
 }
 
@@ -129,8 +158,21 @@ const serverStatusTab = {
 		const serverStatusContainer = document.getElementById("server-status-container");
 		serverStatusContainer.innerHTML = "";
 
-		htmlUtil.createAndAppendChild(serverStatusContainer, "pre", JSON.stringify(data, null, 2));
-	}
+		const listData = [
+			`Uptime: ${stringUtil.formatTimeDiff(new Date(data.StartupTime * 1000), new Date(data.CurrentTime * 1000))}`,
+			`[GameInstance] Games: ${data.GisGames} | Players: ${data.GisPlayers}`,
+			`[Leaderboard] Leaderboards: ${data.Leaderboards}`,
+			`[PlayerManager] Games: ${data.PlayerManagerGames} | Players: ${data.PlayerManagerPlayers} | Sessions: ${data.PlayerManagerActiveSessions} [${data.PlayerManagerPendingSessions}]`,
+			`[GroupingManager] Players: ${data.GroupingManagerPlayers}`,
+			//`[Billing]`,
+			`[Frontend] Connections: ${data.FrontendConnections} | Clients: ${data.FrontendClients}`,
+			`[Auth] Handlers: ${data.WebFrontendHandlers} | Handled Requests: ${data.WebFrontendHandledRequests}`,
+		];
+
+		htmlUtil.createAndAppendList(serverStatusContainer, listData);
+	},
+
+	
 }
 
 const metricsTab = {
@@ -168,12 +210,15 @@ const metricsTab = {
 		const memoryContainer = document.getElementById("metrics-memory-container");
 		memoryContainer.innerHTML = "";
 		
-		const memoryList = htmlUtil.createAndAppendChild(memoryContainer, "ul");
-		htmlUtil.createAndAppendChild(memoryList, "li", `GCIndex: ${data.GCIndex}`)
-		htmlUtil.createAndAppendChild(memoryList, "li", `GCCounts: Gen0=${data.GCCountGen0}, Gen1=${data.GCCountGen1}, Gen2=${data.GCCountGen2}`)
-		htmlUtil.createAndAppendChild(memoryList, "li", `HeapSizeBytes: ${data.HeapSizeBytes.toLocaleString()} / ${data.TotalCommittedBytes.toLocaleString()}`)
-		htmlUtil.createAndAppendChild(memoryList, "li", `PauseTimePercentage: ${data.PauseTimePercentage}%`)
-		htmlUtil.createAndAppendChild(memoryList, "li", `PauseDuration: ${this.formatTracker(data.PauseDuration)}`)
+		const listData = [
+			`GCIndex: ${data.GCIndex}`,
+			`GCCounts: Gen0=${data.GCCountGen0}, Gen1=${data.GCCountGen1}, Gen2=${data.GCCountGen2}`,
+			`HeapSizeBytes: ${data.HeapSizeBytes.toLocaleString()} / ${data.TotalCommittedBytes.toLocaleString()}`,
+			`PauseTimePercentage: ${data.PauseTimePercentage}%`,
+			`PauseDuration: ${this.formatTracker(data.PauseDuration)}`,
+		];
+
+		htmlUtil.createAndAppendList(memoryContainer, listData);
 	},
 
 	updateGameMetrics(data) {
