@@ -89,13 +89,11 @@ const stringUtil = {
 		return str;
 	},
 
-	formatTimeDiff(dateA, dateB)
+	formatTimeDiff(timeMS)
 	{
 		const MS_PER_SECOND = 1000;
 		const MS_PER_MINUTE = MS_PER_SECOND * 60;
 		const MS_PER_HOUR = MS_PER_MINUTE * 60;
-
-		const timeMS = Math.abs(dateB - dateA);
 
 		const hours = Math.floor(timeMS / MS_PER_HOUR);
 		const minutes = Math.floor((timeMS % MS_PER_HOUR) / MS_PER_MINUTE);
@@ -105,7 +103,7 @@ const stringUtil = {
 			hours.toString().padStart(2, '0'),
 			minutes.toString().padStart(2, '0'),
 			seconds.toString().padStart(2, '0'),
-    	].join(':');
+		].join(':');
 	}
 }
 
@@ -159,7 +157,7 @@ const serverStatusTab = {
 		serverStatusContainer.innerHTML = "";
 
 		const listData = [
-			`Uptime: ${stringUtil.formatTimeDiff(new Date(data.StartupTime * 1000), new Date(data.CurrentTime * 1000))}`,
+			`Uptime: ${stringUtil.formatTimeDiff((data.CurrentTime - data.StartupTime) * 1000)}`,
 			`[GameInstance] Games: ${data.GisGames} | Players: ${data.GisPlayers}`,
 			`[Leaderboard] Leaderboards: ${data.Leaderboards}`,
 			`[PlayerManager] Games: ${data.PlayerManagerGames} | Players: ${data.PlayerManagerPlayers} | Sessions: ${data.PlayerManagerActiveSessions} [${data.PlayerManagerPendingSessions}]`,
@@ -338,6 +336,7 @@ const regionReportTab = {
 
 const createAccountTab = {
 	tabName: "create-account",
+	pendingAccountData: null,
 
 	initialize() {
 		document.getElementById("create-account-submit").onclick = () => this.createAccount();
@@ -348,6 +347,10 @@ const createAccountTab = {
 		const playerName = document.getElementById("create-account-player-name");
 		const password = document.getElementById("create-account-password");
 		const confirmPassword = document.getElementById("create-account-confirm-password");
+
+		if (this.pendingAccountData != null) {
+			return;
+		}
 
 		confirmPassword.setCustomValidity("");
 
@@ -361,17 +364,36 @@ const createAccountTab = {
 			return;
 		}
 
-		const accountData = {
+		this.pendingAccountData = {
 			Email: email.value,
 			PlayerName: playerName.value,
 			Password: password.value
 		};
 
-		apiUtil.post("/AccountManagement/Create", accountData, (result) => this.onCreateAccountResult(result));
+		apiUtil.post("/AccountManagement/Create", this.pendingAccountData, (result) => this.onCreateAccountResponse(result));
 	},
 
-	onCreateAccountResult(result) {
-		window.alert(result.Text);
+	onCreateAccountResponse(response) {
+		const resultString = this.getAccountOperationResultString(response.Result);
+		window.alert(resultString);
+		this.pendingAccountData = null;
+	},
+
+	getAccountOperationResultString(resultCode) {
+		switch (resultCode) {
+			case 0:  return `Success`;
+			case 1:  return `GenericFailure`;
+			case 2:  return `DatabaseError`;
+			case 3:  return `EmailInvalid`;
+			case 4:  return `EmailAlreadyUsed`;
+			case 5:  return `EmailNotFound`;
+			case 6:  return `PlayerNameInvalid`;
+			case 7:  return `PlayerNameAlreadyUsed`;
+			case 8:  return `PasswordInvalid`;
+			case 9:  return `FlagAlreadySet`;
+			case 10: return `FlagNotSet`;
+			default: return `Unknown error (code ${resultCode}).`;
+		}
 	}
 }
 

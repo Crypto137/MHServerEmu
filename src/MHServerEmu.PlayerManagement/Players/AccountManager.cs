@@ -242,6 +242,9 @@ namespace MHServerEmu.PlayerManagement.Players
         {
             switch (result)
             {
+                case AccountOperationResult.Success:
+                    return $"Created account {email} ({playerName}).";
+
                 case AccountOperationResult.EmailInvalid:
                     return "Email must not be longer than 320 characters.";
 

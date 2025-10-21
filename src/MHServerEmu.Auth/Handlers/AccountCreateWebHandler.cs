@@ -13,7 +13,7 @@ namespace MHServerEmu.Auth.Handlers
 
         protected override async Task Post(WebRequestContext context)
         {
-            AccountCreateQuery query = context.ReadJson<AccountCreateQuery>();
+            AccountCreateRequest query = context.ReadJson<AccountCreateRequest>();
 
             string email = query.Email;
             string playerName = query.PlayerName;
@@ -21,34 +21,30 @@ namespace MHServerEmu.Auth.Handlers
 
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(playerName) || string.IsNullOrWhiteSpace(password))
             {
-                await context.SendJsonAsync(new ResponseData(false, "Error", "Input is not valid"));
+                await context.SendJsonAsync(new AccountCreateResponse(AccountOperationResult.GenericFailure));
                 return;
             }
 
             email = email.ToLower();
 
             AccountOperationResult result = AccountManager.CreateAccount(email, playerName, password);
-            bool isSuccess = result == AccountOperationResult.Success;
-            string resultString = AccountManager.GetOperationResultString(result, email, playerName);
 
             if (HideSensitiveInformation == false)
-                Logger.Trace($"Post(): {resultString}");
+                Logger.Trace($"Post(): {AccountManager.GetOperationResultString(result, email, playerName)}");
 
-            await context.SendJsonAsync(new ResponseData(isSuccess, "Create Account Result", resultString));
+            await context.SendJsonAsync(new AccountCreateResponse(result));
         }
 
-        private class AccountCreateQuery
+        private readonly struct AccountCreateRequest
         {
             public string Email { get; init; }
             public string PlayerName { get; init; }
             public string Password { get; init; }
         }
 
-        private readonly struct ResponseData(bool result, string title, string text)
+        private readonly struct AccountCreateResponse(AccountOperationResult result)
         {
-            public bool Result { get; } = result;
-            public string Title { get; } = title;
-            public string Text { get; } = text;
+            public AccountOperationResult Result { get; } = result;
         }
     }
 }
