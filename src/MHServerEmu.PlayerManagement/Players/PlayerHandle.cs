@@ -7,6 +7,7 @@ using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Games;
 using MHServerEmu.PlayerManagement.Regions;
 using MHServerEmu.PlayerManagement.Social;

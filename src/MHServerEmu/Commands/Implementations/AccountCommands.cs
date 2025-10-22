@@ -6,7 +6,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Json;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Network;
-using MHServerEmu.PlayerManagement.Network;
+using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.Commands.Implementations

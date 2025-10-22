@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.PlayerManagement.Network
+﻿namespace MHServerEmu.PlayerManagement.Auth
 {
     public enum AuthStatusCode
     {

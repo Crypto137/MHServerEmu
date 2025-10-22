@@ -5,6 +5,7 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games;
+using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Games;
 using MHServerEmu.PlayerManagement.Network;
 using MHServerEmu.PlayerManagement.Players;

@@ -7,7 +7,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Web;
 using MHServerEmu.PlayerManagement;
-using MHServerEmu.PlayerManagement.Network;
+using MHServerEmu.PlayerManagement.Auth;
 
 namespace MHServerEmu.WebFrontend.Handlers
 {

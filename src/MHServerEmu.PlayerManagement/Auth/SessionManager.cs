@@ -7,9 +7,9 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games;
-using MHServerEmu.PlayerManagement.Network;
+using MHServerEmu.PlayerManagement.Players;
 
-namespace MHServerEmu.PlayerManagement.Players
+namespace MHServerEmu.PlayerManagement.Auth
 {
     /// <summary>
     /// Manages <see cref="ClientSession"/> instances.

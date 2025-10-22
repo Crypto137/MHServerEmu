@@ -4,7 +4,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
 
-namespace MHServerEmu.PlayerManagement.Players
+namespace MHServerEmu.PlayerManagement.Auth
 {
     public enum ClientDownloader
     {
