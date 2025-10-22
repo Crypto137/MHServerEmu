@@ -8,10 +8,11 @@ if (dashboardConfig == null) {
 
 const apiUtil = {
 	handleReadyStateChange(xhr, callback) {
-		if (xhr.readyState == 4 && xhr.status == 200) {
-			const response = JSON.parse(xhr.responseText);
-			callback(response);
-		}
+		if (xhr.readyState != 4)
+			return;
+
+		const response = xhr.status == 200 ? JSON.parse(xhr.responseText) : null;
+		callback(response);
 	},
 	
 	get(path, callback) {
@@ -153,6 +154,9 @@ const serverStatusTab = {
 	},
 
 	onDataReceived(data) {
+		if (data == null)
+			return;
+
 		const serverStatusContainer = document.getElementById("server-status-container");
 		serverStatusContainer.innerHTML = "";
 
@@ -186,6 +190,9 @@ const metricsTab = {
 	},
 
 	onDataReceived(data) {
+		if (data == null)
+			return;
+
 		this.updateReportMetadata(data);
 		this.updateMemoryMetrics(data.Memory);
 		this.updateGameMetrics(data.Games);
@@ -236,9 +243,8 @@ const metricsTab = {
 			for (const metric in entry) {
 				const value = entry[metric];
 
-				if (dataMap.has(metric) == false) {
+				if (dataMap.has(metric) == false)
 					dataMap.set(metric, [["GameId", "Avg", "Mdn", "Last", "Min", "Max"]]);
-				}
 
 				dataMap.get(metric).push([
 					`0x${stringUtil.bigIntToHexString(key)}`,
@@ -265,9 +271,8 @@ const metricsTab = {
 
 		// Reselect the previously selected metric
 		if (dataMap.size > 0) {
-			if (prevSelectedIndex == -1) {
+			if (prevSelectedIndex == -1)
 				prevSelectedIndex = 0;
-			}
 
 			gameMetricSelect.selectedIndex = prevSelectedIndex;
 			this.onGameMetricSelectChanged();
@@ -278,13 +283,11 @@ const metricsTab = {
 		const metricSubcontainerId = metric != "" ? `${metric}-subcontainer` : "";
 		
 		const subcontainers = document.getElementsByClassName("game-metric-subcontainer");
-		for (let i = 0; i < subcontainers.length; i++) {
+		for (let i = 0; i < subcontainers.length; i++)
 			subcontainers[i].style.display = "none";
-		}
 		
-		if (metricSubcontainerId == "") {
+		if (metricSubcontainerId == "")
 			return;
-		}
 
 		document.getElementById(metricSubcontainerId).style.display = "block";
 	},
@@ -306,6 +309,9 @@ const regionReportTab = {
 	},
 
 	onDataReceived(data) {
+		if (data == null)
+			return;
+
 		const regionReportContainer = document.getElementById("region-report-container");
 		regionReportContainer.innerHTML = "";
 
@@ -334,6 +340,20 @@ const regionReportTab = {
 	}
 }
 
+const AccountOperationResult = Object.freeze({
+	SUCCESS: 0,
+	GENERIC_FAILURE: 1,
+	DATABASE_ERROR: 2,
+	EMAIL_INVALID: 3,
+	EMAIL_ALREADY_USED: 4,
+	EMAIL_NOT_FOUND: 5,
+	PLAYER_NAME_INVALID: 6,
+	PLAYER_NAME_ALREADY_USED: 7,
+	PASSWORD_INVALID: 8,
+	FLAG_ALREADY_SET: 9,
+	FLAG_NOT_SET: 10,
+});
+
 const createAccountTab = {
 	tabName: "create-account",
 	pendingAccountData: null,
@@ -348,15 +368,13 @@ const createAccountTab = {
 		const password = document.getElementById("create-account-password");
 		const confirmPassword = document.getElementById("create-account-confirm-password");
 
-		if (this.pendingAccountData != null) {
+		if (this.pendingAccountData != null)
 			return;
-		}
 
 		confirmPassword.setCustomValidity("");
 
-		if (email.reportValidity() == false || playerName.reportValidity() == false || password.reportValidity() == false) {
+		if (email.reportValidity() == false || playerName.reportValidity() == false || password.reportValidity() == false)
 			return;
-		}
 
 		if (password.value != confirmPassword.value) {
 			confirmPassword.setCustomValidity("Your passwords do not match.");
@@ -365,34 +383,52 @@ const createAccountTab = {
 		}
 
 		this.pendingAccountData = {
-			Email: email.value,
+			Email: email.value.toLowerCase(),
 			PlayerName: playerName.value,
-			Password: password.value
+			Password: password.value,
 		};
 
 		apiUtil.post("/AccountManagement/Create", this.pendingAccountData, (result) => this.onCreateAccountResponse(result));
 	},
 
 	onCreateAccountResponse(response) {
-		const resultString = this.getAccountOperationResultString(response.Result);
+		const resultCode = response != null ? response.Result : AccountOperationResult.GENERIC_FAILURE;
+		const resultString = this.getAccountOperationResultString(resultCode);
+
 		window.alert(resultString);
+		
 		this.pendingAccountData = null;
 	},
 
 	getAccountOperationResultString(resultCode) {
+		const email = this.pendingAccountData.Email;
+		const playerName = this.pendingAccountData.PlayerName;
+
 		switch (resultCode) {
-			case 0:  return `Success`;
-			case 1:  return `GenericFailure`;
-			case 2:  return `DatabaseError`;
-			case 3:  return `EmailInvalid`;
-			case 4:  return `EmailAlreadyUsed`;
-			case 5:  return `EmailNotFound`;
-			case 6:  return `PlayerNameInvalid`;
-			case 7:  return `PlayerNameAlreadyUsed`;
-			case 8:  return `PasswordInvalid`;
-			case 9:  return `FlagAlreadySet`;
-			case 10: return `FlagNotSet`;
-			default: return `Unknown error (code ${resultCode}).`;
+			case AccountOperationResult.SUCCESS:
+				return `Created account ${email} (${playerName}).`;
+			case AccountOperationResult.GENERIC_FAILURE:
+				return `Generic failure.`;
+			case AccountOperationResult.DATABASE_ERROR:
+				return `Database error.`;
+			case AccountOperationResult.EMAIL_INVALID:
+				return `Email must not be longer than 320 characters.`;
+			case AccountOperationResult.EMAIL_ALREADY_USED:
+				return `Email ${email} is already used by another account.`;
+			case AccountOperationResult.EMAIL_NOT_FOUND:
+				return `Account with email ${email} not found.`;
+			case AccountOperationResult.PLAYER_NAME_INVALID:
+				return `Names may contain only up to 16 alphanumeric characters.`;
+			case AccountOperationResult.PLAYER_NAME_ALREADY_USED:
+				return `Name ${playerName} is already used by another account.`;
+			case AccountOperationResult.PASSWORD_INVALID:
+				return `Password must between 3 and 64 characters long.`;
+			case AccountOperationResult.FLAG_ALREADY_SET:
+				return `Flag already set.`;
+			case AccountOperationResult.FLAG_NOT_SET:
+				return `Flag not set.`;
+			default:
+				return `Unknown error (code ${resultCode}).`;
 		}
 	}
 }
