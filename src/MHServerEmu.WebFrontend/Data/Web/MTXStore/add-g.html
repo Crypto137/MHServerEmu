@@ -49,7 +49,20 @@
 		<button onclick="myApi.CloseAddGPanel(false)">Close</button>
 	</div>
 
+	<div class="content">
+		<h1>Debug Information</h1>
+		<pre id="debug-info"></pre>
+	</div>
+
 	<script>
+		var requestContext = Object.freeze({
+			downloader: "%REQUEST_DOWNLOADER%",
+			token: "%REQUEST_TOKEN%",
+			email: "%REQUEST_EMAIL%",
+		});
+
+		var textNode = document.createTextNode(JSON.stringify(requestContext, null, 2));
+		document.getElementById("debug-info").appendChild(textNode);
 	</script>
 </body>
 </html>
