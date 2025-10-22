@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Web;
 using Google.ProtocolBuffers;
 
 namespace MHServerEmu.Core.Network.Web
@@ -42,11 +43,22 @@ namespace MHServerEmu.Core.Network.Web
 
         // TODO: Optimize heap allocations here.
 
-        public T ReadJson<T>()
+        public string ReadString()
         {
             using StreamReader reader = new(_httpRequest.InputStream);
-            string json = reader.ReadToEnd();
+            return reader.ReadToEnd();
+        }
+
+        public T ReadJson<T>()
+        {
+            string json = ReadString();
             return JsonSerializer.Deserialize<T>(json);
+        }
+
+        public NameValueCollection ReadQueryString()
+        {
+            string queryString = ReadString();
+            return HttpUtility.ParseQueryString(queryString);
         }
 
         public IMessage ReadProtobuf<T>() where T: Enum

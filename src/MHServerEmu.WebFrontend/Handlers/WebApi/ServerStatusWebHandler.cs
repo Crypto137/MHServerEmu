@@ -2,7 +2,7 @@
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Web;
 
-namespace MHServerEmu.WebFrontend.Handlers
+namespace MHServerEmu.WebFrontend.Handlers.WebApi
 {
     public class ServerStatusWebHandler : WebHandler
     {

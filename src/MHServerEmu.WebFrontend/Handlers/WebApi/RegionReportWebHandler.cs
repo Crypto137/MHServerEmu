@@ -4,7 +4,7 @@ using MHServerEmu.Core.Network.Web;
 using MHServerEmu.PlayerManagement;
 using MHServerEmu.PlayerManagement.Regions;
 
-namespace MHServerEmu.WebFrontend.Handlers
+namespace MHServerEmu.WebFrontend.Handlers.WebApi
 {
     public class RegionReportWebHandler : WebHandler
     {

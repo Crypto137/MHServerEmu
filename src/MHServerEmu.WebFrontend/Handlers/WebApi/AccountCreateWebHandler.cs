@@ -3,7 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network.Web;
 using MHServerEmu.PlayerManagement.Players;
 
-namespace MHServerEmu.WebFrontend.Handlers
+namespace MHServerEmu.WebFrontend.Handlers.WebApi
 {
     public class AccountCreateWebHandler : WebHandler
     {
