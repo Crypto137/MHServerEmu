@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network.Web;
 
-namespace MHServerEmu.Auth.Handlers
+namespace MHServerEmu.WebFrontend.Handlers
 {
     /// <summary>
     /// Empty <see cref="WebHandler"/> that responds with status code 404 to incoming requests.

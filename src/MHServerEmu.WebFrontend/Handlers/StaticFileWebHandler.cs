@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network.Web;
 
-namespace MHServerEmu.Auth.Handlers
+namespace MHServerEmu.WebFrontend.Handlers
 {
     /// <summary>
     /// Serves a static file.

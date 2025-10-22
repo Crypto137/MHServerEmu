@@ -1,10 +1,10 @@
 ﻿using System.Text;
-using MHServerEmu.Auth;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.WebFrontend;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -67,8 +67,8 @@ namespace MHServerEmu.Commands.Implementations
         [CommandInvokerType(CommandInvokerType.ServerConsole)]
         public string ReloadDashboard(string[] @params, NetClient client)
         {
-            AuthServer authServer = ServerManager.Instance.GetGameService(GameServiceType.Auth) as AuthServer;
-            authServer?.ReloadDashboard();
+            WebFrontendService webFrontend = ServerManager.Instance.GetGameService(GameServiceType.WebFrontend) as WebFrontendService;
+            webFrontend?.ReloadDashboard();
             return string.Empty;
         }
 

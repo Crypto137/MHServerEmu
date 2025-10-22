@@ -2,7 +2,7 @@
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Web;
 
-namespace MHServerEmu.Auth.Handlers
+namespace MHServerEmu.WebFrontend.Handlers
 {
     public class ServerStatusWebHandler : WebHandler
     {

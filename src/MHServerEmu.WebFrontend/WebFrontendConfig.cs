@@ -1,8 +1,8 @@
 ﻿using MHServerEmu.Core.Config;
 
-namespace MHServerEmu.Auth
+namespace MHServerEmu.WebFrontend
 {
-    public class AuthConfig : ConfigContainer
+    public class WebFrontendConfig : ConfigContainer
     {
         public string Address { get; private set; } = "localhost";
         public string Port { get; private set; } = "8080";

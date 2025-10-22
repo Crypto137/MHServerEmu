@@ -2,7 +2,6 @@
 using System.Text;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
-using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Network
@@ -16,7 +15,7 @@ namespace MHServerEmu.Core.Network
         GroupingManager,
         Billing,
         Frontend,
-        Auth,
+        WebFrontend,
         NumServiceTypes
     }
 

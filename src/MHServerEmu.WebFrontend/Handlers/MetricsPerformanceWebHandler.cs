@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network.Web;
 
-namespace MHServerEmu.Auth.Handlers
+namespace MHServerEmu.WebFrontend.Handlers
 {
     public class MetricsPerformanceWebHandler : WebHandler
     {

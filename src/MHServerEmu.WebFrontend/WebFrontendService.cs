@@ -1,16 +1,16 @@
-﻿using MHServerEmu.Auth.Handlers;
+﻿using MHServerEmu.WebFrontend.Handlers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Web;
 
-namespace MHServerEmu.Auth
+namespace MHServerEmu.WebFrontend
 {
     /// <summary>
     /// Handles HTTP requests from clients.
     /// </summary>
-    public class AuthServer : IGameService
+    public class WebFrontendService : IGameService
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -20,15 +20,15 @@ namespace MHServerEmu.Auth
         public GameServiceState State { get; private set; } = GameServiceState.Created;
 
         /// <summary>
-        /// Constructs a new <see cref="AuthServer"/> instance.
+        /// Constructs a new <see cref="WebFrontendService"/> instance.
         /// </summary>
-        public AuthServer()
+        public WebFrontendService()
         {
-            var config = ConfigManager.Instance.GetConfig<AuthConfig>();
+            var config = ConfigManager.Instance.GetConfig<WebFrontendConfig>();
 
             WebServiceSettings webServiceSettings = new()
             {
-                Name = "AuthWebService",
+                Name = "WebFrontend",
                 ListenUrl = $"http://{config.Address}:{config.Port}/",
                 FallbackHandler = new NotFoundWebHandler(),
             };
@@ -53,7 +53,7 @@ namespace MHServerEmu.Auth
         #region IGameService Implementation
 
         /// <summary>
-        /// Runs this <see cref="AuthServer"/> instance.
+        /// Runs this <see cref="WebFrontendService"/> instance.
         /// </summary>
         public void Run()
         {
@@ -67,7 +67,7 @@ namespace MHServerEmu.Auth
         }
 
         /// <summary>
-        /// Stops listening and shuts down this <see cref="AuthServer"/> instance.
+        /// Stops listening and shuts down this <see cref="WebFrontendService"/> instance.
         /// </summary>
         public void Shutdown()
         {

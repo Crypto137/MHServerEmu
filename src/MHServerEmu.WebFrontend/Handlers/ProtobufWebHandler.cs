@@ -9,7 +9,7 @@ using MHServerEmu.Core.Network.Web;
 using MHServerEmu.PlayerManagement;
 using MHServerEmu.PlayerManagement.Network;
 
-namespace MHServerEmu.Auth.Handlers
+namespace MHServerEmu.WebFrontend.Handlers
 {
     public class ProtobufWebHandler : WebHandler
     {
