@@ -177,9 +177,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             SendSetModeText();
         }
 
-        public List<PlayerConnection> GetInterestedClients(Player player = null)
+        public void GetInterestedClients(List<PlayerConnection> interestedClients, Player player = null)
         {
-            List<PlayerConnection> interestedClients = new();
             if (player != null)
             {
                 interestedClients.Add(player.PlayerConnection);
@@ -189,7 +188,6 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                 foreach (var regionPlayer in new PlayerIterator(Region))
                     interestedClients.Add(regionPlayer.PlayerConnection);
             }
-            return interestedClients;
         }
 
         #region SendMessage
@@ -213,7 +211,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         {
             if (notifications.IsNullOrEmpty()) return;
 
-            var interestedClients = GetInterestedClients(player);
+            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+            GetInterestedClients(interestedClients, player);
 
             foreach (var notificationData in notifications)
             {
@@ -227,6 +226,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
                 Game.NetworkManager.SendMessageToMultiple(interestedClients, message);
             }
+            ListPool<PlayerConnection>.Instance.Return(interestedClients);
         }
 
         protected void SendMetaGameBanner(List<PlayerConnection> interestedClients, LocaleStringId bannerText, List<long> intArgs = null,
@@ -275,9 +275,11 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         private void SendClearMetaGameInfoNotification()
         {
-            var interestedClients = GetInterestedClients();
+            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+            GetInterestedClients(interestedClients);
             var message = NetMessageClearMetaGameInfoNotification.DefaultInstance;
             Game.NetworkManager.SendMessageToMultiple(interestedClients, message);
+            ListPool<PlayerConnection>.Instance.Return(interestedClients);
         }
 
         public void SendSetModeText(Player player = null)
@@ -400,9 +402,10 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         private void ScheduledBannerTime(MetaGameBannerTimeDataPrototype bannerProto)
         {
-            var interestedClients = GetInterestedClients();
+            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+            GetInterestedClients(interestedClients);
 
-            List<long> intArgs = new();
+            var intArgs = ListPool<long>.Instance.Get();
             var runTime = Game.CurrentTime - _startTime;
             TimeSpan durationTime = GetDurationTime();
 
@@ -410,6 +413,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             intArgs.Add((long)durationTime.TotalSeconds);
 
             SendMetaGameBanner(interestedClients, bannerProto.BannerText, intArgs);
+            ListPool<long>.Instance.Return(intArgs);
+            ListPool<PlayerConnection>.Instance.Return(interestedClients);
 
             if (bannerProto.TimerModeType == MetaGameModeTimerBannerType.Once) return;
 

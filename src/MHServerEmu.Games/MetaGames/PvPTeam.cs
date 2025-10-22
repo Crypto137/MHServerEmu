@@ -1,5 +1,4 @@
-﻿
-using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
