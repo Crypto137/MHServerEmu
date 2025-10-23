@@ -19,6 +19,7 @@ namespace MHServerEmu.Core.Network.Web
         public IPEndPoint RemoteEndPoint { get => _httpRequest.RemoteEndPoint; }
         public NameValueCollection RequestHeaders { get => _httpRequest.Headers; }
         public NameValueCollection RequestQueryString { get => _httpRequest.QueryString; }
+        public string Url { get => _httpRequest.Url.OriginalString; }
         public string LocalPath { get => _httpRequest.Url.LocalPath; }
         public string HttpMethod { get => _httpRequest.HttpMethod; }
 
@@ -39,6 +40,11 @@ namespace MHServerEmu.Core.Network.Web
         public override string ToString()
         {
             return $"{HttpMethod} {LocalPath}";
+        }
+
+        public void Redirect(string url)
+        {
+            _httpResponse.Redirect(url);
         }
 
         // TODO: Optimize heap allocations here.

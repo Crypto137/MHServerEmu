@@ -118,7 +118,7 @@ namespace MHServerEmu.WebFrontend
             _webService.RegisterHandler("/Metrics/Performance", new MetricsPerformanceWebHandler());
         }
 
-        private void InitializeWebDashboard(string dashboardDirectoryName, string endpointPath)
+        private void InitializeWebDashboard(string dashboardDirectoryName, string localPath)
         {
             string dashboardDirectory = Path.Combine(FileHelper.DataDirectory, "Web", dashboardDirectoryName);
             if (Directory.Exists(dashboardDirectory) == false)
@@ -136,24 +136,37 @@ namespace MHServerEmu.WebFrontend
 
             _dashboardEndpoints = new();
 
-            _webService.RegisterHandler(endpointPath, new StaticFileWebHandler(indexFilePath));
-            _dashboardEndpoints.Add(endpointPath);
+            // Make sure local path starts and ends with slashes.
+            if (localPath.StartsWith('/') == false)
+                localPath = $"/{localPath}";
 
+            if (localPath.EndsWith('/') == false)
+                localPath = $"{localPath}/";
+
+            _webService.RegisterHandler(localPath, new StaticFileWebHandler(indexFilePath));
+            _dashboardEndpoints.Add(localPath);
+
+            // Add redirect for requests to our dashboard "directory" that don't have trailing slashes.
+            if (localPath.Length > 1)
+            {
+                string localPathRedirect = localPath[..^1];
+                _webService.RegisterHandler(localPathRedirect, new TrailingSlashRedirectWebHandler());
+                _dashboardEndpoints.Add(localPathRedirect);
+            }
+
+            // Register other files.
             foreach (string filePath in Directory.GetFiles(dashboardDirectory))
             {
                 ReadOnlySpan<char> fileName = Path.GetFileName(filePath.AsSpan());
                 if (fileName.Equals("index.html", StringComparison.InvariantCultureIgnoreCase))
                     continue;
 
-                string subFilePath = endpointPath.EndsWith('/')
-                    ? $"{endpointPath}{fileName}"
-                    : $"{endpointPath}/{fileName}";
-
+                string subFilePath = $"{localPath}{fileName}";
                 _webService.RegisterHandler(subFilePath, new StaticFileWebHandler(filePath));
                 _dashboardEndpoints.Add(subFilePath);
             }
 
-            Logger.Info($"Initialized web dashboard at {endpointPath}");
+            Logger.Info($"Initialized web dashboard at {localPath}");
         }
     }
 }
