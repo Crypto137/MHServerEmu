@@ -24,13 +24,13 @@ namespace MHServerEmu.Core.Metrics
 
         public PerformanceReport() { }
 
-        public void Initialize(MemoryMetrics memoryMetrics, IEnumerable<GamePerformanceMetrics> gameMetrics)
+        public void Initialize(MemoryMetrics memoryMetrics, Dictionary<ulong, GamePerformanceMetrics> gameMetrics)
         {
             Id = (ulong)Clock.UnixTime.TotalSeconds << 32 | ++_currentReportId;
 
             Memory = memoryMetrics.GetReport();
 
-            foreach (GamePerformanceMetrics metrics in gameMetrics)
+            foreach (GamePerformanceMetrics metrics in gameMetrics.Values)
             {
                 Games.Add(metrics.GameId, metrics.GetReport());
             }
