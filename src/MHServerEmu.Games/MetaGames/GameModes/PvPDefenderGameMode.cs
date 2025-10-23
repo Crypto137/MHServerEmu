@@ -377,19 +377,55 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             }
         }
 
-        private void SendPlayerDefeatOther(Avatar avatarAttacker, Avatar avatarDefender)
+        private void SendPlayerDefeatedPlayer(Player attacker, Player defender)
         {
-            // ChatMessagePlayerDefeatedPlayer
-            // BannerMsgPlayerDefeatAttacker
-            // BannerMsgPlayerDefeatDefender
-            // BannerMsgPlayerDefeatOther
+            if (Game == null || Region == null) return;
+
+            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+
+            GetInterestedClients(interestedClients);
+            Game.ChatManager.SendChatFromMetaGame(_proto.ChatMessagePlayerDefeatedPlayer, interestedClients, attacker, defender);
+
+            interestedClients.Clear();
+            GetInterestedClients(interestedClients, attacker);
+            SendMetaGameBanner(interestedClients, _proto.BannerMsgPlayerDefeatAttacker, null, attacker.GetName(), defender.GetName());
+
+            interestedClients.Clear();
+            GetInterestedClients(interestedClients, defender);
+            SendMetaGameBanner(interestedClients, _proto.BannerMsgPlayerDefeatDefender, null, attacker.GetName(), defender.GetName());
+
+            interestedClients.Clear();
+            foreach (var regionPlayer in new PlayerIterator(Region))
+                if (regionPlayer != attacker && regionPlayer != defender)
+                    interestedClients.Add(regionPlayer.PlayerConnection);
+            
+            SendMetaGameBanner(interestedClients, _proto.BannerMsgPlayerDefeatOther, null, attacker.GetName(), defender.GetName());
+
+            ListPool<PlayerConnection>.Instance.Return(interestedClients);
         }
 
-        private void SendNPDefeatPlayer(WorldEntity attacker, Avatar avatarDefender)
+        private void SendNPDefeatPlayer(WorldEntity attacker, Player defender)
         {
-            // ChatMessageNPDefeatedPlayer
-            // BannerMsgNPDefeatPlayerDefender
-            // BannerMsgNPDefeatPlayerOther
+            var attackerName = attacker.Prototype.DisplayName;
+            if (attackerName == LocaleStringId.Blank) return;
+
+            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+
+            GetInterestedClients(interestedClients);
+            Game.ChatManager.SendChatFromMetaGame(_proto.ChatMessageNPDefeatedPlayer, interestedClients, defender, null, attackerName);
+
+            interestedClients.Clear();
+            GetInterestedClients(interestedClients, defender);
+            SendMetaGameBanner(interestedClients, _proto.BannerMsgNPDefeatPlayerDefender, null, "", defender.GetName());
+
+            interestedClients.Clear();
+            foreach (var regionPlayer in new PlayerIterator(Region))
+                if (regionPlayer != defender)
+                    interestedClients.Add(regionPlayer.PlayerConnection);
+
+            SendMetaGameBanner(interestedClients, _proto.BannerMsgNPDefeatPlayerOther, null, "", defender.GetName());
+
+            ListPool<PlayerConnection>.Instance.Return(interestedClients);
         }
 
         private void SendPlayerMetaGameComplete(PrototypeId teamRef)
@@ -612,7 +648,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                 var avatarAttacker = playerAttacker.CurrentAvatar;
                 if (avatarAttacker != null)
                 {
-                    SendPlayerDefeatOther(avatarAttacker, avatarDefender);
+                    SendPlayerDefeatedPlayer(playerAttacker, playerDefender);
 
                     if (avatarAttacker.Properties[PropertyEnum.PvPLastKilledByEntityId] == playerDefender.Id)
                     {
@@ -643,7 +679,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             {
                 avatarDefender.Properties.RemoveProperty(PropertyEnum.PvPLastKilledByEntityId);
                 var attacker = evt.Attacker;
-                if (attacker != null) SendNPDefeatPlayer(attacker, avatarDefender);
+                if (attacker != null) SendNPDefeatPlayer(attacker, playerDefender);
             }
 
             if (++_totalKills == 1 && sendAudio == false)
