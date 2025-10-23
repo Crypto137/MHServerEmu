@@ -371,10 +371,17 @@ const createAccountTab = {
 		if (this.pendingAccountData != null)
 			return;
 
+		email.setCustomValidity("");
 		confirmPassword.setCustomValidity("");
 
 		if (email.reportValidity() == false || playerName.reportValidity() == false || password.reportValidity() == false)
 			return;
+
+		if (this.validateEmail(email.value) == false) {
+			email.setCustomValidity("Invalid email.");
+			email.reportValidity();
+			return;
+		}
 
 		if (password.value != confirmPassword.value) {
 			confirmPassword.setCustomValidity("Your passwords do not match.");
@@ -398,6 +405,22 @@ const createAccountTab = {
 		window.alert(resultString);
 		
 		this.pendingAccountData = null;
+	},
+
+	validateEmail(email) {
+		const atIndex = email.indexOf('@');
+		if (atIndex == -1)
+			return false;
+
+		const dotIndex = email.lastIndexOf('.');
+		if (dotIndex < atIndex)
+			return false;
+
+		const topDomainLength = email.length - (dotIndex + 1);
+		if (topDomainLength < 2)
+			return false;
+
+		return true;
 	},
 
 	getAccountOperationResultString(resultCode) {
