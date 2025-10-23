@@ -36,7 +36,7 @@ namespace MHServerEmu.WebFrontend.Handlers.MTXStore
                 return;
             }
 
-            NameValueCollection request = context.ReadQueryString();
+            NameValueCollection request = await context.ReadQueryStringAsync();
 
             string downloader = request["downloader"];
             string token = request["token"];

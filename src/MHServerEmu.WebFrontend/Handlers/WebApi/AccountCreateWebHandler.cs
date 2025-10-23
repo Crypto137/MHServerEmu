@@ -13,7 +13,7 @@ namespace MHServerEmu.WebFrontend.Handlers.WebApi
 
         protected override async Task Post(WebRequestContext context)
         {
-            AccountCreateRequest query = context.ReadJson<AccountCreateRequest>();
+            AccountCreateRequest query = await context.ReadJsonAsync<AccountCreateRequest>();
 
             string email = query.Email;
             string playerName = query.PlayerName;

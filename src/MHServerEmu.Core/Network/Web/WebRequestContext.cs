@@ -1,4 +1,5 @@
-﻿using System.Collections.Specialized;
+﻿using System.Buffers;
+using System.Collections.Specialized;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -10,7 +11,7 @@ namespace MHServerEmu.Core.Network.Web
     /// <summary>
     /// Wrapper for <see cref="HttpListenerContext"/>.
     /// </summary>
-    public class WebRequestContext
+    public readonly struct WebRequestContext
     {
         private readonly HttpListenerRequest _httpRequest;
         private readonly HttpListenerResponse _httpResponse;
@@ -47,32 +48,45 @@ namespace MHServerEmu.Core.Network.Web
             _httpResponse.Redirect(url);
         }
 
-        // TODO: Optimize heap allocations here.
-
-        public string ReadString()
+        /// <summary>
+        /// Asynchronously reads the request input stream as a UTF-8 string.
+        /// </summary>
+        public async Task<string> ReadStringAsync()
         {
+            // Is there a painless way to do this without allocating a StreamReader?
             using StreamReader reader = new(_httpRequest.InputStream);
-            return reader.ReadToEnd();
+            return await reader.ReadToEndAsync();
         }
 
-        public T ReadJson<T>()
+        /// <summary>
+        /// Asynchronously reads the request input stream as <typeparamref name="T"/> serialized using JSON.
+        /// </summary>
+        public async Task<T> ReadJsonAsync<T>()
         {
-            string json = ReadString();
-            return JsonSerializer.Deserialize<T>(json);
+            return await JsonSerializer.DeserializeAsync<T>(_httpRequest.InputStream);
         }
 
-        public NameValueCollection ReadQueryString()
+        /// <summary>
+        /// Asynchronously reads the request input stream as a <see cref="NameValueCollection"/>.
+        /// </summary>
+        public async Task<NameValueCollection> ReadQueryStringAsync()
         {
-            string queryString = ReadString();
+            string queryString = await ReadStringAsync();
             return HttpUtility.ParseQueryString(queryString);
         }
 
+        /// <summary>
+        /// Reads the request input stream as an <see cref="IMessage"/> of protocol <typeparamref name="T"/>.
+        /// </summary>
         public IMessage ReadProtobuf<T>() where T: Enum
         {
             MessageBuffer messageBuffer = new(_httpRequest.InputStream);
             return messageBuffer.Deserialize<T>();
         }
 
+        /// <summary>
+        /// Asynchronously responds to the request with the provided payload.
+        /// </summary>
         public async Task SendAsync(byte[] payload, string contentType)
         {
             _httpResponse.ContentType = contentType;
@@ -81,35 +95,63 @@ namespace MHServerEmu.Core.Network.Web
             await _httpResponse.OutputStream.WriteAsync(payload);
         }
 
+        /// <summary>
+        /// Asynchronously responds to the request with the provided <see cref="string"/> encoded as UTF-8.
+        /// </summary>
         public async Task SendAsync(string message, string contentType = "text/plain")
         {
-            byte[] payload = Encoding.UTF8.GetBytes(message);
-            await SendAsync(payload, contentType);
-        }
+            int maxByteCount = Encoding.UTF8.GetMaxByteCount(message.Length);
 
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(maxByteCount);
+
+            try
+            {
+                int byteCount = Encoding.UTF8.GetBytes(message, 0, message.Length, buffer, 0);
+
+                _httpResponse.ContentType = contentType;
+                _httpResponse.ContentLength64 = byteCount;
+
+                await _httpResponse.OutputStream.WriteAsync(buffer.AsMemory(0, byteCount));
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+        }
+        
+        /// <summary>
+        /// Asynchronously responds to the request with the provided <see cref="IMessage"/>.
+        /// </summary>
         public async Task SendAsync(IMessage message)
         {
             MessagePackageOut payload = new(message);
+            int size = payload.GetSerializedSize();
 
-            _httpResponse.ContentType = "application/octet-stream";
-            _httpResponse.ContentLength64 = payload.GetSerializedSize();
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(size);
 
-            // We should probably serialize synchronously and use async only for writing to the http output stream.
-            await Task.Run(() =>
+            try
             {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(_httpResponse.OutputStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(buffer);
                 payload.WriteTo(cos);
                 cos.Flush();
-            });
+
+                _httpResponse.ContentType = "application/octet-stream";
+                _httpResponse.ContentLength64 = size;
+
+                await _httpResponse.OutputStream.WriteAsync(buffer.AsMemory(0, size));
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
 
         /// <summary>
-        /// Serializes <typeparamref name="T"/> to JSON and sends it asynchronously.
+        /// Asynchronously responds to the request with the provided <typeparamref name="T"/> instance serialized to JSON.
         /// </summary>
         public async Task SendJsonAsync<T>(T @object)
         {
-            string json = JsonSerializer.Serialize(@object);
-            await SendAsync(json, "application/json");
+            await JsonSerializer.SerializeAsync(_httpResponse.OutputStream, @object);
         }
     }
 }
