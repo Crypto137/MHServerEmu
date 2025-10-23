@@ -28,8 +28,12 @@ namespace MHServerEmu.PlayerManagement.Players
     /// <summary>
     /// Provides <see cref="DBAccount"/> management functions.
     /// </summary>
-    public static class AccountManager
+    public static partial class AccountManager
     {
+        private const int EmailMaxLength = 320;
+        private const int PasswordMinLength = 3;
+        private const int PasswordMaxLength = 64;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         /// <summary>
@@ -246,7 +250,7 @@ namespace MHServerEmu.PlayerManagement.Players
                     return $"Created account {email} ({playerName}).";
 
                 case AccountOperationResult.EmailInvalid:
-                    return "Email must not be longer than 320 characters.";
+                    return $"'{email}' is not a valid email address.";
 
                 case AccountOperationResult.EmailAlreadyUsed:
                     return $"Email {email} is already used by another account.";
@@ -273,7 +277,23 @@ namespace MHServerEmu.PlayerManagement.Players
         /// </summary>
         private static bool ValidateEmail(string email)
         {
-            return email.Length.IsWithin(1, 320);  // todo: add regex for email
+            if (email.Length > EmailMaxLength)
+                return false;
+
+            // Validate like the client does on the login screen.
+            int atIndex = email.IndexOf('@');
+            if (atIndex == -1)
+                return false;
+
+            int dotIndex = email.LastIndexOf('.');
+            if (dotIndex < atIndex)
+                return false;
+
+            int topDomainLength = email.Length - (dotIndex + 1);
+            if (topDomainLength < 2)
+                return false;
+
+            return true;
         }
 
         /// <summary>
@@ -281,7 +301,7 @@ namespace MHServerEmu.PlayerManagement.Players
         /// </summary>
         private static bool ValidatePlayerName(string playerName)
         {
-            return Regex.Match(playerName, "^[a-zA-Z0-9]{1,16}$").Success;    // 1-16 alphanumeric characters
+            return GetPlayerNameRegex().Match(playerName).Success;    // 1-16 alphanumeric characters
         }
         
         /// <summary>
@@ -289,7 +309,10 @@ namespace MHServerEmu.PlayerManagement.Players
         /// </summary>
         private static bool ValidatePassword(string password)
         {
-            return password.Length.IsWithin(3, 64);
+            return password.Length.IsWithin(PasswordMinLength, PasswordMaxLength);
         }
+
+        [GeneratedRegex(@"^[a-zA-Z0-9]{1,16}$")]
+        private static partial Regex GetPlayerNameRegex();
     }
 }

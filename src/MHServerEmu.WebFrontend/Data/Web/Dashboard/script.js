@@ -412,7 +412,7 @@ const createAccountTab = {
 			case AccountOperationResult.DATABASE_ERROR:
 				return `Database error.`;
 			case AccountOperationResult.EMAIL_INVALID:
-				return `Email must not be longer than 320 characters.`;
+				return `'${email}' is not a valid email address.`;
 			case AccountOperationResult.EMAIL_ALREADY_USED:
 				return `Email ${email} is already used by another account.`;
 			case AccountOperationResult.EMAIL_NOT_FOUND:
