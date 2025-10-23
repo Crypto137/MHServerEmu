@@ -39,6 +39,7 @@ namespace MHServerEmu.Games.MetaGames
     public class PvPScoreEventHandler : MetaGameEventHandler
     {
         private PvPScoreEventHandlerPrototype _proto;
+        public PvPScoreEventHandlerPrototype Prototype => _proto;
         public PvPScoreEventHandler(MetaGame metaGame, MetaGameEventHandlerPrototype proto) : base(metaGame, proto)
         {
             _proto = proto as PvPScoreEventHandlerPrototype;

@@ -430,7 +430,79 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         private void SendPlayerMetaGameComplete(PrototypeId teamRef)
         {
-            // Region.PlayerMetaGameCompleteEvent
+            var region = Region;
+            if (region == null || MetaGame is not PvP pvp) return;
+            var score = pvp.PvPScore;
+            int maxMatches = 10;
+
+            PvPScoreEventHandlerPrototype scoreHandlerProto = null;
+            int didNotPartipateDamage = 0;
+            if (score != null && pvp.EventHandler is PvPScoreEventHandler scoreHandler) 
+            {
+                scoreHandlerProto = scoreHandler.Prototype;
+                var runTime = Game.CurrentTime - _startTime;
+                didNotPartipateDamage = (int)(runTime.TotalSeconds * _proto.DidNotParticipateDmgPerMinuteMin) / 60;
+            }
+
+            foreach (var player in new PlayerIterator(region))
+            {
+                var avatar = player.CurrentAvatar;
+
+                int recentMatches = avatar.Properties[PropertyEnum.PvPMatchCount] - 1;                
+                if (recentMatches < 0) recentMatches = 0;
+                else if (recentMatches > maxMatches) recentMatches = maxMatches;
+
+                float recentRatio = avatar.Properties[PropertyEnum.PvPRecentWinLossRatio];
+                float recentWins = recentRatio * recentMatches;
+
+                bool playerDidNotPartipate = false;
+                if (scoreHandlerProto != null)
+                {
+                    if (score.TryGetPlayerScore(player, scoreHandlerProto.DamageVsTotalEntry, out int damage))
+                        playerDidNotPartipate = damage < didNotPartipateDamage;
+                }
+
+                MetaGameCompleteType complete;
+
+                if (playerDidNotPartipate)
+                {
+                    complete = MetaGameCompleteType.DidNotParticipate;
+                }
+                else
+                {
+                    var team = MetaGame.GetTeamByPlayer(player);
+                    if (team.ProtoRef == teamRef)
+                    {
+                        complete = MetaGameCompleteType.Success;
+                        avatar.Properties.AdjustProperty(1, PropertyEnum.PvPWins);
+                        player.Properties.AdjustProperty(1, PropertyEnum.PvPWins);
+                        player.OnScoringEvent(new(ScoringEventType.PvPMatchWon));
+
+                        recentWins += 1;
+                        if (recentWins > maxMatches) recentWins = maxMatches;
+                    }
+                    else
+                    {
+                        complete = MetaGameCompleteType.Failure; 
+                        avatar.Properties.AdjustProperty(1, PropertyEnum.PvPLosses);
+                        player.Properties.AdjustProperty(1, PropertyEnum.PvPLosses);
+                        player.OnScoringEvent(new(ScoringEventType.PvPMatchLost));
+
+                        recentWins -= 1;
+                        if (recentWins < 0) recentWins = 0;
+                    }
+                }
+
+                if (recentMatches < maxMatches) recentMatches++;
+
+                // calculate new Ratio
+                recentRatio = 0f;
+                if (recentMatches > 0) recentRatio = Math.Max(1f, recentWins / recentMatches);
+                avatar.Properties[PropertyEnum.PvPRecentWinLossRatio] = recentRatio;
+
+                // send event
+                region.PlayerMetaGameCompleteEvent.Invoke(new(player, MetaGame.PrototypeDataRef, complete));
+            }
         }
 
         #endregion
