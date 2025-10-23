@@ -25,5 +25,12 @@ namespace MHServerEmu.Games.MetaGames
             if (Alliance != null) player.SetAllianceOverride(null);
             return true;
         }
+
+        public Player GetTeammateByPlayer(Player player)
+        {
+            foreach (var teammate in _players)
+                if (teammate != player) return teammate;
+            return null;
+        }
     }
 }

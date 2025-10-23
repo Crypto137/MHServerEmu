@@ -54,6 +54,15 @@ namespace MHServerEmu.Games.MetaGames
             return new PvPTeam(this, teamProto);
         }
 
+        public PvPTeam GetTeamByRef(PrototypeId teamRef)
+        {
+            foreach (var team in Teams)
+                if (team.ProtoRef == teamRef) 
+                    return team as PvPTeam;
+
+            return null;
+        }
+
         public override bool Serialize(Archive archive)
         {
             bool success = base.Serialize(archive);
