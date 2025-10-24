@@ -415,7 +415,7 @@ namespace MHServerEmu.Games.Network
 
             if (region.ContainsPvPMatch())
             {
-                TransferParams.DestTeamIndex = 0;
+                // TODO TransferParams.DestTeamIndex
             }
 
             if (TransferParams.FindStartLocation(out Vector3 startPosition, out Orientation startOrientation) == false)

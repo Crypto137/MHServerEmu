@@ -502,6 +502,8 @@ namespace MHServerEmu.Games.MetaGames
         {
             var player = evt.Player;
             if (player == null) return;
+
+            DiscoverEntitiesForPlayer(player);
             AddPlayer(player);
         }
 
@@ -518,7 +520,7 @@ namespace MHServerEmu.Games.MetaGames
             return false;
         }
 
-        private MetaGameTeam GetTeamForPlayer(Player player)
+        public MetaGameTeam GetTeamForPlayer(Player player)
         {
             var transferParams = player.PlayerConnection?.TransferParams;
             if (transferParams == null) return null;
@@ -629,6 +631,17 @@ namespace MHServerEmu.Games.MetaGames
             {
                 _discoveredEntities.Add(entity.Id);
                 DiscoverEntityForPlayers(entity);
+            }
+        }
+
+        private void DiscoverEntitiesForPlayer(Player player)
+        {
+            var manager = Game.EntityManager;
+            foreach (var entityId in _discoveredEntities)
+            {
+                var entity = manager.GetEntity<WorldEntity>(entityId);
+                if (entity != null)
+                    player.DiscoverEntity(entity, true);
             }
         }
 
