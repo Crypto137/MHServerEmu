@@ -28,6 +28,12 @@ namespace MHServerEmu.WebFrontend.Handlers.MTXStore
             _htmlTemplate = File.ReadAllText(HtmlTemplateFilePath);
         }
 
+        protected override Task Get(WebRequestContext context)
+        {
+            // It seems the client sends a GET when it initializes the embedded browser, but it doesn't seem to be needed for anything.
+            return Task.CompletedTask;
+        }
+
         protected override async Task Post(WebRequestContext context)
         {
             if (string.IsNullOrWhiteSpace(_htmlTemplate))
@@ -43,7 +49,7 @@ namespace MHServerEmu.WebFrontend.Handlers.MTXStore
             string email = request["email"];
 
             // TODO: Verify downloader/token/email
-            Logger.Debug($"Post(): downloader={downloader}, token={token}, email={email}");
+            //Logger.Debug($"Post(): downloader={downloader}, token={token}, email={email}");
 
             StringBuilder sb = new(_htmlTemplate);
             sb.Replace("%REQUEST_DOWNLOADER%", downloader);
