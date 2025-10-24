@@ -975,7 +975,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             ListPool<WorldEntity>.Instance.Return(spawnedAttackers);
             ListPool<Vector3>.Instance.Return(spawnPositions);
 
-            ScheduleEvent(_attackerWaveEvent, _proto.AttackerWaveInitialDelayMS);
+            ScheduleEvent(_attackerWaveEvent, _proto.AttackerWaveCycleMS);
         }
 
         private void ScheduledSoftLockRegion()
