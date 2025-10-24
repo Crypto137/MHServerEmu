@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.MetaGames
                     mode.SendPlayUISoundTheme(pvp.PvPPrototype.VOKillSpreeShutdown);
                     killingSpreeSend = true;
                 }
-                score.UpdatePlayerScoreValue(defender, 0, _proto.KillingSpreeEntry);
+                score.SetPlayerScoreValue(defender, 0, _proto.KillingSpreeEntry);
             }
 
             // assists

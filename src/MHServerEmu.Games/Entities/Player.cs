@@ -279,6 +279,22 @@ namespace MHServerEmu.Games.Entities
 
                     break;
                 }
+
+                case PropertyEnum.RunestonesAmount:
+                {
+                    var region = GetRegion();
+                    if (region == null || region.MetaGames.Count == 0) break;
+                    var manager = Game.EntityManager;
+
+                    foreach (var metagameId in region.MetaGames)
+                    {
+                        var pvp = manager.GetEntity<PvP>(metagameId);
+                        if (pvp == null) continue;
+                        pvp.UpdateRunestonesScore(this, newValue);
+                    }
+
+                    break;
+                }
             }
         }
 

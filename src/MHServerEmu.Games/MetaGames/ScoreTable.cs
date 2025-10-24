@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.MetaGames
             SendMessageToInterested(message);
 
             for (int category = 0; category < PlayerSchema.Count; category++)
-                UpdatePlayerScoreByCategory(player, category);
+                InitPlayerScoreByCategory(player, category);
 
             var updMessage = NetMessagePvPScorePlayerUpdate.CreateBuilder()
                 .SetPvpEntityId(MetaGame.Id)
@@ -153,12 +153,21 @@ namespace MHServerEmu.Games.MetaGames
             MetaGame.Game.NetworkManager.SendMessageToInterested(message, MetaGame, AOINetworkPolicyValues.AOIChannelProximity);
         }
 
-        private void UpdatePlayerScoreByCategory(Player player, int category)
+        private void InitPlayerScoreByCategory(Player player, int category)
         {
             var schema = PlayerSchema[category];
             if (schema == null) return;
             int value = schema.GetEvalValue(player);
-            UpdatePlayerScoreValue(player, value, category);
+            SetPlayerScoreValue(player, value, category);
+        }
+
+        public void SetPlayerScoreValue(Player player, int value, int category)
+        {
+            var scoreValue = GetScoreValueByCategory(player, category);
+            if (scoreValue == null) return;
+
+            scoreValue.IntValue = value;
+            SendPvPScorePlayerUpdateValue(player, category, scoreValue);
         }
 
         public void UpdatePlayerScoreValue(Player player, int value, int category)
@@ -166,8 +175,7 @@ namespace MHServerEmu.Games.MetaGames
             var scoreValue = GetScoreValueByCategory(player, category);
             if (scoreValue == null) return;
 
-            scoreValue.IntValue = value;
-            scoreValue.Type = ScoreTableValueType.Int; // float used?
+            scoreValue.IntValue += value;
             SendPvPScorePlayerUpdateValue(player, category, scoreValue);
         }
 
@@ -285,19 +293,21 @@ namespace MHServerEmu.Games.MetaGames
 
     public class ScoreTableRow
     {
-        private readonly List<ScoreTableValue> _scores = [];
+        private readonly ScoreTableValue[] _scores;
 
         public string Name;
-        public int CategoriesNum { get => _scores.Count; }
+        public int CategoriesNum { get => _scores.Length; }
 
         public ScoreTableRow(int size)
         {
-            _scores.Capacity = size;
+            _scores = new ScoreTableValue[size];
+            for (int i = 0; i < size; i++)
+                _scores[i] = new ScoreTableValue(); 
         }
 
         public ScoreTableValue GetValueByCategory(int category)
         {
-            if (category < 0 || category >= _scores.Count) return null;
+            if (category < 0 || category >= _scores.Length) return null;
             return _scores[category];
         }
     }

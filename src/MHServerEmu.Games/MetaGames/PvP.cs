@@ -207,5 +207,11 @@ namespace MHServerEmu.Games.MetaGames
 
             return result;
         }
+
+        public void UpdateRunestonesScore(Player player, int runestones)
+        {            
+            if (EventHandler is not PvPScoreEventHandler handler || PvPScore == null) return;
+            PvPScore.SetPlayerScoreValue(player, runestones, handler.Prototype.Runestones);
+        }
     }
 }
