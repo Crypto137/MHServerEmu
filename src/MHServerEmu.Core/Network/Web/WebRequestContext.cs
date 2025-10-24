@@ -51,11 +51,25 @@ namespace MHServerEmu.Core.Network.Web
         /// <summary>
         /// Asynchronously reads the request input stream as a UTF-8 string.
         /// </summary>
-        public async Task<string> ReadStringAsync()
+        public async Task<string> ReadUtf8StringAsync()
         {
-            // Is there a painless way to do this without allocating a StreamReader?
-            using StreamReader reader = new(_httpRequest.InputStream);
-            return await reader.ReadToEndAsync();
+            const long MaxLength = 1024 * 16;
+
+            int length = (int)_httpRequest.ContentLength64;
+            if (length < 0 || length > MaxLength)
+                throw new InternalBufferOverflowException();
+
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(length);
+
+            try
+            {
+                await _httpRequest.InputStream.ReadAsync(buffer.AsMemory(0, length));
+                return Encoding.UTF8.GetString(buffer, 0, length);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
 
         /// <summary>
@@ -71,7 +85,7 @@ namespace MHServerEmu.Core.Network.Web
         /// </summary>
         public async Task<NameValueCollection> ReadQueryStringAsync()
         {
-            string queryString = await ReadStringAsync();
+            string queryString = await ReadUtf8StringAsync();
             return HttpUtility.ParseQueryString(queryString);
         }
 
