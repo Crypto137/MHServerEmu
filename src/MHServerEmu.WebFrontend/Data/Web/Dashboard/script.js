@@ -359,7 +359,19 @@ const createAccountTab = {
 	pendingAccountData: null,
 
 	initialize() {
-		document.getElementById("create-account-submit").onclick = () => this.createAccount();
+		document.getElementById("create-account-submit-button").onclick = () => this.createAccount();
+
+		const submitOnEnter = function (event) {
+			if (event.key === "Enter") {
+				event.preventDefault();
+				document.getElementById("create-account-submit-button").click();
+			}
+		};
+
+		document.getElementById("create-account-email").addEventListener("keydown", submitOnEnter);
+		document.getElementById("create-account-player-name").addEventListener("keydown", submitOnEnter);
+		document.getElementById("create-account-password").addEventListener("keydown", submitOnEnter);
+		document.getElementById("create-account-confirm-password").addEventListener("keydown", submitOnEnter);
 	},
 
 	createAccount() {
