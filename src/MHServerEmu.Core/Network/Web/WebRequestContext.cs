@@ -20,9 +20,9 @@ namespace MHServerEmu.Core.Network.Web
         public IPEndPoint RemoteEndPoint { get => _httpRequest.RemoteEndPoint; }
         public NameValueCollection RequestHeaders { get => _httpRequest.Headers; }
         public NameValueCollection RequestQueryString { get => _httpRequest.QueryString; }
-        public string Url { get => _httpRequest.Url.OriginalString; }
         public string LocalPath { get => _httpRequest.Url.LocalPath; }
         public string HttpMethod { get => _httpRequest.HttpMethod; }
+        public bool IsForwarded { get => string.IsNullOrWhiteSpace(_httpRequest.Headers["X-Forwarded-For"]) == false; }
 
         public bool IsGameClientRequest { get => UserAgent.Equals("Secret Identity Studios Http Client", StringComparison.InvariantCulture); }
 

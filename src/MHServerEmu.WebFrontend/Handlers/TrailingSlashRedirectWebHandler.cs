@@ -7,32 +7,34 @@ namespace MHServerEmu.WebFrontend.Handlers
     /// </summary>
     public class TrailingSlashRedirectWebHandler : WebHandler
     {
-        protected override Task Get(WebRequestContext context)
+        private const string HtmlRedirect = @"<html><script>window.location.replace(window.location.href + '/');</script></html>";
+
+        protected override async Task Get(WebRequestContext context)
         {
-            return RedirectIfNeeded(context);
+            await RedirectIfNeeded(context);
         }
 
-        protected override Task Post(WebRequestContext context)
+        protected override async Task Post(WebRequestContext context)
         {
-            return RedirectIfNeeded(context);
+            await RedirectIfNeeded(context);
         }
 
-        protected override Task Delete(WebRequestContext context)
+        protected override async Task Delete(WebRequestContext context)
         {
-            return RedirectIfNeeded(context);
+            await RedirectIfNeeded(context);
         }
 
-        private static Task RedirectIfNeeded(WebRequestContext context)
+        private static async Task RedirectIfNeeded(WebRequestContext context)
         {
-            string url = context.Url;
-
-            if (url.EndsWith('/') == false)
+            if (context.LocalPath.EndsWith('/') == false)
             {
-                url = $"{url}/";
-                context.Redirect(url);
+                // This is likely to be accessed from behind reverse proxy, in which case the client-side URL may be different from what we see server-side.
+                // To make sure we add the trailing slash to the actual client URL, do the redirect client-side using JS for forwarded requests.
+                if (context.IsForwarded)
+                    await context.SendAsync(HtmlRedirect, "text/html");
+                else
+                    context.Redirect($"{context.LocalPath}/");
             }
-
-            return Task.CompletedTask;
         }
     }
 }
