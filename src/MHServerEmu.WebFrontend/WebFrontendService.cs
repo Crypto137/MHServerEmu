@@ -39,7 +39,7 @@ namespace MHServerEmu.WebFrontend
 
             // Register the protobuf handler to the /Login/IndexPB path for compatibility with legacy reverse proxy setups.
             // We should probably prefer to use /AuthServer/Login/IndexPB because it's more accurate to what Gazillion had.
-            ProtobufWebHandler protobufHandler = new();
+            ProtobufWebHandler protobufHandler = new(config.EnableLoginRateLimit, TimeSpan.FromMilliseconds(config.LoginRateLimitCostMS), config.LoginRateLimitBurst);
             _webService.RegisterHandler("/Login/IndexPB",            protobufHandler);
             _webService.RegisterHandler("/AuthServer/Login/IndexPB", protobufHandler);
 
