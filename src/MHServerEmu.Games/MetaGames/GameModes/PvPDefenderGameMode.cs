@@ -416,14 +416,14 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             interestedClients.Clear();
             GetInterestedClients(interestedClients, defender);
-            SendMetaGameBanner(interestedClients, _proto.BannerMsgNPDefeatPlayerDefender, null, "", defender.GetName());
+            SendMetaGameBanner(interestedClients, _proto.BannerMsgNPDefeatPlayerDefender, null, "", defender.GetName(), attackerName);
 
             interestedClients.Clear();
             foreach (var regionPlayer in new PlayerIterator(Region))
                 if (regionPlayer != defender)
                     interestedClients.Add(regionPlayer.PlayerConnection);
 
-            SendMetaGameBanner(interestedClients, _proto.BannerMsgNPDefeatPlayerOther, null, "", defender.GetName());
+            SendMetaGameBanner(interestedClients, _proto.BannerMsgNPDefeatPlayerOther, null, "", defender.GetName(), attackerName);
 
             ListPool<PlayerConnection>.Instance.Return(interestedClients);
         }
