@@ -17,17 +17,13 @@ namespace MHServerEmu.Core.Network.Web
         private readonly HttpListenerResponse _httpResponse;
 
         public string UserAgent { get => _httpRequest.UserAgent; }
-        public IPEndPoint RemoteEndPoint { get => _httpRequest.RemoteEndPoint; }
-        public NameValueCollection RequestHeaders { get => _httpRequest.Headers; }
-        public NameValueCollection RequestQueryString { get => _httpRequest.QueryString; }
         public string LocalPath { get => _httpRequest.Url.LocalPath; }
         public string HttpMethod { get => _httpRequest.HttpMethod; }
-        public bool IsForwarded { get => string.IsNullOrWhiteSpace(_httpRequest.Headers["X-Forwarded-For"]) == false; }
+        public string XForwardedFor { get => _httpRequest.Headers["X-Forwarded-For"]; }
 
         public bool IsGameClientRequest { get => UserAgent.Equals("Secret Identity Studios Http Client", StringComparison.InvariantCulture); }
 
         public int StatusCode { get => _httpResponse.StatusCode; set => _httpResponse.StatusCode = value; }
-        public WebHeaderCollection ResponseHeaders { get => _httpResponse.Headers; }
 
         public WebRequestContext(HttpListenerContext httpContext)
         {
@@ -41,6 +37,15 @@ namespace MHServerEmu.Core.Network.Web
         public override string ToString()
         {
             return $"{HttpMethod} {LocalPath}";
+        }
+
+        public string GetIPAddress()
+        {
+            string forwardedFor = XForwardedFor;
+            if (string.IsNullOrWhiteSpace(forwardedFor) == false)
+                return forwardedFor;
+
+            return _httpRequest.RemoteEndPoint.Address.ToString();
         }
 
         public void Redirect(string url)

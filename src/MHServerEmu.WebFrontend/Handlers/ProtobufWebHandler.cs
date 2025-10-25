@@ -2,7 +2,7 @@
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Core.Config;
-using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Web;
@@ -53,11 +53,11 @@ namespace MHServerEmu.WebFrontend.Handlers
                 return;
             }
 
-            // Mask the end point name to prevent sensitive information from appearing in logs in needed
-            // TODO: Hash this instead?
-            string endPointName = HideSensitiveInformation
-                ? context.RemoteEndPoint.ToStringMasked()
-                : context.RemoteEndPoint.ToString();
+            string ipAddress = context.GetIPAddress();
+
+            // Hash the IP address to prevent it from appearing in logs if needed
+            if (HideSensitiveInformation)
+                ipAddress = $"0x{HashHelper.Djb2(ipAddress):X4}";
 
 #if DEBUG
             // Send a TOS popup when the client uses tos@test.com as email
@@ -89,13 +89,13 @@ namespace MHServerEmu.WebFrontend.Handlers
             if (statusCode != AuthStatusCode.Success)
             {
                 context.StatusCode = (int)statusCode;
-                Logger.Info($"Authentication for the game client on {endPointName} failed ({statusCode})");
+                Logger.Info($"Authentication for the game client on {ipAddress} failed ({statusCode})");
                 return;
             }
 
             // Send an AuthTicket if we were able to create a session
             string machineId = loginDataPB.HasMachineId ? loginDataPB.MachineId : string.Empty;
-            Logger.Info($"Sending AuthTicket for SessionId 0x{ticket.SessionId:X} to the game client on {endPointName}, machineId={machineId}");
+            Logger.Info($"Sending AuthTicket for SessionId 0x{ticket.SessionId:X} to the game client on {ipAddress}, machineId={machineId}");
             await context.SendAsync(ticket);
         }
 
