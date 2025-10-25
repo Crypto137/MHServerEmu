@@ -696,7 +696,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                         sendAudio = true;
                     }
 
-                    var team = pvp.GetTeamByRef(defender.Properties[PropertyEnum.MetaGameTeam]);
+                    var team = pvp.GetOtherTeamByRef(defender.Properties[PropertyEnum.MetaGameTeam]);
                     if (team != null)
                         SendPlayerMetaGameComplete(team.ProtoRef);
 
