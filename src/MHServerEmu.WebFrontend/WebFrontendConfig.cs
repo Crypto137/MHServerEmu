@@ -12,6 +12,6 @@ namespace MHServerEmu.WebFrontend
         public bool EnableWebApi { get; private set; } = true;
         public bool EnableDashboard { get; private set; } = true;
         public string DashboardFileDirectory { get; private set; } = "Dashboard";
-        public string DashboardUrlDirectory { get; private set; } = "/";
+        public string DashboardUrlPath { get; private set; } = "/";
     }
 }

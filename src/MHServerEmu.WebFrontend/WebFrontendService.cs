@@ -51,7 +51,7 @@ namespace MHServerEmu.WebFrontend
                 InitializeWebBackend();
 
                 if (config.EnableDashboard)
-                    InitializeWebDashboard(config.DashboardFileDirectory, config.DashboardUrlDirectory);
+                    InitializeWebDashboard(config.DashboardFileDirectory, config.DashboardUrlPath);
             }
         }
 
