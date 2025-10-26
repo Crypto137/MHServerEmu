@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.MTXStore
             if (_catalog != null)
                 return true;
 
-            var config = ConfigManager.Instance.GetConfig<BillingConfig>();
+            var config = ConfigManager.Instance.GetConfig<MTXStoreConfig>();
 
             _catalog = FileHelper.DeserializeJson<Catalog>(Path.Combine(BillingDataDirectory, "Catalog.json"));
 

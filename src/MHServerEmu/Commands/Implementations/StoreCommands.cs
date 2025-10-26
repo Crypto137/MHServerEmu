@@ -31,7 +31,7 @@ namespace MHServerEmu.Commands.Implementations
             if (esBalance < NumConverted)
                 return $"You need at least {NumConverted} Eternity Splinters to convert them to Gs.";
 
-            var config = ConfigManager.Instance.GetConfig<BillingConfig>();
+            var config = ConfigManager.Instance.GetConfig<MTXStoreConfig>();
             long gAmount = Math.Max((long)(NumConverted * config.ESToGazillioniteConversionRatio), 0);
             if (gAmount == 0)
                 return "Current server settings do not allow Eternity Splinter to G conversion.";

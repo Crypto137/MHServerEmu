@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.Network
             // Set G balance for new accounts if needed
             if (_dbAccount.Player.GazillioniteBalance == -1)
             {
-                long defaultBalance = ConfigManager.Instance.GetConfig<BillingConfig>().GazillioniteBalanceForNewAccounts;
+                long defaultBalance = ConfigManager.Instance.GetConfig<MTXStoreConfig>().GazillioniteBalanceForNewAccounts;
                 Logger.Trace($"LoadFromDBAccount(): Setting Gazillionite balance for account [{_dbAccount}] to the default value for new accounts ({defaultBalance})", LogCategory.MTXStore);
                 _dbAccount.Player.GazillioniteBalance = defaultBalance;
             }

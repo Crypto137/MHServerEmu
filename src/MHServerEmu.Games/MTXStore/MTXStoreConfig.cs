@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.Games.MTXStore
 {
-    public class BillingConfig : ConfigContainer
+    public class MTXStoreConfig : ConfigContainer
     {
         public long GazillioniteBalanceForNewAccounts { get; private set; } = 10000;
         public float ESToGazillioniteConversionRatio { get; private set; } = 2.25f;
