@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
     {
         private readonly PvPDefenderGameModePrototype _proto;
         private readonly HashSet<ulong> _defenders;
-        private readonly HashSet<ulong> _attackers;
+        private readonly Dictionary<ulong, PrototypeId> _attackers;
         private readonly List<ulong> _turrets;
         private readonly Dictionary<ulong, TimeSpan> _respawnPlayers;
 
@@ -37,6 +37,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         private readonly EventGroup _timedBanners = new();
 
         private int _totalKills;
+
+        public const int MaxAttackers = 7; // optimal 6-8
 
         public PvPDefenderGameMode(MetaGame metaGame, MetaGameModePrototype proto) : base(metaGame, proto)
         {
@@ -164,7 +166,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         #endregion
 
-        #region Turrets and Defenders
+        #region Turrets Defenders Attackers
 
         private void ApplyInvinciblePowers()
         {
@@ -222,6 +224,34 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                         SetInvisible(defender, _proto.DefenderInvinciblePower, false);
                     }
                 }
+            }
+        }
+
+        private int AttackerAllianceCount(PopulationObjectPrototype popObject)
+        {
+            int count = 0;
+            if (_attackers.Count == 0) return count;
+
+            var entities = HashSetPool<PrototypeId>.Instance.Get();
+            try
+            {
+                popObject.GetContainedEntities(entities);
+                foreach (var entityRef in entities)
+                {
+                    var attackerProto = GameDatabase.GetPrototype<WorldEntityPrototype>(entityRef);
+                    if (attackerProto == null) continue;
+
+                    var allianceRef = attackerProto.Alliance;
+                    foreach (var alliance in _attackers.Values)
+                        if (alliance == allianceRef) count++;
+
+                    break;
+                }
+                return count;
+            }
+            finally
+            {
+                HashSetPool<PrototypeId>.Instance.Return(entities);
             }
         }
 
@@ -328,7 +358,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             }
             _turrets.Clear();
 
-            foreach (var attackerId in _attackers)
+            foreach (var attackerId in _attackers.Keys)
             {
                 var attacker = manager.GetEntity<WorldEntity>(attackerId);
                 if (attacker != null && attacker is not Avatar)
@@ -707,7 +737,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                 _defenders.Remove(defender.Id);
             }
 
-            if (_attackers.Contains(defender.Id))
+            if (_attackers.ContainsKey(defender.Id))
                 _attackers.Remove(defender.Id);
             
             if (defender is not Avatar avatarDefender) return;
@@ -959,9 +989,11 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                 var popObj = GameDatabase.GetPrototype<PopulationObjectPrototype>(attackerData.Wave);
                 if (popObj == null) continue;
 
+                if (AttackerAllianceCount(popObj) >= MaxAttackers) continue;
+
                 spawnPositions.Clear();
                 registry.GetPositionsByMarker(attackerData.WaveSpawnPosition, spawnPositions);
-                if (spawnPositions.Count > 0) 
+                if (spawnPositions.Count > 0)
                 {
                     int randIndex = random.Next(0, spawnPositions.Count);
                     var position = spawnPositions[randIndex];
@@ -970,7 +1002,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             }
 
             foreach (var attacker in spawnedAttackers)
-                if (attacker != null) _attackers.Add(attacker.Id);
+                if (attacker != null) _attackers.Add(attacker.Id, attacker.Alliance.DataRef);
 
             ListPool<WorldEntity>.Instance.Return(spawnedAttackers);
             ListPool<Vector3>.Instance.Return(spawnPositions);
