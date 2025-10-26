@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Web;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
@@ -22,6 +23,8 @@ namespace MHServerEmu.PlayerManagement.Auth
         private readonly PlayerManagerService _playerManager;
 
         private readonly IdGenerator _idGenerator = new(IdType.Session, 0);
+        private readonly WebTokenManager<ulong> _platformTicketManager = new();
+        // "Platform Tickets" are tokens used to access the Add G page from the MTX store.
 
         private readonly Dictionary<ulong, ClientSession> _pendingSessionDict = new();
         private readonly Dictionary<ulong, ClientSession> _activeSessionDict = new();
@@ -97,7 +100,10 @@ namespace MHServerEmu.PlayerManagement.Auth
             string locale = loginDataPB.HasLocale ? loginDataPB.Locale : "en_us";
 
             // Create a new session
-            ClientSession session = new(_idGenerator.Generate(), account, downloaderEnum, locale);
+            ulong sessionId = _idGenerator.Generate();
+            string platformTicket = _platformTicketManager.GenerateToken(sessionId);
+
+            ClientSession session = new(sessionId, account, platformTicket, downloaderEnum, locale);
             lock (_pendingSessionDict)
                 _pendingSessionDict.Add(session.Id, session);
 
@@ -109,7 +115,7 @@ namespace MHServerEmu.PlayerManagement.Auth
                 .SetSessionId(session.Id)
                 .SetFrontendServer(IFrontendClient.FrontendAddress)
                 .SetFrontendPort(IFrontendClient.FrontendPort)
-                .SetPlatformTicket("")  // TODO
+                .SetPlatformTicket(platformTicket)
                 .SetHasnews(_playerManager.Config.ShowNewsOnLogin)
                 .SetNewsurl(_playerManager.Config.NewsUrl)
                 .SetSuccess(true)
@@ -175,11 +181,13 @@ namespace MHServerEmu.PlayerManagement.Auth
         {
             lock (_activeSessionDict)
             {
-                if (_activeSessionDict.Remove(sessionId) == false)
+                if (_activeSessionDict.Remove(sessionId, out ClientSession session) == false)
                     Logger.Warn($"RemoveActiveSession(): No active session for sessionId {sessionId:X}");
 
                 if (_clientDict.Remove(sessionId) == false)
                     Logger.Warn($"RemoveActiveSession(): No client for sessionId {sessionId:X}");
+
+                _platformTicketManager.RemoveToken(session.PlatformTicket);
             }
         }
 
@@ -215,6 +223,7 @@ namespace MHServerEmu.PlayerManagement.Auth
 
                     Logger.Warn($"Pending session expired: sessionId=0x{session.Id:X}, account=[{session.Account}]");
                     _pendingSessionDict.Remove(kvp.Key);
+                    _platformTicketManager.RemoveToken(session.PlatformTicket);
                 }
             }
         }

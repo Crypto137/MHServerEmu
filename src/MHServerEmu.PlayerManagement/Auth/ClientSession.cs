@@ -22,10 +22,11 @@ namespace MHServerEmu.PlayerManagement.Auth
         public ulong Id { get; set; }
         public object Account { get; set; }
 
-        public ClientDownloader Downloader { get; private set; }
-        public string Locale { get; private set; }
+        public string PlatformTicket { get; }
+        public ClientDownloader Downloader { get; }
+        public string Locale { get; }
 
-        public byte[] Key { get; set; }
+        public byte[] Key { get; }
         public byte[] Token { get; }
         public TimeSpan CreationTime { get; }
 
@@ -34,11 +35,12 @@ namespace MHServerEmu.PlayerManagement.Auth
         /// <summary>
         /// Constructs a new <see cref="ClientSession"/> with the provided data.
         /// </summary>
-        public ClientSession(ulong id, DBAccount account, ClientDownloader downloader, string locale)
+        public ClientSession(ulong id, DBAccount account, string platformTicket, ClientDownloader downloader, string locale)
         {
             Id = id;
             Account = account;
 
+            PlatformTicket = platformTicket;
             Downloader = downloader;
             Locale = locale;
 
