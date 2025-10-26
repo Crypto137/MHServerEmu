@@ -1,0 +1,119 @@
+html {
+    background-color: #0d0d0b;
+}
+
+/* content */
+div.content {
+    max-width: 800px;
+    margin: 10px auto;
+    padding: 20px;
+    border: 1px solid #00717c;
+    background-color: #00090e;
+    color: #d7d7d7;
+}
+
+div.content p,
+div.content li,
+div.content th,
+div.content td {
+    font: 12px/1.385 Verdana;
+}
+
+div.content h1,
+div.content h2, 
+div.content h3,
+div.content h4,
+div.content h5,
+div.content h6,
+div.content label {
+    color: #00aaff;
+    font-family: "Bebas Neue", "Trebuchet MS", Verdana, sans-serif;
+    font-weight: normal;
+}
+
+div.table-container {
+    overflow-x: auto;
+    display: block;
+}
+
+div.content table {
+    width: 100%;
+    margin: 4px 0px;
+    border: 1px solid #00717c;
+    border-collapse: collapse;
+    background: #1c1c1c;
+}
+
+div.content tr:nth-child(even) {
+    background: #111111;
+}
+
+div.content th,
+div.content td {
+    padding: 8px;
+}
+
+div.content th {
+    font-weight: bold;
+    text-align: left;
+}
+
+div.content button,
+div.content select {
+    padding: 8px;
+    border: 1px solid black;
+    box-shadow: 0 0 1px 1px #00aaff;
+    background: #1c1c1c;
+    color: inherit;
+}
+
+div.content button:hover {
+    box-shadow: 0 0 1px 1px white;
+}
+
+div.content select {
+    min-width: 160px;
+    padding: 4px;
+}
+
+div.content label {
+    font-size: x-large;
+    color: revert;
+}
+
+div.content input {
+    border: 1px solid black;
+    box-shadow: 0 0 1px 1px #00aaff;
+    background: #1c1c1c;
+    color: inherit;
+}
+
+/* tab-button-container */
+div.tab-button-container {
+    display: flex;
+    justify-content: center;
+}
+
+div.tab-button-container button {
+    width: 160px;
+    margin: 0px 4px;
+}
+
+/* tab-controls-container */
+div.tab-controls-container {
+    float: right;
+    margin-top: 16px;
+}
+
+/* account-form */
+div.account-form {
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+div.account-form input,
+div.account-form button {
+    width: 100%;
+    box-sizing: border-box;
+}

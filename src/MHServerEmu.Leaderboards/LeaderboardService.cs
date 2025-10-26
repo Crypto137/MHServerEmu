@@ -98,9 +98,9 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public string GetStatus()
+        public void GetStatus(Dictionary<string, long> statusDict)
         {
-            return $"Active Leaderboards: {(_database != null ? _database.LeaderboardCount : 0)}";
+            statusDict["Leaderboards"] = _database != null ? _database.LeaderboardCount : 0;
         }
 
         private void OnRouteMailboxMessage(in ServiceMessage.RouteMessage routeMailboxMessage)

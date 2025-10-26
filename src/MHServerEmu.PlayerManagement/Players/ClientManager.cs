@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.PlayerManagement.Auth;
 
 namespace MHServerEmu.PlayerManagement.Players
 {

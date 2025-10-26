@@ -76,12 +76,17 @@ namespace MHServerEmu.Core.Metrics
             _gameInstancesToRemove.Enqueue(gameId);
         }
 
+        public void GetPerformanceReportData(PerformanceReport report)
+        {
+            lock (_lock)
+                report.Initialize(_memoryMetrics, _gamePerformanceMetricsDict);
+        }
+
         public string GeneratePerformanceReport(MetricsReportFormat format)
         {
             using PerformanceReport report = ObjectPoolManager.Instance.Get<PerformanceReport>();
 
-            lock (_lock)
-                report.Initialize(_memoryMetrics, _gamePerformanceMetricsDict.Values);
+            GetPerformanceReportData(report);
 
             return report.ToString(format);
         }

@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.DatabaseAccess;
 using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Social
@@ -26,7 +27,7 @@ namespace MHServerEmu.PlayerManagement.Social
             }
 
             // Query the database.
-            if (AccountManager.DBManager.TryGetPlayerName(playerDbId, out string dbPlayerName))
+            if (IDBManager.Instance.TryGetPlayerName(playerDbId, out string dbPlayerName))
             {
                 AddLookup(playerDbId, dbPlayerName);
                 resultPlayerName = dbPlayerName;
@@ -49,7 +50,7 @@ namespace MHServerEmu.PlayerManagement.Social
             }
 
             // Query the database.
-            if (AccountManager.DBManager.TryGetPlayerDbIdByName(playerName, out ulong dbPlayerDbId, out string dbPlayerName))
+            if (IDBManager.Instance.TryGetPlayerDbIdByName(playerName, out ulong dbPlayerDbId, out string dbPlayerName))
             {
                 AddLookup(dbPlayerDbId, dbPlayerName);
                 resultPlayerDbId = dbPlayerDbId;

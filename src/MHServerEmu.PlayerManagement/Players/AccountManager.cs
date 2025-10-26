@@ -1,55 +1,58 @@
 ﻿using System.Text.RegularExpressions;
 using Gazillion;
-using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.PlayerManagement.Network;
+using MHServerEmu.PlayerManagement.Auth;
 
 namespace MHServerEmu.PlayerManagement.Players
 {
+    public enum AccountOperationResult
+    {
+        Success,
+        GenericFailure,
+        DatabaseError,
+        EmailInvalid,
+        EmailAlreadyUsed,
+        EmailNotFound,
+        PlayerNameInvalid,
+        PlayerNameAlreadyUsed,
+        PasswordInvalid,
+        FlagAlreadySet,
+        FlagNotSet,
+    }
+
     /// <summary>
     /// Provides <see cref="DBAccount"/> management functions.
     /// </summary>
-    public static class AccountManager
+    public static partial class AccountManager
     {
+        private const int EmailMaxLength = 320;
+        private const int PasswordMinLength = 3;
+        private const int PasswordMaxLength = 64;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
-
-        private static bool _useWhitelist;
-
-        public static IDBManager DBManager { get; private set; }
-
-        /// <summary>
-        /// Initializes <see cref="AccountManager"/>.
-        /// </summary>
-        public static bool Initialize()
-        {
-            DBManager = IDBManager.Instance;
-
-            PlayerManagerConfig config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
-            _useWhitelist = config.UseWhitelist;
-
-            return true;
-        }
 
         /// <summary>
         /// Queries a <see cref="DBAccount"/> using the provided <see cref="LoginDataPB"/> instance.
         /// <see cref="AuthStatusCode"/> indicates the outcome of the query.
         /// </summary>
-        public static AuthStatusCode TryGetAccountByLoginDataPB(LoginDataPB loginDataPB, out DBAccount account)
+        public static AuthStatusCode TryGetAccountByLoginDataPB(LoginDataPB loginDataPB, bool useWhitelist, out DBAccount account)
         {
             account = null;
 
+            IDBManager dbManager = IDBManager.Instance;
+
             // Try to query an account to check
             string email = loginDataPB.EmailAddress.ToLower();
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount accountToCheck) == false)
+            if (dbManager.TryQueryAccountByEmail(email, out DBAccount accountToCheck) == false)
                 return AuthStatusCode.IncorrectUsernameOrPassword403;
 
             // Check the account we queried if our DB manager requires it
-            if (DBManager.VerifyAccounts)
+            if (dbManager.VerifyAccounts)
             {
                 if (CryptographyHelper.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
                     return AuthStatusCode.IncorrectUsernameOrPassword403;
@@ -63,7 +66,7 @@ namespace MHServerEmu.PlayerManagement.Players
                 if (accountToCheck.Flags.HasFlag(AccountFlags.IsPasswordExpired))
                     return AuthStatusCode.PasswordExpired;
 
-                if (_useWhitelist && accountToCheck.Flags.HasFlag(AccountFlags.IsWhitelisted) == false)
+                if (useWhitelist && accountToCheck.Flags.HasFlag(AccountFlags.IsWhitelisted) == false)
                     return AuthStatusCode.EmailNotVerified;
             }
 
@@ -77,115 +80,123 @@ namespace MHServerEmu.PlayerManagement.Players
         /// </summary>
         public static bool TryGetAccountByEmail(string email, out DBAccount account)
         {
-            return DBManager.TryQueryAccountByEmail(email, out account);
+            return IDBManager.Instance.TryQueryAccountByEmail(email, out account);
         }
 
         public static bool LoadPlayerDataForAccount(DBAccount account)
         {
-            return DBManager.LoadPlayerData(account);
+            return IDBManager.Instance.LoadPlayerData(account);
         }
 
         /// <summary>
         /// Creates a new <see cref="DBAccount"/> and inserts it into the database. Returns <see langword="true"/> if successful.
         /// </summary>
-        public static (bool, string) CreateAccount(string email, string playerName, string password)
+        public static AccountOperationResult CreateAccount(string email, string playerName, string password)
         {
+            IDBManager dbManager = IDBManager.Instance;
+
             // Validate input before doing database queries
             if (ValidateEmail(email) == false)
-                return (false, "Failed to create account: email must not be longer than 320 characters.");
+                return AccountOperationResult.EmailInvalid;
 
             if (ValidatePlayerName(playerName) == false)
-                return (false, "Failed to create account: names may contain only up to 16 alphanumeric characters.");
+                return AccountOperationResult.PlayerNameInvalid;
 
             if (ValidatePassword(password) == false)
-                return (false, "Failed to create account: password must between 3 and 64 characters long.");
+                return AccountOperationResult.PasswordInvalid;
 
-            if (DBManager.TryQueryAccountByEmail(email, out _))
-                return (false, $"Failed to create account: email {email} is already used by another account.");
+            if (dbManager.TryQueryAccountByEmail(email, out _))
+                return AccountOperationResult.EmailAlreadyUsed;
 
-            if (DBManager.TryGetPlayerDbIdByName(playerName, out _, out _))
-                return (false, $"Failed to create account: name {playerName} is already used by another account.");
+            if (dbManager.TryGetPlayerDbIdByName(playerName, out _, out _))
+                return AccountOperationResult.PlayerNameAlreadyUsed;
 
             // Create a new account and insert it into the database
             DBAccount account = new(email, playerName, password);
 
-            if (DBManager.InsertAccount(account) == false)
-                return (false, "Failed to create account: database error.");
+            if (dbManager.InsertAccount(account) == false)
+                return AccountOperationResult.DatabaseError;
 
-            return (true, $"Created a new account: {email} ({playerName}).");
+            return AccountOperationResult.Success;
         }
 
-        // TODO (bool, string) ChangeAccountEmail(string oldEmail, string newEmail)
+        // TODO AccountOperationResult ChangeAccountEmail(string oldEmail, string newEmail)
 
         /// <summary>
         /// Changes the player name of the <see cref="DBAccount"/> with the specified email. Returns <see langword="true"/> if successful.
         /// </summary>
-        public static (bool, string) ChangeAccountPlayerName(string email, string newPlayerName)
+        public static AccountOperationResult ChangeAccountPlayerName(string email, string newPlayerName)
         {
+            IDBManager dbManager = IDBManager.Instance;
+
             // Validate input before doing database queries
             if (ValidatePlayerName(newPlayerName) == false)
-                return (false, "Failed to change player name: names may contain only up to 16 alphanumeric characters.");
+                return AccountOperationResult.PlayerNameInvalid;
 
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
-                return (false, $"Failed to change player name: account {email} not found.");
+            if (dbManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
+                return AccountOperationResult.EmailNotFound;
 
-            if (DBManager.TryGetPlayerDbIdByName(newPlayerName, out _, out _))
-                return (false, $"Failed to change player name: name {newPlayerName} is already used by another account.");
+            if (dbManager.TryGetPlayerDbIdByName(newPlayerName, out _, out _))
+                return AccountOperationResult.PlayerNameAlreadyUsed;
 
             // Write the new name to the database
             string oldPlayerName = account.PlayerName;
             account.PlayerName = newPlayerName;
-            DBManager.UpdateAccount(account);
+            dbManager.UpdateAccount(account);
 
             ServiceMessage.PlayerNameChanged playerNameChanged = new((ulong)account.Id, oldPlayerName, newPlayerName);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, playerNameChanged);
             ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, playerNameChanged);
 
-            return (true, $"Successfully changed player name for account {email} to {newPlayerName}.");
+            return AccountOperationResult.Success;
         }
 
         /// <summary>
         /// Changes the password of the <see cref="DBAccount"/> with the specified email. Returns <see langword="true"/> if successful.
         /// </summary>
-        public static (bool, string) ChangeAccountPassword(string email, string newPassword)
+        public static AccountOperationResult ChangeAccountPassword(string email, string newPassword)
         {
+            IDBManager dbManager = IDBManager.Instance;
+
             // Validate input before doing database queries
             if (ValidatePassword(newPassword) == false)
-                return (false, "Failed to change password: password must between 3 and 64 characters long.");
+                return AccountOperationResult.PasswordInvalid;
 
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
-                return (false, $"Failed to change password: account {email} not found.");
+            if (dbManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
+                return AccountOperationResult.EmailNotFound;
 
             // Update the password and write the new hash/salt to the database
             account.PasswordHash = CryptographyHelper.HashPassword(newPassword, out byte[] salt);
             account.Salt = salt;
             account.Flags &= ~AccountFlags.IsPasswordExpired;
-            DBManager.UpdateAccount(account);
-            return (true, $"Successfully changed password for account {email}.");
+            dbManager.UpdateAccount(account);
+            return AccountOperationResult.Success;
         }
 
         /// <summary>
         /// Changes the <see cref="AccountUserLevel"/> of the <see cref="DBAccount"/> with the specified email. Returns <see langword="true"/> if successful.
         /// </summary>
-        public static (bool, string) SetAccountUserLevel(string email, AccountUserLevel userLevel)
+        public static AccountOperationResult SetAccountUserLevel(string email, AccountUserLevel userLevel)
         {
+            IDBManager dbManager = IDBManager.Instance;
+
             // Make sure the specified account exists
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
-                return (false, $"Failed to set user level: account {email} not found.");
+            if (dbManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
+                return AccountOperationResult.EmailNotFound;
 
             // Write the new user level to the database
             account.UserLevel = userLevel;
-            DBManager.UpdateAccount(account);
-            return (true, $"Successfully set user level for account {email} to {userLevel}.");
+            dbManager.UpdateAccount(account);
+            return AccountOperationResult.Success;
         }
 
         /// <summary>
         /// Sets the specified <see cref="AccountFlags"/> for the <see cref="DBAccount"/> with the provided email.
         /// </summary>
-        public static (bool, string) SetFlag(string email, AccountFlags flag)
+        public static AccountOperationResult SetFlag(string email, AccountFlags flag)
         {
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
-                return (false, $"Failed to set flag: account with email {email} not found.");
+            if (IDBManager.Instance.TryQueryAccountByEmail(email, out DBAccount account) == false)
+                return AccountOperationResult.EmailNotFound;
 
             return SetFlag(account, flag);
         }
@@ -193,25 +204,25 @@ namespace MHServerEmu.PlayerManagement.Players
         /// <summary>
         /// Sets the specified <see cref="AccountFlags"/> for the provided <see cref="DBAccount"/>.
         /// </summary>
-        public static (bool, string) SetFlag(DBAccount account, AccountFlags flag)
+        public static AccountOperationResult SetFlag(DBAccount account, AccountFlags flag)
         {
             if (account.Flags.HasFlag(flag))
-                return (false, $"Failed to set flag: account {account} already has flag {flag}.");
+                return AccountOperationResult.FlagAlreadySet;
 
             // Update flags and write to the database
             Logger.Trace($"Setting flag {flag} for account {account}");
             account.Flags |= flag;
-            DBManager.UpdateAccount(account);
-            return (true, $"Successfully set flag {flag} for account {account}.");
+            IDBManager.Instance.UpdateAccount(account);
+            return AccountOperationResult.Success;
         }
 
         /// <summary>
         /// Clears the specified <see cref="AccountFlags"/> for the <see cref="DBAccount"/> with the provided email.
         /// </summary>
-        public static (bool, string) ClearFlag(string email, AccountFlags flag)
+        public static AccountOperationResult ClearFlag(string email, AccountFlags flag)
         {
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
-                return (false, $"Failed to clear flag: account with email {email} not found.");
+            if (IDBManager.Instance.TryQueryAccountByEmail(email, out DBAccount account) == false)
+                return AccountOperationResult.EmailNotFound;
 
             return ClearFlag(account, flag);
         }
@@ -219,16 +230,46 @@ namespace MHServerEmu.PlayerManagement.Players
         /// <summary>
         /// Clears the specified <see cref="AccountFlags"/> for the provided <see cref="DBAccount"/>.
         /// </summary>
-        public static (bool, string) ClearFlag(DBAccount account, AccountFlags flag)
+        public static AccountOperationResult ClearFlag(DBAccount account, AccountFlags flag)
         {
             if (account.Flags.HasFlag(flag) == false)
-                return (false, $"Failed to clear flag: {flag} is not set for account {account}.");
+                return AccountOperationResult.FlagNotSet;
 
             // Update flags and write to the database
             Logger.Trace($"Clearing flag {flag} for account {account}");
             account.Flags &= ~flag;
-            DBManager.UpdateAccount(account);
-            return (true, $"Successfully cleared flag {flag} from account {account}.");
+            IDBManager.Instance.UpdateAccount(account);
+            return AccountOperationResult.Success;
+        }
+
+        public static string GetOperationResultString(AccountOperationResult result, string email = null, string playerName = null)
+        {
+            switch (result)
+            {
+                case AccountOperationResult.Success:
+                    return $"Created account {email} ({playerName}).";
+
+                case AccountOperationResult.EmailInvalid:
+                    return $"'{email}' is not a valid email address.";
+
+                case AccountOperationResult.EmailAlreadyUsed:
+                    return $"Email {email} is already used by another account.";
+
+                case AccountOperationResult.EmailNotFound:
+                    return $"Account with email {email} not found.";
+
+                case AccountOperationResult.PlayerNameInvalid:
+                    return "Names may contain only up to 16 alphanumeric characters.";
+
+                case AccountOperationResult.PlayerNameAlreadyUsed:
+                    return $"Name {playerName} is already used by another account.";
+
+                case AccountOperationResult.PasswordInvalid:
+                    return "Password must between 3 and 64 characters long.";
+
+                default:
+                    return result.ToString();
+            }
         }
 
         /// <summary>
@@ -236,7 +277,23 @@ namespace MHServerEmu.PlayerManagement.Players
         /// </summary>
         private static bool ValidateEmail(string email)
         {
-            return email.Length.IsWithin(1, 320);  // todo: add regex for email
+            if (email.Length > EmailMaxLength)
+                return false;
+
+            // Validate like the client does on the login screen.
+            int atIndex = email.IndexOf('@');
+            if (atIndex == -1)
+                return false;
+
+            int dotIndex = email.LastIndexOf('.');
+            if (dotIndex < atIndex)
+                return false;
+
+            int topDomainLength = email.Length - (dotIndex + 1);
+            if (topDomainLength < 2)
+                return false;
+
+            return true;
         }
 
         /// <summary>
@@ -244,7 +301,7 @@ namespace MHServerEmu.PlayerManagement.Players
         /// </summary>
         private static bool ValidatePlayerName(string playerName)
         {
-            return Regex.Match(playerName, "^[a-zA-Z0-9]{1,16}$").Success;    // 1-16 alphanumeric characters
+            return GetPlayerNameRegex().Match(playerName).Success;    // 1-16 alphanumeric characters
         }
         
         /// <summary>
@@ -252,7 +309,10 @@ namespace MHServerEmu.PlayerManagement.Players
         /// </summary>
         private static bool ValidatePassword(string password)
         {
-            return password.Length.IsWithin(3, 64);
+            return password.Length.IsWithin(PasswordMinLength, PasswordMaxLength);
         }
+
+        [GeneratedRegex(@"^[a-zA-Z0-9]{1,16}$")]
+        private static partial Regex GetPlayerNameRegex();
     }
 }

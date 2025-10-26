@@ -61,9 +61,9 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        public string GetStatus()
+        public void GetStatus(Dictionary<string, long> statusDict)
         {
-            return $"Players: {ClientManager.Count}";
+            statusDict["GroupingManagerPlayers"] = ClientManager.Count;
         }
 
         #endregion

@@ -14,14 +14,13 @@ namespace MHServerEmu.Frontend
     /// </summary>
     public class FrontendClient : TcpClient, IFrontendClient, IDBAccountOwner
     {
-        // We are currently allowing 50 packets per seconds with up to 10 seconds of burst.
-        // Given our current receive buffer size of 8 KB, this limits client input at about 400 KB/s.
-        private const int RateLimitPacketsPerSecond = 50;
-        private const int RateLimitBurst = RateLimitPacketsPerSecond * 10;
+        // Rate limit at 8 KB/s with a bit of burst allowed.
+        private const int RateLimitBytesPerSecond = 1024 * 8;
+        private const int RateLimitBurst = RateLimitBytesPerSecond * 10;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly TokenBucket _tokenBucket = new(RateLimitPacketsPerSecond, RateLimitBurst);
+        private readonly TokenBucket _tokenBucket = new(RateLimitBytesPerSecond, RateLimitBurst);
         private readonly MuxReader _muxReader;
 
         // We intentionally don't use an array here so that channel state is inlined in FrontendClient
@@ -138,7 +137,7 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public void HandleIncomingData(byte[] buffer, int length)
         {
-            if (_tokenBucket.CheckLimit() == false)
+            if (_tokenBucket.CheckLimit(length) == false)
             {
                 Logger.Error($"HandleIncomingData(): Rate limit exceeded for client [{this}]");
                 Disconnect();

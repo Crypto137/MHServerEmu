@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.WebFrontend;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -21,7 +22,7 @@ namespace MHServerEmu.Commands.Implementations
             StringBuilder sb = new();
             sb.AppendLine("Server Status");
             sb.AppendLine(ServerApp.VersionInfo);
-            sb.Append(ServerManager.Instance.GetServerStatus(client == null));
+            sb.Append(ServerManager.Instance.GetServerStatusString());
             string status = sb.ToString();
 
             // Display in the console as is
@@ -56,6 +57,18 @@ namespace MHServerEmu.Commands.Implementations
         public string ReloadLiveTuning(string[] @params, NetClient client)
         {
             LiveTuningManager.Instance.LoadLiveTuningDataFromDisk();
+            return string.Empty;
+        }
+
+        [Command("reloaddashboard")]
+        [CommandDescription("Reloads the web dashboard.")]
+        [CommandUsage("server reloaddashboard")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.ServerConsole)]
+        public string ReloadDashboard(string[] @params, NetClient client)
+        {
+            WebFrontendService webFrontend = ServerManager.Instance.GetGameService(GameServiceType.WebFrontend) as WebFrontendService;
+            webFrontend?.ReloadDashboard();
             return string.Empty;
         }
 

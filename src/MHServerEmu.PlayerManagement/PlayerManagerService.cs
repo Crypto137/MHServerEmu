@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics;
 using Gazillion;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games;
+using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Games;
 using MHServerEmu.PlayerManagement.Network;
 using MHServerEmu.PlayerManagement.Players;
@@ -146,9 +146,12 @@ namespace MHServerEmu.PlayerManagement
             }
         }
 
-        public string GetStatus()
+        public void GetStatus(Dictionary<string, long> statusDict)
         {
-            return $"Games: {GameHandleManager.GameCount} | Players: {ClientManager.PlayerCount} | Sessions: {SessionManager.ActiveSessionCount} [{SessionManager.PendingSessionCount}]";
+            statusDict["PlayerManagerGames"] = GameHandleManager.GameCount;
+            statusDict["PlayerManagerPlayers"] = ClientManager.PlayerCount;
+            statusDict["PlayerManagerActiveSessions"] = SessionManager.ActiveSessionCount;
+            statusDict["PlayerManagerPendingSessions"] = SessionManager.PendingSessionCount;
         }
 
         private void OnRouteMessageBuffer(in ServiceMessage.RouteMessageBuffer routeMessageBuffer)
@@ -211,27 +214,7 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public AuthStatusCode OnLoginDataPB(LoginDataPB loginDataPB, out AuthTicket authTicket)
         {
-            authTicket = AuthTicket.DefaultInstance;
-
-            var statusCode = SessionManager.TryCreateSessionFromLoginDataPB(loginDataPB, out ClientSession session);
-
-            if (statusCode == AuthStatusCode.Success)
-            {
-                // Avoid extra allocations and copying by using Unsafe.FromBytes() for session key and token
-                authTicket = AuthTicket.CreateBuilder()
-                    .SetSessionKey(ByteString.Unsafe.FromBytes(session.Key))
-                    .SetSessionToken(ByteString.Unsafe.FromBytes(session.Token))
-                    .SetSessionId(session.Id)
-                    .SetFrontendServer(IFrontendClient.FrontendAddress)
-                    .SetFrontendPort(IFrontendClient.FrontendPort)
-                    .SetPlatformTicket("")
-                    .SetHasnews(Config.ShowNewsOnLogin)
-                    .SetNewsurl(Config.NewsUrl)
-                    .SetSuccess(true)
-                    .Build();
-            }
-
-            return statusCode;
+            return SessionManager.TryCreateSession(loginDataPB, out authTicket);
         }
 
         /// <summary>

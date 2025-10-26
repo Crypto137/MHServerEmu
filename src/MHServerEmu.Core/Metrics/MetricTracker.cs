@@ -1,7 +1,5 @@
-﻿using System.Text;
-using MHServerEmu.Core.Collections;
+﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.Helpers;
 
 namespace MHServerEmu.Core.Metrics
 {
@@ -60,9 +58,8 @@ namespace MHServerEmu.Core.Metrics
         /// <summary>
         /// A snapshot of the state of a <see cref="MetricTracker"/>.
         /// </summary>
-        public readonly struct ReportEntry : IHtmlDataStructure
+        public readonly struct ReportEntry
         {
-            public string Name { get; }
             public float Average { get; }
             public float Median { get; }
             public float Last { get; }
@@ -71,7 +68,6 @@ namespace MHServerEmu.Core.Metrics
 
             public ReportEntry(MetricTracker tracker)
             {
-                Name = tracker._name;
                 Average = tracker._buffer.ToAverage();
                 Median = tracker._buffer.ToMedian();
                 Last = tracker._last;
@@ -82,17 +78,6 @@ namespace MHServerEmu.Core.Metrics
             public override string ToString()
             {
                 return $"avg={Average}, mdn={Median}, last={Last}, min={Min}, max={Max}";
-            }
-
-            public void BuildHtml(StringBuilder sb)
-            {
-                HtmlBuilder.AppendTableRow(sb,
-                    Name,
-                    Average.ToString("0.00"),
-                    Median.ToString("0.00"),
-                    Last.ToString("0.00"),
-                    Min != float.MaxValue ? Min.ToString("0.00") : "0.00",
-                    Max != float.MinValue ? Max.ToString("0.00") : "0.00");
             }
         }
     }

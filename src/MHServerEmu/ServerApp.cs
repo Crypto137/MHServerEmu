@@ -1,12 +1,12 @@
 ﻿using System.Globalization;
 using System.Runtime.InteropServices;
-using MHServerEmu.Auth;
 using MHServerEmu.Billing;
 using MHServerEmu.Commands;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Logging.Targets;
+using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Json;
@@ -20,7 +20,7 @@ using MHServerEmu.Games.Network.InstanceManagement;
 using MHServerEmu.Grouping;
 using MHServerEmu.Leaderboards;
 using MHServerEmu.PlayerManagement;
-using MHServerEmu.PlayerManagement.Players;
+using MHServerEmu.WebFrontend;
 
 namespace MHServerEmu
 {
@@ -120,7 +120,7 @@ namespace MHServerEmu
             serverManager.RegisterGameService(new GroupingManagerService(), GameServiceType.GroupingManager);
             serverManager.RegisterGameService(new BillingService(), GameServiceType.Billing);
             serverManager.RegisterGameService(new FrontendServer(), GameServiceType.Frontend);
-            serverManager.RegisterGameService(new AuthServer(), GameServiceType.Auth);
+            serverManager.RegisterGameService(new WebFrontendService(), GameServiceType.WebFrontend);
 
             serverManager.RunServices();
 
@@ -195,7 +195,8 @@ namespace MHServerEmu
                     writer.WriteLine($"{VersionInfo}\n");
                     writer.WriteLine($"Local Server Time: {now:yyyy.MM.dd HH:mm:ss.fff}\n");
                     writer.WriteLine($"Exception:\n{exception}\n");
-                    writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus(true)}\n");
+                    writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatusString()}\n");
+                    writer.WriteLine($"Performance Metrics:\n{MetricsManager.Instance.GeneratePerformanceReport(MetricsReportFormat.PlainText)}\n");
                 }
 
                 Logger.FatalException(exception, $"MHServerEmu terminating because of unhandled exception, report saved to {crashReportFilePath}");
@@ -250,8 +251,7 @@ namespace MHServerEmu
                 && GameDatabase.IsInitialized
                 && LiveTuningManager.Instance.Initialize()
                 && CatalogManager.Instance.Initialize()
-                && IDBManager.Instance.Initialize()
-                && AccountManager.Initialize();
+                && IDBManager.Instance.Initialize();
         }
     }
 }
