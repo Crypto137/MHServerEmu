@@ -769,10 +769,12 @@ namespace MHServerEmu.Games.Entities
                     rollSettings.UsableAvatar = ((PrototypeId)Properties[PropertyEnum.VendorRollAvatar, vendorTypeProtoRef]).As<AvatarPrototype>();
                     rollSettings.Level = Properties[PropertyEnum.VendorRollLevel, vendorTypeProtoRef];
 
-                    // TODO: region keywords
                     Region region = GetRegion();
                     if (region != null)
+                    {
                         rollSettings.RegionScenarioRarity = region.Settings.ItemRarity;
+                        rollSettings.RegionKeywords = region.GetKeywordsMask();
+                    }
 
                     // Initialize resolver and roll
                     using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
