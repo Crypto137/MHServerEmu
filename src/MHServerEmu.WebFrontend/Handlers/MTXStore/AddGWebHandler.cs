@@ -11,6 +11,7 @@ namespace MHServerEmu.WebFrontend.Handlers.MTXStore
     public class AddGWebHandler : WebHandler
     {
         private const string HtmlTemplateFileName = "add-g.html";
+        private const int AuthTimeoutMS = 15000;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string HtmlTemplateFilePath = Path.Combine(FileHelper.DataDirectory, "Web", "MTXStore", HtmlTemplateFileName);
@@ -56,8 +57,17 @@ namespace MHServerEmu.WebFrontend.Handlers.MTXStore
             ServiceMessage.MTXStoreAuthRequest authRequest = new(requestId, email, token);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, authRequest);
 
-            ServiceMessage.MTXStoreAuthResponse authResponse = await authTask;
+            await Task.WhenAny(authTask, Task.Delay(TimeSpan.FromMilliseconds(AuthTimeoutMS)));
             
+            if (authTask.IsCompletedSuccessfully == false)
+            {
+                Logger.Warn($"Post(): Timeout for request {requestId}");
+                _authTaskManager.CancelTask(requestId);
+                context.StatusCode = (int)HttpStatusCode.RequestTimeout;
+                return;
+            }
+
+            ServiceMessage.MTXStoreAuthResponse authResponse = authTask.Result;
             if (authResponse.IsSuccess == false)
             {
                 context.StatusCode = (int)HttpStatusCode.Forbidden;
