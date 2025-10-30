@@ -91,6 +91,10 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnPartyBoostUpdate(partyBoostUpdate);
                     break;
 
+                case ServiceMessage.MTXStoreAuthRequest mtxStoreAuthRequest:
+                    OnMTXStoreAuthRequest(mtxStoreAuthRequest);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                     break;
@@ -338,6 +342,20 @@ namespace MHServerEmu.PlayerManagement.Network
 
             player.SetPartyBoosts(boosts);
             player.CurrentParty?.UpdateMember(player);
+
+            return true;
+        }
+
+        private bool OnMTXStoreAuthRequest(in ServiceMessage.MTXStoreAuthRequest mtxStoreAuthRequest)
+        {
+            ulong requestId = mtxStoreAuthRequest.RequestId;
+            string email = mtxStoreAuthRequest.Email;
+            string token = mtxStoreAuthRequest.Token;
+
+            // TODO: Verify, get data from game instance
+
+            ServiceMessage.MTXStoreAuthResponse response = new(requestId, true, 0, 2.25f);
+            ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
 
             return true;
         }

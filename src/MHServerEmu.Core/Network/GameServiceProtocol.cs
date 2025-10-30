@@ -530,5 +530,26 @@ namespace MHServerEmu.Core.Network
         }
 
         #endregion
+
+        #region Web Frontend
+
+        public readonly struct MTXStoreAuthRequest(ulong requestId, string email, string token)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly string Email = email;
+            public readonly string Token = token;
+        }
+
+        public readonly struct MTXStoreAuthResponse(ulong requestId, bool isSuccess, int currentBalance, float conversionRatio)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly bool IsSuccess = isSuccess;
+            public readonly int CurrentBalance = currentBalance;
+            public readonly float ConversionRatio = conversionRatio;
+        }
+
+        #endregion
     }
 }

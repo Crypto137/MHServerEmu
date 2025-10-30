@@ -3,6 +3,7 @@ using System.Net;
 using System.Text;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Web;
 
 namespace MHServerEmu.WebFrontend.Handlers.MTXStore
@@ -14,9 +15,10 @@ namespace MHServerEmu.WebFrontend.Handlers.MTXStore
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string HtmlTemplateFilePath = Path.Combine(FileHelper.DataDirectory, "Web", "MTXStore", HtmlTemplateFileName);
 
+        private readonly WebTaskManager<ServiceMessage.MTXStoreAuthResponse> _authTaskManager;
         private readonly string _htmlTemplate;
 
-        public AddGWebHandler()
+        public AddGWebHandler(WebTaskManager<ServiceMessage.MTXStoreAuthResponse> authTaskManager)
         {
             if (File.Exists(HtmlTemplateFilePath) == false)
             {
@@ -25,6 +27,7 @@ namespace MHServerEmu.WebFrontend.Handlers.MTXStore
                 return;
             }
 
+            _authTaskManager = authTaskManager;
             _htmlTemplate = File.ReadAllText(HtmlTemplateFilePath);
         }
 
@@ -48,13 +51,25 @@ namespace MHServerEmu.WebFrontend.Handlers.MTXStore
             string token = request["token"];
             string email = request["email"];
 
-            // TODO: Verify downloader/token/email
-            //Logger.Debug($"Post(): downloader={downloader}, token={token}, email={email}");
+            Task<ServiceMessage.MTXStoreAuthResponse> authTask = _authTaskManager.CreateTask(out ulong requestId);
+            
+            ServiceMessage.MTXStoreAuthRequest authRequest = new(requestId, email, token);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, authRequest);
+
+            ServiceMessage.MTXStoreAuthResponse authResponse = await authTask;
+            
+            if (authResponse.IsSuccess == false)
+            {
+                context.StatusCode = (int)HttpStatusCode.Forbidden;
+                return;
+            }
 
             StringBuilder sb = new(_htmlTemplate);
             sb.Replace("%REQUEST_DOWNLOADER%", downloader);
             sb.Replace("%REQUEST_TOKEN%", token);
             sb.Replace("%REQUEST_EMAIL%", email);
+            sb.Replace("%REQUEST_CURRENT_BALANCE%", $"{authResponse.CurrentBalance}");
+            sb.Replace("%REQUEST_CONVERSION_RATIO%", $"{authResponse.ConversionRatio:0.00}");
             string html = sb.ToString();
 
             await context.SendAsync(html, "text/html");

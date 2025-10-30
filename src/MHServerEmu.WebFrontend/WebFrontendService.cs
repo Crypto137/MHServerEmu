@@ -6,6 +6,7 @@ using MHServerEmu.Core.Network.Web;
 using MHServerEmu.WebFrontend.Handlers;
 using MHServerEmu.WebFrontend.Handlers.MTXStore;
 using MHServerEmu.WebFrontend.Handlers.WebApi;
+using MHServerEmu.WebFrontend.Network;
 
 namespace MHServerEmu.WebFrontend
 {
@@ -15,6 +16,8 @@ namespace MHServerEmu.WebFrontend
     public class WebFrontendService : IGameService
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private readonly WebFrontendServiceMailbox _serviceMailbox = new();
 
         private readonly WebService _webService;
         private List<string> _dashboardEndpoints;
@@ -44,7 +47,7 @@ namespace MHServerEmu.WebFrontend
             _webService.RegisterHandler("/AuthServer/Login/IndexPB", protobufHandler);
 
             // MTXStore handlers are used for the Add G panel in the client UI.
-            _webService.RegisterHandler("/MTXStore/AddG", new AddGWebHandler());
+            _webService.RegisterHandler("/MTXStore/AddG", new AddGWebHandler(_serviceMailbox.MTXStoreAuthTaskManager));
 
             if (config.EnableWebApi)
             {
@@ -66,7 +69,10 @@ namespace MHServerEmu.WebFrontend
             State = GameServiceState.Running;
 
             while (_webService.IsRunning)
-                Thread.Sleep(500);
+            {
+                _serviceMailbox.ProcessMessages();
+                Thread.Sleep(1);
+            }
 
             State = GameServiceState.Shutdown;
         }
@@ -81,9 +87,12 @@ namespace MHServerEmu.WebFrontend
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
-            // AuthServer should not be handling messages from TCP clients
             switch (message)
             {
+                case ServiceMessage.MTXStoreAuthResponse:
+                    _serviceMailbox.PostMessage(message);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
                     break;
