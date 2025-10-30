@@ -95,6 +95,10 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnMTXStoreAuthRequest(mtxStoreAuthRequest);
                     break;
 
+                case ServiceMessage.MTXStoreESBalanceResponse mtxStoreESBalanceResponse:
+                    OnMTXStoreESBalanceResponse(mtxStoreESBalanceResponse);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                     break;
@@ -352,20 +356,40 @@ namespace MHServerEmu.PlayerManagement.Network
             string email = mtxStoreAuthRequest.Email;
             string token = mtxStoreAuthRequest.Token;
 
-            bool success = _playerManager.SessionManager.VerifyPlatformTicket(email, token, out ulong playerDbId);
-            if (success == false)
+            PlayerHandle player = null;
+
+            if (_playerManager.SessionManager.VerifyPlatformTicket(email, token, out ulong playerDbId))
+                player = _playerManager.ClientManager.GetPlayer(playerDbId);
+
+            if (player == null || player.State != PlayerHandleState.InGame)
             {
                 ServiceMessage.MTXStoreAuthResponse response = new(requestId, false);
                 ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
                 return true;
             }
 
-            {
-                // TODO: Request data from game instance
-                Logger.Debug($"OnMTXStoreAuthRequest(): SUCCESS for email={email}, token={token}, playerDbId=0x{playerDbId:X}");
-                ServiceMessage.MTXStoreAuthResponse response = new(requestId, true, 0, 2.25f);
-                ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
-            }
+            ulong gameId = player.CurrentGame.Id;
+
+            // Route the request to game instance to get up to date balance and conversion ratio
+            ServiceMessage.MTXStoreESBalanceRequest balanceRequest = new(requestId, gameId, playerDbId);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, balanceRequest);
+
+            Logger.Debug($"OnMTXStoreAuthRequest(): SUCCESS for email={email}, token={token}, playerDbId=0x{playerDbId:X}");
+
+            return true;
+        }
+
+        private bool OnMTXStoreESBalanceResponse(in ServiceMessage.MTXStoreESBalanceResponse mtxStoreESBalanceResponse)
+        {
+            ulong requestId = mtxStoreESBalanceResponse.RequestId;
+            int currentBalance = mtxStoreESBalanceResponse.CurrentBalance;
+            float conversionRate = mtxStoreESBalanceResponse.ConversionRatio;
+
+            // We should have already handled authentication before routing the request to the game instance, so just route the result back.
+            ServiceMessage.MTXStoreAuthResponse response = new(requestId, true, currentBalance, conversionRate);
+            ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
+
+            Logger.Debug($"OnMTXStoreESBalanceResponse(): currentBalance={currentBalance}, conversionRate={conversionRate}");
 
             return true;
         }

@@ -138,6 +138,7 @@ namespace MHServerEmu.PlayerManagement
                 case ServiceMessage.PartyOperationRequest:
                 case ServiceMessage.PartyBoostUpdate:
                 case ServiceMessage.MTXStoreAuthRequest:
+                case ServiceMessage.MTXStoreESBalanceResponse:
                     _serviceMailbox.PostMessage(message);
                     break;
 

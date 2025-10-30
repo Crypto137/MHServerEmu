@@ -120,6 +120,10 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     OnLeaderboardRewardRequestResponse(leaderboardRewardRequestResponse);
                     break;
 
+                case ServiceMessage.MTXStoreESBalanceRequest mtxStoreESBalanceRequest:
+                    RouteMessageToGame(mtxStoreESBalanceRequest.GameId, mtxStoreESBalanceRequest);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
                     break;

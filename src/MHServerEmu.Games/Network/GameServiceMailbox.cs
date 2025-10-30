@@ -1,8 +1,11 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.MTXStore;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Communities;
 
@@ -76,6 +79,10 @@ namespace MHServerEmu.Games.Network
 
                 case ServiceMessage.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse:
                     OnLeaderboardRewardRequestResponse(leaderboardRewardRequestResponse);
+                    break;
+
+                case ServiceMessage.MTXStoreESBalanceRequest mtxStoreESBalanceRequest:
+                    OnMTXStoreESBalanceRequest(mtxStoreESBalanceRequest);
                     break;
 
                 default:
@@ -250,6 +257,20 @@ namespace MHServerEmu.Games.Network
                 return Logger.WarnReturn(false, $"OnLeaderboardRewardRequestResponse(): Player 0x{playerId:X} not found in game [{Game}]");
 
             player.LeaderboardManager.AddPendingRewards(leaderboardRewardRequestResponse.Entries);
+            return true;
+        }
+
+        private bool OnMTXStoreESBalanceRequest(in ServiceMessage.MTXStoreESBalanceRequest mtxStoreESBalanceRequest)
+        {
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(mtxStoreESBalanceRequest.PlayerDbId);
+            if (player == null) return Logger.WarnReturn(false, "OnMTXStoreESBalanceRequest(): player == null");
+
+            int currentBalance = player.Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.EternitySplinters];
+            float conversionRatio = ConfigManager.Instance.GetConfig<MTXStoreConfig>().ESToGazillioniteConversionRatio;
+
+            ServiceMessage.MTXStoreESBalanceResponse response = new(mtxStoreESBalanceRequest.RequestId, currentBalance, conversionRatio);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, response);
+
             return true;
         }
 
