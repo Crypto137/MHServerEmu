@@ -175,6 +175,36 @@ namespace MHServerEmu.PlayerManagement.Auth
         }
 
         /// <summary>
+        /// Verifies credentials for MTX store authentication.
+        /// </summary>
+        public bool VerifyPlatformTicket(string email, string token, out ulong playerDbId)
+        {
+            playerDbId = 0;
+
+            if (_platformTicketManager.TryGetValue(token, out ulong sessionId) == false)
+                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): Invalid token {token}");
+
+            ClientSession session;
+            lock (_activeSessionDict)
+                _activeSessionDict.TryGetValue(sessionId, out session);
+
+            if (session == null)
+                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): Failed to retrieve session! sessionId=0x{sessionId:X}, token={token}, email={email}");
+
+            if (session.PlatformTicket != token)
+                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): Token mismatch for session 0x{sessionId:X}: expected {session.PlatformTicket}, received {token}");
+
+            if (session.Account is not DBAccount account)
+                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): No account for session 0x{sessionId:X}");
+
+            if (account.Email.Equals(email, StringComparison.OrdinalIgnoreCase) == false)
+                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): Email mismatch for sessionId 0x{sessionId:X}");
+
+            playerDbId = (ulong)account.Id;
+            return true;
+        }
+
+        /// <summary>
         /// Removes the <see cref="ClientSession"/> with the specified id.
         /// </summary>
         public void RemoveActiveSession(ulong sessionId)

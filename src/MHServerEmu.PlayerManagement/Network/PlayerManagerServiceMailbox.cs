@@ -352,10 +352,20 @@ namespace MHServerEmu.PlayerManagement.Network
             string email = mtxStoreAuthRequest.Email;
             string token = mtxStoreAuthRequest.Token;
 
-            // TODO: Verify, get data from game instance
+            bool success = _playerManager.SessionManager.VerifyPlatformTicket(email, token, out ulong playerDbId);
+            if (success == false)
+            {
+                ServiceMessage.MTXStoreAuthResponse response = new(requestId, false);
+                ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
+                return true;
+            }
 
-            ServiceMessage.MTXStoreAuthResponse response = new(requestId, true, 0, 2.25f);
-            ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
+            {
+                // TODO: Request data from game instance
+                Logger.Debug($"OnMTXStoreAuthRequest(): SUCCESS for email={email}, token={token}, playerDbId=0x{playerDbId:X}");
+                ServiceMessage.MTXStoreAuthResponse response = new(requestId, true, 0, 2.25f);
+                ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
+            }
 
             return true;
         }
