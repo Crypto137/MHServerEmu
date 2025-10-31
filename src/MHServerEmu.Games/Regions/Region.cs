@@ -1853,11 +1853,14 @@ namespace MHServerEmu.Games.Regions
                         {
                             killerAvatar.Properties.AdjustProperty(1, PropertyEnum.PvPKills);
 
+                            // not used in PvP.UpdatePlayerCollection
+                            /* 
                             int killerMatchIndex = killerAvatar.Properties[PropertyEnum.PvPLastMatchIndex];
                             killerAvatar.Properties.AdjustProperty(1, new(PropertyEnum.PvPKillsDuringMatch, (PropertyParam)killerMatchIndex));
 
                             int victimMatchIndex = avatar.Properties[PropertyEnum.PvPLastMatchIndex];
                             avatar.Properties.AdjustProperty(1, new(PropertyEnum.PvPDeathsDuringMatch, (PropertyParam)victimMatchIndex));
+                            */
                         }
                     }
 

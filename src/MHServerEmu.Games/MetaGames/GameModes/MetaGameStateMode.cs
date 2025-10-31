@@ -5,6 +5,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 
@@ -173,9 +174,11 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             if (MetaGame.ApplyMetaState(stateRef, skipCooldown) == false) return false;
 
-            var interestedClients = GetInterestedClients();
+            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+            GetInterestedClients(interestedClients);
 
-            List<long> intArgs = new() { (int)MetaGame.Properties[PropertyEnum.MetaGameWaveCount] };
+            var intArgs = ListPool<long>.Instance.Get();
+            intArgs.Add((int)MetaGame.Properties[PropertyEnum.MetaGameWaveCount]);
 
             if (_proto.DifficultyPerStateActivate > 0)
             {
@@ -184,6 +187,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             }
 
             SendMetaGameBanner(interestedClients, _proto.UIStateChangeBannerText, intArgs);
+            ListPool<PlayerConnection>.Instance.Return(interestedClients);
+            ListPool<long>.Instance.Return(intArgs);
 
             return true;
         }

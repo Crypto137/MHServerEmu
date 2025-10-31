@@ -487,6 +487,18 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player owner = GetOwnerOfType<Player>();
             if (owner == null) return Logger.WarnReturn(false, "DoDeathRelease(): owner == null");
 
+            if (region.MetaGames.Count > 0) 
+            {
+                var player = GetOwnerOfType<Player>();
+                var manager = Game.EntityManager;
+                foreach (var metagame in region.MetaGames)
+                {
+                    var pvp = manager.GetEntity<PvP>(metagame);
+                    if (pvp == null) continue;
+                    if (pvp.OnResurrect(player)) return true;
+                }
+            }
+
             switch (requestType)
             {
                 case DeathReleaseRequestType.Checkpoint:

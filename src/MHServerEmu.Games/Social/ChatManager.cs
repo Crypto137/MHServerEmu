@@ -189,6 +189,30 @@ namespace MHServerEmu.Games.Social
 
         #endregion
 
+        #region ChatFromMetaGame
+
+        public bool SendChatFromMetaGame(LocaleStringId localeString, List<PlayerConnection> clientList, 
+            Player player1, Player player2, LocaleStringId arg = LocaleStringId.Blank)
+        {
+            if (localeString == LocaleStringId.Invalid) return Logger.WarnReturn(false, "SendChatFromMetaGame(): localeString == LocaleStringId.Invalid");
+
+            if (clientList.Count == 0)
+                return true;
+
+            var message = NetMessageChatFromMetaGame.CreateBuilder()
+                .SetSourceStringId((ulong)GameDatabase.GlobalsPrototype.MetaGameLocalized)
+                .SetMessageStringId((ulong)localeString);
+
+            if (arg != LocaleStringId.Blank) message.AddArgStringIds((ulong)arg);
+            if (player1 != null) message.SetPlayerName1(player1.GetName());
+            if (player2 != null) message.SetPlayerName2(player2.GetName());
+
+            Game.NetworkManager.SendMessageToMultiple(clientList, message.Build());
+            return true;
+        }
+
+        #endregion
+
         #region Helper Methods
 
         // NOTE: It's not safe to pool filter lists here because the implementation of the grouping manager may change.

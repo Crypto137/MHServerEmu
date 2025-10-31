@@ -343,6 +343,16 @@ namespace MHServerEmu.Games.Entities
             return RefreshVendorInventoryInternal(vendorTypeProtoRef);
         }
 
+        public bool RefreshVendorInventory(PrototypeId vendorTypeProtoRef)
+        {
+            if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "RefreshVendorInventory(): vendorTypeProtoRef == PrototypeId.Invalid");
+
+            if (CanRefreshVendorInventory(vendorTypeProtoRef, false) != VendorResult.RefreshSuccess)
+                return false;
+
+            return RefreshVendorInventoryInternal(vendorTypeProtoRef);
+        }
+
         public PurchaseUnlockResult CanPurchaseUnlock(PrototypeId agentProtoRef)
         {
             AgentPrototype agentProto = agentProtoRef.As<AgentPrototype>();
@@ -759,10 +769,12 @@ namespace MHServerEmu.Games.Entities
                     rollSettings.UsableAvatar = ((PrototypeId)Properties[PropertyEnum.VendorRollAvatar, vendorTypeProtoRef]).As<AvatarPrototype>();
                     rollSettings.Level = Properties[PropertyEnum.VendorRollLevel, vendorTypeProtoRef];
 
-                    // TODO: region keywords
                     Region region = GetRegion();
                     if (region != null)
+                    {
                         rollSettings.RegionScenarioRarity = region.Settings.ItemRarity;
+                        rollSettings.RegionKeywords = region.GetKeywordsMask();
+                    }
 
                     // Initialize resolver and roll
                     using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();

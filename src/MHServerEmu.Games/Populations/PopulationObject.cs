@@ -68,6 +68,7 @@ namespace MHServerEmu.Games.Populations
             {
                 Type = SpawnTargetType.Position,
                 Position = position,
+                Radius = SpawnMap.Resolution
             };
             return SpawnObject(spawnTarget, new());
         }
@@ -222,6 +223,7 @@ namespace MHServerEmu.Games.Populations
         public Cell Cell;
         public SpawnReservation Reservation;
         public Vector3 Position;
+        public int Radius;
 
         public SpawnTarget(Region region)
         {
@@ -265,7 +267,13 @@ namespace MHServerEmu.Games.Populations
                     break;
 
                 case SpawnTargetType.Position:
-                    success = clusterGroup.PickPositionInSector(Position, Orientation.Player, 0, SpawnMap.Resolution);
+                    if (Radius == 0)
+                    {
+                        clusterGroup.SetParentRelative(Position, Orientation.Player);
+                        success = true;
+                        break;
+                    }
+                    success = clusterGroup.PickPositionInSector(Position, Orientation.Player, 0, Radius);
                     break;
 
                 case SpawnTargetType.Spawner:
