@@ -253,10 +253,5 @@
     "Prototype": "Events/PublicEvents/Events/CivilWar.prototype",
     "Setting": "ePETV_EventInstance",
     "Value": 14.0
-  },
-  {
-    "Prototype": "",
-    "Setting": "eGTV_PVPEnabled",
-    "Value": 1.0
   }
 ]
