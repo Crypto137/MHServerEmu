@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using System.Net;
+using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
@@ -363,7 +364,7 @@ namespace MHServerEmu.PlayerManagement.Network
 
             if (player == null || player.State != PlayerHandleState.InGame)
             {
-                ServiceMessage.MTXStoreAuthResponse response = new(requestId, false);
+                ServiceMessage.MTXStoreAuthResponse response = new(requestId, (int)HttpStatusCode.Forbidden);
                 ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
                 return true;
             }
@@ -386,7 +387,7 @@ namespace MHServerEmu.PlayerManagement.Network
             float conversionRate = mtxStoreESBalanceResponse.ConversionRatio;
 
             // We should have already handled authentication before routing the request to the game instance, so just route the result back.
-            ServiceMessage.MTXStoreAuthResponse response = new(requestId, true, currentBalance, conversionRate);
+            ServiceMessage.MTXStoreAuthResponse response = new(requestId, (int)HttpStatusCode.OK, currentBalance, conversionRate);
             ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
 
             Logger.Debug($"OnMTXStoreESBalanceResponse(): currentBalance={currentBalance}, conversionRate={conversionRate}");

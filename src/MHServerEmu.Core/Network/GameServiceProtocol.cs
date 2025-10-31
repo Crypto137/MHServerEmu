@@ -541,11 +541,11 @@ namespace MHServerEmu.Core.Network
             public readonly string Token = token;
         }
 
-        public readonly struct MTXStoreAuthResponse(ulong requestId, bool isSuccess, int currentBalance = 0, float conversionRatio = 0)
+        public readonly struct MTXStoreAuthResponse(ulong requestId, int statusCode, int currentBalance = 0, float conversionRatio = 0)
             : IGameServiceMessage
         {
             public readonly ulong RequestId = requestId;
-            public readonly bool IsSuccess = isSuccess;
+            public readonly int StatusCode = statusCode;
             public readonly int CurrentBalance = currentBalance;
             public readonly float ConversionRatio = conversionRatio;
         }

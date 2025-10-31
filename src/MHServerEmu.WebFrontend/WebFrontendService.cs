@@ -47,7 +47,7 @@ namespace MHServerEmu.WebFrontend
             _webService.RegisterHandler("/AuthServer/Login/IndexPB", protobufHandler);
 
             // MTXStore handlers are used for the Add G panel in the client UI.
-            _webService.RegisterHandler("/MTXStore/AddG", new AddGWebHandler(_serviceMailbox.MTXStoreAuthTaskManager));
+            _webService.RegisterHandler("/MTXStore/AddG", new AddGWebHandler());
 
             if (config.EnableWebApi)
             {

@@ -1,9 +1,9 @@
-﻿namespace MHServerEmu.Core.Network.Web
+﻿namespace MHServerEmu.Core.Threading
 {
     /// <summary>
     /// Manages awaitable custom <see cref="Task{TResult}"/> instances that can be manually completed.
     /// </summary>
-    public class WebTaskManager<T>
+    public class TaskManager<T>
     {
         private readonly Dictionary<ulong, TaskCompletionSource<T>> _pendingTasks = new();
         private ulong _currentTaskId = 1;
