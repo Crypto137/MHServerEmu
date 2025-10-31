@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Text;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Metrics;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Network
@@ -15,7 +15,7 @@ namespace MHServerEmu.Core.Network
         GroupingManager,
         Billing,
         Frontend,
-        Auth,
+        WebFrontend,
         NumServiceTypes
     }
 
@@ -235,34 +235,34 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
+        /// Adds structured server status data to the provided dictionary.
+        /// </summary>
+        public void GetServerStatus(Dictionary<string, long> statusDict)
+        {
+            statusDict["StartupTime"] = (long)StartupTime.TotalSeconds;
+            statusDict["CurrentTime"] = (long)Clock.UnixTime.TotalSeconds;
+
+            for (int i = 0; i < _services.Length; i++)
+                _services[i]?.GetStatus(statusDict);
+        }
+
+        /// <summary>
         /// Returns a <see cref="string"/> representing the current status of all running <see cref="IGameService"/> instances.
         /// </summary>
-        public string GetServerStatus(bool includeMetrics)
+        public string GetServerStatusString()
         {
+            Dictionary<string, long> statusDict = DictionaryPool<string, long>.Instance.Get();
+            GetServerStatus(statusDict);
+
             StringBuilder sb = new();
 
-            TimeSpan uptime = Clock.UnixTime - StartupTime;
-            sb.AppendLine($"Uptime: {uptime:dd\\:hh\\:mm\\:ss}");
+            foreach (var kvp in statusDict)
+                sb.AppendLine($"{kvp.Key}: {kvp.Value}");
 
-            sb.AppendLine("Service Status:");
-            for (int i = 0; i < _services.Length; i++)
-            {
-                if (_services[i] == null) continue;
-                sb.Append($"[{(GameServiceType)i}] ");
+            string statusString = sb.ToString();
 
-                if (_serviceThreads[i] != null)
-                    sb.AppendLine($"{_services[i].GetStatus()}");
-                else
-                    sb.AppendLine("Not running");
-            }
-
-            if (includeMetrics)
-            {
-                sb.AppendLine("Performance Metrics:");
-                sb.AppendLine(MetricsManager.Instance.GeneratePerformanceReport(MetricsReportFormat.PlainText));
-            }
-
-            return sb.ToString();
+            DictionaryPool<string, long>.Instance.Return(statusDict);
+            return statusString;
         }
     }
 }

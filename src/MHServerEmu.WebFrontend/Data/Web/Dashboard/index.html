@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>MHServerEmu Dashboard</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<div class="content">
+		<h1>MHServerEmu Dashboard</h1>
+		<div class="tab-button-container">
+			<button id="server-status-tab-button">Server Status</button>
+			<button id="metrics-tab-button">Metrics</button>
+			<button id="region-report-tab-button">Region Report</button>
+			<button id="create-account-tab-button">Create Account</button>
+		</div>
+	</div>
+
+	<div class="content tab-content" id="server-status-tab">
+		<div class="tab-controls-container">
+			<button id="server-status-button">Refresh</button>
+		</div>
+		<h2>Server Status</h2>
+		<div id="server-status-container"></div>
+	</div>
+
+	<div class="content tab-content" id="metrics-tab">
+		<div class="tab-controls-container">
+			<button id="metrics-button">Refresh</button>
+		</div>
+		<h2>Metrics</h2>
+		<div id="metrics-report-metadata"></div>
+		<h3>Memory</h3>
+		<div id="metrics-memory-container"></div>
+		<h3>Games</h3>
+		<select id="metrics-game-select">
+		</select>
+		<div id="metrics-game-container"></div>
+	</div>
+
+	<div class="content tab-content" id="region-report-tab">
+		<div class="tab-controls-container">
+			<button id="region-report-button">Refresh</button>
+		</div>
+		<h2>Region Report</h2>
+		<div id="region-report-container"></div>
+	</div>
+
+	<div class="content tab-content" id="create-account-tab">
+		<h2>Create Account</h2>
+		<div class="account-form" id="account-form">
+			<label for="create-account-email">Email Address</label><br>
+			<input type="text" id="create-account-email" name="email" minlength="5" maxlength="320" placeholder="Email Address" required><br><br>
+			<label for="create-account-player-name">Player Name</label><br>
+			<input type="text" id="create-account-player-name" name="player-name" placeholder="Player Name" maxlength="16" required><br><br>
+			<label for="create-account-password">Password</label><br>
+			<input type="password" id="create-account-password" name="password" placeholder="Password" minlength="3" maxlength="64" required><br><br>
+			<label for="create-account-confirm-password">Confirm Password</label><br>
+			<input type="password" id="create-account-confirm-password" name="confirm-password" placeholder="Confirm Password" minlength="3" maxlength="64" required><br><br>
+			<button type="submit" id="create-account-submit-button">Submit</button>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="config.js"></script>
+	<script type="text/javascript" src="script.js"></script>
+</body>
+</html>

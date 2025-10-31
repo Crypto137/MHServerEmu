@@ -30,7 +30,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gazillion\Gazillion.csproj" />
-    <ProjectReference Include="..\MHServerEmu.Auth\MHServerEmu.Auth.csproj" />
     <ProjectReference Include="..\MHServerEmu.Billing\MHServerEmu.Billing.csproj" />
     <ProjectReference Include="..\MHServerEmu.Core\MHServerEmu.Core.csproj" />
     <ProjectReference Include="..\MHServerEmu.DatabaseAccess\MHServerEmu.DatabaseAccess.csproj" />
@@ -39,6 +38,7 @@
     <ProjectReference Include="..\MHServerEmu.Grouping\MHServerEmu.Grouping.csproj" />
     <ProjectReference Include="..\MHServerEmu.Leaderboards\MHServerEmu.Leaderboards.csproj" />
     <ProjectReference Include="..\MHServerEmu.PlayerManagement\MHServerEmu.PlayerManagement.csproj" />
+    <ProjectReference Include="..\MHServerEmu.WebFrontend\MHServerEmu.WebFrontend.csproj" />
   </ItemGroup>
 
   <ItemGroup>

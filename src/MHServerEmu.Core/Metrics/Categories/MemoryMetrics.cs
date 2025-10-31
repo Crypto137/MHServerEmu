@@ -1,6 +1,5 @@
 ﻿using System.Runtime;
 using System.Text;
-using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Core.Metrics.Categories
@@ -63,7 +62,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             }
         }
 
-        public readonly struct Report : IHtmlDataStructure
+        public readonly struct Report
         {
             public long GCIndex { get; }
             public long GCCountGen0 { get; }
@@ -97,19 +96,6 @@ namespace MHServerEmu.Core.Metrics.Categories
                 sb.AppendLine($"{nameof(PauseDuration)}: {PauseDuration}");
 
                 return sb.ToString();
-            }
-
-            public void BuildHtml(StringBuilder sb)
-            {
-                HtmlBuilder.BeginUnorderedList(sb);
-
-                HtmlBuilder.AppendListItem(sb, $"{nameof(GCIndex)}: {GCIndex}");
-                HtmlBuilder.AppendListItem(sb, $"GCCounts: Gen0={GCCountGen0}, Gen1={GCCountGen1}, Gen2={GCCountGen2}");
-                HtmlBuilder.AppendListItem(sb, $"{nameof(HeapSizeBytes)}: {HeapSizeBytes:N0} / {TotalCommittedBytes:N0}");
-                HtmlBuilder.AppendListItem(sb, $"{nameof(PauseTimePercentage)}: {PauseTimePercentage}%");
-                HtmlBuilder.AppendListItem(sb, $"{nameof(PauseDuration)}: {PauseDuration}");
-
-                HtmlBuilder.EndUnorderedList(sb);
             }
         }
     }

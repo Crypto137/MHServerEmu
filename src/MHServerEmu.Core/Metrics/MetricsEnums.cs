@@ -4,7 +4,6 @@
     {
         PlainText,
         Json,
-        Html,
     }
 
     public enum GamePerformanceMetricEnum

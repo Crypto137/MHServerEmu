@@ -7,12 +7,12 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games;
-using MHServerEmu.PlayerManagement.Network;
+using MHServerEmu.PlayerManagement.Players;
 
-namespace MHServerEmu.PlayerManagement.Players
+namespace MHServerEmu.PlayerManagement.Auth
 {
     /// <summary>
-    /// Manages <see cref="ClientSession"/> instances.
+    /// Authenticates clients and manages <see cref="ClientSession"/> instances.
     /// </summary>
     public class SessionManager
     {
@@ -51,12 +51,14 @@ namespace MHServerEmu.PlayerManagement.Players
         }
 
         /// <summary>
-        /// Verifies the provided <see cref="LoginDataPB"/> instance and creates a new <see cref="ClientSession"/> if it's valid.
-        /// <see cref="AuthStatusCode"/> indicates the outcome of validation.
+        /// Verifies the provided <see cref="LoginDataPB"/> instance, and creates a new <see cref="ClientSession"/> for it if successful.
         /// </summary>
-        public AuthStatusCode TryCreateSessionFromLoginDataPB(LoginDataPB loginDataPB, out ClientSession session)
+        /// <remarks>
+        /// <see cref="AuthStatusCode"/> indicates the outcome of verification, <see cref="AuthTicket"/> contains the data required for the client to proceed.
+        /// </remarks>
+        public AuthStatusCode TryCreateSession(LoginDataPB loginDataPB, out AuthTicket authTicket)
         {
-            session = null;
+            authTicket = AuthTicket.DefaultInstance;
 
             // Check client version
             if (loginDataPB.HasVersion == false)
@@ -75,7 +77,7 @@ namespace MHServerEmu.PlayerManagement.Players
             }
 
             // Verify credentials
-            AuthStatusCode statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, out DBAccount account);
+            AuthStatusCode statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, _playerManager.Config.UseWhitelist, out DBAccount account);
 
             if (statusCode != AuthStatusCode.Success)
                 return statusCode;
@@ -95,9 +97,23 @@ namespace MHServerEmu.PlayerManagement.Players
             string locale = loginDataPB.HasLocale ? loginDataPB.Locale : "en_us";
 
             // Create a new session
-            session = new(_idGenerator.Generate(), account, downloaderEnum, locale);
+            ClientSession session = new(_idGenerator.Generate(), account, downloaderEnum, locale);
             lock (_pendingSessionDict)
                 _pendingSessionDict.Add(session.Id, session);
+
+            // Create an AuthTicket for the client
+            // Avoid extra allocations and copying by using Unsafe.FromBytes() for session key and token.
+            authTicket = AuthTicket.CreateBuilder()
+                .SetSessionKey(ByteString.Unsafe.FromBytes(session.Key))
+                .SetSessionToken(ByteString.Unsafe.FromBytes(session.Token))
+                .SetSessionId(session.Id)
+                .SetFrontendServer(IFrontendClient.FrontendAddress)
+                .SetFrontendPort(IFrontendClient.FrontendPort)
+                .SetPlatformTicket("")  // TODO
+                .SetHasnews(_playerManager.Config.ShowNewsOnLogin)
+                .SetNewsurl(_playerManager.Config.NewsUrl)
+                .SetSuccess(true)
+                .Build();
 
             return statusCode;
         }

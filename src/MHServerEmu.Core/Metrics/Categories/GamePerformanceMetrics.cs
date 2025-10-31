@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Core.Metrics.Categories
@@ -79,7 +78,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             return _trackers[(int)metric].AsReportEntry();
         }
 
-        public readonly struct Report : IHtmlDataStructure
+        public readonly struct Report
         {
             public MetricTracker.ReportEntry UpdateTime { get; }
             public MetricTracker.ReportEntry FrameTime { get; }
@@ -105,21 +104,6 @@ namespace MHServerEmu.Core.Metrics.Categories
                 sb.AppendLine($"{nameof(EntityCount)}: {EntityCount}");
                 sb.AppendLine($"{nameof(PlayerCount)}: {PlayerCount}");
                 return sb.ToString();
-            }
-
-            public void BuildHtml(StringBuilder sb)
-            {
-                HtmlBuilder.BeginTable(sb);
-
-                HtmlBuilder.AppendTableRow(sb, "Metric", "Avg", "Mdn", "Last", "Min", "Max");
-
-                HtmlBuilder.AppendDataStructure(sb, UpdateTime);
-                HtmlBuilder.AppendDataStructure(sb, FrameTime);
-                HtmlBuilder.AppendDataStructure(sb, ScheduledEventsPerUpdate);
-                HtmlBuilder.AppendDataStructure(sb, EntityCount);
-                HtmlBuilder.AppendDataStructure(sb, PlayerCount);
-
-                HtmlBuilder.EndTable(sb);
             }
         }
     }

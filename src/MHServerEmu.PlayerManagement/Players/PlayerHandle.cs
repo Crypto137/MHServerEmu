@@ -7,6 +7,7 @@ using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Games;
 using MHServerEmu.PlayerManagement.Regions;
 using MHServerEmu.PlayerManagement.Social;
@@ -180,7 +181,7 @@ namespace MHServerEmu.PlayerManagement.Players
                 if (IsConnected == false)
                     account.Player.LastLogoutTime = (long)Clock.UnixTime.TotalMilliseconds;
 
-                if (AccountManager.DBManager.SavePlayerData(account) == false)
+                if (IDBManager.Instance.SavePlayerData(account) == false)
                     return Logger.WarnReturn(false, $"SavePlayerData(): Failed to save player data for account [{account}] to the database");
             }
 

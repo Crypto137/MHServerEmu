@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Add G</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+	
+	<style>
+		html {
+			background-color: #0d0d0b;
+			color: #d7d7d7;
+			font: 12px/1.385 Verdana;
+		}
+
+		h1, h2, h3, h4, h5, h6 {
+			color: #00aaff;
+			font-family: "Bebas Neue", "Trebuchet MS", Verdana, sans-serif;
+			font-weight: normal;
+		}
+
+		button {
+			padding: 8px;
+			border: 1px solid black;
+			box-shadow: 0 0 1px 1px #00aaff;
+			background: #1c1c1c;
+			color: inherit;
+		}
+
+		button:hover {
+			box-shadow: 0 0 1px 1px white;
+		}
+
+		div.content {
+			margin: 10px auto;
+			padding: 20px;
+			border: 1px solid #00717c;
+			background-color: #00090e;
+		}
+	</style>
+</head>
+<body>
+	<div class="content">
+		<h1>Add G</h1>
+		<p>Type the <code>!store convertes</code> command in the game chat to convert Eternity Splinters to Gs.</p>
+		<!-- <button onclick="myApi.ReloadAddGPage()">Reload</button> -->
+		<button onclick="myApi.CloseAddGPanel(false)">Close</button>
+	</div>
+
+	<div class="content">
+		<h1>Debug Information</h1>
+		<pre id="debug-info"></pre>
+	</div>
+
+	<script>
+		var requestContext = Object.freeze({
+			downloader: "%REQUEST_DOWNLOADER%",
+			token: "%REQUEST_TOKEN%",
+			email: "%REQUEST_EMAIL%",
+		});
+
+		var textNode = document.createTextNode(JSON.stringify(requestContext, null, 2));
+		document.getElementById("debug-info").appendChild(textNode);
+	</script>
+</body>
+</html>
