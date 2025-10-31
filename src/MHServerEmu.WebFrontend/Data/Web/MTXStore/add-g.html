@@ -21,8 +21,8 @@
 			font-weight: normal;
 		}
 
-		button {
-			padding: 8px;
+		button, input {
+			box-sizing: border-box;
 			border: 1px solid black;
 			box-shadow: 0 0 1px 1px #00aaff;
 			background: #1c1c1c;
@@ -33,25 +33,62 @@
 			box-shadow: 0 0 1px 1px white;
 		}
 
+		input {
+			width: 100%;
+			text-align: center;
+		}
+
+		input::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			width: 16px;
+			height: 16px;
+			background: #00aaff;
+		}
+
+		table {
+			width: 100%;
+			border-spacing: 8px;
+		}
+
 		div.content {
 			margin: 10px auto;
 			padding: 20px;
 			border: 1px solid #00717c;
 			background-color: #00090e;
 		}
+
+		div.button-container {
+			display: flex;
+			justify-content: center;
+		}
+
+		div.button-container button {
+			width: 50%;
+			margin: 0px 8px;
+			padding: 8px;
+		}
 	</style>
 </head>
 <body>
 	<div class="content">
 		<h1>Add G</h1>
-		<p>Type the <code>!store convertes</code> command in the game chat to convert Eternity Splinters to Gs.</p>
-		<!-- <button onclick="myApi.ReloadAddGPage()">Reload</button> -->
-		<button onclick="myApi.CloseAddGPanel(false)">Close</button>
-	</div>
-
-	<div class="content">
-		<h1>Debug Information</h1>
-		<pre id="debug-info"></pre>
+		<p>Select the amount of Eternity Splinters to convert to G.</p>
+		<table>
+			<tr>
+				<th style="width: 60px;">ES</th>
+				<th></th>
+				<th style="width: 60px;">G</th>
+			</tr>
+			<tr>
+				<td><input type="text" value="0" id="es-text-input" /></td>
+				<td><input type="range" value="0" min="0" max="100" step="1" id="es-range-input" onchange="updateTextFromRange()" /></td>
+				<td><input type="text" value="0" id="g-text-input" /></td>
+			</tr>
+		</table>
+		<div class="button-container">
+			<button onclick="convert()">Convert</button>
+			<button onclick="myApi.CloseAddGPanel(false)">Close</button>
+		</div>
 	</div>
 
 	<script>
@@ -63,8 +100,22 @@
 			conversionRatio: "%REQUEST_CONVERSION_RATIO%",
 		});
 
-		var textNode = document.createTextNode(JSON.stringify(requestContext, null, 2));
-		document.getElementById("debug-info").appendChild(textNode);
+		function updateTextFromRange() {
+			var rangeInput = document.getElementById("es-range-input");
+			var esTextInput = document.getElementById("es-text-input");
+			var gTextInput = document.getElementById("g-text-input");
+
+			var esAmount = rangeInput.value;
+
+            esTextInput.value = esAmount;
+			gTextInput.value = esAmount * requestContext.conversionRatio;
+		}
+
+		function convert() {
+			window.alert('not yet implemented');
+		}
+
+		document.getElementById("es-range-input").max = requestContext.currentBalance;
 	</script>
 </body>
 </html>
