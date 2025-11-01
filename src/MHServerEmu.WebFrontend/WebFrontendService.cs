@@ -119,6 +119,12 @@ namespace MHServerEmu.WebFrontend
             }
         }
 
+        public void ReloadAddGPage()
+        {
+            AddGWebHandler addGHandler = _webService.GetHandler("/MTXStore/AddG") as AddGWebHandler;
+            addGHandler?.Load();
+        }
+
         private void InitializeWebBackend()
         {
             _webService.RegisterHandler("/AccountManagement/Create", new AccountCreateWebHandler());

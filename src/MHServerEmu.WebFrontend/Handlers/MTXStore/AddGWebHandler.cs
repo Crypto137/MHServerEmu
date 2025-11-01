@@ -12,18 +12,22 @@ namespace MHServerEmu.WebFrontend.Handlers.MTXStore
     public class AddGWebHandler : WebHandler
     {
         private const string HtmlTemplateFileName = "add-g.html";
-        private const int AuthTimeoutMS = 15000;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string HtmlTemplateFilePath = Path.Combine(FileHelper.DataDirectory, "Web", "MTXStore", HtmlTemplateFileName);
 
-        private readonly string _htmlTemplate;
+        private string _htmlTemplate;
 
         public AddGWebHandler()
         {
+            Load();
+        }
+
+        public void Load()
+        {
             if (File.Exists(HtmlTemplateFilePath) == false)
             {
-                Logger.Warn($"'{HtmlTemplateFileName}' not found, adding Gs via in-game UI will not work");
+                Logger.Warn($"Load(): '{HtmlTemplateFileName}' not found, adding Gs via in-game UI will not work");
                 _htmlTemplate = string.Empty;
                 return;
             }

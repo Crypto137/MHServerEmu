@@ -62,13 +62,23 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("reloaddashboard")]
         [CommandDescription("Reloads the web dashboard.")]
-        [CommandUsage("server reloaddashboard")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.ServerConsole)]
         public string ReloadDashboard(string[] @params, NetClient client)
         {
             WebFrontendService webFrontend = ServerManager.Instance.GetGameService(GameServiceType.WebFrontend) as WebFrontendService;
             webFrontend?.ReloadDashboard();
+            return string.Empty;
+        }
+
+        [Command("reloadaddg")]
+        [CommandDescription("Reloads the Add G page.")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.ServerConsole)]
+        public string ReloadAddG(string[] @params, NetClient client)
+        {
+            WebFrontendService webFrontend = ServerManager.Instance.GetGameService(GameServiceType.WebFrontend) as WebFrontendService;
+            webFrontend?.ReloadAddGPage();
             return string.Empty;
         }
 
