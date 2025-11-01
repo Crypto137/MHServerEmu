@@ -12,7 +12,11 @@
 		html {
 			background-color: #0d0d0b;
 			color: #d7d7d7;
-			font: 12px/1.385 Verdana;
+			font: 18px/1.385 Verdana;
+		}
+
+		*:focus {
+			outline-color: #00e8ff;
 		}
 
 		h1, h2, h3, h4, h5, h6 {
@@ -22,11 +26,13 @@
 		}
 
 		button, input {
+			width: 100%;
 			box-sizing: border-box;
 			border: 1px solid black;
 			box-shadow: 0 0 1px 1px #00aaff;
 			background: #1c1c1c;
 			color: inherit;
+			font: inherit;
 		}
 
 		button:hover {
@@ -38,16 +44,21 @@
 			text-align: center;
 		}
 
+		input[type="range"] {
+			margin: 4px 0px;
+		}
+
 		input::-webkit-slider-thumb {
 			-webkit-appearance: none;
-			width: 16px;
-			height: 16px;
+			width: 26px;
+			height: 26px;
 			background: #00aaff;
 		}
 
 		table {
 			width: 100%;
-			border-spacing: 8px;
+			margin: 12px 0px;
+			border-spacing: 4px;
 		}
 
 		div.content {
@@ -76,15 +87,20 @@
 		<table>
 			<tr>
 				<th style="width: 60px;">ES</th>
+				<th style="width: 28px;"></th>
 				<th></th>
+				<th style="width: 28px;"></th>
 				<th style="width: 60px;">G</th>
 			</tr>
 			<tr>
-				<td><input type="text" value="0" id="es-text-input" /></td>
-				<td><input type="range" value="0" min="0" max="100" step="1" id="es-range-input" onchange="updateTextFromRange()" /></td>
-				<td><input type="text" value="0" id="g-text-input" /></td>
+				<td><input type="text" value="0" id="es-text-input" onchange="setES(this.value)" /></td>
+				<td><button onclick="adjustES(-1)" class="sign-button">-</button></td>
+				<td><input type="range" value="0" min="0" max="100" step="1" id="es-range-input" onchange="setES(this.value)" /></td>
+				<td><button onclick="adjustES(1)" class="sign-button">+</button></td>
+				<td><input type="text" value="0" id="g-text-input" onchange="setESFromG(this.value)" /></td>
 			</tr>
 		</table>
+		<p>Please note that the amount of G after conversion is subject to rounding errors.</p>
 		<div class="button-container">
 			<button onclick="convert()">Convert</button>
 			<button onclick="myApi.CloseAddGPanel(false)">Close</button>
@@ -100,15 +116,27 @@
 			conversionRatio: "%REQUEST_CONVERSION_RATIO%",
 		});
 
-		function updateTextFromRange() {
-			var rangeInput = document.getElementById("es-range-input");
-			var esTextInput = document.getElementById("es-text-input");
-			var gTextInput = document.getElementById("g-text-input");
+		function getES() {
+			return Number(document.getElementById("es-range-input").value);
+		}
 
-			var esAmount = rangeInput.value;
+		function setES(esAmount) {
+			esAmount = Math.max(Math.min(esAmount, requestContext.currentBalance), 0);
+			if (isNaN(esAmount))
+				esAmount = 0;
 
-            esTextInput.value = esAmount;
-			gTextInput.value = esAmount * requestContext.conversionRatio;
+			document.getElementById("es-range-input").value = esAmount;
+			document.getElementById("es-text-input").value = esAmount;
+			document.getElementById("g-text-input").value = Math.floor(esAmount * requestContext.conversionRatio);
+		}
+
+		function setESFromG(gAmount) {
+			var esAmount = Math.ceil(gAmount / requestContext.conversionRatio);
+			setES(esAmount);
+		}
+
+		function adjustES(delta) {
+			setES(getES() + delta);
 		}
 
 		function convert() {
