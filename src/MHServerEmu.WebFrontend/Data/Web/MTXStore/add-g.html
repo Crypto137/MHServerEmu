@@ -78,6 +78,19 @@
 			margin: 0px 8px;
 			padding: 8px;
 		}
+
+		div.modal-popup {
+			display: none;
+			position: fixed;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 1;
+			background-color: rgba(0, 0, 0, 0.75);
+			justify-content: center;
+			align-items: center;
+		}
 	</style>
 </head>
 <body>
@@ -86,11 +99,11 @@
 		<p>Select the amount of Eternity Splinters to convert to G.</p>
 		<table>
 			<tr>
-				<th style="width: 60px;">ES</th>
+				<th style="width: 70px;">ES</th>
 				<th style="width: 28px;"></th>
 				<th></th>
 				<th style="width: 28px;"></th>
-				<th style="width: 60px;">G</th>
+				<th style="width: 70px;">G</th>
 			</tr>
 			<tr>
 				<td><input type="text" value="0" id="es-text-input" onchange="setES(this.value)" /></td>
@@ -101,9 +114,25 @@
 			</tr>
 		</table>
 		<p>Please note that the amount of G after conversion is subject to rounding errors.</p>
-		<div class="button-container">
-			<button onclick="convert()">Convert</button>
-			<button onclick="myApi.CloseAddGPanel(false)">Close</button>
+		<button onclick="convert()">Convert</button>
+	</div>
+
+	<div class="modal-popup" id="convert-popup">
+		<div class="content" style="width: 600px;">
+			<div id="popup-confirm">
+				<p id="popup-confirm-text"></p>
+				<div class="button-container">
+					<button onclick="convertConfirm()">Confirm</button>
+					<button onclick="convertCancel()">Cancel</button>
+				</div>
+			</div>
+			<div id="popup-pending" style="display: none;">
+				<p>Converting...</p>
+			</div>
+			<div id="popup-result" style="display: none;">
+				<p>Finished</p>
+				<button onclick="closePanel()">Close</button>
+			</div>
 		</div>
 	</div>
 
@@ -140,7 +169,34 @@
 		}
 
 		function convert() {
-			window.alert('not yet implemented');
+			var esAmount = getES();
+			if (esAmount <= 0)
+				return;
+
+			document.getElementById("convert-popup").style.display = "flex";
+			document.getElementById("popup-confirm-text").innerText = "Convert " + esAmount + " Eternity Splinters to " + Math.floor(esAmount * requestContext.conversionRatio) +" G?";
+		}
+
+		function convertConfirm() {
+			document.getElementById("popup-confirm").style.display = "none";
+			document.getElementById("popup-pending").style.display = "block";
+
+			// todo: send request
+			var callback = function() {
+				document.getElementById("popup-pending").style.display = "none";
+				document.getElementById("popup-result").style.display = "block";
+			}
+
+			setTimeout(callback, 1000);
+		}
+
+		function convertCancel() {
+			document.getElementById("convert-popup").style.display = "none";
+		}
+
+		function closePanel() {
+			// todo: true or false depending on returned result
+			myApi.CloseAddGPanel(true);
 		}
 
 		document.getElementById("es-range-input").max = requestContext.currentBalance;
