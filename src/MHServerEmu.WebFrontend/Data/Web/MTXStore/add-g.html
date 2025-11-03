@@ -35,6 +35,10 @@
 			font: inherit;
 		}
 
+		button:not(.sign-button) {
+			padding: 8px;
+		}
+
 		button:hover {
 			box-shadow: 0 0 1px 1px white;
 		}
@@ -76,7 +80,6 @@
 		div.button-container button {
 			width: 50%;
 			margin: 0px 8px;
-			padding: 8px;
 		}
 
 		div.modal-popup {
@@ -107,29 +110,33 @@
 			</tr>
 			<tr>
 				<td><input type="text" value="0" id="es-text-input" onchange="setES(this.value)" /></td>
-				<td><button onclick="adjustES(-1)" class="sign-button">-</button></td>
-				<td><input type="range" value="0" min="0" max="100" step="1" id="es-range-input" onchange="setES(this.value)" /></td>
-				<td><button onclick="adjustES(1)" class="sign-button">+</button></td>
+				<td><button onclick="adjustES(-requestContext.conversionStep)" class="sign-button">-</button></td>
+				<td><input type="range" value="0" min="0" id="es-range-input" onchange="setES(this.value)" /></td>
+				<td><button onclick="adjustES(requestContext.conversionStep)" class="sign-button">+</button></td>
 				<td><input type="text" value="0" id="g-text-input" onchange="setESFromG(this.value)" /></td>
 			</tr>
 		</table>
-		<p>Please note that the amount of G after conversion is subject to rounding errors.</p>
+		<p>Please note that the amount of G after conversion may be subject to rounding errors.</p>
 		<button onclick="convert()">Convert</button>
 	</div>
 
 	<div class="modal-popup" id="convert-popup">
 		<div class="content" style="width: 600px;">
+			<div id="popup-invalid-amount">
+				<p>Please specify a valid amount of Eternity Splinters.</p>
+				<button onclick="closePopup()">Close</button>
+			</div>
 			<div id="popup-confirm">
 				<p id="popup-confirm-text"></p>
 				<div class="button-container">
 					<button onclick="convertConfirm()">Confirm</button>
-					<button onclick="convertCancel()">Cancel</button>
+					<button onclick="closePopup()">Cancel</button>
 				</div>
 			</div>
-			<div id="popup-pending" style="display: none;">
+			<div id="popup-pending">
 				<p>Converting...</p>
 			</div>
-			<div id="popup-result" style="display: none;">
+			<div id="popup-result">
 				<p id="popup-result-text"></p>
 				<button onclick="closePanel()">Close</button>
 			</div>
@@ -141,12 +148,14 @@
 			downloader: "%REQUEST_DOWNLOADER%",
 			token: "%REQUEST_TOKEN%",
 			email: "%REQUEST_EMAIL%",
-			currentBalance: "%REQUEST_CURRENT_BALANCE%",
-			conversionRatio: "%REQUEST_CONVERSION_RATIO%",
+			currentBalance: Number("%REQUEST_CURRENT_BALANCE%"),
+			conversionRatio: Number("%REQUEST_CONVERSION_RATIO%"),
+			conversionStep: 4,	// todo: configure this
 		});
 
 		var PopupType = Object.freeze({
 			NONE: "",
+			INVALID_AMOUNT: "popup-invalid-amount",
 			CONFIRM: "popup-confirm",
 			PENDING: "popup-pending",
 			RESULT: "popup-result",
@@ -155,9 +164,13 @@
 		var convertResult = 200;
 
 		function showPopup(type) {
-			document.getElementById(PopupType.CONFIRM).style.display = "none";
-			document.getElementById(PopupType.PENDING).style.display = "none";
-			document.getElementById(PopupType.RESULT).style.display = "none";
+			var types = Object.keys(PopupType);
+			for (var i = 0; i < types.length; i++) {
+				itType = PopupType[types[i]];
+				if (itType != PopupType.NONE) {
+					document.getElementById(itType).style.display = "none";
+				}
+			}
 
 			var popup = document.getElementById("convert-popup");
 
@@ -169,12 +182,22 @@
 			}
 		}
 
+		
+		function closePopup() {
+			showPopup(PopupType.NONE);
+		}
+
 		function getES() {
 			return Number(document.getElementById("es-range-input").value);
 		}
 
 		function setES(esAmount) {
-			esAmount = Math.max(Math.min(esAmount, requestContext.currentBalance), 0);
+			var step = requestContext.conversionStep;
+			var max = Math.floor(requestContext.currentBalance / step) * step;
+
+			esAmount = Math.ceil(esAmount / step) * step;
+			esAmount = Math.max(Math.min(esAmount, max), 0);
+
 			if (isNaN(esAmount))
 				esAmount = 0;
 
@@ -194,8 +217,10 @@
 
 		function convert() {
 			var esAmount = getES();
-			if (esAmount <= 0)
+			if (esAmount <= 0) {
+				showPopup(PopupType.INVALID_AMOUNT);
 				return;
+			}
 
 			var confirmText = "Convert " + esAmount + " Eternity Splinters to " + Math.floor(esAmount * requestContext.conversionRatio) +" G?"
 			document.getElementById("popup-confirm-text").innerText = confirmText;
@@ -218,10 +243,6 @@
 			xhr.send(JSON.stringify(convertRequest));
 		}
 
-		function convertCancel() {
-			showPopup(PopupType.NONE);
-		}
-
 		function handleReadyStateChange(xhr) {
 			if (xhr.readyState != 4)
 				return;
@@ -237,7 +258,13 @@
 			myApi.CloseAddGPanel(convertResult == 200);
 		}
 
-		document.getElementById("es-range-input").max = requestContext.currentBalance;
+		function initialize() {
+			var esRange = document.getElementById("es-range-input");
+			esRange.step = requestContext.conversionStep;
+			esRange.max = requestContext.currentBalance;
+		}
+
+		initialize();
 	</script>
 </body>
 </html>
