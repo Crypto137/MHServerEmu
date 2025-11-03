@@ -11,8 +11,12 @@ namespace MHServerEmu.WebFrontend.Network
         {
             switch (message)
             {
-                case ServiceMessage.MTXStoreAuthResponse mtxStoreAuthResponse:
-                    GameServiceTaskManager.Instance.OnMTXStoreAuthResponse(mtxStoreAuthResponse);
+                case ServiceMessage.MTXStoreESBalanceResponse mtxStoreESBalanceResponse:
+                    GameServiceTaskManager.Instance.OnMTXStoreESBalanceResponse(mtxStoreESBalanceResponse);
+                    break;
+
+                case ServiceMessage.MTXStoreESConvertResponse mtxStoreESConvertResponse:
+                    GameServiceTaskManager.Instance.OnMTXStoreESConvertResponse(mtxStoreESConvertResponse);
                     break;
 
                 default:

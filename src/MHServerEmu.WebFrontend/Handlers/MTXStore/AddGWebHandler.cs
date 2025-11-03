@@ -55,11 +55,11 @@ namespace MHServerEmu.WebFrontend.Handlers.MTXStore
             string token = request["token"];
             string email = request["email"];
 
-            ServiceMessage.MTXStoreAuthResponse authResponse = await GameServiceTaskManager.Instance.DoMTXStoreAuthAsync(email, token);
+            ServiceMessage.MTXStoreESBalanceResponse balanceResponse = await GameServiceTaskManager.Instance.GetESBalanceAsync(email, token);
 
-            if (authResponse.StatusCode != (int)HttpStatusCode.OK)
+            if (balanceResponse.StatusCode != (int)HttpStatusCode.OK)
             {
-                context.StatusCode = authResponse.StatusCode;
+                context.StatusCode = balanceResponse.StatusCode;
                 return;
             }
 
@@ -67,8 +67,8 @@ namespace MHServerEmu.WebFrontend.Handlers.MTXStore
             sb.Replace("%REQUEST_DOWNLOADER%", downloader);
             sb.Replace("%REQUEST_TOKEN%", token);
             sb.Replace("%REQUEST_EMAIL%", email);
-            sb.Replace("%REQUEST_CURRENT_BALANCE%", $"{authResponse.CurrentBalance}");
-            sb.Replace("%REQUEST_CONVERSION_RATIO%", $"{authResponse.ConversionRatio:0.00}");
+            sb.Replace("%REQUEST_CURRENT_BALANCE%", $"{balanceResponse.CurrentBalance}");
+            sb.Replace("%REQUEST_CONVERSION_RATIO%", $"{balanceResponse.ConversionRatio:0.00}");
             string html = sb.ToString();
 
             await context.SendAsync(html, "text/html");

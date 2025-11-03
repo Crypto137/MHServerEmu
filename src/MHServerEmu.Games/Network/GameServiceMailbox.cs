@@ -81,8 +81,12 @@ namespace MHServerEmu.Games.Network
                     OnLeaderboardRewardRequestResponse(leaderboardRewardRequestResponse);
                     break;
 
-                case ServiceMessage.MTXStoreESBalanceRequest mtxStoreESBalanceRequest:
-                    OnMTXStoreESBalanceRequest(mtxStoreESBalanceRequest);
+                case ServiceMessage.MTXStoreESBalanceGameRequest mtxStoreESBalanceGameRequest:
+                    OnMTXStoreESBalanceGameRequest(mtxStoreESBalanceGameRequest);
+                    break;
+
+                case ServiceMessage.MTXStoreESConvertGameRequest mtxStoreESConvertGameRequest:
+                    OnMTXStoreESConvertGameRequest(mtxStoreESConvertGameRequest);
                     break;
 
                 default:
@@ -260,15 +264,26 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        private bool OnMTXStoreESBalanceRequest(in ServiceMessage.MTXStoreESBalanceRequest mtxStoreESBalanceRequest)
+        private bool OnMTXStoreESBalanceGameRequest(in ServiceMessage.MTXStoreESBalanceGameRequest mtxStoreESBalanceGameRequest)
         {
-            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(mtxStoreESBalanceRequest.PlayerDbId);
-            if (player == null) return Logger.WarnReturn(false, "OnMTXStoreESBalanceRequest(): player == null");
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(mtxStoreESBalanceGameRequest.PlayerDbId);
+            if (player == null) return Logger.WarnReturn(false, "OnMTXStoreESBalanceGameRequest(): player == null");
 
             int currentBalance = player.Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.EternitySplinters];
             float conversionRatio = ConfigManager.Instance.GetConfig<MTXStoreConfig>().ESToGazillioniteConversionRatio;
 
-            ServiceMessage.MTXStoreESBalanceResponse response = new(mtxStoreESBalanceRequest.RequestId, currentBalance, conversionRatio);
+            ServiceMessage.MTXStoreESBalanceGameResponse response = new(mtxStoreESBalanceGameRequest.RequestId, currentBalance, conversionRatio);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, response);
+
+            return true;
+        }
+
+        private bool OnMTXStoreESConvertGameRequest(in ServiceMessage.MTXStoreESConvertGameRequest mtxStoreESConvertGameRequest)
+        {
+            // TODO: conversion
+            Logger.Warn($"OnMTXStoreESConvertGameRequest(): playerDbId=0x{mtxStoreESConvertGameRequest.PlayerDbId:X}, amount={mtxStoreESConvertGameRequest.Amount}");
+
+            ServiceMessage.MTXStoreESConvertGameResponse response = new(mtxStoreESConvertGameRequest.RequestId, false);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, response);
 
             return true;

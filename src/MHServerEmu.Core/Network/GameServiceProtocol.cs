@@ -533,7 +533,7 @@ namespace MHServerEmu.Core.Network
 
         #region MTXStore
 
-        public readonly struct MTXStoreAuthRequest(ulong requestId, string email, string token)
+        public readonly struct MTXStoreESBalanceRequest(ulong requestId, string email, string token)
             : IGameServiceMessage
         {
             public readonly ulong RequestId = requestId;
@@ -541,7 +541,7 @@ namespace MHServerEmu.Core.Network
             public readonly string Token = token;
         }
 
-        public readonly struct MTXStoreAuthResponse(ulong requestId, int statusCode, int currentBalance = 0, float conversionRatio = 0)
+        public readonly struct MTXStoreESBalanceResponse(ulong requestId, int statusCode, int currentBalance = 0, float conversionRatio = 0)
             : IGameServiceMessage
         {
             public readonly ulong RequestId = requestId;
@@ -550,7 +550,7 @@ namespace MHServerEmu.Core.Network
             public readonly float ConversionRatio = conversionRatio;
         }
 
-        public readonly struct MTXStoreESBalanceRequest(ulong requestId, ulong gameId, ulong playerDbId)
+        public readonly struct MTXStoreESBalanceGameRequest(ulong requestId, ulong gameId, ulong playerDbId)
             : IGameServiceMessage
         {
             public readonly ulong RequestId = requestId;
@@ -558,12 +558,44 @@ namespace MHServerEmu.Core.Network
             public readonly ulong PlayerDbId = playerDbId;
         }
 
-        public readonly struct MTXStoreESBalanceResponse(ulong requestId, int currentBalance, float conversionRatio)
+        public readonly struct MTXStoreESBalanceGameResponse(ulong requestId, int currentBalance, float conversionRatio)
             : IGameServiceMessage
         {
             public readonly ulong RequestId = requestId;
             public readonly int CurrentBalance = currentBalance;
             public readonly float ConversionRatio = conversionRatio;
+        }
+
+        public readonly struct MTXStoreESConvertRequest(ulong requestId, string email, string token, int amount)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly string Email = email;
+            public readonly string Token = token;
+            public readonly int Amount = amount;
+        }
+
+        public readonly struct MTXStoreESConvertResponse(ulong requestId, int statusCode)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly int StatusCode = statusCode;
+        }
+
+        public readonly struct MTXStoreESConvertGameRequest(ulong requestId, ulong gameId, ulong playerDbId, int amount)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly int Amount = amount;
+        }
+
+        public readonly struct MTXStoreESConvertGameResponse(ulong requestId, bool result)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly bool Result = result;
         }
 
         #endregion

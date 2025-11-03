@@ -92,12 +92,20 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnPartyBoostUpdate(partyBoostUpdate);
                     break;
 
-                case ServiceMessage.MTXStoreAuthRequest mtxStoreAuthRequest:
-                    OnMTXStoreAuthRequest(mtxStoreAuthRequest);
+                case ServiceMessage.MTXStoreESBalanceRequest mtxStoreESBalanceRequest:
+                    OnMTXStoreESBalanceRequest(mtxStoreESBalanceRequest);
                     break;
 
-                case ServiceMessage.MTXStoreESBalanceResponse mtxStoreESBalanceResponse:
-                    OnMTXStoreESBalanceResponse(mtxStoreESBalanceResponse);
+                case ServiceMessage.MTXStoreESBalanceGameResponse mtxStoreESBalanceGameResponse:
+                    OnMTXStoreESBalanceGameResponse(mtxStoreESBalanceGameResponse);
+                    break;
+
+                case ServiceMessage.MTXStoreESConvertRequest mtxStoreESConvertRequest:
+                    OnMTXStoreESConvertRequest(mtxStoreESConvertRequest);
+                    break;
+
+                case ServiceMessage.MTXStoreESConvertGameResponse mtxStoreESConvertGameResponse:
+                    OnMTXStoreESConvertGameResponse(mtxStoreESConvertGameResponse);
                     break;
 
                 default:
@@ -351,11 +359,11 @@ namespace MHServerEmu.PlayerManagement.Network
             return true;
         }
 
-        private bool OnMTXStoreAuthRequest(in ServiceMessage.MTXStoreAuthRequest mtxStoreAuthRequest)
+        private bool OnMTXStoreESBalanceRequest(in ServiceMessage.MTXStoreESBalanceRequest mtxStoreESBalanceRequest)
         {
-            ulong requestId = mtxStoreAuthRequest.RequestId;
-            string email = mtxStoreAuthRequest.Email;
-            string token = mtxStoreAuthRequest.Token;
+            ulong requestId = mtxStoreESBalanceRequest.RequestId;
+            string email = mtxStoreESBalanceRequest.Email;
+            string token = mtxStoreESBalanceRequest.Token;
 
             PlayerHandle player = null;
 
@@ -364,7 +372,7 @@ namespace MHServerEmu.PlayerManagement.Network
 
             if (player == null || player.State != PlayerHandleState.InGame)
             {
-                ServiceMessage.MTXStoreAuthResponse response = new(requestId, (int)HttpStatusCode.Forbidden);
+                ServiceMessage.MTXStoreESBalanceResponse response = new(requestId, (int)HttpStatusCode.Forbidden);
                 ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
                 return true;
             }
@@ -372,25 +380,69 @@ namespace MHServerEmu.PlayerManagement.Network
             ulong gameId = player.CurrentGame.Id;
 
             // Route the request to game instance to get up to date balance and conversion ratio
-            ServiceMessage.MTXStoreESBalanceRequest balanceRequest = new(requestId, gameId, playerDbId);
-            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, balanceRequest);
+            ServiceMessage.MTXStoreESBalanceGameRequest gameRequest = new(requestId, gameId, playerDbId);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameRequest);
 
-            Logger.Debug($"OnMTXStoreAuthRequest(): SUCCESS for email={email}, token={token}, playerDbId=0x{playerDbId:X}");
+            Logger.Debug($"OnMTXStoreESBalanceRequest(): SUCCESS for email={email}, token={token}, playerDbId=0x{playerDbId:X}");
 
             return true;
         }
 
-        private bool OnMTXStoreESBalanceResponse(in ServiceMessage.MTXStoreESBalanceResponse mtxStoreESBalanceResponse)
+        private bool OnMTXStoreESBalanceGameResponse(in ServiceMessage.MTXStoreESBalanceGameResponse mtxStoreESBalanceGameResponse)
         {
-            ulong requestId = mtxStoreESBalanceResponse.RequestId;
-            int currentBalance = mtxStoreESBalanceResponse.CurrentBalance;
-            float conversionRate = mtxStoreESBalanceResponse.ConversionRatio;
+            ulong requestId = mtxStoreESBalanceGameResponse.RequestId;
+            int currentBalance = mtxStoreESBalanceGameResponse.CurrentBalance;
+            float conversionRate = mtxStoreESBalanceGameResponse.ConversionRatio;
 
             // We should have already handled authentication before routing the request to the game instance, so just route the result back.
-            ServiceMessage.MTXStoreAuthResponse response = new(requestId, (int)HttpStatusCode.OK, currentBalance, conversionRate);
+            ServiceMessage.MTXStoreESBalanceResponse response = new(requestId, (int)HttpStatusCode.OK, currentBalance, conversionRate);
             ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
 
-            Logger.Debug($"OnMTXStoreESBalanceResponse(): currentBalance={currentBalance}, conversionRate={conversionRate}");
+            Logger.Debug($"OnMTXStoreESBalanceGameResponse(): currentBalance={currentBalance}, conversionRate={conversionRate}");
+
+            return true;
+        }
+
+        private bool OnMTXStoreESConvertRequest(in ServiceMessage.MTXStoreESConvertRequest mtxStoreESConvertRequest)
+        {
+            ulong requestId = mtxStoreESConvertRequest.RequestId;
+            string email = mtxStoreESConvertRequest.Email;
+            string token = mtxStoreESConvertRequest.Token;
+            int amount = mtxStoreESConvertRequest.Amount;
+
+            PlayerHandle player = null;
+
+            if (_playerManager.SessionManager.VerifyPlatformTicket(email, token, out ulong playerDbId))
+                player = _playerManager.ClientManager.GetPlayer(playerDbId);
+
+            if (player == null || player.State != PlayerHandleState.InGame)
+            {
+                ServiceMessage.MTXStoreESConvertResponse response = new(requestId, (int)HttpStatusCode.Forbidden);
+                ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
+                return true;
+            }
+
+            ulong gameId = player.CurrentGame.Id;
+
+            // Route the conversion request to the game instance the player is currently in to do the conversion.
+            ServiceMessage.MTXStoreESConvertGameRequest gameRequest = new(requestId, gameId, playerDbId, amount);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameRequest);
+
+            Logger.Debug($"OnMTXStoreESConvertRequest(): SUCCESS for email={email}, token={token}, playerDbId=0x{playerDbId:X}");
+
+            return true;
+        }
+
+        private bool OnMTXStoreESConvertGameResponse(in ServiceMessage.MTXStoreESConvertGameResponse mtxStoreESConvertGameResponse)
+        {
+            ulong requestId = mtxStoreESConvertGameResponse.RequestId;
+            bool result = mtxStoreESConvertGameResponse.Result;
+
+            // We should have already handled authentication before routing the request to the game instance, so just route the result back.
+            ServiceMessage.MTXStoreESConvertResponse response = new(requestId, result ? (int)HttpStatusCode.OK : (int)HttpStatusCode.InternalServerError);
+            ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
+
+            Logger.Debug($"OnMTXStoreESConvertGameResponse(): requestId={requestId}, result={result}");
 
             return true;
         }
