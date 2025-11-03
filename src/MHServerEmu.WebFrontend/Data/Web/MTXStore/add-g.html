@@ -130,7 +130,7 @@
 				<p>Converting...</p>
 			</div>
 			<div id="popup-result" style="display: none;">
-				<p>Finished</p>
+				<p id="popup-result-text"></p>
 				<button onclick="closePanel()">Close</button>
 			</div>
 		</div>
@@ -144,6 +144,30 @@
 			currentBalance: "%REQUEST_CURRENT_BALANCE%",
 			conversionRatio: "%REQUEST_CONVERSION_RATIO%",
 		});
+
+		var PopupType = Object.freeze({
+			NONE: "",
+			CONFIRM: "popup-confirm",
+			PENDING: "popup-pending",
+			RESULT: "popup-result",
+		});
+
+		var convertResult = 200;
+
+		function showPopup(type) {
+			document.getElementById(PopupType.CONFIRM).style.display = "none";
+			document.getElementById(PopupType.PENDING).style.display = "none";
+			document.getElementById(PopupType.RESULT).style.display = "none";
+
+			var popup = document.getElementById("convert-popup");
+
+			if (type != PopupType.NONE) {
+				popup.style.display = "flex";
+				document.getElementById(type).style.display = "block";
+			} else {
+				popup.style.display = "none";
+			}
+		}
 
 		function getES() {
 			return Number(document.getElementById("es-range-input").value);
@@ -173,30 +197,44 @@
 			if (esAmount <= 0)
 				return;
 
-			document.getElementById("convert-popup").style.display = "flex";
-			document.getElementById("popup-confirm-text").innerText = "Convert " + esAmount + " Eternity Splinters to " + Math.floor(esAmount * requestContext.conversionRatio) +" G?";
+			var confirmText = "Convert " + esAmount + " Eternity Splinters to " + Math.floor(esAmount * requestContext.conversionRatio) +" G?"
+			document.getElementById("popup-confirm-text").innerText = confirmText;
+			showPopup(PopupType.CONFIRM);
 		}
 
 		function convertConfirm() {
-			document.getElementById("popup-confirm").style.display = "none";
-			document.getElementById("popup-pending").style.display = "block";
+			showPopup(PopupType.PENDING);
 
-			// todo: send request
-			var callback = function() {
-				document.getElementById("popup-pending").style.display = "none";
-				document.getElementById("popup-result").style.display = "block";
-			}
+			var convertRequest = {
+				Email: requestContext.email,
+				Token: requestContext.token,
+				Amount: getES(),
+			};
 
-			setTimeout(callback, 1000);
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", window.location.href + "/Submit", true);
+			xhr.onreadystatechange = function() { handleReadyStateChange(xhr); };
+			xhr.setRequestHeader("Content-Type", "application/json");
+			xhr.send(JSON.stringify(convertRequest));
 		}
 
 		function convertCancel() {
-			document.getElementById("convert-popup").style.display = "none";
+			showPopup(PopupType.NONE);
+		}
+
+		function handleReadyStateChange(xhr) {
+			if (xhr.readyState != 4)
+				return;
+
+			convertResult = xhr.status;
+
+			var confirmText = convertResult == 200 ? "Successfully converted." : "Conversion error (" + convertResult + ").";
+			document.getElementById("popup-result-text").innerText = confirmText;
+			showPopup(PopupType.RESULT);
 		}
 
 		function closePanel() {
-			// todo: true or false depending on returned result
-			myApi.CloseAddGPanel(true);
+			myApi.CloseAddGPanel(convertResult == 200);
 		}
 
 		document.getElementById("es-range-input").max = requestContext.currentBalance;
