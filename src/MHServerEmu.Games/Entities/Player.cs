@@ -3,6 +3,7 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -30,6 +31,7 @@ using MHServerEmu.Games.Leaderboards;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Missions;
+using MHServerEmu.Games.MTXStore;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
@@ -1433,6 +1435,29 @@ namespace MHServerEmu.Games.Entities
                 .Build());
 
             return true;
+        }
+
+        /// <summary>
+        /// Converts the specified number of Eternity Splinters (ES) to Gazillionite (G). Returns the amount of Gazillionite acquired.
+        /// </summary>
+        public int ConvertEternitySplintersToGazillionite(int esAmount)
+        {
+            PropertyId esPropId = new(PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.EternitySplinters);
+
+            long esBalance = Properties[esPropId];
+            if (esBalance < esAmount)
+                return 0;
+
+            var config = ConfigManager.Instance.GetConfig<MTXStoreConfig>();
+            int gAmount = Math.Max((int)(esAmount * config.ESToGazillioniteConversionRatio), 0);
+            if (gAmount == 0)
+                return 0;
+
+            if (AcquireGazillionite(gAmount) == false)
+                return 0;
+
+            Properties[esPropId] = esBalance - esAmount;
+            return gAmount;
         }
 
         public bool AwardBonusItemFindPoints(int amount, LootInputSettings settings)

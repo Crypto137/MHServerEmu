@@ -280,10 +280,14 @@ namespace MHServerEmu.Games.Network
 
         private bool OnMTXStoreESConvertGameRequest(in ServiceMessage.MTXStoreESConvertGameRequest mtxStoreESConvertGameRequest)
         {
-            // TODO: conversion
-            Logger.Warn($"OnMTXStoreESConvertGameRequest(): playerDbId=0x{mtxStoreESConvertGameRequest.PlayerDbId:X}, amount={mtxStoreESConvertGameRequest.Amount}");
+            Logger.Debug($"OnMTXStoreESConvertGameRequest(): playerDbId=0x{mtxStoreESConvertGameRequest.PlayerDbId:X}, amount={mtxStoreESConvertGameRequest.Amount}");
 
-            ServiceMessage.MTXStoreESConvertGameResponse response = new(mtxStoreESConvertGameRequest.RequestId, false);
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(mtxStoreESConvertGameRequest.PlayerDbId);
+            if (player == null) return Logger.WarnReturn(false, "OnMTXStoreESConvertGameRequest(): player == null");
+
+            int gAmount = player.ConvertEternitySplintersToGazillionite(mtxStoreESConvertGameRequest.Amount);
+
+            ServiceMessage.MTXStoreESConvertGameResponse response = new(mtxStoreESConvertGameRequest.RequestId, gAmount > 0);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, response);
 
             return true;
