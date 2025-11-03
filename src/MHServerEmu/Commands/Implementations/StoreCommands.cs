@@ -1,7 +1,9 @@
 ﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.MTXStore;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Commands.Implementations
@@ -26,6 +28,11 @@ namespace MHServerEmu.Commands.Implementations
             {
                 if (int.TryParse(@params[0], out esAmount) == false)
                     return $"'{@params[0]}' is not a valid Eternity Splinter amount.";
+
+                // Floor to the nearest step value if needed
+                int step = Math.Max(ConfigManager.Instance.GetConfig<MTXStoreConfig>().ESToGazillioniteConversionStep, 1);
+                if (step > 1)
+                    esAmount = esAmount / step * step;
             }
 
             int gAmount = player.ConvertEternitySplintersToGazillionite(esAmount);

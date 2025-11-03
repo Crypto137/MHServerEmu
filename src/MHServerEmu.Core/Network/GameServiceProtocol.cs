@@ -541,13 +541,14 @@ namespace MHServerEmu.Core.Network
             public readonly string Token = token;
         }
 
-        public readonly struct MTXStoreESBalanceResponse(ulong requestId, int statusCode, int currentBalance = 0, float conversionRatio = 0)
+        public readonly struct MTXStoreESBalanceResponse(ulong requestId, int statusCode, int currentBalance = 0, float conversionRatio = 0, int conversionStep = 0)
             : IGameServiceMessage
         {
             public readonly ulong RequestId = requestId;
             public readonly int StatusCode = statusCode;
             public readonly int CurrentBalance = currentBalance;
             public readonly float ConversionRatio = conversionRatio;
+            public readonly int ConversionStep = conversionStep;
         }
 
         public readonly struct MTXStoreESBalanceGameRequest(ulong requestId, ulong gameId, ulong playerDbId)
@@ -558,12 +559,13 @@ namespace MHServerEmu.Core.Network
             public readonly ulong PlayerDbId = playerDbId;
         }
 
-        public readonly struct MTXStoreESBalanceGameResponse(ulong requestId, int currentBalance, float conversionRatio)
+        public readonly struct MTXStoreESBalanceGameResponse(ulong requestId, int currentBalance, float conversionRatio, int conversionStep)
             : IGameServiceMessage
         {
             public readonly ulong RequestId = requestId;
             public readonly int CurrentBalance = currentBalance;
             public readonly float ConversionRatio = conversionRatio;
+            public readonly int ConversionStep = conversionStep;
         }
 
         public readonly struct MTXStoreESConvertRequest(ulong requestId, string email, string token, int amount)

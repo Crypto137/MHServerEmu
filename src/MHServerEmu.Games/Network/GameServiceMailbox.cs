@@ -270,9 +270,12 @@ namespace MHServerEmu.Games.Network
             if (player == null) return Logger.WarnReturn(false, "OnMTXStoreESBalanceGameRequest(): player == null");
 
             int currentBalance = player.Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.EternitySplinters];
-            float conversionRatio = ConfigManager.Instance.GetConfig<MTXStoreConfig>().ESToGazillioniteConversionRatio;
 
-            ServiceMessage.MTXStoreESBalanceGameResponse response = new(mtxStoreESBalanceGameRequest.RequestId, currentBalance, conversionRatio);
+            var config = ConfigManager.Instance.GetConfig<MTXStoreConfig>();
+            float conversionRatio = config.ESToGazillioniteConversionRatio;
+            int conversionStep = config.ESToGazillioniteConversionStep;
+
+            ServiceMessage.MTXStoreESBalanceGameResponse response = new(mtxStoreESBalanceGameRequest.RequestId, currentBalance, conversionRatio, conversionStep);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, response);
 
             return true;

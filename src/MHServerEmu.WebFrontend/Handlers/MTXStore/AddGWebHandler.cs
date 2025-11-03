@@ -64,11 +64,12 @@ namespace MHServerEmu.WebFrontend.Handlers.MTXStore
             }
 
             StringBuilder sb = new(_htmlTemplate);
-            sb.Replace("%REQUEST_DOWNLOADER%", downloader);
-            sb.Replace("%REQUEST_TOKEN%", token);
-            sb.Replace("%REQUEST_EMAIL%", email);
-            sb.Replace("%REQUEST_CURRENT_BALANCE%", $"{balanceResponse.CurrentBalance}");
-            sb.Replace("%REQUEST_CONVERSION_RATIO%", $"{balanceResponse.ConversionRatio:0.00}");
+            sb.Replace("%DOWNLOADER%", downloader);
+            sb.Replace("%TOKEN%", token);
+            sb.Replace("%EMAIL%", email);
+            sb.Replace("%CURRENT_BALANCE%", $"{balanceResponse.CurrentBalance}");
+            sb.Replace("%CONVERSION_RATIO%", $"{balanceResponse.ConversionRatio:0.00}");
+            sb.Replace("%CONVERSION_STEP%", $"{balanceResponse.ConversionStep}");
             string html = sb.ToString();
 
             await context.SendAsync(html, "text/html");

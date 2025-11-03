@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.MTXStore
     {
         public long GazillioniteBalanceForNewAccounts { get; private set; } = 10000;
         public float ESToGazillioniteConversionRatio { get; private set; } = 2.25f;
+        public int ESToGazillioniteConversionStep { get; private set; } = 4;
         public bool ApplyCatalogPatch { get; private set; } = true;
         public bool OverrideStoreUrls { get; private set; } = true;
 

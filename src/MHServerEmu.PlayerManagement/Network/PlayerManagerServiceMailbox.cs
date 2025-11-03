@@ -393,12 +393,13 @@ namespace MHServerEmu.PlayerManagement.Network
             ulong requestId = mtxStoreESBalanceGameResponse.RequestId;
             int currentBalance = mtxStoreESBalanceGameResponse.CurrentBalance;
             float conversionRate = mtxStoreESBalanceGameResponse.ConversionRatio;
+            int conversionStep = mtxStoreESBalanceGameResponse.ConversionStep;
 
             // We should have already handled authentication before routing the request to the game instance, so just route the result back.
-            ServiceMessage.MTXStoreESBalanceResponse response = new(requestId, (int)HttpStatusCode.OK, currentBalance, conversionRate);
+            ServiceMessage.MTXStoreESBalanceResponse response = new(requestId, (int)HttpStatusCode.OK, currentBalance, conversionRate, conversionStep);
             ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
 
-            Logger.Debug($"OnMTXStoreESBalanceGameResponse(): currentBalance={currentBalance}, conversionRate={conversionRate}");
+            Logger.Debug($"OnMTXStoreESBalanceGameResponse(): currentBalance={currentBalance}, conversionRate={conversionRate}, conversionStep={conversionStep}");
 
             return true;
         }

@@ -120,8 +120,12 @@
 		<button onclick="convert()">Convert</button>
 	</div>
 
-	<div class="modal-popup" id="convert-popup">
+	<div class="modal-popup" id="popup">
 		<div class="content" style="width: 600px;">
+			<div id="popup-low-balance">
+				<p>You do not have enough Eternity Splinters to convert to G.</p>
+				<button onclick="closePanel()">Close</button>
+			</div>
 			<div id="popup-invalid-amount">
 				<p>Please specify a valid amount of Eternity Splinters.</p>
 				<button onclick="closePopup()">Close</button>
@@ -145,16 +149,17 @@
 
 	<script>
 		var requestContext = Object.freeze({
-			downloader: "%REQUEST_DOWNLOADER%",
-			token: "%REQUEST_TOKEN%",
-			email: "%REQUEST_EMAIL%",
-			currentBalance: Number("%REQUEST_CURRENT_BALANCE%"),
-			conversionRatio: Number("%REQUEST_CONVERSION_RATIO%"),
-			conversionStep: 4,	// todo: configure this
+			downloader: "%DOWNLOADER%",
+			token: "%TOKEN%",
+			email: "%EMAIL%",
+			currentBalance: Math.max(Number("%CURRENT_BALANCE%"), 0),
+			conversionRatio: Math.max(Number("%CONVERSION_RATIO%"), 0),
+			conversionStep: Math.max(Number("%CONVERSION_STEP%"), 1),
 		});
 
 		var PopupType = Object.freeze({
 			NONE: "",
+			LOW_BALANCE: "popup-low-balance",
 			INVALID_AMOUNT: "popup-invalid-amount",
 			CONFIRM: "popup-confirm",
 			PENDING: "popup-pending",
@@ -172,7 +177,7 @@
 				}
 			}
 
-			var popup = document.getElementById("convert-popup");
+			var popup = document.getElementById("popup");
 
 			if (type != PopupType.NONE) {
 				popup.style.display = "flex";
@@ -182,7 +187,6 @@
 			}
 		}
 
-		
 		function closePopup() {
 			showPopup(PopupType.NONE);
 		}
@@ -260,8 +264,14 @@
 
 		function initialize() {
 			var esRange = document.getElementById("es-range-input");
-			esRange.step = requestContext.conversionStep;
-			esRange.max = requestContext.currentBalance;
+			var step = requestContext.conversionStep;
+			var max = Math.floor(requestContext.currentBalance / step) * step;
+
+			esRange.step = step;
+			esRange.max = max;
+
+			if (max == 0)
+				showPopup(PopupType.LOW_BALANCE);
 		}
 
 		initialize();
