@@ -2128,6 +2128,38 @@ namespace MHServerEmu.Games.Entities
             return HasAvatarAsStarter(avatar.PrototypeDataRef) && avatar.CharacterLevel >= Avatar.GetStarterAvatarLevelCap();
         }
 
+        public bool OwnsItem(PrototypeId itemProtoRef)
+        {
+            if (itemProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "OwnsItem(): itemProtoRef == PrototypeId.Invalid");
+
+            // Avatar unlocks
+            AvatarPrototype avatarProto = itemProtoRef.As<AvatarPrototype>();
+            if (avatarProto != null)
+                return HasAvatarFullyUnlocked(itemProtoRef);
+
+            // Avatar equipment
+            foreach (Avatar avatar in new AvatarIterator(this))
+            {
+                if (InventoryIterator.ContainsMatchingEntity(avatar, itemProtoRef))
+                    return true;
+            }
+
+            // Player inventories
+            foreach (Inventory inventory in new InventoryIterator(this))
+            {
+                if (inventory.Category == InventoryCategory.PlayerAvatars)
+                    continue;
+
+                if (inventory.Category == InventoryCategory.PlayerVendor)
+                    continue;
+
+                if (inventory.ContainsMatchingEntity(itemProtoRef))
+                    return true;
+            }
+
+            return false;
+        }
+
         public bool UnlockPowerSpecIndex(int index)
         {
             if (index < 0)

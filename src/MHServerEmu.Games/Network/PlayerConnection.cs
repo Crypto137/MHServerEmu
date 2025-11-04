@@ -527,6 +527,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageTeleportToPartyMember:             OnTeleportToPartyMember(message); break;            // 114
                 case ClientToGameServerMessage.NetMessageSelectAvatarSynergies:             OnSelectAvatarSynergies(message); break;            // 116
                 case ClientToGameServerMessage.NetMessageRequestLegendaryMissionReroll:     OnRequestLegendaryMissionReroll(message); break;    // 117
+                case ClientToGameServerMessage.NetMessageRequestPlayerOwnsItemStatus:       OnRequestPlayerOwnsItemStatus(message); break;      // 120
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;       // 121
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:  OnRequestInterestInAvatarEquipment(message); break; // 123
                 case ClientToGameServerMessage.NetMessageRequestInterestInTeamUpEquipment:  OnRequestInterestInTeamUpEquipment(message); break; // 124
@@ -1821,6 +1822,22 @@ namespace MHServerEmu.Games.Network
             var requestLegendaryMissionRerol = message.As<NetMessageRequestLegendaryMissionReroll>();
             if (requestLegendaryMissionRerol == null) return Logger.WarnReturn(false, $"OnRequestLegendaryMissionReroll(): Failed to retrieve message");
             Player.RequestLegendaryMissionReroll();
+            return true;
+        }
+
+        private bool OnRequestPlayerOwnsItemStatus(in MailboxMessage message)   // 120
+        {
+            var requestPlayerOwnsItemStatus = message.As<NetMessageRequestPlayerOwnsItemStatus>();
+            if (requestPlayerOwnsItemStatus == null) return Logger.WarnReturn(false, "OnRequestPlayerOwnsItemStatus(): Failed to retrieve message");
+
+            PrototypeId itemProtoRef = (PrototypeId)requestPlayerOwnsItemStatus.ItemProtoId;
+            bool ownsItem = Player.OwnsItem((PrototypeId)requestPlayerOwnsItemStatus.ItemProtoId);
+
+            Player.SendMessage(NetMessagePlayerOwnsItemResponse.CreateBuilder()
+                .SetItemProtoId((ulong)itemProtoRef)
+                .SetOwns(ownsItem)
+                .Build());
+
             return true;
         }
 
