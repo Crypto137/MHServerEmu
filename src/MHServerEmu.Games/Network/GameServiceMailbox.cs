@@ -283,8 +283,6 @@ namespace MHServerEmu.Games.Network
 
         private bool OnMTXStoreESConvertGameRequest(in ServiceMessage.MTXStoreESConvertGameRequest mtxStoreESConvertGameRequest)
         {
-            Logger.Debug($"OnMTXStoreESConvertGameRequest(): playerDbId=0x{mtxStoreESConvertGameRequest.PlayerDbId:X}, amount={mtxStoreESConvertGameRequest.Amount}");
-
             Player player = Game.EntityManager.GetEntityByDbGuid<Player>(mtxStoreESConvertGameRequest.PlayerDbId);
             if (player == null) return Logger.WarnReturn(false, "OnMTXStoreESConvertGameRequest(): player == null");
 

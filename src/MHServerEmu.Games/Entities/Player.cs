@@ -1457,6 +1457,8 @@ namespace MHServerEmu.Games.Entities
                 return 0;
 
             Properties[esPropId] = esBalance - esAmount;
+
+            Logger.Info($"[{PlayerConnection}] converted {esAmount} ES to {gAmount} G", LogCategory.MTXStore);            
             return gAmount;
         }
 

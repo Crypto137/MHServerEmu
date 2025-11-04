@@ -377,13 +377,13 @@ namespace MHServerEmu.PlayerManagement.Network
                 return true;
             }
 
+            Logger.Info($"Authenticated ES balance request from player [{player}]");
+
             ulong gameId = player.CurrentGame.Id;
 
             // Route the request to game instance to get up to date balance and conversion ratio
             ServiceMessage.MTXStoreESBalanceGameRequest gameRequest = new(requestId, gameId, playerDbId);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameRequest);
-
-            Logger.Debug($"OnMTXStoreESBalanceRequest(): SUCCESS for email={email}, token={token}, playerDbId=0x{playerDbId:X}");
 
             return true;
         }
@@ -398,8 +398,6 @@ namespace MHServerEmu.PlayerManagement.Network
             // We should have already handled authentication before routing the request to the game instance, so just route the result back.
             ServiceMessage.MTXStoreESBalanceResponse response = new(requestId, (int)HttpStatusCode.OK, currentBalance, conversionRate, conversionStep);
             ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
-
-            Logger.Debug($"OnMTXStoreESBalanceGameResponse(): currentBalance={currentBalance}, conversionRate={conversionRate}, conversionStep={conversionStep}");
 
             return true;
         }
@@ -423,13 +421,13 @@ namespace MHServerEmu.PlayerManagement.Network
                 return true;
             }
 
+            Logger.Info($"Authenticated ES conversion request from player [{player}]");
+
             ulong gameId = player.CurrentGame.Id;
 
             // Route the conversion request to the game instance the player is currently in to do the conversion.
             ServiceMessage.MTXStoreESConvertGameRequest gameRequest = new(requestId, gameId, playerDbId, amount);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameRequest);
-
-            Logger.Debug($"OnMTXStoreESConvertRequest(): SUCCESS for email={email}, token={token}, playerDbId=0x{playerDbId:X}");
 
             return true;
         }
@@ -442,8 +440,6 @@ namespace MHServerEmu.PlayerManagement.Network
             // We should have already handled authentication before routing the request to the game instance, so just route the result back.
             ServiceMessage.MTXStoreESConvertResponse response = new(requestId, result ? (int)HttpStatusCode.OK : (int)HttpStatusCode.InternalServerError);
             ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
-
-            Logger.Debug($"OnMTXStoreESConvertGameResponse(): requestId={requestId}, result={result}");
 
             return true;
         }
