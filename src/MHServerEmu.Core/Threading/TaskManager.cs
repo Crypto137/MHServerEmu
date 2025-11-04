@@ -11,14 +11,14 @@
         /// <summary>
         /// Constructs a new <see cref="Task{TResult}"/>.
         /// </summary>
-        public Task<T> CreateTask(out ulong taskId)
+        public Handle CreateTask()
         {
             lock (_pendingTasks)
             {
-                taskId = _currentTaskId++;
+                ulong taskId = _currentTaskId++;
                 TaskCompletionSource<T> tcs = new();
                 _pendingTasks.Add(taskId, tcs);
-                return tcs.Task;
+                return new(taskId, tcs.Task, this);
             }
         }
 
@@ -27,14 +27,16 @@
         /// </summary>
         public bool CompleteTask(ulong taskId, T result)
         {
+            TaskCompletionSource<T> tcs = null;
+
             lock (_pendingTasks)
             {
-                if (_pendingTasks.Remove(taskId, out TaskCompletionSource<T> tcs) == false)
+                if (_pendingTasks.Remove(taskId, out tcs) == false)
                     return false;
-
-                tcs.SetResult(result);
-                return true;
             }
+
+            tcs.SetResult(result);
+            return true;
         }
 
         /// <summary>
@@ -42,14 +44,16 @@
         /// </summary>
         public bool CancelTask(ulong taskId)
         {
+            TaskCompletionSource<T> tcs = null;
+
             lock (_pendingTasks)
             {
-                if (_pendingTasks.Remove(taskId, out TaskCompletionSource<T> tcs) == false)
+                if (_pendingTasks.Remove(taskId, out tcs) == false)
                     return false;
-
-                tcs.SetCanceled();
-                return true;
             }
+
+            tcs.SetCanceled();
+            return true;
         }
 
         /// <summary>
@@ -63,6 +67,31 @@
                     kvp.Value.SetCanceled();
 
                 _pendingTasks.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Represents a <see cref="Task{TResult}"/> managed by a <see cref="TaskManager{T}"/>.
+        /// </summary>
+        public readonly struct Handle
+        {
+            public readonly ulong Id;
+            public readonly Task<T> Task;
+            public readonly TaskManager<T> Manager;
+
+            internal Handle(ulong id, Task<T> task, TaskManager<T> manager)
+            {
+                Id = id;
+                Task = task;
+                Manager = manager;
+            }
+
+            /// <summary>
+            /// Cancels the <see cref="Task{TResult}"/> represented by this handle.
+            /// </summary>
+            public void Cancel()
+            {
+                Manager.CancelTask(Id);
             }
         }
     }

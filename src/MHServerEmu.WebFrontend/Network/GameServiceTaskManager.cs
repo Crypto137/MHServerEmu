@@ -25,21 +25,17 @@ namespace MHServerEmu.WebFrontend.Network
         /// </summary>
         public async Task<ServiceMessage.MTXStoreESBalanceResponse> GetESBalanceAsync(string email, string token)
         {
-            Task<ServiceMessage.MTXStoreESBalanceResponse> balanceRequestTask = _esBalanceTaskManager.CreateTask(out ulong requestId);
+            var balanceRequestTask = _esBalanceTaskManager.CreateTask();
 
-            ServiceMessage.MTXStoreESBalanceRequest balanceRequest = new(requestId, email, token);
+            ServiceMessage.MTXStoreESBalanceRequest balanceRequest = new(balanceRequestTask.Id, email, token);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, balanceRequest);
 
-            await Task.WhenAny(balanceRequestTask, Task.Delay(TaskTimeout));
+            ServiceMessage.MTXStoreESBalanceResponse? balanceResponse = await CompleteTaskWithTimeout(balanceRequestTask);
 
-            if (balanceRequestTask.IsCompletedSuccessfully == false)
-            {
-                Logger.Warn($"GetESBalanceAsync(): Timeout for request {requestId}");
-                _esBalanceTaskManager.CancelTask(requestId);
-                return new(requestId, (int)HttpStatusCode.RequestTimeout);
-            }
+            if (balanceResponse == null)
+                return new(balanceRequestTask.Id, (int)HttpStatusCode.RequestTimeout);
 
-            return balanceRequestTask.Result;
+            return balanceResponse.Value;
         }
 
         /// <summary>
@@ -55,21 +51,17 @@ namespace MHServerEmu.WebFrontend.Network
         /// </summary>
         public async Task<ServiceMessage.MTXStoreESConvertResponse> ConvertESAsync(string email, string token, int amount)
         {
-            Task<ServiceMessage.MTXStoreESConvertResponse> convertTask = _esConvertTaskManager.CreateTask(out ulong requestId);
+            var convertTask = _esConvertTaskManager.CreateTask();
 
-            ServiceMessage.MTXStoreESConvertRequest convertRequest = new(requestId, email, token, amount);
+            ServiceMessage.MTXStoreESConvertRequest convertRequest = new(convertTask.Id, email, token, amount);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, convertRequest);
 
-            await Task.WhenAny(convertTask, Task.Delay(TaskTimeout));
+            ServiceMessage.MTXStoreESConvertResponse? response = await CompleteTaskWithTimeout(convertTask);
 
-            if (convertTask.IsCompletedSuccessfully == false)
-            {
-                Logger.Warn($"ConvertESAsync(): Timeout for request {requestId}");
-                _esConvertTaskManager.CancelTask(requestId);
-                return new(requestId, (int)HttpStatusCode.RequestTimeout);
-            }
+            if (response == null)
+                return new(convertTask.Id, (int)HttpStatusCode.RequestTimeout);
 
-            return convertTask.Result;
+            return response.Value;
         }
 
         /// <summary>
@@ -78,6 +70,22 @@ namespace MHServerEmu.WebFrontend.Network
         public void OnMTXStoreESConvertResponse(in ServiceMessage.MTXStoreESConvertResponse response)
         {
             _esConvertTaskManager.CompleteTask(response.RequestId, response);
+        }
+
+        private static async Task<T?> CompleteTaskWithTimeout<T>(TaskManager<T>.Handle taskHandle)
+            where T: struct, IGameServiceMessage
+        {
+            Task timeoutTask = Task.Delay(TaskTimeout);
+            Task completedTask = await Task.WhenAny(taskHandle.Task, timeoutTask);
+            
+            if (completedTask == timeoutTask)
+            {
+                Logger.Warn($"CompleteTaskWithTimeout(): Timeout for request {taskHandle.Id} of type {typeof(T).Name}");
+                taskHandle.Cancel();
+                return null;
+            }
+
+            return taskHandle.Task.Result;
         }
     }
 }
