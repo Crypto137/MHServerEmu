@@ -31,10 +31,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Data\Billing\Catalog.json">
+    <None Update="Data\Game\MTXStore\Catalog.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Billing\CatalogPatch.json">
+    <None Update="Data\Game\MTXStore\CatalogPatch.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\Achievements\AchievementContextMap.json">
