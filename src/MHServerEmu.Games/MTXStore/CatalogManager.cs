@@ -84,9 +84,40 @@ namespace MHServerEmu.Games.MTXStore
 
         public bool OnBuyItemFromCatalog(Player player, NetMessageBuyItemFromCatalog buyItemFromCatalog)
         {
+            if (buyItemFromCatalog.HasSkuId == false)
+                return Logger.WarnReturn(false, $"OnBuyItemFromCatalog(): No SkuId received from player [{player}]");
+
             long skuId = buyItemFromCatalog.SkuId;
+
             BuyItemResultErrorCodes result = BuyItem(player, skuId);
-            SendBuyItemResponse(player, result, skuId);
+
+            player.SendMessage(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
+                .SetDidSucceed(result == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
+                .SetCurrentCurrencyBalance(player.GazillioniteBalance)
+                .SetErrorcode(result)
+                .SetSkuId(skuId)
+                .Build());
+
+            return true;
+        }
+
+        public bool OnBuyGiftForOtherPlayer(Player player, NetMessageBuyGiftForOtherPlayer buyGiftForOtherPlayer)
+        {
+            if (buyGiftForOtherPlayer.HasSkuId == false)
+                return Logger.WarnReturn(false, $"OnBuyGiftForOtherPlayer(): No SkuId received from player [{player}]");
+
+            long skuId = buyGiftForOtherPlayer.SkuId;
+
+            // TODO: actual gifting
+            BuyItemResultErrorCodes result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_GIFTING_UNAVAILABLE;
+
+            player.SendMessage(NetMessageBuyGiftForOtherPlayerResponse.CreateBuilder()
+                .SetDidSucceed(result == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
+                .SetCurrentCurrencyBalance(player.GazillioniteBalance)
+                .SetErrorcode(result)
+                .SetSkuid(skuId)
+                .Build());
+
             return true;
         }
 
@@ -174,16 +205,6 @@ namespace MHServerEmu.Games.MTXStore
             Logger.Trace($"OnBuyItemFromCatalog(): Player [{player}] purchased [skuId={skuId}, catalogItemProto={catalogItemProto}, itemPrice={itemPrice}]. Balance={balance}", LogCategory.MTXStore);
 
             return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
-        }
-
-        private void SendBuyItemResponse(Player player, BuyItemResultErrorCodes errorCode, long skuId)
-        {
-            player.SendMessage(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
-                .SetDidSucceed(errorCode == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
-                .SetCurrentCurrencyBalance(player.GazillioniteBalance)
-                .SetErrorcode(errorCode)
-                .SetSkuId(skuId)
-                .Build());
         }
     }
 }

@@ -505,6 +505,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageGetCatalog:                        OnGetCatalog(message); break;                       // 68
                 case ClientToGameServerMessage.NetMessageGetCurrencyBalance:                OnGetCurrencyBalance(message); break;               // 69
                 case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:                OnBuyItemFromCatalog(message); break;               // 70
+                case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:             OnBuyGiftForOtherPlayer(message); break;            // 71
                 case ClientToGameServerMessage.NetMessagePurchaseUnlock:                    OnPurchaseUnlock(message); break;                   // 72
                 case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieStarted:      OnNotifyFullscreenMovieStarted(message); break;     // 84
                 case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieFinished:     OnNotifyFullscreenMovieFinished(message); break;    // 85
@@ -1498,6 +1499,14 @@ namespace MHServerEmu.Games.Network
             if (buyItemFromCatalog == null) return Logger.WarnReturn(false, $"OnBuyItemFromCatalog(): Failed to retrieve message");
 
             return CatalogManager.Instance.OnBuyItemFromCatalog(Player, buyItemFromCatalog);
+        }
+
+        private bool OnBuyGiftForOtherPlayer(in MailboxMessage message) // 71
+        {
+            var buyGiftForOtherPlayer = message.As<NetMessageBuyGiftForOtherPlayer>();
+            if (buyGiftForOtherPlayer == null) return Logger.WarnReturn(false, $"OnBuyGiftForOtherPlayer(): Failed to retrieve message");
+
+            return CatalogManager.Instance.OnBuyGiftForOtherPlayer(Player, buyGiftForOtherPlayer);
         }
 
         private bool OnPurchaseUnlock(MailboxMessage message)   // 72
