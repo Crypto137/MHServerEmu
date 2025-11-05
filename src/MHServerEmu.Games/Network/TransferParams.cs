@@ -5,6 +5,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Network
@@ -25,8 +26,9 @@ namespace MHServerEmu.Games.Network
         public NetStructRegionTarget DestTarget { get; private set; }
         public ulong DestEntityDbId { get; set; }
 
+        public int DestTeamIndex { get; set; }
+
         // TODO
-        // int32 DestTeamIndex
         // bool HasInvite
         // NetStructRegionOrigin Origin
 
@@ -43,6 +45,8 @@ namespace MHServerEmu.Games.Network
             DestLocation = transferParams.HasDestLocation ? transferParams.DestLocation : null;
             DestTarget = transferParams.HasDestTarget ? transferParams.DestTarget : null;
             DestEntityDbId = transferParams.HasDestEntityDbId ? transferParams.DestEntityDbId : 0;
+
+            DestTeamIndex = transferParams.HasDestTeamIndex ? transferParams.DestTeamIndex : -1;
         }
         
         public bool FindStartLocation(out Vector3 position, out Orientation orientation)
@@ -57,6 +61,10 @@ namespace MHServerEmu.Games.Network
 
             Area startArea = region.GetStartArea();
             if (startArea == null) return Logger.WarnReturn(false, "FindStartLocation(): startArea == null");
+
+            // Check if there is a pvp team
+            if (FindStartLocationFromPvPTeam(region, ref position, ref orientation))
+                return true;
 
             // Check if there is a region-specific override (e.g. divided start targets)
             if (FindStartLocationFromRegionOverride(region, ref position, ref orientation))
@@ -81,6 +89,45 @@ namespace MHServerEmu.Games.Network
             // Fall back to the center of the first cell in the start area if all else fails (this is very bad and should never really happen!)
             position = startArea.Cells.First().Value.RegionBounds.Center;
             Logger.Error($"FindStartPosition(): Failed to find target location, falling back to {position} as the last resort!");
+            return true;
+        }
+
+        private bool FindStartLocationFromPvPTeam(Region region, ref Vector3 position, ref Orientation orientation)
+        {
+            if (region.MetaGames.Count == 0) return false;
+
+            Game game = PlayerConnection.Game;
+            EntityManager entityManager = game.EntityManager;
+            Player player = PlayerConnection.Player;
+
+            PvPTeam pvpTeam = null;
+            foreach (ulong metaGameId in region.MetaGames)
+            {
+                PvP pvp = entityManager.GetEntity<PvP>(metaGameId);
+                if (pvp == null) return false;
+
+                pvpTeam = pvp.GetTeamForPlayer(player) as PvPTeam;
+                if (pvpTeam == null) return false;
+                break;
+            }
+
+            PrototypeId startTarget = pvpTeam.StartTarget;
+            if (startTarget == PrototypeId.Invalid)
+                return false;
+
+            RegionConnectionTargetPrototype targetProto = startTarget.As<RegionConnectionTargetPrototype>();
+            if (targetProto == null) return Logger.WarnReturn(false, "FindStartLocationFromPvPTeam(): targetProto == null");
+
+            if (RegionPrototype.Equivalent(targetProto.Region.As<RegionPrototype>(), region.Prototype) == false)
+                return Logger.WarnReturn(false, $"FindStartLocationFromPvPTeam(): Target region mismatch, expected {region.PrototypeDataRef.GetName()}, got {targetProto.Region.GetName()}");
+
+            PrototypeId areaProtoRef = targetProto.Area;
+            PrototypeId cellProtoRef = GameDatabase.GetDataRefByAsset(targetProto.Cell);
+            PrototypeId entityProtoRef = targetProto.Entity;
+
+            if (region.FindTargetLocation(ref position, ref orientation, areaProtoRef, cellProtoRef, entityProtoRef) == false)
+                return Logger.WarnReturn(false, $"FindStartLocationFromPvPTeam(): Failed to find location for target {targetProto}");
+
             return true;
         }
 

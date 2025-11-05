@@ -173,6 +173,7 @@ namespace MHServerEmu.Games.Entities
         public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
         public int PowerSpecIndexUnlocked { get => Properties[PropertyEnum.PowerSpecIndexUnlocked]; }
         public ulong TeamUpSynergyConditionId { get; set; }
+        public PropertyCollection AvatarProperties { get => _avatarProperties; }
 
         public override ulong PartyId { get => _partyId.Get(); }
         public bool IsInParty { get => PartyId != 0; }
@@ -277,6 +278,22 @@ namespace MHServerEmu.Games.Entities
 
                     if (Power.IsCooldownPersistent(powerProto))
                         Properties[PropertyEnum.PowerCooldownStartTimePersistent, powerProtoRef] = newValue;
+
+                    break;
+                }
+
+                case PropertyEnum.RunestonesAmount:
+                {
+                    var region = GetRegion();
+                    if (region == null || region.MetaGames.Count == 0) break;
+                    var manager = Game.EntityManager;
+
+                    foreach (var metagameId in region.MetaGames)
+                    {
+                        var pvp = manager.GetEntity<PvP>(metagameId);
+                        if (pvp == null) continue;
+                        pvp.UpdateRunestonesScore(this, newValue);
+                    }
 
                     break;
                 }
@@ -2075,6 +2092,26 @@ namespace MHServerEmu.Games.Entities
                 .SetAvatarIndex(avatarIndex)
                 .SetLastCurrentEntityId(lastCurrentAvatarId)
                 .Build());
+
+            UpdateAvatarAlliance();
+        }
+
+        private void UpdateAvatarAlliance()
+        {
+            var avatar = CurrentAvatar;
+            if (avatar == null) return;
+
+            avatar.Properties[PropertyEnum.AllianceOverride] = AvatarProperties[PropertyEnum.AllianceOverride];
+        }
+
+        public void SetAllianceOverride(AlliancePrototype allianceProto)
+        {
+            if (allianceProto == null)
+                AvatarProperties.RemoveProperty(PropertyEnum.AllianceOverride);
+            else
+                AvatarProperties[PropertyEnum.AllianceOverride] = allianceProto.DataRef;
+
+            UpdateAvatarAlliance();
         }
 
         public void OnAvatarCharacterLevelChanged(Avatar avatar)

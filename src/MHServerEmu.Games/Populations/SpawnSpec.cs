@@ -114,7 +114,10 @@ namespace MHServerEmu.Games.Populations
             {
                 settingsProperties[PropertyEnum.SpawnGroupId] = Group.Id;
                 if (Group.ObjectProto != null)
+                {
                     settingsProperties[PropertyEnum.ClusterPrototype] = Group.ObjectProto.DataRef;
+                    settingsProperties[PropertyEnum.MissionXEncounterHostilityOk] = Group.ObjectProto.AllowCrossMissionHostility;
+                }
 
                 if (Group.SpawnerId != Entity.InvalidId)
                 {

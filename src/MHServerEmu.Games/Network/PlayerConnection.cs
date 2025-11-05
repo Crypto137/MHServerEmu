@@ -413,6 +413,11 @@ namespace MHServerEmu.Games.Network
                 return;
             }
 
+            if (region.ContainsPvPMatch())
+            {
+                // TODO TransferParams.DestTeamIndex
+            }
+
             if (TransferParams.FindStartLocation(out Vector3 startPosition, out Orientation startOrientation) == false)
             {
                 Logger.Error($"EnterGame(): Failed to find start location");

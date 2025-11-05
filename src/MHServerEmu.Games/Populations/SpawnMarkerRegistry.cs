@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
@@ -182,7 +183,7 @@ namespace MHServerEmu.Games.Populations
 
         public void RemoveCell(Cell cell)
         {
-            List<SpawnReservation> reservations = new();
+            var reservations = ListPool<SpawnReservation>.Instance.Get();
             GetReservationsInCell(cell.Id, reservations);
 
             foreach (SpawnReservation reservation in reservations)
@@ -196,6 +197,7 @@ namespace MHServerEmu.Games.Populations
                 success &= RemoveFromCellLookup(reservation);
                 if (success == false) Logger.Warn($"RemoveCell failed {cell}");
             }
+            ListPool<SpawnReservation>.Instance.Return(reservations);
         }
 
         private void GetReservationsInCell(uint cellId, List<SpawnReservation> reservations)
@@ -362,26 +364,47 @@ namespace MHServerEmu.Games.Populations
         {
             int cellId = pid / 1000;
             int markerId = pid % 1000;
-            List<SpawnReservation> reservations = new();
-            GetReservationsInCell((uint)cellId, reservations);
-            foreach (var reservation in reservations)
-                if (reservation.Id == markerId) return reservation;
+            var reservations = ListPool<SpawnReservation>.Instance.Get();
+            try
+            {
+                GetReservationsInCell((uint)cellId, reservations);
+                foreach (var reservation in reservations)
+                    if (reservation.Id == markerId) return reservation;
 
-            return null;
+                return null;
+            }
+            finally
+            {
+                ListPool<SpawnReservation>.Instance.Return(reservations);
+            }
         }
 
         public SpawnReservation GetReservationInCell(uint cellId, int id)
         {
-            List<SpawnReservation> reservations = new();
-            GetReservationsInCell(cellId, reservations);
-            foreach (var reservation in reservations)
-                if (reservation.Id == id) return reservation;
-            return null;
+            var reservations = ListPool<SpawnReservation>.Instance.Get();
+            try
+            {
+                GetReservationsInCell(cellId, reservations);
+                foreach (var reservation in reservations)
+                    if (reservation.Id == id) return reservation;
+                return null;
+            }
+            finally
+            {
+                ListPool<SpawnReservation>.Instance.Return(reservations);
+            }
+        }
+
+        public void GetPositionsByMarker(PrototypeId markerRef, List<Vector3> positions)
+        {
+            if (_regionLookup.TryGetValue(markerRef, out var list) && list != null)
+                foreach (var testReservation in list)
+                    positions.Add(testReservation.GetRegionPosition());
         }
 
         public void OnSimulation(Cell cell, int numPlayers)
         {
-            List<SpawnReservation> reservations = new();
+            var reservations = ListPool<SpawnReservation>.Instance.Get();
 
             if (numPlayers == 0)
             {
@@ -400,6 +423,8 @@ namespace MHServerEmu.Games.Populations
                     if (reservation.Cell == cell)
                         reservation.Simulated = true;
             }
+
+            ListPool<SpawnReservation>.Instance.Return(reservations);
         }
 
         public bool TestReservation(SpawnReservation reservation, SpawnFlags flag, bool checkRespawn = false, bool checkFree = true)

@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.MetaGames
         public PrototypeId ProtoRef { get; }
         public int MaxPlayers { get; }
         public int TeamSize { get => _players.Count; }
-        private List<Player> _players {  get; }
+        protected List<Player> _players {  get; }
 
         public MetaGameTeam(MetaGame metaGame, PrototypeId protoRef, int maxPlayers)
         {

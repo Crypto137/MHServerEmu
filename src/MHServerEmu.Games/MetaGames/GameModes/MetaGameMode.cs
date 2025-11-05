@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         public MetaGameModePrototype Prototype { get; }
         public PrototypeId PrototypeDataRef { get; }
 
-        private TimeSpan _startTime;
+        protected TimeSpan _startTime;
         private EventGroup _timedGroup = new();
         protected EventGroup _pendingEvents = new();
         private EventPointer<ActiveGoalRepeatEvent> _activeGoalRepeatEvent = new();
@@ -117,7 +117,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             region.EntityEnteredWorldEvent.RemoveAction(_entityEnteredWorldAction);
         }
-
+        public virtual PrototypeId GetStartTargetOverride(Player player) => PrototypeId.Invalid;
+        public virtual bool OnResurrect(Player player) => false;
         public virtual void OnRemovePlayer(Player player) { }
         public virtual void OnRemoveState(PrototypeId removeStateRef) { }
         public virtual void OnUpdatePlayerNotification(Player player)
@@ -176,9 +177,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             SendSetModeText();
         }
 
-        public List<PlayerConnection> GetInterestedClients(Player player = null)
+        public void GetInterestedClients(List<PlayerConnection> interestedClients, Player player = null)
         {
-            List<PlayerConnection> interestedClients = new();
             if (player != null)
             {
                 interestedClients.Add(player.PlayerConnection);
@@ -188,7 +188,6 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                 foreach (var regionPlayer in new PlayerIterator(Region))
                     interestedClients.Add(regionPlayer.PlayerConnection);
             }
-            return interestedClients;
         }
 
         #region SendMessage
@@ -201,7 +200,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                 player.SendMessage(message);
         }
 
-        private void SendPlayUISoundTheme(AssetId soundThemeAssetRef, Player player = null)
+        public void SendPlayUISoundTheme(AssetId soundThemeAssetRef, Player player = null)
         {
             if (soundThemeAssetRef == AssetId.Invalid) return;
             var message = NetMessagePlayUISoundTheme.CreateBuilder().SetSoundThemeAssetId((ulong)soundThemeAssetRef).Build();
@@ -212,7 +211,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         {
             if (notifications.IsNullOrEmpty()) return;
 
-            var interestedClients = GetInterestedClients(player);
+            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+            GetInterestedClients(interestedClients, player);
 
             foreach (var notificationData in notifications)
             {
@@ -226,6 +226,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
                 Game.NetworkManager.SendMessageToMultiple(interestedClients, message);
             }
+            ListPool<PlayerConnection>.Instance.Return(interestedClients);
         }
 
         protected void SendMetaGameBanner(List<PlayerConnection> interestedClients, LocaleStringId bannerText, List<long> intArgs = null,
@@ -255,6 +256,11 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             SendMessage(NetMessageUINotificationMessage.CreateBuilder().SetUiNotificationRef((ulong)uiNotificationRef).Build());
         }
 
+        public void SetUITrackedEntityId(ulong entityId, Player player)
+        {           
+            SendMessage(NetMessageSetUITrackedEntityId.CreateBuilder().SetEntityId(entityId).Build(), player);
+        }
+
         private void SendAvatarOnKilledInfoOverride(PrototypeId avatarOnKilledInfoRef, Player player = null)
         {
             Region.SetAvatarOnKilledInfo(avatarOnKilledInfoRef);
@@ -269,9 +275,11 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         private void SendClearMetaGameInfoNotification()
         {
-            var interestedClients = GetInterestedClients();
+            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+            GetInterestedClients(interestedClients);
             var message = NetMessageClearMetaGameInfoNotification.DefaultInstance;
             Game.NetworkManager.SendMessageToMultiple(interestedClients, message);
+            ListPool<PlayerConnection>.Instance.Return(interestedClients);
         }
 
         public void SendSetModeText(Player player = null)
@@ -394,9 +402,10 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         private void ScheduledBannerTime(MetaGameBannerTimeDataPrototype bannerProto)
         {
-            var interestedClients = GetInterestedClients();
+            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+            GetInterestedClients(interestedClients);
 
-            List<long> intArgs = new();
+            var intArgs = ListPool<long>.Instance.Get();
             var runTime = Game.CurrentTime - _startTime;
             TimeSpan durationTime = GetDurationTime();
 
@@ -404,6 +413,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             intArgs.Add((long)durationTime.TotalSeconds);
 
             SendMetaGameBanner(interestedClients, bannerProto.BannerText, intArgs);
+            ListPool<long>.Instance.Return(intArgs);
+            ListPool<PlayerConnection>.Instance.Return(interestedClients);
 
             if (bannerProto.TimerModeType == MetaGameModeTimerBannerType.Once) return;
 
