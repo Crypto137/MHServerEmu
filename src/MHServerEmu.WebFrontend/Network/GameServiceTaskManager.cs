@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Threading;
@@ -13,12 +14,40 @@ namespace MHServerEmu.WebFrontend.Network
         private static readonly TimeSpan TaskTimeout = TimeSpan.FromSeconds(15);
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly TaskManager<ServiceMessage.AuthResponse> _authTaskManager = new();
         private readonly TaskManager<ServiceMessage.MTXStoreESBalanceResponse> _esBalanceTaskManager = new();
         private readonly TaskManager<ServiceMessage.MTXStoreESConvertResponse> _esConvertTaskManager = new();
 
         public static GameServiceTaskManager Instance { get; } = new();
 
         private GameServiceTaskManager() { }
+
+        /// <summary>
+        /// Asynchronously authenticates a client using the provided <see cref="LoginDataPB"/>.
+        /// </summary>
+        public async Task<ServiceMessage.AuthResponse> AuthenticateAsync(LoginDataPB loginDataPB)
+        {
+            var authTask = _authTaskManager.CreateTask();
+
+            ServiceMessage.AuthRequest authRequest = new(authTask.Id, loginDataPB);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, authRequest);
+
+            ServiceMessage.AuthResponse? authResponse = await CompleteTaskWithTimeout(authTask);
+
+            if (authResponse == null)
+                return new(authTask.Id, (int)HttpStatusCode.RequestTimeout, AuthTicket.DefaultInstance);
+
+            return authResponse.Value;
+        }
+
+        /// <summary>
+        /// Completes a previously started client authentication attempt.
+        /// </summary>
+        /// <param name=""></param>
+        public void OnAuthResponse(in ServiceMessage.AuthResponse response)
+        {
+            _authTaskManager.CompleteTask(response.RequestId, response);
+        }
 
         /// <summary>
         /// Asynchronously queries the current Eternity Splinter balance for a given account.
@@ -72,6 +101,9 @@ namespace MHServerEmu.WebFrontend.Network
             _esConvertTaskManager.CompleteTask(response.RequestId, response);
         }
 
+        /// <summary>
+        /// Completes the provided task with a timeout if it's taking too long. Returns <see langword="null"/> if timed out.
+        /// </summary>
         private static async Task<T?> CompleteTaskWithTimeout<T>(TaskManager<T>.Handle taskHandle)
             where T: struct, IGameServiceMessage
         {

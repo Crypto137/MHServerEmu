@@ -88,17 +88,7 @@ namespace MHServerEmu.WebFrontend
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
-            switch (message)
-            {
-                case ServiceMessage.MTXStoreESBalanceResponse:
-                case ServiceMessage.MTXStoreESConvertResponse:
-                    _serviceMailbox.PostMessage(message);
-                    break;
-
-                default:
-                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
-                    break;
-            }
+            _serviceMailbox.PostMessage(message);
         }
 
         public void GetStatus(Dictionary<string, long> statusDict)

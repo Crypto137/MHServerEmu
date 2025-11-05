@@ -5,6 +5,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Regions;
 using MHServerEmu.PlayerManagement.Social;
@@ -90,6 +91,14 @@ namespace MHServerEmu.PlayerManagement.Network
 
                 case ServiceMessage.PartyBoostUpdate partyBoostUpdate:
                     OnPartyBoostUpdate(partyBoostUpdate);
+                    break;
+
+                case ServiceMessage.AuthRequest authRequest:
+                    OnAuthRequest(authRequest);
+                    break;
+
+                case ServiceMessage.SessionVerificationRequest sessionVerificationRequest:
+                    OnSessionVerificationRequest(sessionVerificationRequest);
                     break;
 
                 case ServiceMessage.MTXStoreESBalanceRequest mtxStoreESBalanceRequest:
@@ -356,6 +365,32 @@ namespace MHServerEmu.PlayerManagement.Network
             player.SetPartyBoosts(boosts);
             player.CurrentParty?.UpdateMember(player);
 
+            return true;
+        }
+
+        private bool OnAuthRequest(in ServiceMessage.AuthRequest authRequest)
+        {
+            AuthStatusCode statusCode = _playerManager.SessionManager.TryCreateSession(authRequest.LoginDataPB, out AuthTicket authTicket);
+
+            ServiceMessage.AuthResponse response = new(authRequest.RequestId, (int)statusCode, authTicket);
+            ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
+
+            return true;
+        }
+
+        private bool OnSessionVerificationRequest(in ServiceMessage.SessionVerificationRequest sessionVerificationRequest)
+        {
+            IFrontendClient client = sessionVerificationRequest.Client;
+            ClientCredentials clientCredentials = sessionVerificationRequest.ClientCredentials;
+
+            if (_playerManager.SessionManager.VerifyClientCredentials(client, clientCredentials) == false)
+            {
+                Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client [{client}]");
+                client.Disconnect();
+                return false;
+            }
+
+            _playerManager.LoginQueueManager.EnqueueNewClient(client);
             return true;
         }
 

@@ -240,10 +240,10 @@ namespace MHServerEmu.Frontend
                 var clientCredentials = messageBuffer.Deserialize<FrontendProtocolMessage>() as ClientCredentials;
                 if (clientCredentials == null) return Logger.ErrorReturn(false, $"OnClientCredentials(): Failed to retrieve message");
 
-                // Routing this message should authenticate the client if the credentials are successfully verified
-                MailboxMessage mailboxMessage = new(messageBuffer.MessageId, clientCredentials);
-                ServiceMessage.RouteMessage routeMessage = new(_client, typeof(FrontendProtocolMessage), mailboxMessage);
-                ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, routeMessage);
+                // Routing this message should authenticate the client if the credentials are successfully verified.
+                // If we ever split the frontend into a separate process we will need to replicate session assignment between the processes.
+                ServiceMessage.SessionVerificationRequest sessionVerificationRequest = new(_client, clientCredentials);
+                ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, sessionVerificationRequest);
 
                 return true;
             }

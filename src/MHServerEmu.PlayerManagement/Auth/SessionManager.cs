@@ -63,6 +63,19 @@ namespace MHServerEmu.PlayerManagement.Auth
         {
             authTicket = AuthTicket.DefaultInstance;
 
+#if DEBUG
+            // Send a TOS popup when the client uses tos@test.com as email
+            if (loginDataPB.EmailAddress == "tos@test.com")
+            {
+                authTicket = AuthTicket.CreateBuilder()
+                    .SetSessionId(0)
+                    .SetTosurl("http://localhost/tos")  // The client adds &locale=en_us to this url (or another locale code)
+                    .Build();
+
+                return AuthStatusCode.NeedToAcceptLegal;
+            }
+#endif
+
             // Check client version
             if (loginDataPB.HasVersion == false)
             {
@@ -171,6 +184,8 @@ namespace MHServerEmu.PlayerManagement.Auth
                 }
             }
 
+            // Success!
+            Logger.Info($"Successful auth for client [{client}]");
             return true;
         }
 

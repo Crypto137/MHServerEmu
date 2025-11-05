@@ -7,8 +7,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Web;
 using MHServerEmu.Core.System;
-using MHServerEmu.PlayerManagement;
-using MHServerEmu.PlayerManagement.Auth;
+using MHServerEmu.WebFrontend.Network;
 
 namespace MHServerEmu.WebFrontend.Handlers
 {
@@ -74,44 +73,23 @@ namespace MHServerEmu.WebFrontend.Handlers
                 return;
             }
 
-#if DEBUG
-            // Send a TOS popup when the client uses tos@test.com as email
-            if (loginDataPB.EmailAddress == "tos@test.com")
-            {
-                var tosTicket = AuthTicket.CreateBuilder()
-                    .SetSessionId(0)
-                    .SetTosurl("http://localhost/tos")  // The client adds &locale=en_us to this url (or another locale code)
-                    .Build();
+            ServiceMessage.AuthResponse authResponse = await GameServiceTaskManager.Instance.AuthenticateAsync(loginDataPB);
 
-                context.StatusCode = (int)AuthStatusCode.NeedToAcceptLegal;
-                await context.SendAsync(tosTicket);
-                return;
-            }
-#endif
-
-            // Try to create a new session from the data we received
-            PlayerManagerService playerManager = ServerManager.Instance.GetGameService(GameServiceType.PlayerManager) as PlayerManagerService;
-            if (playerManager == null)
-            {
-                Logger.Error($"OnLoginDataPB(): Failed to connect to the player manager");
-                context.StatusCode = (int)HttpStatusCode.InternalServerError;
-                return;
-            }
-
-            AuthStatusCode statusCode = playerManager.OnLoginDataPB(loginDataPB, out AuthTicket ticket);
+            int statusCode = authResponse.StatusCode;
+            AuthTicket authTicket = authResponse.AuthTicket;
 
             // Respond with an error if session creation didn't succeed
-            if (statusCode != AuthStatusCode.Success)
+            if (statusCode != (int)HttpStatusCode.OK)
             {
-                context.StatusCode = (int)statusCode;
+                context.StatusCode = statusCode;
                 Logger.Info($"Authentication for the game client on {ipAddressHandle} failed ({statusCode})");
                 return;
             }
 
             // Send an AuthTicket if we were able to create a session
             string machineId = loginDataPB.HasMachineId ? loginDataPB.MachineId : string.Empty;
-            Logger.Info($"Sending AuthTicket for SessionId 0x{ticket.SessionId:X} to the game client on {ipAddressHandle}, machineId={machineId}");
-            await context.SendAsync(ticket);
+            Logger.Info($"Sending AuthTicket for SessionId 0x{authTicket.SessionId:X} to the game client on {ipAddressHandle}, machineId={machineId}");
+            await context.SendAsync(authTicket);
         }
 
         private static async Task OnPrecacheHeaders(WebRequestContext context, PrecacheHeaders precacheHeaders)

@@ -531,8 +531,38 @@ namespace MHServerEmu.Core.Network
 
         #endregion
 
+        #region Auth
+
+        // WebFrontend -> PlayerManager
+        public readonly struct AuthRequest(ulong requestId, LoginDataPB loginDataPB)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly LoginDataPB LoginDataPB = loginDataPB;
+        }
+
+        // PlayerManager -> WebFrontend
+        public readonly struct AuthResponse(ulong requestId, int statusCode, AuthTicket authTicket)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly int StatusCode = statusCode;
+            public readonly AuthTicket AuthTicket = authTicket;
+        }
+
+        // Frontend -> PlayerManager
+        public readonly struct SessionVerificationRequest(IFrontendClient client, ClientCredentials clientCredentials)
+            : IGameServiceMessage
+        {
+            public readonly IFrontendClient Client = client;
+            public readonly ClientCredentials ClientCredentials = clientCredentials;
+        }
+
+        #endregion
+
         #region MTXStore
 
+        // WebFrontend -> PlayerManager
         public readonly struct MTXStoreESBalanceRequest(ulong requestId, string email, string token)
             : IGameServiceMessage
         {
@@ -541,6 +571,7 @@ namespace MHServerEmu.Core.Network
             public readonly string Token = token;
         }
 
+        // PlayerManager -> WebFrontend
         public readonly struct MTXStoreESBalanceResponse(ulong requestId, int statusCode, int currentBalance = 0, float conversionRatio = 0, int conversionStep = 0)
             : IGameServiceMessage
         {
@@ -551,6 +582,7 @@ namespace MHServerEmu.Core.Network
             public readonly int ConversionStep = conversionStep;
         }
 
+        // PlayerManager -> Game
         public readonly struct MTXStoreESBalanceGameRequest(ulong requestId, ulong gameId, ulong playerDbId)
             : IGameServiceMessage
         {
@@ -559,6 +591,7 @@ namespace MHServerEmu.Core.Network
             public readonly ulong PlayerDbId = playerDbId;
         }
 
+        // Game -> PlayerManager
         public readonly struct MTXStoreESBalanceGameResponse(ulong requestId, int currentBalance, float conversionRatio, int conversionStep)
             : IGameServiceMessage
         {
@@ -568,6 +601,7 @@ namespace MHServerEmu.Core.Network
             public readonly int ConversionStep = conversionStep;
         }
 
+        // WebFrontend -> PlayerManager
         public readonly struct MTXStoreESConvertRequest(ulong requestId, string email, string token, int amount)
             : IGameServiceMessage
         {
@@ -577,6 +611,7 @@ namespace MHServerEmu.Core.Network
             public readonly int Amount = amount;
         }
 
+        // PlayerManager -> WebFrontend
         public readonly struct MTXStoreESConvertResponse(ulong requestId, int statusCode)
             : IGameServiceMessage
         {
@@ -584,6 +619,7 @@ namespace MHServerEmu.Core.Network
             public readonly int StatusCode = statusCode;
         }
 
+        // PlayerManager -> Game
         public readonly struct MTXStoreESConvertGameRequest(ulong requestId, ulong gameId, ulong playerDbId, int amount)
             : IGameServiceMessage
         {
@@ -593,6 +629,7 @@ namespace MHServerEmu.Core.Network
             public readonly int Amount = amount;
         }
 
+        // Game -> PlayerManager
         public readonly struct MTXStoreESConvertGameResponse(ulong requestId, bool result)
             : IGameServiceMessage
         {
