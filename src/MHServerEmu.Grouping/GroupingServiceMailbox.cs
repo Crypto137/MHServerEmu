@@ -41,8 +41,16 @@ namespace MHServerEmu.Grouping
                     OnGroupingManagerTell(groupingManagerTell);
                     break;
 
+                case ServiceMessage.GroupingManagerMetagameMessage groupingManagerMetagameMessage:
+                    OnGroupingManagerMetagameMessage(groupingManagerMetagameMessage);
+                    break;
+
                 case ServiceMessage.GroupingManagerServerNotification groupingManagerServerNotification:
                     OnGroupingManagerServerNotification(groupingManagerServerNotification);
+                    break;
+
+                default:
+                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                     break;
             }
         }
@@ -100,11 +108,26 @@ namespace MHServerEmu.Grouping
 
             if (_groupingManager.ClientManager.TryGetClient(playerDbId, out IFrontendClient client) == false)
             {
-                Logger.Warn($"OnGroupingManagerChat(): Player 0x{playerDbId:X} not found");
+                Logger.Warn($"OnGroupingManagerTell(): Player 0x{playerDbId:X} not found");
                 return;
             }
 
             _groupingManager.ChatManager.OnTell(client, tell, prestigeLevel);
+        }
+
+        private void OnGroupingManagerMetagameMessage(in ServiceMessage.GroupingManagerMetagameMessage groupingManagerMetagameMessage)
+        {
+            ulong playerDbId = groupingManagerMetagameMessage.PlayerDbId;
+            string text = groupingManagerMetagameMessage.Text;
+            bool showSender = groupingManagerMetagameMessage.ShowSender;
+
+            if (_groupingManager.ClientManager.TryGetClient(playerDbId, out IFrontendClient client) == false)
+            {
+                Logger.Warn($"OnGroupingManagerMetagameMessage(): Player 0x{playerDbId:X} not found");
+                return;
+            }
+
+            _groupingManager.ChatManager.OnMetagameMessage(client, text, showSender);
         }
 
         private void OnGroupingManagerServerNotification(in ServiceMessage.GroupingManagerServerNotification groupingManagerServerNotification)

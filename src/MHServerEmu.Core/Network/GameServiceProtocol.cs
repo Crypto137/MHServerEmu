@@ -379,7 +379,9 @@ namespace MHServerEmu.Core.Network
 
         #region Grouping Manager
 
-        // Game -> GroupingManager
+        /// <summary>
+        /// [Game -> GroupingManager] Routes a regular chat message from a game instance.
+        /// </summary>
         public readonly struct GroupingManagerChat(ulong playerDbId, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter)
             : IGameServiceMessage
         {
@@ -389,7 +391,9 @@ namespace MHServerEmu.Core.Network
             public readonly List<ulong> PlayerFilter = playerFilter;
         }
 
-        // Game -> GroupingManager
+        /// <summary>
+        /// [Game -> GroupingManager] Routes a tell chat message from a game instance.
+        /// </summary>
         public readonly struct GroupingManagerTell(ulong playerDbId, NetMessageTell tell, int prestigeLevel)
             : IGameServiceMessage
         {
@@ -398,7 +402,20 @@ namespace MHServerEmu.Core.Network
             public readonly int PrestigeLevel = prestigeLevel;
         }
 
-        // Command -> GroupingManager
+        /// <summary>
+        /// [Any -> GroupingManager] Sends a custom metagame chat message to the specified player.
+        /// </summary>
+        public readonly struct GroupingManagerMetagameMessage(ulong playerDbId, string text, bool showSender)
+            : IGameServiceMessage
+        {
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly string Text = text;
+            public readonly bool ShowSender = showSender;
+        }
+
+        /// <summary>
+        /// [Command -> GroupingManager] Broadcasts a server notification to all connected clients.
+        /// </summary>
         public readonly struct GroupingManagerServerNotification(string notificationText)
             : IGameServiceMessage
         {
