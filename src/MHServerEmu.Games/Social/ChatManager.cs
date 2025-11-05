@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.Social
         {
             // Route to the grouping manager
             int prestigeLevel = player.CurrentAvatar != null ? player.CurrentAvatar.PrestigeLevel : 0;
-            ServiceMessage.GroupingManagerTell serviceMessage = new(player.PlayerConnection.FrontendClient, tell, prestigeLevel);
+            ServiceMessage.GroupingManagerTell serviceMessage = new(player.DatabaseUniqueId, tell, prestigeLevel);
             ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, serviceMessage);
         }
 
@@ -243,7 +243,7 @@ namespace MHServerEmu.Games.Social
         private void SendChat(Player player, NetMessageChat chat, List<ulong> playerFilter)
         {
             int prestigeLevel = player.CurrentAvatar != null ? player.CurrentAvatar.PrestigeLevel : 0;
-            ServiceMessage.GroupingManagerChat chatMessage = new(player.PlayerConnection.FrontendClient, chat, prestigeLevel, playerFilter);
+            ServiceMessage.GroupingManagerChat chatMessage = new(player.DatabaseUniqueId, chat, prestigeLevel, playerFilter);
             ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, chatMessage);
         }
 

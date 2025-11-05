@@ -379,23 +379,26 @@ namespace MHServerEmu.Core.Network
 
         #region Grouping Manager
 
-        public readonly struct GroupingManagerChat(IFrontendClient client, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter)
+        // Game -> GroupingManager
+        public readonly struct GroupingManagerChat(ulong playerDbId, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter)
             : IGameServiceMessage
         {
-            public readonly IFrontendClient Client = client;
+            public readonly ulong PlayerDbId = playerDbId;
             public readonly NetMessageChat Chat = chat;
             public readonly int PrestigeLevel = prestigeLevel;
             public readonly List<ulong> PlayerFilter = playerFilter;
         }
 
-        public readonly struct GroupingManagerTell(IFrontendClient client, NetMessageTell tell, int prestigeLevel)
+        // Game -> GroupingManager
+        public readonly struct GroupingManagerTell(ulong playerDbId, NetMessageTell tell, int prestigeLevel)
             : IGameServiceMessage
         {
-            public readonly IFrontendClient Client = client;
+            public readonly ulong PlayerDbId = playerDbId;
             public readonly NetMessageTell Tell = tell;
             public readonly int PrestigeLevel = prestigeLevel;
         }
 
+        // Command -> GroupingManager
         public readonly struct GroupingManagerServerNotification(string notificationText)
             : IGameServiceMessage
         {
