@@ -110,6 +110,7 @@ namespace MHServerEmu.Games.MTXStore
 
             // TODO: actual gifting
             BuyItemResultErrorCodes result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_GIFTING_UNAVAILABLE;
+            player.Game.ChatManager.SendChatFromCustomSystem(player, "Gifting is currently unavailable.");
 
             player.SendMessage(NetMessageBuyGiftForOtherPlayerResponse.CreateBuilder()
                 .SetDidSucceed(result == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)

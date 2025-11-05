@@ -213,6 +213,18 @@ namespace MHServerEmu.Games.Social
 
         #endregion
 
+        #region Custom System Messages
+
+        // This is used to send our custom system messages that the client does not have locale strings for.
+
+        public void SendChatFromCustomSystem(Player player, string text, bool showSender = true)
+        {
+            ServiceMessage.GroupingManagerMetagameMessage message = new(player.DatabaseUniqueId, text, showSender);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, message);
+        }
+
+        #endregion
+
         #region Helper Methods
 
         // NOTE: It's not safe to pool filter lists here because the implementation of the grouping manager may change.
