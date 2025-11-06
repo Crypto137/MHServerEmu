@@ -1,5 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using Google.ProtocolBuffers;
 using Gazillion;
 
 namespace MHServerEmu.Games.MTXStore.Catalogs
@@ -27,10 +26,11 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
 
         public MHLocalizedCatalogEntryUrlOrData ToNetStruct()
         {
+            // imagedata is unused in our dump.
             return MHLocalizedCatalogEntryUrlOrData.CreateBuilder()
                 .SetLanguageId(LanguageId)
                 .SetUrl(Url)
-                .SetImagedata(ByteString.CopyFrom(ImageData))
+                //.SetImagedata(ByteString.CopyFrom(ImageData))
                 .Build();
         }
     }

@@ -47,6 +47,35 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
             if (newEntries.IsNullOrEmpty())
                 return;
 
+            // HACK: Rewrite bundle URLs if needed
+            var config = ConfigManager.Instance.GetConfig<MTXStoreConfig>();
+
+            if (config.RewriteOriginalBundleUrls)
+            {
+                const string GazillionCdnUrl = "marvelheroes.com";
+
+                foreach (CatalogEntry entry in newEntries)
+                {
+                    if (entry.InfoUrls.HasValue())
+                    {
+                        foreach (LocalizedCatalogEntryUrlOrData infoUrl in entry.InfoUrls)
+                        {
+                            if (infoUrl.Url.Contains(GazillionCdnUrl, StringComparison.OrdinalIgnoreCase))
+                                infoUrl.Url = $"{config.BundleInfoUrl}{Path.GetFileName(infoUrl.Url)}";
+                        }
+                    }
+
+                    if (entry.ContentData.HasValue())
+                    {
+                        foreach (LocalizedCatalogEntryUrlOrData contentData in entry.ContentData)
+                        {
+                            if (contentData.Url.Contains(GazillionCdnUrl, StringComparison.OrdinalIgnoreCase))
+                                contentData.Url = $"{config.BundleImageUrl}{Path.GetFileName(contentData.Url)}";
+                        }
+                    }
+                }
+            }
+
             // Overwrite entries with the same skuId
             foreach (CatalogEntry entry in newEntries)
                 _entries[entry.SkuId] = entry;

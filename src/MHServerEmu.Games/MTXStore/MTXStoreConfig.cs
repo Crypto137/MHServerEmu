@@ -16,5 +16,9 @@ namespace MHServerEmu.Games.MTXStore
         public string ChestsBannerPageUrl { get; private set; } = "http://storecdn.marvelheroes.com/cdn/en_us/chests_banner";
         public string SpecialsBannerPageUrl { get; private set; } = "http://storecdn.marvelheroes.com/cdn/en_us/specials_banner";
         public string RealMoneyUrl { get; private set; } = "https://mtxstore.marvelheroes.com/mtx_en_us/gs-bundles.html";
+
+        public bool RewriteOriginalBundleUrls { get; private set; } = true;
+        public string BundleInfoUrl { get; private set; } = "http://localhost/bundles/";
+        public string BundleImageUrl { get; private set; } = "http://localhost/bundles/images/";
     }
 }
