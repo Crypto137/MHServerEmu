@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.MTXStore
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string MTXStoreDataDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "MTXStore");
 
-        private Catalog _catalog = new();
+        private readonly Catalog _catalog = new();
 
         public static CatalogManager Instance { get; } = new();
 
@@ -36,16 +36,11 @@ namespace MHServerEmu.Games.MTXStore
         {
             _catalog.ClearEntries();
 
-            string basePath = Path.Combine(MTXStoreDataDirectory, "Catalog.json");
-            CatalogEntry[] baseEntries = FileHelper.DeserializeJson<CatalogEntry[]>(basePath);
-            _catalog.AddEntries(baseEntries);
-
-            // Apply a patch to the catalog
-            string patchPath = Path.Combine(MTXStoreDataDirectory, "CatalogPatch.json");
-            if (File.Exists(patchPath))
+            foreach (string filePath in FileHelper.GetFilesWithPrefix(MTXStoreDataDirectory, "Catalog", "json"))
             {
-                CatalogEntry[] catalogPatch = FileHelper.DeserializeJson<CatalogEntry[]>(patchPath);
-                _catalog.AddEntries(catalogPatch);
+                CatalogEntry[] entries = FileHelper.DeserializeJson<CatalogEntry[]>(filePath);
+                _catalog.AddEntries(entries);
+                Logger.Trace($"Parsed catalog entries from {Path.GetFileName(filePath)}");
             }
 
             Logger.Info($"Loaded {_catalog.Count} store catalog entries");
