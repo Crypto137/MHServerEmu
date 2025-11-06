@@ -27,10 +27,11 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
 
         public MHCatalogGuidEntry ToNetStruct()
         {
+            // prototypeGuid and quantity fields are unused in our dump.
             return MHCatalogGuidEntry.CreateBuilder()
-                .SetPrototypeGuid(PrototypeGuid)
+                //.SetPrototypeGuid(PrototypeGuid)
                 .SetItemPrototypeRuntimeIdForClient((ulong)ItemPrototypeRuntimeIdForClient)
-                .SetQuantity(Quantity)
+                //.SetQuantity(Quantity)
                 .Build();
         }
     }
