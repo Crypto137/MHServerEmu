@@ -34,16 +34,19 @@ namespace MHServerEmu.Games.MTXStore
 
         public void LoadEntries()
         {
-            _catalog.ClearEntries();
-
-            foreach (string filePath in FileHelper.GetFilesWithPrefix(MTXStoreDataDirectory, "Catalog", "json"))
+            lock (_catalog)
             {
-                CatalogEntry[] entries = FileHelper.DeserializeJson<CatalogEntry[]>(filePath);
-                _catalog.AddEntries(entries);
-                Logger.Trace($"Parsed catalog entries from {Path.GetFileName(filePath)}");
-            }
+                _catalog.ClearEntries();
 
-            Logger.Info($"Loaded {_catalog.Count} store catalog entries");
+                foreach (string filePath in FileHelper.GetFilesWithPrefix(MTXStoreDataDirectory, "Catalog", "json"))
+                {
+                    CatalogEntry[] entries = FileHelper.DeserializeJson<CatalogEntry[]>(filePath);
+                    _catalog.AddEntries(entries);
+                    Logger.Trace($"Parsed catalog entries from {Path.GetFileName(filePath)}");
+                }
+
+                Logger.Info($"Loaded {_catalog.Count} store catalog entries");
+            }
         }
 
         #region Message Handling
@@ -52,8 +55,12 @@ namespace MHServerEmu.Games.MTXStore
         {
             // Send the catalog only if the client is out of date.
             TimeSpan clientTimestamp = TimeSpan.FromMicroseconds(getCatalog.TimestampSeconds * 1000000 + getCatalog.TimestampMicroseconds);
-            if (clientTimestamp != _catalog.Timestamp)
-                player.SendMessage(_catalog.ToProtobuf());
+
+            lock (_catalog)
+            {
+                if (clientTimestamp != _catalog.Timestamp)
+                    player.SendMessage(_catalog.ToProtobuf());
+            }
 
             return true;
         }
@@ -118,7 +125,11 @@ namespace MHServerEmu.Games.MTXStore
                 return result;
 
             // Validate the order
-            CatalogEntry entry = _catalog.GetEntry(skuId);
+            CatalogEntry entry = null;
+
+            lock (_catalog)
+                entry = _catalog.GetEntry(skuId);
+
             if (entry == null || entry.GuidItems.Length == 0)
                 return result;
 
