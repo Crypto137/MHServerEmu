@@ -1,5 +1,4 @@
 ﻿using Gazillion;
-using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -16,7 +15,7 @@ namespace MHServerEmu.Games.MTXStore
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string MTXStoreDataDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "MTXStore");
 
-        private Catalog _catalog;
+        private Catalog _catalog = new();
 
         public static CatalogManager Instance { get; } = new();
 
@@ -24,52 +23,43 @@ namespace MHServerEmu.Games.MTXStore
 
         public bool Initialize()
         {
-            if (_catalog != null)
-                return true;
+            if (_catalog.Count != 0)
+                return false;
 
-            var config = ConfigManager.Instance.GetConfig<MTXStoreConfig>();
-
-            _catalog = FileHelper.DeserializeJson<Catalog>(Path.Combine(MTXStoreDataDirectory, "Catalog.json"));
-
-            // Apply a patch to the catalog if it's enabled and there's one
-            if (config.ApplyCatalogPatch)
-            {
-                string patchPath = Path.Combine(MTXStoreDataDirectory, "CatalogPatch.json");
-                if (File.Exists(patchPath))
-                {
-                    CatalogEntry[] catalogPatch = FileHelper.DeserializeJson<CatalogEntry[]>(patchPath);
-                    _catalog.ApplyPatch(catalogPatch);
-                }
-            }
-
-            // Override store urls if enabled
-            if (config.OverrideStoreUrls)
-            {
-                _catalog.Urls[0].StoreHomePageUrl = config.StoreHomePageUrl;
-                _catalog.Urls[0].StoreBannerPageUrls[0].Url = config.StoreHomeBannerPageUrl;
-                _catalog.Urls[0].StoreBannerPageUrls[1].Url = config.StoreHeroesBannerPageUrl;
-                _catalog.Urls[0].StoreBannerPageUrls[2].Url = config.StoreCostumesBannerPageUrl;
-                _catalog.Urls[0].StoreBannerPageUrls[3].Url = config.StoreBoostsBannerPageUrl;
-                _catalog.Urls[0].StoreBannerPageUrls[4].Url = config.StoreChestsBannerPageUrl;
-                _catalog.Urls[0].StoreBannerPageUrls[5].Url = config.StoreSpecialsBannerPageUrl;
-                _catalog.Urls[0].StoreRealMoneyUrl = config.StoreRealMoneyUrl;
-            }
-
-            Logger.Info($"Initialized store catalog with {_catalog.Entries.Length} entries");
+            _catalog.Initialize();
+            LoadEntries();
 
             return true;
+        }
+
+        public void LoadEntries()
+        {
+            _catalog.ClearEntries();
+
+            string basePath = Path.Combine(MTXStoreDataDirectory, "Catalog.json");
+            CatalogEntry[] baseEntries = FileHelper.DeserializeJson<CatalogEntry[]>(basePath);
+            _catalog.AddEntries(baseEntries);
+
+            // Apply a patch to the catalog
+            string patchPath = Path.Combine(MTXStoreDataDirectory, "CatalogPatch.json");
+            if (File.Exists(patchPath))
+            {
+                CatalogEntry[] catalogPatch = FileHelper.DeserializeJson<CatalogEntry[]>(patchPath);
+                _catalog.AddEntries(catalogPatch);
+            }
+
+            Logger.Info($"Loaded {_catalog.Count} store catalog entries");
         }
 
         #region Message Handling
 
         public bool OnGetCatalog(Player player, NetMessageGetCatalog getCatalog)
         {
-            // Bail out if the client already has an up to date catalog
-            if (getCatalog.TimestampSeconds == _catalog.TimestampSeconds && getCatalog.TimestampMicroseconds == _catalog.TimestampMicroseconds)
-                return true;
+            // Send the catalog only if the client is out of date.
+            TimeSpan clientTimestamp = TimeSpan.FromMicroseconds(getCatalog.TimestampSeconds * 1000000 + getCatalog.TimestampMicroseconds);
+            if (clientTimestamp != _catalog.Timestamp)
+                player.SendMessage(_catalog.ToProtobuf());
 
-            // Send the current catalog
-            player.SendMessage(_catalog.ToNetMessageCatalogItems(false));
             return true;
         }
 

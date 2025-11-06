@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using Gazillion;
+﻿using Gazillion;
 
 namespace MHServerEmu.Games.MTXStore.Catalogs
 {
@@ -8,19 +7,16 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
         public string Type { get; set; }
         public string Url { get; set; }
 
-        [JsonConstructor]
-        public BannerUrl(string type, string url)
+        public BannerUrl()
         {
-            Type = type;
-            Url = url;
         }
 
-        public BannerUrl(MHBannerUrl bannerUrl)
+        public MHBannerUrl ToNetStruct()
         {
-            Type = bannerUrl.Type;
-            Url = bannerUrl.Url;
+            return MHBannerUrl.CreateBuilder()
+                .SetType(Type)
+                .SetUrl(Url)
+                .Build();
         }
-
-        public MHBannerUrl ToNetStruct() => MHBannerUrl.CreateBuilder().SetType(Type).SetUrl(Url).Build();
     }
 }
