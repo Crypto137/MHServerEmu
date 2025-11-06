@@ -3,7 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.RateLimiting;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Players;

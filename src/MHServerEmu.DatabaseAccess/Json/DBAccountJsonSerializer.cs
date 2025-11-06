@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.RateLimiting;
 using MHServerEmu.DatabaseAccess.Models;
 
 namespace MHServerEmu.DatabaseAccess.Json

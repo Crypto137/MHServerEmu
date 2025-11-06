@@ -3,7 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.RateLimiting;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 

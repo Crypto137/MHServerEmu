@@ -6,7 +6,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Web;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.RateLimiting;
 using MHServerEmu.WebFrontend.Network;
 
 namespace MHServerEmu.WebFrontend.Handlers

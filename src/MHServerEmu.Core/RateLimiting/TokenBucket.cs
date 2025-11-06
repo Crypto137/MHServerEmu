@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using MHServerEmu.Core.System.Time;
 
-namespace MHServerEmu.Core.System
+namespace MHServerEmu.Core.RateLimiting
 {
     /// <summary>
     /// A rate limiter based on the token bucket algorithm.
