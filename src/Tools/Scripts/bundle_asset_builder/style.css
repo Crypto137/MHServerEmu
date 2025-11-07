@@ -15,7 +15,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 button, input {
-    width: 100%;
     box-sizing: border-box;
     border: 1px solid black;
     box-shadow: 0 0 1px 1px #00aaff;
@@ -39,6 +38,19 @@ div.content {
     background-color: #00090e;
 }
 
+div.buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 span.enhanced-keyword {
     color: #9128bb;
+}
+
+span.price {
+    color: #00aaff;
+    font-family: "Bebas Neue", "Trebuchet MS", Verdana, sans-serif;
+    font-weight: normal;
+    font-size: 32px;
 }
