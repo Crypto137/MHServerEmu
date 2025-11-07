@@ -57,10 +57,50 @@
     },
     {
         "Enabled": true,
-        "Prototype": "Metagame/Story/CH06FortStryker/States/CH06TrainingCamp.prototype",
-        "Path": "RespawnDelayMS",
-        "Description": "Increase RespawnDelayMS for TrainingCamp Population",
-        "ValueType": "Integer",
-        "Value": 180000
+        "Prototype": "Loot/Tables/Test/testAimGunbotSpawnTable.prototype",
+        "Path": "Choices[0].Agent",
+        "Description": "ExperienceOrbDiscoveryReward for 1 Orb Reward",
+        "ValueType": "PrototypeId",
+        "Value": 17153689258362476876
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Populations/Clusters/Generic/SelectAct/SelectActRunToExitClusterClearRewarded.prototype",
+        "Path": "Rewards[0]",
+        "Description": "DiscoverySurvival as 1 Orb Rewards",
+        "ValueType": "PrototypeId",
+        "Value": 3451806331797967983
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Populations/Clusters/Generic/SelectAct/SelectActRunToExitInteract.prototype",
+        "Path": "Rewards[0]",
+        "Description": "DiscoverySurvival as 1 Orb Rewards",
+        "ValueType": "PrototypeId",
+        "Value": 3451806331797967983
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Populations/Clusters/Generic/SelectAct/SelectActRunToExitInteractThankFall.prototype",
+        "Path": "Rewards[0]",
+        "Description": "DiscoverySurvival as 1 Orb Rewards",
+        "ValueType": "PrototypeId",
+        "Value": 3451806331797967983
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Populations/Clusters/Generic/SelectAct/SelectActRunToExitOnInteractThanks.prototype",
+        "Path": "Rewards[0]",
+        "Description": "DiscoverySurvival as 1 Orb Rewards",
+        "ValueType": "PrototypeId",
+        "Value": 3451806331797967983
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Populations/Clusters/Generic/SelectAct/SelectActRunToExitPlayerProxDelay5000Rewarded.prototype",
+        "Path": "Rewards[0]",
+        "Description": "DiscoverySurvival as 1 Orb Rewards",
+        "ValueType": "PrototypeId",
+        "Value": 3451806331797967983
     }
 ]
