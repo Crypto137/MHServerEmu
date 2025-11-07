@@ -4,12 +4,15 @@ import csv
 import json
 import shutil
 
+from PIL import ImageFont, ImageDraw, Image
+
 CATALOG_PATH = "../../../MHServerEmu.Games/Data/Game/MTXStore/Catalog.json"
 
 INFO_TEMPLATE = "info.html"
 INFO_NAMES_TABLE = "names.tsv"
 IMAGE_TEMPLATE = "image.png"
 IMAGE_FONT = "BebasNeue-Regular.ttf"
+IMAGE_FONT_SIZE = 32
 CSS_FILE = "style.css"
 
 INFO_OUTPUT_DIRECTORY = "bundles"
@@ -47,12 +50,32 @@ def build_info(entry: dict, template: str, names: dict):
 
     print(file_name)
 
-def build_image(entry: dict):
+def build_image(entry: dict, template: Image, font: ImageFont):
     file_name = os.path.basename(entry["ContentData"][0]["Url"])
+
+    image_text = (str(file_name)
+        .replace("MTXStore_Bundle_", "")
+        .replace("MTX_Store_Bundle_", "")
+        .replace("Thumb_", "")
+        .replace("_Thumb", "")
+        .replace("Thumb", "")
+        .replace(".png", "")
+    )
+
+    image = template.copy()
+    draw = ImageDraw.Draw(image)
+
+    _, _, text_width, text_height = draw.textbbox((0, 0), image_text, font=font)
+
+    text_x = (image.width - text_width) / 2
+    text_y = (image.height - text_height) / 2
+
+    draw.text((text_x + 2, text_y + 2), image_text, font=font, fill="black")
+    draw.text((text_x, text_y), image_text, font=font, fill="white")
 
     os.makedirs(IMAGE_OUTPUT_DIRECTORY, exist_ok=True)
     file_path = os.path.join(IMAGE_OUTPUT_DIRECTORY, file_name)
-    shutil.copy(IMAGE_TEMPLATE, file_path)
+    image.save(file_path)
 
     print(file_name)
 
@@ -67,6 +90,9 @@ def main(args: list[str]):
     with open(INFO_TEMPLATE) as file:
         info_template = file.read()
 
+    image_template = Image.open(IMAGE_TEMPLATE)
+    image_font = ImageFont.truetype(IMAGE_FONT, IMAGE_FONT_SIZE)
+
     names = {}
     with open(INFO_NAMES_TABLE) as file:
         for row in csv.reader(file, delimiter='\t'):
@@ -79,7 +105,7 @@ def main(args: list[str]):
                 build_info(entry, info_template, names)
 
             if len(entry["ContentData"]) > 0:
-                build_image(entry)
+                build_image(entry, image_template, image_font)
 
     build_css()
 
