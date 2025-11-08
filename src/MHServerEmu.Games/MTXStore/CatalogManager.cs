@@ -285,7 +285,7 @@ namespace MHServerEmu.Games.MTXStore
                 if (allowTokenReplacements == false)
                     return BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
 
-                CharacterTokenPrototype tokenProto = GetCharacterTokenPrototype(teamUpProtoRef);
+                CharacterTokenPrototype tokenProto = GetCharacterTokenPrototype(teamUpProtoRef, CharacterTokenType.None);
                 if (tokenProto == null)
                     return BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
 
@@ -327,7 +327,7 @@ namespace MHServerEmu.Games.MTXStore
                 if (tokenProto.Character != agentProtoRef)
                     continue;
 
-                if (tokenProto.TokenType != tokenType)
+                if (tokenType != CharacterTokenType.None && tokenProto.TokenType != tokenType)
                     continue;
 
                 ItemCostPrototype itemCostProto = tokenProto.Cost;
