@@ -80,8 +80,9 @@ namespace MHServerEmu.Games.MTXStore
                 return Logger.WarnReturn(false, $"OnBuyItemFromCatalog(): No SkuId received from player [{player}]");
 
             long skuId = buyItemFromCatalog.SkuId;
+            long clientPrice = buyItemFromCatalog.ItemUnitPrice;
 
-            BuyItemResultErrorCodes result = BuyItem(player, skuId);
+            BuyItemResultErrorCodes result = BuyItem(player, skuId, clientPrice);
 
             player.SendMessage(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
                 .SetDidSucceed(result == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
@@ -116,13 +117,11 @@ namespace MHServerEmu.Games.MTXStore
 
         #endregion
 
-        private BuyItemResultErrorCodes BuyItem(Player player, long skuId)
+        private BuyItemResultErrorCodes BuyItem(Player player, long skuId, long clientPrice)
         {
-            BuyItemResultErrorCodes result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
-
             // Make sure the player has already finished the tutorial, which could unlock characters depending on server settings.
             if (player.HasFinishedTutorial() == false)
-                return result;
+                return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
 
             // Validate the order
             CatalogEntry entry = null;
@@ -130,78 +129,219 @@ namespace MHServerEmu.Games.MTXStore
             lock (_catalog)
                 entry = _catalog.GetEntry(skuId);
 
-            if (entry == null || entry.GuidItems.Length == 0)
-                return result;
-
-            // Bundles don't work properly yet, so disable them for now
-            if (entry.Type?.Name == "Bundle")
-                return result;
-
-            if (entry.LocalizedEntries.IsNullOrEmpty())
-                return result;
+            if (entry == null || entry.GuidItems.IsNullOrEmpty() || entry.LocalizedEntries.IsNullOrEmpty())
+                return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
 
             LocalizedCatalogEntry localizedEntry = entry.LocalizedEntries[0];
             long itemPrice = localizedEntry.ItemPrice;
+
+            // Do not allow the purchase if the price changed since the client requested it.
+            if (clientPrice != itemPrice)
+                return BuyItemResultErrorCodes.BUY_RESULT_ERROR_PRICE_MISMATCH;
 
             long balance = player.GazillioniteBalance;
             if (itemPrice > balance)
                 return BuyItemResultErrorCodes.BUY_RESULT_ERROR_INSUFFICIENT_BALANCE;
 
-            Prototype catalogItemProto = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient.As<Prototype>();
-            if (catalogItemProto == null)
-                return result;
-
-            // Fullfill
-            switch (catalogItemProto)
+            if (entry.GuidItems.Length == 1)
             {
-                case ItemPrototype itemProto:
-                    // Give the player the item they are trying to "buy"
-                    if (player.Game.LootManager.GiveItem(itemProto.DataRef, LootContext.CashShop, player))
-                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
-                    break;
-
-                case PlayerStashInventoryPrototype playerStashInventoryProto:
-                    // Unlock the stash tab
-                    if (player.UnlockInventory(playerStashInventoryProto.DataRef))
-                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
-                    break;
-
-                case AvatarPrototype avatarProto:
-                    PrototypeId avatarProtoRef = avatarProto.DataRef;
-                    if (player.HasAvatarFullyUnlocked(avatarProtoRef))
-                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
-                    else if (player.UnlockAvatar(avatarProtoRef, true))
-                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
-                    break;
-
-                case AgentTeamUpPrototype teamUpProto:
-                    PrototypeId teamUpProtoRef = teamUpProto.DataRef;
-                    if (player.IsTeamUpAgentUnlocked(teamUpProtoRef))
-                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
-                    else if (player.UnlockTeamUpAgent(teamUpProtoRef, true))
-                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
-                    break;
-
-                case PowerSpecPrototype powerSpecProto:
-                    if (player.UnlockPowerSpecIndex(powerSpecProto.Index))
-                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
-                    break;
-
-                default:
-                    // Return error for unhandled SKU types
-                    Logger.Warn($"OnBuyItemFromCatalog(): Unimplemented catalog item type {catalogItemProto.GetType().Name} for {catalogItemProto}", LogCategory.MTXStore);
-                    break;
+                // For individual purchases it's all or nothing with early out if failed to fulfill.
+                BuyItemResultErrorCodes result = AcquireCatalogGuid(player, entry.GuidItems[0], false);
+                if (result != BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
+                    return result;
             }
+            else
+            {
+                // Allow partial fulfillment of bundles (e.g. hero already owned)
+                foreach (CatalogGuidEntry catalogItemEntry in entry.GuidItems)
+                {
+                    BuyItemResultErrorCodes result = AcquireCatalogGuid(player, catalogItemEntry, true);
+                    switch (result)
+                    {
+                        case BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS:
+                        case BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_STASH_INV:
+                        case BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_PERMABUFF:
+                            // this is fine
+                            break;
 
-            if (result != BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
-                return result;
+                        default:
+                            // this is not fine
+                            Logger.Warn($"BuyItem(): Partial fulfillment of sku! skuId={skuId}, entry={catalogItemEntry}, plauer=[{player}]", LogCategory.MTXStore);
+                            break;
+                    }
+                }
+            }
 
             // Adjust currency balance (do not allow negative balance in case somebody figures out some kind of exploit to get here)
             balance = Math.Max(balance - itemPrice, 0);
             player.GazillioniteBalance = balance;
-            Logger.Trace($"OnBuyItemFromCatalog(): Player [{player}] purchased [skuId={skuId}, catalogItemProto={catalogItemProto}, itemPrice={itemPrice}]. Balance={balance}", LogCategory.MTXStore);
+            Logger.Trace($"OnBuyItemFromCatalog(): Player [{player}] purchased [skuId={skuId}, itemPrice={itemPrice}]. Balance={balance}", LogCategory.MTXStore);
 
             return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+        }
+
+        private static BuyItemResultErrorCodes AcquireCatalogGuid(Player player, CatalogGuidEntry guidEntry, bool allowTokenReplacements)
+        {
+            Prototype proto = guidEntry.ItemPrototypeRuntimeIdForClient.As<Prototype>();
+            if (proto == null) return Logger.WarnReturn(BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, "AcquireCatalogItem(): proto == null");
+
+            for (int i = 0; i < guidEntry.Quantity; i++)
+            {
+                BuyItemResultErrorCodes result;
+
+                switch (proto)
+                {
+                    case ItemPrototype itemProto:
+                        result = AcquireItem(player, itemProto);
+                        break;
+
+                    case PlayerStashInventoryPrototype playerStashInventoryProto:
+                        result = AcquirePlayerStashInventory(player, playerStashInventoryProto);
+                        break;
+
+                    case AvatarPrototype avatarProto:
+                        result = AcquireAvatar(player, avatarProto, allowTokenReplacements);
+                        break;
+
+                    case AgentTeamUpPrototype teamUpProto:
+                        result = AcquireTeamUp(player, teamUpProto, allowTokenReplacements);
+                        break;
+
+                    case PowerSpecPrototype powerSpecProto:
+                        result = AcquirePowerSpec(player, powerSpecProto);
+                        break;
+
+                    default:
+                        Logger.Warn($"AcquireCatalogItem(): Unimplemented catalog item type {proto.GetType().Name} for {proto}", LogCategory.MTXStore);
+                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
+                        break;
+                }
+
+                if (result != BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
+                    return result;
+            }
+
+            return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+        }
+
+        private static BuyItemResultErrorCodes AcquireItem(Player player, ItemPrototype itemProto)
+        {
+            if (player.Game.LootManager.GiveItem(itemProto.DataRef, LootContext.CashShop, player) == false)
+                return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
+
+            return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+        }
+
+        private static BuyItemResultErrorCodes AcquirePlayerStashInventory(Player player, PlayerStashInventoryPrototype playerStashInventoryProto)
+        {
+            if (player.IsInventoryUnlocked(playerStashInventoryProto.DataRef))
+                return BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_STASH_INV;
+
+            if (player.UnlockInventory(playerStashInventoryProto.DataRef) == false)
+                return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
+
+            return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+        }
+
+        private static BuyItemResultErrorCodes AcquireAvatar(Player player, AvatarPrototype avatarProto, bool allowTokenReplacements)
+        {
+            PrototypeId avatarProtoRef = avatarProto.DataRef;
+
+            // Replace with token and starting costume if we are purchasing a bundle and we already have the hero.
+            if (player.HasAvatarFullyUnlocked(avatarProtoRef))
+            {
+                if (allowTokenReplacements == false)
+                    return BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
+
+                CharacterTokenPrototype tokenProto = GetCharacterTokenPrototype(avatarProtoRef);
+                if (tokenProto == null)
+                    return BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
+
+                CostumePrototype costumeProto = avatarProto.GetStartingCostumeForPlatform(Platforms.PC).As<CostumePrototype>();
+                if (costumeProto == null)
+                    return BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
+
+                var result = AcquireItem(player, tokenProto);
+                if (result != BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
+                    return result;
+
+                return AcquireItem(player, costumeProto);
+            }
+
+            // Unlock the avatar.
+            if (player.UnlockAvatar(avatarProtoRef, true) == false)
+                return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
+
+            return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+        }
+
+        private static BuyItemResultErrorCodes AcquireTeamUp(Player player, AgentTeamUpPrototype teamUpProto, bool allowTokenReplacements)
+        {
+            PrototypeId teamUpProtoRef = teamUpProto.DataRef;
+
+            // Replace with token if we are purchasing a bundle and we already have the hero.
+            if (player.IsTeamUpAgentUnlocked(teamUpProtoRef))
+            {
+                if (allowTokenReplacements == false)
+                    return BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
+
+                CharacterTokenPrototype tokenProto = GetCharacterTokenPrototype(teamUpProtoRef);
+                if (tokenProto == null)
+                    return BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
+
+                return AcquireItem(player, tokenProto);
+            }
+
+            if (player.UnlockTeamUpAgent(teamUpProtoRef, true) == false)
+                return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
+
+            return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+        }
+
+        private static BuyItemResultErrorCodes AcquirePowerSpec(Player player, PowerSpecPrototype powerSpecProto)
+        {
+            if (player.UnlockPowerSpecIndex(powerSpecProto.Index) == false)
+                return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
+
+            return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+        }
+
+        private static CharacterTokenPrototype GetCharacterTokenPrototype(PrototypeId agentProtoRef)
+        {
+            // Prefer UnlockCharOrUpgradeUlt tokens if available.
+            CharacterTokenPrototype tokenProto = GetCharacterTokenPrototype(agentProtoRef, CharacterTokenType.UnlockCharOrUpgradeUlt);
+
+            // Fall back to UpgradeUltimateOnly tokens for "removed" heroes.
+            if (tokenProto == null)
+                return GetCharacterTokenPrototype(agentProtoRef, CharacterTokenType.UpgradeUltimateOnly);
+
+            return tokenProto;
+        }
+
+        private static CharacterTokenPrototype GetCharacterTokenPrototype(PrototypeId agentProtoRef, CharacterTokenType tokenType)
+        {
+            foreach (PrototypeId tokenProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CharacterTokenPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                CharacterTokenPrototype tokenProto = tokenProtoRef.As<CharacterTokenPrototype>();
+
+                if (tokenProto.Character != agentProtoRef)
+                    continue;
+
+                if (tokenProto.TokenType != tokenType)
+                    continue;
+
+                ItemCostPrototype itemCostProto = tokenProto.Cost;
+
+                if (itemCostProto == null)
+                    continue;
+
+                if (itemCostProto.HasEternitySplintersComponent() == false)
+                    continue;
+
+                return tokenProto;
+            }
+
+            return null;
         }
     }
 }
