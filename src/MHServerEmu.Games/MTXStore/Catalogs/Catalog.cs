@@ -1,12 +1,15 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Games.MTXStore.Catalogs
 {
     public class Catalog
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private readonly Dictionary<long, CatalogEntry> _entries = new();
         private readonly LocalizedCatalogUrls _urls = new();    // Make this a collection if we ever implement locales other than en_us
 
@@ -78,7 +81,14 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
 
             // Overwrite entries with the same skuId
             foreach (CatalogEntry entry in newEntries)
-                _entries[entry.SkuId] = entry;
+            {
+                long skuId = entry.SkuId;
+
+                if (_entries.ContainsKey(skuId))
+                    Logger.Trace($"Overriding SKU {skuId}");
+
+                _entries[skuId] = entry;
+            }
 
             FlagDirty();
         }

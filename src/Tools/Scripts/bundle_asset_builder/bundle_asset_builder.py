@@ -6,7 +6,10 @@ import shutil
 
 from PIL import ImageFont, ImageDraw, Image
 
-CATALOG_PATH = "../../../MHServerEmu.Games/Data/Game/MTXStore/Catalog.json"
+CATALOG_PATHS = [
+    "../../../MHServerEmu.Games/Data/Game/MTXStore/Catalog.json",
+    "../../../MHServerEmu.Games/Data/Game/MTXStore/CatalogRestoredHeroes.json",
+]
 
 INFO_TEMPLATE = "info.html"
 INFO_NAMES_TABLE = "names.tsv"
@@ -98,9 +101,12 @@ def main(args: list[str]):
         for row in csv.reader(file, delimiter='\t'):
             names[row[0]] = row[1]
 
-    with open(CATALOG_PATH) as file:
-        catalog_data = json.load(file)
-        for entry in catalog_data:
+    for catalog_path in CATALOG_PATHS:
+        catalog = {}
+        with open(catalog_path) as file:
+            catalog = json.load(file)
+
+        for entry in catalog:
             if len(entry["InfoUrls"]) > 0:
                 build_info(entry, info_template, names)
 
