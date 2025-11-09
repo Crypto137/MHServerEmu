@@ -7,15 +7,20 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MTXStore.Catalogs;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.MTXStore
 {
     public class CatalogManager
     {
+        private const int GiftMessageMaxLength = 100;   // matching the client-side limit
+
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string MTXStoreDataDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "MTXStore");
 
         private readonly Catalog _catalog = new();
+
+        private ulong _currentGiftId = 1;   // used by the client to differentiate notifications
 
         public static CatalogManager Instance { get; } = new();
 
@@ -82,7 +87,8 @@ namespace MHServerEmu.Games.MTXStore
             long skuId = buyItemFromCatalog.SkuId;
             long clientPrice = buyItemFromCatalog.ItemUnitPrice;
 
-            BuyItemResultErrorCodes result = BuyItem(player, skuId, clientPrice);
+            // In normal non-gift purchases the buyer is the recipient
+            BuyItemResultErrorCodes result = BuyItem(player, player, skuId, clientPrice);
 
             player.SendMessage(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
                 .SetDidSucceed(result == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
@@ -94,33 +100,89 @@ namespace MHServerEmu.Games.MTXStore
             return true;
         }
 
-        public bool OnBuyGiftForOtherPlayer(Player player, NetMessageBuyGiftForOtherPlayer buyGiftForOtherPlayer)
+        public bool OnBuyGiftForOtherPlayer(Player buyer, NetMessageBuyGiftForOtherPlayer buyGiftForOtherPlayer)
         {
             if (buyGiftForOtherPlayer.HasSkuId == false)
-                return Logger.WarnReturn(false, $"OnBuyGiftForOtherPlayer(): No SkuId received from player [{player}]");
+                return Logger.WarnReturn(false, $"OnBuyGiftForOtherPlayer(): No SkuId received from player [{buyer}]");
 
             long skuId = buyGiftForOtherPlayer.SkuId;
+            long clientPrice = buyGiftForOtherPlayer.ItemUnitPrice;
+            string recipientName = buyGiftForOtherPlayer.RecipientName;
+            string giftMessage = buyGiftForOtherPlayer.HasGiftMessage ? buyGiftForOtherPlayer.GiftMessage : null;
 
-            // TODO: actual gifting
-            BuyItemResultErrorCodes result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_GIFTING_UNAVAILABLE;
-            player.Game.ChatManager.SendChatFromCustomSystem(player, "Gifting is currently unavailable.");
+            Game game = buyer.Game;
 
-            player.SendMessage(NetMessageBuyGiftForOtherPlayerResponse.CreateBuilder()
-                .SetDidSucceed(result == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
-                .SetCurrentCurrencyBalance(player.GazillioniteBalance)
-                .SetErrorcode(result)
-                .SetSkuid(skuId)
-                .Build());
+            // TODO: Check omega/infinity points
+            if (game.GiftingEnabled == false || buyer.IsGiftingAllowed() == false)
+            {
+                SendBuyGiftForOtherPlayerResponse(buyer, skuId, BuyItemResultErrorCodes.BUY_RESULT_ERROR_GIFTING_UNAVAILABLE);
+                return false;
+            }
+
+            if (giftMessage != null && giftMessage.Length > GiftMessageMaxLength)
+            {
+                SendBuyGiftForOtherPlayerResponse(buyer, skuId, BuyItemResultErrorCodes.BUY_RESULT_ERROR_GIFT_MESSAGE_TOO_LONG);
+                return false;
+            }
+
+            // Currently we allow only local synchronous gifts to nearby players.
+            Player recipient = game.EntityManager.GetPlayerByName(recipientName);
+
+            Community community = buyer.Community;
+            CommunityMember recipientMember = community.GetMemberByName(recipientName);
+            CommunityCircle nearbyCircle = community.GetCircle(CircleId.__Nearby);
+
+            if (recipient == null || recipientMember == null || recipientMember.IsInCircle(nearbyCircle) == false)
+            {
+                SendBuyGiftForOtherPlayerResponse(buyer, skuId, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN_RECIPIENT);
+                game.ChatManager.SendChatFromCustomSystem(buyer, $"Player {recipientName} not found. You must be near the recipient player to send gifts.");
+                return false;
+            }
+
+            if (recipient == buyer)
+            {
+                SendBuyGiftForOtherPlayerResponse(buyer, skuId, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN);
+                game.ChatManager.SendChatFromCustomSystem(buyer, $"You cannot purchase gifts for yourself.");
+                return false;
+            }
+
+            // All good, do the purchase.
+            BuyItemResultErrorCodes result = BuyItem(buyer, recipient, skuId, clientPrice);
+            SendBuyGiftForOtherPlayerResponse(buyer, skuId, result);
+
+            // Notify the recipient if successful.
+            if (result == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
+            {
+                var giftNotification = NetMessageReceivedGift.CreateBuilder()
+                    .SetSkuId((ulong)skuId)
+                    .SetTransId(Interlocked.Increment(ref _currentGiftId))
+                    .SetSender(buyer.GetName());
+
+                if (giftMessage != null)
+                    giftNotification.SetMessage(giftMessage);
+
+                recipient.SendMessage(giftNotification.Build());
+            }
 
             return true;
         }
 
+        private static void SendBuyGiftForOtherPlayerResponse(Player buyer, long skuId, BuyItemResultErrorCodes result)
+        {
+            buyer.SendMessage(NetMessageBuyGiftForOtherPlayerResponse.CreateBuilder()
+                .SetDidSucceed(result == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
+                .SetCurrentCurrencyBalance(buyer.GazillioniteBalance)
+                .SetErrorcode(result)
+                .SetSkuid(skuId)
+                .Build());
+        }
+
         #endregion
 
-        private BuyItemResultErrorCodes BuyItem(Player player, long skuId, long clientPrice)
+        private BuyItemResultErrorCodes BuyItem(Player buyer, Player recipient, long skuId, long clientPrice)
         {
             // Make sure the player has already finished the tutorial, which could unlock characters depending on server settings.
-            if (player.HasFinishedTutorial() == false)
+            if (buyer.HasFinishedTutorial() == false)
                 return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
 
             // Validate the order
@@ -139,23 +201,23 @@ namespace MHServerEmu.Games.MTXStore
             if (clientPrice != itemPrice)
                 return BuyItemResultErrorCodes.BUY_RESULT_ERROR_PRICE_MISMATCH;
 
-            long balance = player.GazillioniteBalance;
+            long balance = buyer.GazillioniteBalance;
             if (itemPrice > balance)
                 return BuyItemResultErrorCodes.BUY_RESULT_ERROR_INSUFFICIENT_BALANCE;
 
             if (entry.GuidItems.Length == 1)
             {
                 // For individual purchases it's all or nothing with early out if failed to fulfill.
-                BuyItemResultErrorCodes result = AcquireCatalogGuid(player, entry.GuidItems[0], false);
+                BuyItemResultErrorCodes result = AcquireCatalogGuid(recipient, entry.GuidItems[0], false);
                 if (result != BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
                     return result;
             }
             else
             {
-                // Allow partial fulfillment of bundles (e.g. hero already owned)
+                // Allow partial fulfillment of bundles (e.g. stash already owned)
                 foreach (CatalogGuidEntry catalogItemEntry in entry.GuidItems)
                 {
-                    BuyItemResultErrorCodes result = AcquireCatalogGuid(player, catalogItemEntry, true);
+                    BuyItemResultErrorCodes result = AcquireCatalogGuid(recipient, catalogItemEntry, true);
                     switch (result)
                     {
                         case BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS:
@@ -166,7 +228,7 @@ namespace MHServerEmu.Games.MTXStore
 
                         default:
                             // this is not fine
-                            Logger.Warn($"BuyItem(): Partial fulfillment of sku! skuId={skuId}, entry={catalogItemEntry}, plauer=[{player}]", LogCategory.MTXStore);
+                            Logger.Warn($"BuyItem(): Partial fulfillment of sku! skuId={skuId}, entry={catalogItemEntry}, buyer=[{buyer}], recipient=[{recipient}]", LogCategory.MTXStore);
                             break;
                     }
                 }
@@ -174,8 +236,8 @@ namespace MHServerEmu.Games.MTXStore
 
             // Adjust currency balance (do not allow negative balance in case somebody figures out some kind of exploit to get here)
             balance = Math.Max(balance - itemPrice, 0);
-            player.GazillioniteBalance = balance;
-            Logger.Trace($"OnBuyItemFromCatalog(): Player [{player}] purchased [skuId={skuId}, itemPrice={itemPrice}]. Balance={balance}", LogCategory.MTXStore);
+            buyer.GazillioniteBalance = balance;
+            Logger.Trace($"OnBuyItemFromCatalog(): Player [{buyer}] purchased [skuId={skuId}, itemPrice={itemPrice}] for recipient [{recipient}]. Balance={balance}", LogCategory.MTXStore);
 
             return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
         }

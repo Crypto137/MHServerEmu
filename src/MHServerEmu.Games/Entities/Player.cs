@@ -3721,16 +3721,6 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private void SetGiftingRestrictions()
-        {
-            // Email is always verified (for now)
-            _emailVerified = true;
-
-            // We are taking advantage of the fact that our database guids include account creation timestamp.
-            // Review this code if this ever changes.
-            _accountCreationTimestamp = TimeSpan.FromSeconds(DatabaseUniqueId >> 16 & 0xFFFFFFFF);
-        }
-
         #endregion
 
         #region Communities
@@ -4088,6 +4078,45 @@ namespace MHServerEmu.Games.Entities
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
             teleporter.Initialize(this, TeleportContextEnum.TeleportContext_Party);
             return teleporter.TeleportToPlayer(targetPlayerDbId);
+        }
+
+        #endregion
+
+        #region MTXStore
+
+        public bool IsGiftingAllowed()
+        {
+            // This function mirrors the client-side check and does not include any custom restrictions.
+            NetStructGameOptions options = Game.GameOptions;
+
+            if (_emailVerified == false)
+                return false;
+
+            TimeSpan accountAge = Clock.UnixTime - _accountCreationTimestamp;
+
+            if ((int)accountAge.TotalDays < options.GiftingAccountAgeInDaysRequired)
+                return false;
+
+            if (Properties.HasProperty(PropertyEnum.PlayerMaxAvatarLevel) == false)
+                return false;
+
+            if (Properties[PropertyEnum.PlayerMaxAvatarLevel] < options.GiftingAvatarLevelRequired)
+                return false;
+
+            if (Properties[PropertyEnum.LoginCount] < options.GiftingLoginCountRequired)
+                return false;
+
+            return true;
+        }
+
+        private void SetGiftingRestrictions()
+        {
+            // Email is always verified (for now)
+            _emailVerified = true;
+
+            // We are taking advantage of the fact that our database guids include account creation timestamp.
+            // Review this code if this ever changes.
+            _accountCreationTimestamp = TimeSpan.FromSeconds(DatabaseUniqueId >> 16 & 0xFFFFFFFF);
         }
 
         #endregion
