@@ -34,7 +34,7 @@ namespace MHServerEmu.WebFrontend.Handlers
             }
 
             _data = File.ReadAllBytes(_filePath);
-            Logger.Info($"Loaded '{_filePath}'");
+            Logger.Trace($"Loaded '{_filePath}'");
         }
 
         protected override async Task Get(WebRequestContext context)
