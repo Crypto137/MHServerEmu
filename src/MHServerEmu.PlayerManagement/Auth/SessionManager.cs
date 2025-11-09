@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Web;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
@@ -22,6 +23,8 @@ namespace MHServerEmu.PlayerManagement.Auth
         private readonly PlayerManagerService _playerManager;
 
         private readonly IdGenerator _idGenerator = new(IdType.Session, 0);
+        private readonly WebTokenManager<ulong> _platformTicketManager = new();
+        // "Platform Tickets" are tokens used to access the Add G page from the MTX store.
 
         private readonly Dictionary<ulong, ClientSession> _pendingSessionDict = new();
         private readonly Dictionary<ulong, ClientSession> _activeSessionDict = new();
@@ -60,6 +63,19 @@ namespace MHServerEmu.PlayerManagement.Auth
         {
             authTicket = AuthTicket.DefaultInstance;
 
+#if DEBUG
+            // Send a TOS popup when the client uses tos@test.com as email
+            if (loginDataPB.EmailAddress == "tos@test.com")
+            {
+                authTicket = AuthTicket.CreateBuilder()
+                    .SetSessionId(0)
+                    .SetTosurl("http://localhost/tos")  // The client adds &locale=en_us to this url (or another locale code)
+                    .Build();
+
+                return AuthStatusCode.NeedToAcceptLegal;
+            }
+#endif
+
             // Check client version
             if (loginDataPB.HasVersion == false)
             {
@@ -97,7 +113,10 @@ namespace MHServerEmu.PlayerManagement.Auth
             string locale = loginDataPB.HasLocale ? loginDataPB.Locale : "en_us";
 
             // Create a new session
-            ClientSession session = new(_idGenerator.Generate(), account, downloaderEnum, locale);
+            ulong sessionId = _idGenerator.Generate();
+            string platformTicket = _platformTicketManager.GenerateToken(sessionId);
+
+            ClientSession session = new(sessionId, account, platformTicket, downloaderEnum, locale);
             lock (_pendingSessionDict)
                 _pendingSessionDict.Add(session.Id, session);
 
@@ -109,7 +128,7 @@ namespace MHServerEmu.PlayerManagement.Auth
                 .SetSessionId(session.Id)
                 .SetFrontendServer(IFrontendClient.FrontendAddress)
                 .SetFrontendPort(IFrontendClient.FrontendPort)
-                .SetPlatformTicket("")  // TODO
+                .SetPlatformTicket(platformTicket)
                 .SetHasnews(_playerManager.Config.ShowNewsOnLogin)
                 .SetNewsurl(_playerManager.Config.NewsUrl)
                 .SetSuccess(true)
@@ -165,6 +184,38 @@ namespace MHServerEmu.PlayerManagement.Auth
                 }
             }
 
+            // Success!
+            Logger.Info($"Successful auth for client [{client}]");
+            return true;
+        }
+
+        /// <summary>
+        /// Verifies credentials for MTX store authentication.
+        /// </summary>
+        public bool VerifyPlatformTicket(string email, string token, out ulong playerDbId)
+        {
+            playerDbId = 0;
+
+            if (_platformTicketManager.TryGetValue(token, out ulong sessionId) == false)
+                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): Invalid token {token}");
+
+            ClientSession session;
+            lock (_activeSessionDict)
+                _activeSessionDict.TryGetValue(sessionId, out session);
+
+            if (session == null)
+                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): Failed to retrieve session! sessionId=0x{sessionId:X}, token={token}, email={email}");
+
+            if (session.PlatformTicket != token)
+                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): Token mismatch for session 0x{sessionId:X}: expected {session.PlatformTicket}, received {token}");
+
+            if (session.Account is not DBAccount account)
+                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): No account for session 0x{sessionId:X}");
+
+            if (account.Email.Equals(email, StringComparison.OrdinalIgnoreCase) == false)
+                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): Email mismatch for sessionId 0x{sessionId:X}");
+
+            playerDbId = (ulong)account.Id;
             return true;
         }
 
@@ -175,11 +226,13 @@ namespace MHServerEmu.PlayerManagement.Auth
         {
             lock (_activeSessionDict)
             {
-                if (_activeSessionDict.Remove(sessionId) == false)
+                if (_activeSessionDict.Remove(sessionId, out ClientSession session) == false)
                     Logger.Warn($"RemoveActiveSession(): No active session for sessionId {sessionId:X}");
 
                 if (_clientDict.Remove(sessionId) == false)
                     Logger.Warn($"RemoveActiveSession(): No client for sessionId {sessionId:X}");
+
+                _platformTicketManager.RemoveToken(session.PlatformTicket);
             }
         }
 
@@ -215,6 +268,7 @@ namespace MHServerEmu.PlayerManagement.Auth
 
                     Logger.Warn($"Pending session expired: sessionId=0x{session.Id:X}, account=[{session.Account}]");
                     _pendingSessionDict.Remove(kvp.Key);
+                    _platformTicketManager.RemoveToken(session.PlatformTicket);
                 }
             }
         }

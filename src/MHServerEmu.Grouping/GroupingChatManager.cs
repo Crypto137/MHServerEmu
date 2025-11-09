@@ -18,6 +18,9 @@ namespace MHServerEmu.Grouping
 
         private readonly GroupingManagerService _groupingManager;
 
+        private readonly string _serverName;
+        private readonly int _serverPrestigeLevel;
+
         private readonly ChatBroadcastMessage _motd;
         private readonly bool _logTells;
 
@@ -26,12 +29,14 @@ namespace MHServerEmu.Grouping
             _groupingManager = groupingManager;
 
             GroupingManagerConfig config = ConfigManager.Instance.GetConfig<GroupingManagerConfig>();
+            _serverName = config.ServerName;
+            _serverPrestigeLevel = config.ServerPrestigeLevel;
 
             _motd = ChatBroadcastMessage.CreateBuilder()
                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
-                .SetFromPlayerName(config.ServerName)
+                .SetFromPlayerName(_serverName)
                 .SetTheMessage(ChatMessage.CreateBuilder().SetBody(config.MotdText))
-                .SetPrestigeLevel(config.ServerPrestigeLevel)
+                .SetPrestigeLevel(_serverPrestigeLevel)
                 .Build();
 
             _logTells = config.LogTells;
@@ -82,6 +87,18 @@ namespace MHServerEmu.Grouping
                 .Build();
 
             SendMessage(message, targetClient);
+        }
+
+        public void OnMetagameMessage(IFrontendClient client, string text, bool showSender)
+        {
+            ChatNormalMessage message = ChatNormalMessage.CreateBuilder()
+                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
+                .SetFromPlayerName(showSender ? _serverName : string.Empty)
+                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(text))
+                .SetPrestigeLevel(_serverPrestigeLevel)
+                .Build();
+
+            SendMessage(message, client);
         }
 
         public void OnServerNotification(string notificationText)

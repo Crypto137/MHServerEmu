@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Core.Network;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands
 {
@@ -8,11 +7,9 @@ namespace MHServerEmu.Commands
     /// </summary>
     public class FrontendClientChatOutput : IClientOutput
     {
-        // TODO: Potentially move this to MHServerEmu.Grouping.
-
         public void Output(string output, NetClient client)
         {
-            ChatHelper.SendMetagameMessage(client.FrontendClient, output);
+            CommandHelper.SendMessage(client, output);
         }
     }
 }

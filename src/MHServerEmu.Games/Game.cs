@@ -97,9 +97,11 @@ namespace MHServerEmu.Games
 
         public ulong CurrentRepId { get => ++_currentRepId; }
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
-        public bool OmegaMissionsEnabled { get; set; }
-        public bool AchievementsEnabled { get; set; }
-        public bool LeaderboardsEnabled { get; set; }
+
+        public bool AchievementsEnabled { get => GameOptions.AchievementsEnabled; }
+        public bool OmegaMissionsEnabled { get => GameOptions.OmegaMissionsEnabled; }
+        public bool LeaderboardsEnabled { get => GameOptions.LeaderboardsEnabled; }
+        public bool GiftingEnabled { get => GameOptions.GiftingEnabled; }
         public bool InfinitySystemEnabled { get => GameOptions.InfinitySystemEnabled; }
 
         public override string ToString() => $"serverGameId=0x{Id:X}";
@@ -114,8 +116,6 @@ namespace MHServerEmu.Games
 
             // Initialize game options
             var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
-            AchievementsEnabled = config.AchievementsEnabled;
-            LeaderboardsEnabled = config.LeaderboardsEnabled;
             GameOptions = config.ToProtobuf();
 
             CustomGameOptions = ConfigManager.Instance.GetConfig<CustomGameOptionsConfig>();
@@ -151,8 +151,6 @@ namespace MHServerEmu.Games
 
             success &= RegionManager.Initialize(this);
             success &= EntityManager.Initialize();
-
-            OmegaMissionsEnabled = true;
 
             State = GameState.Running;
             Logger.Info($"Game 0x{Id:X} started, initial replication id: {_currentRepId}");

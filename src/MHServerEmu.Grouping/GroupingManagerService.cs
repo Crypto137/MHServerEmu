@@ -40,25 +40,7 @@ namespace MHServerEmu.Grouping
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
-            switch (message)
-            {
-                // NOTE: We haven't really seen this, but there is a ClientToGroupingManager protocol
-                // that includes a single message - GetPlayerInfoByName. If we ever receive it, it should end up here.
-
-                // Handle everything in a dedicated worker thread
-                case ServiceMessage.AddClient:
-                case ServiceMessage.RemoveClient:
-                case ServiceMessage.PlayerNameChanged:
-                case ServiceMessage.GroupingManagerChat:
-                case ServiceMessage.GroupingManagerTell:
-                case ServiceMessage.GroupingManagerServerNotification:
-                    _serviceMailbox.PostMessage(message);
-                    break;
-
-                default:
-                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
-                    break;
-            }
+            _serviceMailbox.PostMessage(message);
         }
 
         public void GetStatus(Dictionary<string, long> statusDict)

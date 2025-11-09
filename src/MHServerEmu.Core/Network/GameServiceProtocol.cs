@@ -379,23 +379,43 @@ namespace MHServerEmu.Core.Network
 
         #region Grouping Manager
 
-        public readonly struct GroupingManagerChat(IFrontendClient client, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter)
+        /// <summary>
+        /// [Game -> GroupingManager] Routes a regular chat message from a game instance.
+        /// </summary>
+        public readonly struct GroupingManagerChat(ulong playerDbId, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter)
             : IGameServiceMessage
         {
-            public readonly IFrontendClient Client = client;
+            public readonly ulong PlayerDbId = playerDbId;
             public readonly NetMessageChat Chat = chat;
             public readonly int PrestigeLevel = prestigeLevel;
             public readonly List<ulong> PlayerFilter = playerFilter;
         }
 
-        public readonly struct GroupingManagerTell(IFrontendClient client, NetMessageTell tell, int prestigeLevel)
+        /// <summary>
+        /// [Game -> GroupingManager] Routes a tell chat message from a game instance.
+        /// </summary>
+        public readonly struct GroupingManagerTell(ulong playerDbId, NetMessageTell tell, int prestigeLevel)
             : IGameServiceMessage
         {
-            public readonly IFrontendClient Client = client;
+            public readonly ulong PlayerDbId = playerDbId;
             public readonly NetMessageTell Tell = tell;
             public readonly int PrestigeLevel = prestigeLevel;
         }
 
+        /// <summary>
+        /// [Any -> GroupingManager] Sends a custom metagame chat message to the specified player.
+        /// </summary>
+        public readonly struct GroupingManagerMetagameMessage(ulong playerDbId, string text, bool showSender)
+            : IGameServiceMessage
+        {
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly string Text = text;
+            public readonly bool ShowSender = showSender;
+        }
+
+        /// <summary>
+        /// [Command -> GroupingManager] Broadcasts a server notification to all connected clients.
+        /// </summary>
         public readonly struct GroupingManagerServerNotification(string notificationText)
             : IGameServiceMessage
         {
@@ -527,6 +547,114 @@ namespace MHServerEmu.Core.Network
             public readonly ulong LeaderboardId = leaderboardId;
             public readonly ulong InstanceId = instanceId;
             public readonly ulong ParticipantId = participantId;
+        }
+
+        #endregion
+
+        #region Auth
+
+        // WebFrontend -> PlayerManager
+        public readonly struct AuthRequest(ulong requestId, LoginDataPB loginDataPB)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly LoginDataPB LoginDataPB = loginDataPB;
+        }
+
+        // PlayerManager -> WebFrontend
+        public readonly struct AuthResponse(ulong requestId, int statusCode, AuthTicket authTicket)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly int StatusCode = statusCode;
+            public readonly AuthTicket AuthTicket = authTicket;
+        }
+
+        // Frontend -> PlayerManager
+        public readonly struct SessionVerificationRequest(IFrontendClient client, ClientCredentials clientCredentials)
+            : IGameServiceMessage
+        {
+            public readonly IFrontendClient Client = client;
+            public readonly ClientCredentials ClientCredentials = clientCredentials;
+        }
+
+        #endregion
+
+        #region MTXStore
+
+        // WebFrontend -> PlayerManager
+        public readonly struct MTXStoreESBalanceRequest(ulong requestId, string email, string token)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly string Email = email;
+            public readonly string Token = token;
+        }
+
+        // PlayerManager -> WebFrontend
+        public readonly struct MTXStoreESBalanceResponse(ulong requestId, int statusCode, int currentBalance = 0, float conversionRatio = 0, int conversionStep = 0)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly int StatusCode = statusCode;
+            public readonly int CurrentBalance = currentBalance;
+            public readonly float ConversionRatio = conversionRatio;
+            public readonly int ConversionStep = conversionStep;
+        }
+
+        // PlayerManager -> Game
+        public readonly struct MTXStoreESBalanceGameRequest(ulong requestId, ulong gameId, ulong playerDbId)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+        }
+
+        // Game -> PlayerManager
+        public readonly struct MTXStoreESBalanceGameResponse(ulong requestId, int currentBalance, float conversionRatio, int conversionStep)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly int CurrentBalance = currentBalance;
+            public readonly float ConversionRatio = conversionRatio;
+            public readonly int ConversionStep = conversionStep;
+        }
+
+        // WebFrontend -> PlayerManager
+        public readonly struct MTXStoreESConvertRequest(ulong requestId, string email, string token, int amount)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly string Email = email;
+            public readonly string Token = token;
+            public readonly int Amount = amount;
+        }
+
+        // PlayerManager -> WebFrontend
+        public readonly struct MTXStoreESConvertResponse(ulong requestId, int statusCode)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly int StatusCode = statusCode;
+        }
+
+        // PlayerManager -> Game
+        public readonly struct MTXStoreESConvertGameRequest(ulong requestId, ulong gameId, ulong playerDbId, int amount)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly int Amount = amount;
+        }
+
+        // Game -> PlayerManager
+        public readonly struct MTXStoreESConvertGameResponse(ulong requestId, bool result)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly bool Result = result;
         }
 
         #endregion

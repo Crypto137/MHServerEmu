@@ -13,7 +13,6 @@ namespace MHServerEmu.Core.Network
         Leaderboard,
         PlayerManager,
         GroupingManager,
-        Billing,
         Frontend,
         WebFrontend,
         NumServiceTypes

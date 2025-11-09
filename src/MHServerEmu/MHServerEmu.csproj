@@ -30,7 +30,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gazillion\Gazillion.csproj" />
-    <ProjectReference Include="..\MHServerEmu.Billing\MHServerEmu.Billing.csproj" />
     <ProjectReference Include="..\MHServerEmu.Core\MHServerEmu.Core.csproj" />
     <ProjectReference Include="..\MHServerEmu.DatabaseAccess\MHServerEmu.DatabaseAccess.csproj" />
     <ProjectReference Include="..\MHServerEmu.Frontend\MHServerEmu.Frontend.csproj" />

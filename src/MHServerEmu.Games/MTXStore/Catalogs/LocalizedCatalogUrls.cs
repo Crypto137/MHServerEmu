@@ -1,30 +1,27 @@
-﻿using System.Text.Json.Serialization;
-using Gazillion;
+﻿using Gazillion;
 
 namespace MHServerEmu.Games.MTXStore.Catalogs
 {
+    public enum StoreBannerPage
+    {
+        Home,
+        Heroes,
+        Costumes,
+        Boosts,
+        Chests,
+        Specials,
+        NumPages,
+    }
+
     public class LocalizedCatalogUrls
     {
         public string LocaleId { get; set; }
         public string StoreHomePageUrl { get; set; }
-        public BannerUrl[] StoreBannerPageUrls { get; set; }
+        public BannerUrl[] StoreBannerPageUrls { get; } = new BannerUrl[(int)StoreBannerPage.NumPages];
         public string StoreRealMoneyUrl { get; set; }
 
-        [JsonConstructor]
-        public LocalizedCatalogUrls(string localeId, string storeHomePageUrl, BannerUrl[] storeBannerPageUrls, string storeRealMoneyUrl)
+        public LocalizedCatalogUrls()
         {
-            LocaleId = localeId;
-            StoreHomePageUrl = storeHomePageUrl;
-            StoreBannerPageUrls = storeBannerPageUrls;
-            StoreRealMoneyUrl = storeRealMoneyUrl;
-        }
-
-        public LocalizedCatalogUrls(MHLocalizedCatalogUrls localizedCatalogUrls)
-        {
-            LocaleId = localizedCatalogUrls.LocaleId;
-            StoreHomePageUrl = localizedCatalogUrls.StoreHomePageUrl;
-            StoreBannerPageUrls = localizedCatalogUrls.StoreBannerPageUrlsList.Select(storeBannerPageUrl => new BannerUrl(storeBannerPageUrl)).ToArray();
-            StoreRealMoneyUrl = localizedCatalogUrls.StoreRealMoneyUrl;
         }
 
         public MHLocalizedCatalogUrls ToNetStruct()

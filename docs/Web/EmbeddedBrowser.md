@@ -63,3 +63,11 @@ The actual viewable area is slightly smaller than these.
 - Community News (Version 2) Main Page 988x644
 
 - Community News (Version 2) Popup: 650x764
+
+## Bundles
+
+- Bundle images are downloaded and cached in `%TEMP%\MarvelHeroes`. It is possible for the client to cache an invalid bundle image, which may require clearing the cache to fix it.
+
+- A bundle image needs to be a PNG file with its horizontal and vertical resolution being a multiple of 4. Preferred resolution is 344x128.
+
+- `?gmode=` is appended to information page requests, indicating whether the gifting mode is enabled (0 or 1).

@@ -6,6 +6,7 @@ using MHServerEmu.Core.Network.Web;
 using MHServerEmu.WebFrontend.Handlers;
 using MHServerEmu.WebFrontend.Handlers.MTXStore;
 using MHServerEmu.WebFrontend.Handlers.WebApi;
+using MHServerEmu.WebFrontend.Network;
 
 namespace MHServerEmu.WebFrontend
 {
@@ -15,6 +16,8 @@ namespace MHServerEmu.WebFrontend
     public class WebFrontendService : IGameService
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private readonly WebFrontendServiceMailbox _serviceMailbox = new();
 
         private readonly WebService _webService;
         private List<string> _dashboardEndpoints;
@@ -45,6 +48,7 @@ namespace MHServerEmu.WebFrontend
 
             // MTXStore handlers are used for the Add G panel in the client UI.
             _webService.RegisterHandler("/MTXStore/AddG", new AddGWebHandler());
+            _webService.RegisterHandler("/MTXStore/AddG/Submit", new AddGSubmitWebHandler());
 
             if (config.EnableWebApi)
             {
@@ -66,7 +70,10 @@ namespace MHServerEmu.WebFrontend
             State = GameServiceState.Running;
 
             while (_webService.IsRunning)
-                Thread.Sleep(500);
+            {
+                _serviceMailbox.ProcessMessages();
+                Thread.Sleep(1);
+            }
 
             State = GameServiceState.Shutdown;
         }
@@ -81,13 +88,7 @@ namespace MHServerEmu.WebFrontend
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
-            // AuthServer should not be handling messages from TCP clients
-            switch (message)
-            {
-                default:
-                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
-                    break;
-            }
+            _serviceMailbox.PostMessage(message);
         }
 
         public void GetStatus(Dictionary<string, long> statusDict)
@@ -108,6 +109,12 @@ namespace MHServerEmu.WebFrontend
                 StaticFileWebHandler fileHandler = _webService.GetHandler(localPath) as StaticFileWebHandler;
                 fileHandler?.Load();
             }
+        }
+
+        public void ReloadAddGPage()
+        {
+            AddGWebHandler addGHandler = _webService.GetHandler("/MTXStore/AddG") as AddGWebHandler;
+            addGHandler?.Load();
         }
 
         private void InitializeWebBackend()

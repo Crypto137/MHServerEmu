@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.Social
         {
             // Route to the grouping manager
             int prestigeLevel = player.CurrentAvatar != null ? player.CurrentAvatar.PrestigeLevel : 0;
-            ServiceMessage.GroupingManagerTell serviceMessage = new(player.PlayerConnection.FrontendClient, tell, prestigeLevel);
+            ServiceMessage.GroupingManagerTell serviceMessage = new(player.DatabaseUniqueId, tell, prestigeLevel);
             ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, serviceMessage);
         }
 
@@ -213,6 +213,18 @@ namespace MHServerEmu.Games.Social
 
         #endregion
 
+        #region Custom System Messages
+
+        // This is used to send our custom system messages that the client does not have locale strings for.
+
+        public void SendChatFromCustomSystem(Player player, string text, bool showSender = true)
+        {
+            ServiceMessage.GroupingManagerMetagameMessage message = new(player.DatabaseUniqueId, text, showSender);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, message);
+        }
+
+        #endregion
+
         #region Helper Methods
 
         // NOTE: It's not safe to pool filter lists here because the implementation of the grouping manager may change.
@@ -267,7 +279,7 @@ namespace MHServerEmu.Games.Social
         private void SendChat(Player player, NetMessageChat chat, List<ulong> playerFilter)
         {
             int prestigeLevel = player.CurrentAvatar != null ? player.CurrentAvatar.PrestigeLevel : 0;
-            ServiceMessage.GroupingManagerChat chatMessage = new(player.PlayerConnection.FrontendClient, chat, prestigeLevel, playerFilter);
+            ServiceMessage.GroupingManagerChat chatMessage = new(player.DatabaseUniqueId, chat, prestigeLevel, playerFilter);
             ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, chatMessage);
         }
 

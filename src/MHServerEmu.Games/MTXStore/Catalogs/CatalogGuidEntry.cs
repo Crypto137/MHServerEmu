@@ -25,12 +25,18 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
             Quantity = catalogGuidEntry.Quantity;
         }
 
+        public override string ToString()
+        {
+            return ItemPrototypeRuntimeIdForClient.GetName();
+        }
+
         public MHCatalogGuidEntry ToNetStruct()
         {
+            // prototypeGuid and quantity fields are unused in our dump.
             return MHCatalogGuidEntry.CreateBuilder()
-                .SetPrototypeGuid(PrototypeGuid)
+                //.SetPrototypeGuid(PrototypeGuid)
                 .SetItemPrototypeRuntimeIdForClient((ulong)ItemPrototypeRuntimeIdForClient)
-                .SetQuantity(Quantity)
+                //.SetQuantity(Quantity)
                 .Build();
         }
     }

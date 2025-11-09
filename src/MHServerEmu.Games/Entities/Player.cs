@@ -3,6 +3,7 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -30,6 +31,7 @@ using MHServerEmu.Games.Leaderboards;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Missions;
+using MHServerEmu.Games.MTXStore;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
@@ -1452,6 +1454,31 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        /// <summary>
+        /// Converts the specified number of Eternity Splinters (ES) to Gazillionite (G). Returns the amount of Gazillionite acquired.
+        /// </summary>
+        public int ConvertEternitySplintersToGazillionite(int esAmount)
+        {
+            PropertyId esPropId = new(PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.EternitySplinters);
+
+            long esBalance = Properties[esPropId];
+            if (esBalance < esAmount)
+                return 0;
+
+            var config = ConfigManager.Instance.GetConfig<MTXStoreConfig>();
+            int gAmount = Math.Max((int)(esAmount * config.ESToGazillioniteConversionRatio), 0);
+            if (gAmount == 0)
+                return 0;
+
+            if (AcquireGazillionite(gAmount) == false)
+                return 0;
+
+            Properties[esPropId] = esBalance - esAmount;
+
+            Logger.Info($"[{PlayerConnection}] converted {esAmount} ES to {gAmount} G", LogCategory.MTXStore);            
+            return gAmount;
+        }
+
         public bool AwardBonusItemFindPoints(int amount, LootInputSettings settings)
         {
             if (amount <= 0)
@@ -2136,6 +2163,38 @@ namespace MHServerEmu.Games.Entities
         public bool HasAvatarAsCappedStarter(Avatar avatar)
         {
             return HasAvatarAsStarter(avatar.PrototypeDataRef) && avatar.CharacterLevel >= Avatar.GetStarterAvatarLevelCap();
+        }
+
+        public bool OwnsItem(PrototypeId itemProtoRef)
+        {
+            if (itemProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "OwnsItem(): itemProtoRef == PrototypeId.Invalid");
+
+            // Avatar unlocks
+            AvatarPrototype avatarProto = itemProtoRef.As<AvatarPrototype>();
+            if (avatarProto != null)
+                return HasAvatarFullyUnlocked(itemProtoRef);
+
+            // Avatar equipment
+            foreach (Avatar avatar in new AvatarIterator(this))
+            {
+                if (InventoryIterator.ContainsMatchingEntity(avatar, itemProtoRef))
+                    return true;
+            }
+
+            // Player inventories
+            foreach (Inventory inventory in new InventoryIterator(this))
+            {
+                if (inventory.Category == InventoryCategory.PlayerAvatars)
+                    continue;
+
+                if (inventory.Category == InventoryCategory.PlayerVendor)
+                    continue;
+
+                if (inventory.ContainsMatchingEntity(itemProtoRef))
+                    return true;
+            }
+
+            return false;
         }
 
         public bool UnlockPowerSpecIndex(int index)
@@ -3662,16 +3721,6 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private void SetGiftingRestrictions()
-        {
-            // Email is always verified (for now)
-            _emailVerified = true;
-
-            // We are taking advantage of the fact that our database guids include account creation timestamp.
-            // Review this code if this ever changes.
-            _accountCreationTimestamp = TimeSpan.FromSeconds(DatabaseUniqueId >> 16 & 0xFFFFFFFF);
-        }
-
         #endregion
 
         #region Communities
@@ -4029,6 +4078,45 @@ namespace MHServerEmu.Games.Entities
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
             teleporter.Initialize(this, TeleportContextEnum.TeleportContext_Party);
             return teleporter.TeleportToPlayer(targetPlayerDbId);
+        }
+
+        #endregion
+
+        #region MTXStore
+
+        public bool IsGiftingAllowed()
+        {
+            // This function mirrors the client-side check and does not include any custom restrictions.
+            NetStructGameOptions options = Game.GameOptions;
+
+            if (_emailVerified == false)
+                return false;
+
+            TimeSpan accountAge = Clock.UnixTime - _accountCreationTimestamp;
+
+            if ((int)accountAge.TotalDays < options.GiftingAccountAgeInDaysRequired)
+                return false;
+
+            if (Properties.HasProperty(PropertyEnum.PlayerMaxAvatarLevel) == false)
+                return false;
+
+            if (Properties[PropertyEnum.PlayerMaxAvatarLevel] < options.GiftingAvatarLevelRequired)
+                return false;
+
+            if (Properties[PropertyEnum.LoginCount] < options.GiftingLoginCountRequired)
+                return false;
+
+            return true;
+        }
+
+        private void SetGiftingRestrictions()
+        {
+            // Email is always verified (for now)
+            _emailVerified = true;
+
+            // We are taking advantage of the fact that our database guids include account creation timestamp.
+            // Review this code if this ever changes.
+            _accountCreationTimestamp = TimeSpan.FromSeconds(DatabaseUniqueId >> 16 & 0xFFFFFFFF);
         }
 
         #endregion

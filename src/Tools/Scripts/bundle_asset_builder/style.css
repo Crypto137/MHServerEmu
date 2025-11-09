@@ -1,0 +1,56 @@
+html {
+    background-color: #0d0d0b;
+    color: #d7d7d7;
+    font: 18px/1.385 Verdana;
+}
+
+*:focus {
+    outline-color: #00e8ff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #00aaff;
+    font-family: "Bebas Neue", "Trebuchet MS", Verdana, sans-serif;
+    font-weight: normal;
+}
+
+button, input {
+    box-sizing: border-box;
+    border: 1px solid black;
+    box-shadow: 0 0 1px 1px #00aaff;
+    background: #1c1c1c;
+    color: inherit;
+    font: inherit;
+}
+
+button {
+    padding: 8px;
+}
+
+button:hover {
+    box-shadow: 0 0 1px 1px white;
+}
+
+div.content {
+    margin: 10px auto;
+    padding: 20px;
+    border: 1px solid #00717c;
+    background-color: #00090e;
+}
+
+div.buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+span.enhanced-keyword {
+    color: #9128bb;
+}
+
+span.price {
+    color: #00aaff;
+    font-family: "Bebas Neue", "Trebuchet MS", Verdana, sans-serif;
+    font-weight: normal;
+    font-size: 32px;
+}

@@ -111,37 +111,14 @@ namespace MHServerEmu.PlayerManagement
         {
             switch (message)
             {
-                // Message buffers are routed asynchronously rather than in ticks to have the lowest latency possible.
+                // Message buffers are routed right away to have the lowest latency possible.
                 case ServiceMessage.RouteMessageBuffer routeMessagePackage:
                     OnRouteMessageBuffer(routeMessagePackage);
                     break;
 
-                case ServiceMessage.RouteMessage routeMessage:
-                    OnRouteMessage(routeMessage);
-                    break;
-
-                // Service messages are handled in ticks
-                case ServiceMessage.AddClient:
-                case ServiceMessage.RemoveClient:
-                case ServiceMessage.GameInstanceOp:
-                case ServiceMessage.GameInstanceClientOp:
-                case ServiceMessage.CreateRegionResult:
-                case ServiceMessage.RequestRegionShutdown:
-                case ServiceMessage.ChangeRegionRequest:
-                case ServiceMessage.RegionTransferFinished:
-                case ServiceMessage.ClearPrivateStoryRegions:
-                case ServiceMessage.SetDifficultyTierPreference:
-                case ServiceMessage.PlayerLookupByNameRequest:
-                case ServiceMessage.PlayerNameChanged:
-                case ServiceMessage.CommunityStatusUpdate:
-                case ServiceMessage.CommunityStatusRequest:
-                case ServiceMessage.PartyOperationRequest:
-                case ServiceMessage.PartyBoostUpdate:
-                    _serviceMailbox.PostMessage(message);
-                    break;
-
+                // Regular service messages are handled by the service thread when the next tick comes.
                 default:
-                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
+                    _serviceMailbox.PostMessage(message);
                     break;
             }
         }
@@ -171,19 +148,6 @@ namespace MHServerEmu.PlayerManagement
             }
         }
 
-        private void OnRouteMessage(in ServiceMessage.RouteMessage routeMessage)
-        {
-            IFrontendClient client = routeMessage.Client;
-            MailboxMessage message = routeMessage.Message;
-
-            switch ((FrontendProtocolMessage)message.Id)
-            {
-                case FrontendProtocolMessage.ClientCredentials: OnClientCredentials(client, message); break;
-
-                default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
-            }
-        }
-
         #endregion
 
         #region Player Management
@@ -208,36 +172,6 @@ namespace MHServerEmu.PlayerManagement
         #endregion
 
         #region Message Handling
-
-        /// <summary>
-        /// Handles <see cref="LoginDataPB"/>.
-        /// </summary>
-        public AuthStatusCode OnLoginDataPB(LoginDataPB loginDataPB, out AuthTicket authTicket)
-        {
-            return SessionManager.TryCreateSession(loginDataPB, out authTicket);
-        }
-
-        /// <summary>
-        /// Handles <see cref="ClientCredentials"/>.
-        /// </summary>
-        private bool OnClientCredentials(IFrontendClient client, MailboxMessage message)
-        {
-            var clientCredentials = message.As<ClientCredentials>();
-            if (clientCredentials == null) return Logger.WarnReturn(false, "OnClientCredentials(): clientCredentials == null");
-
-            if (SessionManager.VerifyClientCredentials(client, clientCredentials) == false)
-            {
-                Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client [{client}]");
-                client.Disconnect();
-                return false;
-            }
-
-            // Success!
-            Logger.Info($"Successful auth for client [{client}]");
-            LoginQueueManager.EnqueueNewClient(client);
-
-            return true;
-        }
 
         /// <summary>
         /// Handles <see cref="NetMessageReadyForGameJoin"/>.

@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using MHServerEmu.Core.System.Time;
 
-namespace MHServerEmu.Core.System
+namespace MHServerEmu.Core.RateLimiting
 {
     public class TimeLeakyBucketCollection<TKey>
     {
@@ -25,11 +25,11 @@ namespace MHServerEmu.Core.System
             _dict.TryGetValue(key, out TimeSpan time);
 
             TimeSpan currentTime = Clock.ElapsedTime;
-            if ((currentTime - time) > TimeSpan.Zero)
+            if (currentTime - time > TimeSpan.Zero)
                 time = currentTime;
 
             TimeSpan newTime = time + _cost;
-            if ((newTime - currentTime) >= _maxCost)
+            if (newTime - currentTime >= _maxCost)
             {
                 _dict[key] = time;
                 return false;

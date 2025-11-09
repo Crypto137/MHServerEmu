@@ -12,7 +12,11 @@
 		html {
 			background-color: #0d0d0b;
 			color: #d7d7d7;
-			font: 12px/1.385 Verdana;
+			font: 18px/1.385 Verdana;
+		}
+
+		*:focus {
+			outline-color: #00e8ff;
 		}
 
 		h1, h2, h3, h4, h5, h6 {
@@ -21,16 +25,44 @@
 			font-weight: normal;
 		}
 
-		button {
-			padding: 8px;
+		button, input {
+			width: 100%;
+			box-sizing: border-box;
 			border: 1px solid black;
 			box-shadow: 0 0 1px 1px #00aaff;
 			background: #1c1c1c;
 			color: inherit;
+			font: inherit;
+		}
+
+		button:not(.sign-button) {
+			padding: 8px;
 		}
 
 		button:hover {
 			box-shadow: 0 0 1px 1px white;
+		}
+
+		input {
+			width: 100%;
+			text-align: center;
+		}
+
+		input[type="range"] {
+			margin: 4px 0px;
+		}
+
+		input::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			width: 26px;
+			height: 26px;
+			background: #00aaff;
+		}
+
+		table {
+			width: 100%;
+			margin: 12px 0px;
+			border-spacing: 4px;
 		}
 
 		div.content {
@@ -39,30 +71,210 @@
 			border: 1px solid #00717c;
 			background-color: #00090e;
 		}
+
+		div.button-container {
+			display: flex;
+			justify-content: center;
+		}
+
+		div.button-container button {
+			width: 50%;
+			margin: 0px 8px;
+		}
+
+		div.modal-popup {
+			display: none;
+			position: fixed;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 1;
+			background-color: rgba(0, 0, 0, 0.75);
+			justify-content: center;
+			align-items: center;
+		}
 	</style>
 </head>
 <body>
 	<div class="content">
 		<h1>Add G</h1>
-		<p>Type the <code>!store convertes</code> command in the game chat to convert Eternity Splinters to Gs.</p>
-		<!-- <button onclick="myApi.ReloadAddGPage()">Reload</button> -->
-		<button onclick="myApi.CloseAddGPanel(false)">Close</button>
+		<p>Select the amount of Eternity Splinters to convert to G.</p>
+		<table>
+			<tr>
+				<th style="width: 70px;">ES</th>
+				<th style="width: 28px;"></th>
+				<th></th>
+				<th style="width: 28px;"></th>
+				<th style="width: 70px;">G</th>
+			</tr>
+			<tr>
+				<td><input type="text" value="0" id="es-text-input" onchange="setES(this.value)" /></td>
+				<td><button onclick="adjustES(-requestContext.conversionStep)" class="sign-button">-</button></td>
+				<td><input type="range" value="0" min="0" id="es-range-input" onchange="setES(this.value)" /></td>
+				<td><button onclick="adjustES(requestContext.conversionStep)" class="sign-button">+</button></td>
+				<td><input type="text" value="0" id="g-text-input" onchange="setESFromG(this.value)" /></td>
+			</tr>
+		</table>
+		<p>Please note that the amount of G after conversion may be subject to rounding errors.</p>
+		<button onclick="convert()">Convert</button>
 	</div>
 
-	<div class="content">
-		<h1>Debug Information</h1>
-		<pre id="debug-info"></pre>
+	<div class="modal-popup" id="popup">
+		<div class="content" style="width: 600px;">
+			<div id="popup-low-balance">
+				<p>You do not have enough Eternity Splinters to convert to G.</p>
+				<button onclick="closePanel()">Close</button>
+			</div>
+			<div id="popup-invalid-amount">
+				<p>Please specify a valid amount of Eternity Splinters.</p>
+				<button onclick="closePopup()">Close</button>
+			</div>
+			<div id="popup-confirm">
+				<p id="popup-confirm-text"></p>
+				<div class="button-container">
+					<button onclick="convertConfirm()">Confirm</button>
+					<button onclick="closePopup()">Cancel</button>
+				</div>
+			</div>
+			<div id="popup-pending">
+				<p>Converting...</p>
+			</div>
+			<div id="popup-result">
+				<p id="popup-result-text"></p>
+				<button onclick="closePanel()">Close</button>
+			</div>
+		</div>
 	</div>
 
 	<script>
 		var requestContext = Object.freeze({
-			downloader: "%REQUEST_DOWNLOADER%",
-			token: "%REQUEST_TOKEN%",
-			email: "%REQUEST_EMAIL%",
+			downloader: "%DOWNLOADER%",
+			token: "%TOKEN%",
+			email: "%EMAIL%",
+			currentBalance: Math.max(Number("%CURRENT_BALANCE%"), 0),
+			conversionRatio: Math.max(Number("%CONVERSION_RATIO%"), 0),
+			conversionStep: Math.max(Number("%CONVERSION_STEP%"), 1),
 		});
 
-		var textNode = document.createTextNode(JSON.stringify(requestContext, null, 2));
-		document.getElementById("debug-info").appendChild(textNode);
+		var PopupType = Object.freeze({
+			NONE: "",
+			LOW_BALANCE: "popup-low-balance",
+			INVALID_AMOUNT: "popup-invalid-amount",
+			CONFIRM: "popup-confirm",
+			PENDING: "popup-pending",
+			RESULT: "popup-result",
+		});
+
+		var convertResult = 200;
+
+		function showPopup(type) {
+			var types = Object.keys(PopupType);
+			for (var i = 0; i < types.length; i++) {
+				itType = PopupType[types[i]];
+				if (itType != PopupType.NONE) {
+					document.getElementById(itType).style.display = "none";
+				}
+			}
+
+			var popup = document.getElementById("popup");
+
+			if (type != PopupType.NONE) {
+				popup.style.display = "flex";
+				document.getElementById(type).style.display = "block";
+			} else {
+				popup.style.display = "none";
+			}
+		}
+
+		function closePopup() {
+			showPopup(PopupType.NONE);
+		}
+
+		function getES() {
+			return Number(document.getElementById("es-range-input").value);
+		}
+
+		function setES(esAmount) {
+			var step = requestContext.conversionStep;
+			var max = Math.floor(requestContext.currentBalance / step) * step;
+
+			esAmount = Math.ceil(esAmount / step) * step;
+			esAmount = Math.max(Math.min(esAmount, max), 0);
+
+			if (isNaN(esAmount))
+				esAmount = 0;
+
+			document.getElementById("es-range-input").value = esAmount;
+			document.getElementById("es-text-input").value = esAmount;
+			document.getElementById("g-text-input").value = Math.floor(esAmount * requestContext.conversionRatio);
+		}
+
+		function setESFromG(gAmount) {
+			var esAmount = Math.ceil(gAmount / requestContext.conversionRatio);
+			setES(esAmount);
+		}
+
+		function adjustES(delta) {
+			setES(getES() + delta);
+		}
+
+		function convert() {
+			var esAmount = getES();
+			if (esAmount <= 0) {
+				showPopup(PopupType.INVALID_AMOUNT);
+				return;
+			}
+
+			var confirmText = "Convert " + esAmount + " Eternity Splinters to " + Math.floor(esAmount * requestContext.conversionRatio) +" G?"
+			document.getElementById("popup-confirm-text").innerText = confirmText;
+			showPopup(PopupType.CONFIRM);
+		}
+
+		function convertConfirm() {
+			showPopup(PopupType.PENDING);
+
+			var convertRequest = {
+				Email: requestContext.email,
+				Token: requestContext.token,
+				Amount: getES(),
+			};
+
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", window.location.href + "/Submit", true);
+			xhr.onreadystatechange = function() { handleReadyStateChange(xhr); };
+			xhr.setRequestHeader("Content-Type", "application/json");
+			xhr.send(JSON.stringify(convertRequest));
+		}
+
+		function handleReadyStateChange(xhr) {
+			if (xhr.readyState != 4)
+				return;
+
+			convertResult = xhr.status;
+
+			var confirmText = convertResult == 200 ? "Successfully converted." : "Conversion error (" + convertResult + ").";
+			document.getElementById("popup-result-text").innerText = confirmText;
+			showPopup(PopupType.RESULT);
+		}
+
+		function closePanel() {
+			myApi.CloseAddGPanel(convertResult == 200);
+		}
+
+		function initialize() {
+			var esRange = document.getElementById("es-range-input");
+			var step = requestContext.conversionStep;
+			var max = Math.floor(requestContext.currentBalance / step) * step;
+
+			esRange.step = step;
+			esRange.max = max;
+
+			if (max == 0)
+				showPopup(PopupType.LOW_BALANCE);
+		}
+
+		initialize();
 	</script>
 </body>
 </html>
