@@ -70,11 +70,11 @@
     <None Update="Data\Game\Patches\PatchDataBugFixes.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\LiveTuningData.json">
+    <None Update="Data\Game\LiveTuning\LiveTuningData.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\LiveTuningDataBugFixes.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Update="Data\Game\LiveTuning\LiveTuningDataBugFixes.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\Patches\PatchDataRestoredContent.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

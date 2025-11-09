@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public bool LoadLiveTuningDataFromDisk()
         {
-            string liveTuningDirectory = Path.Combine(FileHelper.DataDirectory, "Game");
+            string liveTuningDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "LiveTuning");
             if (Directory.Exists(liveTuningDirectory) == false)
                 return Logger.WarnReturn(false, "LoadLiveTuningDataFromDisk(): Game data directory not found");
 
