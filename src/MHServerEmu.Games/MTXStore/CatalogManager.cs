@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -20,6 +21,8 @@ namespace MHServerEmu.Games.MTXStore
 
         private readonly Catalog _catalog = new();
 
+        private long _giftingOmegaLevelRequired = 0;
+        private long _giftingInfinityLevelRequired = 0;
         private ulong _currentGiftId = 1;   // used by the client to differentiate notifications
 
         public static CatalogManager Instance { get; } = new();
@@ -33,6 +36,10 @@ namespace MHServerEmu.Games.MTXStore
 
             _catalog.Initialize();
             LoadEntries();
+
+            var config = ConfigManager.Instance.GetConfig<MTXStoreConfig>();
+            _giftingOmegaLevelRequired = config.GiftingOmegaLevelRequired;
+            _giftingInfinityLevelRequired = config.GiftingInfinityLevelRequired;
 
             return true;
         }
@@ -112,11 +119,30 @@ namespace MHServerEmu.Games.MTXStore
 
             Game game = buyer.Game;
 
-            // TODO: Check omega/infinity points
             if (game.GiftingEnabled == false || buyer.IsGiftingAllowed() == false)
             {
                 SendBuyGiftForOtherPlayerResponse(buyer, skuId, BuyItemResultErrorCodes.BUY_RESULT_ERROR_GIFTING_UNAVAILABLE);
                 return false;
+            }
+
+            // CUSTOM: Check Omega/Infinity level requirement
+            if (game.InfinitySystemEnabled)
+            {
+                if (_giftingInfinityLevelRequired > 0 && buyer.GetTotalInfinityPoints() < _giftingInfinityLevelRequired)
+                {
+                    SendBuyGiftForOtherPlayerResponse(buyer, skuId, BuyItemResultErrorCodes.BUY_RESULT_ERROR_GIFTING_UNAVAILABLE);
+                    game.ChatManager.SendChatFromCustomSystem(buyer, $"Infinity level {_giftingInfinityLevelRequired} is required to send gifts.");
+                    return false;
+                }
+            }
+            else 
+            {
+                if (_giftingOmegaLevelRequired > 0 && buyer.GetOmegaPoints() < _giftingOmegaLevelRequired)
+                {
+                    SendBuyGiftForOtherPlayerResponse(buyer, skuId, BuyItemResultErrorCodes.BUY_RESULT_ERROR_GIFTING_UNAVAILABLE);
+                    game.ChatManager.SendChatFromCustomSystem(buyer, $"Omega level {_giftingOmegaLevelRequired} is required to send gifts.");
+                    return false;
+                }
             }
 
             if (giftMessage != null && giftMessage.Length > GiftMessageMaxLength)

@@ -7,6 +7,8 @@ namespace MHServerEmu.Games.MTXStore
         public long GazillioniteBalanceForNewAccounts { get; private set; } = 10000;
         public float ESToGazillioniteConversionRatio { get; private set; } = 2.25f;
         public int ESToGazillioniteConversionStep { get; private set; } = 4;
+        public long GiftingOmegaLevelRequired { get; private set; } = 0;
+        public long GiftingInfinityLevelRequired { get; private set; } = 0;
 
         public string HomePageUrl { get; private set; } = "http://storecdn.marvelheroes.com/cdn/en_us/mhgame_store_home";
         public string HomeBannerPageUrl { get; private set; } = "http://storecdn.marvelheroes.com/cdn/en_us/home_banner";
