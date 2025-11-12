@@ -89,7 +89,13 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
 
                 case ItemActionType.UnlockPermaBuff:
-                    wasUsed |= DoItemActionUnlockPermaBuff();
+                    if (actionProto is not ItemActionUnlockPermaBuffPrototype unlockPermaBuffProto)
+                    {
+                        Logger.Warn("TriggerItemActionOnUse(): actionProto is not ItemActionUnlockPermaBuffPrototype unlockPermaBuffProto");
+                        return;
+                    }
+
+                    wasUsed |= DoItemActionUnlockPermaBuff(unlockPermaBuffProto.PermaBuff, player);
                     break;
 
                 case ItemActionType.UsePower:
@@ -248,10 +254,14 @@ namespace MHServerEmu.Games.Entities.Items
             return false;
         }
 
-        private bool DoItemActionUnlockPermaBuff()
+        private bool DoItemActionUnlockPermaBuff(PrototypeId permaBuffProtoRef, Player player)
         {
-            Logger.Debug($"DoItemActionUnlockPermaBuff(): {this}");
-            return false;
+            if (permaBuffProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "ItemActionUnlockPermaBuffPrototype(): permaBuffProtoRef == PrototypeId.Invalid");
+
+            if (player.Properties[PropertyEnum.PermaBuff, permaBuffProtoRef])
+                return true;
+
+            return player.UnlockPermaBuff(permaBuffProtoRef);
         }
         
         private bool DoItemActionUsePower(PrototypeId powerProtoRef, Avatar avatar)

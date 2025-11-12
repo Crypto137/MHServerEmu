@@ -95,6 +95,8 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<TeleportToPartyMemberEvent> _teleportToPartyMemberEvent = new();
         private readonly EventGroup _pendingEvents = new();
 
+        private readonly PropertyCollection _permaBuffProperties = new();
+
         private ReplicatedPropertyCollection _avatarProperties = new();
         private ulong _shardId;     // This was probably used for database sharding, we don't need this
         private RepVar_string _playerName = new();
@@ -205,6 +207,9 @@ namespace MHServerEmu.Games.Entities
 
             Game.EntityManager.AddPlayer(this);
             MatchQueueStatus.SetOwner(this);
+
+            // Perma buff properties are attached as child to avatar properties because avatar properties are persistent, while perma buffs are not.
+            _avatarProperties.AddChildCollection(_permaBuffProperties);
 
             _community = new(this);
             _community.Initialize();
@@ -503,6 +508,8 @@ namespace MHServerEmu.Games.Entities
 
             // Enter game to become added to the AOI
             base.EnterGame(settings);
+
+            InitPermaBuffs();
 
             OnEnterGameInitStashTabOptions();
 
@@ -4129,6 +4136,86 @@ namespace MHServerEmu.Games.Entities
             // We are taking advantage of the fact that our database guids include account creation timestamp.
             // Review this code if this ever changes.
             _accountCreationTimestamp = TimeSpan.FromSeconds(DatabaseUniqueId >> 16 & 0xFFFFFFFF);
+        }
+
+        #endregion
+
+        #region Perma Buffs
+
+        public bool UnlockPermaBuff(PrototypeId permaBuffProtoRef)
+        {
+            if (Properties[PropertyEnum.PermaBuff, permaBuffProtoRef])
+                return Logger.WarnReturn(false, $"UnlockPermaBuff(): PermaBuff {permaBuffProtoRef.GetName()} is already unlocked for player [{this}]");
+
+            Properties[PropertyEnum.PermaBuff, permaBuffProtoRef] = true;
+
+            if (ApplyPermaBuff(permaBuffProtoRef) == false)
+                return Logger.WarnReturn(false, $"UnlockPermaBuff(): Failed to apply PermaBuff {permaBuffProtoRef.GetName()} to player [{this}]");
+
+            SendMessage(NetMessagePermaBuffUnlock.CreateBuilder()
+                .SetPermaBuffProtoId((ulong)permaBuffProtoRef)
+                .Build());
+
+            return true;
+        }
+
+        private void InitPermaBuffs()
+        {
+            _permaBuffProperties.Clear();
+
+            using PropertyCollection unlockedPermaBuffs = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            unlockedPermaBuffs.CopyPropertyRange(Properties, PropertyEnum.PermaBuff);
+
+            foreach (var kvp in unlockedPermaBuffs.IteratePropertyRange(PropertyEnum.PermaBuff))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId permaBuffProtoRef);
+                if (permaBuffProtoRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn("InitPermaBuffs(): permaBuffProtoRef == PrototypeId.Invalid");
+                    continue;
+                }
+
+                if (ApplyPermaBuff(permaBuffProtoRef) == false)
+                    Logger.Warn($"InitPermaBuffs(): Failed to apply PermaBuff {permaBuffProtoRef.GetName()} to player [{this}]");
+            }
+        }
+
+        private bool ApplyPermaBuff(PrototypeId permaBuffProtoRef)
+        {
+            PermaBuffPrototype permaBuffProto = permaBuffProtoRef.As<PermaBuffPrototype>();
+            if (permaBuffProto == null) return Logger.WarnReturn(false, "ApplyPermaBuff(): permaBuffProto == null");
+
+            if (permaBuffProto.EvalAvatarProperties == null)
+                return true;
+
+            using PropertyCollection tempProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, tempProps);
+            Eval.RunBool(permaBuffProto.EvalAvatarProperties, evalContext);
+
+            PropertyInfoTable propInfoTable = GameDatabase.PropertyInfoTable;
+            foreach (var kvp in tempProps)
+            {
+                PropertyInfo propInfo = propInfoTable.LookupPropertyInfo(kvp.Key.Enum);
+
+                switch (propInfo.DataType)
+                {
+                    case PropertyDataType.Real:
+                        _permaBuffProperties.AdjustProperty((float)kvp.Value, kvp.Key);
+                        break;
+
+                    case PropertyDataType.Integer:
+                        _permaBuffProperties.AdjustProperty((int)kvp.Value, kvp.Key);
+                        break;
+
+                    default:
+                        Logger.Warn($"ApplyPermaBuff(): The following PermaBuff contains non-numeric property(ies), which is not currently supported!\nPermaBuff: [{permaBuffProtoRef.GetName()}]");
+                        break;
+                }
+            }
+
+            return true;
         }
 
         #endregion
