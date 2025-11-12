@@ -133,6 +133,7 @@ namespace MHServerEmu.Games.Entities
         public ArchiveVersion LastSerializedArchiveVersion { get; private set; } = ArchiveVersion.Current;    // Updated on serialization
 
         public MissionManager MissionManager { get; private set; }
+        public PropertyCollection AvatarProperties { get => _avatarProperties; }
         public MatchQueueStatus MatchQueueStatus { get; private set; } = new();
         public Community Community { get => _community; }
         public GameplayOptions GameplayOptions { get; private set; } = new();
@@ -173,7 +174,6 @@ namespace MHServerEmu.Games.Entities
         public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
         public int PowerSpecIndexUnlocked { get => Properties[PropertyEnum.PowerSpecIndexUnlocked]; }
         public ulong TeamUpSynergyConditionId { get; set; }
-        public PropertyCollection AvatarProperties { get => _avatarProperties; }
 
         public override ulong PartyId { get => _partyId.Get(); }
         public bool IsInParty { get => PartyId != 0; }
@@ -2086,7 +2086,19 @@ namespace MHServerEmu.Games.Entities
 
         public void OnChangeActiveAvatar(int avatarIndex, ulong lastCurrentAvatarId)
         {
-            // TODO: Apply and remove avatar properties stored in the player
+            if (lastCurrentAvatarId != InvalidId)
+            {
+                Avatar lastCurrentAvatar = Game.EntityManager.GetEntity<Avatar>(lastCurrentAvatarId);
+                if (lastCurrentAvatar != null)
+                {
+                    PropertyCollection lastAvatarProperties = lastCurrentAvatar.Properties;
+                    if (_avatarProperties.IsChildOf(lastAvatarProperties))
+                        _avatarProperties.RemoveFromParent(lastAvatarProperties);
+                }
+            }
+
+            Avatar avatar = GetActiveAvatarByIndex(avatarIndex);
+            avatar?.Properties.AddChildCollection(_avatarProperties);
 
             SendMessage(NetMessageCurrentAvatarChanged.CreateBuilder()
                 .SetAvatarIndex(avatarIndex)
