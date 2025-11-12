@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2025.08.16 18:28:24 UTC` using server version `0.7.0`.
+This list was automatically generated on `2025.11.12 14:50:01 UTC` using server version `0.8.0`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -12,7 +12,7 @@ Account management commands.
 | !account ban [email]                            | Bans the specified account.                       | Moderator  | Any           |
 | !account create [email] [playerName] [password] | Creates a new account.                            | Any        | Any           |
 | !account download                               | Downloads a JSON copy of the current account.     | Any        | Client        |
-| !account info                                   | Shows information for the logged in account.      | Any        | Client        |
+| !account info                                   | Shows information for the logged in account.      | Moderator  | Client        |
 | !account password [email] [password]            | Changes password for the specified account.       | Any        | Any           |
 | !account playername [email] [playername]        | Changes player name for the specified account.    | Any        | Any           |
 | !account unban [email]                          | Unbans the specified account.                     | Moderator  | Any           |
@@ -44,6 +44,8 @@ Commands for boosting the stats of the invoker player's current avatar.
 | Command                 | Description                                         | User Level | Invoker Type  |
 | ----------------------- | --------------------------------------------------- | ---------- | ------------  |
 | !boost damage [1-10000] | Sets DamagePctBonus for the current avatar.         | Admin      | Client        |
+| !boost invulnerable     | Switches Invulnerable for the current avatar.       | Admin      | Client        |
+| !boost mana             | Switches NoEnduranceCosts for the current avatar.   | Admin      | Client        |
 | !boost vsboss [1-10000] | Sets DamagePctBonusVsBosses for the current avatar. | Admin      | Client        |
 
 ## Client
@@ -211,6 +213,9 @@ Server management commands.
 | Command                  | Description                               | User Level | Invoker Type   |
 | ------------------------ | ----------------------------------------- | ---------- | -------------  |
 | !server broadcast        | Broadcasts a notification to all players. | Admin      | Any            |
+| !server reloadaddg       | Reloads the Add G page.                   | Admin      | ServerConsole  |
+| !server reloadcatalog    | Reloads MTX store catalog.                | Admin      | ServerConsole  |
+| !server reloaddashboard  | Reloads the web dashboard.                | Admin      | ServerConsole  |
 | !server reloadlivetuning | Reloads live tuning settings.             | Admin      | ServerConsole  |
 | !server shutdown         | Shuts the server down.                    | Admin      | Any            |
 | !server status           | Prints server status.                     | Any        | Any            |
@@ -218,10 +223,10 @@ Server management commands.
 ## Store
 Commands for interacting with the in-game store.
 
-| Command              | Description                                                     | User Level | Invoker Type  |
-| -------------------- | --------------------------------------------------------------- | ---------- | ------------  |
-| !store addg [amount] | Adds the specified number of Gs to this account.                | Admin      | Client        |
-| !store convertes     | Converts 100 Eternity Splinters to the equivalent amount of Gs. | Any        | Client        |
+| Command                   | Description                                                                                                              | User Level | Invoker Type  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------- | ------------  |
+| !store addg [amount]      | Adds the specified number of Gs to this account.                                                                         | Admin      | Client        |
+| !store convertes [amount] | Converts Eternity Splinters to the equivalent amount of Gs. Defaults to 100 Eternity Splinters if no value is specified. | Any        | Client        |
 
 ## Unlock
 Commands for unlocking various things.
@@ -241,6 +246,7 @@ Commands for unlocking various things.
 | !help                | Help needs no help.                                                                                          | Any        | Any            |
 | !jail                | Teleports to East Side: Detention Facility (old).                                                            | Admin      | Client         |
 | !position            | Shows current position.                                                                                      | Any        | Client         |
+| !syncmana            | Syncs the current mana value with the server.                                                                | Any        | Client         |
 | !tower               | Teleports to Avengers Tower (original).                                                                      | Any        | Client         |
 | !tp                  | Teleports to position. Usage: tp x:+1000 (relative to current position) tp x100 y500 z10 (absolute position) | Admin      | Client         |
 

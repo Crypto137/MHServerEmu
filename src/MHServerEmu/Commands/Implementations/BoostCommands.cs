@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 
@@ -45,6 +46,36 @@ namespace MHServerEmu.Commands.Implementations
             avatarProps[PropertyEnum.DamagePctBonusVsBosses] = (float)vsboss;
 
             return $"Damage vs Bosses x{vsboss}";
-        }        
+        }
+
+        [Command("invulnerable")]
+        [CommandDescription("Switches Invulnerable for the current avatar.")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string Invulnerable(string[] @params, NetClient client)
+        {
+            PlayerConnection playerConnection = (PlayerConnection)client;
+            PropertyCollection avatarProps = playerConnection.Player.AvatarProperties;
+
+            bool newValue = avatarProps[PropertyEnum.Invulnerable] == false;
+            avatarProps[PropertyEnum.Invulnerable] = newValue;
+
+            return $"Invulnerability {(newValue ? "enabled" : "disabled")}.";
+        }
+
+        [Command("mana")]
+        [CommandDescription("Switches NoEnduranceCosts for the current avatar.")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string Mana(string[] @params, NetClient client)
+        {
+            PlayerConnection playerConnection = (PlayerConnection)client;
+            PropertyCollection avatarProps = playerConnection.Player.AvatarProperties;
+
+            bool newValue = avatarProps[PropertyEnum.NoEnduranceCosts] == false;
+            avatarProps[PropertyEnum.NoEnduranceCosts, (int)ManaType.Type1] = newValue;
+            avatarProps[PropertyEnum.NoEnduranceCosts, (int)ManaType.Type2] = newValue;
+            avatarProps[PropertyEnum.NoEnduranceCosts, (int)ManaType.TypeAll] = newValue;
+
+            return $"Endurance costs {(newValue ? "disabled" : "enabled")}.";
+        }
     }
 }
