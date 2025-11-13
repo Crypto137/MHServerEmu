@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -305,6 +306,8 @@ namespace MHServerEmu.Games.Behavior
 
         public void SetTargetEntity(WorldEntity target)
         {
+            if (Owner == null) return;
+
             var collection = Blackboard.PropertyCollection;
             ulong oldTarget = collection[PropertyEnum.AIRawTargetEntityID];
             bool hasTarget = oldTarget != Entity.InvalidId;
@@ -312,6 +315,16 @@ namespace MHServerEmu.Games.Behavior
 
             if (oldTarget != newTarget)
             {
+                if (collection[PropertyEnum.AISendsTargetInfoToClients])
+                {
+                    var message = NetMessageAITargetChangeNotification.CreateBuilder()
+                        .SetOldTargetid(oldTarget)
+                        .SetNewTargetid(newTarget)
+                        .SetAiId(Owner.Id).Build();
+
+                    Game.NetworkManager.SendMessageToInterested(message, Owner.Region);
+                }
+
                 Brain?.OnOwnerTargetSwitch(oldTarget, newTarget);
                 collection[PropertyEnum.AIRawTargetEntityID] = newTarget;
             }
