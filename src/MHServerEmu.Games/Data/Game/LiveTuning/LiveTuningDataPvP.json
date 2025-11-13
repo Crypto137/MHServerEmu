@@ -1,0 +1,42 @@
+[
+  {
+    "Prototype": "Entity/Characters/Mobs/PvP/Defenders/PvPGuardianBlue.prototype",
+    "Setting": "eWETV_MobHealth",
+    "Value": 15.0
+  },
+  {
+    "Prototype": "Entity/Characters/Mobs/PvP/Defenders/PvPGuardianRed.prototype",
+    "Setting": "eWETV_MobHealth",
+    "Value": 15.0
+  },
+  {
+    "Prototype": "Entity/Characters/Mobs/PvP/Turrets/DefenderPvPArcherBlueInner.prototype",
+    "Setting": "eWETV_MobHealth",
+    "Value": 15.0
+  },
+  {
+    "Prototype": "Entity/Characters/Mobs/PvP/Turrets/DefenderPvPArcherRedInner.prototype",
+    "Setting": "eWETV_MobHealth",
+    "Value": 15.0
+  },
+  {
+    "Prototype": "Entity/Characters/Mobs/PvP/Turrets/DefenderPvPArcherBlueMiddle.prototype",
+    "Setting": "eWETV_MobHealth",
+    "Value": 15.0
+  },
+  {
+    "Prototype": "Entity/Characters/Mobs/PvP/Turrets/DefenderPvPArcherRedMiddle.prototype",
+    "Setting": "eWETV_MobHealth",
+    "Value": 15.0
+  },
+  {
+    "Prototype": "Entity/Characters/Mobs/PvP/Turrets/DefenderPvPArcherBlueOuter.prototype",
+    "Setting": "eWETV_MobHealth",
+    "Value": 15.0
+  },
+  {
+    "Prototype": "Entity/Characters/Mobs/PvP/Turrets/DefenderPvPArcherRedOuter.prototype",
+    "Setting": "eWETV_MobHealth",
+    "Value": 15.0
+  }
+]
