@@ -728,6 +728,10 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld == false)
                 return SetSimulated(false);
 
+            // PvP regions force simulation of everything
+            if (Region.Prototype.ForceSimulation)
+                return SetSimulated(true);
+
             // Simulate if the prototype is flagged as always simulated
             if (WorldEntityPrototype?.AlwaysSimulated == true)
                 return SetSimulated(true);
