@@ -517,12 +517,6 @@ namespace MHServerEmu.Games.Behavior
                 ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50), true);
         }
 
-        public void OnAIAllyGotHit(WorldEntity ally, WorldEntity attacker)
-        {
-            // TODO
-            Logger.Debug("OnAIAllyGotHit");
-        }
-
         public void OnAIGotDamaged(WorldEntity attacker, long damage)
         {
             if (attacker != null)

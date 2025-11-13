@@ -2314,11 +2314,8 @@ namespace MHServerEmu.Games.Entities
 
         public override void OnGotHit(WorldEntity attacker)
         {
-            base.OnGotHit(attacker);
             AIController?.OnAIOnGotHit(attacker);
-
-            Agent allyToInform = Game.EntityManager.GetEntity<Agent>(Properties[PropertyEnum.InformsHitInfoToAllyId]);
-            allyToInform?.AIController?.OnAIAllyGotHit(this, attacker);
+            base.OnGotHit(attacker);
         }
 
         public override void OnDramaticEntranceEnd()

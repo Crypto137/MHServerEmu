@@ -2367,7 +2367,11 @@ namespace MHServerEmu.Games.Powers
 
             // InformsHitInfoToAlly
             if (conditionProps[PropertyEnum.InformsHitInfoToAlly])
+            {
+                // This appears to be unused, log this in case it somehow pops up somewhere.
+                Logger.Debug($"CalculateResultConditionExtraProperties(): InformsHitInfoToAlly on target [{target}]");
                 conditionProps[PropertyEnum.InformsHitInfoToAllyId] = UltimateOwnerId;
+            }
 
             // TargetedCritBonus
             if (conditionProps[PropertyEnum.TargetedCritBonus] > 0f)
