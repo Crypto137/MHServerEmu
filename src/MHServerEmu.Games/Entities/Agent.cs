@@ -2316,6 +2316,9 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnGotHit(attacker);
             AIController?.OnAIOnGotHit(attacker);
+
+            Agent allyToInform = Game.EntityManager.GetEntity<Agent>(Properties[PropertyEnum.InformsHitInfoToAllyId]);
+            allyToInform?.AIController?.OnAIAllyGotHit(this, attacker);
         }
 
         public override void OnDramaticEntranceEnd()

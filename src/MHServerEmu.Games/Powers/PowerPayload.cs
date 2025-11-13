@@ -2344,7 +2344,6 @@ namespace MHServerEmu.Games.Powers
             PowerPrototype powerProto = PowerPrototype;
             if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultConditionExtraProperties(): powerProto == null");
 
-            // TODO: Add more properties to set
             PropertyCollection conditionProps = condition.Properties;
 
             // NoEntityCollideException
@@ -2365,6 +2364,18 @@ namespace MHServerEmu.Games.Powers
             // Damage Transfer
             if (conditionProps[PropertyEnum.DamageTransferChance] > 0f)
                 conditionProps[PropertyEnum.DamageTransferID] = PowerOwnerId;
+
+            // InformsHitInfoToAlly
+            if (conditionProps[PropertyEnum.InformsHitInfoToAlly])
+                conditionProps[PropertyEnum.InformsHitInfoToAllyId] = UltimateOwnerId;
+
+            // TargetedCritBonus
+            if (conditionProps[PropertyEnum.TargetedCritBonus] > 0f)
+                conditionProps[PropertyEnum.TargetedCritBonusId] = UltimateOwnerId;
+
+            // XPTransfer
+            if (conditionProps[PropertyEnum.XPTransfer])
+                conditionProps[PropertyEnum.XPTransferToID] = UltimateOwnerId;
 
             // Procs
             CalculateResultConditionProcProperties(results, target, condition.Properties);
