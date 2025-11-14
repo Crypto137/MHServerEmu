@@ -239,8 +239,8 @@ namespace MHServerEmu.Games.MetaGames
         private ScoreTable _table;
         private ScoreTable.DataType _type;
         private int _index;
-        private Event<AdjustHealthGameEvent>.Action _adjustHealthAction;
-        private Event<EntityDeadGameEvent>.Action _entityDeadAction;
+        //private Event<AdjustHealthGameEvent>.Action _adjustHealthAction;
+        //private Event<EntityDeadGameEvent>.Action _entityDeadAction;
 
         public ScoreTableType(ScoreTable table, ScoreTable.DataType type, int index)
         {
