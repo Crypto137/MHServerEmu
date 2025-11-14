@@ -413,10 +413,9 @@ namespace MHServerEmu.Games.Network
                 return;
             }
 
+            // REMOVEME: Temp team selection logic until we have proper matchmaking.
             if (region.ContainsPvPMatch())
-            {
-                // TODO TransferParams.DestTeamIndex
-            }
+                TransferParams.DestTeamIndex = region.GetTeamIndex();
 
             if (TransferParams.FindStartLocation(out Vector3 startPosition, out Orientation startOrientation) == false)
             {

@@ -79,6 +79,9 @@ namespace MHServerEmu.Games.Regions
         private int _playerDeaths;
         private PrototypeId _avatarOnKilledInfo = PrototypeId.Invalid;
 
+        // REMOVEME
+        private int _currentTeamIndex = 0;
+
         public Game Game { get; private set; }
         public ulong Id { get; private set; } // InstanceAddress
         public RegionSettings Settings { get; private set; }
@@ -1675,6 +1678,14 @@ namespace MHServerEmu.Games.Regions
             bool boostTimersRunning = LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_BoostTimersRunning) != 0f;
 
             return regionProto.PausesBoostConditions || boostTimersRunning == false;
+        }
+
+        public int GetTeamIndex()
+        {
+            // REMOVEME
+            int index = _currentTeamIndex;
+            _currentTeamIndex = ++_currentTeamIndex % 2;
+            return index;
         }
 
         private bool InitDividedStartLocations(DividedStartLocationPrototype[] dividedStartLocations)
