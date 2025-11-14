@@ -3074,15 +3074,14 @@ namespace MHServerEmu.Games.Entities
                 List<Player> playerList = ListPool<Player>.Instance.Get();
                 Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, false, playerList);
 
-                Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[action.Rewards.Length];
-
-                int numTables = 0;
+                List<(PrototypeId, LootActionType)> tables = ListPool<(PrototypeId, LootActionType)>.Instance.Get();
                 foreach (var lootTableProtoRef in action.Rewards)
                 {
-                    if (lootTableProtoRef == PrototypeId.Invalid) continue;
-                    tables[numTables++] = (lootTableProtoRef, LootActionType.Spawn);
+                    if (lootTableProtoRef == PrototypeId.Invalid)
+                        continue;
+
+                    tables.Add((lootTableProtoRef, LootActionType.Spawn));
                 }
-                tables = tables[..numTables];
 
                 int recipientId = 1;
                 foreach (Player player in playerList)
@@ -3093,6 +3092,7 @@ namespace MHServerEmu.Games.Entities
                 }
 
                 ListPool<Player>.Instance.Return(playerList);
+                ListPool<(PrototypeId, LootActionType)>.Instance.Return(tables);
             }
 
             if (action.BroadcastEvent != PrototypeId.Invalid)

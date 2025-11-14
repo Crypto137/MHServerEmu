@@ -990,48 +990,53 @@ namespace MHServerEmu.Games.Powers
             Avatar avatar = Owner as Avatar;
 
             HashSet<Player> recipientPlayers = HashSetPool<Player>.Instance.Get();
+            List<(PrototypeId, LootActionType)> tables = ListPool<(PrototypeId, LootActionType)>.Instance.Get();
 
-            if (lootTableContext.IncludeNearbyAvatars)
+            try
             {
-                List<Player> nearbyPlayerList = ListPool<Player>.Instance.Get();
+                if (lootTableContext.IncludeNearbyAvatars)
+                {
+                    List<Player> nearbyPlayerList = ListPool<Player>.Instance.Get();
 
-                bool requireCombatActive = Owner.WorldEntityPrototype.RequireCombatActiveForKillCredit;
-                ComputeNearbyPlayers(Owner.Region, Owner.RegionLocation.Position, 0, requireCombatActive, nearbyPlayerList);
+                    bool requireCombatActive = Owner.WorldEntityPrototype.RequireCombatActiveForKillCredit;
+                    ComputeNearbyPlayers(Owner.Region, Owner.RegionLocation.Position, 0, requireCombatActive, nearbyPlayerList);
 
-                foreach (Player player in nearbyPlayerList)
+                    foreach (Player player in nearbyPlayerList)
+                        recipientPlayers.Add(player);
+
+                    ListPool<Player>.Instance.Return(nearbyPlayerList);
+                }
+                else if (avatar == null)
+                {
+                    return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): avatar == null");
+                }
+
+                if (avatar != null)
+                {
+                    Player player = avatar.GetOwnerOfType<Player>();
+                    if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): player == null");
+
                     recipientPlayers.Add(player);
+                }
 
-                ListPool<Player>.Instance.Return(nearbyPlayerList);
+                int level = lootTableContext.UseItemLevelForLootRoll ? Properties[PropertyEnum.ItemLevel] : Owner.CharacterLevel;
+
+                tables.Add((lootTableContext.LootTable, lootTableContext.PlaceLootInGeneralInventory ? LootActionType.Give : LootActionType.Spawn));
+
+                int recipientId = 1;
+                foreach (Player recipient in recipientPlayers)
+                {
+                    using LootInputSettings lootSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    lootSettings.Initialize(LootContext.Drop, recipient, Owner, level);
+                    Game.LootManager.AwardLootFromTables(tables, lootSettings, recipientId++);
+                }
             }
-            else if (avatar == null)
+            finally
             {
-                return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): avatar == null");
-            }
-            
-            if (avatar != null)
-            {
-                Player player = avatar.GetOwnerOfType<Player>();
-                if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): player == null");
-
-                recipientPlayers.Add(player);
-            }
-
-            int level = lootTableContext.UseItemLevelForLootRoll ? Properties[PropertyEnum.ItemLevel] : Owner.CharacterLevel;
-
-            Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
-            {
-                (lootTableContext.LootTable, lootTableContext.PlaceLootInGeneralInventory ? LootActionType.Give : LootActionType.Spawn)
-            };
-
-            int recipientId = 1;
-            foreach (Player recipient in recipientPlayers)
-            {
-                using LootInputSettings lootSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                lootSettings.Initialize(LootContext.Drop, recipient, Owner, level);
-                Game.LootManager.AwardLootFromTables(tables, lootSettings, recipientId++);
+                HashSetPool<Player>.Instance.Return(recipientPlayers);
+                ListPool<(PrototypeId, LootActionType)>.Instance.Return(tables);
             }
 
-            HashSetPool<Player>.Instance.Return(recipientPlayers);
             return true;
         }
 

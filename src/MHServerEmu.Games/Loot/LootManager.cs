@@ -67,7 +67,7 @@ namespace MHServerEmu.Games.Loot
             GiveLootFromSummary(lootResultSummary, inputSettings.Player);
         }
 
-        public void AwardLootFromTables(Span<(PrototypeId, LootActionType)> tables, LootInputSettings inputSettings, int recipientId)
+        public void AwardLootFromTables(List<(PrototypeId, LootActionType)> tables, LootInputSettings inputSettings, int recipientId)
         {
             // TODO: Combine loot summaries from multiple spawn / drop events
 

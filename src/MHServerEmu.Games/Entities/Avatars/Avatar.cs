@@ -5917,12 +5917,12 @@ namespace MHServerEmu.Games.Entities.Avatars
                     using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
                     settings.Initialize(LootContext.Initialization, player, null, 1);
 
-                    Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
-                    {
-                        (prestigeLootTableProtoRef, LootActionType.Give)
-                    };
+                    List<(PrototypeId, LootActionType)> tables = ListPool<(PrototypeId, LootActionType)>.Instance.Get();
+                    tables.Add((prestigeLootTableProtoRef, LootActionType.Give));
 
                     Game.LootManager.AwardLootFromTables(tables, settings, 1);
+
+                    ListPool<(PrototypeId, LootActionType)>.Instance.Return(tables);
                 }
             }
             else
