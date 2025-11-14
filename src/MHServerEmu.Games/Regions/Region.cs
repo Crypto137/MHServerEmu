@@ -874,8 +874,8 @@ namespace MHServerEmu.Games.Regions
                 }
             }
         }
-        
-        public bool ContainsPvPMatch()
+
+        public PvP GetPvPMatch()
         {
             EntityManager entityManager = Game.EntityManager;
 
@@ -889,10 +889,15 @@ namespace MHServerEmu.Games.Regions
                     continue;
 
                 if (pvpProto.IsPvP)
-                    return true;
+                    return pvp;
             }
 
-            return false;
+            return null;
+        }
+
+        public bool ContainsPvPMatch()
+        {
+            return GetPvPMatch() != null;
         }
 
         private void SetRegionLevel()

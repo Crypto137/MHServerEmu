@@ -1,5 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.MetaGames;
@@ -245,6 +247,69 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId DamageBoostForOmegaPct { get; protected set; }
         public CurveId DamageReductionForOmegaPct { get; protected set; }
         public bool ScreenArrowsForNonPartyAvatars { get; protected set; }
+
+        //---
+
+        // NOTE: Boosts are additive, reductions are multiplicative.
+        // For this reason, boost curves contain percentages to be added together, while reduction curves contain ready to apply multipliers.
+
+        public float GetDamageBoostForKDPct(float kdPct)
+        {
+            int index = MathHelper.RoundToInt(kdPct * 100f);
+            return GetDamageModifier(DamageBoostForKDPct, index, 0f);
+        }
+
+        public float GetDamageReductionForKDPct(float kdPct)
+        {
+            int index = MathHelper.RoundToInt(kdPct * 100f);
+            return GetDamageModifier(DamageReductionForKDPct, index, 1f);
+        }
+
+        public float GetDamageBoostForNoobs(int pvpMatchCount)
+        {
+            return GetDamageModifier(DamageBoostForNoobs, pvpMatchCount, 0f);
+        }
+
+        public float GetDamageReductionForNoobs(int pvpMatchCount)
+        {
+            return GetDamageModifier(DamageReductionForNoobs, pvpMatchCount, 1f);
+        }
+
+        public float GetDamageBoostForWinPct(float winPct)
+        {
+            int index = MathHelper.RoundToInt(winPct * 100f);
+            return GetDamageModifier(DamageBoostForWinPct, index, 0f);
+        }
+
+        public float GetDamageReductionForWinPct(float winPct)
+        {
+            int index = MathHelper.RoundToInt(winPct * 100f);
+            return GetDamageModifier(DamageReductionForWinPct, index, 1f);
+        }
+
+        public float GetDamageBoostForOmegaPct(float omegaPct)
+        {
+            int index = MathHelper.RoundToInt(omegaPct * 100f);
+            return GetDamageModifier(DamageBoostForOmegaPct, index, 0f);
+        }
+
+        public float GetDamageReductionForOmegaPct(float omegaPct)
+        {
+            int index = MathHelper.RoundToInt(omegaPct * 100f);
+            return GetDamageModifier(DamageReductionForOmegaPct, index, 1f);
+        }
+
+        private static float GetDamageModifier(CurveId curveRef, int index, float defaultValue)
+        {
+            if (curveRef != CurveId.Invalid)
+            {
+                Curve curve = curveRef.AsCurve();
+                if (curve != null && curve.IndexInRange(index))
+                    return curve.GetAt(index);
+            }
+
+            return defaultValue;
+        }
     }
 
     public class GameModePrototype : Prototype

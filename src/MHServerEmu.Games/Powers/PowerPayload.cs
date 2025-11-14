@@ -16,6 +16,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -1043,6 +1044,8 @@ namespace MHServerEmu.Games.Powers
             target.TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedPriorResist, results, healthDelta);
 
             // Apply other modifiers
+            CalculateResultDamagePvPBoost(results, target);
+
             CalculateResultDamageSplitBetweenTargets(results);
 
             CalculateResultDamagePvPScaling(results, target);
@@ -1068,6 +1071,8 @@ namespace MHServerEmu.Games.Powers
             CalculateResultDamageConversion(results, target, difficultyMult);
 
             CalculateResultDamageMetaGameModifier(results, target);
+
+            CalculateResultDamagePvPReduction(results, target);
 
             CalculateResultDamageLevelScaling(results, target, difficultyMult);
 
@@ -1373,6 +1378,47 @@ namespace MHServerEmu.Games.Powers
                 distanceBonusMult = 1f - distanceBonusMult;
 
             value += maxDistanceBonus * distanceBonusMult;
+        }
+
+        private bool CalculateResultDamagePvPBoost(PowerResults results, WorldEntity target)
+        {
+            Region region = target.Region;
+            if (region == null) return Logger.WarnReturn(false, "CalculateResultDamagePvPBoost(): region == null");
+
+            PvP pvp = region.GetPvPMatch();
+            if (pvp == null)
+                return true;
+
+            // This is dumb and should probably never be enabled.
+            if (Game.CustomGameOptions.ApplyHiddenPvPDamageModifiers == false)
+                return true;
+
+            // Only avatar-originating damage gets boosted in PvP.
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(UltimateOwnerId);
+            if (avatar == null)
+                return true;
+
+            PvPPrototype pvpProto = pvp.PvPPrototype;
+            PropertyCollection avatarProps = avatar.Properties;
+
+            float boostPct = 1f;
+
+            boostPct += pvpProto.GetDamageBoostForKDPct(avatarProps[PropertyEnum.PvPRecentKDRatio]);
+            boostPct += pvpProto.GetDamageBoostForNoobs(avatarProps[PropertyEnum.PvPMatchCount]);
+            boostPct += pvpProto.GetDamageBoostForWinPct(avatarProps[PropertyEnum.PvPRecentWinLossRatio]);
+
+            if (Game.InfinitySystemEnabled == false)
+            {
+                Player player = avatar.GetOwnerOfType<Player>();
+                if (player != null)
+                {
+                    float omegaPct = (float)player.GetOmegaPoints() / GameDatabase.AdvancementGlobalsPrototype.OmegaPointsCap;
+                    boostPct += pvpProto.GetDamageBoostForOmegaPct(omegaPct);
+                }
+            }
+
+            ApplyDamageMultiplier(results.Properties, boostPct);
+            return true;
         }
 
         private bool CalculateResultDamageSplitBetweenTargets(PowerResults results)
@@ -1843,6 +1889,46 @@ namespace MHServerEmu.Games.Powers
             }
 
             ApplyDamageMultiplier(results.Properties, metaGameMult);
+            return true;
+        }
+
+        private bool CalculateResultDamagePvPReduction(PowerResults results, WorldEntity target)
+        {
+            Region region = target.Region;
+            if (region == null) return Logger.WarnReturn(false, "CalculateResultDamagePvPBoost(): region == null");
+
+            PvP pvp = region.GetPvPMatch();
+            if (pvp == null)
+                return true;
+
+            // This is dumb and should probably never be enabled.
+            if (Game.CustomGameOptions.ApplyHiddenPvPDamageModifiers == false)
+                return true;
+
+            Avatar avatar = target.GetSelfOrOwnerOfType<Avatar>();
+            if (avatar == null)
+                return true;
+
+            PvPPrototype pvpProto = pvp.PvPPrototype;
+            PropertyCollection avatarProps = avatar.Properties;
+
+            float damageReduction = 1f;
+
+            damageReduction *= pvpProto.GetDamageReductionForKDPct(avatarProps[PropertyEnum.PvPRecentKDRatio]);
+            damageReduction *= pvpProto.GetDamageReductionForNoobs(avatarProps[PropertyEnum.PvPMatchCount]);
+            damageReduction *= pvpProto.GetDamageReductionForWinPct(avatarProps[PropertyEnum.PvPRecentWinLossRatio]);
+
+            if (Game.InfinitySystemEnabled == false)
+            {
+                Player player = avatar.GetOwnerOfType<Player>();
+                if (player != null)
+                {
+                    float omegaPct = (float)player.GetOmegaPoints() / GameDatabase.AdvancementGlobalsPrototype.OmegaPointsCap;
+                    damageReduction *= pvpProto.GetDamageReductionForOmegaPct(omegaPct);
+                }
+            }
+
+            ApplyDamageMultiplier(results.Properties, damageReduction);
             return true;
         }
 
