@@ -8,18 +8,24 @@ namespace MHServerEmu.Games.MetaGames
     public class MetaGameTeam
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected readonly List<Player> _players = new();
+
         public MetaGame MetaGame { get; }
         public PrototypeId ProtoRef { get; }
         public int MaxPlayers { get; }
         public int TeamSize { get => _players.Count; }
-        protected List<Player> _players {  get; }
 
         public MetaGameTeam(MetaGame metaGame, PrototypeId protoRef, int maxPlayers)
         {
             MetaGame = metaGame;
             ProtoRef = protoRef;
-            _players = new();
             MaxPlayers = maxPlayers;
+        }
+
+        public List<Player>.Enumerator GetEnumerator()
+        {
+            return _players.GetEnumerator();
         }
 
         public virtual bool AddPlayer(Player player)

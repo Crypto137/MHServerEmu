@@ -5,6 +5,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Communities;
@@ -77,8 +78,11 @@ namespace MHServerEmu.Games.Social
                     SendChatToParty(player, chat);
                     break;
 
-                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_FACTION:
+                    SendChatToPvPTeam(player, chat);
+                    break;
+
+                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER:
                     // TODO, send a Service Unavailable message for now
                     SendServiceUnavailableMessage(player);
@@ -271,6 +275,20 @@ namespace MHServerEmu.Games.Social
             List<ulong> playerFilter = new();
             foreach (var kvp in party)
                 playerFilter.Add(kvp.Value.PlayerDbId);
+
+            SendChat(player, chat, playerFilter);
+            return true;
+        }
+
+        private bool SendChatToPvPTeam(Player player, NetMessageChat chat)
+        {
+            MetaGameTeam team = player.GetPvPTeam();
+            if (team == null)
+                return false;
+
+            List<ulong> playerFilter = new();
+            foreach (Player teamPlayer in team)
+                playerFilter.Add(teamPlayer.DatabaseUniqueId);
 
             SendChat(player, chat, playerFilter);
             return true;
