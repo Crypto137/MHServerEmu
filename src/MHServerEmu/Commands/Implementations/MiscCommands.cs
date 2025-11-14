@@ -56,6 +56,9 @@ namespace MHServerEmu.Commands.Implementations
             if (avatar.CanActivatePower(returnToHubPower, avatar.Id, avatar.RegionLocation.Position) != PowerUseResult.Success)
                 return CanTeleportResult.BodyslideNotAvailable;
 
+            if (avatar.Region.ContainsPvPMatch())
+                return CanTeleportResult.BodyslideNotAvailable;
+
             return CanTeleportResult.Success;
         }
 
