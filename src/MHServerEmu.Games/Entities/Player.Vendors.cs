@@ -179,7 +179,12 @@ namespace MHServerEmu.Games.Entities
                 if (IsInGame == false)
                     settings.OptionFlags &= ~EntitySettingsOptionFlags.EnterGame;
 
-                item = entityManager.CreateEntity(settings) as Item;
+                Item clonedItem = entityManager.CreateEntity(settings) as Item;
+
+                if (clonedItem == null)
+                    return Logger.WarnReturn(false, $"BuyItemFromVendor(): Failed to clone item [{item}]");
+
+                item = clonedItem;
             }
 
             // Pay the cost of the item. We need to do this before we move the item because
