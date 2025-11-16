@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         private EventPointer<PlayerDeathLimitEvent> _playerDeathLimitEvent = new();
         private PrototypeId _stateRef;
         private PrototypeId _lastStateRef;
+        public PrototypeId GetCurrentStateRef() => _stateRef;
 
         public MetaStateMissionProgression(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
@@ -199,7 +200,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             _stateIntervalEvent.Get().Initialize(this);
         }
 
-        private void OnStateInterval()
+        public void OnStateInterval()
         {
             var region = Region;
             if (region == null) return;
