@@ -170,6 +170,7 @@ namespace MHServerEmu.Core.Network.Web
         /// </summary>
         public async Task SendJsonAsync<T>(T @object)
         {
+            _httpResponse.ContentType = "application/json";
             await JsonSerializer.SerializeAsync(_httpResponse.OutputStream, @object);
         }
     }
