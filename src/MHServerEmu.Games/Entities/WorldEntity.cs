@@ -815,14 +815,19 @@ namespace MHServerEmu.Games.Entities
             if (RegionLocation.IsValid())
                 ExitWorldRegionLocation.Set(RegionLocation);
 
-            if (positionChanged && flags.HasFlag(ChangePositionFlags.SkipInterestUpdate) == false)
-            {
-                // Update interest when this world entity moves to another cell or it has moved far enough from the last interest update position
-                if (Cell != null &&
-                   (Cell != previousCell || Vector3.DistanceSquared2D(_lastInterestUpdatePosition, RegionLocation.Position) >= AreaOfInterest.UpdateDistanceSquared))
+            if (positionChanged && Vector3.EpsilonSphereTest(preChangeLocation.Position, RegionLocation.Position, 0.1f) == false) 
+            {                
+                if (flags.HasFlag(ChangePositionFlags.SkipInterestUpdate) == false)
                 {
-                    UpdateInterestPolicies(true);
+                    // Update interest when this world entity moves to another cell or it has moved far enough from the last interest update position
+                    if (Cell != null &&
+                       (Cell != previousCell || Vector3.DistanceSquared2D(_lastInterestUpdatePosition, RegionLocation.Position) >= AreaOfInterest.UpdateDistanceSquared))
+                    {
+                        UpdateInterestPolicies(true);
+                    }
                 }
+
+                UpdateHotspotData(previousCell, Cell, RegionLocation.Position);
             }
 
             // Send position to clients if needed
@@ -855,6 +860,67 @@ namespace MHServerEmu.Games.Entities
             }
 
             return ChangePositionResult.PositionChanged;
+        }
+
+        private byte _activeHotspots;
+
+        private void UpdateHotspotData(Cell previousCell, Cell cell, Vector3 position)
+        {
+            if (previousCell == null) _activeHotspots = 0;
+
+            byte hotspotData = 0;
+
+            if (cell != null)
+            {
+                var cellProto = cell.Prototype;
+                if (cellProto.HotspotPrototypes.HasValue() && cellProto.HeightMap.HotspotData.HasValue())
+                {
+                    Vector3 cellPos = position - cell.RegionBounds.Min;
+                    cellPos.X /= cellProto.BoundingBox.Width;
+                    cellPos.Y /= cellProto.BoundingBox.Length;
+                    int mapX = (int)cellProto.HeightMap.HeightMapSize.X;
+                    int mapY = (int)cellProto.HeightMap.HeightMapSize.Y;
+                    int x = Math.Clamp((int)(cellPos.X * mapX), 0, mapX - 1);
+                    int y = Math.Clamp((int)(cellPos.Y * mapY), 0, mapY - 1);
+                    int index = y * mapX + x;
+                    if (index < cellProto.HeightMap.HotspotData.Length)
+                        hotspotData = cellProto.HeightMap.HotspotData[index];
+                }
+            }
+
+            if (previousCell != null && _activeHotspots != 0) 
+            {
+                byte activeHotspotData = 0;
+
+                var cellProto = previousCell.Prototype;
+                if (cellProto.HotspotPrototypes.HasValue())
+                    for (int i = 0; i < cellProto.HotspotPrototypes.Length; i++)
+                    {
+                        byte indexData = (byte)(1 << i);
+                        if ((_activeHotspots & indexData) != indexData) continue;
+
+                        if (cell != null && cell.GetHotspotIndexData(previousCell, i, hotspotData, out byte activeData))
+                            activeHotspotData |= activeData;
+                        else 
+                            previousCell.OnHotspotLeave(this, cellProto.HotspotPrototypes[i]);
+                    }
+
+                _activeHotspots = activeHotspotData;
+            }
+
+            if (cell != null && hotspotData != 0)
+            {
+                var cellProto = cell.Prototype;
+                byte hotspotMask = (byte)(hotspotData & ~_activeHotspots);
+                for (int i = 0; i < cellProto.HotspotPrototypes.Length; i++)
+                {
+                    byte indexData = (byte)(1 << i);
+                    if ((hotspotMask & indexData) != indexData) continue;
+
+                    _activeHotspots |= indexData;
+                    cell.OnHotspotEnter(this, cellProto.HotspotPrototypes[i]);
+                }
+            }
         }
 
         public RegionLocation ClearWorldLocation()
@@ -3346,6 +3412,8 @@ namespace MHServerEmu.Games.Entities
                     player.UndiscoverEntity(this, false);   // Skip interest update for undiscover because we are doing an update below anyway
                 }
             }
+
+            UpdateHotspotData(Cell, null, Vector3.Zero);
 
             ConditionCollection?.OnOwnerExitedWorld();
 
