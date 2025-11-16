@@ -36,6 +36,13 @@ namespace MHServerEmu.Commands.Implementations
             if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out ChangeEventType type)) == false)
                 type = ChangeEventType.Stop;   // Default Stop            
 
+            if (type == ChangeEventType.Next && metagame.MetaStates.Count > 0 &&
+                metagame.MetaStates[0] is MetaStateMissionProgression progression)
+            {
+                progression.OnStateInterval();
+                return $"Event {type} {progression.GetCurrentStateRef().GetNameFormatted()}";
+            }
+
             if (metagame.CurrentMode is not MetaGameStateMode stateMode) return "MetaGameStateMode is not current";
 
             PrototypeId stateRef = stateMode.GetCurrentStateRef();
