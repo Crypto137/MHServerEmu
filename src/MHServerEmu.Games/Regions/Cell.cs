@@ -202,8 +202,6 @@ namespace MHServerEmu.Games.Regions
 
             using EntitySettings hotspotSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
             hotspotSettings.EntityRef = hotspotRef;
-            hotspotSettings.RegionId = region.Id;
-            hotspotSettings.Position = new Vector3(1f, 1f, 0f);
             hotspotSettings.HotspotSkipCollide = true;
 
             using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
