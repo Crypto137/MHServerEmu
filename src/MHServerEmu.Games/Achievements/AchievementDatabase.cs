@@ -62,8 +62,7 @@ namespace MHServerEmu.Games.Achievements
 
                 foreach (string filePath in achievementInfoMapFiles)
                 {
-                    string achievementInfoMapJson = File.ReadAllText(filePath);
-                    var infos = JsonSerializer.Deserialize<IEnumerable<AchievementInfo>>(achievementInfoMapJson, options);
+                    AchievementInfo[] infos = FileHelper.DeserializeJson<AchievementInfo[]>(filePath, options);
 
                     foreach (AchievementInfo info in infos)
                         _achievementInfoMap[info.Id] = info;
@@ -79,12 +78,9 @@ namespace MHServerEmu.Games.Achievements
             if (File.Exists(achievementContextMapPath) == false)
                 return Logger.WarnReturn(false, $"Initialize(): Achievement context map not found at {achievementContextMapPath}");
 
-            string achievementContextMapJson = File.ReadAllText(achievementContextMapPath);
-
             try
             {
-                JsonSerializerOptions options = new();
-                var contexts = JsonSerializer.Deserialize<IEnumerable<AchievementContext>>(achievementContextMapJson, options);
+                AchievementContext[] contexts = FileHelper.DeserializeJson<AchievementContext[]>(achievementContextMapPath);
 
                 foreach (AchievementContext context in contexts)
                     if (_achievementInfoMap.TryGetValue(context.Id, out var info))
@@ -100,11 +96,9 @@ namespace MHServerEmu.Games.Achievements
             if (File.Exists(achievementPartyVisiblePath) == false)
                 return Logger.WarnReturn(false, $"Initialize(): Achievement party visible not found at {achievementPartyVisiblePath}");
 
-            string achievementPartyVisibleJson = File.ReadAllText(achievementPartyVisiblePath);
-
             try
             {
-                List<uint> ids = JsonSerializer.Deserialize<List<uint>>(achievementPartyVisibleJson);
+                uint[] ids = FileHelper.DeserializeJson<uint[]>(achievementPartyVisiblePath);
 
                 foreach (uint id in ids)
                     if (_achievementInfoMap.TryGetValue(id, out var info))

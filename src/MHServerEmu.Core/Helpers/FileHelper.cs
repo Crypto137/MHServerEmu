@@ -57,9 +57,8 @@ namespace MHServerEmu.Core.Helpers
         {
             try
             {
-                string json = File.ReadAllText(path);
-                T data = JsonSerializer.Deserialize<T>(json, options);
-                return data;
+                using FileStream fs = File.OpenRead(path);
+                return JsonSerializer.Deserialize<T>(fs, options);
             }
             catch (Exception e)
             {
@@ -73,11 +72,11 @@ namespace MHServerEmu.Core.Helpers
         public static void SerializeJson<T>(string path, T @object, JsonSerializerOptions options = null)
         {
             string dirName = Path.GetDirectoryName(path);
-            if (Directory.Exists(dirName) == false)
+            if (string.IsNullOrWhiteSpace(dirName) == false && Directory.Exists(dirName) == false)
                 Directory.CreateDirectory(dirName);
 
-            string json = JsonSerializer.Serialize(@object, options);
-            File.WriteAllText(path, json);
+            using FileStream fs = File.OpenWrite(path);
+            JsonSerializer.Serialize(fs, @object, options);
         }
 
         /// <summary>

@@ -95,13 +95,11 @@ namespace MHServerEmu.Leaderboards
         private bool LoadSchedule(string schedulePath, List<DBLeaderboard> updatedLeaderboards, List<DBLeaderboardInstance> updatedInstances)
         {
             // Load schedule
-            string scheduleJson = File.ReadAllText(schedulePath);
-
             LeaderboardScheduler[] schedulers;
 
             try
             {
-                schedulers = JsonSerializer.Deserialize<LeaderboardScheduler[]>(scheduleJson, LeaderboardScheduler.JsonSerializerOptions);
+                schedulers = FileHelper.DeserializeJson<LeaderboardScheduler[]>(schedulePath, LeaderboardScheduler.JsonSerializerOptions);
                 LeaderboardScheduler.ValidateMetaLeaderboards(schedulers);
             }
             catch (Exception e)
