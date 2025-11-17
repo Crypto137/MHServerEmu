@@ -402,3 +402,6 @@ FodyWeavers.xsd
 .*#
 .#*
 
+# Build directory
+/build
+
