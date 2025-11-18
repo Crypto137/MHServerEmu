@@ -15,10 +15,8 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-    - name: Restore dependencies
-      run: dotnet restore MHServerEmu.sln
     - name: Publish Self-Contained
-      run: dotnet publish MHServerEmu.sln --no-restore --configuration Release --runtime linux-x64 --self-contained
+      run: dotnet publish MHServerEmu.sln --configuration Release --runtime linux-x64 --self-contained
     - name: Get current date
       run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
     - name: Upload artifact
