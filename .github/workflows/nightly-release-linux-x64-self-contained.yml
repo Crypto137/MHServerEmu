@@ -1,6 +1,7 @@
 name: Nightly Release (Linux x64) (Self-Contained)
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '15 7 * * *'
 
