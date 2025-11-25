@@ -96,7 +96,7 @@ namespace MHServerEmu.Games.Network
 
             // Send the achievement database if this is not a transfer from another game.
             if (_dbAccount.MigrationData.IsFirstLoad)
-                SendMessage(AchievementDatabase.Instance.GetDump());
+                SendMessage(AchievementDatabase.Instance.GetDump(_frontendClient.Session.Locale));
 
             return true;
         }

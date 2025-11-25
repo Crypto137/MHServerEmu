@@ -210,11 +210,11 @@ namespace MHServerEmu.Games.Achievements
             if (_cachedDumps.TryGetValue(locale, out NetMessageAchievementDatabaseDump dump) == false)
             {
                 // Fall back to the default locale (en_us) if we are being requested a locale we don't have.
-                if (DefaultLocale.Equals(locale) == false && _cachedDumps.TryGetValue(DefaultLocale, out dump))
-                    return dump;
-
-                Logger.Warn("GetDump(): Failed to fall back to the default locale");
-                return NetMessageAchievementDatabaseDump.DefaultInstance;
+                if (DefaultLocale.Equals(locale) || _cachedDumps.TryGetValue(DefaultLocale, out dump) == false)
+                {
+                    Logger.Warn("GetDump(): Failed to fall back to the default locale");
+                    return NetMessageAchievementDatabaseDump.DefaultInstance;
+                }
             }
 
             return dump;
