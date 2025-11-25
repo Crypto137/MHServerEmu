@@ -5,10 +5,11 @@ using Gazillion;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
-using MHServerEmu.Games.Locales;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Locales;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -17,15 +18,18 @@ namespace MHServerEmu.Games.Achievements
     /// </summary>
     public class AchievementDatabase
     {
+        private const string DefaultLocale = "en_us";
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private static readonly string AchievementsDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "Achievements");
 
         private readonly Dictionary<uint, AchievementInfo> _achievementInfoMap = new();
-        private Dictionary<ScoringEventType, List<AchievementInfo>> _scoringEventTypeToAchievementInfo = new();
-        private Dictionary<Prototype, List<AchievementInfo>> _prototypeToAchievementInfo = new();
-        private byte[] _localizedAchievementStringBuffer = Array.Empty<byte>();
-        private NetMessageAchievementDatabaseDump _cachedDump = NetMessageAchievementDatabaseDump.DefaultInstance;
+        private readonly Dictionary<ScoringEventType, List<AchievementInfo>> _scoringEventTypeToAchievementInfo = new();
+        private readonly Dictionary<Prototype, List<AchievementInfo>> _prototypeToAchievementInfo = new();
+        private readonly Dictionary<string, byte[]> _stringBuffers = new(StringComparer.OrdinalIgnoreCase);
+
+        private readonly Dictionary<string, NetMessageAchievementDatabaseDump> _cachedDumps = new();
 
         public static AchievementDatabase Instance { get; } = new();
         public Dictionary<uint, AchievementInfo>.ValueCollection AchievementInfoMap { get => _achievementInfoMap.Values; }
@@ -109,12 +113,8 @@ namespace MHServerEmu.Games.Achievements
                 return Logger.WarnReturn(false, $"Initialize(): Achievement party visible deserialization failed - {e.Message}");
             }
 
-            // Load string buffer
-            string stringBufferPath = Path.Combine(AchievementsDirectory, "eng.achievements.string");
-            if (File.Exists(stringBufferPath) == false)
-                return Logger.WarnReturn(false, $"Initialize(): String buffer not found at {stringBufferPath}");
-
-            _localizedAchievementStringBuffer = File.ReadAllBytes(stringBufferPath);
+            // Build string buffer
+            BuildStringBuffers();
 
             // Load new achievement threshold
             string thresholdPath = Path.Combine(AchievementsDirectory, "AchievementNewThresholdUS.txt");
@@ -143,8 +143,8 @@ namespace MHServerEmu.Games.Achievements
             ImportAchievementStringsToCurrentLocale();
             HookUpParentChildAchievementReferences();
 
-            // Create the dump for sending to clients
-            CreateDump();
+            // Cache achievement database dumps for sending to clients
+            CacheDumps();
 
             Logger.Info($"Initialized {_achievementInfoMap.Count} achievements in {stopwatch.ElapsedMilliseconds} ms");
             return true;
@@ -205,7 +205,20 @@ namespace MHServerEmu.Games.Achievements
         /// <summary>
         /// Returns a <see cref="NetMessageAchievementDatabaseDump"/> instance that contains a compressed dump of the <see cref="AchievementDatabase"/>.
         /// </summary>
-        public NetMessageAchievementDatabaseDump GetDump() => _cachedDump;
+        public NetMessageAchievementDatabaseDump GetDump(string locale = DefaultLocale)
+        {
+            if (_cachedDumps.TryGetValue(locale, out NetMessageAchievementDatabaseDump dump) == false)
+            {
+                // Fall back to the default locale (en_us) if we are being requested a locale we don't have.
+                if (DefaultLocale.Equals(locale) == false && _cachedDumps.TryGetValue(DefaultLocale, out dump))
+                    return dump;
+
+                Logger.Warn("GetDump(): Failed to fall back to the default locale");
+                return NetMessageAchievementDatabaseDump.DefaultInstance;
+            }
+
+            return dump;
+        }
 
         /// <summary>
         /// Clears the <see cref="AchievementDatabase"/> instance.
@@ -213,8 +226,10 @@ namespace MHServerEmu.Games.Achievements
         private void Clear()
         {
             _achievementInfoMap.Clear();
-            _localizedAchievementStringBuffer = Array.Empty<byte>();
-            _cachedDump = NetMessageAchievementDatabaseDump.DefaultInstance;
+            _scoringEventTypeToAchievementInfo.Clear();
+            _prototypeToAchievementInfo.Clear();
+            _stringBuffers.Clear();
+            _cachedDumps.Clear();
             AchievementNewThresholdUS = TimeSpan.Zero;
         }
 
@@ -238,32 +253,123 @@ namespace MHServerEmu.Games.Achievements
             }
         }
 
+        private void BuildStringBuffers()
+        {
+            _stringBuffers.Clear();
+
+            StringMap combinedStringMap = new();
+            Dictionary<string, LocaleSerializer> localeSerializers = new();
+
+            // Load and combine JSON data
+            foreach (string filePath in FileHelper.GetFilesWithPrefix(AchievementsDirectory, "AchievementStringMap", "json"))
+            {
+                StringMap stringMap = FileHelper.DeserializeJson<StringMap>(filePath);
+                if (stringMap == null)
+                {
+                    Logger.Warn("BuildStringBuffers(): stringMap == null");
+                    continue;
+                }
+
+                foreach (var kvp in stringMap)
+                {
+                    // Allow overriding of existing locale string ids
+                    combinedStringMap[kvp.Key] = kvp.Value;
+
+                    // Prepare serializers for newly encountered locales
+                    foreach (string locale in kvp.Value.Keys)
+                    {
+                        if (localeSerializers.ContainsKey(locale) == false)
+                            localeSerializers.Add(locale, new());
+                    }
+                }
+
+                // NOTE: If we override all instances of a locale appearing, it will still have its own serializer,
+                // but all values will have to fall back to default. This is an unlikely scenario, but mentioning it just in case.
+
+                Logger.Trace($"Loaded {stringMap.Count} achievement strings from {Path.GetFileName(filePath)}");
+            }
+
+            // Add combined data to serializers
+            foreach (var kvp in combinedStringMap)
+            {
+                LocaleStringId localeStringId = kvp.Key;
+                Dictionary<string, string> stringByLocale = kvp.Value;
+                
+                // We need a default value to fall back to for incomplete locales.
+                if (stringByLocale.TryGetValue(DefaultLocale, out string defaultValue) == false)
+                {
+                    Logger.Warn($"BuildStringBuffers(): No default value for locale string id {kvp.Key}");
+                    continue;
+                }
+
+                foreach (var serializerKvp in localeSerializers)
+                {
+                    string locale = serializerKvp.Key;
+                    LocaleSerializer serializer = serializerKvp.Value;
+
+                    if (stringByLocale.TryGetValue(locale, out string localizedValue) == false)
+                        localizedValue = defaultValue;
+
+                    serializer.AddString(localeStringId, localizedValue);
+                }
+            }
+
+            // Finalize string buffer serialization
+            foreach (var kvp in localeSerializers)
+            {
+                string locale = kvp.Key;
+                LocaleSerializer serializer = kvp.Value;
+
+                using MemoryStream stream = new();
+                serializer.WriteTo(stream);
+                _stringBuffers[locale] = stream.ToArray();
+
+                Logger.Trace($"Initialized achievement locale {locale}");
+            }
+        }
+
         private void ImportAchievementStringsToCurrentLocale()
         {
             Locale currentLocale = LocaleManager.Instance.CurrentLocale;
 
-            using (MemoryStream ms = new(_localizedAchievementStringBuffer))
-                currentLocale.ImportStringStream("achievements", ms);
+            if (_stringBuffers.TryGetValue(DefaultLocale, out byte[] buffer) == false)
+            {
+                Logger.Warn("ImportAchievementStringsToCurrentLocale(): No string buffer for the default locale");
+                return;
+            }
+
+            using MemoryStream stream = new(buffer);
+            currentLocale.ImportStringStream("achievements", stream);
         }
 
         /// <summary>
         /// Creates and caches a <see cref="NetMessageAchievementDatabaseDump"/> instance that will be sent to clients.
         /// </summary>
-        private void CreateDump()
+        private void CacheDumps()
         {
-            var dumpBuffer = AchievementDatabaseDump.CreateBuilder()
-                .SetLocalizedAchievementStringBuffer(ByteString.CopyFrom(_localizedAchievementStringBuffer))
-                .AddRangeAchievementInfos(_achievementInfoMap.Values.Select(info => info.ToNetStruct()))
-                .SetAchievementNewThresholdUS((ulong)AchievementNewThresholdUS.TotalSeconds)
-                .Build().ToByteArray();
+            _cachedDumps.Clear();
 
-            // NOTE: If you don't use the right library to compress this it's going to cause client-side errors.
-            // See CompressionHelper.ZLibDeflate() for more details.
-            byte[] compressedBuffer = CompressionHelper.ZLibDeflate(dumpBuffer);
+            foreach (var kvp in _stringBuffers)
+            {
+                var dumpBuffer = AchievementDatabaseDump.CreateBuilder()
+                    .SetLocalizedAchievementStringBuffer(ByteString.Unsafe.FromBytes(kvp.Value))
+                    .AddRangeAchievementInfos(_achievementInfoMap.Values.Select(info => info.ToNetStruct()))
+                    .SetAchievementNewThresholdUS((ulong)AchievementNewThresholdUS.TotalSeconds)
+                    .Build().ToByteArray();
 
-            _cachedDump = NetMessageAchievementDatabaseDump.CreateBuilder()
-                 .SetCompressedAchievementDatabaseDump(ByteString.CopyFrom(compressedBuffer))
-                 .Build();
+                // NOTE: If you don't use the right library to compress this it's going to cause client-side errors.
+                // See CompressionHelper.ZLibDeflate() for more details.
+                byte[] compressedBuffer = CompressionHelper.ZLibDeflate(dumpBuffer);
+
+                _cachedDumps[kvp.Key] = NetMessageAchievementDatabaseDump.CreateBuilder()
+                     .SetCompressedAchievementDatabaseDump(ByteString.CopyFrom(compressedBuffer))
+                     .Build();
+            }
+        }
+
+        // subclassing for readability
+        private class StringMap : Dictionary<LocaleStringId, Dictionary<string, string>>
+        {
         }
     }
 }
