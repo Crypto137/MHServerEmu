@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Achievements;
@@ -32,6 +33,19 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.SendMessage(client, "Achievement Info:");
             CommandHelper.SendMessageSplit(client, info.ToString(), false);
             return string.Empty;
+        }
+
+        [Command("localeid")]
+        [CommandDescription("Generates a LocaleStringId from the specified argument.")]
+        [CommandParamCount(1)]
+        public string LocaleId(string[] @params, NetClient client)
+        {
+            // Prefix everything with MHServerEmu to make collisions with Gazillion ids less likely.
+            string nameToHash = $"MHServerEmu.{@params[0]}";
+
+            ulong hash = HashHelper.HashPath(nameToHash);
+
+            return $"{nameToHash} => {hash}";
         }
     }
 }

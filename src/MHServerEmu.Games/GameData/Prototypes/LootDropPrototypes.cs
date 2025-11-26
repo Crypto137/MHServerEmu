@@ -543,7 +543,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            player.SendBannerMessage(BannerMessage.As<BannerMessagePrototype>());
+            player.SendBannerMessage(BannerMessage);
         }
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)

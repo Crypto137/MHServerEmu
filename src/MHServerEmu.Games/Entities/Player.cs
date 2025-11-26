@@ -629,21 +629,21 @@ namespace MHServerEmu.Games.Entities
                 // Do not allow teleports to PvP regions when PvP is disabled
                 if (LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_PVPEnabled) == 0f)
                 {
-                    SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePvPDisabledPortalFail.As<BannerMessagePrototype>());
+                    SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePvPDisabledPortalFail);
                     return false;
                 }
 
                 // Do not allow party teleports to PvP regions
                 if (isPartyTeleport)
                 {
-                    SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePartyPvPPortalFail.As<BannerMessagePrototype>());
+                    SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePartyPvPPortalFail);
                     return false;
                 }
             }
 
             if (regionProto.RunEvalAccessRestriction(this, avatar, difficultyTierProtoRef) == false)
             {
-                SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionRestricted.As<BannerMessagePrototype>());
+                SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionRestricted);
                 return false;
             }
 
@@ -654,13 +654,13 @@ namespace MHServerEmu.Games.Entities
                 {
                     case RegionBehavior.PrivateStory:
                     case RegionBehavior.PrivateNonStory:
-                        SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePrivateDisallowedInRaid.As<BannerMessagePrototype>());
+                        SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePrivateDisallowedInRaid);
                         return false;
 
                     case RegionBehavior.MatchPlay:
                         if (regionProto.AllowRaids() == false)
                         {
-                            SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageQueueNotAvailableInRaid.As<BannerMessagePrototype>());
+                            SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageQueueNotAvailableInRaid);
                             return false;
                         }
                         break;
@@ -669,7 +669,7 @@ namespace MHServerEmu.Games.Entities
 
             if (LiveTuningManager.GetLiveRegionTuningVar(regionProto, RegionTuningVar.eRTV_Enabled) == 0f)
             {
-                SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionDisabledPortalFail.As<BannerMessagePrototype>());
+                SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionDisabledPortalFail);
                 return false;
             }
 
@@ -3406,17 +3406,35 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message.Build());
         }
 
-        public void SendBannerMessage(BannerMessagePrototype bannerMessage)
+        public bool SendBannerMessage(LocaleStringId bannerText, PrototypeId textStyle = TextStylePrototype.BannerMessageStandard, int timeToLiveMS = 8000,
+            BannerMessageStyle messageStyle = BannerMessageStyle.Standard, bool doNotQueue = false, bool showImmediately = false)
         {
-            if (bannerMessage == null) return;
+            // We can send custom banner messages here using localized strings added via achievements.
             var message = NetMessageBannerMessage.CreateBuilder()
-                .SetBannerText((ulong)bannerMessage.BannerText)
-                .SetTextStyle((ulong)bannerMessage.TextStyle)
-                .SetTimeToLiveMS((uint)bannerMessage.TimeToLiveMS)
-                .SetMessageStyle((uint)bannerMessage.MessageStyle)
-                .SetDoNotQueue(bannerMessage.DoNotQueue)
-                .SetShowImmediately(bannerMessage.ShowImmediately).Build();
+                .SetBannerText((ulong)bannerText)
+                .SetTextStyle((ulong)textStyle)
+                .SetTimeToLiveMS((uint)timeToLiveMS)
+                .SetMessageStyle((uint)messageStyle)
+                .SetDoNotQueue(doNotQueue)
+                .SetShowImmediately(showImmediately)
+                .Build();
+
             SendMessage(message);
+
+            return true;
+        }
+
+        public bool SendBannerMessage(BannerMessagePrototype bannerMessageProto)
+        {
+            if (bannerMessageProto == null) return Logger.WarnReturn(false, "SendBannerMessage(): bannerMessageProto == null");
+
+            return SendBannerMessage(bannerMessageProto.BannerText, bannerMessageProto.TextStyle, bannerMessageProto.TimeToLiveMS,
+                bannerMessageProto.MessageStyle, bannerMessageProto.DoNotQueue, bannerMessageProto.ShowImmediately);
+        }
+
+        public bool SendBannerMessage(PrototypeId bannerMessageProtoRef)
+        {
+            return SendBannerMessage(bannerMessageProtoRef.As<BannerMessagePrototype>());
         }
 
         #endregion

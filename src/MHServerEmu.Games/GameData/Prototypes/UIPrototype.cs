@@ -588,6 +588,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId Alignment { get; protected set; }
         public bool Hidden { get; protected set; }
         public int FontSizeConsole { get; protected set; }
+
+        //--
+
+        public const PrototypeId BannerMessageAlert = (PrototypeId)2949056351269622091;
+        public const PrototypeId BannerMessageError = (PrototypeId)13605002274316751197;
+        public const PrototypeId BannerMessageErrorLarge = (PrototypeId)14779619855014040424;
+        public const PrototypeId BannerMessageGift = (PrototypeId)17622774712892985565;
+        public const PrototypeId BannerMessageHalloween = (PrototypeId)13493636367699743474;
+        public const PrototypeId BannerMessageLarge = (PrototypeId)5885646240247714110;
+        public const PrototypeId BannerMessageReward = (PrototypeId)2359092406774272440;
+        public const PrototypeId BannerMessageRewardLarge = (PrototypeId)17457913576525468611;
+        public const PrototypeId BannerMessageStandard = (PrototypeId)7680634729112998532;
+        public const PrototypeId BannerMessageStatProgression = (PrototypeId)12566597636377482666;
+        public const PrototypeId BannerMessageUnlock = (PrototypeId)15319327166454698431;
     }
 
     public class UINotificationPrototype : Prototype
