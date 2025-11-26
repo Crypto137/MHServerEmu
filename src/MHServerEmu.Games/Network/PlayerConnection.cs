@@ -530,6 +530,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageTryMoveInventoryContentsToGeneral: OnTryMoveInventoryContentsToGeneral(message); break;// 112
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;         // 113
                 case ClientToGameServerMessage.NetMessageTeleportToPartyMember:             OnTeleportToPartyMember(message); break;            // 114
+                case ClientToGameServerMessage.NetMessageRegionRequestQueueCommandClient:   OnRegionRequestQueueCommandClient(message); break;  // 115
                 case ClientToGameServerMessage.NetMessageSelectAvatarSynergies:             OnSelectAvatarSynergies(message); break;            // 116
                 case ClientToGameServerMessage.NetMessageRequestLegendaryMissionReroll:     OnRequestLegendaryMissionReroll(message); break;    // 117
                 case ClientToGameServerMessage.NetMessageRequestPlayerOwnsItemStatus:       OnRequestPlayerOwnsItemStatus(message); break;      // 120
@@ -1773,6 +1774,20 @@ namespace MHServerEmu.Games.Network
             if (memberId == 0) return Logger.WarnReturn(false, "OnTeleportToPartyMember(): memberId == 0");
 
             Player.BeginTeleportToPartyMember(memberId);
+            return true;
+        }
+
+        private bool OnRegionRequestQueueCommandClient(in MailboxMessage message) // 115
+        {
+            var regionRequestQueueCommandClient = message.As<NetMessageRegionRequestQueueCommandClient>();
+            if (regionRequestQueueCommandClient == null) return Logger.WarnReturn(false, $"OnRegionRequestQueueCommandClient(): Failed to retrieve message");
+
+            PrototypeId regionRef = (PrototypeId)regionRequestQueueCommandClient.RegionProtoId;
+            PrototypeId difficultyTierRef = (PrototypeId)regionRequestQueueCommandClient.DifficultyTierProtoId;
+            ulong groupId = regionRequestQueueCommandClient.HasRegionRequestGroupId ? regionRequestQueueCommandClient.RegionRequestGroupId : 0;
+            RegionRequestQueueCommandVar command = regionRequestQueueCommandClient.Command;
+
+            Player.MatchQueueStatus.TryRegionRequestCommand(regionRef, difficultyTierRef, groupId, command);
             return true;
         }
 

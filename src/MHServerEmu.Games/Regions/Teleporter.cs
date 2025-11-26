@@ -388,7 +388,7 @@ namespace MHServerEmu.Games.Regions
             // Queue up straight away if there is nothing to choose (queue bypass is not allowed and we are not in a party).
             if (destinationRegionProto.RegionQueueMethod.HasFlag(RegionQueueMethod.QueueBypass) == false && party == null)
             {
-                Player.SendRegionRequestQueueCommand(regionProtoRef, DifficultyTierRef, RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo);
+                Player.SendRegionRequestQueueCommandToPlayerManager(regionProtoRef, DifficultyTierRef, RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo);
                 return true;
             }
 

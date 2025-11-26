@@ -2805,10 +2805,25 @@ namespace MHServerEmu.Games.Entities
             SendMessage(builder.Build());
         }
 
-        public void SendRegionRequestQueueCommand(PrototypeId regionRef, PrototypeId difficultyTierRef, RegionRequestQueueCommandVar command)
+        public void SendRegionRequestQueueCommandToPlayerManager(PrototypeId regionRef, PrototypeId difficultyTierRef,
+            RegionRequestQueueCommandVar command, ulong groupId = 0)
         {
             // TODO: Send to player manager
-            Logger.Debug("SendRegionRequestQueueCommand()");
+            Logger.Debug($"SendRegionRequestQueueCommandToPlayerManager(): {regionRef.GetNameFormatted()}[{difficultyTierRef.GetNameFormatted()}] - {command}");
+
+            // REMOVEME: debug command handling
+            switch (command)
+            {
+                case RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo:
+                case RegionRequestQueueCommandVar.eRRQC_AddToQueueParty:
+                case RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass:
+                    SendMatchQueueUpdate(DatabaseUniqueId, regionRef, difficultyTierRef, groupId, RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue);
+                    break;
+
+                case RegionRequestQueueCommandVar.eRRQC_RemoveFromQueue:
+                    SendMatchQueueUpdate(DatabaseUniqueId, regionRef, difficultyTierRef, groupId, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup);
+                    break;
+            }
         }
 
         #endregion

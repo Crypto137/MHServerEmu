@@ -5,7 +5,9 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Social.Communities;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Regions.MatchQueues
 {
@@ -176,6 +178,72 @@ namespace MHServerEmu.Games.Regions.MatchQueues
             }
 
             return newRegionStatus.UpdatePlayer(playerGuid, status, playerName);
+        }
+
+        /// <summary>
+        /// Handles a <see cref="RegionRequestQueueCommandVar"/> request from a client.
+        /// </summary>
+        public bool TryRegionRequestCommand(PrototypeId regionRef, PrototypeId difficultyTierRef,
+            ulong groupId, RegionRequestQueueCommandVar command)
+        {
+            if (regionRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "TryRegionRequestCommand(): regionRef == PrototypeId.Invalid");
+
+            RegionPrototype regionProto = regionRef.As<RegionPrototype>();
+            if (regionProto == null) return Logger.WarnReturn(false, "TryRegionRequestCommand(): regionProto == null");
+
+            RegionRequestQueueUpdateVar status = RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup;
+
+            if (_regionStatusDict.TryGetValue((regionRef, difficultyTierRef), out MatchQueueRegionStatus regionStatus) &&
+                regionStatus.PlayerInfos.TryGetValue(_owner.DatabaseUniqueId, out MatchQueuePlayerInfoEntry entry))
+            {
+                status = entry.Status;
+            }
+
+            switch (command)
+            {
+                case RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo:
+                case RegionRequestQueueCommandVar.eRRQC_AddToQueueParty:
+                case RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass:
+                    if (difficultyTierRef == PrototypeId.Invalid)
+                        return Logger.WarnReturn(false, "TryRegionRequestCommand(): difficultyTierRef == PrototypeId.Invalid");
+
+                    if (IsOwnerInQueue())
+                        return false;
+
+                    Party party = _owner.GetParty();
+                    if (party != null && party.IsLeader(_owner) == false)
+                        return false;
+
+                    break;
+
+                case RegionRequestQueueCommandVar.eRRQC_GroupInviteAccept:
+                case RegionRequestQueueCommandVar.eRRQC_GroupInviteDecline:
+                    if (status != RegionRequestQueueUpdateVar.eRRQ_GroupInvitePending)
+                        return Logger.WarnReturn(false, $"TryRegionRequestCommand(): Invalid status {status} for command {command} from [{_owner}]");
+                    break;
+
+                case RegionRequestQueueCommandVar.eRRQC_RemoveFromQueue:
+                    // does not require validation
+                    break;
+
+                case RegionRequestQueueCommandVar.eRRQC_MatchInviteAccept:
+                case RegionRequestQueueCommandVar.eRRQC_MatchInviteDecline:
+                    if (status != RegionRequestQueueUpdateVar.eRRQ_MatchInvitePending && status != RegionRequestQueueUpdateVar.eRRQ_RemovedGracePeriod)
+                        return Logger.WarnReturn(false, $"TryRegionRequestCommand(): Invalid status {status} for command {command} from [{_owner}]");
+                    break;
+
+                // The client should not be sending these commands.
+                case RegionRequestQueueCommandVar.eRRQC_DebugForceStart:
+                case RegionRequestQueueCommandVar.eRRQC_DebugInfo:
+                case RegionRequestQueueCommandVar.eRRQC_RequestToJoinGroup:
+                    return Logger.WarnReturn(false, $"TryRegionRequestCommand(): Received command {command} from [{_owner}]");
+            }
+
+            if (command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass && regionProto.RegionQueueMethod.HasFlag(RegionQueueMethod.QueueBypass) == false)
+                return false;
+
+            _owner.SendRegionRequestQueueCommandToPlayerManager(regionRef, difficultyTierRef, command);
+            return true;
         }
 
         /// <summary>
