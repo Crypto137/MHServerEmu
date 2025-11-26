@@ -5,13 +5,14 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.Regions.MatchQueues
 {
     // For reference see NetMessageMatchQueueUpdateClient
 
     /// <summary>
-    /// Manages queue statuses for region / difficulty tier combinations.
+    /// Manages <see cref="MatchQueueRegionStatus"/> instances bound to a <see cref="Player"/>.
     /// </summary>
     public class MatchQueueStatus : ISerialize
     {
@@ -24,7 +25,22 @@ namespace MHServerEmu.Games.Regions.MatchQueues
         /// <summary>
         /// Constructs a new <see cref="MatchQueueStatus"/> instance.
         /// </summary>
-        public MatchQueueStatus() { }
+        public MatchQueueStatus()
+        {
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+
+            foreach (var kvp in _regionStatusDict)
+            {
+                sb.Append($"[{GameDatabase.GetFormattedPrototypeName(kvp.Key.Item1)}][{GameDatabase.GetFormattedPrototypeName(kvp.Key.Item2)}]: ");
+                sb.AppendLine(kvp.Value.ToString());
+            }
+
+            return sb.ToString();
+        }
 
         public bool Serialize(Archive archive)
         {
@@ -39,15 +55,15 @@ namespace MHServerEmu.Games.Regions.MatchQueues
                 {
                     PrototypeId regionRef = kvp.Key.Item1;
                     PrototypeId difficultyTierRef = kvp.Key.Item2;
-                    ulong regionRequestGroupId = kvp.Value.RegionRequestGroupId;
-                    uint numPlayers = (uint)kvp.Value.PlayerInfoDict.Count;
+                    ulong groupId = kvp.Value.GroupId;
+                    uint numPlayers = (uint)kvp.Value.PlayerInfos.Count;
 
                     success &= Serializer.Transfer(archive, ref regionRef);
                     success &= Serializer.Transfer(archive, ref difficultyTierRef);
-                    success &= Serializer.Transfer(archive, ref regionRequestGroupId);
+                    success &= Serializer.Transfer(archive, ref groupId);
                     success &= Serializer.Transfer(archive, ref numPlayers);
 
-                    foreach (var playerInfoKvp in kvp.Value.PlayerInfoDict)
+                    foreach (var playerInfoKvp in kvp.Value.PlayerInfos)
                     {
                         ulong playerGuid = playerInfoKvp.Key;
                         string playerName = playerInfoKvp.Value.PlayerName;
@@ -65,15 +81,16 @@ namespace MHServerEmu.Games.Regions.MatchQueues
                 {
                     PrototypeId regionRef = PrototypeId.Invalid;
                     PrototypeId difficultyTierRef = PrototypeId.Invalid;
-                    ulong regionRequestGroupId = 0;
+                    ulong groupId = 0;
                     uint numPlayers = 0;
 
                     success &= Serializer.Transfer(archive, ref regionRef);
                     success &= Serializer.Transfer(archive, ref difficultyTierRef);
-                    success &= Serializer.Transfer(archive, ref regionRequestGroupId);
+                    success &= Serializer.Transfer(archive, ref groupId);
                     success &= Serializer.Transfer(archive, ref numPlayers);
 
-                    if (regionRef == PrototypeId.Invalid) continue;
+                    if (regionRef == PrototypeId.Invalid)
+                        continue;
 
                     for (uint j = 0; j < numPlayers; j++)
                     {
@@ -85,8 +102,7 @@ namespace MHServerEmu.Games.Regions.MatchQueues
                         success &= Serializer.Transfer(archive, ref playerName);
                         success &= Serializer.Transfer(archive, ref status);
 
-                        UpdatePlayerState(playerGuid, regionRef, difficultyTierRef, regionRequestGroupId,
-                            (RegionRequestQueueUpdateVar)status, playerName);
+                        UpdatePlayerState(playerGuid, regionRef, difficultyTierRef, groupId, (RegionRequestQueueUpdateVar)status, playerName);
                     }
                 }
             }
@@ -94,31 +110,27 @@ namespace MHServerEmu.Games.Regions.MatchQueues
             return success;
         }
 
-        /// <summary>
-        /// Updates queue state of the specified player.
-        /// </summary>
-        public bool UpdatePlayerState(ulong playerGuid, PrototypeId regionRef, PrototypeId difficultyTierRef,
-            ulong regionRequestGroupId, RegionRequestQueueUpdateVar status, string playerName)
+        public bool IsOwnerInQueue()
         {
-            if (_owner == null)
-                return Logger.WarnReturn(false, "UpdatePlayerState(): _owner == null");
+            ulong ownerDbId = _owner.DatabaseUniqueId;
 
-            // Check if we need to remove the player
-            if (RemovePlayerOnStatus(status) && _owner.DatabaseUniqueId == playerGuid)
-                return _regionStatusDict.Remove((regionRef, difficultyTierRef));
-
-            // Set new status
-            MatchQueueRegionStatus newRegionStatus = GetOrCreateRegionStatus(regionRef, difficultyTierRef, regionRequestGroupId);
-
-            // TODO: fall back to community data
-            if (string.IsNullOrEmpty(playerName))
+            foreach (MatchQueueRegionStatus regionStatus in _regionStatusDict.Values)
             {
-                Logger.Warn($"UpdatePlayerState(): playerName is empty");
-                playerName = "TODO: GET NAME FROM COMMUNITY";
-            }
-                
+                if (regionStatus.PlayerInfos.TryGetValue(ownerDbId, out MatchQueuePlayerInfoEntry entry) == false)
+                    continue;
 
-            return newRegionStatus.UpdatePlayer(playerGuid, status, playerName);
+                switch (entry.Status)
+                {
+                    case RegionRequestQueueUpdateVar.eRRQ_SelectQueueMethod:
+                    case RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup:
+                        continue;
+
+                    default:
+                        return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -129,50 +141,75 @@ namespace MHServerEmu.Games.Regions.MatchQueues
             _owner = owner;
         }
 
-        public override string ToString()
+        public void UpdateQueue(PrototypeId regionRef, PrototypeId difficultyTierRef, ulong groupId, int playersInQueue)
         {
-            StringBuilder sb = new();
-
-            foreach (var kvp in _regionStatusDict)
+            MatchQueueRegionStatus newRegionStatus = GetOrCreateRegionStatus(regionRef, difficultyTierRef, groupId);
+            if (newRegionStatus == null)
             {
-                sb.Append($"[{GameDatabase.GetFormattedPrototypeName(kvp.Key.Item1)}][{GameDatabase.GetFormattedPrototypeName(kvp.Key.Item2)}]: ");
-                sb.AppendLine(kvp.Value.ToString());
+                Logger.Warn("UpdateQueue(): newRegionStatus == null");
+                return;
             }
 
-            return sb.ToString();
+            newRegionStatus.UpdateQueue(playersInQueue);
+        }
+
+        /// <summary>
+        /// Updates queue state of the specified player.
+        /// </summary>
+        public bool UpdatePlayerState(ulong playerGuid, PrototypeId regionRef, PrototypeId difficultyTierRef,
+            ulong groupId, RegionRequestQueueUpdateVar status, string playerName)
+        {
+            if (_owner == null)
+                return Logger.WarnReturn(false, "UpdatePlayerState(): _owner == null");
+
+            // Some statuses cause the player to be removed.
+            if (IsRemovePlayerStatus(status) && _owner.DatabaseUniqueId == playerGuid)
+                return _regionStatusDict.Remove((regionRef, difficultyTierRef));
+
+            MatchQueueRegionStatus newRegionStatus = GetOrCreateRegionStatus(regionRef, difficultyTierRef, groupId);
+
+            // Fall back to community data if we don't have a valid name
+            if (string.IsNullOrEmpty(playerName))
+            {
+                CommunityMember member = _owner.Community.GetMember(playerGuid);
+                playerName = member != null ? member.GetName() : string.Empty;
+            }
+
+            return newRegionStatus.UpdatePlayer(playerGuid, status, playerName);
         }
 
         /// <summary>
         /// Returns <see langword="true"/> if the specified <see cref="RegionRequestQueueUpdateVar"/> requires the player to be removed.
         /// </summary>
-        public static bool RemovePlayerOnStatus(RegionRequestQueueUpdateVar status)
+        public static bool IsRemovePlayerStatus(RegionRequestQueueUpdateVar status)
         {
-            return status == RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup
-                || status == RegionRequestQueueUpdateVar.eRRQ_RaidNotAllowed
-                || status == RegionRequestQueueUpdateVar.eRRQ_PartyTooLarge
-                || status == RegionRequestQueueUpdateVar.eRRQ_GroupInviteExpired
-                || status == RegionRequestQueueUpdateVar.eRRQ_MatchInviteExpired;
-        }
+            switch (status)
+            {
+                case RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup:
+                case RegionRequestQueueUpdateVar.eRRQ_RaidNotAllowed:
+                case RegionRequestQueueUpdateVar.eRRQ_PartyTooLarge:
+                case RegionRequestQueueUpdateVar.eRRQ_GroupInviteExpired:
+                case RegionRequestQueueUpdateVar.eRRQ_MatchInviteExpired:
+                    return true;
 
-        public bool IsOwnerInQueue()
-        {
-            // TODO
-            return false;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
         /// Retrieves or create a new <see cref="MatchQueueRegionStatus"/> instance for the specified arguments.
         /// </summary>
-        private MatchQueueRegionStatus GetOrCreateRegionStatus(PrototypeId regionRef, PrototypeId difficultyTierRef, ulong regionRequestGroupId)
+        private MatchQueueRegionStatus GetOrCreateRegionStatus(PrototypeId regionRef, PrototypeId difficultyTierRef, ulong groupId)
         {
             if (_regionStatusDict.TryGetValue((regionRef, difficultyTierRef), out MatchQueueRegionStatus regionStatus) == false)
             {
-                regionStatus = new(regionRef, difficultyTierRef, regionRequestGroupId);
+                regionStatus = new(regionRef, difficultyTierRef, groupId);
                 _regionStatusDict.Add((regionRef, difficultyTierRef), regionStatus);
             }
 
-            if (regionStatus.RegionRequestGroupId != regionRequestGroupId)
-                regionStatus.RegionRequestGroupId = regionRequestGroupId;
+            if (regionStatus.GroupId != groupId)
+                regionStatus.GroupId = groupId;
 
             return regionStatus;
         }
