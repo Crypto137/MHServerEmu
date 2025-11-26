@@ -2784,6 +2784,35 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Match Queue
+
+        public void SendMatchQueueUpdate(ulong playerGuid, PrototypeId regionRef, PrototypeId difficultyTierRef, ulong groupId,
+            RegionRequestQueueUpdateVar status, string playerName = null, int playersInQueue = -1)
+        {
+            var builder = NetMessageMatchQueueUpdateClient.CreateBuilder()
+                .SetPlayerGuid(playerGuid)
+                .SetRegionProtoId((ulong)regionRef)
+                .SetDifficultyTierProtoId((ulong)difficultyTierRef)
+                .SetRegionRequestGroupId(groupId)
+                .SetStatus(status);
+
+            if (string.IsNullOrEmpty(playerName) == false)
+                builder.SetPlayerName(playerName);
+
+            if (playersInQueue >= 0)
+                builder.SetPlayersInQueue((uint)playersInQueue);
+
+            SendMessage(builder.Build());
+        }
+
+        public void SendRegionRequestQueueCommand(PrototypeId regionRef, PrototypeId difficultyTierRef, RegionRequestQueueCommandVar command)
+        {
+            // TODO: Send to player manager
+            Logger.Debug("SendRegionRequestQueueCommand()");
+        }
+
+        #endregion
+
         #region AOI & Discovery
 
         public bool InterestedInEntity(Entity entity, AOINetworkPolicyValues interestFilter)

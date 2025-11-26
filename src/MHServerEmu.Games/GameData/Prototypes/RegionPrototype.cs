@@ -56,11 +56,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 
     [AssetEnum((int)None)]
+    [Flags]
     public enum RegionQueueMethod
     {
-        None = 0,
-        PvPQueue = 1,
-        DailyQueue = 5,
+        None                    = 0,
+        UsesRegionRequestQueue  = 1 << 0,
+        Method1                 = 1 << 1,   // This is never set because there was no option for it in Calligraphy.
+        QueueBypass             = 1 << 2,
+
+        // Calligraphy aliases
+        PvPQueue = UsesRegionRequestQueue,
+        DailyQueue = UsesRegionRequestQueue | QueueBypass,
     }
 
     [AssetEnum((int)BiDirectional)]
