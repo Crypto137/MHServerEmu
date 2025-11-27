@@ -46,7 +46,7 @@ namespace MHServerEmu.Games.Regions.MatchQueues
         {
             if (playersInQueue < 0)
             {
-                Logger.Warn("UpdateQueue(): playerInQueue < 0");
+                Logger.Warn("UpdateQueue(): playersInQueue < 0");
                 return;
             }
 
@@ -66,6 +66,7 @@ namespace MHServerEmu.Games.Regions.MatchQueues
             {
                 entry = new(playerName, status);
                 PlayerInfos.Add(playerGuid, entry);
+                return true;
             }
 
             return entry.Update(status);

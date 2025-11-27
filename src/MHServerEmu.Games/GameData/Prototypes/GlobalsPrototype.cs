@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -72,8 +73,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         MatchLocked = 14,
         PendingMatch = 15,
         AddedToMatch = 16,
-        MatchInviteExpired = 18,
         MatchInviteDeclined = 17,
+        MatchInviteExpired = 18,
         MovingToInstance = 19,
     }
 
@@ -1139,6 +1140,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DisabledState { get; protected set; }
         public MatchQueueStringEntryPrototype[] QueueStrings { get; protected set; }
         public AssetId TransitionEmptyClass { get; protected set; }
+
+        //--
+
+        public LocaleStringId GetLocaleStringIdForLog(RegionRequestQueueUpdateVar status)
+        {
+            // This mirrors TransitionGlobalsPrototype::GetLocaleStringIdForStatus() from the client.
+
+            if (QueueStrings.HasValue())
+            {
+                foreach (MatchQueueStringEntryPrototype entry in QueueStrings)
+                {
+                    if ((RegionRequestQueueUpdateVar)entry.StatusKey == status)
+                        return entry.StringLog;
+                }
+            }
+
+            return LocaleStringId.Blank;
+        }
     }
 
     public class KeywordGlobalsPrototype : Prototype

@@ -2786,6 +2786,65 @@ namespace MHServerEmu.Games.Entities
 
         #region Match Queue
 
+        public bool UpdateMatchQueue(ulong playerGuid, PrototypeId regionRef, PrototypeId difficultyTierRef, int playersInQueue,
+            ulong groupId, RegionRequestQueueUpdateVar status, string playerName)
+        {
+            RegionPrototype regionProto = regionRef.As<RegionPrototype>();
+            if (regionProto == null) return Logger.WarnReturn(false, "UpdateMatchQueue(): regionProto == null");
+
+            bool isUpdatingSelf = playerGuid == DatabaseUniqueId;
+
+            // Update MatchQueueStatus server-side
+            MatchQueueStatus.UpdateQueue(regionRef, difficultyTierRef, groupId, playersInQueue);
+            bool changed = MatchQueueStatus.UpdatePlayerState(playerGuid, regionRef, difficultyTierRef, groupId, status, playerName);
+
+            // Update MatchQueueStatus client-side
+            SendMatchQueueUpdate(playerGuid, regionRef, difficultyTierRef, groupId, status, playerName);
+
+            // Send banners if we are self-updating.
+            if (isUpdatingSelf)
+            {
+                switch (status)
+                {
+                    case RegionRequestQueueUpdateVar.eRRQ_RaidNotAllowed:
+                    case RegionRequestQueueUpdateVar.eRRQ_PartyTooLarge:
+                        SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageQueueNotAvailableInRaid);
+                        break;
+
+                    case RegionRequestQueueUpdateVar.eRRQ_WaitingInWaitlist:
+                        SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageTeleportTargetIsInMatch);
+                        break;
+                }
+            }
+
+            // Send chat log message if the status actually changed.
+            if (changed)
+            {
+                CommunityMember member = Community.GetMember(playerGuid);
+
+                string chatLogPlayerName;
+
+                // Get up to date player name if possible.
+                if (isUpdatingSelf)
+                    chatLogPlayerName = GetName();
+                else if (member != null)
+                    chatLogPlayerName = member.GetName();
+                else
+                    chatLogPlayerName = playerName;
+
+                var chatLogMessage = NetMessageChatFromMetaGame.CreateBuilder()
+                    .SetSourceStringId((ulong)GameDatabase.GlobalsPrototype.SystemLocalized)
+                    .SetMessageStringId((ulong)GameDatabase.TransitionGlobalsPrototype.GetLocaleStringIdForLog(status))
+                    .SetPlayerName1(chatLogPlayerName)
+                    .AddArgStringIds((ulong)regionProto.RegionName)
+                    .Build();
+
+                SendMessage(chatLogMessage);
+            }
+
+            return true;
+        }
+
         public void SendMatchQueueUpdate(ulong playerGuid, PrototypeId regionRef, PrototypeId difficultyTierRef, ulong groupId,
             RegionRequestQueueUpdateVar status, string playerName = null, int playersInQueue = -1)
         {
@@ -2817,11 +2876,11 @@ namespace MHServerEmu.Games.Entities
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo:
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueParty:
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass:
-                    SendMatchQueueUpdate(DatabaseUniqueId, regionRef, difficultyTierRef, groupId, RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue);
+                    UpdateMatchQueue(DatabaseUniqueId, regionRef, difficultyTierRef, 0, groupId, RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue, GetName());
                     break;
 
                 case RegionRequestQueueCommandVar.eRRQC_RemoveFromQueue:
-                    SendMatchQueueUpdate(DatabaseUniqueId, regionRef, difficultyTierRef, groupId, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup);
+                    UpdateMatchQueue(DatabaseUniqueId, regionRef, difficultyTierRef, 0, groupId, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup, GetName());
                     break;
             }
         }
