@@ -17,11 +17,11 @@ namespace MHServerEmu.Games.Entities.Persistence
         {
             dbAccount.ClearEntities();
 
-            StoreContainer(player, dbAccount);
+            StoreContainer(player, dbAccount, true);
 
             foreach (Avatar avatar in new AvatarIterator(player))
             {
-                StoreContainer(avatar, dbAccount);
+                StoreContainer(avatar, dbAccount, true);
             }
 
             EntityManager entityManager = player.Game.EntityManager;
@@ -35,7 +35,8 @@ namespace MHServerEmu.Games.Entities.Persistence
                     continue;
                 }
 
-                StoreContainer(teamUp, dbAccount);
+                // Team-ups shouldn't have transferrable summons, but disabling it explicitly just in case.
+                StoreContainer(teamUp, dbAccount, false);
             }
         }
 
@@ -44,11 +45,13 @@ namespace MHServerEmu.Games.Entities.Persistence
             RestoreContainer(player, dbAccount.Avatars);
             RestoreContainer(player, dbAccount.TeamUps);
             RestoreContainer(player, dbAccount.Items);
+            RestoreContainer(player, dbAccount.TransferredEntities);
 
             foreach (Avatar avatar in new AvatarIterator(player))
             {
                 RestoreContainer(avatar, dbAccount.Items);
                 RestoreContainer(avatar, dbAccount.ControlledEntities);
+                RestoreContainer(avatar, dbAccount.TransferredEntities);
             }
 
             EntityManager entityManager = player.Game.EntityManager;
@@ -63,15 +66,19 @@ namespace MHServerEmu.Games.Entities.Persistence
                 }
 
                 RestoreContainer(teamUp, dbAccount.Items);
+                RestoreContainer(teamUp, dbAccount.TransferredEntities);
             }
         }
 
-        private static bool StoreContainer(Entity container, DBAccount dbAccount)
+        private static bool StoreContainer(Entity container, DBAccount dbAccount, bool allowReplicateForTransfer)
         {
             foreach (Inventory inventory in new InventoryIterator(container))
             {
                 if (inventory.Prototype.PersistedToDatabase == false)
-                    continue;
+                {
+                    if (allowReplicateForTransfer == false || inventory.Prototype.ReplicateForTransfer == false)
+                        continue;
+                }
 
                 StoreInventory(inventory, dbAccount);
             }
@@ -85,7 +92,11 @@ namespace MHServerEmu.Games.Entities.Persistence
 
             DBEntityCollection entities;
 
-            if (inventory.Category == InventoryCategory.PlayerAvatars)
+            if (inventory.Prototype.PersistedToDatabase == false)
+            {
+                entities = dbAccount.TransferredEntities;
+            }
+            else if (inventory.Category == InventoryCategory.PlayerAvatars)
             {
                 entities = dbAccount.Avatars;
             }

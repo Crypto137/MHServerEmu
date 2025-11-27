@@ -1,12 +1,9 @@
 ﻿using Gazillion;
-using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.MatchQueues;
@@ -19,10 +16,6 @@ namespace MHServerEmu.Games.Network
         // We have everything in a self-contained server, so we can get away with just storing our migration data in a runtime object.
         // We can potentially use a separate archive that would contain just the migration data.
 
-        // TODO: Migrate summoned inventory.
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public static void Store(MigrationData migrationData, Entity entity)
         {
             StoreProperties(migrationData, entity);
@@ -32,6 +25,11 @@ namespace MHServerEmu.Games.Network
                 StoreWorldView(migrationData, player.PlayerConnection.WorldView);
                 StoreMatchQueueStatus(migrationData, player.MatchQueueStatus);
                 StoreCommunity(migrationData, player.Community);
+            }
+            else if (entity is Agent agent)
+            {
+                foreach (WorldEntity summon in new SummonedEntityIterator(agent))
+                    StoreProperties(migrationData, summon);
             }
         }
 
@@ -45,6 +43,11 @@ namespace MHServerEmu.Games.Network
                 RestoreMatchQueueStatus(migrationData, player.MatchQueueStatus);
                 RestoreCommunity(migrationData, player.Community);
             }
+            else if (entity is Agent agent)
+            {
+                foreach (WorldEntity summon in new SummonedEntityIterator(agent))
+                    RestoreProperties(migrationData, summon);
+            }
         }
 
         private static void StoreProperties(MigrationData migrationData, Entity entity)
@@ -57,14 +60,28 @@ namespace MHServerEmu.Games.Network
         private static void RestoreProperties(MigrationData migrationData, Entity entity)
         {
             PropertyCollection properties = entity.Properties;
+            ulong entityDbId = entity.DatabaseUniqueId;
 
-            List<(ulong, ulong)> propertyList = migrationData.GetOrCreatePropertyList(entity.DatabaseUniqueId);
+            List<(ulong, ulong)> propertyList = migrationData.GetOrCreatePropertyList(entityDbId);
 
             foreach (var kvp in propertyList)
             {
                 PropertyId propertyId = new(kvp.Item1);
                 PropertyValue propertyValue = kvp.Item2;
                 properties[propertyId] = propertyValue;
+            }
+
+            // Clean up lists for runtime entities (e.g. summons).
+            switch (entity.Prototype)
+            {
+                case PlayerPrototype:
+                case AvatarPrototype:
+                case AgentTeamUpPrototype:
+                    break;
+
+                default:
+                    migrationData.RemovePropertyList(entityDbId);
+                    break;
             }
         }
 
