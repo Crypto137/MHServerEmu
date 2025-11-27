@@ -1207,6 +1207,18 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
+        public void TriggerInventoryCleanupEvent(InventoryEvent inventoryEvent)
+        {
+            if (inventoryEvent == InventoryEvent.Invalid)
+            {
+                Logger.Warn("TriggerInventoryCleanupEvent(): inventoryEvent == InventoryEvent.Invalid");
+                return;
+            }
+
+            foreach (Inventory inventory in new InventoryIterator(this))
+                inventory.TriggerCleanupEvent(inventoryEvent);
+        }
+
         protected virtual bool InitInventories(bool populateInventories)
         {
             bool success = true;

@@ -15,6 +15,7 @@ using MHServerEmu.Games.DRAG;
 using MHServerEmu.Games.DRAG.Generators.Regions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
@@ -1572,6 +1573,8 @@ namespace MHServerEmu.Games.Regions
             // Track this player
             if (_players.Add(player.Id) == false)
                 Logger.Warn($"OnAddedToAOI(): Failed to add player id {player.Id}");
+
+            player.TriggerInventoryCleanupEvent(InventoryEvent.RegionChange);
         }
 
         public void OnRemovedFromAOI(Player player)

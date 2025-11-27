@@ -174,6 +174,58 @@ namespace MHServerEmu.Games.Entities.Inventories
             return true;
         }
 
+        public void TriggerCleanupEvent(InventoryEvent inventoryEvent)
+        {
+            InventoryPrototype inventoryProto = Prototype;
+            if (inventoryProto == null)
+            {
+                Logger.Warn("TriggerCleanupEvent(): inventoryProto == null");
+                return;
+            }
+
+            InventoryEvent destroyOnEvent = inventoryProto.DestroyContainedOnEvent;
+            if (destroyOnEvent == InventoryEvent.Invalid || destroyOnEvent != inventoryEvent)
+                return;
+
+            TimeSpan expirationTime = TimeSpan.FromSeconds(inventoryProto.DestroyContainedAfterSecs);
+
+            EntityManager entityManager = Game.EntityManager;
+            List<ulong> entitiesToDestroy = ListPool<ulong>.Instance.Get();
+
+            foreach (var entry in this)
+            {
+                Entity entity = entityManager.GetEntity<Entity>(entry.Id);
+                if (entity == null)
+                {
+                    Logger.Warn("TriggerInventoryCleanupEvent(): entity == null");
+                    continue;
+                }
+
+                if (entity.Properties.HasProperty(PropertyEnum.InventoryAddTime) == false)
+                    continue;
+
+                TimeSpan currentTime = Game.Current.CurrentTime;
+                TimeSpan elapsedTime = currentTime - entity.Properties[PropertyEnum.InventoryAddTime];
+
+                if (elapsedTime < expirationTime)
+                    continue;
+
+                entitiesToDestroy.Add(entity.Id);
+            }
+
+            foreach (ulong entityId in entitiesToDestroy)
+            {
+                // Retrieve the entity from id again in case this game's spaghetti code somehow destroyed it in a callback.
+                Entity entity = entityManager.GetEntity<Entity>(entityId);
+                if (entity == null)
+                    continue;
+
+                entity.Destroy();
+            }
+
+            ListPool<ulong>.Instance.Return(entitiesToDestroy);
+        }
+
         public int GetCapacity()
         {
             if (Prototype == null) return Logger.WarnReturn(0, "GetCapacity(): Prototype == null");
@@ -646,17 +698,24 @@ namespace MHServerEmu.Games.Entities.Inventories
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.InventoryLocationPrevious = prevInvLoc;
 
-            /*
-            settings.PreviousInventoryLocation = prevInvLoc;
-
-            if (prevInvLoc?.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarLegendary
+            if (prevInvLoc?.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarLibrary
                 && invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarInPlay)
             {
                 settings.OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden;
             }
-            */
 
             entity.UpdateInterestPolicies(true, settings);
+
+            // Timestamp entities in expirable inventories.
+            InventoryPrototype inventoryProto = Prototype;
+            if (inventoryProto == null) return Logger.WarnReturn(false, "PostAdd(): inventoryProto == null");
+
+            if (inventoryProto.DestroyContainedOnEvent != InventoryEvent.Invalid &&
+                entity.Properties.HasProperty(PropertyEnum.InventoryAddTime) == false)
+            {
+                TimeSpan timestamp = Game.Current.CurrentTime;
+                entity.Properties[PropertyEnum.InventoryAddTime] = timestamp;
+            }
 
             return true;
         }
@@ -673,6 +732,9 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             entity.OnSelfRemovedFromOtherInventory(prevInvLoc);
             entity.UpdateInterestPolicies(true);
+
+            if (withinSameInventory == false)
+                entity.Properties.RemoveProperty(PropertyEnum.InventoryAddTime);
 
             return true;
         }
