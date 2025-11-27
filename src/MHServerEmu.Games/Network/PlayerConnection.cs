@@ -159,10 +159,8 @@ namespace MHServerEmu.Games.Network
             if (Player == null)
                 throw new($"InitializeFromDBAccount(): Failed to create player entity for {_dbAccount}");
 
-            // Restore migrated data
-            MigrationUtility.RestoreProperties(migrationData.PlayerProperties, Player.Properties);
-            MigrationUtility.RestoreWorldView(migrationData, WorldView);
-            MigrationUtility.RestoreCommunity(migrationData, Player.Community);
+            // Restore migrated player data
+            MigrationUtility.Restore(migrationData, Player);
 
             // Add all badges to admin accounts
             if (_dbAccount.UserLevel == AccountUserLevel.Admin)
@@ -171,7 +169,7 @@ namespace MHServerEmu.Games.Network
                     Player.AddBadge(badge);
             }
 
-            // TODO: Improve new player detection
+            // Initialize new players.
             if (_dbAccount.Player.ArchiveData.IsNullOrEmpty())
             {
                 Player.InitializeMissionTrackerFilters();
@@ -184,22 +182,32 @@ namespace MHServerEmu.Games.Network
 
             PersistenceHelper.RestoreInventoryEntities(Player, _dbAccount);
 
+            // Create missing avatar entities if there are any (this should happen only for new players if there are no issue).
+            foreach (PrototypeId avatarRef in dataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                if (avatarRef == (PrototypeId)6044485448390219466) //zzzBrevikOLD.prototype
+                    continue;
+
+                if (Player.GetAvatar(avatarRef) != null)
+                    continue;
+
+                Avatar avatar = Player.CreateAvatar(avatarRef);
+                if (avatar == null)
+                    Logger.Warn($"LoadFromDBAccount(): Failed to create avatar {avatarRef.GetName()} for player [{Player}]");
+            }
+
+            // Swap to the default avatar if the player doesn't have an in-play avatar for whatever reason.
             if (Player.CurrentAvatar == null)
             {
-                // If we don't have an avatar after loading from the database it means this is a new player that we need to create avatars for
-                foreach (PrototypeId avatarRef in dataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-                {
-                    if (avatarRef == (PrototypeId)6044485448390219466) //zzzBrevikOLD.prototype
-                        continue;
-
-                    Player.CreateAvatar(avatarRef);
-                }
-
-                // Put the default avatar into the play inventory
+                Logger.Trace($"LoadFromDBAccount(): Auto selecting default starting avatar for [{Player}]");
                 Avatar defaultAvatar = Player.GetAvatar(GameDatabase.GlobalsPrototype.DefaultStartingAvatarPrototype);
                 Inventory avatarInPlay = Player.GetInventory(InventoryConvenienceLabel.AvatarInPlay);
                 defaultAvatar.ChangeInventoryLocation(avatarInPlay);
             }
+
+            // Restore migrated avatar data
+            foreach (Avatar avatar in new AvatarIterator(Player))
+                MigrationUtility.Restore(migrationData, avatar);
 
             // Apply versioning if needed
             if (PlayerVersioning.Apply(Player) == false)
@@ -255,9 +263,10 @@ namespace MHServerEmu.Games.Network
                 {
                     if (updateMigrationData)
                     {
-                        MigrationUtility.StoreProperties(migrationData.PlayerProperties, Player.Properties);
-                        MigrationUtility.StoreWorldView(migrationData, WorldView);
-                        MigrationUtility.StoreCommunity(migrationData, Player.Community);
+                        MigrationUtility.Store(migrationData, Player);
+
+                        foreach (Avatar avatar in new AvatarIterator(Player))
+                            MigrationUtility.Store(migrationData, avatar);
                     }
                 }
                 else

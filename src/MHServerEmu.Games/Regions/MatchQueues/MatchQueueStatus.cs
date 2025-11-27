@@ -24,6 +24,8 @@ namespace MHServerEmu.Games.Regions.MatchQueues
 
         private Player _owner;
 
+        public int Count { get => _regionStatusDict.Count; }
+
         /// <summary>
         /// Constructs a new <see cref="MatchQueueStatus"/> instance.
         /// </summary>

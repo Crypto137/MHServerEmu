@@ -11,6 +11,7 @@ namespace MHServerEmu.DatabaseAccess.Models
         // Store everything here as ulong, PropertyCollection will sort it out game-side
         public List<KeyValuePair<ulong, ulong>> PlayerProperties { get; } = new(256);
         public List<(ulong, ulong)> WorldView { get; } = new();
+        public byte[] MatchQueueStatus { get; set; }
         public List<CommunityMemberBroadcast> CommunityStatus { get; } = new();
 
         // TODO: Summoned inventory
@@ -24,6 +25,7 @@ namespace MHServerEmu.DatabaseAccess.Models
             IsFirstLoad = true;
             PlayerProperties.Clear();
             WorldView.Clear();
+            MatchQueueStatus = null;
             CommunityStatus.Clear();
         }
     }
