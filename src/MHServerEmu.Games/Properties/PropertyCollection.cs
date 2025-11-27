@@ -818,6 +818,28 @@ namespace MHServerEmu.Games.Properties
             return success;
         }
 
+        public void GetPropertiesForMigration(List<(ulong, ulong)> propertyList)
+        {
+            PropertyEnum prevProperty = PropertyEnum.Invalid;
+            PropertyInfoPrototype propInfoProto = null;
+
+            // Need to use base list for this so that we don't accidentally migrate properties from attached collections.
+            foreach (var kvp in _baseList)
+            {
+                PropertyEnum propertyEnum = kvp.Key.Enum;
+                if (propertyEnum != prevProperty)
+                {
+                    PropertyInfo propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+                    propInfoProto = propInfo.Prototype;
+                    prevProperty = propertyEnum;
+                }
+
+                // Migrate properties that are not saved to the database, but are supposed to be replicated for transfer
+                if (propInfoProto.ReplicateToDatabase == DatabasePolicy.None && propInfoProto.ReplicateForTransfer)
+                    propertyList.Add((kvp.Key.Raw, kvp.Value));
+            }
+        }
+
         /// <summary>
         /// Converts a <see cref="PropertyValue"/> to a <see cref="ulong"/> bit representation.
         /// </summary>

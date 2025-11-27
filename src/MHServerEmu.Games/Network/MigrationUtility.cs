@@ -1,9 +1,12 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.MatchQueues;
@@ -18,58 +21,49 @@ namespace MHServerEmu.Games.Network
 
         // TODO: Migrate summoned inventory.
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public static void Store(MigrationData migrationData, Entity entity)
         {
-            // TODO: Migrate avatar properties (e.g. endurance).
-            if (entity is not Player player)
-                return;
+            StoreProperties(migrationData, entity);
 
-            StoreProperties(migrationData.PlayerProperties, player.Properties);
-            StoreWorldView(migrationData, player.PlayerConnection.WorldView);
-            StoreMatchQueueStatus(migrationData, player.MatchQueueStatus);
-            StoreCommunity(migrationData, player.Community);
+            if (entity is Player player)
+            {
+                StoreWorldView(migrationData, player.PlayerConnection.WorldView);
+                StoreMatchQueueStatus(migrationData, player.MatchQueueStatus);
+                StoreCommunity(migrationData, player.Community);
+            }
         }
 
         public static void Restore(MigrationData migrationData, Entity entity)
         {
-            // TODO: Migrate avatar properties (e.g. endurance).
-            if (entity is not Player player)
-                return;
+            RestoreProperties(migrationData, entity);
 
-            RestoreProperties(migrationData.PlayerProperties, player.Properties);
-            RestoreWorldView(migrationData, player.PlayerConnection.WorldView);
-            RestoreMatchQueueStatus(migrationData, player.MatchQueueStatus);
-            RestoreCommunity(migrationData, player.Community);
-        }
-
-        private static void StoreProperties(List<KeyValuePair<ulong, ulong>> migrationDataList, PropertyCollection properties)
-        {
-            migrationDataList.Clear();
-
-            PropertyEnum prevProperty = PropertyEnum.Invalid;
-            PropertyInfoPrototype propInfoProto = null;
-            foreach (var kvp in properties)
+            if (entity is Player player)
             {
-                PropertyEnum propertyEnum = kvp.Key.Enum;
-                if (propertyEnum != prevProperty)
-                {
-                    PropertyInfo propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
-                    propInfoProto = propInfo.Prototype;
-                    prevProperty = propertyEnum;
-                }
-
-                // Migrate properties that are not saved to the database, but are supposed to be replicated for transfer
-                if (propInfoProto.ReplicateToDatabase == DatabasePolicy.None && propInfoProto.ReplicateForTransfer)
-                    migrationDataList.Add(new(kvp.Key.Raw, kvp.Value));
+                RestoreWorldView(migrationData, player.PlayerConnection.WorldView);
+                RestoreMatchQueueStatus(migrationData, player.MatchQueueStatus);
+                RestoreCommunity(migrationData, player.Community);
             }
         }
 
-        private static void RestoreProperties(List<KeyValuePair<ulong, ulong>> migrationDataList, PropertyCollection properties)
+        private static void StoreProperties(MigrationData migrationData, Entity entity)
         {
-            foreach (var kvp in migrationDataList)
+            List<(ulong, ulong)> propertyList = migrationData.GetOrCreatePropertyList(entity.DatabaseUniqueId);
+            propertyList.Clear();
+            entity.Properties.GetPropertiesForMigration(propertyList);
+        }
+
+        private static void RestoreProperties(MigrationData migrationData, Entity entity)
+        {
+            PropertyCollection properties = entity.Properties;
+
+            List<(ulong, ulong)> propertyList = migrationData.GetOrCreatePropertyList(entity.DatabaseUniqueId);
+
+            foreach (var kvp in propertyList)
             {
-                PropertyId propertyId = new(kvp.Key);
-                PropertyValue propertyValue = kvp.Value;
+                PropertyId propertyId = new(kvp.Item1);
+                PropertyValue propertyValue = kvp.Item2;
                 properties[propertyId] = propertyValue;
             }
         }
