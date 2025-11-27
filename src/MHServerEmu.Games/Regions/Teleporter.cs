@@ -228,7 +228,7 @@ namespace MHServerEmu.Games.Regions
                 if (Player.CanEnterRegion(regionProtoRef, DifficultyTierRef, false) == false)
                     return false;
 
-                if (destinationRegionProto.RegionQueueMethod.HasFlag(RegionQueueMethod.UsesRegionRequestQueue))
+                if (destinationRegionProto.IsQueueRegion)
                     return BeginTeleportToQueueTarget(regionProtoRef);
 
                 return TeleportToRemoteTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
@@ -372,7 +372,7 @@ namespace MHServerEmu.Games.Regions
             }
 
             RegionPrototype currentRegionProto = Player.GetRegion()?.Prototype;
-            if (currentRegionProto != null && currentRegionProto.RegionQueueMethod.HasFlag(RegionQueueMethod.UsesRegionRequestQueue))
+            if (currentRegionProto != null && currentRegionProto.IsQueueRegion)
             {
                 Player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageCantQueueInQueueRegion);
                 return false;
@@ -386,7 +386,7 @@ namespace MHServerEmu.Games.Regions
             }
 
             // Queue up straight away if there is nothing to choose (queue bypass is not allowed and we are not in a party).
-            if (destinationRegionProto.RegionQueueMethod.HasFlag(RegionQueueMethod.QueueBypass) == false && party == null)
+            if (destinationRegionProto.AllowsQueueBypass == false && party == null)
             {
                 Player.SendRegionRequestQueueCommandToPlayerManager(regionProtoRef, DifficultyTierRef, RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo);
                 return true;

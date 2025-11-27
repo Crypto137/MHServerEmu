@@ -4153,7 +4153,16 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            // TODO: Additional validation for match regions?
+            // Request queue if we are teleporting to a player in a different region, and it is a match region.
+            Player targetPlayer = Game.EntityManager.GetEntityByDbGuid<Player>(targetPlayerDbId);
+            Region targetRegion = targetPlayer?.GetRegion();
+
+            // We are guaranteed to have a current region here because we check above that our avatar is in the world.
+            if (targetRegion != null && targetRegion.Id != GetRegion().Id && targetRegion.IsQueueRegion)
+            {
+                SendRegionRequestQueueCommandToPlayerManager(PrototypeId.Invalid, PrototypeId.Invalid, RegionRequestQueueCommandVar.eRRQC_RequestToJoinGroup);
+                return true;
+            }
 
             // Teleport
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();

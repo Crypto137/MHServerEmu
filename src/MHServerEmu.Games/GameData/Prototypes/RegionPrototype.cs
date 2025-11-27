@@ -180,6 +180,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public bool IsPrivate { get => IsPublic == false; }
         [DoNotCopy]
+        public bool IsQueueRegion { get => RegionQueueMethod.HasFlag(RegionQueueMethod.UsesRegionRequestQueue); }
+        [DoNotCopy]
+        public bool AllowsQueueBypass { get => RegionQueueMethod.HasFlag(RegionQueueMethod.QueueBypass); }
+        [DoNotCopy]
         public TimeSpan Lifetime { get; private set; }
 
         private Dictionary<AssetId, List<LootTableAssignmentPrototype>> _lootTableMap = new();

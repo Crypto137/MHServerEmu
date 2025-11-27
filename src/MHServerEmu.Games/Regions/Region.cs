@@ -99,6 +99,7 @@ namespace MHServerEmu.Games.Regions
         public RegionBehavior Behavior { get => Prototype != null ? Prototype.Behavior : RegionBehavior.Invalid; }
         public bool CanBeLastTown { get => Behavior == RegionBehavior.Town || PrototypeDataRef == GameDatabase.GlobalsPrototype.PrestigeRegionProtoRef; }
         public bool AllowsPartyFormation { get => Prototype != null && Prototype.PartyFormationAllowed; }
+        public bool IsQueueRegion { get => Prototype != null && Prototype.IsQueueRegion; }
 
         public Aabb Aabb { get; private set; }
         public Aabb2 Aabb2 { get => new(Aabb); }

@@ -239,7 +239,7 @@ namespace MHServerEmu.Games.Regions.MatchQueues
                     return Logger.WarnReturn(false, $"TryRegionRequestCommand(): Received command {command} from [{_owner}]");
             }
 
-            if (command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass && regionProto.RegionQueueMethod.HasFlag(RegionQueueMethod.QueueBypass) == false)
+            if (command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass && regionProto.AllowsQueueBypass == false)
                 return false;
 
             _owner.SendRegionRequestQueueCommandToPlayerManager(regionRef, difficultyTierRef, command);
