@@ -659,6 +659,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public int Index { get; set; }
+
+        [DoNotCopy]
+        public bool CanQueue { get => StateParent != PrototypeId.Invalid || State == PrototypeId.Invalid; }
     }
 
     public class DividedStartLocationPrototype : Prototype

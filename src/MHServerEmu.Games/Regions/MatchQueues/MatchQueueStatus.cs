@@ -244,7 +244,7 @@ namespace MHServerEmu.Games.Regions.MatchQueues
             if (command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass && regionProto.AllowsQueueBypass == false)
                 return false;
 
-            _owner.SendRegionRequestQueueCommandToPlayerManager(regionRef, difficultyTierRef, command);
+            _owner.SendRegionRequestQueueCommandToPlayerManager(regionRef, difficultyTierRef, command, groupId);
             return true;
         }
 

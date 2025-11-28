@@ -93,6 +93,10 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnPartyBoostUpdate(partyBoostUpdate);
                     break;
 
+                case ServiceMessage.MatchRegionRequestQueueCommand matchRegionRequestQueueCommand:
+                    OnMatchRegionRequestQueueCommand(matchRegionRequestQueueCommand);
+                    break;
+
                 case ServiceMessage.AuthRequest authRequest:
                     OnAuthRequest(authRequest);
                     break;
@@ -364,6 +368,44 @@ namespace MHServerEmu.PlayerManagement.Network
 
             player.SetPartyBoosts(boosts);
             player.CurrentParty?.UpdateMember(player);
+
+            return true;
+        }
+
+        private bool OnMatchRegionRequestQueueCommand(in ServiceMessage.MatchRegionRequestQueueCommand matchRegionRequestQueueCommand)
+        {
+            ulong playerDbId = matchRegionRequestQueueCommand.PlayerDbId;
+            ulong regionProtoId = matchRegionRequestQueueCommand.RegionProtoId;
+            ulong difficultyTierProtoId = matchRegionRequestQueueCommand.DifficultyTierProtoId;
+            ulong metaStateProtoId = matchRegionRequestQueueCommand.MetaStateProtoId;
+            RegionRequestQueueCommandVar command = matchRegionRequestQueueCommand.Command;
+            ulong regionRequestGroupId = matchRegionRequestQueueCommand.RegionRequestGroupId;
+            ulong targetPlayerDbId = matchRegionRequestQueueCommand.TargetPlayerDbId;
+
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
+            if (player == null) return Logger.WarnReturn(false, "OnMatchRegionRequestQueueCommand(): player == null");
+
+            Logger.Debug($"OnMatchRegionRequestQueueCommand(): {command}");
+
+            // REMOVEME: debug command handling
+            ServiceMessage.MatchQueueUpdate message = new(player.CurrentGame.Id, playerDbId, regionProtoId,
+                difficultyTierProtoId, 0, regionRequestGroupId, new());
+
+            switch (command)
+            {
+                case RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo:
+                case RegionRequestQueueCommandVar.eRRQC_AddToQueueParty:
+                case RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass:
+                    message.Data.Add(new(player.PlayerDbId, RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue));
+                    break;
+
+                case RegionRequestQueueCommandVar.eRRQC_RemoveFromQueue:
+                    message.Data.Add(new(player.PlayerDbId, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup));
+                    break;
+            }
+
+            if (message.Data.Count > 0)
+                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
 
             return true;
         }

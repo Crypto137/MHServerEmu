@@ -2864,25 +2864,45 @@ namespace MHServerEmu.Games.Entities
             SendMessage(builder.Build());
         }
 
-        public void SendRegionRequestQueueCommandToPlayerManager(PrototypeId regionRef, PrototypeId difficultyTierRef,
-            RegionRequestQueueCommandVar command, ulong groupId = 0)
+        public bool SendRegionRequestQueueCommandToPlayerManager(PrototypeId regionRef, PrototypeId difficultyTierRef,
+            RegionRequestQueueCommandVar command, ulong groupId = 0, ulong targetPlayerDbId = 0)
         {
-            // TODO: Send to player manager
             Logger.Debug($"SendRegionRequestQueueCommandToPlayerManager(): {regionRef.GetNameFormatted()}[{difficultyTierRef.GetNameFormatted()}] - {command}");
 
-            // REMOVEME: debug command handling
+            ulong playerDbId = DatabaseUniqueId;
+            ulong regionProtoId = (ulong)regionRef;
+            ulong difficultyTierProtoId = (ulong)difficultyTierRef;
+            ulong metaStateProtoId = 0;
+
             switch (command)
             {
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo:
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueParty:
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass:
-                    UpdateMatchQueue(DatabaseUniqueId, regionRef, difficultyTierRef, 0, groupId, RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue, GetName());
-                    break;
+                    Avatar avatar = CurrentAvatar;
 
-                case RegionRequestQueueCommandVar.eRRQC_RemoveFromQueue:
-                    UpdateMatchQueue(DatabaseUniqueId, regionRef, difficultyTierRef, 0, groupId, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup, GetName());
+                    PrototypeId metaGameRef = PrototypeId.Invalid;
+                    PrototypeId metaStateRef = PrototypeId.Invalid;
+                    TimeSpan time = TimeSpan.Zero;
+                    if (avatar != null && MetaGame.LoadMetaStateProgress(avatar, regionRef, difficultyTierRef, ref metaGameRef, ref metaStateRef, ref time))
+                    {
+                        RegionQueueStateEntryPrototype queueStateProto = regionRef.As<RegionPrototype>()?.GetRegionQueueStateEntry(metaStateRef);
+                        if (queueStateProto != null)
+                        {
+                            if (queueStateProto.CanQueue == false)
+                                return Logger.WarnReturn(false, "SendRegionRequestQueueCommandToPlayerManager(): queueStateProto.CanQueue == false");
+
+                            metaStateProtoId = (ulong)queueStateProto.State;
+                        }
+                    }
+
                     break;
             }
+
+            ServiceMessage.MatchRegionRequestQueueCommand message = new(playerDbId, regionProtoId, difficultyTierProtoId, metaStateProtoId, command, groupId, targetPlayerDbId);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+
+            return true;
         }
 
         #endregion
@@ -4219,7 +4239,7 @@ namespace MHServerEmu.Games.Entities
             // We are guaranteed to have a current region here because we check above that our avatar is in the world.
             if (targetRegion != null && targetRegion.Id != GetRegion().Id && targetRegion.IsQueueRegion)
             {
-                SendRegionRequestQueueCommandToPlayerManager(PrototypeId.Invalid, PrototypeId.Invalid, RegionRequestQueueCommandVar.eRRQC_RequestToJoinGroup);
+                SendRegionRequestQueueCommandToPlayerManager(PrototypeId.Invalid, PrototypeId.Invalid, RegionRequestQueueCommandVar.eRRQC_RequestToJoinGroup, 0, targetPlayerDbId);
                 return true;
             }
 
