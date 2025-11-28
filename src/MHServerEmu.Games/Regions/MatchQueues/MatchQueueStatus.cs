@@ -248,6 +248,15 @@ namespace MHServerEmu.Games.Regions.MatchQueues
             return true;
         }
 
+        public void RemoveFromAllQueues()
+        {
+            if (_owner == null)
+                return;
+
+            foreach ((PrototypeId regionRef, PrototypeId difficultyTierRef) in _regionStatusDict.Keys)
+                _owner.SendRegionRequestQueueCommandToPlayerManager(regionRef, difficultyTierRef, RegionRequestQueueCommandVar.eRRQC_RemoveFromQueue);
+        }
+
         /// <summary>
         /// Returns <see langword="true"/> if the specified <see cref="RegionRequestQueueUpdateVar"/> requires the player to be removed.
         /// </summary>
