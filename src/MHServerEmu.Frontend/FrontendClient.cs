@@ -16,7 +16,7 @@ namespace MHServerEmu.Frontend
     {
         // Rate limit at 8 KB/s with a bit of burst allowed.
         private const int RateLimitBytesPerSecond = 1024 * 8;
-        private const int RateLimitBurst = RateLimitBytesPerSecond * 10;
+        private const int RateLimitBurst = RateLimitBytesPerSecond * 15;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
