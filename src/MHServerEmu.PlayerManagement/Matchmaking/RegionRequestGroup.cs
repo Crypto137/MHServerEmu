@@ -1,5 +1,7 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Social;
@@ -12,7 +14,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         private static ulong _currentGroupId = 0;
 
-        private readonly HashSet<PlayerHandle> _players = new();
+        private readonly Dictionary<ulong, RegionRequestGroupMember> _members = new();
 
         public ulong Id { get; }
         public RegionRequestQueue Queue { get; }
@@ -45,27 +47,27 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 players.Add(player);
 
             RegionRequestGroup group = new(groupId, queue, difficultyTierRef, metaStateRef, isBypass);
-            group.AddPlayers(player, players);
+            group.AddPlayers(players);
 
             return group;
         }
 
-        public void AddPlayers(PlayerHandle inviter, HashSet<PlayerHandle> invitees)
+        public void AddPlayers(HashSet<PlayerHandle> players)
         {
-            foreach (PlayerHandle invitee in invitees)
-            {
-                _players.Add(invitee);
-                invitee.RegionRequestGroup = this;
-            }
+            if (players == null)
+                return;
+
+            foreach (PlayerHandle player in players)
+                AddPlayerInternal(player);
         }
 
         public void RemovePlayers(HashSet<PlayerHandle> players)
         {
+            if (players == null)
+                return;
+
             foreach (PlayerHandle player in players)
-            {
-                _players.Remove(player);
-                player.RegionRequestGroup = null;
-            }
+                RemovePlayerInternal(player);
         }
 
         public void RemovePlayer(PlayerHandle player)
@@ -74,6 +76,94 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             players.Add(player);
             RemovePlayers(players);
             HashSetPool<PlayerHandle>.Instance.Return(players);
+        }
+
+        public void UpdatePlayerStatus(PlayerHandle updatePlayer, RegionRequestQueueUpdateVar status)
+        {
+            // Update player may no longer be a member of this group, but we still need to send an update to them (e.g. after removing)
+            SendStatusUpdate(updatePlayer, updatePlayer, status);
+
+            foreach (RegionRequestGroupMember member in _members.Values)
+            {
+                PlayerHandle recipientPlayer = member.Player;
+
+                if (recipientPlayer == updatePlayer)
+                    member.Status = status;
+                else
+                    SendStatusUpdate(recipientPlayer, updatePlayer, status);
+            }
+        }
+
+        private bool AddPlayerInternal(PlayerHandle player)
+        {
+            ulong playerDbId = player.PlayerDbId;
+
+            if (_members.ContainsKey(playerDbId))
+                return false;
+
+            RegionRequestGroupMember member = new(this, player);
+            _members.Add(playerDbId, member);
+
+            player.RegionRequestGroup = this;
+
+            member.Status = RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue;    // REMOVEME
+
+            SyncStatus(player);
+
+            return true;
+        }
+
+        private bool RemovePlayerInternal(PlayerHandle player)
+        {
+            ulong playerDbId = player.PlayerDbId;
+
+            if (_members.Remove(playerDbId) == false)
+                Logger.Warn($"RemovePlayerInternal(): Player [{player}] is not a member of region request group {Id}");
+
+            player.RegionRequestGroup = null;
+
+            UpdatePlayerStatus(player, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup);
+
+            return true;
+        }
+
+        private void SyncStatus(PlayerHandle recipientPlayer)
+        {
+            foreach (RegionRequestGroupMember member in _members.Values)
+                SendStatusUpdate(recipientPlayer, member.Player, member.Status);
+        }
+
+        private void SendStatusUpdate(PlayerHandle recipientPlayer, PlayerHandle updatePlayer, RegionRequestQueueUpdateVar status)
+        {
+            if (recipientPlayer == null)
+                return;
+
+            if (recipientPlayer.State != PlayerHandleState.InGame)
+                return;
+
+            if (updatePlayer == null)
+                return;
+
+            ulong gameId = recipientPlayer.CurrentGame.Id;
+            ulong playerDbId = recipientPlayer.PlayerDbId;
+            ulong regionProtoId = (ulong)Queue.PrototypeDataRef;
+            ulong difficultyTierProtoId = (ulong)DifficultyTierRef;
+            int playersInQueue = 0;
+            ulong regionRequestGroupId = Id;
+
+            ServiceMessage.MatchQueueUpdate message = new(gameId, playerDbId, regionProtoId, difficultyTierProtoId,
+                playersInQueue, regionRequestGroupId, new());
+
+            ulong updatePlayerGuid = updatePlayer.PlayerDbId;
+            string updatePlayerName = null;
+
+            if (recipientPlayer.CurrentParty == null || recipientPlayer.CurrentParty.HasMember(updatePlayer) == false)
+                updatePlayerName = updatePlayer.PlayerName;
+
+            ServiceMessage.MatchQueueUpdateData updatePlayerData = new(updatePlayerGuid, status, updatePlayerName);
+            message.Data.Add(updatePlayerData);
+
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
     }
 }

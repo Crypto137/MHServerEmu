@@ -1,6 +1,5 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Social;
@@ -52,23 +51,13 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             // TODO: Validate
 
-
             // Create region request group
             MasterParty party = command == RegionRequestQueueCommandVar.eRRQC_AddToQueueParty ? _player.CurrentParty : null;
             bool isBypass = command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass;
             RegionRequestGroup group = RegionRequestGroup.Create(queue, difficultyTierRef, metaStateRef, _player, party, isBypass);
+
             if (group == null)
                 return Logger.WarnReturn(false, $"OnAddToQueue(): Failed to create region request group for player [{_player}]");
-
-            // TODO: Move this update sending to RegionRequestGroup
-            ulong playerDbId = _player.PlayerDbId;
-
-            ServiceMessage.MatchQueueUpdate message = new(_player.CurrentGame.Id, playerDbId, (ulong)regionRef,
-                (ulong)difficultyTierRef, 0, group.Id, new());
-
-            message.Data.Add(new(playerDbId, RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue));
-
-            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
 
             return true;
         }
@@ -85,15 +74,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 return;
 
             group.RemovePlayer(_player);
-
-            ulong playerDbId = _player.PlayerDbId;
-
-            ServiceMessage.MatchQueueUpdate message = new(_player.CurrentGame.Id, playerDbId, (ulong)group.Queue.PrototypeDataRef,
-                (ulong)group.DifficultyTierRef, 0, group.Id, new());
-
-            message.Data.Add(new(playerDbId, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup));
-
-            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 
         private void OnMatchInviteResponse(bool response)
