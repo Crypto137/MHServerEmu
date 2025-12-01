@@ -106,7 +106,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             player.RegionRequestGroup = this;
 
-            member.Status = RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue;    // REMOVEME
+            member.SetState(RegionRequestGroupMember.WaitingInQueueState.Instance);
 
             SyncStatus(player);
 
