@@ -375,38 +375,15 @@ namespace MHServerEmu.PlayerManagement.Network
         private bool OnMatchRegionRequestQueueCommand(in ServiceMessage.MatchRegionRequestQueueCommand matchRegionRequestQueueCommand)
         {
             ulong playerDbId = matchRegionRequestQueueCommand.PlayerDbId;
-            ulong regionProtoId = matchRegionRequestQueueCommand.RegionProtoId;
-            ulong difficultyTierProtoId = matchRegionRequestQueueCommand.DifficultyTierProtoId;
-            ulong metaStateProtoId = matchRegionRequestQueueCommand.MetaStateProtoId;
+            PrototypeId regionRef = (PrototypeId)matchRegionRequestQueueCommand.RegionProtoId;
+            PrototypeId difficultyTierRef = (PrototypeId)matchRegionRequestQueueCommand.DifficultyTierProtoId;
+            PrototypeId metaStateRef = (PrototypeId)matchRegionRequestQueueCommand.MetaStateProtoId;
             RegionRequestQueueCommandVar command = matchRegionRequestQueueCommand.Command;
             ulong regionRequestGroupId = matchRegionRequestQueueCommand.RegionRequestGroupId;
             ulong targetPlayerDbId = matchRegionRequestQueueCommand.TargetPlayerDbId;
 
             PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
-            if (player == null) return Logger.WarnReturn(false, "OnMatchRegionRequestQueueCommand(): player == null");
-
-            Logger.Debug($"OnMatchRegionRequestQueueCommand(): {command}");
-
-            // REMOVEME: debug command handling
-            ServiceMessage.MatchQueueUpdate message = new(player.CurrentGame.Id, playerDbId, regionProtoId,
-                difficultyTierProtoId, 0, regionRequestGroupId, new());
-
-            switch (command)
-            {
-                case RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo:
-                case RegionRequestQueueCommandVar.eRRQC_AddToQueueParty:
-                case RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass:
-                    message.Data.Add(new(player.PlayerDbId, RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue));
-                    break;
-
-                case RegionRequestQueueCommandVar.eRRQC_RemoveFromQueue:
-                    message.Data.Add(new(player.PlayerDbId, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup));
-                    break;
-            }
-
-            if (message.Data.Count > 0)
-                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
-
+            player?.ReceiveRegionRequestQueueCommand(regionRef, difficultyTierRef, metaStateRef, command, regionRequestGroupId, targetPlayerDbId);
             return true;
         }
 

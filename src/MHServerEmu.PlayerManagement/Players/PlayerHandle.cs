@@ -9,6 +9,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Games;
+using MHServerEmu.PlayerManagement.Matchmaking;
 using MHServerEmu.PlayerManagement.Regions;
 using MHServerEmu.PlayerManagement.Social;
 
@@ -36,6 +37,7 @@ namespace MHServerEmu.PlayerManagement.Players
         private static ulong _nextTransferId = 1;
 
         private readonly HashSet<PrototypeGuid> _partyBoosts = new();
+        private readonly RegionRequestQueueCommandHandler _regionRequestQueueCommandHandler;
 
         private bool _saveNeeded = false;   // Dirty flag for player data
 
@@ -83,6 +85,8 @@ namespace MHServerEmu.PlayerManagement.Players
             State = PlayerHandleState.Created;
 
             DifficultyTierPreference = GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+
+            _regionRequestQueueCommandHandler = new(this);
         }
 
         public override string ToString()
@@ -614,6 +618,12 @@ namespace MHServerEmu.PlayerManagement.Players
 
                 _partyBoosts.Add((PrototypeGuid)boost);
             }
+        }
+
+        public void ReceiveRegionRequestQueueCommand(PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId metaStateRef,
+            RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId)
+        {
+            _regionRequestQueueCommandHandler.HandleCommand(regionRef, difficultyTierRef, metaStateRef, command, regionRequestGroupId, targetPlayerDbId);
         }
 
         private void SetTransferParams(ulong gameId, NetStructTransferParams transferParams)
