@@ -6,6 +6,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.Games;
 using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Games;
+using MHServerEmu.PlayerManagement.Matchmaking;
 using MHServerEmu.PlayerManagement.Network;
 using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Regions;
@@ -34,6 +35,7 @@ namespace MHServerEmu.PlayerManagement
         internal ClientManager ClientManager { get; }
         internal CommunityRegistry CommunityRegistry { get; }
         internal MasterPartyManager PartyManager { get; }
+        internal RegionRequestQueueManager RegionRequestQueueManager { get; }
 
         public PlayerManagerConfig Config { get; }
 
@@ -53,6 +55,7 @@ namespace MHServerEmu.PlayerManagement
             ClientManager = new(this);
             CommunityRegistry = new(this);
             PartyManager = new(this);
+            RegionRequestQueueManager = new(this);
 
             Config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
         }
@@ -62,6 +65,9 @@ namespace MHServerEmu.PlayerManagement
         public void Run()
         {
             Instance = this;
+            State = GameServiceState.Starting;
+
+            RegionRequestQueueManager.Initialize();
 
             State = GameServiceState.Running;
             while (State == GameServiceState.Running)

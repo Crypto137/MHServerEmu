@@ -69,6 +69,8 @@ namespace MHServerEmu.PlayerManagement.Players
         public MasterParty PendingParty { get; internal set; }
         public MasterParty CurrentParty { get; internal set; }
 
+        public RegionRequestGroup RegionRequestGroup { get; internal set; }
+
         public bool HasTransferParams { get => _transferParams != null; }
 
         public PlayerHandle(IFrontendClient client)

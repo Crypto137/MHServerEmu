@@ -3,6 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Players;
+using MHServerEmu.PlayerManagement.Social;
 
 namespace MHServerEmu.PlayerManagement.Matchmaking
 {
@@ -23,31 +24,86 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public void HandleCommand(PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId metaStateRef,
             RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId)
         {
-            Logger.Debug($"HandleCommand(): {command}");
-
-            // REMOVEME: debug command handling
-            ulong gameId = _player.CurrentGame.Id;
-            ulong playerDbId = _player.PlayerDbId;
-
-            ServiceMessage.MatchQueueUpdate message = new(_player.CurrentGame.Id, playerDbId, (ulong)regionRef,
-                (ulong)difficultyTierRef, 0, regionRequestGroupId, new());
+            Logger.Info($"HandleCommand(): player=[{_player}], region=[{regionRef.GetNameFormatted()}] command=[{command}]");
 
             switch (command)
             {
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo:
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueParty:
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass:
-                    message.Data.Add(new(playerDbId, RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue));
+                    OnAddToQueue(regionRef, difficultyTierRef, metaStateRef, command);
                     break;
 
                 case RegionRequestQueueCommandVar.eRRQC_RemoveFromQueue:
-                    message.Data.Add(new(playerDbId, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup));
+                    OnRemoveFromQueue();
+                    break;
+
+                default:
+                    Logger.Warn($"HandleCommand(): Unhandled command {command} from player [{_player}]");
                     break;
             }
-
-            if (message.Data.Count > 0)
-                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 
+        private bool OnAddToQueue(PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId metaStateRef, RegionRequestQueueCommandVar command)
+        {
+            RegionRequestQueue queue = PlayerManagerService.Instance.RegionRequestQueueManager.GetRegionRequestQueue(regionRef);
+            if (queue == null)
+                return Logger.WarnReturn(false, $"OnAddToQueue(): Player [{_player}] attempted to enter queue for non-queue region [{regionRef.GetName()}]");
+
+            // TODO: Validate
+
+
+            // Create region request group
+            MasterParty party = command == RegionRequestQueueCommandVar.eRRQC_AddToQueueParty ? _player.CurrentParty : null;
+            bool isBypass = command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass;
+            RegionRequestGroup group = RegionRequestGroup.Create(queue, difficultyTierRef, metaStateRef, _player, party, isBypass);
+            if (group == null)
+                return Logger.WarnReturn(false, $"OnAddToQueue(): Failed to create region request group for player [{_player}]");
+
+            // TODO: Move this update sending to RegionRequestGroup
+            ulong playerDbId = _player.PlayerDbId;
+
+            ServiceMessage.MatchQueueUpdate message = new(_player.CurrentGame.Id, playerDbId, (ulong)regionRef,
+                (ulong)difficultyTierRef, 0, group.Id, new());
+
+            message.Data.Add(new(playerDbId, RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue));
+
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+
+            return true;
+        }
+
+        private void OnGroupInviteResponse(ulong regionRequestGroupId, bool response)
+        {
+
+        }
+
+        private void OnRemoveFromQueue()
+        {
+            RegionRequestGroup group = _player.RegionRequestGroup;
+            if (group == null)
+                return;
+
+            group.RemovePlayer(_player);
+
+            ulong playerDbId = _player.PlayerDbId;
+
+            ServiceMessage.MatchQueueUpdate message = new(_player.CurrentGame.Id, playerDbId, (ulong)group.Queue.PrototypeDataRef,
+                (ulong)group.DifficultyTierRef, 0, group.Id, new());
+
+            message.Data.Add(new(playerDbId, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup));
+
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+        }
+
+        private void OnMatchInviteResponse(bool response)
+        {
+
+        }
+
+        private void OnRequestToJoinGroup()
+        {
+
+        }
     }
 }
