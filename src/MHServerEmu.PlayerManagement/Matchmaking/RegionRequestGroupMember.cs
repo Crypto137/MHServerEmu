@@ -12,6 +12,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public RegionRequestQueueUpdateVar StatusVar { get; }
 
         public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState);
+        public void OnEntered(RegionRequestGroupMember member) { }
+        public void OnExited(RegionRequestGroupMember member) { }
     }
 
     public class RegionRequestGroupMember
@@ -52,21 +54,10 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 return Logger.WarnReturn(false, "SetStateInternal(): newState == oldState");
 
             State = newState;
+            oldState.OnExited(this);
+            newState.OnEntered(this);
+
             Group.UpdatePlayerStatus(Player, newState.StatusVar);
-
-            /* TODO: Set and cancel expiration timers for RemovedGracePeriod, GroupInvitePendingState, and MatchInvitePendingState
-            switch (newState)
-            {
-                case RemovedGracePeriod:
-                    break;
-
-                case GroupInvitePendingState:
-                    break;
-
-                case MatchInvitePendingState:
-                    break;
-            }
-            */
 
             return true;
         }
@@ -107,27 +98,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        public class RemovedGracePeriodState : IRegionRequestGroupMemberState
-        {
-            public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_RemovedGracePeriod; }
-
-            public static RemovedGracePeriodState Instance { get; } = new();
-
-            private RemovedGracePeriodState() { }
-
-            public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState)
-            {
-                switch (newState)
-                {
-                    case MatchInviteAcceptedState:
-                        return member.SetStateInternal(newState);
-
-                    default:
-                        return member.OnInvalidStateTransition(newState);
-                }
-            }
-        }
-
         public class GroupInvitePendingState : IRegionRequestGroupMemberState
         {
             public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_GroupInvitePending; }
@@ -146,6 +116,21 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     default:
                         return member.OnInvalidStateTransition(newState);
                 }
+            }
+
+            public void OnEntered(RegionRequestGroupMember member)
+            {
+                var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingGroupInviteExpired;
+
+                eventScheduler.ScheduleEvent(member.Player.PlayerDbId, TimeSpan.FromSeconds(30),
+                    member.Group.GroupInviteExpiredCallback, member.Player);
+            }
+
+            public void OnExited(RegionRequestGroupMember member)
+            {
+                var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingGroupInviteExpired;
+
+                eventScheduler.CancelEvent(member.Player.PlayerDbId);
             }
         }
 
@@ -261,6 +246,21 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                         return member.OnInvalidStateTransition(newState);
                 }
             }
+
+            public void OnEntered(RegionRequestGroupMember member)
+            {
+                var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingMatchInviteExpired;
+
+                eventScheduler.ScheduleEvent(member.Player.PlayerDbId, TimeSpan.FromSeconds(30),
+                    member.Group.MatchInviteExpiredCallback, member.Player);
+            }
+
+            public void OnExited(RegionRequestGroupMember member)
+            {
+                var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingMatchInviteExpired;
+
+                eventScheduler.CancelEvent(member.Player.PlayerDbId);
+            }
         }
 
         public class MatchInviteAcceptedState : IRegionRequestGroupMemberState
@@ -303,6 +303,42 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     default:
                         return member.OnInvalidStateTransition(newState);
                 }
+            }
+        }
+
+        public class RemovedGracePeriodState : IRegionRequestGroupMemberState
+        {
+            public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_RemovedGracePeriod; }
+
+            public static RemovedGracePeriodState Instance { get; } = new();
+
+            private RemovedGracePeriodState() { }
+
+            public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState)
+            {
+                switch (newState)
+                {
+                    case MatchInviteAcceptedState:
+                        return member.SetStateInternal(newState);
+
+                    default:
+                        return member.OnInvalidStateTransition(newState);
+                }
+            }
+
+            public void OnEntered(RegionRequestGroupMember member)
+            {
+                var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingRemovedGracePeriodExpired;
+
+                eventScheduler.ScheduleEvent(member.Player.PlayerDbId, TimeSpan.FromMinutes(1),
+                    member.Group.RemovedGracePeriodExpiredCallback, member.Player);
+            }
+
+            public void OnExited(RegionRequestGroupMember member)
+            {
+                var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingRemovedGracePeriodExpired;
+
+                eventScheduler.CancelEvent(member.Player.PlayerDbId);
             }
         }
 
