@@ -5,15 +5,21 @@ using MHServerEmu.PlayerManagement.Players;
 namespace MHServerEmu.PlayerManagement.Matchmaking
 {
     /// <summary>
-    /// Represents a state of a <see cref="RegionRequestGroupMember"/>.
+    /// Represents the state of a <see cref="RegionRequestGroupMember"/>.
     /// </summary>
-    public interface IRegionRequestGroupMemberState
+    public abstract class RegionRequestGroupMemberState
     {
-        public RegionRequestQueueUpdateVar StatusVar { get; }
+        public virtual RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_Invalid; }
 
-        public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState);
-        public void OnEntered(RegionRequestGroupMember member) { }
-        public void OnExited(RegionRequestGroupMember member) { }
+        public override string ToString()
+        {
+            return GetType().Name;
+        }
+
+        public abstract bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState);
+
+        public virtual void OnEntered(RegionRequestGroupMember member) { }
+        public virtual void OnExited(RegionRequestGroupMember member) { }
     }
 
     public class RegionRequestGroupMember
@@ -22,7 +28,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public RegionRequestGroup Group { get; }
         public PlayerHandle Player { get; }
-        public IRegionRequestGroupMemberState State { get; private set; }
+        public RegionRequestGroupMemberState State { get; private set; }
         public RegionRequestQueueUpdateVar Status { get; set; }
 
         public RegionRequestGroupMember(RegionRequestGroup group, PlayerHandle player)
@@ -35,9 +41,12 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             Status = RegionRequestQueueUpdateVar.eRRQ_Invalid;
         }
 
-        public bool SetState(IRegionRequestGroupMemberState newState)
+        public bool SetState(RegionRequestGroupMemberState newState)
         {
-            IRegionRequestGroupMemberState oldState = State;
+            RegionRequestGroupMemberState oldState = State;
+
+            if (newState == null)
+                return Logger.WarnReturn(false, "SetState(): newState == null");
 
             if (newState == oldState)
                 return false;
@@ -45,9 +54,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return oldState.SetState(this, newState);
         }
 
-        private bool SetStateInternal(IRegionRequestGroupMemberState newState)
+        private bool SetStateInternal(RegionRequestGroupMemberState newState)
         {
-            IRegionRequestGroupMemberState oldState = State;
+            RegionRequestGroupMemberState oldState = State;
 
             // This should have already been validated by now
             if (newState == oldState)
@@ -62,7 +71,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return true;
         }
 
-        private bool OnInvalidStateTransition(IRegionRequestGroupMemberState newState)
+        private bool OnInvalidStateTransition(RegionRequestGroupMemberState newState)
         {
             Logger.Warn($"SetState(): Attempted invalid state transition {State} -> {newState} for player [{Player}]");
             return false;
@@ -72,15 +81,15 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         // NOTE: IRegionRequestGroupMemberState implementations need to be nested in RegionRequestGroupMember to be able to access its private members.
 
-        public class InitialState : IRegionRequestGroupMemberState
+        public sealed class InitialState : RegionRequestGroupMemberState
         {
-            public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_Invalid; }
+            public override RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_Invalid; }
 
             public static InitialState Instance { get; } = new();
 
             private InitialState() { }
 
-            public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState)
+            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
@@ -98,15 +107,15 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        public class GroupInvitePendingState : IRegionRequestGroupMemberState
+        public sealed class GroupInvitePendingState : RegionRequestGroupMemberState
         {
-            public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_GroupInvitePending; }
+            public override RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_GroupInvitePending; }
 
             public static GroupInvitePendingState Instance { get; } = new();
 
             private GroupInvitePendingState() { }
 
-            public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState)
+            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
@@ -118,7 +127,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 }
             }
 
-            public void OnEntered(RegionRequestGroupMember member)
+            public override void OnEntered(RegionRequestGroupMember member)
             {
                 var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingGroupInviteExpired;
 
@@ -126,7 +135,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     member.Group.GroupInviteExpiredCallback, member.Player);
             }
 
-            public void OnExited(RegionRequestGroupMember member)
+            public override void OnExited(RegionRequestGroupMember member)
             {
                 var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingGroupInviteExpired;
 
@@ -134,15 +143,15 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        public class GroupInviteAcceptedState : IRegionRequestGroupMemberState
+        public sealed class GroupInviteAcceptedState : RegionRequestGroupMemberState
         {
-            public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_GroupInviteAccepted; }
+            public override RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_GroupInviteAccepted; }
 
             public static GroupInviteAcceptedState Instance { get; } = new();
 
             private GroupInviteAcceptedState() { }
 
-            public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState)
+            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
@@ -162,15 +171,15 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        public class WaitingInQueueState : IRegionRequestGroupMemberState
+        public sealed class WaitingInQueueState : RegionRequestGroupMemberState
         {
-            public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue; }
+            public override RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_WaitingInQueue; }
 
             public static WaitingInQueueState Instance { get; } = new();
 
             private WaitingInQueueState() { }
 
-            public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState)
+            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
@@ -183,15 +192,15 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        public class WaitingInWaitlistState : IRegionRequestGroupMemberState
+        public sealed class WaitingInWaitlistState : RegionRequestGroupMemberState
         {
-            public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_WaitingInWaitlist; }
+            public override RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_WaitingInWaitlist; }
 
             public static WaitingInWaitlistState Instance { get; } = new();
 
             private WaitingInWaitlistState() { }
 
-            public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState)
+            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
@@ -207,15 +216,15 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         }
 
         // TODO: Figure out if we need this and how we can recover from this state.
-        public class WaitingInWaitlistLockedState : IRegionRequestGroupMemberState
+        public sealed class WaitingInWaitlistLockedState : RegionRequestGroupMemberState
         {
-            public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_WaitingInWaitlistLocked; }
+            public override RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_WaitingInWaitlistLocked; }
 
             public static WaitingInWaitlistLockedState Instance { get; } = new();
 
             private WaitingInWaitlistLockedState() { }
 
-            public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState)
+            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
@@ -225,15 +234,15 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        public class MatchInvitePendingState : IRegionRequestGroupMemberState
+        public sealed class MatchInvitePendingState : RegionRequestGroupMemberState
         {
-            public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_MatchInvitePending; }
+            public override RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_MatchInvitePending; }
 
             public static MatchInvitePendingState Instance { get; } = new();
 
             private MatchInvitePendingState() { }
 
-            public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState)
+            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
@@ -247,7 +256,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 }
             }
 
-            public void OnEntered(RegionRequestGroupMember member)
+            public override void OnEntered(RegionRequestGroupMember member)
             {
                 var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingMatchInviteExpired;
 
@@ -255,7 +264,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     member.Group.MatchInviteExpiredCallback, member.Player);
             }
 
-            public void OnExited(RegionRequestGroupMember member)
+            public override void OnExited(RegionRequestGroupMember member)
             {
                 var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingMatchInviteExpired;
 
@@ -263,15 +272,15 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        public class MatchInviteAcceptedState : IRegionRequestGroupMemberState
+        public sealed class MatchInviteAcceptedState : RegionRequestGroupMemberState
         {
-            public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_MatchInviteAccepted; }
+            public override RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_MatchInviteAccepted; }
 
             public static MatchInviteAcceptedState Instance { get; } = new();
 
             private MatchInviteAcceptedState() { }
 
-            public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState)
+            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
@@ -285,15 +294,15 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        public class InMatchState : IRegionRequestGroupMemberState
+        public sealed class InMatchState : RegionRequestGroupMemberState
         {
-            public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_InMatch; }
+            public override RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_InMatch; }
 
             public static InMatchState Instance { get; } = new();
 
             private InMatchState() { }
 
-            public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState)
+            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
@@ -306,15 +315,15 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        public class RemovedGracePeriodState : IRegionRequestGroupMemberState
+        public sealed class RemovedGracePeriodState : RegionRequestGroupMemberState
         {
-            public RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_RemovedGracePeriod; }
+            public override RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_RemovedGracePeriod; }
 
             public static RemovedGracePeriodState Instance { get; } = new();
 
             private RemovedGracePeriodState() { }
 
-            public bool SetState(RegionRequestGroupMember member, IRegionRequestGroupMemberState newState)
+            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
@@ -326,7 +335,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 }
             }
 
-            public void OnEntered(RegionRequestGroupMember member)
+            public override void OnEntered(RegionRequestGroupMember member)
             {
                 var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingRemovedGracePeriodExpired;
 
@@ -334,7 +343,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     member.Group.RemovedGracePeriodExpiredCallback, member.Player);
             }
 
-            public void OnExited(RegionRequestGroupMember member)
+            public override void OnExited(RegionRequestGroupMember member)
             {
                 var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingRemovedGracePeriodExpired;
 
