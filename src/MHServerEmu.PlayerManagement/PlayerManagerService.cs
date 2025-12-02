@@ -37,6 +37,8 @@ namespace MHServerEmu.PlayerManagement
         internal MasterPartyManager PartyManager { get; }
         internal RegionRequestQueueManager RegionRequestQueueManager { get; }
 
+        internal PlayerManagerEventScheduler EventScheduler { get; }
+
         public PlayerManagerConfig Config { get; }
 
         public GameServiceState State { get; private set; } = GameServiceState.Created;
@@ -56,6 +58,8 @@ namespace MHServerEmu.PlayerManagement
             CommunityRegistry = new(this);
             PartyManager = new(this);
             RegionRequestQueueManager = new(this);
+
+            EventScheduler = new();
 
             Config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
         }
@@ -80,6 +84,8 @@ namespace MHServerEmu.PlayerManagement
                 LoginQueueManager.Update();
                 ClientManager.Update();
                 CommunityRegistry.Update();
+
+                EventScheduler.TriggerEvents();
 
                 double tickTimeMS = (_stopwatch.Elapsed - referenceTime).TotalMilliseconds;
                 int sleepTimeMS = (int)Math.Max(TargetTickTimeMS - tickTimeMS, 0);

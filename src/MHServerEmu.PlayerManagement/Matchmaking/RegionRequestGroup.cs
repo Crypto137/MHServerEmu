@@ -22,6 +22,10 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public PrototypeId MetaStateRef { get; }
         public bool IsBypass { get; }
 
+        public Action<PlayerHandle> GroupInviteExpiredCallback { get; }
+        public Action<PlayerHandle> MatchInviteExpiredCallback { get; }
+        public Action<PlayerHandle> RemovedGracePeriodExpiredCallback { get; }
+
         private RegionRequestGroup(ulong id, RegionRequestQueue queue, PrototypeId difficultyTierRef, PrototypeId metaStateRef, bool isBypass)
         {
             Id = id;
@@ -30,6 +34,10 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             DifficultyTierRef = difficultyTierRef;
             MetaStateRef = metaStateRef;
             IsBypass = isBypass;
+
+            GroupInviteExpiredCallback = OnGroupInviteExpired;
+            MatchInviteExpiredCallback = OnMatchInviteExpired;
+            RemovedGracePeriodExpiredCallback = OnRemovedGracePeriodExpired;
         }
 
         public static RegionRequestGroup Create(RegionRequestQueue queue, PrototypeId difficultyTierRef, PrototypeId metaStateRef,
@@ -165,5 +173,42 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
+
+        #region Event Callbacks
+
+        private void OnGroupInviteExpired(PlayerHandle player)
+        {
+            if (_members.ContainsKey(player.PlayerDbId) == false)
+                return;
+
+            UpdatePlayerStatus(player, RegionRequestQueueUpdateVar.eRRQ_GroupInviteExpired);
+            RemovePlayer(player);
+
+            Logger.Info($"Group invite expired for player [{player}]");
+        }
+
+        private void OnMatchInviteExpired(PlayerHandle player)
+        {
+            if (_members.ContainsKey(player.PlayerDbId) == false)
+                return;
+
+            UpdatePlayerStatus(player, RegionRequestQueueUpdateVar.eRRQ_MatchInviteExpired);
+            RemovePlayer(player);
+
+            Logger.Info($"Match invite expired for player [{player}]");
+        }
+
+        private void OnRemovedGracePeriodExpired(PlayerHandle player)
+        {
+            if (_members.ContainsKey(player.PlayerDbId) == false)
+                return;
+
+            UpdatePlayerStatus(player, RegionRequestQueueUpdateVar.eRRQ_RemovedGracePeriodExpired);
+            RemovePlayer(player);
+
+            Logger.Info($"Remove grace period expired for player [{player}]");
+        }
+
+        #endregion
     }
 }
