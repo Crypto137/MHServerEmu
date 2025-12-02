@@ -62,8 +62,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (newState == oldState)
                 return Logger.WarnReturn(false, "SetStateInternal(): newState == oldState");
 
-            State = newState;
             oldState.OnExited(this);
+            State = newState;
             newState.OnEntered(this);
 
             Group.UpdatePlayerStatus(Player, newState.StatusVar);
@@ -79,7 +79,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         #region State Implementations
 
-        // NOTE: IRegionRequestGroupMemberState implementations need to be nested in RegionRequestGroupMember to be able to access its private members.
+        // NOTE: RegionRequestGroupMemberState implementations need to be nested in RegionRequestGroupMember to be able to access its private members.
 
         public sealed class InitialState : RegionRequestGroupMemberState
         {

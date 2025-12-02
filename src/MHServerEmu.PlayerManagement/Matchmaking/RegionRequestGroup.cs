@@ -8,6 +8,24 @@ using MHServerEmu.PlayerManagement.Social;
 
 namespace MHServerEmu.PlayerManagement.Matchmaking
 {
+    /// <summary>
+    /// Represents the state of a <see cref="RegionRequestGroup"/>.
+    /// </summary>
+    public abstract class RegionRequestGroupState
+    {
+        public override string ToString()
+        {
+            return GetType().Name;
+        }
+
+        public abstract void Update(RegionRequestGroup group);
+        public abstract int AddPlayers(RegionRequestGroup group);
+        public abstract bool IsReady(RegionRequestGroup group);
+
+        public virtual void OnEntered(RegionRequestGroup group) { }
+        public virtual void OnExited(RegionRequestGroup group) { }
+    }
+
     public class RegionRequestGroup
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -26,6 +44,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public Action<PlayerHandle> MatchInviteExpiredCallback { get; }
         public Action<PlayerHandle> RemovedGracePeriodExpiredCallback { get; }
 
+        public RegionRequestGroupState State { get; private set; }
+
         private RegionRequestGroup(ulong id, RegionRequestQueue queue, PrototypeId difficultyTierRef, PrototypeId metaStateRef, bool isBypass)
         {
             Id = id;
@@ -38,6 +58,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             GroupInviteExpiredCallback = OnGroupInviteExpired;
             MatchInviteExpiredCallback = OnMatchInviteExpired;
             RemovedGracePeriodExpiredCallback = OnRemovedGracePeriodExpired;
+
+            State = InitializationState.Instance;
+            State.OnEntered(this);
         }
 
         public static RegionRequestGroup Create(RegionRequestQueue queue, PrototypeId difficultyTierRef, PrototypeId metaStateRef,
@@ -57,7 +80,26 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             RegionRequestGroup group = new(groupId, queue, difficultyTierRef, metaStateRef, isBypass);
             group.AddPlayers(players);
 
+            HashSetPool<PlayerHandle>.Instance.Return(players);
             return group;
+        }
+
+        public bool SetState(RegionRequestGroupState newState)
+        {
+            RegionRequestGroupState oldState = State;
+
+            if (newState == null)
+                return Logger.WarnReturn(false, "SetState(): newState == null");
+
+            if (newState == oldState)
+                return false;
+
+            // TODO: state change event
+            oldState.OnExited(this);
+            State = newState;
+            newState.OnEntered(this);
+
+            return true;
         }
 
         public void AddPlayers(HashSet<PlayerHandle> players)
@@ -207,6 +249,143 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             RemovePlayer(player);
 
             Logger.Info($"Remove grace period expired for player [{player}]");
+        }
+
+        #endregion
+
+        #region State Implementations
+
+        // NOTE: RegionRequestGroupState implementations need to be nested in RegionRequestGroup to be able to access its private members.
+
+        public sealed class InitializationState : RegionRequestGroupState
+        {
+            public static InitializationState Instance { get; } = new();
+
+            private InitializationState() { }
+
+            public override void Update(RegionRequestGroup group)
+            {
+            }
+
+            public override int AddPlayers(RegionRequestGroup group)
+            {
+                return 0;
+            }
+
+            public override bool IsReady(RegionRequestGroup group)
+            {
+                return false;
+            }
+
+            public override void OnEntered(RegionRequestGroup group)
+            {
+                Logger.Debug($"OnEntered(): {this}");
+            }
+        }
+
+        public sealed class WaitingInQueueState : RegionRequestGroupState
+        {
+            public static WaitingInQueueState Instance { get; } = new();
+
+            private WaitingInQueueState() { }
+
+            public override void Update(RegionRequestGroup group)
+            {
+            }
+
+            public override int AddPlayers(RegionRequestGroup group)
+            {
+                return 0;
+            }
+
+            public override bool IsReady(RegionRequestGroup group)
+            {
+                return false;
+            }
+        }
+
+        public sealed class MatchFoundState : RegionRequestGroupState
+        {
+            public static MatchFoundState Instance { get; } = new();
+
+            private MatchFoundState() { }
+
+            public override void Update(RegionRequestGroup group)
+            {
+            }
+
+            public override int AddPlayers(RegionRequestGroup group)
+            {
+                return 0;
+            }
+
+            public override bool IsReady(RegionRequestGroup group)
+            {
+                return false;
+            }
+        }
+
+        public sealed class BypassQueueState : RegionRequestGroupState
+        {
+            public static BypassQueueState Instance { get; } = new();
+
+            private BypassQueueState() { }
+
+            public override void Update(RegionRequestGroup group)
+            {
+            }
+
+            public override int AddPlayers(RegionRequestGroup group)
+            {
+                return 0;
+            }
+
+            public override bool IsReady(RegionRequestGroup group)
+            {
+                return false;
+            }
+        }
+
+        public sealed class InMatchState : RegionRequestGroupState
+        {
+            public static InMatchState Instance { get; } = new();
+
+            private InMatchState() { }
+
+            public override void Update(RegionRequestGroup group)
+            {
+            }
+
+            public override int AddPlayers(RegionRequestGroup group)
+            {
+                return 0;
+            }
+
+            public override bool IsReady(RegionRequestGroup group)
+            {
+                return false;
+            }
+        }
+
+        public sealed class ShutdownState : RegionRequestGroupState
+        {
+            public static ShutdownState Instance { get; } = new();
+
+            private ShutdownState() { }
+
+            public override void Update(RegionRequestGroup group)
+            {
+            }
+
+            public override int AddPlayers(RegionRequestGroup group)
+            {
+                return 0;
+            }
+
+            public override bool IsReady(RegionRequestGroup group)
+            {
+                return false;
+            }
         }
 
         #endregion
