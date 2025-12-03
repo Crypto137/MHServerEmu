@@ -266,6 +266,12 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         private void EnterMatch()
         {
             Logger.Debug("EnterMatch()");
+
+            // TODO: proper implementation
+            foreach (RegionRequestGroupMember member in this)
+            {
+                member.Player.BeginRegionTransferToMatch(Match.Region, 0);
+            }
         }
 
         private void SyncStatus(PlayerHandle recipientPlayer)

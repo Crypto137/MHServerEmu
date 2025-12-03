@@ -65,6 +65,15 @@ namespace MHServerEmu.PlayerManagement.Regions
             return CreateRegionInGame(privateGame, regionProtoRef, createRegionParams, RegionFlags.CloseWhenReservationsReachesZero);
         }
 
+        public RegionHandle CreateMatchRegion(PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)
+        {
+            if (createRegionParams.MatchNumber == 0) return Logger.WarnReturn<RegionHandle>(null, "CreateMatchRegion(): createRegionParams.MatchNumber == 0");
+
+            GameHandle game = _playerManager.GameHandleManager.CreateGame();
+            RegionHandle region = CreateRegionInGame(game, regionProtoRef, createRegionParams, RegionFlags.None);
+            return region;
+        }
+
         public RegionHandle GetRegion(ulong regionId)
         {
             if (_allRegions.TryGetValue(regionId, out RegionHandle region) == false)
