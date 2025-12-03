@@ -18,8 +18,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return GetType().Name;
         }
 
-        public abstract void Update(RegionRequestGroup group);
-        public abstract int AddPlayers(RegionRequestGroup group);
+        public abstract void Update(RegionRequestGroup group, bool memberCountChanged);
+        public abstract int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players);
         public abstract bool IsReady(RegionRequestGroup group);
 
         public virtual void OnEntered(RegionRequestGroup group) { }
@@ -40,9 +40,12 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public PrototypeId MetaStateRef { get; }
         public bool IsBypass { get; }
 
+        public Action<RegionRequestGroupState> GroupStateChangeCallback { get; }
         public Action<PlayerHandle> GroupInviteExpiredCallback { get; }
         public Action<PlayerHandle> MatchInviteExpiredCallback { get; }
         public Action<PlayerHandle> RemovedGracePeriodExpiredCallback { get; }
+
+        public int Count { get => _members.Count; }
 
         public RegionRequestGroupState State { get; private set; }
 
@@ -53,8 +56,10 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             DifficultyTierRef = difficultyTierRef;
             MetaStateRef = metaStateRef;
-            IsBypass = isBypass;
+            //IsBypass = isBypass;
+            IsBypass = true;    // force bypass for now
 
+            GroupStateChangeCallback = OnGroupStateChange;
             GroupInviteExpiredCallback = OnGroupInviteExpired;
             MatchInviteExpiredCallback = OnMatchInviteExpired;
             RemovedGracePeriodExpiredCallback = OnRemovedGracePeriodExpired;
@@ -84,6 +89,11 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return group;
         }
 
+        public Dictionary<ulong, RegionRequestGroupMember>.ValueCollection.Enumerator GetEnumerator()
+        {
+            return _members.Values.GetEnumerator();
+        }
+
         public bool SetState(RegionRequestGroupState newState)
         {
             RegionRequestGroupState oldState = State;
@@ -94,11 +104,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (newState == oldState)
                 return false;
 
-            // TODO: state change event
-            oldState.OnExited(this);
-            State = newState;
-            newState.OnEntered(this);
-
+            PlayerManagerService.Instance.EventScheduler.MatchmakingGroupStateChange.ScheduleEvent(Id, TimeSpan.Zero, GroupStateChangeCallback, newState);
             return true;
         }
 
@@ -107,8 +113,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (players == null)
                 return;
 
-            foreach (PlayerHandle player in players)
-                AddPlayerInternal(player);
+            State.AddPlayers(this, players);
         }
 
         public void RemovePlayers(HashSet<PlayerHandle> players)
@@ -133,7 +138,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             // Update player may no longer be a member of this group, but we still need to send an update to them (e.g. after removing)
             SendStatusUpdate(updatePlayer, updatePlayer, status);
 
-            foreach (RegionRequestGroupMember member in _members.Values)
+            foreach (RegionRequestGroupMember member in this)
             {
                 PlayerHandle recipientPlayer = member.Player;
 
@@ -144,19 +149,46 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        private bool AddPlayerInternal(PlayerHandle player)
+        public bool HasMember(PlayerHandle player)
         {
-            ulong playerDbId = player.PlayerDbId;
+            if (player == null) return Logger.WarnReturn(false, "HasMember(): player == null");
 
-            if (_members.ContainsKey(playerDbId))
+            return _members.ContainsKey(player.PlayerDbId);
+        }
+
+        private int AddPlayersInternal(HashSet<PlayerHandle> players, RegionRequestGroupMemberState memberState)
+        {
+            int numAdded = 0;
+
+            foreach (PlayerHandle player in players)
+            {
+                if (AddPlayerInternal(player, memberState))
+                    numAdded++;
+            }
+
+            return numAdded;
+        }
+
+        private bool AddPlayerInternal(PlayerHandle player, RegionRequestGroupMemberState memberState)
+        {
+            // TODO: validation
+
+            if (HasMember(player))
+                return true;
+
+            player.RegionRequestGroup?.RemovePlayer(player);
+
+            if (player.RegionRequestGroup != null)
                 return false;
 
+            // TODO: adding mid match
+
             RegionRequestGroupMember member = new(this, player);
-            _members.Add(playerDbId, member);
+            _members.Add(player.PlayerDbId, member);
 
             player.RegionRequestGroup = this;
 
-            member.SetState(RegionRequestGroupMember.WaitingInQueueState.Instance);
+            member.SetState(memberState);
 
             SyncStatus(player);
 
@@ -165,9 +197,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         private bool RemovePlayerInternal(PlayerHandle player)
         {
-            ulong playerDbId = player.PlayerDbId;
-
-            if (_members.Remove(playerDbId) == false)
+            if (_members.Remove(player.PlayerDbId) == false)
                 Logger.Warn($"RemovePlayerInternal(): Player [{player}] is not a member of region request group {Id}");
 
             player.RegionRequestGroup = null;
@@ -179,7 +209,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         private void SyncStatus(PlayerHandle recipientPlayer)
         {
-            foreach (RegionRequestGroupMember member in _members.Values)
+            foreach (RegionRequestGroupMember member in this)
                 SendStatusUpdate(recipientPlayer, member.Player, member.Status);
         }
 
@@ -218,9 +248,24 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         #region Event Callbacks
 
+        private void OnGroupStateChange(RegionRequestGroupState newState)
+        {
+            if (newState == null)
+                return;
+
+            if (newState == State)
+                return;
+
+            State.OnExited(this);
+            State = newState;
+            State.OnEntered(this);
+
+            Logger.Debug($"OnGroupStateChange(): {newState}");
+        }
+
         private void OnGroupInviteExpired(PlayerHandle player)
         {
-            if (_members.ContainsKey(player.PlayerDbId) == false)
+            if (HasMember(player) == false)
                 return;
 
             UpdatePlayerStatus(player, RegionRequestQueueUpdateVar.eRRQ_GroupInviteExpired);
@@ -231,7 +276,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         private void OnMatchInviteExpired(PlayerHandle player)
         {
-            if (_members.ContainsKey(player.PlayerDbId) == false)
+            if (HasMember(player) == false)
                 return;
 
             UpdatePlayerStatus(player, RegionRequestQueueUpdateVar.eRRQ_MatchInviteExpired);
@@ -242,7 +287,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         private void OnRemovedGracePeriodExpired(PlayerHandle player)
         {
-            if (_members.ContainsKey(player.PlayerDbId) == false)
+            if (HasMember(player) == false)
                 return;
 
             UpdatePlayerStatus(player, RegionRequestQueueUpdateVar.eRRQ_RemovedGracePeriodExpired);
@@ -263,13 +308,42 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private InitializationState() { }
 
-            public override void Update(RegionRequestGroup group)
+            public override void Update(RegionRequestGroup group, bool memberCountChanged)
             {
+                if (group.Count == 0)
+                {
+                    group.SetState(ShutdownState.Instance);
+                    return;
+                }
+
+                bool allMembersReady = true;
+
+                foreach (RegionRequestGroupMember member in group)
+                {
+                    if (member.State != RegionRequestGroupMember.GroupInviteAcceptedState.Instance &&
+                        member.State != RegionRequestGroupMember.WaitingInWaitlistState.Instance)
+                    {
+                        allMembersReady = false;
+                        break;
+                    }
+                }
+
+                if (allMembersReady == false)
+                    return;
+
+                if (group.IsBypass)
+                    group.SetState(BypassQueueState.Instance);
+                else
+                    group.SetState(WaitingInQueueState.Instance);
             }
 
-            public override int AddPlayers(RegionRequestGroup group)
+            public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
             {
-                return 0;
+                int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.GroupInviteAcceptedState.Instance);
+
+                Update(group, numAdded != 0);
+
+                return numAdded;
             }
 
             public override bool IsReady(RegionRequestGroup group)
@@ -279,7 +353,29 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             public override void OnEntered(RegionRequestGroup group)
             {
-                Logger.Debug($"OnEntered(): {this}");
+                int numPlayers = 0;
+                int maxPlayers = group.Queue.Prototype.QueueGroupLimit;
+
+                foreach (RegionRequestGroupMember member in group)
+                {
+                    if (member.State == RegionRequestGroupMember.WaitingInWaitlistState.Instance)
+                        continue;
+
+                    member.SetState(RegionRequestGroupMember.GroupInviteAcceptedState.Instance);
+                    numPlayers++;
+                }
+
+                foreach (RegionRequestGroupMember member in group)
+                {
+                    if (numPlayers >= maxPlayers)
+                        break;
+
+                    if (member.State != RegionRequestGroupMember.WaitingInWaitlistState.Instance)
+                        continue;
+
+                    member.SetState(RegionRequestGroupMember.GroupInviteAcceptedState.Instance);
+                    numPlayers++;
+                }
             }
         }
 
@@ -289,13 +385,18 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private WaitingInQueueState() { }
 
-            public override void Update(RegionRequestGroup group)
+            public override void Update(RegionRequestGroup group, bool memberCountChanged)
             {
             }
 
-            public override int AddPlayers(RegionRequestGroup group)
+            public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
             {
-                return 0;
+                int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.WaitingInQueueState.Instance);
+
+                Update(group, numAdded != 0);
+
+                return numAdded;
+
             }
 
             public override bool IsReady(RegionRequestGroup group)
@@ -310,13 +411,17 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private MatchFoundState() { }
 
-            public override void Update(RegionRequestGroup group)
+            public override void Update(RegionRequestGroup group, bool memberCountChanged)
             {
             }
 
-            public override int AddPlayers(RegionRequestGroup group)
+            public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
             {
-                return 0;
+                int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.MatchInvitePendingState.Instance);
+
+                Update(group, numAdded != 0);
+
+                return numAdded;
             }
 
             public override bool IsReady(RegionRequestGroup group)
@@ -331,13 +436,18 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private BypassQueueState() { }
 
-            public override void Update(RegionRequestGroup group)
+            public override void Update(RegionRequestGroup group, bool memberCountChanged)
             {
             }
 
-            public override int AddPlayers(RegionRequestGroup group)
+            public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
             {
-                return 0;
+                int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.MatchInvitePendingState.Instance);
+                
+                if (numAdded != 0)
+                    Update(group, true);
+
+                return numAdded;
             }
 
             public override bool IsReady(RegionRequestGroup group)
@@ -352,13 +462,17 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private InMatchState() { }
 
-            public override void Update(RegionRequestGroup group)
+            public override void Update(RegionRequestGroup group, bool memberCountChanged)
             {
             }
 
-            public override int AddPlayers(RegionRequestGroup group)
+            public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
             {
-                return 0;
+                int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.MatchInvitePendingState.Instance);
+
+                Update(group, numAdded != 0);
+
+                return numAdded;
             }
 
             public override bool IsReady(RegionRequestGroup group)
@@ -373,12 +487,13 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private ShutdownState() { }
 
-            public override void Update(RegionRequestGroup group)
+            public override void Update(RegionRequestGroup group, bool memberCountChanged)
             {
             }
 
-            public override int AddPlayers(RegionRequestGroup group)
+            public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
             {
+                // Do not allow players to be added in this state.
                 return 0;
             }
 
