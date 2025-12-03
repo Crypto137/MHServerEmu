@@ -7,6 +7,7 @@ using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Games;
 using MHServerEmu.PlayerManagement.Matchmaking;
@@ -466,6 +467,25 @@ namespace MHServerEmu.PlayerManagement.Players
                 .Build();
 
             SetTransferParams(region.Game.Id, transferParams);
+
+            // This needs to be called after we set transfer params because the region may already be ready.
+            SetTargetRegion(region);
+            region.RequestTransfer(this);
+            return true;
+        }
+
+        public bool BeginRegionTransferToMatch(RegionHandle region, int teamIndex)
+        {
+            ulong destGameId = region.Game.Id;
+
+            NetStructTransferParams transferParams = NetStructTransferParams.CreateBuilder()
+                .SetTransferId(_nextTransferId++)
+                .SetDestRegionId(region.Id)
+                .SetDestRegionProtoId((ulong)region.RegionProtoRef)
+                .SetDestTeamIndex(teamIndex)
+                .Build();
+
+            SetTransferParams(destGameId, transferParams);
 
             // This needs to be called after we set transfer params because the region may already be ready.
             SetTargetRegion(region);

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Regions;
 
@@ -39,7 +40,19 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public void CreateRegion()
         {
-            Logger.Debug("CreateRegion()");
+            PrototypeId regionProtoRef = Queue.PrototypeDataRef;
+
+            NetStructCreateRegionParams createRegionParams = NetStructCreateRegionParams.CreateBuilder()
+                .SetLevel(0)
+                .SetDifficultyTierProtoId((ulong)DifficultyTierRef)
+                .SetGameStateId((ulong)MetaStateRef)
+                .SetMatchNumber(Id)
+                .Build();
+
+            Region = PlayerManagerService.Instance.WorldManager.CreateMatchRegion(regionProtoRef, createRegionParams);
+
+            Logger.Debug($"CreateRegion(): {regionProtoRef.GetName()}");
+
         }
     }
 }
