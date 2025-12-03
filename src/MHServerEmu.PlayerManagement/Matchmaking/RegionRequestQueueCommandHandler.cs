@@ -37,6 +37,11 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     OnRemoveFromQueue();
                     break;
 
+                case RegionRequestQueueCommandVar.eRRQC_MatchInviteAccept:
+                case RegionRequestQueueCommandVar.eRRQC_MatchInviteDecline:
+                    OnMatchInviteResponse(command == RegionRequestQueueCommandVar.eRRQC_MatchInviteAccept);
+                    break;
+
                 default:
                     Logger.Warn($"HandleCommand(): Unhandled command {command} from player [{_player}]");
                     break;
@@ -62,7 +67,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return true;
         }
 
-        private void OnGroupInviteResponse(ulong regionRequestGroupId, bool response)
+        private void OnGroupInviteResponse()
         {
 
         }
@@ -78,7 +83,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         private void OnMatchInviteResponse(bool response)
         {
-
+            _player.RegionRequestGroup?.ReceiveMatchInviteResponse(_player, response);
         }
 
         private void OnRequestToJoinGroup()

@@ -126,7 +126,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public void RemovePlayers(HashSet<PlayerHandle> players)
         {
-            if (players == null)
+            if (players == null || players.Count == 0)
                 return;
 
             foreach (PlayerHandle player in players)
@@ -184,6 +184,32 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
 
             State.Update(this, false);
+
+            return true;
+        }
+
+        public bool ReceiveMatchInviteResponse(PlayerHandle player, bool response)
+        {
+            if (player == null) return Logger.WarnReturn(false, "ReceiveMatchInviteResponse(): player == null");
+            if (player.RegionRequestGroup != this) return Logger.WarnReturn(false, "ReceiveMatchInviteResponse(): player.RegionRequestGroup != this");
+            if (HasMember(player) == false) return Logger.WarnReturn(false, "ReceiveMatchInviteResponse(): HasMember(player) == false");
+            if (Match == null) return Logger.WarnReturn(false, "ReceiveMatchInviteResponse(): Match == null");
+
+            if (response)
+            {
+                Logger.Trace($"Player [{player}] accepted match invite for group [{this}]");
+
+                // HasMember() should guarantee that we have this player as a member.
+                _members[player.PlayerDbId].SetState(RegionRequestGroupMember.MatchInviteAcceptedState.Instance);
+                State.Update(this, false);
+            }
+            else
+            {
+                Logger.Trace($"Player [{player}] declined match invite for group [{this}]");
+
+                UpdatePlayerStatus(player, RegionRequestQueueUpdateVar.eRRQ_MatchInviteDeclined);
+                RemovePlayer(player);
+            }
 
             return true;
         }
@@ -267,11 +293,25 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         {
             Logger.Debug("EnterMatch()");
 
-            // TODO: proper implementation
+            // TODO: get team
+
+            HashSet<PlayerHandle> playersToRemove = HashSetPool<PlayerHandle>.Instance.Get();
+
             foreach (RegionRequestGroupMember member in this)
             {
-                member.Player.BeginRegionTransferToMatch(Match.Region, 0);
+                if (member.State != RegionRequestGroupMember.MatchInviteAcceptedState.Instance)
+                    continue;
+
+                member.SetState(RegionRequestGroupMember.InMatchState.Instance);
+                bool success = member.Player.BeginRegionTransferToMatch(Match.Region, 0);
+
+                if (success == false)
+                    playersToRemove.Add(member.Player);
             }
+
+            RemovePlayers(playersToRemove);
+
+            HashSetPool<PlayerHandle>.Instance.Return(playersToRemove);
         }
 
         private void SyncStatus(PlayerHandle recipientPlayer)
@@ -572,7 +612,34 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             public override bool IsReady(RegionRequestGroup group)
             {
-                return true;
+                // TODO: check available capacity
+
+                bool isReady = true;
+
+                foreach (RegionRequestGroupMember member in group)
+                {
+                    switch (member.State)
+                    {
+                        case RegionRequestGroupMember.GroupInviteAcceptedState:
+                            member.SetState(RegionRequestGroupMember.MatchInvitePendingState.Instance);
+                            isReady = false;
+                            break;
+
+                        case RegionRequestGroupMember.MatchInvitePendingState:
+                            isReady = false;
+                            break;
+
+                        case RegionRequestGroupMember.MatchInviteAcceptedState:
+                            // This is the state we want everybody to be in.
+                            break;
+
+                        default:
+                            Logger.Warn($"IsReady(): Invalid member state {member.State} for member {member} in group {group}");
+                            break;
+                    }
+                }
+
+                return isReady;
             }
         }
 
