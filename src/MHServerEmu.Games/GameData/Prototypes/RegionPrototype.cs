@@ -184,6 +184,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public bool AllowsQueueBypass { get => RegionQueueMethod.HasFlag(RegionQueueMethod.QueueBypass); }
         [DoNotCopy]
+        public int QueueGroupLimit { get; private set; }
+        [DoNotCopy]
         public TimeSpan Lifetime { get; private set; }
 
         private Dictionary<AssetId, List<LootTableAssignmentPrototype>> _lootTableMap = new();
@@ -312,6 +314,61 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // ClientMapOverrides client only
 
             Lifetime = TimeSpan.FromMinutes(LifetimeInMinutes);
+
+            QueueGroupLimit = GetQueueGroupLimit();
+        }
+
+        private int GetQueueGroupLimit()
+        {
+            if (MetaGames.HasValue())
+            {
+                int limit = -1;
+
+                foreach (PrototypeId metaGameProtoRef in MetaGames)
+                {
+                    MetaGamePrototype metaGameProto = metaGameProtoRef.As<MetaGamePrototype>();
+                    if (metaGameProto == null)
+                    {
+                        Logger.Warn("GetQueueGroupMaxSize(): metaGameProto == null");
+                        continue;
+                    }
+
+                    if (metaGameProto.Teams.IsNullOrEmpty())
+                        continue;
+
+                    foreach (PrototypeId teamProtoRef in metaGameProto.Teams)
+                    {
+                        MetaGameTeamPrototype teamProto = teamProtoRef.As<MetaGameTeamPrototype>();
+                        if (teamProto == null)
+                        {
+                            Logger.Warn("GetQueueGroupMaxSize(): teamProto == null");
+                            continue;
+                        }
+
+                        limit = Math.Max(teamProto.MaxPlayers, limit);
+                    }
+                }
+
+                if (limit >= 0)
+                    return limit;
+            }
+
+            switch (Behavior)
+            {
+                case RegionBehavior.Town:
+                case RegionBehavior.PublicCombatZone:
+                case RegionBehavior.MatchPlay:
+                    return PlayerLimit;
+
+                case RegionBehavior.PrivateStory:
+                case RegionBehavior.PrivateNonStory:
+                    return Math.Min(GameDatabase.GlobalsPrototype.PlayerPartyMaxSize, PlayerLimit);
+
+                case RegionBehavior.PrivateRaid:
+                    return Math.Min(GameDatabase.GlobalsPrototype.PlayerRaidMaxSize, PlayerLimit);
+            }
+
+            return 0;
         }
 
         public static PrototypeId ConstrainDifficulty(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
