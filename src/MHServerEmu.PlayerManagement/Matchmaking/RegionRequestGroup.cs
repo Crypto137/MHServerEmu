@@ -18,12 +18,11 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return GetType().Name;
         }
 
-        public abstract void Update(RegionRequestGroup group, bool memberCountChanged);
-        public abstract int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players);
-        public abstract bool IsReady(RegionRequestGroup group);
-
         public virtual void OnEntered(RegionRequestGroup group) { }
         public virtual void OnExited(RegionRequestGroup group) { }
+        public virtual void Update(RegionRequestGroup group, bool memberCountChanged) { }
+        public virtual int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players) { return 0; }
+        public virtual bool IsReady(RegionRequestGroup group) { return false; }
     }
 
     public class RegionRequestGroup
@@ -41,6 +40,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public bool IsBypass { get; }
 
         public Action<RegionRequestGroupState> GroupStateChangeCallback { get; }
+        public Action<bool> GroupStateUpdateCallback { get; }
         public Action<PlayerHandle> GroupInviteExpiredCallback { get; }
         public Action<PlayerHandle> MatchInviteExpiredCallback { get; }
         public Action<PlayerHandle> RemovedGracePeriodExpiredCallback { get; }
@@ -48,6 +48,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public int Count { get => _members.Count; }
 
         public RegionRequestGroupState State { get; private set; }
+        public List<RegionRequestGroup> Bucket { get; set; }
+        public Match Match { get; private set; }
 
         private RegionRequestGroup(ulong id, RegionRequestQueue queue, PrototypeId difficultyTierRef, PrototypeId metaStateRef, bool isBypass)
         {
@@ -60,6 +62,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             IsBypass = true;    // force bypass for now
 
             GroupStateChangeCallback = OnGroupStateChange;
+            GroupStateUpdateCallback = OnGroupStateUpdate;
             GroupInviteExpiredCallback = OnGroupInviteExpired;
             MatchInviteExpiredCallback = OnMatchInviteExpired;
             RemovedGracePeriodExpiredCallback = OnRemovedGracePeriodExpired;
@@ -87,6 +90,11 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             HashSetPool<PlayerHandle>.Instance.Return(players);
             return group;
+        }
+
+        public override string ToString()
+        {
+            return $"id={Id}";
         }
 
         public Dictionary<ulong, RegionRequestGroupMember>.ValueCollection.Enumerator GetEnumerator()
@@ -156,6 +164,30 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return _members.ContainsKey(player.PlayerDbId);
         }
 
+        public bool SetMatch(Match match)
+        {
+            if (State != WaitingInQueueState.Instance && State != BypassQueueState.Instance)
+                return Logger.WarnReturn(false, $"SetMatch(): Invalid state {State} for group {this}");
+
+            if (Bucket == null && IsBypass == false)
+                return Logger.WarnReturn(false, $"SetMatch(): No bucket when assigning a match to a non-bypass group {this}");
+
+            if (Match != null)
+                return Logger.WarnReturn(false, $"SetMatch(): Group {this} already has match {Match} assigned to it");
+
+            Match = match;
+
+            if (Bucket != null)
+            {
+                Bucket.Remove(this);
+                Bucket = null;
+            }
+
+            State.Update(this, false);
+
+            return true;
+        }
+
         private int AddPlayersInternal(HashSet<PlayerHandle> players, RegionRequestGroupMemberState memberState)
         {
             int numAdded = 0;
@@ -205,6 +237,35 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             UpdatePlayerStatus(player, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup);
 
             return true;
+        }
+
+        private void UpdateContainers(bool memberCountChanged)
+        {
+            if (Bucket != null)
+                Queue.UpdateGroupBucket(this);
+
+            Match?.OnGroupUpdate(this, memberCountChanged);
+        }
+
+        private void RemoveFromContainers()
+        {
+            if (Bucket != null)
+            {
+                Bucket.Remove(this);
+                Bucket = null;
+            }
+
+            Match?.OnGroupUpdate(this, true);
+        }
+
+        private void ScheduleUpdate()
+        {
+            // TODO
+        }
+
+        private void EnterMatch()
+        {
+            Logger.Debug("EnterMatch()");
         }
 
         private void SyncStatus(PlayerHandle recipientPlayer)
@@ -263,6 +324,11 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             Logger.Debug($"OnGroupStateChange(): {newState}");
         }
 
+        private void OnGroupStateUpdate(bool memberCountChanged)
+        {
+            State.Update(this, memberCountChanged);
+        }
+
         private void OnGroupInviteExpired(PlayerHandle player)
         {
             if (HasMember(player) == false)
@@ -308,51 +374,20 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private InitializationState() { }
 
-            public override void Update(RegionRequestGroup group, bool memberCountChanged)
-            {
-                if (group.Count == 0)
-                {
-                    group.SetState(ShutdownState.Instance);
-                    return;
-                }
-
-                bool allMembersReady = true;
-
-                foreach (RegionRequestGroupMember member in group)
-                {
-                    if (member.State != RegionRequestGroupMember.GroupInviteAcceptedState.Instance &&
-                        member.State != RegionRequestGroupMember.WaitingInWaitlistState.Instance)
-                    {
-                        allMembersReady = false;
-                        break;
-                    }
-                }
-
-                if (allMembersReady == false)
-                    return;
-
-                if (group.IsBypass)
-                    group.SetState(BypassQueueState.Instance);
-                else
-                    group.SetState(WaitingInQueueState.Instance);
-            }
-
-            public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
-            {
-                int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.GroupInviteAcceptedState.Instance);
-
-                Update(group, numAdded != 0);
-
-                return numAdded;
-            }
-
-            public override bool IsReady(RegionRequestGroup group)
-            {
-                return false;
-            }
-
             public override void OnEntered(RegionRequestGroup group)
             {
+                if (group.Bucket != null)
+                {
+                    Logger.Warn($"OnEntered(): Group {group} has a bucket assigned when entering InitializationState");
+                    return;
+                }
+
+                if (group.Match != null)
+                {
+                    Logger.Warn($"OnEntered(): Group {group} has a match assigned when entering InitializationState");
+                    return;
+                }
+
                 int numPlayers = 0;
                 int maxPlayers = group.Queue.Prototype.QueueGroupLimit;
 
@@ -377,6 +412,57 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     numPlayers++;
                 }
             }
+
+            public override void Update(RegionRequestGroup group, bool memberCountChanged)
+            {
+                if (group.Bucket != null)
+                {
+                    Logger.Warn($"Update(): Group {group} has a bucket assigned to it in the InitializationState");
+                    group.SetState(ShutdownState.Instance);
+                    return;
+                }
+
+                if (group.Match != null)
+                {
+                    Logger.Warn($"Update(): Group {group} has a match assigned to it in the InitializationState");
+                    group.SetState(ShutdownState.Instance);
+                    return;
+                }
+
+                if (group.Count == 0)
+                {
+                    group.SetState(ShutdownState.Instance);
+                    return;
+                }
+
+                bool allMembersReady = true;
+
+                foreach (RegionRequestGroupMember member in group)
+                {
+                    if (member.State == RegionRequestGroupMember.GroupInvitePendingState.Instance)
+                    {
+                        allMembersReady = false;
+                        break;
+                    }
+                }
+
+                if (allMembersReady == false)
+                    return;
+
+                if (group.IsBypass)
+                    group.SetState(BypassQueueState.Instance);
+                else
+                    group.SetState(WaitingInQueueState.Instance);
+            }
+
+            public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
+            {
+                int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.GroupInviteAcceptedState.Instance);
+
+                Update(group, numAdded != 0);
+
+                return numAdded;
+            }
         }
 
         public sealed class WaitingInQueueState : RegionRequestGroupState
@@ -385,10 +471,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private WaitingInQueueState() { }
 
-            public override void Update(RegionRequestGroup group, bool memberCountChanged)
-            {
-            }
-
             public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
             {
                 int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.WaitingInQueueState.Instance);
@@ -396,12 +478,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 Update(group, numAdded != 0);
 
                 return numAdded;
-
-            }
-
-            public override bool IsReady(RegionRequestGroup group)
-            {
-                return false;
             }
         }
 
@@ -411,10 +487,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private MatchFoundState() { }
 
-            public override void Update(RegionRequestGroup group, bool memberCountChanged)
-            {
-            }
-
             public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
             {
                 int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.MatchInvitePendingState.Instance);
@@ -422,11 +494,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 Update(group, numAdded != 0);
 
                 return numAdded;
-            }
-
-            public override bool IsReady(RegionRequestGroup group)
-            {
-                return false;
             }
         }
 
@@ -436,8 +503,55 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private BypassQueueState() { }
 
+            public override void OnEntered(RegionRequestGroup group)
+            {
+                if (group.Bucket != null)
+                {
+                    Logger.Warn($"OnEntered(): Group {group} has a bucket assigned when entering BypassQueueState");
+                    return;
+                }
+
+                if (group.Match != null)
+                {
+                    Logger.Warn($"OnEntered(): Group {group} has a match assigned when entering BypassQueueState");
+                    return;
+                }
+
+                if (group.IsBypass == false)
+                {
+                    Logger.Warn($"OnEntered(): Non-bypass group {group} entered BypassQueueState");
+                    return;
+                }
+
+                // Adding a bypass group to the queue should assign a match to it immediately.
+                group.Queue.AddBypassGroup(group);
+            }
+
             public override void Update(RegionRequestGroup group, bool memberCountChanged)
             {
+                if (group.Count == 0)
+                {
+                    group.SetState(ShutdownState.Instance);
+                    return;
+                }
+
+                if (memberCountChanged)
+                    group.UpdateContainers(memberCountChanged);
+
+                if (group.Match == null)
+                {
+                    Logger.Warn($"Update(): No match assigned to group {group} in BypassQueueState");
+                    group.SetState(ShutdownState.Instance);
+                    return;
+                }
+
+                if (group.Match.Region == null && IsReady(group))
+                    group.Match.CreateRegion();
+
+                if (group.Match.Region != null)
+                    group.EnterMatch();
+
+                group.ScheduleUpdate();
             }
 
             public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
@@ -452,7 +566,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             public override bool IsReady(RegionRequestGroup group)
             {
-                return false;
+                return true;
             }
         }
 
@@ -462,10 +576,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private InMatchState() { }
 
-            public override void Update(RegionRequestGroup group, bool memberCountChanged)
-            {
-            }
-
             public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
             {
                 int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.MatchInvitePendingState.Instance);
@@ -474,11 +584,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
                 return numAdded;
             }
-
-            public override bool IsReady(RegionRequestGroup group)
-            {
-                return false;
-            }
         }
 
         public sealed class ShutdownState : RegionRequestGroupState
@@ -486,21 +591,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             public static ShutdownState Instance { get; } = new();
 
             private ShutdownState() { }
-
-            public override void Update(RegionRequestGroup group, bool memberCountChanged)
-            {
-            }
-
-            public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
-            {
-                // Do not allow players to be added in this state.
-                return 0;
-            }
-
-            public override bool IsReady(RegionRequestGroup group)
-            {
-                return false;
-            }
         }
 
         #endregion
