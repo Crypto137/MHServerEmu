@@ -184,6 +184,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public bool AllowsQueueBypass { get => RegionQueueMethod.HasFlag(RegionQueueMethod.QueueBypass); }
         [DoNotCopy]
+        public int[] TeamLimits { get; private set; }
+        [DoNotCopy]
         public int QueueGroupLimit { get; private set; }
         [DoNotCopy]
         public TimeSpan Lifetime { get; private set; }
@@ -315,21 +317,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             Lifetime = TimeSpan.FromMinutes(LifetimeInMinutes);
 
+            TeamLimits = GetTeamLimits();
             QueueGroupLimit = GetQueueGroupLimit();
         }
 
-        private int GetQueueGroupLimit()
+        private int[] GetTeamLimits()
         {
+            List<int> teamLimits = null;
+
             if (MetaGames.HasValue())
             {
-                int limit = -1;
-
                 foreach (PrototypeId metaGameProtoRef in MetaGames)
                 {
                     MetaGamePrototype metaGameProto = metaGameProtoRef.As<MetaGamePrototype>();
                     if (metaGameProto == null)
                     {
-                        Logger.Warn("GetQueueGroupMaxSize(): metaGameProto == null");
+                        Logger.Warn("FindMatchTeams(): metaGameProto == null");
                         continue;
                     }
 
@@ -341,16 +344,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         MetaGameTeamPrototype teamProto = teamProtoRef.As<MetaGameTeamPrototype>();
                         if (teamProto == null)
                         {
-                            Logger.Warn("GetQueueGroupMaxSize(): teamProto == null");
+                            Logger.Warn("FindMatchTeams(): teamProto == null");
                             continue;
                         }
 
-                        limit = Math.Max(teamProto.MaxPlayers, limit);
+                        teamLimits ??= new();
+                        teamLimits.Add(teamProto.MaxPlayers);
                     }
                 }
+            }
 
-                if (limit >= 0)
-                    return limit;
+            return teamLimits?.ToArray();
+        }
+
+        private int GetQueueGroupLimit()
+        {
+            if (TeamLimits.HasValue())
+            {
+                int limit = 0;
+
+                foreach (int teamLimit in TeamLimits)
+                    limit = Math.Max(teamLimit, limit);
+
+                return limit;
             }
 
             switch (Behavior)
@@ -366,9 +382,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 case RegionBehavior.PrivateRaid:
                     return Math.Min(GameDatabase.GlobalsPrototype.PlayerRaidMaxSize, PlayerLimit);
-            }
 
-            return 0;
+                default:
+                    return 0;
+            }
         }
 
         public static PrototypeId ConstrainDifficulty(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
