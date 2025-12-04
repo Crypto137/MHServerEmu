@@ -413,7 +413,15 @@ namespace MHServerEmu.Core.Network
             public readonly List<MatchQueueUpdateData> Data = data;
         }
 
-        // MatchQueueFlush - gameId, playerDbId, not sure yet if this is needed
+        /// <summary>
+        /// [PlayerManager -> Game] Clears the state of a MatchQueueStatus instance game-side.
+        /// </summary>
+        public readonly struct MatchQueueFlush(ulong gameId, ulong playerDbId)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+        }
 
         #endregion
 

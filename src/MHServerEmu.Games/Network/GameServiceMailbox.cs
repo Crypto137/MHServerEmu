@@ -77,6 +77,10 @@ namespace MHServerEmu.Games.Network
                     OnMatchQueueUpdate(matchQueueUpdate);
                     break;
 
+                case ServiceMessage.MatchQueueFlush matchQueueFlush:
+                    OnMatchQueueFlush(matchQueueFlush);
+                    break;
+
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;
@@ -253,6 +257,17 @@ namespace MHServerEmu.Games.Network
 
                 player.UpdateMatchQueue(updatePlayerDbId, regionRef, difficultyTierRef, playersInQueue, groupId, status, updatePlayerName);
             }
+        }
+
+        private void OnMatchQueueFlush(in ServiceMessage.MatchQueueFlush matchQueueFlush)
+        {
+            ulong playerDbId = matchQueueFlush.PlayerDbId;
+
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
+            if (player == null)
+                return;
+
+            player.MatchQueueStatus.Flush();
         }
 
         private void OnLeaderboardStateChange(in ServiceMessage.LeaderboardStateChange leaderboardStateChange)
