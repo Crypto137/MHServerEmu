@@ -47,6 +47,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public Action<PlayerHandle> RemovedGracePeriodExpiredCallback { get; }
 
         public int Count { get => _members.Count; }
+        public bool IsReady { get => State.IsReady(this); }
 
         public RegionRequestGroupState State { get; private set; }
         public List<RegionRequestGroup> Bucket { get; set; }
@@ -132,6 +133,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             foreach (PlayerHandle player in players)
                 RemovePlayerInternal(player);
+
+            State.Update(this, true);
         }
 
         public void RemovePlayer(PlayerHandle player)
@@ -308,9 +311,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             // TODO
         }
 
-        private void EnterMatch()
+        private void MovePlayersToMatch()
         {
-            Logger.Debug("EnterMatch()");
+            Logger.Debug("MovePlayersToMatch()");
 
             // TODO: get team
 
@@ -432,6 +435,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         #region State Implementations
 
         // NOTE: RegionRequestGroupState implementations need to be nested in RegionRequestGroup to be able to access its private members.
+
+        // NOTE: WaitingInQueue, MatchFound, and InMatch are used only in regular matchmaking groups.
+        // Bypass groups use BypassQueueState instead of these three.
 
         public sealed class InitializationState : RegionRequestGroupState
         {
@@ -562,6 +568,60 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
+        public sealed class InMatchState : RegionRequestGroupState
+        {
+            public static InMatchState Instance { get; } = new();
+
+            private InMatchState() { }
+
+            public override void OnEntered(RegionRequestGroup group)
+            {
+                Update(group, false);
+            }
+
+            public override void Update(RegionRequestGroup group, bool memberCountChanged)
+            {
+                Logger.Debug("Update(): InMatchState");
+
+                if (group.Count == 0)
+                {
+                    group.SetState(ShutdownState.Instance);
+                    return;
+                }
+
+                if (group.Match == null)
+                {
+                    Logger.Warn($"Update(): No match assigned to group {group} in InMatchState");
+                    group.SetState(ShutdownState.Instance);
+                    return;
+                }
+
+                if (group.Match.Region != null)
+                {
+                    group.MovePlayersToMatch();
+
+                    if (memberCountChanged)
+                        group.UpdateContainers(memberCountChanged);
+                }
+
+                group.ScheduleUpdate();
+            }
+
+            public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
+            {
+                int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.MatchInvitePendingState.Instance);
+
+                Update(group, numAdded != 0);
+
+                return numAdded;
+            }
+
+            public override bool IsReady(RegionRequestGroup group)
+            {
+                return true;
+            }
+        }
+
         public sealed class BypassQueueState : RegionRequestGroupState
         {
             public static BypassQueueState Instance { get; } = new();
@@ -594,6 +654,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             public override void Update(RegionRequestGroup group, bool memberCountChanged)
             {
+                Logger.Debug("Update(): BypassQueueState");
+
                 if (group.Count == 0)
                 {
                     group.SetState(ShutdownState.Instance);
@@ -614,7 +676,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     group.Match.CreateRegion();
 
                 if (group.Match.Region != null)
-                    group.EnterMatch();
+                    group.MovePlayersToMatch();
 
                 group.ScheduleUpdate();
             }
@@ -662,27 +724,24 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        public sealed class InMatchState : RegionRequestGroupState
-        {
-            public static InMatchState Instance { get; } = new();
-
-            private InMatchState() { }
-
-            public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
-            {
-                int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.MatchInvitePendingState.Instance);
-
-                Update(group, numAdded != 0);
-
-                return numAdded;
-            }
-        }
-
         public sealed class ShutdownState : RegionRequestGroupState
         {
             public static ShutdownState Instance { get; } = new();
 
             private ShutdownState() { }
+
+            public override void OnEntered(RegionRequestGroup group)
+            {
+                HashSet<PlayerHandle> players = HashSetPool<PlayerHandle>.Instance.Get();
+
+                foreach (RegionRequestGroupMember member in group)
+                    players.Add(member.Player);
+
+                group.RemovePlayers(players);
+                group.RemoveFromContainers();
+
+                HashSetPool<PlayerHandle>.Instance.Return(players);
+            }
         }
 
         #endregion
