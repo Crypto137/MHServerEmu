@@ -182,6 +182,34 @@ namespace MHServerEmu.Games.Regions.MatchQueues
             return newRegionStatus.UpdatePlayer(playerGuid, status, playerName);
         }
 
+        public void Flush()
+        {
+            if (_regionStatusDict.Count == 0)
+                return;
+
+            ulong playerDbId = _owner.DatabaseUniqueId;
+            string playerName = _owner.GetName();
+            RegionRequestQueueUpdateVar status = RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup;
+
+            foreach ((PrototypeId regionRef, PrototypeId difficultyTierRef) in _regionStatusDict.Keys)
+            {
+                RegionPrototype regionProto = regionRef.As<RegionPrototype>();
+
+                NetMessageChatFromMetaGame chatLogMessage = NetMessageChatFromMetaGame.CreateBuilder()
+                    .SetSourceStringId((ulong)GameDatabase.GlobalsPrototype.SystemLocalized)
+                    .SetMessageStringId((ulong)GameDatabase.TransitionGlobalsPrototype.GetLocaleStringIdForLog(status))
+                    .SetPlayerName1(playerName)
+                    .AddArgStringIds(regionProto != null ? (ulong)regionProto.RegionName : 0)
+                    .Build();
+
+                _owner.SendMessage(chatLogMessage);
+
+                _owner.SendMatchQueueUpdate(playerDbId, regionRef, difficultyTierRef, 0, status, playerName, 0);
+            }
+
+            _regionStatusDict.Clear();
+        }
+
         /// <summary>
         /// Handles a <see cref="RegionRequestQueueCommandVar"/> request from a client.
         /// </summary>

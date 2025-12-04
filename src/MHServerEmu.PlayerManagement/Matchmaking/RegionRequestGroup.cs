@@ -4,6 +4,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Players;
+using MHServerEmu.PlayerManagement.Regions;
 using MHServerEmu.PlayerManagement.Social;
 
 namespace MHServerEmu.PlayerManagement.Matchmaking
@@ -139,6 +140,24 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             players.Add(player);
             RemovePlayers(players);
             HashSetPool<PlayerHandle>.Instance.Return(players);
+        }
+
+        public void OnPlayerBeginTransfer(PlayerHandle player, RegionHandle newRegion)
+        {
+            if (_members.TryGetValue(player.PlayerDbId, out RegionRequestGroupMember member) == false)
+                return;
+
+            if (member.State == RegionRequestGroupMember.InMatchState.Instance && newRegion != Match?.Region)
+                RemovePlayer(player);   // TODO: grace period for leaving
+        }
+
+        public void OnPlayerFinishTransfer(PlayerHandle player)
+        {
+            if (_members.TryGetValue(player.PlayerDbId, out RegionRequestGroupMember member) == false)
+                return;
+
+            // Sync status updates that may have gotten lost in transfer.
+            SendStatusUpdate(player, player, member.Status);
         }
 
         public void UpdatePlayerStatus(PlayerHandle updatePlayer, RegionRequestQueueUpdateVar status)

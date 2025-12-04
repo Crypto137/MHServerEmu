@@ -141,6 +141,9 @@ namespace MHServerEmu.PlayerManagement.Players
             SetTargetRegion(null);
             SetActualRegion(null);
 
+            // Remove from matchmaking
+            RegionRequestGroup?.RemovePlayer(this);
+
             // Clearing the WorldView will remove all reservations and shut down the private game instance if none of its regions are reserved by other players.
             WorldView.Clear();
         }
@@ -546,6 +549,17 @@ namespace MHServerEmu.PlayerManagement.Players
 
             PlayerManagerService.Instance.PartyManager.OnPlayerRegionTransferFinished(this);
 
+            // Sync matchmaking status
+            if (RegionRequestGroup != null)
+            {
+                RegionRequestGroup.OnPlayerFinishTransfer(this);
+            }
+            else
+            {
+                ServiceMessage.MatchQueueFlush message = new(CurrentGame.Id, PlayerDbId);
+                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            }
+
             Logger.Info($"Player [{this}] finished region transfer {transferId}");
             return true;
         }
@@ -695,6 +709,8 @@ namespace MHServerEmu.PlayerManagement.Players
         {
             if (TargetRegion == newRegion)
                 return;
+
+            RegionRequestGroup?.OnPlayerBeginTransfer(this, newRegion);
 
             RegionHandle prevRegion = TargetRegion;
 
