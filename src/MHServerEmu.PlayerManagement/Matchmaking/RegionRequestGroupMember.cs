@@ -215,7 +215,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        // TODO: Figure out if we need this and how we can recover from this state.
         public sealed class WaitingInWaitlistLockedState : RegionRequestGroupMemberState
         {
             public override RegionRequestQueueUpdateVar StatusVar { get => RegionRequestQueueUpdateVar.eRRQ_WaitingInWaitlistLocked; }
@@ -228,6 +227,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             {
                 switch (newState)
                 {
+                    case WaitingInWaitlistState:
+                        return member.SetStateInternal(newState);
+
                     default:
                         return member.OnInvalidStateTransition(newState);
                 }
