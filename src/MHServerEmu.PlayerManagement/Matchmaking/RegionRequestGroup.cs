@@ -132,7 +132,14 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 return;
 
             foreach (PlayerHandle player in players)
-                RemovePlayerInternal(player);
+            {
+                if (_members.Remove(player.PlayerDbId) == false)
+                    Logger.Warn($"RemovePlayers(): Player [{player}] is not a member of region request group {Id}");
+
+                player.RegionRequestGroup = null;
+
+                UpdatePlayerStatus(player, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup);
+            }
 
             State.Update(this, true);
         }
@@ -271,7 +278,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         private bool AddPlayerInternal(PlayerHandle player, RegionRequestGroupMemberState memberState)
         {
-            // TODO: validation
+            if (player.RegionRequestGroup != null && player.RegionRequestGroup.Match != null)
+                return false;
 
             if (HasMember(player))
                 return true;
@@ -281,28 +289,25 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (player.RegionRequestGroup != null)
                 return false;
 
-            // TODO: adding mid match
+            // If we are adding mid-match, put the player in a waitlist if there are no available spots.
+            if (Match != null)
+            {
+                // TODO: Check for eRTF_PlayerBlacklistedFromRegion
+
+                MatchTeam? team = Match.GetTeamForGroup(this);
+
+                if (Match.Region?.PlayerAccess == RegionPlayerAccessVar.eRPA_Locked)
+                    memberState = RegionRequestGroupMember.WaitingInWaitlistLockedState.Instance;
+                else if (team?.IsFull() == true)
+                    memberState = RegionRequestGroupMember.WaitingInWaitlistState.Instance;
+            }
 
             RegionRequestGroupMember member = new(this, player);
             _members.Add(player.PlayerDbId, member);
-
             player.RegionRequestGroup = this;
 
             member.SetState(memberState);
-
             SyncStatus(player);
-
-            return true;
-        }
-
-        private bool RemovePlayerInternal(PlayerHandle player)
-        {
-            if (_members.Remove(player.PlayerDbId) == false)
-                Logger.Warn($"RemovePlayerInternal(): Player [{player}] is not a member of region request group {Id}");
-
-            player.RegionRequestGroup = null;
-
-            UpdatePlayerStatus(player, RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup);
 
             return true;
         }
