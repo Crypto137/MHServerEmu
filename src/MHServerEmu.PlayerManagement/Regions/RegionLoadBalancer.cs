@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Regions
 {
@@ -19,7 +20,7 @@ namespace MHServerEmu.PlayerManagement.Regions
             RegionProtoRef = regionProtoRef;
         }
 
-        public RegionHandle GetAvailableRegion(PrototypeId difficultyProtoRef)
+        public RegionHandle GetAvailableRegion(PrototypeId difficultyProtoRef, PlayerHandle player)
         {
             TryCleanUpRegions();
 
@@ -35,8 +36,7 @@ namespace MHServerEmu.PlayerManagement.Regions
                 if (region.DifficultyTierProtoRef != difficultyProtoRef)
                     continue;
 
-                // TODO: eRPA_InviteOnly?
-                if (region.PlayerAccess != Gazillion.RegionPlayerAccessVar.eRPA_Open)
+                if (region.IsAccessible(player) == false)
                     continue;
 
                 return region;

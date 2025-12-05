@@ -8,9 +8,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
     /// </summary>
     public class RegionRequestQueue
     {
-        private readonly List<Match> _matches = new();
+        private readonly Dictionary<ulong, Match> _matches = new();
 
-        private ulong _currentMatchId = 0;
+        private ulong _currentMatchNumber = 0;
 
         public RegionPrototype Prototype { get; }
         public PrototypeId PrototypeDataRef { get => Prototype.DataRef; }
@@ -31,11 +31,19 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         }
 
+        public Match GetMatch(ulong matchNumber)
+        {
+            if (_matches.TryGetValue(matchNumber, out Match match) == false)
+                return null;
+
+            return match;
+        }
+
         private Match CreateMatch(PrototypeId difficultyTierRef, PrototypeId metaStateRef, bool isBypass)
         {
-            ulong matchId = ++_currentMatchId;
-            Match match = new(matchId, this, difficultyTierRef, metaStateRef, isBypass);
-            _matches.Add(match);
+            ulong matchNumber = ++_currentMatchNumber;
+            Match match = new(matchNumber, this, difficultyTierRef, metaStateRef, isBypass);
+            _matches.Add(matchNumber, match);
             return match;
         }
     }

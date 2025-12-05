@@ -225,6 +225,11 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return true;
         }
 
+        public void OnMatchRegionAccessChange(RegionHandle region)
+        {
+            // TODO
+        }
+
         public bool ReceiveMatchInviteResponse(PlayerHandle player, bool response)
         {
             if (player == null) return Logger.WarnReturn(false, "ReceiveMatchInviteResponse(): player == null");
@@ -323,14 +328,48 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         private void ScheduleUpdate()
         {
-            // TODO
+            RegionHandle matchRegion = Match?.Region;
+            if (matchRegion == null)
+                return;
+
+            MatchTeam? team = Match.GetTeamForGroup(this);
+            if (team == null)
+                return;
+
+            if (team.Value.IsFull())
+                return;
+
+            bool hasMembersInWaitlist = false;
+            foreach (RegionRequestGroupMember member in this)
+            {
+                if (member.IsWaitingInWaitlist)
+                {
+                    hasMembersInWaitlist = true;
+                    break;
+                }
+            }
+
+            if (hasMembersInWaitlist == false)
+                return;
+
+            if (matchRegion.IsAccessible(null, true) == false)
+                return;
+
+            var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingGroupStateUpdate;
+            eventScheduler.ScheduleEvent(Id, TimeSpan.FromSeconds(5), GroupStateUpdateCallback, true);
         }
 
         private void MovePlayersToMatch()
         {
             Logger.Debug("MovePlayersToMatch()");
 
-            // TODO: get team
+            MatchTeam? team = Match?.GetTeamForGroup(this);
+            if (team == null)
+            {
+                Logger.Warn("MovePlayersToMatch(): team == null");
+                SetState(ShutdownState.Instance);
+                return;
+            }
 
             HashSet<PlayerHandle> playersToRemove = HashSetPool<PlayerHandle>.Instance.Get();
 
@@ -340,7 +379,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     continue;
 
                 member.SetState(RegionRequestGroupMember.InMatchState.Instance);
-                bool success = member.Player.BeginRegionTransferToMatch(Match.Region, 0);
+                bool success = member.Player.BeginRegionTransferToMatch(Match.Region, team.Value.Index);
 
                 if (success == false)
                     playersToRemove.Add(member.Player);
@@ -708,17 +747,66 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             public override bool IsReady(RegionRequestGroup group)
             {
-                // TODO: check available capacity
-
                 bool isReady = true;
 
+                MatchTeam? team = group.Match.GetTeamForGroup(group);
+                if (team == null)
+                {
+                    Logger.Warn("IsReady(): team == null");
+                    group.SetState(ShutdownState.Instance);
+                    return false;
+                }
+
+                int limit = team.Value.PlayerLimit;
+                int numInvited = 0;
+
+                foreach (RegionRequestGroupMember member in group)
+                {
+                    if (member.State != RegionRequestGroupMember.MatchInvitePendingState.Instance &&
+                        member.State != RegionRequestGroupMember.MatchInviteAcceptedState.Instance)
+                    {
+                        continue;
+                    }
+
+                    numInvited++;
+                }
+
+                int numAvailable = limit - numInvited;
+                if (numAvailable < 0)
+                {
+                    Logger.Warn("IsReady(): numAvailable < 0");
+                    group.SetState(ShutdownState.Instance);
+                    return false;
+                }
+
+                // Send as many match invites as we have available slots, put everyone else in the waitlist.
+                // Wait for all pending match invites to be accepted.
                 foreach (RegionRequestGroupMember member in group)
                 {
                     switch (member.State)
                     {
                         case RegionRequestGroupMember.GroupInviteAcceptedState:
-                            member.SetState(RegionRequestGroupMember.MatchInvitePendingState.Instance);
-                            isReady = false;
+                            if (numAvailable > 0)
+                            {
+                                member.SetState(RegionRequestGroupMember.MatchInvitePendingState.Instance);
+                                numAvailable--;
+                                isReady = false;
+                            }
+                            else
+                            {
+                                member.SetState(RegionRequestGroupMember.WaitingInWaitlistState.Instance);
+                            }
+
+                            break;
+
+                        case RegionRequestGroupMember.WaitingInWaitlistState:
+                            if (numAvailable > 0)
+                            {
+                                member.SetState(RegionRequestGroupMember.MatchInvitePendingState.Instance);
+                                numAvailable--;
+                                isReady = false;
+                            }
+
                             break;
 
                         case RegionRequestGroupMember.MatchInvitePendingState:

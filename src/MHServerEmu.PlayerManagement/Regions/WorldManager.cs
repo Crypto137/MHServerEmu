@@ -33,7 +33,7 @@ namespace MHServerEmu.PlayerManagement.Regions
             return _allRegions.Values.GetEnumerator();
         }
 
-        public RegionHandle GetOrCreatePublicRegion(PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)
+        public RegionHandle GetOrCreatePublicRegion(PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams, PlayerHandle player = null)
         {
             if (_publicRegions.TryGetValue(regionProtoRef, out RegionLoadBalancer regionLoadBalancer) == false)
             {
@@ -41,7 +41,7 @@ namespace MHServerEmu.PlayerManagement.Regions
                 _publicRegions.Add(regionProtoRef, regionLoadBalancer);
             }
 
-            RegionHandle region = regionLoadBalancer.GetAvailableRegion((PrototypeId)createRegionParams.DifficultyTierProtoId);
+            RegionHandle region = regionLoadBalancer.GetAvailableRegion((PrototypeId)createRegionParams.DifficultyTierProtoId, player);
             if (region == null)
             {
                 GameHandle game = _playerManager.GameHandleManager.CreateGame();
