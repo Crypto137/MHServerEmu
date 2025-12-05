@@ -67,6 +67,20 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return false;
         }
 
+        public MatchTeam? GetTeamForGroup(RegionRequestGroup group)
+        {
+            foreach (MatchTeam team in _teams)
+            {
+                foreach ((RegionRequestGroup itGroup, _) in team.Groups)
+                {
+                    if (itGroup == group)
+                        return team;
+                }
+            }
+
+            return null;
+        }
+
         public void AddBypassGroup(RegionRequestGroup group)
         {
             MatchTeam? team = GetAvailableTeam();
@@ -83,6 +97,21 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public void OnGroupUpdate(RegionRequestGroup group, bool memberCountChanged)
         {
             Logger.Debug($"OnGroupUpdate(): group={group}, memberCountChanged={memberCountChanged}");
+        }
+
+        public void OnRegionAccessChanged(RegionHandle region)
+        {
+            if (region != Region)
+            {
+                Logger.Warn("OnRegionAccessChanged(): region != Region");
+                return;
+            }
+
+            foreach (MatchTeam team in _teams)
+            {
+                foreach ((RegionRequestGroup group, _) in team.Groups)
+                    group?.OnMatchRegionAccessChange(region);
+            }
         }
 
         public void CreateRegion()
