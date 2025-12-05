@@ -31,6 +31,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public RegionRequestGroupMemberState State { get; private set; }
         public RegionRequestQueueUpdateVar Status { get; set; }
 
+        public bool IsWaitingInWaitlist { get => State == WaitingInWaitlistState.Instance || State == WaitingInWaitlistLockedState.Instance; }
+
         public RegionRequestGroupMember(RegionRequestGroup group, PlayerHandle player)
         {
             Group = group;

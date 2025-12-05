@@ -186,6 +186,21 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return _members.ContainsKey(player.PlayerDbId);
         }
 
+        public int GetCountNotInWaitlist()
+        {
+            int numMembers = 0;
+
+            foreach (RegionRequestGroupMember member in this)
+            {
+                if (member.IsWaitingInWaitlist)
+                    continue;
+
+                numMembers++;
+            }
+
+            return numMembers;
+        }
+
         public bool SetMatch(Match match)
         {
             if (State != WaitingInQueueState.Instance && State != BypassQueueState.Instance)
