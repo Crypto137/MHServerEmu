@@ -45,9 +45,38 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
+        public bool IsFull()
+        {
+            foreach (MatchTeam team in _teams)
+            {
+                if (team.IsFull() == false)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public bool HasGroup(RegionRequestGroup group)
+        {
+            foreach (MatchTeam team in _teams)
+            {
+                if (team.HasGroup(group))
+                    return true;
+            }
+
+            return false;
+        }
+
         public void AddBypassGroup(RegionRequestGroup group)
         {
-            // TODO: other stuff
+            MatchTeam? team = GetAvailableTeam();
+            if (team == null)
+                return;
+
+            if (HasGroup(group))
+                return;
+
+            team.Value.Groups.Add((group, true));
             group.SetMatch(this);
         }
 
@@ -71,6 +100,20 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             Logger.Debug($"CreateRegion(): {regionProtoRef.GetName()}");
 
+        }
+
+        private MatchTeam? GetAvailableTeam()
+        {
+            if (_teams.Count > 0)
+            {
+                _teams.Sort();
+                MatchTeam team = _teams[0];
+
+                if (team.IsFull() == false)
+                    return team;
+            }
+
+            return null;
         }
     }
 }
