@@ -346,6 +346,12 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public bool BeginRegionTransferToTarget(ulong requestingGameId, TeleportContextEnum context, NetStructRegionTarget destTarget, NetStructCreateRegionParams createRegionParams)
         {
+            if (CanBeginRegionTransfer(false) == false)
+            {
+                CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_GenericError);
+                return false;
+            }
+
             PrototypeId regionProtoRef = (PrototypeId)destTarget.RegionProtoId;
             RegionPrototype regionProto = ((PrototypeId)destTarget.RegionProtoId).As<RegionPrototype>();
             if (regionProto == null)
@@ -405,6 +411,12 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public bool BeginRegionTransferToLocation(ulong requestingGameId, TeleportContextEnum context, NetStructRegionLocation destLocation)
         {
+            if (CanBeginRegionTransfer(false) == false)
+            {
+                CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_GenericError);
+                return false;
+            }
+
             RegionHandle region = PlayerManagerService.Instance.WorldManager.GetRegion(destLocation.RegionId);
             if (region == null)
             {
@@ -442,6 +454,12 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public bool BeginRegionTransferToPlayer(ulong requestingGameId, ulong destPlayerDbId)
         {
+            if (CanBeginRegionTransfer(false) == false)
+            {
+                CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_GenericError);
+                return false;
+            }
+
             RegionHandle region = null;
 
             PlayerHandle destPlayer = PlayerManagerService.Instance.ClientManager.GetPlayer(destPlayerDbId);
@@ -479,6 +497,10 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public bool BeginRegionTransferToMatch(RegionHandle region, int teamIndex)
         {
+            // This initiated by the server, so we don't need to send a cancellation here.
+            if (CanBeginRegionTransfer(true) == false)
+                return false;
+
             ulong destGameId = region.Game.Id;
 
             NetStructTransferParams transferParams = NetStructTransferParams.CreateBuilder()
@@ -561,6 +583,27 @@ namespace MHServerEmu.PlayerManagement.Players
             }
 
             Logger.Info($"Player [{this}] finished region transfer {transferId}");
+            return true;
+        }
+
+        public bool CanBeginRegionTransfer(bool isMatchTransfer)
+        {
+            if (IsConnected == false)
+                return false;
+
+            // Do not allow players who accepted a match invite to transfer anywhere but the match region.
+            if (RegionRequestGroup != null && isMatchTransfer == false)
+            {
+                foreach (RegionRequestGroupMember member in RegionRequestGroup)
+                {
+                    if (member.Player != this)
+                        continue;
+
+                    if (member.State == RegionRequestGroupMember.MatchInviteAcceptedState.Instance)
+                        return false;
+                }
+            }
+
             return true;
         }
 
