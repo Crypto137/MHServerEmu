@@ -97,6 +97,45 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public void OnGroupUpdate(RegionRequestGroup group, bool memberCountChanged)
         {
             Logger.Debug($"OnGroupUpdate(): group={group}, memberCountChanged={memberCountChanged}");
+
+            MatchTeam? nullableTeam = GetTeamForGroup(group);
+            if (nullableTeam == null)
+            {
+                Logger.Warn("OnGroupUpdate(): nullableTeam == null");
+                return;
+            }
+
+            MatchTeam team = nullableTeam.Value;
+
+            // Remove groups that have become empty
+            if (memberCountChanged && group.Count == 0)
+            {
+                var groups = team.Groups;
+                for (int i = 0; i < groups.Count; i++)
+                {
+                    (RegionRequestGroup itGroup, _) = groups[i];
+                    if (itGroup == group)
+                    {
+                        Logger.Debug($"Removed group {group} from team {team}");
+                        groups.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+
+            // Try filling the team with waitlisted players from existing groups.
+            if (team.IsFull() == false)
+            {
+                foreach ((RegionRequestGroup itGroup, _) in team.Groups)
+                {
+                    if (team.GetAvailableCount() <= 0)
+                        break;
+
+                    itGroup.OnMatchRegionAccessChange(Region);
+                }
+            }
+
+            // TODO: Check matchmaking state transition for the group
         }
 
         public void OnRegionAccessChanged(RegionHandle region)
