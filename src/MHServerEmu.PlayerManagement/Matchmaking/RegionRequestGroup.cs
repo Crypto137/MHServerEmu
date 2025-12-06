@@ -234,7 +234,58 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public void OnMatchRegionAccessChange(RegionHandle region)
         {
-            // TODO
+            RegionHandle currentMatchRegion = Match?.Region;
+            if (currentMatchRegion == null || currentMatchRegion != region)
+            {
+                Logger.Warn("OnMatchRegionAccessChange(): currentMatchRegion == null || currentMatchRegion != region");
+                return;
+            }
+
+            MatchTeam? team = Match.GetTeamForGroup(this);
+            if (team == null)
+            {
+                Logger.Warn("OnMatchRegionAccessChange(): team == null");
+                return;
+            }
+
+            HashSet<PlayerHandle> playersToRemove = HashSetPool<PlayerHandle>.Instance.Get();
+
+            foreach (RegionRequestGroupMember member in this)
+            {
+                switch (region.PlayerAccess)
+                {
+                    case RegionPlayerAccessVar.eRPA_Open:
+                    case RegionPlayerAccessVar.eRPA_InviteOnly:
+                        // Invite waitlisted players to fill up free spots in the team.
+                        if (member.State == RegionRequestGroupMember.WaitingInWaitlistLockedState.Instance)
+                            member.SetState(RegionRequestGroupMember.WaitingInWaitlistState.Instance);
+
+                        if (member.State == RegionRequestGroupMember.WaitingInWaitlistState.Instance &&
+                            team.Value.IsFull() == false &&
+                            region.IsAccessible(member.Player, true))
+                        {
+                            member.SetState(RegionRequestGroupMember.MatchInvitePendingState.Instance);
+                        }
+
+                        break;
+
+                    case RegionPlayerAccessVar.eRPA_Locked:
+                        if (member.State == RegionRequestGroupMember.WaitingInWaitlistState.Instance ||
+                            member.State == RegionRequestGroupMember.MatchInvitePendingState.Instance)
+                        {
+                            member.SetState(RegionRequestGroupMember.WaitingInWaitlistLockedState.Instance);
+                        }
+                        break;
+
+                    case RegionPlayerAccessVar.eRPA_Closed:
+                        playersToRemove.Add(member.Player);
+                        break;
+                }
+            }
+
+            RemovePlayers(playersToRemove);
+
+            HashSetPool<PlayerHandle>.Instance.Return(playersToRemove);
         }
 
         public bool ReceiveMatchInviteResponse(PlayerHandle player, bool response)
@@ -338,10 +389,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 return;
 
             MatchTeam? team = Match.GetTeamForGroup(this);
-            if (team == null)
-                return;
-
-            if (team.Value.IsFull())
+            if (team?.IsFull() != false)    // null team or full
                 return;
 
             bool hasMembersInWaitlist = false;
@@ -357,9 +405,10 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (hasMembersInWaitlist == false)
                 return;
 
-            if (matchRegion.IsAccessible(null, true) == false)
+            if (matchRegion.IsAccessible(null, true))
                 return;
 
+            // Update players waitlisted for the currently inaccessible match region every 5 seconds.
             var eventScheduler = PlayerManagerService.Instance.EventScheduler.MatchmakingGroupStateUpdate;
             eventScheduler.ScheduleEvent(Id, TimeSpan.FromSeconds(5), GroupStateUpdateCallback, true);
         }
