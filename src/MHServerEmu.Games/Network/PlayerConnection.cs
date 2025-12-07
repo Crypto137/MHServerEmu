@@ -422,10 +422,6 @@ namespace MHServerEmu.Games.Network
                 return;
             }
 
-            // REMOVEME: Temp team selection logic until we have proper matchmaking.
-            if (region.ContainsPvPMatch())
-                TransferParams.DestTeamIndex = region.GetTeamIndex();
-
             if (TransferParams.FindStartLocation(out Vector3 startPosition, out Orientation startOrientation) == false)
             {
                 Logger.Error($"EnterGame(): Failed to find start location");
