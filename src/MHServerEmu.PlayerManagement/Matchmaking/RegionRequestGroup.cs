@@ -126,6 +126,17 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             State.AddPlayers(this, players);
         }
 
+        public void AddPlayer(PlayerHandle player)
+        {
+            if (player == null)
+                return;
+
+            HashSet<PlayerHandle> players = HashSetPool<PlayerHandle>.Instance.Get();
+            players.Add(player);
+            AddPlayers(players);
+            HashSetPool<PlayerHandle>.Instance.Return(players);
+        }
+
         public void RemovePlayers(HashSet<PlayerHandle> players)
         {
             if (players == null || players.Count == 0)
@@ -146,6 +157,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public void RemovePlayer(PlayerHandle player)
         {
+            if (player == null)
+                return;
+
             HashSet<PlayerHandle> players = HashSetPool<PlayerHandle>.Instance.Get();
             players.Add(player);
             RemovePlayers(players);

@@ -4221,13 +4221,15 @@ namespace MHServerEmu.Games.Entities
 
             // Check destination region, use community data for this
             CommunityMember member = Community.GetMember(targetPlayerDbId);
+            PrototypeId targetRegionProtoRef = PrototypeId.Invalid;
+
             if (member != null)
             {
-                PrototypeId regionProtoRef = member.RegionRef;
+                targetRegionProtoRef = member.RegionRef;
                 PrototypeId difficultyProtoRef = member.DifficultyRef;
-                if (regionProtoRef != PrototypeId.Invalid && difficultyProtoRef != PrototypeId.Invalid)
+                if (targetRegionProtoRef != PrototypeId.Invalid && difficultyProtoRef != PrototypeId.Invalid)
                 {
-                    if (CanEnterRegion(regionProtoRef, difficultyProtoRef, true) == false)
+                    if (CanEnterRegion(targetRegionProtoRef, difficultyProtoRef, true) == false)
                         return false;
                 }
             }
@@ -4237,10 +4239,14 @@ namespace MHServerEmu.Games.Entities
             Region targetRegion = targetPlayer?.GetRegion();
 
             // We are guaranteed to have a current region here because we check above that our avatar is in the world.
-            if (targetRegion != null && targetRegion.Id != GetRegion().Id && targetRegion.IsQueueRegion)
+            if (targetRegion == null || targetRegion.Id != GetRegion().Id)
             {
-                SendRegionRequestQueueCommandToPlayerManager(PrototypeId.Invalid, PrototypeId.Invalid, RegionRequestQueueCommandVar.eRRQC_RequestToJoinGroup, 0, targetPlayerDbId);
-                return true;
+                RegionPrototype targetRegionProto = targetRegionProtoRef.As<RegionPrototype>();
+                if (targetRegionProto != null && targetRegionProto.IsQueueRegion)
+                {
+                    SendRegionRequestQueueCommandToPlayerManager(PrototypeId.Invalid, PrototypeId.Invalid, RegionRequestQueueCommandVar.eRRQC_RequestToJoinGroup, 0, targetPlayerDbId);
+                    return true;
+                }
             }
 
             // Teleport

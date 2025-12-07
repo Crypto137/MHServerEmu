@@ -470,14 +470,30 @@ namespace MHServerEmu.PlayerManagement.Players
                 CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_TargetPlayerUnavailable);
                 return false;
             }
-            else
+
+            if (region != ActualRegion)
             {
-                RegionTransferFailure canEnterRegion = CanEnterRegion(region);
-                if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
+                if (region.CreateParams.HasEndlessLevel && region.CreateParams.EndlessLevel > 1)
                 {
-                    CancelRegionTransfer(requestingGameId, canEnterRegion);
+                    CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_EndlessProgressedTooFar);
                     return false;
                 }
+
+                // This should be handled game-side in most cases, but games rely on community data, which can be outdated.
+                // If this request got sent based on outdated community data, interpret it as a queue command.
+                if (region.IsMatch)
+                {
+                    _regionRequestQueueCommandHandler.HandleCommand(PrototypeId.Invalid, PrototypeId.Invalid, PrototypeId.Invalid,
+                        RegionRequestQueueCommandVar.eRRQC_RequestToJoinGroup, 0, destPlayerDbId);
+                    return true;
+                }
+            }
+
+            RegionTransferFailure canEnterRegion = CanEnterRegion(region);
+            if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
+            {
+                CancelRegionTransfer(requestingGameId, canEnterRegion);
+                return false;
             }
 
             NetStructTransferParams transferParams = NetStructTransferParams.CreateBuilder()

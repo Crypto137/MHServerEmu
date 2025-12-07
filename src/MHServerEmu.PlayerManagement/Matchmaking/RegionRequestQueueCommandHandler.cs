@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Social;
@@ -40,6 +41,10 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 case RegionRequestQueueCommandVar.eRRQC_MatchInviteAccept:
                 case RegionRequestQueueCommandVar.eRRQC_MatchInviteDecline:
                     OnMatchInviteResponse(command == RegionRequestQueueCommandVar.eRRQC_MatchInviteAccept);
+                    break;
+
+                case RegionRequestQueueCommandVar.eRRQC_RequestToJoinGroup:
+                    OnRequestToJoinGroup(targetPlayerDbId);
                     break;
 
                 default:
@@ -86,9 +91,13 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             _player.RegionRequestGroup?.ReceiveMatchInviteResponse(_player, response);
         }
 
-        private void OnRequestToJoinGroup()
+        private void OnRequestToJoinGroup(ulong targetPlayerDbId)
         {
+            if (targetPlayerDbId == 0)
+                return;
 
+            PlayerHandle targetPlayer = PlayerManagerService.Instance.ClientManager.GetPlayer(targetPlayerDbId);
+            targetPlayer?.RegionRequestGroup?.AddPlayer(_player);
         }
     }
 }
