@@ -56,6 +56,27 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return true;
         }
 
+        public bool IsEmpty()
+        {
+            foreach (MatchTeam team in _teams)
+            {
+                if (team.Groups.Count > 0)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public int GetAvailableCount()
+        {
+            int count = 0;
+
+            foreach (MatchTeam team in _teams)
+                count += team.GetAvailableCount();
+
+            return count;
+        }
+
         public bool HasGroup(RegionRequestGroup group)
         {
             foreach (MatchTeam team in _teams)
@@ -136,6 +157,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
 
             // TODO: Check matchmaking state transition for the group
+
+            Queue.UpdateMatchSortOrder(this);
         }
 
         public void OnRegionAccessChanged(RegionHandle region)

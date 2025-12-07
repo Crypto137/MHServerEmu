@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Games.GameData;
+﻿using Gazillion;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.PlayerManagement.Matchmaking
@@ -8,7 +10,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
     /// </summary>
     public class RegionRequestQueue
     {
-        private readonly Dictionary<ulong, Match> _matches = new();
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private readonly SortedSet<Match> _matches = new(MatchLoadComparer.Instance);
 
         private ulong _currentMatchNumber = 0;
 
@@ -31,20 +35,63 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         }
 
+        public void UpdateMatchSortOrder(Match match)
+        {
+            if (_matches.Remove(match) == false)
+                return;
+
+            // QueueDoNotWaitToFull regions can stay in the queue even if they don't have any players in them.
+            if (match.IsEmpty() == false || (Prototype.QueueDoNotWaitToFull && match.Region != null))
+                _matches.Add(match);
+            else
+                Logger.Debug($"Match {match.Id} removed from queue for {Prototype}");
+        }
+
         public Match GetMatch(ulong matchNumber)
         {
-            if (_matches.TryGetValue(matchNumber, out Match match) == false)
-                return null;
+            foreach (Match match in _matches)
+            {
+                if (match.Id == matchNumber)
+                    return match;
+            }
 
-            return match;
+            return null;
         }
 
         private Match CreateMatch(PrototypeId difficultyTierRef, PrototypeId metaStateRef, bool isBypass)
         {
             ulong matchNumber = ++_currentMatchNumber;
             Match match = new(matchNumber, this, difficultyTierRef, metaStateRef, isBypass);
-            _matches.Add(matchNumber, match);
+            _matches.Add(match);
             return match;
+        }
+
+        private class MatchLoadComparer : IComparer<Match>
+        {
+            public static MatchLoadComparer Instance { get; } = new();
+
+            private MatchLoadComparer() { }
+
+            public int Compare(Match x, Match y)
+            {
+                int xCount = GetLoadValue(x);
+                int yCount = GetLoadValue(y);
+
+                return xCount.CompareTo(yCount);
+            }
+
+            private static int GetLoadValue(Match match)
+            {
+                // Prioritize matches that are most close to being full, put locked matches at the end.
+                if (match.Region != null)
+                {
+                    RegionPlayerAccessVar access = match.Region.PlayerAccess;
+                    if (access != RegionPlayerAccessVar.eRPA_Open && access != RegionPlayerAccessVar.eRPA_InviteOnly)
+                        return int.MaxValue;
+                }
+
+                return match.GetAvailableCount();
+            }
         }
     }
 }

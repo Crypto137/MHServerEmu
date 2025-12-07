@@ -65,12 +65,12 @@ namespace MHServerEmu.PlayerManagement.Regions
         public bool IsTown { get => Prototype.Behavior == RegionBehavior.Town; }
         public bool IsPrivateStory { get => Prototype.Behavior == RegionBehavior.PrivateStory; }
         public bool IsPrivateNonStory { get => Prototype.Behavior == RegionBehavior.PrivateNonStory; }
-        public bool IsMatch { get => Prototype.Behavior == RegionBehavior.MatchPlay; }
+        public bool IsMatch { get => MatchNumber != 0; }
         public bool CanExpire { get => Prototype.Behavior == RegionBehavior.PublicCombatZone || Prototype.Behavior == RegionBehavior.MatchPlay; }
 
         public RegionHandleState State { get; private set; } = RegionHandleState.Pending;
         public RegionFlags Flags { get; private set; }
-        public RegionPlayerAccessVar PlayerAccess { get; private set; }
+        public RegionPlayerAccessVar PlayerAccess { get; private set; } = RegionPlayerAccessVar.eRPA_Invalid;
 
         public int PlayerCount { get => _players.Count; }
         public int PlayerLimit { get => Prototype.PlayerLimit; }
@@ -363,12 +363,15 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         private void SetPlayerAccess(RegionPlayerAccessVar access)
         {
-            if (PlayerAccess == access)
+            RegionPlayerAccessVar prevAccess = PlayerAccess;
+
+            if (prevAccess == access)
                 return;
 
             PlayerAccess = access;
 
-            if (access == RegionPlayerAccessVar.eRPA_Invalid)
+            // Update matches if we are changing from one valid access type to another (i.e. not initializing).
+            if (prevAccess == RegionPlayerAccessVar.eRPA_Invalid)
                 return;
 
             RegionRequestQueue queue = PlayerManagerService.Instance.RegionRequestQueueManager.GetRegionRequestQueue(RegionProtoRef);
