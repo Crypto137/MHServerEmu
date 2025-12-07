@@ -26,6 +26,7 @@ namespace MHServerEmu.Core.RateLimiting
             _maxTokens = maxTokens;
 
             _currentTokens = _maxTokens;
+            _lastRefillTime = Clock.ElapsedTime;
         }
 
         /// <summary>
