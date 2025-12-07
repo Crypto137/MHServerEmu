@@ -52,10 +52,10 @@ namespace MHServerEmu.Core.RateLimiting
             TimeSpan currentTime = Clock.ElapsedTime;
             TimeSpan elapsed = currentTime - _lastRefillTime;
 
-            int tokensGained = (int)(elapsed.Ticks / _ticksPerToken);
+            long tokensGained = elapsed.Ticks / _ticksPerToken;
             if (tokensGained > 0)
             {
-                _currentTokens = Math.Min(_currentTokens + tokensGained, _maxTokens);
+                _currentTokens = (int)Math.Clamp(_currentTokens + tokensGained, 0, _maxTokens);
                 _lastRefillTime = currentTime;
             }
         }
