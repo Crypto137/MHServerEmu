@@ -12,6 +12,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly Dictionary<RegionRequestQueueParams, Dictionary<int, List<RegionRequestGroup>>> _bucketsByParams = new();
         private readonly SortedSet<Match> _matches = new(MatchLoadComparer.Instance);
 
         private ulong _currentMatchNumber = 0;
@@ -30,9 +31,48 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             match.AddBypassGroup(group);
         }
 
-        public void UpdateGroupBucket(RegionRequestGroup group)
+        public void UpdateQueue(in RegionRequestQueueParams queueParams)
         {
+            Logger.Debug($"UpdateQueue(): queueParams={queueParams}");
 
+            if (queueParams.IsBypass)
+                return;
+
+            // TODO
+        }
+
+        public bool UpdateGroupBucket(RegionRequestGroup group)
+        {
+            if (group == null) return Logger.WarnReturn(false, "UpdateGroupBucket(): group == null");
+
+            // Remove from the current bucket.
+            List<RegionRequestGroup> oldBucket = group.Bucket;
+            if (oldBucket != null)
+            {
+                if (oldBucket.Remove(group))
+                    group.Bucket = null;
+                else
+                    return Logger.WarnReturn(false, $"UpdateGroupBucket(): Group {group} is not in the bucket assigned to it.");
+            }
+
+            // Do not rebucket if the group is empty now.
+            int memberCount = group.GetCountNotInWaitlist();
+            if (memberCount == 0)
+                return false;
+
+            RegionRequestQueueParams queueParams = group.QueueParams;
+
+            List<RegionRequestGroup> newBucket = GetBucket(queueParams, memberCount);
+            if (newBucket == null)
+                return Logger.WarnReturn(false, $"UpdateGroupBucket(): No bucket found for region=[{Prototype}], params=[{queueParams}], memberCount=[{memberCount}]");
+
+            newBucket.Add(group);
+            group.Bucket = newBucket;
+
+            if (oldBucket != newBucket)
+                UpdateQueue(queueParams);
+
+            return true;
         }
 
         public void UpdateMatchSortOrder(Match match)
@@ -47,6 +87,18 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 Logger.Debug($"Match {match.Id} removed from queue for {Prototype}");
         }
 
+        public List<RegionRequestGroup> GetBucket(in RegionRequestQueueParams queueParams, int memberCount)
+        {
+            Dictionary<int, List<RegionRequestGroup>> buckets = GetBucketsForParams(queueParams);
+            if (buckets == null)
+                return null;
+
+            if (buckets.TryGetValue(memberCount, out List<RegionRequestGroup> bucket) == false)
+                return null;
+
+            return bucket;
+        }
+
         public Match GetMatch(ulong matchNumber)
         {
             foreach (Match match in _matches)
@@ -56,6 +108,22 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
 
             return null;
+        }
+
+        private Dictionary<int, List<RegionRequestGroup>> GetBucketsForParams(in RegionRequestQueueParams queueParams)
+        {
+            if (_bucketsByParams.TryGetValue(queueParams, out Dictionary<int, List<RegionRequestGroup>> buckets) == false)
+            {
+                buckets = new();
+
+                int playerLimit = Prototype.QueueGroupLimit;
+                for (int i = 1; i <= playerLimit; i++)
+                    buckets.Add(i, new());
+
+                _bucketsByParams.Add(queueParams, buckets);
+            }
+
+            return buckets;
         }
 
         private Match CreateMatch(in RegionRequestQueueParams queueParams)

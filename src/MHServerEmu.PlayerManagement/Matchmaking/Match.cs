@@ -154,6 +154,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             // TODO: Check matchmaking state transition for the group
 
             Queue.UpdateMatchSortOrder(this);
+
+            if (IsFull() == false)
+                Queue.UpdateQueue(group.QueueParams);
         }
 
         public void OnRegionAccessChanged(RegionHandle region)
