@@ -92,6 +92,23 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return true;
         }
 
+        public bool IsReady()
+        {
+            if (IsFull() == false && IsBypass == false && Queue.Prototype.QueueDoNotWaitToFull == false)
+                return false;
+
+            foreach (MatchTeam team in _teams)
+            {
+                foreach ((RegionRequestGroup group, _) in team.Groups)
+                {
+                    if (group.IsReady == false)
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
         public bool HasGroup(RegionRequestGroup group)
         {
             foreach (MatchTeam team in _teams)
@@ -245,7 +262,33 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 }
             }
 
-            // TODO: Check matchmaking state transition for the group
+            if (Region == null)
+            {
+                if (IsFull() == false && IsBypass == false)
+                    AddGroupsFromQueue(Queue.Prototype.QueueDoNotWaitToFull == false);
+
+                if (IsReady())
+                {
+                    CreateRegion();
+
+                    foreach (MatchTeam itTeam in _teams)
+                    {
+                        foreach ((RegionRequestGroup itGroup, _) in itTeam.Groups)
+                            itGroup.SetState(RegionRequestGroup.InMatchState.Instance);
+                    }
+                }
+            }
+            else if (IsBypass == false)
+            {
+                foreach (MatchTeam itTeam in _teams)
+                {
+                    foreach ((RegionRequestGroup itGroup, _) in itTeam.Groups)
+                    {
+                        if (itGroup.IsReady)
+                            itGroup.SetState(RegionRequestGroup.InMatchState.Instance);
+                    }
+                }
+            }
 
             Queue.UpdateMatchSortOrder(this);
 

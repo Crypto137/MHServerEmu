@@ -516,7 +516,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             State = newState;
             State.OnEntered(this);
 
-            Logger.Debug($"OnGroupStateChange(): {newState}");
+            Logger.Debug($"OnGroupStateChange(): {this} - {newState}");
         }
 
         private void OnGroupStateUpdate(bool memberCountChanged)
