@@ -31,8 +31,9 @@ namespace MHServerEmu.Core.System.Time
                 if (now < serviceEvent.FireTime)
                     continue;
 
-                serviceEvent.Trigger();
+                // Important: remove before triggering, because triggering can schedule another event with the same handle.
                 _events.Remove(serviceEvent.Handle);
+                serviceEvent.Trigger();
             }
 
             ListPool<ServiceEvent>.Instance.Return(events);
