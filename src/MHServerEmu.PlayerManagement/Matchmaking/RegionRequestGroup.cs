@@ -48,6 +48,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public int Count { get => _members.Count; }
         public bool IsReady { get => State.IsReady(this); }
+        public int PlayerLimit { get => Queue.Prototype.QueueGroupLimit; }
+        public bool IsFull { get => GetCountNotInWaitlist() >= PlayerLimit; }
 
         public RegionRequestGroupState State { get; private set; }
         public List<RegionRequestGroup> Bucket { get; set; }
@@ -60,8 +62,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             DifficultyTierRef = difficultyTierRef;
             MetaStateRef = metaStateRef;
-            //IsBypass = isBypass;
-            IsBypass = true;    // force bypass for now
+            IsBypass = isBypass;
 
             GroupStateChangeCallback = OnGroupStateChange;
             GroupStateUpdateCallback = OnGroupStateUpdate;
@@ -664,6 +665,74 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private WaitingInQueueState() { }
 
+            public override void OnEntered(RegionRequestGroup group)
+            {
+                if (group.IsBypass)
+                {
+                    Logger.Warn($"OnEntered(): Bypass group {group} entered WaitingInQueueState");
+                    return;
+                }
+
+                int waitingInQueueCount = 0;
+                
+                // Put active group members into the queue.
+                foreach (RegionRequestGroupMember member in group)
+                {
+                    if (member.State == RegionRequestGroupMember.WaitingInWaitlistState.Instance)
+                        continue;
+
+                    member.SetState(RegionRequestGroupMember.WaitingInQueueState.Instance);
+                    waitingInQueueCount++;
+                }
+
+                // Fill out remaining slots with waitlisted members.
+                foreach (RegionRequestGroupMember member in group)
+                {
+                    if (waitingInQueueCount >= group.PlayerLimit)
+                        break;
+
+                    if (member.State != RegionRequestGroupMember.WaitingInWaitlistState.Instance)
+                        continue;
+
+                    member.SetState(RegionRequestGroupMember.WaitingInQueueState.Instance);
+                    waitingInQueueCount++;
+                }
+
+                group.Queue.UpdateGroupBucket(group);
+            }
+
+            public override void OnExited(RegionRequestGroup group)
+            {
+                if (group.Bucket != null)
+                {
+                    group.Bucket.Remove(group);
+                    group.Bucket = null;
+                }
+            }
+
+            public override void Update(RegionRequestGroup group, bool memberCountChanged)
+            {
+                // We need to have either a bucket or an assigned match when we are looking for match to avoid getting stuck.
+                if (group.Bucket == null && group.Match == null)
+                {
+                    Logger.Warn($"Update(): No bucket or match for group {group} in WaitingInQueueState");
+                    group.SetState(ShutdownState.Instance);
+                    return;
+                }
+
+                if (group.Count == 0)
+                {
+                    group.SetState(ShutdownState.Instance);
+                    return;
+                }
+
+                if (memberCountChanged)
+                    group.UpdateContainers(memberCountChanged);
+
+                if (group.Match != null)
+                    group.SetState(MatchFoundState.Instance);
+            }
+
             public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
             {
                 int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.WaitingInQueueState.Instance);
@@ -680,6 +749,41 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private MatchFoundState() { }
 
+            public override void OnEntered(RegionRequestGroup group)
+            {
+                if (group.Match == null)
+                {
+                    Logger.Warn($"OnEntered(): No match assigned to group {group} when entering MatchFoundState");
+                    return;
+                }
+
+                // Invite everybody
+                foreach (RegionRequestGroupMember member in group)
+                {
+                    if (member.State == RegionRequestGroupMember.WaitingInWaitlistState.Instance)
+                        continue;
+
+                    member.SetState(RegionRequestGroupMember.MatchInvitePendingState.Instance);
+                }
+            }
+
+            public override void Update(RegionRequestGroup group, bool memberCountChanged)
+            {
+                if (group.Match == null)
+                {
+                    Logger.Warn($"OnEntered(): No match assigned to group {group} in MatchFoundState");
+                    return;
+                }
+
+                if (group.Count == 0)
+                {
+                    group.SetState(ShutdownState.Instance);
+                    return;
+                }
+
+                group.UpdateContainers(memberCountChanged);
+            }
+
             public override int AddPlayers(RegionRequestGroup group, HashSet<PlayerHandle> players)
             {
                 int numAdded = group.AddPlayersInternal(players, RegionRequestGroupMember.MatchInvitePendingState.Instance);
@@ -687,6 +791,28 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 Update(group, numAdded != 0);
 
                 return numAdded;
+            }
+
+            public override bool IsReady(RegionRequestGroup group)
+            {
+                foreach (RegionRequestGroupMember member in group)
+                {
+                    switch (member.State)
+                    {
+                        case RegionRequestGroupMember.MatchInvitePendingState:
+                            return false;
+
+                        case RegionRequestGroupMember.WaitingInWaitlistState:
+                        case RegionRequestGroupMember.MatchInviteAcceptedState:
+                            break;
+
+                        default:
+                            Logger.Warn($"IsReady(): Invalid member state {member.State} while the group is in the MatchFoundState");
+                            break;
+                    }
+                }
+
+                return true;
             }
         }
 
@@ -703,8 +829,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             public override void Update(RegionRequestGroup group, bool memberCountChanged)
             {
-                Logger.Debug("Update(): InMatchState");
-
                 if (group.Count == 0)
                 {
                     group.SetState(ShutdownState.Instance);
