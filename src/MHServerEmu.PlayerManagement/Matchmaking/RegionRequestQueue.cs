@@ -26,7 +26,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public void AddBypassGroup(RegionRequestGroup group)
         {
-            Match match = CreateMatch(group.DifficultyTierRef, group.MetaStateRef, group.IsBypass);
+            Match match = CreateMatch(group.QueueParams);
             match.AddBypassGroup(group);
         }
 
@@ -58,10 +58,10 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return null;
         }
 
-        private Match CreateMatch(PrototypeId difficultyTierRef, PrototypeId metaStateRef, bool isBypass)
+        private Match CreateMatch(in RegionRequestQueueParams queueParams)
         {
             ulong matchNumber = ++_currentMatchNumber;
-            Match match = new(matchNumber, this, difficultyTierRef, metaStateRef, isBypass);
+            Match match = new(matchNumber, this, queueParams);
             _matches.Add(match);
             return match;
         }

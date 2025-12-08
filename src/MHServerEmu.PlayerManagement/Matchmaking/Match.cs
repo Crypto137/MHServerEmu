@@ -14,20 +14,15 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public ulong Id { get; }
         public RegionRequestQueue Queue { get; }
-        public PrototypeId DifficultyTierRef { get; }
-        public PrototypeId MetaStateRef { get; }
-        public bool IsBypass { get; }
+        public RegionRequestQueueParams QueueParams { get; }
 
         public RegionHandle Region { get; private set; }
 
-        public Match(ulong id, RegionRequestQueue queue, PrototypeId difficultyTierRef, PrototypeId metaStateRef, bool isBypass)
+        public Match(ulong id, RegionRequestQueue queue, in RegionRequestQueueParams queueParams)
         {
             Id = id;
             Queue = queue;
-
-            DifficultyTierRef = difficultyTierRef;
-            MetaStateRef = metaStateRef;
-            IsBypass = isBypass;
+            QueueParams = queueParams;
 
             int[] teamLimits = Queue.Prototype.TeamLimits;
             if (teamLimits.HasValue())
@@ -182,8 +177,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             NetStructCreateRegionParams createRegionParams = NetStructCreateRegionParams.CreateBuilder()
                 .SetLevel(0)
-                .SetDifficultyTierProtoId((ulong)DifficultyTierRef)
-                .SetGameStateId((ulong)MetaStateRef)
+                .SetDifficultyTierProtoId((ulong)QueueParams.DifficultyTierRef)
+                .SetGameStateId((ulong)QueueParams.MetaStateRef)
                 .SetMatchNumber(Id)
                 .Build();
 

@@ -63,8 +63,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             // Create region request group
             MasterParty party = command == RegionRequestQueueCommandVar.eRRQC_AddToQueueParty ? _player.CurrentParty : null;
-            bool isBypass = command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass;
-            RegionRequestGroup group = RegionRequestGroup.Create(queue, difficultyTierRef, metaStateRef, _player, party, isBypass);
+            RegionRequestQueueParams queueParams = new(difficultyTierRef, metaStateRef, command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass);
+            RegionRequestGroup group = RegionRequestGroup.Create(queue, queueParams, _player, party);
 
             if (group == null)
                 return Logger.WarnReturn(false, $"OnAddToQueue(): Failed to create region request group for player [{_player}]");

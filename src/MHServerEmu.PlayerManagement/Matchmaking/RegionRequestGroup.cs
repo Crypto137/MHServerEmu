@@ -36,9 +36,11 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public ulong Id { get; }
         public RegionRequestQueue Queue { get; }
-        public PrototypeId DifficultyTierRef { get; }
-        public PrototypeId MetaStateRef { get; }
-        public bool IsBypass { get; }
+        public RegionRequestQueueParams QueueParams { get; }
+
+        public PrototypeId DifficultyTierRef { get => QueueParams.DifficultyTierRef; }
+        public PrototypeId MetaStateRef { get => QueueParams.MetaStateRef; }
+        public bool IsBypass { get => QueueParams.IsBypass; }
 
         public Action<RegionRequestGroupState> GroupStateChangeCallback { get; }
         public Action<bool> GroupStateUpdateCallback { get; }
@@ -55,14 +57,11 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public List<RegionRequestGroup> Bucket { get; set; }
         public Match Match { get; private set; }
 
-        private RegionRequestGroup(ulong id, RegionRequestQueue queue, PrototypeId difficultyTierRef, PrototypeId metaStateRef, bool isBypass)
+        private RegionRequestGroup(ulong id, RegionRequestQueue queue, in RegionRequestQueueParams queueParams)
         {
             Id = id;
             Queue = queue;
-
-            DifficultyTierRef = difficultyTierRef;
-            MetaStateRef = metaStateRef;
-            IsBypass = isBypass;
+            QueueParams = queueParams;
 
             GroupStateChangeCallback = OnGroupStateChange;
             GroupStateUpdateCallback = OnGroupStateUpdate;
@@ -74,8 +73,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             State.OnEntered(this);
         }
 
-        public static RegionRequestGroup Create(RegionRequestQueue queue, PrototypeId difficultyTierRef, PrototypeId metaStateRef,
-            PlayerHandle player, MasterParty party, bool isBypass)
+        public static RegionRequestGroup Create(RegionRequestQueue queue, in RegionRequestQueueParams queueParams,
+            PlayerHandle player, MasterParty party)
         {
             if (queue == null) return Logger.WarnReturn<RegionRequestGroup>(null, "Create(): queue == null");
             if (player == null) return Logger.WarnReturn<RegionRequestGroup>(null, "Create(): player == null");
@@ -88,7 +87,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             else
                 players.Add(player);
 
-            RegionRequestGroup group = new(groupId, queue, difficultyTierRef, metaStateRef, isBypass);
+            RegionRequestGroup group = new(groupId, queue, queueParams);
             group.AddPlayers(players);
 
             HashSetPool<PlayerHandle>.Instance.Return(players);
