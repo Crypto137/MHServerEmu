@@ -246,6 +246,11 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return true;
         }
 
+        public void ClearMatch()
+        {
+            Match = null;
+        }
+
         public void OnMatchRegionAccessChange(RegionHandle region)
         {
             RegionHandle currentMatchRegion = Match?.Region;

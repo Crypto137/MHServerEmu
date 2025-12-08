@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -16,6 +17,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         private readonly SortedSet<Match> _matches = new(MatchLoadComparer.Instance);
 
         private ulong _currentMatchNumber = 0;
+        private Match _nextQueueMatch = null;
 
         public RegionPrototype Prototype { get; }
         public PrototypeId PrototypeDataRef { get => Prototype.DataRef; }
@@ -38,7 +40,30 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (queueParams.IsBypass)
                 return;
 
-            // TODO
+            List<Match> matches = ListPool<Match>.Instance.Get();
+            bool hasGroups = true;
+
+            // Try to fill existing matches.
+            foreach (Match match in matches)
+            {
+                match.AddGroupsFromQueue(false);
+                UpdateMatchSortOrder(match);
+
+                hasGroups = HasBucketedGroupsForParams(queueParams);
+                if (hasGroups == false)
+                    break;
+            }
+
+            if (hasGroups)
+            {
+                // This probably needs to be bucketed by params as well.
+                _nextQueueMatch ??= CreateMatch(queueParams);
+
+                if (_nextQueueMatch.AddGroupsFromQueue(true))
+                    _nextQueueMatch = null;
+            }
+
+            ListPool<Match>.Instance.Return(matches);
         }
 
         public bool UpdateGroupBucket(RegionRequestGroup group)
@@ -126,12 +151,39 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return buckets;
         }
 
+        private bool HasBucketedGroupsForParams(in RegionRequestQueueParams queueParams)
+        {
+            Dictionary<int, List<RegionRequestGroup>> buckets = GetBucketsForParams(queueParams);
+            
+            if (buckets != null)
+            {
+                foreach (var kvp in buckets)
+                {
+                    if (kvp.Value.Count > 0)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         private Match CreateMatch(in RegionRequestQueueParams queueParams)
         {
             ulong matchNumber = ++_currentMatchNumber;
             Match match = new(matchNumber, this, queueParams);
             _matches.Add(match);
             return match;
+        }
+
+        private void GetMatchesLookingForMore(List<Match> matches)
+        {
+            foreach (Match match in _matches)
+            {
+                if (match.IsLookingForMore() == false)
+                    continue;
+
+                matches.Add(match);
+            }
         }
 
         private class MatchLoadComparer : IComparer<Match>

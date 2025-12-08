@@ -16,6 +16,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public RegionRequestQueue Queue { get; }
         public RegionRequestQueueParams QueueParams { get; }
 
+        public bool IsBypass { get => QueueParams.IsBypass; }
+
         public RegionHandle Region { get; private set; }
 
         public Match(ulong id, RegionRequestQueue queue, in RegionRequestQueueParams queueParams)
@@ -72,6 +74,24 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return count;
         }
 
+        public bool IsLookingForMore()
+        {
+            if (IsBypass)
+                return false;
+
+            if (IsFull())
+                return false;
+
+            // NOTE: This prevents adding players mid-match from the queue.
+            if (Region != null && Region.IsAccessible(null, false) == false)
+                return false;
+
+            if (IsEmpty() && (Queue.Prototype.QueueDoNotWaitToFull == false || Region == null))
+                return false;
+
+            return true;
+        }
+
         public bool HasGroup(RegionRequestGroup group)
         {
             foreach (MatchTeam team in _teams)
@@ -95,6 +115,80 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
 
             return null;
+        }
+
+        public bool AddGroupsFromQueue(bool clearTeamsIfNotReady)
+        {
+            bool hasGroups = true;
+
+            while (IsFull() == false && hasGroups)
+                hasGroups = AddNextGroupFromQueue();
+
+            // Always ready if we the match has already started (i.e. it has a region).
+            bool isReady = Region != null;
+
+            // If the match hasn't started yet, wait for the group to get full if needed.
+            if (isReady == false)
+            {
+                isReady = Queue.Prototype.QueueDoNotWaitToFull || IsFull();
+
+                if (isReady == false && clearTeamsIfNotReady)
+                {
+                    ClearTeams();
+                    return false;
+                }
+            }
+
+            if (isReady)
+            {
+                foreach (MatchTeam team in _teams)
+                {
+                    for (int i = 0; i < team.Groups.Count; i++)
+                    {
+                        (RegionRequestGroup group, bool groupIsAdded) = team.Groups[i];
+                        if (groupIsAdded)
+                            continue;
+
+                        team.Groups[i] = (group, true);
+                        group.SetMatch(this);
+                    }
+                }
+            }
+
+            return isReady;
+        }
+
+        private bool AddNextGroupFromQueue()
+        {
+            MatchTeam? nullableTeam = GetAvailableTeam();
+            if (nullableTeam == null)
+                return false;
+
+            MatchTeam team = nullableTeam.Value;
+            int count = team.GetAvailableCount();
+
+            if (count > 0)
+            {
+                // Search buckets highest to lowest until we find a valid group.
+                for (int i = count; i > 0; i--)
+                {
+                    List<RegionRequestGroup> bucket = Queue.GetBucket(QueueParams, i);
+                    if (bucket == null || bucket.Count == 0)
+                        continue;
+
+                    foreach (RegionRequestGroup group in bucket)
+                    {
+                        if (HasGroup(group))
+                            continue;
+
+                        team.Groups.Add((group, false));
+                        return true;
+                    }
+                }
+            }
+
+            // No groups added in this iteration.
+            return false;
         }
 
         public void AddBypassGroup(RegionRequestGroup group)
@@ -203,6 +297,22 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
 
             return null;
+        }
+
+        private void ClearTeams()
+        {
+            foreach (MatchTeam team in _teams)
+            {
+                foreach ((RegionRequestGroup group, _) in team.Groups)
+                {
+                    if (IsBypass == false)
+                        group.SetState(RegionRequestGroup.WaitingInQueueState.Instance);
+
+                    group.ClearMatch();
+                }
+
+                team.Groups.Clear();
+            }
         }
     }
 }

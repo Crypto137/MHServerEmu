@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Core.System.Time
 {
@@ -22,7 +23,10 @@ namespace MHServerEmu.Core.System.Time
 
             TimeSpan now = Clock.UnixTime;
 
-            foreach (ServiceEvent serviceEvent in _events.Values)
+            List<ServiceEvent> events = ListPool<ServiceEvent>.Instance.Get();
+            events.AddRange(_events.Values);
+
+            foreach (ServiceEvent serviceEvent in events)
             {
                 if (now < serviceEvent.FireTime)
                     continue;
@@ -30,6 +34,8 @@ namespace MHServerEmu.Core.System.Time
                 serviceEvent.Trigger();
                 _events.Remove(serviceEvent.Handle);
             }
+
+            ListPool<ServiceEvent>.Instance.Return(events);
         }
 
         public bool ScheduleEvent(THandle handle, TimeSpan delay, Action<TEventData> callback, TEventData eventData = default)
