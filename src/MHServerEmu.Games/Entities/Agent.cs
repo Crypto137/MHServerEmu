@@ -1527,6 +1527,8 @@ namespace MHServerEmu.Games.Entities
                 return true;
             }
 
+            Region?.EntityEnteredCombatEvent.Invoke(new(this));
+
             // Enter combat if not currently in combat
             ScheduleEntityEvent(_exitCombatEvent, inCombatTime);
 
@@ -1541,6 +1543,8 @@ namespace MHServerEmu.Games.Entities
         {
             if (Properties[PropertyEnum.IsInCombat] == false)
                 return Logger.WarnReturn(false, $"ExitCombat(): Agent [{this}] is not in combat");
+
+            Region?.EntityExitedCombatEvent.Invoke(new(this));
 
             if (_exitCombatEvent.IsValid)
                 Game.GameEventScheduler.CancelEvent(_exitCombatEvent);
