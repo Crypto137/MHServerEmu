@@ -2867,8 +2867,6 @@ namespace MHServerEmu.Games.Entities
         public bool SendRegionRequestQueueCommandToPlayerManager(PrototypeId regionRef, PrototypeId difficultyTierRef,
             RegionRequestQueueCommandVar command, ulong groupId = 0, ulong targetPlayerDbId = 0)
         {
-            Logger.Debug($"SendRegionRequestQueueCommandToPlayerManager(): {regionRef.GetNameFormatted()}[{difficultyTierRef.GetNameFormatted()}] - {command}");
-
             ulong playerDbId = DatabaseUniqueId;
             ulong regionProtoId = (ulong)regionRef;
             ulong difficultyTierProtoId = (ulong)difficultyTierRef;

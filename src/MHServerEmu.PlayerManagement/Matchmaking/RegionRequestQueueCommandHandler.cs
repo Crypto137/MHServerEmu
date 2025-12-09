@@ -24,7 +24,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public void HandleCommand(PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId metaStateRef,
             RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId)
         {
-            Logger.Info($"HandleCommand(): player=[{_player}], region=[{regionRef.GetNameFormatted()}] command=[{command}]");
+            Logger.Trace($"HandleCommand(): command=[{command}], region=[{regionRef.GetNameFormatted()}], player=[{_player}]");
 
             switch (command)
             {

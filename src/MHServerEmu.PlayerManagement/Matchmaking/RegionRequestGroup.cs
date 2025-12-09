@@ -434,8 +434,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         private void MovePlayersToMatch()
         {
-            Logger.Debug("MovePlayersToMatch()");
-
             MatchTeam? team = Match?.GetTeamForGroup(this);
             if (team == null)
             {
@@ -516,7 +514,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             State = newState;
             State.OnEntered(this);
 
-            Logger.Debug($"OnGroupStateChange(): {this} - {newState}");
+            //Logger.Debug($"OnGroupStateChange(): {this} - {newState}");
         }
 
         private void OnGroupStateUpdate(bool memberCountChanged)
@@ -904,8 +902,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             public override void Update(RegionRequestGroup group, bool memberCountChanged)
             {
-                Logger.Debug("Update(): BypassQueueState");
-
                 if (group.Count == 0)
                 {
                     group.SetState(ShutdownState.Instance);

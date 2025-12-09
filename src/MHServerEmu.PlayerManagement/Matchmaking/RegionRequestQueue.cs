@@ -35,8 +35,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public void UpdateQueue(in RegionRequestQueueParams queueParams)
         {
-            Logger.Debug($"UpdateQueue(): queueParams={queueParams}");
-
             if (queueParams.IsBypass)
                 return;
 
@@ -109,7 +107,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (match.IsEmpty() == false || (Prototype.QueueDoNotWaitToFull && match.Region != null))
                 _matches.Add(match);
             else
-                Logger.Debug($"Match {match.Id} removed from queue for {Prototype}");
+                Logger.Info($"Removed match {match}");
         }
 
         public List<RegionRequestGroup> GetBucket(in RegionRequestQueueParams queueParams, int memberCount)
@@ -172,6 +170,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             ulong matchNumber = ++_currentMatchNumber;
             Match match = new(matchNumber, this, queueParams);
             _matches.Add(match);
+
+            Logger.Info($"Created match {match}");
+
             return match;
         }
 

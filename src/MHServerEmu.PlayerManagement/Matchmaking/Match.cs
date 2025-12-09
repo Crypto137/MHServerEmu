@@ -42,6 +42,11 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
+        public override string ToString()
+        {
+            return $"{Queue.PrototypeDataRef.GetNameFormatted()}[{Id}][{QueueParams}]";
+        }
+
         public bool IsFull()
         {
             foreach (MatchTeam team in _teams)
@@ -223,8 +228,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public void OnGroupUpdate(RegionRequestGroup group, bool memberCountChanged)
         {
-            Logger.Debug($"OnGroupUpdate(): group={group}, memberCountChanged={memberCountChanged}");
-
             MatchTeam? nullableTeam = GetTeamForGroup(group);
             if (nullableTeam == null)
             {
@@ -243,7 +246,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     (RegionRequestGroup itGroup, _) = groups[i];
                     if (itGroup == group)
                     {
-                        Logger.Debug($"Removed group {group} from team {team}");
                         groups.RemoveAt(i);
                         break;
                     }
@@ -313,6 +315,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public void CreateRegion()
         {
+            Logger.Info($"Creating region for match {this}");
+
             PrototypeId regionProtoRef = Queue.PrototypeDataRef;
 
             NetStructCreateRegionParams createRegionParams = NetStructCreateRegionParams.CreateBuilder()
@@ -323,9 +327,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 .Build();
 
             Region = PlayerManagerService.Instance.WorldManager.CreateMatchRegion(regionProtoRef, createRegionParams);
-
-            Logger.Debug($"CreateRegion(): {regionProtoRef.GetName()}");
-
         }
 
         private MatchTeam? GetAvailableTeam()
