@@ -49,6 +49,10 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnCreateRegionResult(createRegionResult);
                     break;
 
+                case ServiceMessage.SetRegionPlayerAccess setRegionPlayerAccess:
+                    OnSetRegionPlayerAccess(setRegionPlayerAccess);
+                    break;
+
                 case ServiceMessage.RequestRegionShutdown requestRegionShutdown:
                     OnRequestRegionShutdown(requestRegionShutdown);
                     break;
@@ -197,6 +201,13 @@ namespace MHServerEmu.PlayerManagement.Network
                 return Logger.WarnReturn(false, $"OnCreateRegionResponse(): Region 0x{createRegionResponse.RegionId:X} not found");
 
             region.OnInstanceCreateResponse(createRegionResponse.Success);
+            return true;
+        }
+
+        private bool OnSetRegionPlayerAccess(in ServiceMessage.SetRegionPlayerAccess setRegionPlayerAccess)
+        {
+            RegionHandle region = _playerManager.WorldManager.GetRegion(setRegionPlayerAccess.RegionId);
+            region?.SetPlayerAccess(setRegionPlayerAccess.PlayerAccess);
             return true;
         }
 

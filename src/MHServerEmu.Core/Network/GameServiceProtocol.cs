@@ -105,6 +105,16 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
+        /// [Game -> PlayerManager] Requests <see cref="RegionPlayerAccessVar"/> update for a region.
+        /// </summary>
+        public readonly struct SetRegionPlayerAccess(ulong regionId, RegionPlayerAccessVar playerAccess)
+            : IGameServiceMessage
+        {
+            public readonly ulong RegionId = regionId;
+            public readonly RegionPlayerAccessVar PlayerAccess = playerAccess;
+        }
+
+        /// <summary>
         /// [Game -> PlayerManager] Requests the player manager to shut down the specified region.
         /// </summary>
         public readonly struct RequestRegionShutdown(ulong regionId)

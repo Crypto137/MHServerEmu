@@ -92,7 +92,7 @@ namespace MHServerEmu.PlayerManagement.Regions
             if (Prototype.AlwaysShutdownWhenVacant)
                 Flags |= RegionFlags.ShutdownWhenVacant;
 
-            SetPlayerAccess(IsMatch ? RegionPlayerAccessVar.eRPA_InviteOnly : RegionPlayerAccessVar.eRPA_Open);
+            SetPlayerAccessInternal(IsMatch ? RegionPlayerAccessVar.eRPA_InviteOnly : RegionPlayerAccessVar.eRPA_Open);
         }
 
         public override string ToString()
@@ -306,7 +306,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
             Logger.Info($"Region [{this}] expired after {uptime:dd\\:hh\\:mm\\:ss}");
             Flags |= RegionFlags.IsExpired;
-            SetPlayerAccess(RegionPlayerAccessVar.eRPA_InviteOnly);
+            SetPlayerAccessInternal(RegionPlayerAccessVar.eRPA_InviteOnly);
             return true;
         }
 
@@ -361,7 +361,16 @@ namespace MHServerEmu.PlayerManagement.Regions
             return true;
         }
 
-        private void SetPlayerAccess(RegionPlayerAccessVar access)
+        public void SetPlayerAccess(RegionPlayerAccessVar access)
+        {
+            if (PlayerAccess == RegionPlayerAccessVar.eRPA_Closed || State == RegionHandleState.Shutdown)
+                return;
+
+            Logger.Debug($"SetPlayerAccess(): {access}");
+            SetPlayerAccessInternal(access);
+        }
+
+        private void SetPlayerAccessInternal(RegionPlayerAccessVar access)
         {
             RegionPlayerAccessVar prevAccess = PlayerAccess;
 
