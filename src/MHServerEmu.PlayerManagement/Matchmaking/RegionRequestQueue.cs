@@ -38,11 +38,18 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (queueParams.IsBypass)
                 return;
 
-            List<Match> matches = ListPool<Match>.Instance.Get();
             bool hasGroups = true;
 
             // Try to fill existing matches.
-            foreach (Match match in matches)
+            List<Match> lfmMatches = ListPool<Match>.Instance.Get();
+
+            foreach (Match match in _matches)
+            {
+                if (match.IsLookingForMore())
+                    lfmMatches.Add(match);
+            }
+
+            foreach (Match match in lfmMatches)
             {
                 match.AddGroupsFromQueue(false);
                 UpdateMatchSortOrder(match);
@@ -52,6 +59,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     break;
             }
 
+            ListPool<Match>.Instance.Return(lfmMatches);
+
+            // Set up new matches.
             if (hasGroups)
             {
                 if (_pendingMatches.TryGetValue(queueParams, out Match match) == false)
@@ -63,8 +73,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 if (match.AddGroupsFromQueue(true))
                     _pendingMatches.Remove(queueParams);
             }
-
-            ListPool<Match>.Instance.Return(matches);
         }
 
         public bool UpdateGroupBucket(RegionRequestGroup group)
@@ -177,17 +185,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             Logger.Info($"Created match {match}");
 
             return match;
-        }
-
-        private void GetMatchesLookingForMore(List<Match> matches)
-        {
-            foreach (Match match in _matches)
-            {
-                if (match.IsLookingForMore() == false)
-                    continue;
-
-                matches.Add(match);
-            }
         }
 
         private class MatchLoadComparer : IComparer<Match>
