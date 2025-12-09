@@ -15,9 +15,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         private readonly Dictionary<RegionRequestQueueParams, Dictionary<int, List<RegionRequestGroup>>> _bucketsByParams = new();
         private readonly SortedSet<Match> _matches = new(MatchLoadComparer.Instance);
+        private readonly Dictionary<RegionRequestQueueParams, Match> _pendingMatches = new();
 
         private ulong _currentMatchNumber = 0;
-        private Match _nextQueueMatch = null;
 
         public RegionPrototype Prototype { get; }
         public PrototypeId PrototypeDataRef { get => Prototype.DataRef; }
@@ -54,11 +54,14 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             if (hasGroups)
             {
-                // This probably needs to be bucketed by params as well.
-                _nextQueueMatch ??= CreateMatch(queueParams);
+                if (_pendingMatches.TryGetValue(queueParams, out Match match) == false)
+                {
+                    match = CreateMatch(queueParams);
+                    _pendingMatches.Add(queueParams, match);
+                }
 
-                if (_nextQueueMatch.AddGroupsFromQueue(true))
-                    _nextQueueMatch = null;
+                if (match.AddGroupsFromQueue(true))
+                    _pendingMatches.Remove(queueParams);
             }
 
             ListPool<Match>.Instance.Return(matches);
