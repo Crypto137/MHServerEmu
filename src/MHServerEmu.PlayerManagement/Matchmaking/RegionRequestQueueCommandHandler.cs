@@ -1,6 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Social;
@@ -59,7 +59,18 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (queue == null)
                 return Logger.WarnReturn(false, $"OnAddToQueue(): Player [{_player}] attempted to enter queue for non-queue region [{regionRef.GetName()}]");
 
-            // TODO: Validate
+            if (difficultyTierRef == PrototypeId.Invalid)
+            {
+                OnRemoveFromQueue();
+                return true;
+            }
+
+            RegionTransferFailure canEnterRegion = _player.CanEnterRegion(queue.Prototype, true);
+            if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
+            {
+                SendMatchQueueStatusError(regionRef, difficultyTierRef, canEnterRegion);
+                return true;
+            }
 
             // Create region request group
             MasterParty party = command == RegionRequestQueueCommandVar.eRRQC_AddToQueueParty ? _player.CurrentParty : null;
@@ -72,18 +83,10 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return true;
         }
 
-        private void OnGroupInviteResponse()
-        {
-
-        }
-
         private void OnRemoveFromQueue()
         {
             RegionRequestGroup group = _player.RegionRequestGroup;
-            if (group == null)
-                return;
-
-            group.RemovePlayer(_player);
+            group?.RemovePlayer(_player);
         }
 
         private void OnMatchInviteResponse(bool response)
@@ -98,6 +101,46 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             PlayerHandle targetPlayer = PlayerManagerService.Instance.ClientManager.GetPlayer(targetPlayerDbId);
             targetPlayer?.RegionRequestGroup?.AddPlayer(_player);
+        }
+
+        private void SendMatchQueueStatusError(PrototypeId regionRef, PrototypeId difficultyTierRef, RegionTransferFailure failure)
+        {
+            if (_player.State != PlayerHandleState.InGame)
+                return;
+
+            RegionRequestQueueUpdateVar status;
+
+            switch (failure)
+            {
+                case RegionTransferFailure.eRTF_Full:
+                    status = RegionRequestQueueUpdateVar.eRRQ_PartyTooLarge;
+                    break;
+
+                case RegionTransferFailure.eRTF_RaidsNotAllowed:
+                    status = RegionRequestQueueUpdateVar.eRRQ_RaidNotAllowed;
+                    break;
+
+                default:
+                    return;
+            }
+
+            ulong gameId = _player.CurrentGame.Id;
+            ulong playerDbId = _player.PlayerDbId;
+            ulong regionProtoId = (ulong)regionRef;
+            ulong difficultyTierProtoId = (ulong)difficultyTierRef;
+            int playersInQueue = 0;
+            ulong regionRequestGroupId = 0;
+
+            ServiceMessage.MatchQueueUpdate message = new(gameId, playerDbId, regionProtoId, difficultyTierProtoId,
+                playersInQueue, regionRequestGroupId, new());
+
+            ulong updatePlayerGuid = _player.PlayerDbId;
+            string updatePlayerName = null;
+
+            ServiceMessage.MatchQueueUpdateData updatePlayerData = new(updatePlayerGuid, status, updatePlayerName);
+            message.Data.Add(updatePlayerData);
+
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
     }
 }

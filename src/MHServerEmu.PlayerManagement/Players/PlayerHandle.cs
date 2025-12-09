@@ -384,7 +384,7 @@ namespace MHServerEmu.PlayerManagement.Players
             }
             else
             {
-                RegionTransferFailure canEnterRegion = CanEnterRegion(region);
+                RegionTransferFailure canEnterRegion = CanEnterRegion(region, false);
                 if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
                 {
                     CancelRegionTransfer(requestingGameId, canEnterRegion);
@@ -429,7 +429,7 @@ namespace MHServerEmu.PlayerManagement.Players
             }
             else
             {
-                RegionTransferFailure canEnterRegion = CanEnterRegion(region);
+                RegionTransferFailure canEnterRegion = CanEnterRegion(region, false);
                 if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
                 {
                     CancelRegionTransfer(requestingGameId, canEnterRegion);
@@ -489,7 +489,7 @@ namespace MHServerEmu.PlayerManagement.Players
                 }
             }
 
-            RegionTransferFailure canEnterRegion = CanEnterRegion(region);
+            RegionTransferFailure canEnterRegion = CanEnterRegion(region, false);
             if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
             {
                 CancelRegionTransfer(requestingGameId, canEnterRegion);
@@ -600,6 +600,48 @@ namespace MHServerEmu.PlayerManagement.Players
 
             Logger.Info($"Player [{this}] finished region transfer {transferId}");
             return true;
+        }
+
+        public RegionTransferFailure CanEnterRegion(RegionPrototype regionProto, bool isQueue)
+        {
+            if (regionProto == null)
+                return RegionTransferFailure.eRTF_GenericError;
+
+            if (CurrentParty != null && CurrentParty.Type == GroupType.GroupType_Raid)
+            {
+                switch (regionProto.Behavior)
+                {
+                    case RegionBehavior.PrivateStory:
+                    case RegionBehavior.PrivateNonStory:
+                        return RegionTransferFailure.eRTF_RaidsNotAllowed;
+
+                    case RegionBehavior.MatchPlay:
+                        if (regionProto.QueueGroupLimit < GameDatabase.GlobalsPrototype.PlayerRaidMaxSize)
+                            return RegionTransferFailure.eRTF_RaidsNotAllowed;
+                        break;
+                }
+            }
+
+            if (isQueue && CurrentParty != null && CurrentParty.MemberCount > regionProto.QueueGroupLimit)
+                return RegionTransferFailure.eRTF_Full;
+
+            return RegionTransferFailure.eRTF_NoError;
+        }
+
+        public RegionTransferFailure CanEnterRegion(RegionHandle region, bool isQueue)
+        {
+            if (region == null)
+                return RegionTransferFailure.eRTF_GenericError;
+
+            RegionTransferFailure protoResult = CanEnterRegion(region.Prototype, isQueue);
+            if (protoResult != RegionTransferFailure.eRTF_NoError)
+                return protoResult;
+
+            // For matches we check matchmaking group limit instead of the region itself in prototype checks above.
+            if (region.IsPrivate && region != TargetRegion && region.IsFull)
+                return RegionTransferFailure.eRTF_Full;
+
+            return RegionTransferFailure.eRTF_NoError;
         }
 
         public bool CanBeginRegionTransfer(bool isMatchTransfer)
@@ -801,24 +843,6 @@ namespace MHServerEmu.PlayerManagement.Players
             // Remove the previous region from the WorldView if it needs to be shut down.
             if (prevRegion != null && prevRegion.Flags.HasFlag(RegionFlags.ShutdownWhenVacant))
                 WorldView.RemoveRegion(prevRegion);
-        }
-
-        private RegionTransferFailure CanEnterRegion(RegionHandle region)
-        {
-            if (region == null)
-                return RegionTransferFailure.eRTF_GenericError;
-
-            // TODO: Reevaluate if we need region.IsMatch int the check after we implement matchmaking.
-            if ((region.IsPrivate || region.IsMatch) && region != TargetRegion && region.IsFull)
-                return RegionTransferFailure.eRTF_Full;
-
-            if (CurrentParty != null && CurrentParty.Type == GroupType.GroupType_Raid)
-            {
-                if (region.IsPrivateStory || region.IsPrivateNonStory)
-                    return RegionTransferFailure.eRTF_RaidsNotAllowed;
-            }
-
-            return RegionTransferFailure.eRTF_NoError;
         }
     }
 }
