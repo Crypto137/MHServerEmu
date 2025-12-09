@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.Regions
                 return null;
             }
 
-            if (region.MatchNumber != 0)    // Matches are not stored in the public region dict
+            if (region.MatchNumber != 0)
                 _matches[region.MatchNumber] = region;
 
             if (region.Id != instanceAddress)

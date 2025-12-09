@@ -291,6 +291,9 @@ namespace MHServerEmu.Games.Network
             AOI.SetRegion(0, true);
             if (Player != null)
             {
+                // Do an AOI update here to remove from the fake "party" after exiting match regions,
+                // see AreaOfInterest.GetInventoryInterestPolicies() for more details.
+                Player.UpdateInterestPolicies(false);
                 Player.QueueLoadingScreen(PrototypeId.Invalid);
                 Player.Destroy();
             }
