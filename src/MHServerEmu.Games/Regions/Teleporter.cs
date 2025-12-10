@@ -8,10 +8,10 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -228,6 +228,9 @@ namespace MHServerEmu.Games.Regions
                 if (Player.CanEnterRegion(regionProtoRef, DifficultyTierRef, false) == false)
                     return false;
 
+                if (destinationRegionProto.IsQueueRegion)
+                    return BeginTeleportToQueueTarget(regionProtoRef);
+
                 return TeleportToRemoteTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
             }
         }
@@ -355,6 +358,45 @@ namespace MHServerEmu.Games.Regions
 
             ChangePositionResult result = Player.CurrentAvatar.ChangeRegionPosition(position, orientation, ChangePositionFlags.Teleport);
             return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
+        }
+
+        private bool BeginTeleportToQueueTarget(PrototypeId regionProtoRef)
+        {
+            RegionPrototype destinationRegionProto = regionProtoRef.As<RegionPrototype>();
+            if (destinationRegionProto == null) return Logger.WarnReturn(false, "BeginTeleportToQueueTarget(): destinationRegionProto == null");
+
+            if (Player.MatchQueueStatus.IsOwnerInQueue())
+            {
+                Player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageAlreadyInQueue);
+                return false;
+            }
+
+            RegionPrototype currentRegionProto = Player.GetRegion()?.Prototype;
+            if (currentRegionProto != null && currentRegionProto.IsQueueRegion)
+            {
+                Player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageCantQueueInQueueRegion);
+                return false;
+            }
+
+            Party party = Player.GetParty();
+            if (party != null && party.IsLeader(Player) == false)
+            {
+                Player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageOnlyPartyLeaderCanQueue);
+                return false;
+            }
+
+            // Queue up straight away if there is nothing to choose (queue bypass is not allowed and we are not in a party).
+            if (destinationRegionProto.AllowsQueueBypass == false && party == null)
+            {
+                Player.SendRegionRequestQueueCommandToPlayerManager(regionProtoRef, DifficultyTierRef, RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo);
+                return true;
+            }
+
+            // Ask the player to choose whether to queue solo or not.
+            Player.SendMatchQueueUpdate(Player.DatabaseUniqueId, regionProtoRef, DifficultyTierRef, 0,
+                RegionRequestQueueUpdateVar.eRRQ_SelectQueueMethod, Player.GetName());
+
+            return true;
         }
 
         private bool TeleportToRemoteTarget(PrototypeId regionProtoRef, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)

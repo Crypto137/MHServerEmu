@@ -1,9 +1,12 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Regions.MatchQueues;
 using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.Network
@@ -11,40 +14,78 @@ namespace MHServerEmu.Games.Network
     public static class MigrationUtility
     {
         // We have everything in a self-contained server, so we can get away with just storing our migration data in a runtime object.
+        // We can potentially use a separate archive that would contain just the migration data.
 
-        public static void StoreProperties(List<KeyValuePair<ulong, ulong>> migrationDataList, PropertyCollection properties)
+        public static void Store(MigrationData migrationData, Entity entity)
         {
-            migrationDataList.Clear();
+            StoreProperties(migrationData, entity);
 
-            PropertyEnum prevProperty = PropertyEnum.Invalid;
-            PropertyInfoPrototype propInfoProto = null;
-            foreach (var kvp in properties)
+            if (entity is Player player)
             {
-                PropertyEnum propertyEnum = kvp.Key.Enum;
-                if (propertyEnum != prevProperty)
-                {
-                    PropertyInfo propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
-                    propInfoProto = propInfo.Prototype;
-                    prevProperty = propertyEnum;
-                }
-
-                // Migrate properties that are not saved to the database, but are supposed to be replicated for transfer
-                if (propInfoProto.ReplicateToDatabase == DatabasePolicy.None && propInfoProto.ReplicateForTransfer)
-                    migrationDataList.Add(new(kvp.Key.Raw, kvp.Value));
+                StoreWorldView(migrationData, player.PlayerConnection.WorldView);
+                StoreMatchQueueStatus(migrationData, player.MatchQueueStatus);
+                StoreCommunity(migrationData, player.Community);
+            }
+            else if (entity is Agent agent)
+            {
+                foreach (WorldEntity summon in new SummonedEntityIterator(agent))
+                    StoreProperties(migrationData, summon);
             }
         }
 
-        public static void RestoreProperties(List<KeyValuePair<ulong, ulong>> migrationDataList, PropertyCollection properties)
+        public static void Restore(MigrationData migrationData, Entity entity)
         {
-            foreach (var kvp in migrationDataList)
+            RestoreProperties(migrationData, entity);
+
+            if (entity is Player player)
             {
-                PropertyId propertyId = new(kvp.Key);
-                PropertyValue propertyValue = kvp.Value;
+                RestoreWorldView(migrationData, player.PlayerConnection.WorldView);
+                RestoreMatchQueueStatus(migrationData, player.MatchQueueStatus);
+                RestoreCommunity(migrationData, player.Community);
+            }
+            else if (entity is Agent agent)
+            {
+                foreach (WorldEntity summon in new SummonedEntityIterator(agent))
+                    RestoreProperties(migrationData, summon);
+            }
+        }
+
+        private static void StoreProperties(MigrationData migrationData, Entity entity)
+        {
+            List<(ulong, ulong)> propertyList = migrationData.GetOrCreatePropertyList(entity.DatabaseUniqueId);
+            propertyList.Clear();
+            entity.Properties.GetPropertiesForMigration(propertyList);
+        }
+
+        private static void RestoreProperties(MigrationData migrationData, Entity entity)
+        {
+            PropertyCollection properties = entity.Properties;
+            ulong entityDbId = entity.DatabaseUniqueId;
+
+            List<(ulong, ulong)> propertyList = migrationData.GetOrCreatePropertyList(entityDbId);
+
+            foreach (var kvp in propertyList)
+            {
+                PropertyId propertyId = new(kvp.Item1);
+                PropertyValue propertyValue = kvp.Item2;
                 properties[propertyId] = propertyValue;
             }
+
+            // Clean up lists for runtime entities (e.g. summons).
+            switch (entity.Prototype)
+            {
+                case PlayerPrototype:
+                case AvatarPrototype:
+                case AgentTeamUpPrototype:
+                    break;
+
+                default:
+                    migrationData.RemovePropertyList(entityDbId);
+                    break;
+            }
         }
 
-        public static void StoreWorldView(MigrationData migrationData, WorldViewCache worldView)
+        private static void StoreWorldView(MigrationData migrationData, WorldViewCache worldView)
         {
             List<(ulong, ulong)> worldViewData = migrationData.WorldView;
             worldViewData.Clear();
@@ -53,12 +94,39 @@ namespace MHServerEmu.Games.Network
                 worldViewData.Add((regionId, (ulong)regionProtoRef));
         }
 
-        public static void RestoreWorldView(MigrationData migrationData, WorldViewCache worldView)
+        private static void RestoreWorldView(MigrationData migrationData, WorldViewCache worldView)
         {
             worldView.Sync(migrationData.WorldView);
         }
 
-        public static void StoreCommunity(MigrationData migrationData, Community community)
+        private static void StoreMatchQueueStatus(MigrationData migrationData, MatchQueueStatus matchQueueStatus)
+        {
+            // Do not serialize unless we have actual queue data.
+            if (matchQueueStatus.Count == 0)
+            {
+                migrationData.MatchQueueStatus = null;
+                return;
+            }
+
+            // We don't have the server migration mode properly implemented, so just use the client replication mode for now.
+            using Archive archive = new(ArchiveSerializeType.Replication);
+            matchQueueStatus.Serialize(archive);
+
+            migrationData.MatchQueueStatus = archive.AccessAutoBuffer().ToArray();
+        }
+
+        private static void RestoreMatchQueueStatus(MigrationData migrationData, MatchQueueStatus matchQueueStatus)
+        {
+            // Do not deserialize unless we have actual queue data.
+            if (migrationData.MatchQueueStatus == null)
+                return;
+
+            // We don't have the server migration mode properly implemented, so just use the client replication mode for now.
+            using Archive archive = new(ArchiveSerializeType.Replication, migrationData.MatchQueueStatus);
+            matchQueueStatus.Serialize(archive);
+        }
+
+        private static void StoreCommunity(MigrationData migrationData, Community community)
         {
             migrationData.CommunityStatus.Clear();
             foreach (CommunityMember member in community.IterateMembers())
@@ -86,7 +154,7 @@ namespace MHServerEmu.Games.Network
             }
         }
 
-        public static void RestoreCommunity(MigrationData migrationData, Community community)
+        private static void RestoreCommunity(MigrationData migrationData, Community community)
         {
             foreach (CommunityMemberBroadcast broadcast in migrationData.CommunityStatus)
             {

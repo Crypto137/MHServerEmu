@@ -2784,6 +2784,127 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Match Queue
+
+        public bool UpdateMatchQueue(ulong playerGuid, PrototypeId regionRef, PrototypeId difficultyTierRef, int playersInQueue,
+            ulong groupId, RegionRequestQueueUpdateVar status, string playerName)
+        {
+            RegionPrototype regionProto = regionRef.As<RegionPrototype>();
+            if (regionProto == null) return Logger.WarnReturn(false, "UpdateMatchQueue(): regionProto == null");
+
+            bool isUpdatingSelf = playerGuid == DatabaseUniqueId;
+
+            // Update MatchQueueStatus server-side
+            MatchQueueStatus.UpdateQueue(regionRef, difficultyTierRef, groupId, playersInQueue);
+            bool changed = MatchQueueStatus.UpdatePlayerState(playerGuid, regionRef, difficultyTierRef, groupId, status, playerName);
+
+            // Update MatchQueueStatus client-side
+            SendMatchQueueUpdate(playerGuid, regionRef, difficultyTierRef, groupId, status, playerName);
+
+            // Send banners if we are self-updating.
+            if (isUpdatingSelf)
+            {
+                switch (status)
+                {
+                    case RegionRequestQueueUpdateVar.eRRQ_RaidNotAllowed:
+                    case RegionRequestQueueUpdateVar.eRRQ_PartyTooLarge:
+                        SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageQueueNotAvailableInRaid);
+                        break;
+
+                    case RegionRequestQueueUpdateVar.eRRQ_WaitingInWaitlist:
+                        SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageTeleportTargetIsInMatch);
+                        break;
+                }
+            }
+
+            // Send chat log message if the status actually changed.
+            if (changed)
+            {
+                CommunityMember member = Community.GetMember(playerGuid);
+
+                string chatLogPlayerName;
+
+                // Get up to date player name if possible.
+                if (isUpdatingSelf)
+                    chatLogPlayerName = GetName();
+                else if (member != null)
+                    chatLogPlayerName = member.GetName();
+                else
+                    chatLogPlayerName = playerName;
+
+                var chatLogMessage = NetMessageChatFromMetaGame.CreateBuilder()
+                    .SetSourceStringId((ulong)GameDatabase.GlobalsPrototype.SystemLocalized)
+                    .SetMessageStringId((ulong)GameDatabase.TransitionGlobalsPrototype.GetLocaleStringIdForLog(status))
+                    .SetPlayerName1(chatLogPlayerName)
+                    .AddArgStringIds((ulong)regionProto.RegionName)
+                    .Build();
+
+                SendMessage(chatLogMessage);
+            }
+
+            return true;
+        }
+
+        public void SendMatchQueueUpdate(ulong playerGuid, PrototypeId regionRef, PrototypeId difficultyTierRef, ulong groupId,
+            RegionRequestQueueUpdateVar status, string playerName = null, int playersInQueue = -1)
+        {
+            var builder = NetMessageMatchQueueUpdateClient.CreateBuilder()
+                .SetPlayerGuid(playerGuid)
+                .SetRegionProtoId((ulong)regionRef)
+                .SetDifficultyTierProtoId((ulong)difficultyTierRef)
+                .SetRegionRequestGroupId(groupId)
+                .SetStatus(status);
+
+            if (string.IsNullOrEmpty(playerName) == false)
+                builder.SetPlayerName(playerName);
+
+            if (playersInQueue >= 0)
+                builder.SetPlayersInQueue((uint)playersInQueue);
+
+            SendMessage(builder.Build());
+        }
+
+        public bool SendRegionRequestQueueCommandToPlayerManager(PrototypeId regionRef, PrototypeId difficultyTierRef,
+            RegionRequestQueueCommandVar command, ulong groupId = 0, ulong targetPlayerDbId = 0)
+        {
+            ulong playerDbId = DatabaseUniqueId;
+            ulong regionProtoId = (ulong)regionRef;
+            ulong difficultyTierProtoId = (ulong)difficultyTierRef;
+            ulong metaStateProtoId = 0;
+
+            switch (command)
+            {
+                case RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo:
+                case RegionRequestQueueCommandVar.eRRQC_AddToQueueParty:
+                case RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass:
+                    Avatar avatar = CurrentAvatar;
+
+                    PrototypeId metaGameRef = PrototypeId.Invalid;
+                    PrototypeId metaStateRef = PrototypeId.Invalid;
+                    TimeSpan time = TimeSpan.Zero;
+                    if (avatar != null && MetaGame.LoadMetaStateProgress(avatar, regionRef, difficultyTierRef, ref metaGameRef, ref metaStateRef, ref time))
+                    {
+                        RegionQueueStateEntryPrototype queueStateProto = regionRef.As<RegionPrototype>()?.GetRegionQueueStateEntry(metaStateRef);
+                        if (queueStateProto != null)
+                        {
+                            if (queueStateProto.CanQueue == false)
+                                return Logger.WarnReturn(false, "SendRegionRequestQueueCommandToPlayerManager(): queueStateProto.CanQueue == false");
+
+                            metaStateProtoId = (ulong)queueStateProto.State;
+                        }
+                    }
+
+                    break;
+            }
+
+            ServiceMessage.MatchRegionRequestQueueCommand message = new(playerDbId, regionProtoId, difficultyTierProtoId, metaStateProtoId, command, groupId, targetPlayerDbId);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+
+            return true;
+        }
+
+        #endregion
+
         #region AOI & Discovery
 
         public bool InterestedInEntity(Entity entity, AOINetworkPolicyValues interestFilter)
@@ -4098,18 +4219,33 @@ namespace MHServerEmu.Games.Entities
 
             // Check destination region, use community data for this
             CommunityMember member = Community.GetMember(targetPlayerDbId);
+            PrototypeId targetRegionProtoRef = PrototypeId.Invalid;
+
             if (member != null)
             {
-                PrototypeId regionProtoRef = member.RegionRef;
+                targetRegionProtoRef = member.RegionRef;
                 PrototypeId difficultyProtoRef = member.DifficultyRef;
-                if (regionProtoRef != PrototypeId.Invalid && difficultyProtoRef != PrototypeId.Invalid)
+                if (targetRegionProtoRef != PrototypeId.Invalid && difficultyProtoRef != PrototypeId.Invalid)
                 {
-                    if (CanEnterRegion(regionProtoRef, difficultyProtoRef, true) == false)
+                    if (CanEnterRegion(targetRegionProtoRef, difficultyProtoRef, true) == false)
                         return false;
                 }
             }
 
-            // TODO: Additional validation for match regions?
+            // Request queue if we are teleporting to a player in a different region, and it is a match region.
+            Player targetPlayer = Game.EntityManager.GetEntityByDbGuid<Player>(targetPlayerDbId);
+            Region targetRegion = targetPlayer?.GetRegion();
+
+            // We are guaranteed to have a current region here because we check above that our avatar is in the world.
+            if (targetRegion == null || targetRegion.Id != GetRegion().Id)
+            {
+                RegionPrototype targetRegionProto = targetRegionProtoRef.As<RegionPrototype>();
+                if (targetRegionProto != null && targetRegionProto.IsQueueRegion)
+                {
+                    SendRegionRequestQueueCommandToPlayerManager(PrototypeId.Invalid, PrototypeId.Invalid, RegionRequestQueueCommandVar.eRRQC_RequestToJoinGroup, 0, targetPlayerDbId);
+                    return true;
+                }
+            }
 
             // Teleport
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();

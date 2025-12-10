@@ -73,6 +73,14 @@ namespace MHServerEmu.Games.Network
                     OnPartyMemberInfoServerUpdate(partyMemberInfoServerUpdate);
                     break;
 
+                case ServiceMessage.MatchQueueUpdate matchQueueUpdate:
+                    OnMatchQueueUpdate(matchQueueUpdate);
+                    break;
+
+                case ServiceMessage.MatchQueueFlush matchQueueFlush:
+                    OnMatchQueueFlush(matchQueueFlush);
+                    break;
+
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;
@@ -223,6 +231,43 @@ namespace MHServerEmu.Games.Network
             PartyMemberInfo memberInfo = partyMemberInfoServerUpdate.MemberInfo;
 
             Game.PartyManager.OnPartyMemberInfoServerUpdate(playerDbId, groupId, memberDbId, memberEvent, memberInfo);
+        }
+
+        private void OnMatchQueueUpdate(in ServiceMessage.MatchQueueUpdate matchQueueUpdate)
+        {
+            ulong playerDbId = matchQueueUpdate.PlayerDbId;
+            PrototypeId regionRef = (PrototypeId)matchQueueUpdate.RegionProtoId;
+            PrototypeId difficultyTierRef = (PrototypeId)matchQueueUpdate.DifficultyTierProtoId;
+            int playersInQueue = matchQueueUpdate.PlayersInQueue;
+            ulong groupId = matchQueueUpdate.RegionRequestGroupId;
+            List<ServiceMessage.MatchQueueUpdateData> data = matchQueueUpdate.Data;
+
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
+            if (player == null)
+                return;
+
+            if (data == null)
+                return;
+
+            foreach (ServiceMessage.MatchQueueUpdateData dataEntry in data)
+            {
+                ulong updatePlayerDbId = dataEntry.UpdatePlayerGuid;
+                string updatePlayerName = dataEntry.UpdatePlayerName ?? string.Empty;
+                RegionRequestQueueUpdateVar status = dataEntry.Status;
+
+                player.UpdateMatchQueue(updatePlayerDbId, regionRef, difficultyTierRef, playersInQueue, groupId, status, updatePlayerName);
+            }
+        }
+
+        private void OnMatchQueueFlush(in ServiceMessage.MatchQueueFlush matchQueueFlush)
+        {
+            ulong playerDbId = matchQueueFlush.PlayerDbId;
+
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
+            if (player == null)
+                return;
+
+            player.MatchQueueStatus.Flush();
         }
 
         private void OnLeaderboardStateChange(in ServiceMessage.LeaderboardStateChange leaderboardStateChange)

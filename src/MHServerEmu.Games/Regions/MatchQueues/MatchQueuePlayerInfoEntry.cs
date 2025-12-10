@@ -7,7 +7,7 @@ namespace MHServerEmu.Games.Regions.MatchQueues
     /// </summary>
     public class MatchQueuePlayerInfoEntry
     {
-        public string PlayerName { get; private set; }
+        public string PlayerName { get; }
         public RegionRequestQueueUpdateVar Status { get; private set; }
 
         /// <summary>
@@ -17,6 +17,11 @@ namespace MHServerEmu.Games.Regions.MatchQueues
         {
             PlayerName = playerName;
             Status = status;
+        }
+
+        public override string ToString()
+        {
+            return $"{PlayerName}: {Status}";
         }
 
         /// <summary>
@@ -30,7 +35,5 @@ namespace MHServerEmu.Games.Regions.MatchQueues
             Status = status;
             return true;
         }
-
-        public override string ToString() => $"{PlayerName}: {Status}";
     }
 }

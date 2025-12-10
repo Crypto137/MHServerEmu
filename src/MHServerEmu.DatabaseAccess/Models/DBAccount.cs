@@ -47,6 +47,10 @@ namespace MHServerEmu.DatabaseAccess.Models
         public DBEntityCollection Items { get; init; } = new();
         public DBEntityCollection ControlledEntities { get; init; } = new();
 
+        // Imitate ReplicateForTransfer behavior by having a DBEntityCollection that doesn't get saved to the database.
+        [JsonIgnore]
+        public DBEntityCollection TransferredEntities { get; } = new();
+
         // MigrationData is explicitly not saved and exists only as long as the current session does
         [JsonIgnore]
         public MigrationData MigrationData { get; } = new();
@@ -94,6 +98,7 @@ namespace MHServerEmu.DatabaseAccess.Models
             TeamUps.Clear();
             Items.Clear();
             ControlledEntities.Clear();
+            TransferredEntities.Clear();
         }
     }
 }

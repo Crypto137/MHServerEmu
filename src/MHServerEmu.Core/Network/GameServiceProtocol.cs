@@ -65,7 +65,7 @@ namespace MHServerEmu.Core.Network
             public readonly MailboxMessage Message = message;
         }
 
-        #region Game Instances
+        #region Player Manager
 
         public readonly struct GameInstanceOp(GameInstanceOpType type, ulong gameId)
             : IGameServiceMessage
@@ -102,6 +102,16 @@ namespace MHServerEmu.Core.Network
         {
             public readonly ulong RegionId = regionId;
             public readonly bool Success = success;
+        }
+
+        /// <summary>
+        /// [Game -> PlayerManager] Requests <see cref="RegionPlayerAccessVar"/> update for a region.
+        /// </summary>
+        public readonly struct SetRegionPlayerAccess(ulong regionId, RegionPlayerAccessVar playerAccess)
+            : IGameServiceMessage
+        {
+            public readonly ulong RegionId = regionId;
+            public readonly RegionPlayerAccessVar PlayerAccess = playerAccess;
         }
 
         /// <summary>
@@ -373,6 +383,54 @@ namespace MHServerEmu.Core.Network
             public readonly ulong MemberDbId = memberDbId;
             public readonly PartyMemberEvent MemberEvent = memberEvent;
             public readonly PartyMemberInfo MemberInfo = memberInfo;
+        }
+
+        /// <summary>
+        /// [Game -> PlayerManager] Relays a match region request command from a client.
+        /// </summary>
+        public readonly struct MatchRegionRequestQueueCommand(ulong playerDbId, ulong regionProtoId, ulong difficultyTierProtoId, ulong metaStateProtoId, RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId)
+            : IGameServiceMessage
+        {
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ulong RegionProtoId = regionProtoId;
+            public readonly ulong DifficultyTierProtoId = difficultyTierProtoId;
+            public readonly ulong MetaStateProtoId = metaStateProtoId;
+            public readonly RegionRequestQueueCommandVar Command = command;
+            public readonly ulong RegionRequestGroupId = regionRequestGroupId;
+            public readonly ulong TargetPlayerDbId = targetPlayerDbId;
+        }
+
+        // MatchQueueUpdate is based on PlayerMgrToGameServer.proto from 1.53
+        public readonly struct MatchQueueUpdateData(ulong updatePlayerGuid, RegionRequestQueueUpdateVar status, string updatePlayerName = null)
+        {
+            public readonly ulong UpdatePlayerGuid = updatePlayerGuid;
+            public readonly RegionRequestQueueUpdateVar Status = status;
+            public readonly string UpdatePlayerName = updatePlayerName;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] Updates the state of a MatchQueueStatus instance game-side.
+        /// </summary>
+        public readonly struct MatchQueueUpdate(ulong gameId, ulong playerDbId, ulong regionProtoId, ulong difficultyTierProtoId, int playersInQueue, ulong regionRequestGroupId, List<MatchQueueUpdateData> data)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ulong RegionProtoId = regionProtoId;
+            public readonly ulong DifficultyTierProtoId = difficultyTierProtoId;
+            public readonly int PlayersInQueue = playersInQueue;
+            public readonly ulong RegionRequestGroupId = regionRequestGroupId;
+            public readonly List<MatchQueueUpdateData> Data = data;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] Clears the state of a MatchQueueStatus instance game-side.
+        /// </summary>
+        public readonly struct MatchQueueFlush(ulong gameId, ulong playerDbId)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
         }
 
         #endregion

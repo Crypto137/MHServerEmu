@@ -7,8 +7,10 @@ using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Games;
+using MHServerEmu.PlayerManagement.Matchmaking;
 using MHServerEmu.PlayerManagement.Regions;
 using MHServerEmu.PlayerManagement.Social;
 
@@ -36,6 +38,7 @@ namespace MHServerEmu.PlayerManagement.Players
         private static ulong _nextTransferId = 1;
 
         private readonly HashSet<PrototypeGuid> _partyBoosts = new();
+        private readonly RegionRequestQueueCommandHandler _regionRequestQueueCommandHandler;
 
         private bool _saveNeeded = false;   // Dirty flag for player data
 
@@ -67,6 +70,8 @@ namespace MHServerEmu.PlayerManagement.Players
         public MasterParty PendingParty { get; internal set; }
         public MasterParty CurrentParty { get; internal set; }
 
+        public RegionRequestGroup RegionRequestGroup { get; internal set; }
+
         public bool HasTransferParams { get => _transferParams != null; }
 
         public PlayerHandle(IFrontendClient client)
@@ -83,6 +88,8 @@ namespace MHServerEmu.PlayerManagement.Players
             State = PlayerHandleState.Created;
 
             DifficultyTierPreference = GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+
+            _regionRequestQueueCommandHandler = new(this);
         }
 
         public override string ToString()
@@ -133,6 +140,9 @@ namespace MHServerEmu.PlayerManagement.Players
             // Remove from region
             SetTargetRegion(null);
             SetActualRegion(null);
+
+            // Remove from matchmaking
+            RegionRequestGroup?.RemovePlayer(this);
 
             // Clearing the WorldView will remove all reservations and shut down the private game instance if none of its regions are reserved by other players.
             WorldView.Clear();
@@ -336,6 +346,12 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public bool BeginRegionTransferToTarget(ulong requestingGameId, TeleportContextEnum context, NetStructRegionTarget destTarget, NetStructCreateRegionParams createRegionParams)
         {
+            if (CanBeginRegionTransfer(false) == false)
+            {
+                CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_GenericError);
+                return false;
+            }
+
             PrototypeId regionProtoRef = (PrototypeId)destTarget.RegionProtoId;
             RegionPrototype regionProto = ((PrototypeId)destTarget.RegionProtoId).As<RegionPrototype>();
             if (regionProto == null)
@@ -368,7 +384,7 @@ namespace MHServerEmu.PlayerManagement.Players
             }
             else
             {
-                RegionTransferFailure canEnterRegion = CanEnterRegion(region);
+                RegionTransferFailure canEnterRegion = CanEnterRegion(region, false);
                 if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
                 {
                     CancelRegionTransfer(requestingGameId, canEnterRegion);
@@ -395,6 +411,12 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public bool BeginRegionTransferToLocation(ulong requestingGameId, TeleportContextEnum context, NetStructRegionLocation destLocation)
         {
+            if (CanBeginRegionTransfer(false) == false)
+            {
+                CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_GenericError);
+                return false;
+            }
+
             RegionHandle region = PlayerManagerService.Instance.WorldManager.GetRegion(destLocation.RegionId);
             if (region == null)
             {
@@ -407,7 +429,7 @@ namespace MHServerEmu.PlayerManagement.Players
             }
             else
             {
-                RegionTransferFailure canEnterRegion = CanEnterRegion(region);
+                RegionTransferFailure canEnterRegion = CanEnterRegion(region, false);
                 if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
                 {
                     CancelRegionTransfer(requestingGameId, canEnterRegion);
@@ -432,6 +454,12 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public bool BeginRegionTransferToPlayer(ulong requestingGameId, ulong destPlayerDbId)
         {
+            if (CanBeginRegionTransfer(false) == false)
+            {
+                CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_GenericError);
+                return false;
+            }
+
             RegionHandle region = null;
 
             PlayerHandle destPlayer = PlayerManagerService.Instance.ClientManager.GetPlayer(destPlayerDbId);
@@ -442,14 +470,30 @@ namespace MHServerEmu.PlayerManagement.Players
                 CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_TargetPlayerUnavailable);
                 return false;
             }
-            else
+
+            if (region != ActualRegion)
             {
-                RegionTransferFailure canEnterRegion = CanEnterRegion(region);
-                if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
+                if (region.CreateParams.HasEndlessLevel && region.CreateParams.EndlessLevel > 1)
                 {
-                    CancelRegionTransfer(requestingGameId, canEnterRegion);
+                    CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_EndlessProgressedTooFar);
                     return false;
                 }
+
+                // This should be handled game-side in most cases, but games rely on community data, which can be outdated.
+                // If this request got sent based on outdated community data, interpret it as a queue command.
+                if (region.IsMatch)
+                {
+                    _regionRequestQueueCommandHandler.HandleCommand(PrototypeId.Invalid, PrototypeId.Invalid, PrototypeId.Invalid,
+                        RegionRequestQueueCommandVar.eRRQC_RequestToJoinGroup, 0, destPlayerDbId);
+                    return true;
+                }
+            }
+
+            RegionTransferFailure canEnterRegion = CanEnterRegion(region, false);
+            if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
+            {
+                CancelRegionTransfer(requestingGameId, canEnterRegion);
+                return false;
             }
 
             NetStructTransferParams transferParams = NetStructTransferParams.CreateBuilder()
@@ -460,6 +504,29 @@ namespace MHServerEmu.PlayerManagement.Players
                 .Build();
 
             SetTransferParams(region.Game.Id, transferParams);
+
+            // This needs to be called after we set transfer params because the region may already be ready.
+            SetTargetRegion(region);
+            region.RequestTransfer(this);
+            return true;
+        }
+
+        public bool BeginRegionTransferToMatch(RegionHandle region, int teamIndex)
+        {
+            // This initiated by the server, so we don't need to send a cancellation here.
+            if (CanBeginRegionTransfer(true) == false)
+                return false;
+
+            ulong destGameId = region.Game.Id;
+
+            NetStructTransferParams transferParams = NetStructTransferParams.CreateBuilder()
+                .SetTransferId(_nextTransferId++)
+                .SetDestRegionId(region.Id)
+                .SetDestRegionProtoId((ulong)region.RegionProtoRef)
+                .SetDestTeamIndex(teamIndex)
+                .Build();
+
+            SetTransferParams(destGameId, transferParams);
 
             // This needs to be called after we set transfer params because the region may already be ready.
             SetTargetRegion(region);
@@ -520,7 +587,81 @@ namespace MHServerEmu.PlayerManagement.Players
 
             PlayerManagerService.Instance.PartyManager.OnPlayerRegionTransferFinished(this);
 
+            // Sync matchmaking status
+            if (RegionRequestGroup != null)
+            {
+                RegionRequestGroup.OnPlayerFinishTransfer(this);
+            }
+            else
+            {
+                ServiceMessage.MatchQueueFlush message = new(CurrentGame.Id, PlayerDbId);
+                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            }
+
             Logger.Info($"Player [{this}] finished region transfer {transferId}");
+            return true;
+        }
+
+        public RegionTransferFailure CanEnterRegion(RegionPrototype regionProto, bool isQueue)
+        {
+            if (regionProto == null)
+                return RegionTransferFailure.eRTF_GenericError;
+
+            if (CurrentParty != null && CurrentParty.Type == GroupType.GroupType_Raid)
+            {
+                switch (regionProto.Behavior)
+                {
+                    case RegionBehavior.PrivateStory:
+                    case RegionBehavior.PrivateNonStory:
+                        return RegionTransferFailure.eRTF_RaidsNotAllowed;
+
+                    case RegionBehavior.MatchPlay:
+                        if (regionProto.QueueGroupLimit < GameDatabase.GlobalsPrototype.PlayerRaidMaxSize)
+                            return RegionTransferFailure.eRTF_RaidsNotAllowed;
+                        break;
+                }
+            }
+
+            if (isQueue && CurrentParty != null && CurrentParty.MemberCount > regionProto.QueueGroupLimit)
+                return RegionTransferFailure.eRTF_Full;
+
+            return RegionTransferFailure.eRTF_NoError;
+        }
+
+        public RegionTransferFailure CanEnterRegion(RegionHandle region, bool isQueue)
+        {
+            if (region == null)
+                return RegionTransferFailure.eRTF_GenericError;
+
+            RegionTransferFailure protoResult = CanEnterRegion(region.Prototype, isQueue);
+            if (protoResult != RegionTransferFailure.eRTF_NoError)
+                return protoResult;
+
+            // For matches we check matchmaking group limit instead of the region itself in prototype checks above.
+            if (region.IsPrivate && region != TargetRegion && region.IsFull)
+                return RegionTransferFailure.eRTF_Full;
+
+            return RegionTransferFailure.eRTF_NoError;
+        }
+
+        public bool CanBeginRegionTransfer(bool isMatchTransfer)
+        {
+            if (IsConnected == false)
+                return false;
+
+            // Do not allow players who accepted a match invite to transfer anywhere but the match region.
+            if (RegionRequestGroup != null && isMatchTransfer == false)
+            {
+                foreach (RegionRequestGroupMember member in RegionRequestGroup)
+                {
+                    if (member.Player != this)
+                        continue;
+
+                    if (member.State == RegionRequestGroupMember.MatchInviteAcceptedState.Instance)
+                        return false;
+                }
+            }
+
             return true;
         }
 
@@ -616,6 +757,12 @@ namespace MHServerEmu.PlayerManagement.Players
             }
         }
 
+        public void ReceiveRegionRequestQueueCommand(PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId metaStateRef,
+            RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId)
+        {
+            _regionRequestQueueCommandHandler.HandleCommand(regionRef, difficultyTierRef, metaStateRef, command, regionRequestGroupId, targetPlayerDbId);
+        }
+
         private void SetTransferParams(ulong gameId, NetStructTransferParams transferParams)
         {
             if (transferParams != null && _transferParams != null)
@@ -664,6 +811,8 @@ namespace MHServerEmu.PlayerManagement.Players
             if (TargetRegion == newRegion)
                 return;
 
+            RegionRequestGroup?.OnPlayerBeginTransfer(this, newRegion);
+
             RegionHandle prevRegion = TargetRegion;
 
             prevRegion?.RemovePlayer(this);
@@ -694,24 +843,6 @@ namespace MHServerEmu.PlayerManagement.Players
             // Remove the previous region from the WorldView if it needs to be shut down.
             if (prevRegion != null && prevRegion.Flags.HasFlag(RegionFlags.ShutdownWhenVacant))
                 WorldView.RemoveRegion(prevRegion);
-        }
-
-        private RegionTransferFailure CanEnterRegion(RegionHandle region)
-        {
-            if (region == null)
-                return RegionTransferFailure.eRTF_GenericError;
-
-            // TODO: Reevaluate if we need region.IsMatch int the check after we implement matchmaking.
-            if ((region.IsPrivate || region.IsMatch) && region != TargetRegion && region.IsFull)
-                return RegionTransferFailure.eRTF_Full;
-
-            if (CurrentParty != null && CurrentParty.Type == GroupType.GroupType_Raid)
-            {
-                if (region.IsPrivateStory || region.IsPrivateNonStory)
-                    return RegionTransferFailure.eRTF_RaidsNotAllowed;
-            }
-
-            return RegionTransferFailure.eRTF_NoError;
         }
     }
 }

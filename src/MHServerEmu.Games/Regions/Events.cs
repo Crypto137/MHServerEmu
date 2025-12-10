@@ -415,6 +415,16 @@ namespace MHServerEmu.Games.Regions
         public readonly WorldEntity Entity = entity;
     }
 
+    public readonly struct EntityEnteredCombatGameEvent(WorldEntity entity) : IGameEventData
+    {
+        public readonly WorldEntity Entity = entity;
+    }
+
+    public readonly struct EntityExitedCombatGameEvent(WorldEntity entity) : IGameEventData
+    {
+        public readonly WorldEntity Entity = entity;
+    }
+
     public readonly struct EntityEnteredMissionHotspotGameEvent(WorldEntity target, Hotspot hotspot) : IGameEventData
     {
         public readonly WorldEntity Target = target;

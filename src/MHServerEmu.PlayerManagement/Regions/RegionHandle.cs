@@ -5,6 +5,7 @@ using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.PlayerManagement.Games;
+using MHServerEmu.PlayerManagement.Matchmaking;
 using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Regions
@@ -52,6 +53,7 @@ namespace MHServerEmu.PlayerManagement.Regions
         public RegionPrototype Prototype { get; }
         public NetStructCreateRegionParams CreateParams { get; }
         public PrototypeId DifficultyTierProtoRef { get => (PrototypeId)CreateParams.DifficultyTierProtoId; }
+        public ulong MatchNumber { get => CreateParams.HasMatchNumber ? CreateParams.MatchNumber : 0; }
 
         public TimeSpan CreationTime { get; } = Clock.UnixTime;
         public TimeSpan Uptime { get => Clock.UnixTime - CreationTime; }
@@ -63,12 +65,12 @@ namespace MHServerEmu.PlayerManagement.Regions
         public bool IsTown { get => Prototype.Behavior == RegionBehavior.Town; }
         public bool IsPrivateStory { get => Prototype.Behavior == RegionBehavior.PrivateStory; }
         public bool IsPrivateNonStory { get => Prototype.Behavior == RegionBehavior.PrivateNonStory; }
-        public bool IsMatch { get => Prototype.Behavior == RegionBehavior.MatchPlay; }
+        public bool IsMatch { get => MatchNumber != 0; }
         public bool CanExpire { get => Prototype.Behavior == RegionBehavior.PublicCombatZone || Prototype.Behavior == RegionBehavior.MatchPlay; }
 
         public RegionHandleState State { get; private set; } = RegionHandleState.Pending;
         public RegionFlags Flags { get; private set; }
-        public RegionPlayerAccessVar PlayerAccess { get; private set; } = RegionPlayerAccessVar.eRPA_Open;
+        public RegionPlayerAccessVar PlayerAccess { get; private set; } = RegionPlayerAccessVar.eRPA_Invalid;
 
         public int PlayerCount { get => _players.Count; }
         public int PlayerLimit { get => Prototype.PlayerLimit; }
@@ -89,6 +91,8 @@ namespace MHServerEmu.PlayerManagement.Regions
 
             if (Prototype.AlwaysShutdownWhenVacant)
                 Flags |= RegionFlags.ShutdownWhenVacant;
+
+            SetPlayerAccessInternal(IsMatch ? RegionPlayerAccessVar.eRPA_InviteOnly : RegionPlayerAccessVar.eRPA_Open);
         }
 
         public override string ToString()
@@ -302,7 +306,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
             Logger.Info($"Region [{this}] expired after {uptime:dd\\:hh\\:mm\\:ss}");
             Flags |= RegionFlags.IsExpired;
-            PlayerAccess = RegionPlayerAccessVar.eRPA_InviteOnly;
+            SetPlayerAccessInternal(RegionPlayerAccessVar.eRPA_InviteOnly);
             return true;
         }
 
@@ -333,6 +337,57 @@ namespace MHServerEmu.PlayerManagement.Regions
                 Shutdown(true);
                 return;
             }
+        }
+
+        public bool IsAccessible(PlayerHandle player, bool hasInvite = false)
+        {
+            switch (PlayerAccess)
+            {
+                case RegionPlayerAccessVar.eRPA_Open:
+                    break;
+
+                case RegionPlayerAccessVar.eRPA_InviteOnly:
+                    if (hasInvite == false)
+                        return false;
+                    break;
+
+                default:
+                    return false;
+            }
+
+            if (IsFull && (player == null || player.TargetRegion != this))
+                return false;
+
+            return true;
+        }
+
+        public void SetPlayerAccess(RegionPlayerAccessVar access)
+        {
+            if (PlayerAccess == RegionPlayerAccessVar.eRPA_Closed || State == RegionHandleState.Shutdown)
+                return;
+
+            SetPlayerAccessInternal(access);
+        }
+
+        private void SetPlayerAccessInternal(RegionPlayerAccessVar access)
+        {
+            RegionPlayerAccessVar prevAccess = PlayerAccess;
+
+            if (prevAccess == access)
+                return;
+
+            PlayerAccess = access;
+
+            // Update matches if we are changing from one valid access type to another (i.e. not initializing).
+            if (prevAccess == RegionPlayerAccessVar.eRPA_Invalid)
+                return;
+
+            RegionRequestQueue queue = PlayerManagerService.Instance.RegionRequestQueueManager.GetRegionRequestQueue(RegionProtoRef);
+            if (queue == null)
+                return;
+
+            Match match = queue.GetMatch(MatchNumber);
+            match?.OnRegionAccessChanged(this);
         }
 
         private bool DestroyAccessPortalIfNeeded()

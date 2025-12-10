@@ -15,6 +15,7 @@ using MHServerEmu.Games.DRAG;
 using MHServerEmu.Games.DRAG.Generators.Regions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
@@ -79,9 +80,6 @@ namespace MHServerEmu.Games.Regions
         private int _playerDeaths;
         private PrototypeId _avatarOnKilledInfo = PrototypeId.Invalid;
 
-        // REMOVEME
-        private int _currentTeamIndex = 0;
-
         public Game Game { get; private set; }
         public ulong Id { get; private set; } // InstanceAddress
         public RegionSettings Settings { get; private set; }
@@ -99,6 +97,7 @@ namespace MHServerEmu.Games.Regions
         public RegionBehavior Behavior { get => Prototype != null ? Prototype.Behavior : RegionBehavior.Invalid; }
         public bool CanBeLastTown { get => Behavior == RegionBehavior.Town || PrototypeDataRef == GameDatabase.GlobalsPrototype.PrestigeRegionProtoRef; }
         public bool AllowsPartyFormation { get => Prototype != null && Prototype.PartyFormationAllowed; }
+        public bool IsQueueRegion { get => Prototype != null && Prototype.IsQueueRegion; }
 
         public Aabb Aabb { get; private set; }
         public Aabb2 Aabb2 { get => new(Aabb); }
@@ -160,6 +159,9 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerInteractGameEvent> PlayerInteractEvent = new();
         public Event<EntityAggroedGameEvent> EntityAggroedEvent = new();
         public Event<AdjustHealthGameEvent> AdjustHealthEvent = new();
+
+        public Event<EntityEnteredCombatGameEvent> EntityEnteredCombatEvent = new();
+        public Event<EntityExitedCombatGameEvent> EntityExitedCombatEvent = new();
         public Event<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspotEvent = new();
         public Event<EntityLeftMissionHotspotGameEvent> EntityLeftMissionHotspotEvent = new();
         public Event<EntityLeaveDormantGameEvent> EntityLeaveDormantEvent = new();
@@ -1571,6 +1573,8 @@ namespace MHServerEmu.Games.Regions
             // Track this player
             if (_players.Add(player.Id) == false)
                 Logger.Warn($"OnAddedToAOI(): Failed to add player id {player.Id}");
+
+            player.TriggerInventoryCleanupEvent(InventoryEvent.RegionChange);
         }
 
         public void OnRemovedFromAOI(Player player)
@@ -1683,14 +1687,6 @@ namespace MHServerEmu.Games.Regions
             bool boostTimersRunning = LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_BoostTimersRunning) != 0f;
 
             return regionProto.PausesBoostConditions || boostTimersRunning == false;
-        }
-
-        public int GetTeamIndex()
-        {
-            // REMOVEME
-            int index = _currentTeamIndex;
-            _currentTeamIndex = ++_currentTeamIndex % 2;
-            return index;
         }
 
         private bool InitDividedStartLocations(DividedStartLocationPrototype[] dividedStartLocations)

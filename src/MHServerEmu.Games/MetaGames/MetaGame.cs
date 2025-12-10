@@ -1,6 +1,8 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.System.Time;
@@ -256,7 +258,8 @@ namespace MHServerEmu.Games.MetaGames
 
         public void SetSoftLockRegion(RegionPlayerAccess access)
         {
-            // TODO Set Player Access for Region
+            ServiceMessage.SetRegionPlayerAccess message = new(Region.Id, (RegionPlayerAccessVar)access);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         private void InitializeEventHandler(PrototypeId eventHandlerRef)

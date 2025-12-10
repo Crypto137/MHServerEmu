@@ -56,11 +56,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 
     [AssetEnum((int)None)]
+    [Flags]
     public enum RegionQueueMethod
     {
-        None = 0,
-        PvPQueue = 1,
-        DailyQueue = 5,
+        None                    = 0,
+        UsesRegionRequestQueue  = 1 << 0,
+        Method1                 = 1 << 1,   // This is never set because there was no option for it in Calligraphy.
+        QueueBypass             = 1 << 2,
+
+        // Calligraphy aliases
+        PvPQueue = UsesRegionRequestQueue,
+        DailyQueue = UsesRegionRequestQueue | QueueBypass,
     }
 
     [AssetEnum((int)BiDirectional)]
@@ -173,6 +179,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsPublic { get => Behavior == RegionBehavior.Town || Behavior == RegionBehavior.PublicCombatZone || Behavior == RegionBehavior.MatchPlay; }
         [DoNotCopy]
         public bool IsPrivate { get => IsPublic == false; }
+        [DoNotCopy]
+        public bool IsQueueRegion { get => RegionQueueMethod.HasFlag(RegionQueueMethod.UsesRegionRequestQueue); }
+        [DoNotCopy]
+        public bool AllowsQueueBypass { get => RegionQueueMethod.HasFlag(RegionQueueMethod.QueueBypass); }
+        [DoNotCopy]
+        public int[] TeamLimits { get; private set; }
+        [DoNotCopy]
+        public int QueueGroupLimit { get; private set; }
         [DoNotCopy]
         public TimeSpan Lifetime { get; private set; }
 
@@ -302,6 +316,76 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // ClientMapOverrides client only
 
             Lifetime = TimeSpan.FromMinutes(LifetimeInMinutes);
+
+            TeamLimits = GetTeamLimits();
+            QueueGroupLimit = GetQueueGroupLimit();
+        }
+
+        private int[] GetTeamLimits()
+        {
+            List<int> teamLimits = null;
+
+            if (MetaGames.HasValue())
+            {
+                foreach (PrototypeId metaGameProtoRef in MetaGames)
+                {
+                    MetaGamePrototype metaGameProto = metaGameProtoRef.As<MetaGamePrototype>();
+                    if (metaGameProto == null)
+                    {
+                        Logger.Warn("FindMatchTeams(): metaGameProto == null");
+                        continue;
+                    }
+
+                    if (metaGameProto.Teams.IsNullOrEmpty())
+                        continue;
+
+                    foreach (PrototypeId teamProtoRef in metaGameProto.Teams)
+                    {
+                        MetaGameTeamPrototype teamProto = teamProtoRef.As<MetaGameTeamPrototype>();
+                        if (teamProto == null)
+                        {
+                            Logger.Warn("FindMatchTeams(): teamProto == null");
+                            continue;
+                        }
+
+                        teamLimits ??= new();
+                        teamLimits.Add(teamProto.MaxPlayers);
+                    }
+                }
+            }
+
+            return teamLimits?.ToArray();
+        }
+
+        private int GetQueueGroupLimit()
+        {
+            if (TeamLimits.HasValue())
+            {
+                int limit = 0;
+
+                foreach (int teamLimit in TeamLimits)
+                    limit = Math.Max(teamLimit, limit);
+
+                return limit;
+            }
+
+            switch (Behavior)
+            {
+                case RegionBehavior.Town:
+                case RegionBehavior.PublicCombatZone:
+                case RegionBehavior.MatchPlay:
+                    return PlayerLimit;
+
+                case RegionBehavior.PrivateStory:
+                case RegionBehavior.PrivateNonStory:
+                    return Math.Min(GameDatabase.GlobalsPrototype.PlayerPartyMaxSize, PlayerLimit);
+
+                case RegionBehavior.PrivateRaid:
+                    return Math.Min(GameDatabase.GlobalsPrototype.PlayerRaidMaxSize, PlayerLimit);
+
+                default:
+                    return 0;
+            }
         }
 
         public static PrototypeId ConstrainDifficulty(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
@@ -649,6 +733,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public int Index { get; set; }
+
+        [DoNotCopy]
+        public bool CanQueue { get => StateParent != PrototypeId.Invalid || State == PrototypeId.Invalid; }
     }
 
     public class DividedStartLocationPrototype : Prototype
