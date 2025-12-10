@@ -159,6 +159,9 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerInteractGameEvent> PlayerInteractEvent = new();
         public Event<EntityAggroedGameEvent> EntityAggroedEvent = new();
         public Event<AdjustHealthGameEvent> AdjustHealthEvent = new();
+
+        public Event<EntityEnteredCombatGameEvent> EntityEnteredCombatEvent = new();
+        public Event<EntityExitedCombatGameEvent> EntityExitedCombatEvent = new();
         public Event<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspotEvent = new();
         public Event<EntityLeftMissionHotspotGameEvent> EntityLeftMissionHotspotEvent = new();
         public Event<EntityLeaveDormantGameEvent> EntityLeaveDormantEvent = new();
