@@ -366,7 +366,6 @@ namespace MHServerEmu.PlayerManagement.Regions
             if (PlayerAccess == RegionPlayerAccessVar.eRPA_Closed || State == RegionHandleState.Shutdown)
                 return;
 
-            Logger.Debug($"SetPlayerAccess(): {access}");
             SetPlayerAccessInternal(access);
         }
 
