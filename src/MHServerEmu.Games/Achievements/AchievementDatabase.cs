@@ -190,16 +190,23 @@ namespace MHServerEmu.Games.Achievements
         /// </summary>
         public List<AchievementInfo> GetItemCollectedAchievements(Prototype itemPrototype)
         {
-            if (_prototypeToAchievementInfo.ContainsKey(itemPrototype))
-                return _prototypeToAchievementInfo[itemPrototype];
+            lock (_prototypeToAchievementInfo)
+            {
+                if (_prototypeToAchievementInfo.TryGetValue(itemPrototype, out List<AchievementInfo> achievementInfosFound) == false)
+                {
+                    achievementInfosFound = new();
 
-            List<AchievementInfo> achievementInfosFound = new();
-            foreach (AchievementInfo info in GetAchievementsByEventType(ScoringEventType.ItemCollected))
-                if (FilterEventDataPrototype(itemPrototype, info.EventData))
-                    achievementInfosFound.Add(info);
+                    foreach (AchievementInfo info in GetAchievementsByEventType(ScoringEventType.ItemCollected))
+                    {
+                        if (FilterEventDataPrototype(itemPrototype, info.EventData))
+                            achievementInfosFound.Add(info);
+                    }
 
-            _prototypeToAchievementInfo[itemPrototype] = achievementInfosFound;
-            return achievementInfosFound;
+                    _prototypeToAchievementInfo.Add(itemPrototype, achievementInfosFound);
+                }
+
+                return achievementInfosFound;
+            }
         }
 
         /// <summary>
