@@ -23,7 +23,7 @@
             // We can't use a dict for reverse lookup for all ref managers because some reference
             // types (e.g. assets) can have duplicate names
             if (useReverseLookupDict)
-                _reverseLookupDict = new();
+                _reverseLookupDict = new(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -32,10 +32,7 @@
         public void AddDataRef(T value, string name)
         {
             _referenceDict.Add(value, name);
-
-            // Add reverse lookup if this data ref manager has a reverse dict
-            if (_reverseLookupDict != null)
-                _reverseLookupDict.Add(name.ToLower(), value);  // Convert to lower case to make reverse lookup case insensitive
+            _reverseLookupDict?.Add(name, value);
         }
 
         /// <summary>
@@ -43,8 +40,6 @@
         /// </summary>
         public T GetDataRefByName(string name)
         {
-            name = name.ToLower();
-
             // Try to use a lookup dict first
             if (_reverseLookupDict != null)
             {
@@ -57,7 +52,7 @@
             // Fall back to linear search if there's no dict
             foreach (var kvp in _referenceDict)
             {
-                if (kvp.Value.ToLower() == name)
+                if (kvp.Value.Equals(name, StringComparison.OrdinalIgnoreCase))
                     return kvp.Key;
             }
 
