@@ -15,7 +15,7 @@ namespace MHServerEmu.Commands
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<string, CommandGroup> _commandGroupDict = new();
+        private readonly Dictionary<string, CommandGroup> _commandGroupDict = new(StringComparer.OrdinalIgnoreCase);
         private IClientOutput _clientOutput;
 
         public static CommandManager Instance { get; } = new();
@@ -95,22 +95,22 @@ namespace MHServerEmu.Commands
             if (string.IsNullOrWhiteSpace(input))
                 return false;
 
-            input = input.Trim();
+            ReadOnlySpan<char> span = input.AsSpan().Trim();
 
             // Only input that starts with our command prefix char followed by something else can be a command
-            if (input.Length < 2 || input[0] != CommandPrefix)
+            if (span.Length < 2 || input[0] != CommandPrefix)
                 return false;
 
-            int whiteSpaceIndex = input.IndexOf(' ');
+            int whiteSpaceIndex = span.IndexOf(' ');
 
             // Get the command.
             // The command ends at the first occurrence of white space or the end of the input string.
             int commandLength = whiteSpaceIndex >= 0 ? whiteSpaceIndex - 1 : input.Length - 1;
-            command = input.Substring(1, commandLength).ToLower();
+            command = span.Slice(1, commandLength).ToString();
 
             // Get parameters after the first space (if there are any)
             if (whiteSpaceIndex >= 0)
-                parameters = input.Substring(whiteSpaceIndex + 1);
+                parameters = span.Slice(whiteSpaceIndex + 1).ToString();
 
             return true;
         }
