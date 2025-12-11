@@ -34,15 +34,23 @@ namespace MHServerEmu.Core.Helpers
             return zlib.crc32(0, bytes, bytes.Length);
         }
 
+        public static uint Djb2(ReadOnlySpan<byte> bytes)
+        {
+            uint hash = 5381;
+            foreach (byte b in bytes)
+                hash = (hash << 5) + hash + b;
+            return hash;
+        }
+
         /// <summary>
         /// Hashes a <see cref="string"/> using the djb2 algorithm.
         /// </summary>
         public static uint Djb2(string str)
         {
-            uint hash = 5381;
-            for (int i = 0; i < str.Length; i++)
-                hash = (hash << 5) + hash + ((byte)str[i]);
-            return hash;
+            int numBytes = Encoding.UTF8.GetByteCount(str);
+            Span<byte> bytes = stackalloc byte[numBytes];
+            Encoding.UTF8.GetBytes(str, bytes);
+            return Djb2(bytes);
         }
 
         /// <summary>
