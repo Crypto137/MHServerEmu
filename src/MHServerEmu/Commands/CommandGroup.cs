@@ -138,7 +138,7 @@ namespace MHServerEmu.Commands
         {
             foreach (CommandDefinition commandDefinition in _commands)
             {
-                if (commandDefinition.Name == name)
+                if (commandDefinition.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
                     return commandDefinition;
             }
 
