@@ -181,8 +181,8 @@ namespace MHServerEmu.Games.Entities
         public bool IsInParty { get => PartyId != 0; }
         public List<PrototypeId> PartyFilters { get; } = new();
 
-        public static bool IsPlayerTradeEnabled { get; internal set; }
         public PlayerTradeStatusCode PlayerTradeStatusCode { get; private set; } = PlayerTradeStatusCode.ePTSC_None;
+        public string PlayerTradePartnerName { get; private set; }
 
         public Player(Game game) : base(game)
         {
@@ -3073,11 +3073,46 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
-        #region Trading
+        #region Trade
 
         public void CancelPlayerTrade()
         {
             // TODO
+        }
+
+        public static bool IsPlayerTradeEnabled()
+        {
+            return LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_PlayerTradeEnabled) != 0f;
+        }
+
+        public bool HasActiveTradingSession()
+        {
+            switch (PlayerTradeStatusCode)
+            {
+                case PlayerTradeStatusCode.ePTSC_SentInvitation:
+                case PlayerTradeStatusCode.ePTSC_ReceivedInvitation:
+                case PlayerTradeStatusCode.ePTSC_TradeInProgress:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        private bool HasInventorySpaceToReceivePlayerTrade()
+        {
+            if (PlayerTradeStatusCode != PlayerTradeStatusCode.ePTSC_TradeInProgress)
+                return false;
+
+            Player tradePartner = Game.EntityManager.GetPlayerByName(PlayerTradePartnerName);
+
+            Inventory playerGeneralInventory = GetInventory(InventoryConvenienceLabel.General);
+            if (playerGeneralInventory == null) return Logger.WarnReturn(false, "HasInventorySpaceToReceivePlayerTrade(): playerGeneralInventory == null");
+
+            Inventory partnerTradeInventory = tradePartner?.GetInventory(InventoryConvenienceLabel.Trade);
+            if (partnerTradeInventory == null) return Logger.WarnReturn(false, "HasInventorySpaceToReceivePlayerTrade(): partnerTradeInventory == null");
+
+            return partnerTradeInventory.Count <= playerGeneralInventory.CapacityRemaining;
         }
 
         #endregion

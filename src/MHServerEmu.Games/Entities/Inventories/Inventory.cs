@@ -31,6 +31,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         public int MaxCapacity { get; private set; }
 
         public int Count { get => _entities.Count; }
+        public int CapacityRemaining { get => GetCapacity() - Count; }
 
         public bool VisibleToOwner { get; set; }    // For AOI
 

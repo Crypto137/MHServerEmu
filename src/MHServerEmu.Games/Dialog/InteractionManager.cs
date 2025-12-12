@@ -1232,7 +1232,7 @@ namespace MHServerEmu.Games.Dialog
                 CreateOptionInList<InspectOption>(optionsList);
                 CreateOptionInList<MakeLeaderOption>(optionsList);
 
-                if (Player.IsPlayerTradeEnabled)
+                if (Player.IsPlayerTradeEnabled())
                     CreateOptionInList<TradeOption>(optionsList);
             }
         }
