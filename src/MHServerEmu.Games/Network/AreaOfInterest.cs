@@ -996,6 +996,20 @@ namespace MHServerEmu.Games.Network
                 // Discovery - we should not replicate discovered entities not in our region (e.g. saved discoveries from another region or equipped items on nearby avatars)
                 if (isInRegion && player.IsEntityDiscovered(worldEntity))
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
+
+                // Add party / trade policies from the inventory.
+                if (Region != null)
+                {
+                    Player worldEntityOwner = entity.GetOwnerOfType<Player>();
+                    if (worldEntityOwner != null && worldEntityOwner.GetRegion() == Region)
+                    {
+                        if (inventoryInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelParty))
+                            newInterestPolicies |= AOINetworkPolicyValues.AOIChannelParty;
+
+                        if (inventoryInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelTrader))
+                            newInterestPolicies |= AOINetworkPolicyValues.AOIChannelTrader;
+                    }
+                }
             }
 
             // MetaGame is always in proximity
@@ -1019,7 +1033,11 @@ namespace MHServerEmu.Games.Network
                 if (Region.MatchNumber != 0)
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelParty;
 
-                // TODO: Trade
+                if (player.PlayerTradeStatusCode == PlayerTradeStatusCode.ePTSC_TradeInProgress &&
+                    player.PlayerTradePartnerName == otherPlayer.GetName())
+                {
+                    newInterestPolicies |= AOINetworkPolicyValues.AOIChannelTrader;
+                }
             }
 
             // Filter out results that don't match channels specified in the entity prototype
@@ -1072,9 +1090,11 @@ namespace MHServerEmu.Games.Network
                             interestPolicies |= AOINetworkPolicyValues.AOIChannelParty;
                     }
 
-                    if (inventoryPrototype.VisibleToTrader)
+                    if (inventoryPrototype.VisibleToTrader &&
+                        player.PlayerTradeStatusCode == PlayerTradeStatusCode.ePTSC_TradeInProgress &&
+                        player.PlayerTradePartnerName == containerRootPlayer.GetName())
                     {
-                        // TODO: VisibleToTrader
+                        interestPolicies |= AOINetworkPolicyValues.AOIChannelTrader;
                     }
                 }
             }
