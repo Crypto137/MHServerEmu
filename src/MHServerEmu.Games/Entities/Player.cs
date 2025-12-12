@@ -3075,9 +3075,19 @@ namespace MHServerEmu.Games.Entities
 
         #region Trade
 
+        public void StartPlayerTrade(string partnerName)
+        {
+
+        }
+
         public void CancelPlayerTrade()
         {
             // TODO
+        }
+
+        public void SetPlayerTradeConfirmFlag(bool confirmFlag, uint sequenceNumber)
+        {
+
         }
 
         public static bool IsPlayerTradeEnabled()
