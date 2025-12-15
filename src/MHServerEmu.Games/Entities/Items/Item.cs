@@ -158,8 +158,9 @@ namespace MHServerEmu.Games.Entities.Items
                 // Account binding
                 if (Game.CustomGameOptions.DisableAccountBinding == false)
                 {
-                    // HACK: Do not account bind tradable items until we get the trade window implemented
-                    if (BindsToAccountOnPickup && IsTradable == false)
+                    // NOTE: Adding IsTradable == false to the check here can disable the Not Droppable binding state,
+                    // allowing Not Droppable items to be traded without the trade window.
+                    if (BindsToAccountOnPickup)
                     {
                         Player playerOwner = owner?.GetSelfOrOwnerOfType<Player>();
                         if (playerOwner != null && IsBoundToAccount == false)
@@ -355,9 +356,12 @@ namespace MHServerEmu.Games.Entities.Items
 
                     Inventory ownerInventory = GetOwnerInventory();
                     if (ownerInventory != null)
-                        owner.AdjustCraftingIngredientAvailable(PrototypeDataRef, delta, ownerInventory.Category);
-
-                    // TODO: trade-specific stuff
+                    {
+                        if (ownerInventory.ConvenienceLabel == InventoryConvenienceLabel.Trade)
+                            owner.OnPlayerTradeInventoryChanged();
+                        else
+                            owner.AdjustCraftingIngredientAvailable(PrototypeDataRef, delta, ownerInventory.Category);
+                    }
 
                     Region region = owner.GetRegion();
                     if (region == null)

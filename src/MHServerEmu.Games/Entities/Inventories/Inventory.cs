@@ -31,6 +31,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         public int MaxCapacity { get; private set; }
 
         public int Count { get => _entities.Count; }
+        public int CapacityRemaining { get => GetCapacity() - Count; }
 
         public bool VisibleToOwner { get; set; }    // For AOI
 
@@ -72,6 +73,9 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public ulong GetAnyEntity()
         {
+            if (_entities.Count == 0)
+                return 0;
+
             SortedDictionary<uint, InvEntry>.Enumerator enumerator = _entities.GetEnumerator();
             if (enumerator.MoveNext() == false)
                 return 0;
@@ -687,6 +691,12 @@ namespace MHServerEmu.Games.Entities.Inventories
         {
             if (entity is WorldEntity worldEntity && Prototype.ExitWorldOnAdd && worldEntity.IsInWorld)
                 worldEntity.ExitWorld();
+
+            if (ConvenienceLabel == InventoryConvenienceLabel.Trade)
+            {
+                Player player = Owner?.GetSelfOrOwnerOfType<Player>();
+                player?.OnPlayerTradeInventoryChanged();
+            }
         }
 
         private bool PostAdd(Entity entity, InventoryLocation prevInvLoc, InventoryLocation invLoc)
@@ -724,6 +734,12 @@ namespace MHServerEmu.Games.Entities.Inventories
         {
             if (entity is WorldEntity worldEntity && Prototype.ExitWorldOnRemove && worldEntity.IsInWorld)
                 worldEntity.ExitWorld();
+
+            if (ConvenienceLabel == InventoryConvenienceLabel.Trade)
+            {
+                Player player = Owner?.GetSelfOrOwnerOfType<Player>();
+                player?.OnPlayerTradeInventoryChanged();
+            }
         }
 
         private bool PostRemove(Entity entity, InventoryLocation prevInvLoc, bool withinSameInventory)

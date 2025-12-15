@@ -563,7 +563,9 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageUnassignMappedPower:               OnUnassignMappedPower(message); break;              // 138
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;                // 139
                 case ClientToGameServerMessage.NetMessageVanityTitleSelect:                 OnVanityTitleSelect(message); break;                // 140
+                case ClientToGameServerMessage.NetMessagePlayerTradeStart:                  OnPlayerTradeStart(message); break;                 // 143
                 case ClientToGameServerMessage.NetMessagePlayerTradeCancel:                 OnPlayerTradeCancel(message); break;                // 144
+                case ClientToGameServerMessage.NetMessagePlayerTradeSetConfirmFlag:         OnPlayerTradeSetConfirmFlag(message); break;        // 145
                 case ClientToGameServerMessage.NetMessageRequestPetTechDonate:              OnRequestPetTechDonate(message); break;             // 146
                 case ClientToGameServerMessage.NetMessageSetActivePowerSpec:                OnSetActivePowerSpec(message); break;               // 147
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;             // 148
@@ -2149,12 +2151,30 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        private bool OnPlayerTradeCancel(MailboxMessage message)    // 144
+        private bool OnPlayerTradeStart(in MailboxMessage message)    // 143
+        {
+            var playerTradeStart = message.As<NetMessagePlayerTradeStart>();
+            if (playerTradeStart == null) return Logger.WarnReturn(false, $"OnPlayerTradeStart(): Failed to retrieve message");
+
+            Player?.StartPlayerTrade(playerTradeStart.PartnerPlayerName);
+            return true;
+        }
+
+        private bool OnPlayerTradeCancel(in MailboxMessage message)    // 144
         {
             var playerTradeCancel = message.As<NetMessagePlayerTradeCancel>();
             if (playerTradeCancel == null) return Logger.WarnReturn(false, $"OnPlayerTradeCancel(): Failed to retrieve message");
 
             Player?.CancelPlayerTrade();
+            return true;
+        }
+
+        private bool OnPlayerTradeSetConfirmFlag(in MailboxMessage message)    // 145
+        {
+            var playerTradeSetConfirmFlag = message.As<NetMessagePlayerTradeSetConfirmFlag>();
+            if (playerTradeSetConfirmFlag == null) return Logger.WarnReturn(false, $"OnPlayerTradeSetConfirmFlag(): Failed to retrieve message");
+
+            Player?.SetPlayerTradeConfirmFlag(playerTradeSetConfirmFlag.ConfirmFlag, playerTradeSetConfirmFlag.SequenceNumber);
             return true;
         }
 
