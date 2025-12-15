@@ -355,9 +355,12 @@ namespace MHServerEmu.Games.Entities.Items
 
                     Inventory ownerInventory = GetOwnerInventory();
                     if (ownerInventory != null)
-                        owner.AdjustCraftingIngredientAvailable(PrototypeDataRef, delta, ownerInventory.Category);
-
-                    // TODO: trade-specific stuff
+                    {
+                        if (ownerInventory.ConvenienceLabel == InventoryConvenienceLabel.Trade)
+                            owner.OnPlayerTradeInventoryChanged();
+                        else
+                            owner.AdjustCraftingIngredientAvailable(PrototypeDataRef, delta, ownerInventory.Category);
+                    }
 
                     Region region = owner.GetRegion();
                     if (region == null)

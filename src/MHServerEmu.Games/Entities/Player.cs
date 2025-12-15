@@ -3157,7 +3157,45 @@ namespace MHServerEmu.Games.Entities
 
         public void SetPlayerTradeConfirmFlag(bool confirmFlag, uint sequenceNumber)
         {
+            if (PlayerTradeStatusCode != PlayerTradeStatusCode.ePTSC_TradeInProgress || PlayerTradeSequenceNumber != sequenceNumber)
+            {
+                SendPlayerTradeStatus();
+                return;
+            }
 
+            Player tradePartner = Game.EntityManager.GetPlayerByName(PlayerTradePartnerName);
+            if (tradePartner == null)
+            {
+                Logger.Warn("SetPlayerTradeConfirmFlag(): tradePartner == null");
+                return;
+            }
+
+            confirmFlag &= HasInventorySpaceToReceivePlayerTrade();
+
+            PlayerTradeConfirmFlag = confirmFlag;
+            tradePartner.PlayerTradePartnerConfirmFlag = confirmFlag;
+
+            if (PlayerTradeConfirmFlag && tradePartner.PlayerTradeConfirmFlag)
+                ExecutePlayerTrade(this, tradePartner);
+
+            SendPlayerTradeStatus();
+            tradePartner.SendPlayerTradeStatus();
+        }
+
+        public void OnPlayerTradeInventoryChanged()
+        {
+            if (PlayerTradeStatusCode != PlayerTradeStatusCode.ePTSC_TradeInProgress)
+                return;
+
+            Player tradePartner = Game.EntityManager.GetPlayerByName(PlayerTradePartnerName);
+            if (tradePartner == null)
+            {
+                Logger.Warn("OnPlayerTradeInventoryChanged(): tradePartner == null");
+                return;
+            }
+
+            IncrementPlayerTradeSequenceNumber();
+            tradePartner.IncrementPlayerTradeSequenceNumber();
         }
 
         public static bool IsPlayerTradeEnabled()
@@ -3193,12 +3231,8 @@ namespace MHServerEmu.Games.Entities
         private static void AcceptPlayerTradeInvite(Player initiator, Player target)
         {
             initiator.InitializeTradeInProgress(target);
-            initiator.AOI.ConsiderEntity(target);
-            initiator.SendPlayerTradeStatus();
 
             target.InitializeTradeInProgress(initiator);
-            target.AOI.ConsiderEntity(initiator);
-            target.SendPlayerTradeStatus();
         }
 
         private static void DoCancelPlayerTrade(Player initiator, Player target)
@@ -3212,6 +3246,17 @@ namespace MHServerEmu.Games.Entities
             target.AOI.ConsiderEntity(initiator);
             target.SendPlayerTradeStatus();
             target.ClearPlayerTradeInventory();
+        }
+
+        private static void ExecutePlayerTrade(Player initiator, Player target)
+        {
+            initiator.PlayerTradeStatusCode = PlayerTradeStatusCode.ePTSC_TradeExecuted;
+            initiator.AOI.ConsiderEntity(target);
+
+            target.PlayerTradeStatusCode = PlayerTradeStatusCode.ePTSC_TradeExecuted;
+            target.AOI.ConsiderEntity(initiator);
+
+            ExchangePlayerTradeInventories(initiator, target);
         }
 
         /// <summary>
@@ -3229,6 +3274,18 @@ namespace MHServerEmu.Games.Entities
             PlayerTradeConfirmFlag = false;
             PlayerTradePartnerConfirmFlag = false;
             PlayerTradeSequenceNumber = 0;
+
+            AOI.ConsiderEntity(tradePartner);
+            SendPlayerTradeStatus();
+        }
+
+        private void IncrementPlayerTradeSequenceNumber()
+        {
+            PlayerTradeConfirmFlag = false;
+            PlayerTradePartnerConfirmFlag = false;
+            PlayerTradeSequenceNumber++;
+
+            SendPlayerTradeStatus();
         }
 
         private bool HasInventorySpaceToReceivePlayerTrade()
@@ -3247,16 +3304,109 @@ namespace MHServerEmu.Games.Entities
             return partnerTradeInventory.Count <= playerGeneralInventory.CapacityRemaining;
         }
 
+        private bool GetInventoriesForPlayerTrade(out Inventory tradeInv, out Inventory generalInv, out Inventory fallbackInv)
+        {
+            tradeInv = null;
+            generalInv = null;
+            fallbackInv = null;
+
+            tradeInv = GetInventory(InventoryConvenienceLabel.Trade);
+            if (tradeInv == null) return Logger.WarnReturn(false, "GetInventoriesForPlayerTrade(): tradeInv == null");
+
+            generalInv = GetInventory(InventoryConvenienceLabel.General);
+            if (generalInv == null) return Logger.WarnReturn(false, "GetInventoriesForPlayerTrade(): generalInv == null");
+
+            fallbackInv = GetInventory(InventoryConvenienceLabel.DeliveryBox);
+            if (fallbackInv == null) return Logger.WarnReturn(false, "GetInventoriesForPlayerTrade(): initiatorFallbackInv == null");
+
+            return true;
+        }
+
+        private static bool ExchangePlayerTradeInventories(Player playerA, Player playerB)
+        {
+            if (playerA.GetInventoriesForPlayerTrade(out Inventory tradeInvA, out Inventory generalInvA, out Inventory fallbackInvA) == false)
+                return Logger.WarnReturn(false, $"ExchangePlayerTradeInventories(): Failed to get one or more trade inventories for initiator player [{playerA}]");
+
+            if (playerB.GetInventoriesForPlayerTrade(out Inventory tradeInvB, out Inventory generalInvB, out Inventory fallbackInvB) == false)
+                return Logger.WarnReturn(false, $"ExchangePlayerTradeInventories(): Failed to get one or more trade inventories for target player [{playerA}]");
+
+            List<Entity> itemsA = ListPool<Entity>.Instance.Get();
+            List<Entity> itemsB = ListPool<Entity>.Instance.Get();
+
+            GatherItemsForPlayerTrade(tradeInvA, itemsA);
+            GatherItemsForPlayerTrade(tradeInvB, itemsB);
+
+            ReceiveItemsFromPlayerTrade(playerA, itemsA, generalInvB, fallbackInvB);
+            ReceiveItemsFromPlayerTrade(playerB, itemsB, generalInvA, fallbackInvA);
+
+            ListPool<Entity>.Instance.Return(itemsA);
+            ListPool<Entity>.Instance.Return(itemsB);
+
+            return true;
+        }
+
+        private static void GatherItemsForPlayerTrade(Inventory tradeInv, List<Entity> items)
+        {
+            EntityManager entityManager = tradeInv.Game.EntityManager;
+
+            while (tradeInv.Count > 0)
+            {
+                ulong entityId = tradeInv.GetAnyEntity();
+                Entity entity = entityManager.GetEntity<Entity>(entityId);
+                
+                if (entity == null)
+                {
+                    Logger.Error("GatherItemsForPlayerTrade(): entity == null");
+                    return;
+                }
+
+                if (entity.ChangeInventoryLocation(null) != InventoryResult.Success)
+                {
+                    Logger.Error($"GatherItemsForPlayerTrade(): Failed to remove entity [{entity}] from the trade inventory");
+                    return;
+                }
+
+                items.Add(entity);
+            }
+        }
+
+        private static void ReceiveItemsFromPlayerTrade(Player oldOwner, List<Entity> items, Inventory destinationInv, Inventory fallbackInv)
+        {
+            Player newOwner = (Player)destinationInv.Owner;
+
+            while (items.Count > 0)
+            {
+                int i = items.Count - 1;
+                Entity item = items[i];
+                int oldStackSize = item.CurrentStackSize;
+
+                ulong? stackId = 0;
+                InventoryResult result = item.ChangeInventoryLocation(destinationInv, Inventory.InvalidSlot, ref stackId, true);
+                
+                if (result != InventoryResult.Success)
+                {
+                    Logger.Warn($"ReceiveItemsFromPlayerTrade(): Failed to move item [{item}] to destination inventory with result {result}!\noldOwner=[{oldOwner}], newOwner=[{newOwner}]");
+
+                    result = item.ChangeInventoryLocation(fallbackInv, Inventory.InvalidSlot, ref stackId, true);
+
+                    if (result != InventoryResult.Success)
+                        Logger.Error($"ReceiveItemsFromPlayerTrade(): Failed to move item [{item}] to fallback inventory with result {result}!\noldOwner=[{oldOwner}], newOwner=[{newOwner}]");
+                }
+
+                // Do not remove the item yet if we only moved a part of a stack.
+                int newStackSize = item.CurrentStackSize;
+                if (stackId != 0 && item.IsDestroyed == false && newStackSize > 0 && newStackSize < oldStackSize)
+                    continue;
+
+                Logger.Trace($"ReceiveItemsFromPlayerTrade(): [{oldOwner}] => [{newOwner}] - [{item}]");
+                items.RemoveAt(i);
+            }
+        }
+
         private bool ClearPlayerTradeInventory()
         {
-            Inventory tradeInv = GetInventory(InventoryConvenienceLabel.Trade);
-            if (tradeInv == null) return Logger.WarnReturn(false, "ClearPlayerTradeInventory(): tradeInv == null");
-
-            Inventory generalInv = GetInventory(InventoryConvenienceLabel.General);
-            if (generalInv == null) return Logger.WarnReturn(false, "ClearPlayerTradeInventory(): generalInv == null");
-
-            Inventory fallbackInv = GetInventory(InventoryConvenienceLabel.DeliveryBox);
-            if (fallbackInv == null) return Logger.WarnReturn(false, "ClearPlayerTradeInventory(): fallbackInv == null");
+            if (GetInventoriesForPlayerTrade(out Inventory tradeInv, out Inventory generalInv, out Inventory fallbackInv) == false)
+                return Logger.WarnReturn(false, $"ClearPlayerTradeInventory(): Failed to get one or more of the trade inventories for player [{this}]");
 
             EntityManager entityManager = Game.EntityManager;
 

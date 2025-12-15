@@ -691,6 +691,12 @@ namespace MHServerEmu.Games.Entities.Inventories
         {
             if (entity is WorldEntity worldEntity && Prototype.ExitWorldOnAdd && worldEntity.IsInWorld)
                 worldEntity.ExitWorld();
+
+            if (ConvenienceLabel == InventoryConvenienceLabel.Trade)
+            {
+                Player player = Owner?.GetSelfOrOwnerOfType<Player>();
+                player?.OnPlayerTradeInventoryChanged();
+            }
         }
 
         private bool PostAdd(Entity entity, InventoryLocation prevInvLoc, InventoryLocation invLoc)
@@ -728,6 +734,12 @@ namespace MHServerEmu.Games.Entities.Inventories
         {
             if (entity is WorldEntity worldEntity && Prototype.ExitWorldOnRemove && worldEntity.IsInWorld)
                 worldEntity.ExitWorld();
+
+            if (ConvenienceLabel == InventoryConvenienceLabel.Trade)
+            {
+                Player player = Owner?.GetSelfOrOwnerOfType<Player>();
+                player?.OnPlayerTradeInventoryChanged();
+            }
         }
 
         private bool PostRemove(Entity entity, InventoryLocation prevInvLoc, bool withinSameInventory)
