@@ -182,7 +182,10 @@ namespace MHServerEmu.Games.Entities
         public List<PrototypeId> PartyFilters { get; } = new();
 
         public PlayerTradeStatusCode PlayerTradeStatusCode { get; private set; } = PlayerTradeStatusCode.ePTSC_None;
-        public string PlayerTradePartnerName { get; private set; }
+        public string PlayerTradePartnerName { get; private set; } = string.Empty;
+        public bool PlayerTradeConfirmFlag { get; private set; }
+        public bool PlayerTradePartnerConfirmFlag { get; private set; }
+        public uint PlayerTradeSequenceNumber { get; private set; }
 
         public Player(Game game) : base(game)
         {
@@ -512,6 +515,8 @@ namespace MHServerEmu.Games.Entities
             InitPermaBuffs();
 
             OnEnterGameInitStashTabOptions();
+
+            ClearPlayerTradeInventory();
 
             InitializeVendors();
             ScheduleCheckHoursPlayedEvent();
@@ -3077,12 +3082,77 @@ namespace MHServerEmu.Games.Entities
 
         public void StartPlayerTrade(string partnerName)
         {
+            if (IsPlayerTradeEnabled() == false)
+            {
+                SetPlayerTradeStatusCode(PlayerTradeStatusCode.ePTSC_Disabled);
+                return;
+            }
 
+            // This is client input, so case may not match for whatever reason.
+            if (string.Equals(PlayerTradePartnerName, partnerName, StringComparison.OrdinalIgnoreCase))
+            {
+                // If already trading with this player, send sync the current status and do an early exit.
+                if (PlayerTradeStatusCode == PlayerTradeStatusCode.ePTSC_SentInvitation ||
+                    PlayerTradeStatusCode == PlayerTradeStatusCode.ePTSC_TradeInProgress)
+                {
+                    SendPlayerTradeStatus();
+                    return;
+                }
+            }
+            else
+            {
+                // If trading with a different player, cancel that trade.
+                if (HasActiveTradingSession())
+                    CancelPlayerTrade();
+            }
+
+            Player tradePartner = Game.EntityManager.GetPlayerByName(partnerName);
+            if (tradePartner == null || tradePartner == this)
+            {
+                SetPlayerTradeStatusCode(PlayerTradeStatusCode.ePTSC_InvalidPartner);
+                return;
+            }
+
+            if (IsIgnoredPlayer(tradePartner.DatabaseUniqueId))
+            {
+                SetPlayerTradeStatusCode(PlayerTradeStatusCode.ePTSC_PartnerIsIgnored);
+                return;
+            }
+
+            // Send an invitation first if the partner doesn't have one already.
+            if (tradePartner.PlayerTradeStatusCode != PlayerTradeStatusCode.ePTSC_SentInvitation ||
+                tradePartner.PlayerTradePartnerName.Equals(GetName(), StringComparison.OrdinalIgnoreCase) == false)
+            {
+                if (tradePartner.HasActiveTradingSession() || tradePartner.IsIgnoredPlayer(DatabaseUniqueId))
+                {
+                    SetPlayerTradeStatusCode(PlayerTradeStatusCode.ePTSC_PartnerIsBusy);
+                    return;
+                }
+
+                SendPlayerTradeInvite(this, tradePartner);
+                return;
+            }
+
+            // Accept the invitation and start the trade!
+            AcceptPlayerTradeInvite(this, tradePartner);
         }
 
         public void CancelPlayerTrade()
         {
-            // TODO
+            if (HasActiveTradingSession() == false)
+            {
+                SendPlayerTradeStatus();
+                return;
+            }
+
+            Player tradePartner = Game.EntityManager.GetPlayerByName(PlayerTradePartnerName);
+            if (tradePartner == null)
+            {
+                Logger.Warn("CancelPlayerTrade(): tradePartner == null");
+                return;
+            }
+
+            DoCancelPlayerTrade(this, tradePartner);     
         }
 
         public void SetPlayerTradeConfirmFlag(bool confirmFlag, uint sequenceNumber)
@@ -3109,6 +3179,58 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        private static void SendPlayerTradeInvite(Player initiator, Player target)
+        {
+            initiator.PlayerTradeStatusCode = PlayerTradeStatusCode.ePTSC_SentInvitation;
+            initiator.PlayerTradePartnerName = target.GetName();
+            initiator.SendPlayerTradeStatus();
+
+            target.PlayerTradeStatusCode = PlayerTradeStatusCode.ePTSC_ReceivedInvitation;
+            target.PlayerTradePartnerName = initiator.GetName();
+            target.SendPlayerTradeStatus();
+        }
+
+        private static void AcceptPlayerTradeInvite(Player initiator, Player target)
+        {
+            initiator.InitializeTradeInProgress(target);
+            initiator.AOI.ConsiderEntity(target);
+            initiator.SendPlayerTradeStatus();
+
+            target.InitializeTradeInProgress(initiator);
+            target.AOI.ConsiderEntity(initiator);
+            target.SendPlayerTradeStatus();
+        }
+
+        private static void DoCancelPlayerTrade(Player initiator, Player target)
+        {
+            initiator.PlayerTradeStatusCode = PlayerTradeStatusCode.ePTSC_Cancelled;
+            initiator.AOI.ConsiderEntity(target);
+            initiator.SendPlayerTradeStatus();
+            initiator.ClearPlayerTradeInventory();
+
+            target.PlayerTradeStatusCode = PlayerTradeStatusCode.ePTSC_PartnerCancelled;
+            target.AOI.ConsiderEntity(initiator);
+            target.SendPlayerTradeStatus();
+            target.ClearPlayerTradeInventory();
+        }
+
+        /// <summary>
+        /// Updates the value of <see cref="PlayerTradeStatusCode"/> and sends it to the client.
+        /// </summary>
+        private void SetPlayerTradeStatusCode(PlayerTradeStatusCode status)
+        {
+            PlayerTradeStatusCode = status;
+            SendPlayerTradeStatus();
+        }
+
+        private void InitializeTradeInProgress(Player tradePartner)
+        {
+            PlayerTradeStatusCode = PlayerTradeStatusCode.ePTSC_TradeInProgress;
+            PlayerTradeConfirmFlag = false;
+            PlayerTradePartnerConfirmFlag = false;
+            PlayerTradeSequenceNumber = 0;
+        }
+
         private bool HasInventorySpaceToReceivePlayerTrade()
         {
             if (PlayerTradeStatusCode != PlayerTradeStatusCode.ePTSC_TradeInProgress)
@@ -3123,6 +3245,49 @@ namespace MHServerEmu.Games.Entities
             if (partnerTradeInventory == null) return Logger.WarnReturn(false, "HasInventorySpaceToReceivePlayerTrade(): partnerTradeInventory == null");
 
             return partnerTradeInventory.Count <= playerGeneralInventory.CapacityRemaining;
+        }
+
+        private bool ClearPlayerTradeInventory()
+        {
+            Inventory tradeInv = GetInventory(InventoryConvenienceLabel.Trade);
+            if (tradeInv == null) return Logger.WarnReturn(false, "ClearPlayerTradeInventory(): tradeInv == null");
+
+            Inventory generalInv = GetInventory(InventoryConvenienceLabel.General);
+            if (generalInv == null) return Logger.WarnReturn(false, "ClearPlayerTradeInventory(): generalInv == null");
+
+            Inventory fallbackInv = GetInventory(InventoryConvenienceLabel.DeliveryBox);
+            if (fallbackInv == null) return Logger.WarnReturn(false, "ClearPlayerTradeInventory(): fallbackInv == null");
+
+            EntityManager entityManager = Game.EntityManager;
+
+            while (tradeInv.Count > 0)
+            {
+                ulong entityId = tradeInv.GetAnyEntity();
+                Entity entity = entityManager.GetEntity<Entity>(entityId);
+                if (entity == null) return Logger.WarnReturn(false, "ClearPlayerTradeInventory(): entity == null");
+
+                if (entity.ChangeInventoryLocation(generalInv) != InventoryResult.Success)
+                {
+                    Logger.Warn($"ClearPlayerTradeInventory(): Failed to return [{entity}] to general inventory for player [{this}]");
+                    if (entity.ChangeInventoryLocation(fallbackInv) != InventoryResult.Success)
+                        return Logger.ErrorReturn(false, $"ClearPlayerTradeInventory(): Failed to return [{entity}] to fallback inventory for player [{this}]");
+                }
+            }
+
+            return true;
+        }
+
+        private void SendPlayerTradeStatus()
+        {
+            NetMessagePlayerTradeStatus playerTradeStatus = NetMessagePlayerTradeStatus.CreateBuilder()
+                .SetStatusCode(PlayerTradeStatusCode)
+                .SetPartnerPlayerName(PlayerTradePartnerName)
+                .SetConfirmFlag(PlayerTradeConfirmFlag)
+                .SetPartnerConfirmFlag(PlayerTradePartnerConfirmFlag)
+                .SetSequenceNumber(PlayerTradeSequenceNumber)
+                .Build();
+
+            SendMessage(playerTradeStatus);
         }
 
         #endregion
@@ -3929,6 +4094,12 @@ namespace MHServerEmu.Games.Entities
         #region Communities
 
         // Community update broadcasts are done via scheduled events to avoid multiple broadcasts at once.
+
+        public bool IsIgnoredPlayer(ulong playerDbId)
+        {
+            CommunityCircle ignoreCircle = Community?.GetCircle(CircleId.__Ignore);
+            return ignoreCircle != null && ignoreCircle.ContainsPlayerDbGuid(playerDbId);
+        }
 
         public void ScheduleCommunityBroadcast()
         {

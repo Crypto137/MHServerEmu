@@ -73,6 +73,9 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public ulong GetAnyEntity()
         {
+            if (_entities.Count == 0)
+                return 0;
+
             SortedDictionary<uint, InvEntry>.Enumerator enumerator = _entities.GetEnumerator();
             if (enumerator.MoveNext() == false)
                 return 0;
