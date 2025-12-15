@@ -99,7 +99,7 @@ namespace MHServerEmu.Games.MetaGames
                     && mode != null
                     && pvp.PvPPrototype.VOKillSpreeList.HasValue()
                     && score.TryGetPlayerScore(killer, _proto.KillingSpreeEntry, out killingSpree)
-                    && killingSpree >= pvp.PvPPrototype.VOKillSpreeList.Length)
+                    && killingSpree >= 1 && killingSpree <= pvp.PvPPrototype.VOKillSpreeList.Length)
                 {
                     var spreeVO = pvp.PvPPrototype.VOKillSpreeList[killingSpree - 1];
                     mode.SendPlayUISoundTheme(spreeVO);

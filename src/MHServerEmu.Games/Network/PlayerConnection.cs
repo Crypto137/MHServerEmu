@@ -286,6 +286,12 @@ namespace MHServerEmu.Games.Network
         public override void OnDisconnect()
         {
             // Post-disconnection cleanup (save data, remove entities, etc).
+
+            // Remove avatar from the world before saving to avoid migrating in-world runtime properties (e.g. max charges).
+            Avatar avatar = Player?.CurrentAvatar;
+            if (avatar != null && avatar.IsInWorld)
+                avatar.ExitWorld();
+            
             UpdateDBAccount(true);
 
             AOI.SetRegion(0, true);
