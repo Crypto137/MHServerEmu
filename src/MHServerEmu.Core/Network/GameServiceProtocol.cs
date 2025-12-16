@@ -386,6 +386,28 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
+        /// [Game -> PlayerManager] Routes guild messages to the player manager.
+        /// </summary>
+        public readonly struct GuildMessageFromGame(GuildMessageSetToPlayerManager messages)
+            : IGameServiceMessage
+        {
+            public readonly GuildMessageSetToPlayerManager Messages = messages;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] Routes guild messages from the player manager.
+        /// </summary>
+        public readonly struct GuildMessageToGame(ulong gameId, IReadOnlyList<ulong> playerDbIds, GuildMessageSetToServer serverMessages, GuildMessageSetToClient clientMessages)
+            : IGameServiceMessage
+        {
+            // Based on GuildMessageToServer from 1.53.
+            public readonly ulong GameId = gameId;
+            public readonly IReadOnlyList<ulong> PlayerDbIds = playerDbIds;
+            public readonly GuildMessageSetToServer ServerMessages = serverMessages;
+            public readonly GuildMessageSetToClient ClientMessages = clientMessages;
+        }
+
+        /// <summary>
         /// [Game -> PlayerManager] Relays a match region request command from a client.
         /// </summary>
         public readonly struct MatchRegionRequestQueueCommand(ulong playerDbId, ulong regionProtoId, ulong difficultyTierProtoId, ulong metaStateProtoId, RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId)

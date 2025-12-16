@@ -538,6 +538,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageVendorRequestRefresh:              OnVendorRequestRefresh(message); break;             // 105
                 case ClientToGameServerMessage.NetMessageTryModifyCommunityMemberCircle:    OnTryModifyCommunityMemberCircle(message); break;   // 106
                 case ClientToGameServerMessage.NetMessagePullCommunityStatus:               OnPullCommunityStatus(message); break;              // 107
+                case ClientToGameServerMessage.NetMessageGuildMessageToPlayerManager:       OnGuildMessageToPlayerManager(message); break;      // 108
                 case ClientToGameServerMessage.NetMessageAkEvent:                           OnAkEvent(message); break;                          // 109
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
@@ -1664,12 +1665,21 @@ namespace MHServerEmu.Games.Network
             return community.TryModifyCommunityMemberCircle(circleId, playerName, operation);
         }
 
-        private bool OnPullCommunityStatus(MailboxMessage message)  // 107
+        private bool OnPullCommunityStatus(in MailboxMessage message)  // 107
         {
             var pullCommunityStatus = message.As<NetMessagePullCommunityStatus>();
-            if (pullCommunityStatus == null) return Logger.WarnReturn(false, $"OnPullCommunityStatus(): Failed to retrieve message");
+            if (pullCommunityStatus == null) return Logger.WarnReturn(false, "OnPullCommunityStatus(): Failed to retrieve message");
 
             Player?.Community?.PullCommunityStatus();
+            return true;
+        }
+
+        private bool OnGuildMessageToPlayerManager(in MailboxMessage message)   // 108
+        {
+            var guildMessageToPlayerManager = message.As<NetMessageGuildMessageToPlayerManager>();
+            if (guildMessageToPlayerManager == null) return Logger.WarnReturn(false, "OnGuildMessageToPlayerManager(): Failed to retrieve message");
+
+            Game.GuildManager.OnGuildMessage(Player, guildMessageToPlayerManager.Messages);
             return true;
         }
 
