@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Gazillion;
+﻿using Gazillion;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 
@@ -7,21 +6,23 @@ namespace MHServerEmu.Games.Social.Guilds
 {
     public class GuildMember
     {
-        public const ulong InvalidGuildId = 0;
+        public Guild Guild { get; }
 
-        public ulong Id { get; set; }
-        public string Name { get; set; }
-        public GuildMembership GuildMembership { get; set; }
+        public ulong PlayerId { get; }
+        public string PlayerName { get; }
+        public GuildMembership Membership { get; }
 
-        public GuildMember() { }
+        public GuildMember(Guild guild, GuildMemberInfo guildMemberInfo)
+        {
+            Guild = guild;
+            PlayerId = guildMemberInfo.PlayerId;
+            PlayerName = guildMemberInfo.PlayerName;
+            Membership = guildMemberInfo.Membership;
+        }
 
         public override string ToString()
         {
-            StringBuilder sb = new();
-            sb.AppendLine($"Id: 0x{Id:x}");
-            sb.AppendLine($"Name: {Name}");
-            sb.AppendLine($"GuildMembership: {GuildMembership}");
-            return sb.ToString();
+            return $"{PlayerName} (0x{PlayerId:X}) - {Membership}";
         }
 
         // This static method is for serializing Player and Avatar entity guild information,
@@ -30,7 +31,7 @@ namespace MHServerEmu.Games.Social.Guilds
         {
             bool success = true;
 
-            bool hasGuildInfo = guildId != InvalidGuildId;
+            bool hasGuildInfo = guildId != GuildManager.InvalidGuildId;
             success &= Serializer.Transfer(archive, ref hasGuildInfo);
             if (hasGuildInfo == false) return success;
 

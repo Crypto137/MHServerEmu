@@ -4795,7 +4795,7 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(_accountCreationTimestamp)}: {Clock.UnixTimeToDateTime(_accountCreationTimestamp)}");
             sb.AppendLine($"{nameof(_partyId)}: {_partyId}");
 
-            if (_guildId != GuildMember.InvalidGuildId)
+            if (_guildId != GuildManager.InvalidGuildId)
             {
                 sb.AppendLine($"{nameof(_guildId)}: {_guildId}");
                 sb.AppendLine($"{nameof(_guildName)}: {_guildName}");

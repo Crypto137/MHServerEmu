@@ -69,9 +69,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         private List<AbilityKeyMapping> _transientAbilityKeyMappings;   // Non-persistent ability key mappings used for transform modes (init on demand)
         private AbilityKeyMapping _currentAbilityKeyMapping;            // Reference to the currently active ability key mapping
 
-        private ulong _guildId = GuildMember.InvalidGuildId;
+        private ulong _guildId = GuildManager.InvalidGuildId;
         private string _guildName = string.Empty;
         private GuildMembership _guildMembership = GuildMembership.eGMNone;
+
         private readonly PendingPowerData _continuousPowerData = new();
         private readonly PendingAction _pendingAction = new();
 
@@ -6756,7 +6757,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
             sb.AppendLine($"{nameof(_ownerPlayerDbId)}: 0x{OwnerPlayerDbId:X}");
 
-            if (_guildId != GuildMember.InvalidGuildId)
+            if (_guildId != GuildManager.InvalidGuildId)
             {
                 sb.AppendLine($"{nameof(_guildId)}: {_guildId}");
                 sb.AppendLine($"{nameof(_guildName)}: {_guildName}");
