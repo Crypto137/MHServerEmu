@@ -6750,6 +6750,22 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
+        #region Guild
+
+        public bool SetGuildMembership(ulong guildId, string guildName, GuildMembership guildMembership)
+        {
+            if (_guildId == guildId && _guildName == guildName && _guildMembership == guildMembership)
+                return false;
+
+            _guildId = guildId;
+            _guildName = guildName;
+            _guildMembership = guildMembership;
+
+            return true;
+        }
+
+        #endregion
+
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);

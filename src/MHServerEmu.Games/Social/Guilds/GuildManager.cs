@@ -24,8 +24,8 @@ namespace MHServerEmu.Games.Social.Guilds
             if (existingGuild != null)
                 return Logger.WarnReturn<Guild>(null, "CreateGuild(): Trying to create duplicate guild. existingGuild=%s");
 
-            Guild guild = new(guildCompleteInfo);
-            _guilds[guild.Id] = guild;
+            Guild guild = new(Game, guildCompleteInfo);
+            _guilds.Add(guild.Id, guild);
 
             for (int i = 0; i < guildCompleteInfo.MembersCount; i++)
             {

@@ -8,21 +8,21 @@ namespace MHServerEmu.Games.Social.Guilds
     {
         public Guild Guild { get; }
 
-        public ulong PlayerId { get; }
-        public string PlayerName { get; }
+        public ulong Id { get; }
+        public string Name { get; }
         public GuildMembership Membership { get; }
 
         public GuildMember(Guild guild, GuildMemberInfo guildMemberInfo)
         {
             Guild = guild;
-            PlayerId = guildMemberInfo.PlayerId;
-            PlayerName = guildMemberInfo.PlayerName;
+            Id = guildMemberInfo.PlayerId;
+            Name = guildMemberInfo.PlayerName;
             Membership = guildMemberInfo.Membership;
         }
 
         public override string ToString()
         {
-            return $"{PlayerName} (0x{PlayerId:X}) - {Membership}";
+            return $"{Name} (0x{Id:X}) - {Membership}";
         }
 
         // This static method is for serializing Player and Avatar entity guild information,

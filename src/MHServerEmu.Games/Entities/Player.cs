@@ -4312,6 +4312,21 @@ namespace MHServerEmu.Games.Entities
             _communityPartyCircleChangedEvent.Get()?.Initialize(this);
         }
 
+        public bool SetGuildMembership(ulong guildId, string guildName, GuildMembership guildMembership)
+        {
+            if (_guildId == guildId && _guildName == guildName && _guildMembership == guildMembership)
+                return false;
+
+            _guildId = guildId;
+            _guildName = guildName;
+            _guildMembership = guildMembership;
+
+            foreach (Avatar avatar in new AvatarIterator(this))
+                avatar.SetGuildMembership(guildId, guildName, guildMembership);
+
+            return true;
+        }
+
         private void DoCommunityBroadcast()
         {
             // Send a status update to the player manager. It will be relayed to subscribers in other game instances.
