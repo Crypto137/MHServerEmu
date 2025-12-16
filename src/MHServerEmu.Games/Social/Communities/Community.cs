@@ -438,6 +438,12 @@ namespace MHServerEmu.Games.Social.Communities
             ListPool<ulong>.Instance.Return(membersToRemove);
         }
 
+        public void UpdateGuild(Guilds.Guild guild)
+        {
+            // TODO
+            Logger.Debug($"UpdateGuild(): {guild}");
+        }
+
         /// <summary>
         /// Returns the name of the specified <see cref="CircleId"/>.
         /// </summary>

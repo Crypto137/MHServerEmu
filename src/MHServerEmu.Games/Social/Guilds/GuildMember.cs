@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.Social.Guilds
 {
@@ -44,6 +45,18 @@ namespace MHServerEmu.Games.Social.Guilds
             guildMembership = (GuildMembership)guildMembershipValue;
 
             return success;
+        }
+
+        public static void SendEntityGuildInfo(Entity entity, ulong guildId, string guildName, GuildMembership guildMembership)
+        {
+            NetMessageEntityGuildInfo message = NetMessageEntityGuildInfo.CreateBuilder()
+                .SetEntityId(entity.Id)
+                .SetGuildId(guildId)
+                .SetGuildName(guildName)
+                .SetGuildMembership(guildMembership)
+                .Build();
+
+            entity.Game.NetworkManager.SendMessageToInterested(message, entity);
         }
 
         public static bool CanInvite(GuildMembership guildMembership)

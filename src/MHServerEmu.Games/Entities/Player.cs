@@ -4324,6 +4324,21 @@ namespace MHServerEmu.Games.Entities
             foreach (Avatar avatar in new AvatarIterator(this))
                 avatar.SetGuildMembership(guildId, guildName, guildMembership);
 
+            GuildMember.SendEntityGuildInfo(this, guildId, guildName, guildMembership);
+
+            if (guildId != GuildManager.InvalidGuildId)
+            {
+                Social.Guilds.Guild guild = Game.GuildManager.GetGuild(guildId);
+                if (guild != null)
+                    Community.UpdateGuild(guild);
+                else
+                    Logger.Warn("SetGuildMembership(): guild == null");
+            }
+            else
+            {
+                Community.UpdateGuild(null);
+            }
+
             return true;
         }
 

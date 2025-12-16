@@ -6761,6 +6761,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             _guildName = guildName;
             _guildMembership = guildMembership;
 
+            GuildMember.SendEntityGuildInfo(this, guildId, guildName, guildMembership);
+
             return true;
         }
 
