@@ -106,6 +106,17 @@ namespace MHServerEmu.Core.Extensions
             return sb.ToString();
         }
 
+        public static bool IsAscii(this ReadOnlySpan<char> chars)
+        {
+            foreach (char c in chars)
+            {
+                if (char.IsAscii(c) == false)
+                    return false;
+            }
+
+            return true;
+        }
+
         #endregion
     }
 }

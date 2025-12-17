@@ -4312,36 +4312,6 @@ namespace MHServerEmu.Games.Entities
             _communityPartyCircleChangedEvent.Get()?.Initialize(this);
         }
 
-        public bool SetGuildMembership(ulong guildId, string guildName, GuildMembership guildMembership)
-        {
-            if (_guildId == guildId && _guildName == guildName && _guildMembership == guildMembership)
-                return false;
-
-            _guildId = guildId;
-            _guildName = guildName;
-            _guildMembership = guildMembership;
-
-            foreach (Avatar avatar in new AvatarIterator(this))
-                avatar.SetGuildMembership(guildId, guildName, guildMembership);
-
-            GuildMember.SendEntityGuildInfo(this, guildId, guildName, guildMembership);
-
-            if (guildId != GuildManager.InvalidGuildId)
-            {
-                Social.Guilds.Guild guild = Game.GuildManager.GetGuild(guildId);
-                if (guild != null)
-                    Community.UpdateGuild(guild);
-                else
-                    Logger.Warn("SetGuildMembership(): guild == null");
-            }
-            else
-            {
-                Community.UpdateGuild(null);
-            }
-
-            return true;
-        }
-
         private void DoCommunityBroadcast()
         {
             // Send a status update to the player manager. It will be relayed to subscribers in other game instances.
@@ -4647,6 +4617,53 @@ namespace MHServerEmu.Games.Entities
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
             teleporter.Initialize(this, TeleportContextEnum.TeleportContext_Party);
             return teleporter.TeleportToPlayer(targetPlayerDbId);
+        }
+
+        #endregion
+
+        #region Guild
+
+        public Social.Guilds.Guild GetGuild()
+        {
+            return Game.GuildManager.GetGuild(_guildId);
+        }
+
+        public bool SetGuildMembership(ulong guildId, string guildName, GuildMembership guildMembership)
+        {
+            if (_guildId == guildId && _guildName == guildName && _guildMembership == guildMembership)
+                return false;
+
+            _guildId = guildId;
+            _guildName = guildName;
+            _guildMembership = guildMembership;
+
+            foreach (Avatar avatar in new AvatarIterator(this))
+                avatar.SetGuildMembership(guildId, guildName, guildMembership);
+
+            GuildMember.SendEntityGuildInfo(this, guildId, guildName, guildMembership);
+
+            if (guildId != GuildManager.InvalidGuildId)
+            {
+                Social.Guilds.Guild guild = Game.GuildManager.GetGuild(guildId);
+                if (guild != null)
+                    Community.UpdateGuild(guild);
+                else
+                    Logger.Warn("SetGuildMembership(): guild == null");
+            }
+            else
+            {
+                Community.UpdateGuild(null);
+            }
+
+            return true;
+        }
+
+        public bool GuildsAreUnlocked()
+        {
+            // This property check existed in older versions of the game (at least 1.10-1.25), but it had been removed as of 1.48.
+            // Although it's meaningless in later versions, I'm leaving this in for consistency / reference.
+            //return Properties[PropertyEnum.GuildsUnlocked];
+            return true;
         }
 
         #endregion
