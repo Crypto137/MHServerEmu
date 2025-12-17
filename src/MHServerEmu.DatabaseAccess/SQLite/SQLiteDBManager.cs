@@ -204,6 +204,122 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return Logger.WarnReturn(false, $"SavePlayerData(): Failed to write player data for account [{account}]");
         }
 
+        public bool LoadGuilds(List<DBGuild> outGuilds)
+        {
+            try
+            {
+                TimeSpan startTime = Clock.UnixTime;
+
+                using SQLiteConnection connection = GetConnection();
+
+                IEnumerable<DBGuild> guildQueryResult = connection.Query<DBGuild>("SELECT * FROM Guild");
+                IEnumerable<DBGuildMember> memberQueryResult = connection.Query<DBGuildMember>("SELECT * FROM GuildMember");
+
+                outGuilds.AddRange(guildQueryResult);
+
+                // This is going to be called only on server startup, so it's fine not to pool this.
+                Dictionary<long, DBGuild> guildLookup = new(outGuilds.Count);
+                foreach (DBGuild guild in outGuilds)
+                    guildLookup.Add(guild.Id, guild);
+
+                int numMembers = 0;
+                foreach (DBGuildMember member in memberQueryResult)
+                {
+                    if (guildLookup.TryGetValue(member.GuildId, out DBGuild guild) == false)
+                    {
+                        Logger.Warn($"LoadGuilds(): Found orphan member [{member}]");
+                        continue;
+                    }
+
+                    guild.Members.Add(member);
+                    numMembers++;
+                }
+
+                TimeSpan elapsed = Clock.UnixTime - startTime;
+                Logger.Info($"Loaded {outGuilds.Count} guilds with {numMembers} members in {(long)elapsed.TotalMilliseconds} ms");
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                outGuilds.Clear();
+                Logger.ErrorException(e, nameof(SaveGuildMember));
+                return false;
+            }
+        }
+
+        public bool SaveGuild(DBGuild guild)
+        {
+            try
+            {
+                using SQLiteConnection connection = GetConnection();
+
+                int inserted = connection.Execute("INSERT OR IGNORE INTO Guild (Id, Name, Motd, CreatorDbGuid, CreationTime) VALUES (@Id, @Name, @Motd, @CreatorDbGuid, @CreationTime)", guild);
+
+                // Only name and MOTD should be mutable after creation.
+                if (inserted == 0)
+                    connection.Execute("UPDATE Guild SET Name=@Name, Motd=@Motd WHERE Id=@Id", guild);
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(SaveGuildMember));
+                return false;
+            }
+        }
+
+        public bool DeleteGuild(DBGuild guild)
+        {
+            try
+            {
+                using SQLiteConnection connection = GetConnection();
+                connection.Execute("DELETE * FROM Guild WHERE Id = @Id", guild);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(DeleteGuildMember));
+                return false;
+            }
+        }
+
+        public bool SaveGuildMember(DBGuildMember guildMember)
+        {
+            try
+            {
+                using SQLiteConnection connection = GetConnection();
+
+                int inserted = connection.Execute("INSERT OR IGNORE INTO GuildMember (PlayerDbGuid, GuildId, Membership) VALUES (@PlayerDbGuid, @GuildId, @Membership)", guildMember);
+
+                // Only membership should be mutable after creation.
+                if (inserted == 0)
+                    connection.Execute("UPDATE GuildMember SET Membership=@Membership WHERE PlayerDbGuid=@PlayerDbGuid", guildMember);
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(SaveGuildMember));
+                return false;
+            }
+        }
+
+        public bool DeleteGuildMember(DBGuildMember guildMember)
+        {
+            try
+            {
+                using SQLiteConnection connection = GetConnection();
+                connection.Execute("DELETE * FROM GuildMember WHERE PlayerDbGuid = @PlayerDbGuid", guildMember);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(DeleteGuildMember));
+                return false;
+            }
+        }
+
         /// <summary>
         /// Creates and opens a new <see cref="SQLiteConnection"/>.
         /// </summary>

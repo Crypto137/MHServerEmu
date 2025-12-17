@@ -64,5 +64,30 @@ namespace MHServerEmu.DatabaseAccess
         /// Saves persistent game data stored in the database for the provided <see cref="DBAccount"/>.
         /// </summary>
         public bool SavePlayerData(DBAccount account);
+
+        /// <summary>
+        /// Loads <see cref="DBGuild"/> instances stored in the database and adds them to the provided <see cref="List{T}"/>.
+        /// </summary>
+        public bool LoadGuilds(List<DBGuild> guilds);
+
+        /// <summary>
+        /// Inserts or updates an existing <see cref="DBGuild"/> instance stored in the database.
+        /// </summary>
+        public bool SaveGuild(DBGuild guild);
+
+        /// <summary>
+        /// Deletes a stored <see cref="DBGuild"/> instance with all of its members from the database.
+        /// </summary>
+        public bool DeleteGuild(DBGuild guild);
+
+        /// <summary>
+        /// Inserts or updates an existing <see cref="DBGuildMember"/> instance stored in the database.
+        /// </summary>
+        public bool SaveGuildMember(DBGuildMember guildMember);
+
+        /// <summary>
+        /// Delets a store <see cref="DBGuildMember"/> instance from the database.
+        /// </summary>
+        public bool DeleteGuildMember(DBGuildMember guildMember);
     }
 }
