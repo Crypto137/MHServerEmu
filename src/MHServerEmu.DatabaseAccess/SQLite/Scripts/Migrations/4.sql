@@ -19,6 +19,7 @@ CREATE TABLE "GuildMember" (
 	"GuildId"	INTEGER NOT NULL,
 	"Membership"	INTEGER NOT NULL,
 	FOREIGN KEY("PlayerDbGuid") REFERENCES "Player"("DbGuid") ON DELETE CASCADE,
+	FOREIGN KEY("GuildId") REFERENCES "Guild"("Id") ON DELETE CASCADE,
 	PRIMARY KEY("PlayerDbGuid")
 );
 
