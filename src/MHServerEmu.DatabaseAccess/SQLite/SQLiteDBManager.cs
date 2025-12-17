@@ -243,7 +243,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             catch (Exception e)
             {
                 outGuilds.Clear();
-                Logger.ErrorException(e, nameof(SaveGuildMember));
+                Logger.ErrorException(e, nameof(LoadGuilds));
                 return false;
             }
         }
@@ -264,7 +264,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             }
             catch (Exception e)
             {
-                Logger.ErrorException(e, nameof(SaveGuildMember));
+                Logger.ErrorException(e, nameof(SaveGuild));
                 return false;
             }
         }
@@ -279,7 +279,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             }
             catch (Exception e)
             {
-                Logger.ErrorException(e, nameof(DeleteGuildMember));
+                Logger.ErrorException(e, nameof(DeleteGuild));
                 return false;
             }
         }
