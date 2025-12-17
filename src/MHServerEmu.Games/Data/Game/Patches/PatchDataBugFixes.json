@@ -126,5 +126,13 @@
         "Description": "Fix for AchievementPunisherMidtownTimed",
         "ValueType": "Boolean",
         "Value": false
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/AccountMissions/PvPBreadcrumb.prototype",
+        "Path": "PrereqConditions.Conditions[0].MissionPrototype",
+        "Description": "Fix old CH09Main2BattleForAsgard",
+        "ValueType": "PrototypeId",
+        "Value": 17539112805425617594
     }
 ]
