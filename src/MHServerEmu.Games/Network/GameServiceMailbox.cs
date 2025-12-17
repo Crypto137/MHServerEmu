@@ -73,6 +73,10 @@ namespace MHServerEmu.Games.Network
                     OnPartyMemberInfoServerUpdate(partyMemberInfoServerUpdate);
                     break;
 
+                case ServiceMessage.GuildMessageToGame guildMessageToGame:
+                    OnGuildMessageToGame(guildMessageToGame);
+                    break;
+
                 case ServiceMessage.MatchQueueUpdate matchQueueUpdate:
                     OnMatchQueueUpdate(matchQueueUpdate);
                     break;
@@ -231,6 +235,35 @@ namespace MHServerEmu.Games.Network
             PartyMemberInfo memberInfo = partyMemberInfoServerUpdate.MemberInfo;
 
             Game.PartyManager.OnPartyMemberInfoServerUpdate(playerDbId, groupId, memberDbId, memberEvent, memberInfo);
+        }
+
+        private void OnGuildMessageToGame(in ServiceMessage.GuildMessageToGame guildMessageToGame)
+        {
+            Logger.Debug("OnGuildMessageToGame()");
+
+            if (guildMessageToGame.ServerMessages != null)
+                Game.GuildManager.OnGuildMessage(guildMessageToGame.ServerMessages);
+
+            if (guildMessageToGame.ClientMessages != null)
+            {
+                IReadOnlyList<ulong> playerDbIds = guildMessageToGame.PlayerDbIds;
+                if (playerDbIds == null || playerDbIds.Count == 0)
+                {
+                    Logger.Warn("OnGuildMessageToGame(): Received GuildMessageSetToClient with no players specified");
+                    return;
+                }
+
+                EntityManager entityManager = Game.EntityManager;
+                NetMessageGuildMessageToClient clientMessage = NetMessageGuildMessageToClient.CreateBuilder()
+                    .SetMessages(guildMessageToGame.ClientMessages)
+                    .Build();
+
+                for (int i = 0; i < playerDbIds.Count; i++)
+                {
+                    Player player = entityManager.GetEntityByDbGuid<Player>(playerDbIds[i]);
+                    player?.SendMessage(clientMessage);
+                }
+            }
         }
 
         private void OnMatchQueueUpdate(in ServiceMessage.MatchQueueUpdate matchQueueUpdate)

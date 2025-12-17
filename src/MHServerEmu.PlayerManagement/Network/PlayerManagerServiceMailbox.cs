@@ -97,6 +97,10 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnPartyBoostUpdate(partyBoostUpdate);
                     break;
 
+                case ServiceMessage.GuildMessageFromGame guildMessageFromGame:
+                    OnGuildMessageFromGame(guildMessageFromGame);
+                    break;
+
                 case ServiceMessage.MatchRegionRequestQueueCommand matchRegionRequestQueueCommand:
                     OnMatchRegionRequestQueueCommand(matchRegionRequestQueueCommand);
                     break;
@@ -326,6 +330,7 @@ namespace MHServerEmu.PlayerManagement.Network
         private bool OnCommunityStatusUpdate(in ServiceMessage.CommunityStatusUpdate communityStatusUpdate)
         {
             CommunityMemberBroadcast broadcast = communityStatusUpdate.Broadcast;
+            if (broadcast == null) return Logger.WarnReturn(false, "OnCommunityStatusUpdate(): broadcast == null");
             
             _playerManager.CommunityRegistry.ReceiveMemberBroadcast(broadcast);
             return true;
@@ -380,6 +385,15 @@ namespace MHServerEmu.PlayerManagement.Network
             player.SetPartyBoosts(boosts);
             player.CurrentParty?.UpdateMember(player);
 
+            return true;
+        }
+
+        private bool OnGuildMessageFromGame(in ServiceMessage.GuildMessageFromGame guildMessageFromGame)
+        {
+            GuildMessageSetToPlayerManager messages = guildMessageFromGame.Messages;
+            if (messages == null) return Logger.WarnReturn(false, "OnGuildMessageFromGame(): messages == null");
+
+            _playerManager.GuildManager.OnGuildMessage(messages);
             return true;
         }
 

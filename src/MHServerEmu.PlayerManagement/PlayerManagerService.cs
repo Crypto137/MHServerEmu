@@ -35,6 +35,7 @@ namespace MHServerEmu.PlayerManagement
         internal ClientManager ClientManager { get; }
         internal CommunityRegistry CommunityRegistry { get; }
         internal MasterPartyManager PartyManager { get; }
+        internal MasterGuildManager GuildManager { get; }
         internal RegionRequestQueueManager RegionRequestQueueManager { get; }
 
         internal PlayerManagerEventScheduler EventScheduler { get; }
@@ -57,6 +58,7 @@ namespace MHServerEmu.PlayerManagement
             ClientManager = new(this);
             CommunityRegistry = new(this);
             PartyManager = new(this);
+            GuildManager = new(this);
             RegionRequestQueueManager = new(this);
 
             EventScheduler = new();
