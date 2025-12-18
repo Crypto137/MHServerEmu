@@ -1,8 +1,12 @@
 ﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Social.Guilds
 {
@@ -80,24 +84,33 @@ namespace MHServerEmu.Games.Social.Guilds
             Logger.Debug($"OnGuildMessage(): {messages}");
 
             // Validate client input (guild name / motd).
-            GuildMessageCode guildMessageCode = GuildMessageCode.eGMC_None;
+            GuildMessageCode result = GuildMessageCode.eGMC_None;
 
             // Due to the way Gazillion set up their guild messages, multiple ones can be bundled together by a malicious client.
             // We need to validate them individually to prevent somebody from sneaking a bad message alongside a valid one.
             if (messages.HasGuildForm)
-                guildMessageCode = ValidateGuildForm(player, messages.GuildForm);
+                result = ValidateGuildForm(player, ref messages);
             
-            if (messages.HasGuildChangeName && guildMessageCode == GuildMessageCode.eGMC_None)
-                guildMessageCode = ValidateGuildChangeName(player, messages.GuildChangeName);
-            
-            if (messages.HasGuildChangeMotd && guildMessageCode == GuildMessageCode.eGMC_None)
-                guildMessageCode = ValidateGuildChangeMotd(player, messages.GuildChangeMotd);
+            if (result == GuildMessageCode.eGMC_None && messages.HasGuildChangeName)
+                result = ValidateGuildChangeName(player, ref messages);
+
+            if (result == GuildMessageCode.eGMC_None && messages.HasGuildInvite)
+                result = ValidateGuildInvite(player, messages.GuildInvite);
+
+            if (result == GuildMessageCode.eGMC_None && messages.HasGuildRespondToInvite)
+                result = ValidateGuildRespondToInvite(player, messages.GuildRespondToInvite);
+
+            if (result == GuildMessageCode.eGMC_None && messages.HasGuildChangeMember)
+                result = ValidateGuildChangeMember(player, messages.GuildChangeMember);
+
+            if (result == GuildMessageCode.eGMC_None && messages.HasGuildChangeMotd)
+                result = ValidateGuildChangeMotd(player, messages.GuildChangeMotd);
 
             // Early out if validation failed.
-            if (guildMessageCode != GuildMessageCode.eGMC_None)
+            if (result != GuildMessageCode.eGMC_None)
             {
                 player.SendMessage(NetMessageGuildSystemMessage.CreateBuilder()
-                    .SetCode(guildMessageCode)
+                    .SetCode(result)
                     .Build());
                 return;
             }
@@ -107,19 +120,59 @@ namespace MHServerEmu.Games.Social.Guilds
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
-        private static GuildMessageCode ValidateGuildForm(Player player, GuildForm guildForm)
+        private static GuildMessageCode ValidateGuildForm(Player player, ref GuildMessageSetToPlayerManager messages)
         {
+            GuildForm guildForm = messages.GuildForm;
+
+            GuildMessageCode idResult = ValidateGuildMessagePlayerId(player, guildForm);
+            if (idResult != GuildMessageCode.eGMC_None)
+                return idResult;
+
+            // Interact with the item to run all the normal validation.
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(GuildMessageCode.eGMC_GuildsLocked, "ValidateGuildForm(): avatar == null");
+
+            Item item = player.Game.EntityManager.GetEntity<Item>(guildForm.ItemId);
+            if (item == null) return Logger.WarnReturn(GuildMessageCode.eGMC_GuildsLocked, "ValidateGuildForm(): item == null");
+
+            if (item.IsGuildUnlockItem == false)
+                return GuildMessageCode.eGMC_GuildsLocked;
+
+            if (avatar.UseInteractableObject(item.Id, PrototypeId.Invalid) == false)
+                return GuildMessageCode.eGMC_GuildsLocked;
+
             if (player.GuildsAreUnlocked() == false)
                 return GuildMessageCode.eGMC_GuildsLocked;
 
-            // NOTE: We do the final trimming equivalent of the client-side FormatGuildName() in the PlayerManager.
-            // This is to avoid rebuilding protobufs we get from the client.
-            ReadOnlySpan<char> guildName = guildForm.GuildName.AsSpan().Trim();
-            return ValidateGuildNameCharacters(guildName);
+            // The client should do trimming on its own, so this call shouldn't do anything for non-malicious users.
+            string guildName = guildForm.GuildName.Trim();
+
+            GuildMessageCode charResult = ValidateGuildNameCharacters(guildName);
+            if (charResult != GuildMessageCode.eGMC_None)
+                return charResult;
+
+            // Rebuild the guild form to use trimmed guild name and dbId instead of runtime id for the item
+            guildForm = GuildForm.CreateBuilder()
+                .SetPlayerId(player.DatabaseUniqueId)
+                .SetGuildName(guildName)
+                .SetItemId(item.DatabaseUniqueId)
+                .Build();
+
+            messages = GuildMessageSetToPlayerManager.CreateBuilder(messages)
+                .SetGuildForm(guildForm)
+                .Build();
+
+            return GuildMessageCode.eGMC_None;
         }
 
-        private static GuildMessageCode ValidateGuildChangeName(Player player, GuildChangeName guildChangeName)
+        private static GuildMessageCode ValidateGuildChangeName(Player player, ref GuildMessageSetToPlayerManager messages)
         {
+            GuildChangeName guildChangeName = messages.GuildChangeName;
+
+            GuildMessageCode idResult = ValidateGuildMessagePlayerId(player, guildChangeName);
+            if (idResult != GuildMessageCode.eGMC_None)
+                return idResult;
+
             Guild guild = player.GetGuild();
             if (guild == null)
                 return GuildMessageCode.eGMC_GuildNotInGuild;
@@ -127,19 +180,76 @@ namespace MHServerEmu.Games.Social.Guilds
             if (string.Equals(guild.Name, guildChangeName.GuildName, StringComparison.Ordinal))
                 return GuildMessageCode.eGMC_GuildNameIdentical;
 
-            // NOTE: We do the final trimming equivalent of the client-side FormatGuildName() in the PlayerManager.
-            // This is to avoid rebuilding protobufs we get from the client.
-            ReadOnlySpan<char> guildName = guildChangeName.GuildName.AsSpan().Trim();
-            return ValidateGuildNameCharacters(guildName);
+            // The client should do trimming on its own, so this call shouldn't do anything for non-malicious users.
+            string guildName = guildChangeName.GuildName.Trim();
+
+            GuildMessageCode charResult = ValidateGuildNameCharacters(guildName);
+            if (charResult != GuildMessageCode.eGMC_None)
+                return charResult;
+
+            // Rebuild the guild form to use trimmed guild name.
+            guildChangeName = GuildChangeName.CreateBuilder()
+                .SetPlayerId(player.DatabaseUniqueId)
+                .SetGuildName(guildName)
+                .Build();
+
+            messages = GuildMessageSetToPlayerManager.CreateBuilder(messages)
+                .SetGuildChangeName(guildChangeName)
+                .Build();
+
+            return GuildMessageCode.eGMC_None;
         }
 
-        private static GuildMessageCode ValidateGuildChangeMotd(Player player, GuildChangeMotd guildChangeMotd)
+        private static GuildMessageCode ValidateGuildInvite(Player player, GuildInvite guildInvite)
         {
+            GuildMessageCode idResult = ValidateGuildMessagePlayerId(player, guildInvite);
+            if (idResult != GuildMessageCode.eGMC_None)
+                return idResult;
+
             Guild guild = player.GetGuild();
             if (guild == null)
                 return GuildMessageCode.eGMC_GuildNotInGuild;
 
-            return ValidateGuildMotdCharacters(guildChangeMotd.GuildMotd);
+            return GuildMessageCode.eGMC_None;
+        }
+
+        private static GuildMessageCode ValidateGuildRespondToInvite(Player player, GuildRespondToInvite guildRespondToInvite)
+        {
+            GuildMessageCode idResult = ValidateGuildMessagePlayerId(player, guildRespondToInvite);
+            if (idResult != GuildMessageCode.eGMC_None)
+                return idResult;
+
+            return GuildMessageCode.eGMC_None;
+        }
+
+        private static GuildMessageCode ValidateGuildChangeMember(Player player, GuildChangeMember guildChangeMember)
+        {
+            GuildMessageCode idResult = ValidateGuildMessagePlayerId(player, guildChangeMember);
+            if (idResult != GuildMessageCode.eGMC_None)
+                return idResult;
+
+            Guild guild = player.GetGuild();
+            if (guild == null)
+                return GuildMessageCode.eGMC_GuildNotInGuild;
+
+            return GuildMessageCode.eGMC_None;
+        }
+
+        private static GuildMessageCode ValidateGuildChangeMotd(Player player, GuildChangeMotd guildChangeMotd)
+        {
+            GuildMessageCode idResult = ValidateGuildMessagePlayerId(player, guildChangeMotd);
+            if (idResult != GuildMessageCode.eGMC_None)
+                return idResult;
+
+            Guild guild = player.GetGuild();
+            if (guild == null)
+                return GuildMessageCode.eGMC_GuildNotInGuild;
+
+            GuildMessageCode charResult = ValidateGuildMotdCharacters(guildChangeMotd.GuildMotd);
+            if (charResult != GuildMessageCode.eGMC_None)
+                return charResult;
+
+            return GuildMessageCode.eGMC_None;
         }
 
         // NOTE: We do not have a separate CharacterResult enum for character validation result like the client does.
@@ -197,6 +307,33 @@ namespace MHServerEmu.Games.Social.Guilds
 
             if (guildMotd.Length < GuildMotdMinLength)
                 return GuildMessageCode.eGMC_GuildMotdTooShort;
+
+            return GuildMessageCode.eGMC_None;
+        }
+
+        private static GuildMessageCode ValidateGuildMessagePlayerId(Player player, IMessage message)
+        {
+            ulong playerId;
+
+            switch (message)
+            {
+                case GuildForm guildForm:                       playerId = guildForm.PlayerId; break;
+                case GuildChangeName guildChangeName:           playerId = guildChangeName.PlayerId; break;
+                case GuildInvite guildInvite:                   playerId = guildInvite.InvitedByPlayerId; break;
+                case GuildRespondToInvite guildRespondToInvite: playerId = guildRespondToInvite.PlayerId; break;
+                case GuildChangeMember guildChangeMember:       playerId = guildChangeMember.SourcePlayerId; break;
+                case GuildChangeMotd guildChangeMotd:           playerId = guildChangeMotd.PlayerId; break;
+
+                default:
+                    Logger.Warn($"ValidateGuildMessagePlayerId(): Invalid guild message type {message.DescriptorForType.Name} from player [{player}]");
+                    return GuildMessageCode.eGMC_ServicesDown;
+            }
+
+            if (playerId != player.DatabaseUniqueId)
+            {
+                Logger.Warn($"ValidateGuildMessagePlayerId(): Received guild message {message.DescriptorForType.Name} from player [{player}] with unexpected playerId 0x{playerId:X}");
+                return GuildMessageCode.eGMC_ServicesDown;
+            }
 
             return GuildMessageCode.eGMC_None;
         }

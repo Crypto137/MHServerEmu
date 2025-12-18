@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
 
                 case ItemActionType.GuildUnlock:
-                    wasUsed |= DoItemActionGuildUnlock();
+                    wasUsed |= DoItemActionGuildUnlock(player);
                     break;
 
                 case ItemActionType.PrestigeMode:
@@ -158,10 +158,9 @@ namespace MHServerEmu.Games.Entities.Items
             isConsumable = true;
         }
 
-        private bool DoItemActionGuildUnlock()
+        private bool DoItemActionGuildUnlock(Player player)
         {
-            Logger.Debug($"DoItemActionGuildUnlock(): {this}");
-            return false;
+            return player.UnlockGuilds(true);
         }
 
         private bool DoItemActionPrestigeMode(Avatar avatar)

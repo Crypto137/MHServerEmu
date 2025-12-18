@@ -4666,6 +4666,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool UnlockGuilds(bool value)
+        {
+            // See GuildsAreUnlocked()
+            return true;
+        }
+
         #endregion
 
         #region MTXStore
