@@ -92,7 +92,7 @@ namespace MHServerEmu.PlayerManagement.Social
             Logger.Info($"Initialized in {(long)elapsed.TotalMilliseconds} ms (guilds={_guilds.Count}, members={numMembers}, currentGuildId={_currentGuildId})");
         }
 
-        private MasterGuild CreateGuild(DBGuild data, bool writeToDatabase)
+        private MasterGuild CreateGuild(DBGuild data, bool saveToDatabase)
         {
             ulong guildId = (ulong)data.Id;
             string guildName = data.Name;
@@ -103,7 +103,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (_guildNamesInUse.Add(guildName) == false)
                 return Logger.WarnReturn<MasterGuild>(null, $"CreateGuild(): Guild name {guildName} is already in use");
 
-            MasterGuild guild = new(data, writeToDatabase);
+            MasterGuild guild = new(data, saveToDatabase);
             _guilds.Add(guild.Id, guild);
             return guild;
         }

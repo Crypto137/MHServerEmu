@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess;
-using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Social
 {
