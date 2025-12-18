@@ -1,6 +1,9 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System.Time;
+using MHServerEmu.DatabaseAccess;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Social
@@ -9,11 +12,57 @@ namespace MHServerEmu.PlayerManagement.Social
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly Dictionary<ulong, MasterGuild> _guilds = new();
+
         private readonly PlayerManagerService _playerManager;
+
+        private ulong _currentGuildId = 0;
 
         public MasterGuildManager(PlayerManagerService playerManager)
         {
             _playerManager = playerManager;
+        }
+
+        public void Initialize()
+        {
+            TimeSpan startTime = Clock.UnixTime;
+
+            // We store all guilds in memory, so preload everything.
+            List<DBGuild> dbGuilds = new();
+            IDBManager.Instance.LoadGuilds(dbGuilds);
+
+            int numMembers = 0;
+            foreach (DBGuild dbGuild in dbGuilds)
+            {
+                if (dbGuild == null)
+                {
+                    Logger.Warn("Initialize(): dbGuild == null");
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(dbGuild.Name))
+                {
+                    Logger.Warn($"Initialize(): Loaded guild with invalid name, id={dbGuild.Id}");
+                    continue;
+                }
+
+                if (dbGuild.Members == null || dbGuild.Members.Count == 0)
+                {
+                    Logger.Warn($"Initialize(): Loaded guild [{dbGuild}] has no members");
+                    continue;
+                }
+
+                MasterGuild guild = new(dbGuild);
+
+                ulong guildId = guild.Id;
+                _guilds.Add(guildId, guild);
+                _currentGuildId = Math.Max(_currentGuildId, guildId);
+
+                numMembers += guild.MemberCount;
+            }
+
+            TimeSpan elapsed = Clock.UnixTime - startTime;
+            Logger.Info($"Initialized in {(long)elapsed.TotalMilliseconds} ms (guilds={_guilds.Count}, members={numMembers}, currentGuildId={_currentGuildId})");
         }
 
         #region Message Handling

@@ -208,8 +208,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         {
             try
             {
-                TimeSpan startTime = Clock.UnixTime;
-
                 using SQLiteConnection connection = GetConnection();
 
                 IEnumerable<DBGuild> guildQueryResult = connection.Query<DBGuild>("SELECT * FROM Guild");
@@ -222,7 +220,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 foreach (DBGuild guild in outGuilds)
                     guildLookup.Add(guild.Id, guild);
 
-                int numMembers = 0;
                 foreach (DBGuildMember member in memberQueryResult)
                 {
                     if (guildLookup.TryGetValue(member.GuildId, out DBGuild guild) == false)
@@ -232,11 +229,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     }
 
                     guild.Members.Add(member);
-                    numMembers++;
                 }
-
-                TimeSpan elapsed = Clock.UnixTime - startTime;
-                Logger.Info($"Loaded {outGuilds.Count} guilds with {numMembers} members in {(long)elapsed.TotalMilliseconds} ms");
 
                 return true;
             }
