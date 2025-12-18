@@ -3076,10 +3076,40 @@ namespace MHServerEmu.Games.Entities
         public void TwinEnemyBoost(Cell cell)
         {
             var popGlobals = GameDatabase.PopulationGlobalsPrototype;
-            // TODO share damage with twin enemy
-            // PropertyEnum.DamageTransferID
-            // popGlobals.TwinEnemyCondition
-            Properties[PropertyEnum.EnemyBoost, popGlobals.TwinEnemyBoost] = true;
+            ConditionPrototype twinConditionProto = popGlobals.TwinEnemyCondition.As<ConditionPrototype>();
+            foreach (var entity in cell.Entities)
+            {
+                if (entity is not WorldEntity worldEntity) continue;
+                if (worldEntity == this || worldEntity.PrototypeDataRef != PrototypeDataRef) continue;
+                if (worldEntity.ConditionCollection.GetConditionByRef(popGlobals.TwinEnemyCondition) != null) continue;
+                if (worldEntity.HasEnemyBoost(popGlobals.TwinEnemyBoost))
+                {
+                    InitTwinEnemyCondition(worldEntity.Id, twinConditionProto);
+                    worldEntity.InitTwinEnemyCondition(Id, twinConditionProto);
+                    return;
+                }
+            }
+        }
+
+        private void InitTwinEnemyCondition(ulong entityId, ConditionPrototype twinConditionProto)
+        {
+            Condition condition = ConditionCollection.AllocateCondition();
+            condition.InitializeFromConditionPrototype(ConditionCollection.NextConditionId, Game, Id, Id, Id, twinConditionProto, TimeSpan.Zero);
+            condition.Properties[PropertyEnum.DamageTransferID] = entityId;
+            ConditionCollection.AddCondition(condition);
+
+            Properties[PropertyEnum.EnemyBoost, GameDatabase.PopulationGlobalsPrototype.TwinEnemyBoost] = true;
+        }
+
+        private bool HasEnemyBoost(PrototypeId enemyBoostRef)
+        {
+            if (SpawnSpec == null) return false;
+            foreach (var kvp in SpawnSpec.Properties.IteratePropertyRange(PropertyEnum.EnemyBoost))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId boostRef);
+                if (boostRef == enemyBoostRef) return true;
+            }
+            return false;
         }
 
         #endregion
