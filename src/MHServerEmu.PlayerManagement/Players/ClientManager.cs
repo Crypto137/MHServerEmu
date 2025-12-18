@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.PlayerManagement.Auth;
+using MHServerEmu.PlayerManagement.Social;
 
 namespace MHServerEmu.PlayerManagement.Players
 {
@@ -181,6 +182,9 @@ namespace MHServerEmu.PlayerManagement.Players
 
                 player.LoadPlayerData();
                 _playerManager.CommunityRegistry.RefreshPlayerStatus(player);
+
+                MasterGuild guild = _playerManager.GuildManager.GetGuildForPlayer(playerDbId);
+                guild?.OnMemberOnline(player);
             }
             else
             {

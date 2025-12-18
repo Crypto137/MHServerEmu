@@ -19,6 +19,8 @@ namespace MHServerEmu.PlayerManagement.Social
         private readonly HashSet<string> _guildNamesInUse = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _guildNameBlacklist = new(StringComparer.OrdinalIgnoreCase);
 
+        private readonly Dictionary<ulong, MasterGuild> _guildsByMember = new();
+
         private readonly PlayerManagerService _playerManager;
 
         private ulong _currentGuildId = 0;
@@ -90,6 +92,27 @@ namespace MHServerEmu.PlayerManagement.Social
 
             TimeSpan elapsed = Clock.UnixTime - startTime;
             Logger.Info($"Initialized in {(long)elapsed.TotalMilliseconds} ms (guilds={_guilds.Count}, members={numMembers}, currentGuildId={_currentGuildId})");
+        }
+
+        public MasterGuild GetGuildForPlayer(ulong playerDbId)
+        {
+            if (_guildsByMember.TryGetValue(playerDbId, out MasterGuild guild) == false)
+                return null;
+
+            return guild;
+        }
+
+        public void SetGuildForPlayer(ulong playerDbId, MasterGuild guild)
+        {
+            // TODO: additional validation
+
+            if (guild == null)
+            {
+                _guildsByMember.Remove(playerDbId);
+                return;
+            }
+
+            _guildsByMember[playerDbId] = guild;
         }
 
         private MasterGuild CreateGuild(DBGuild data, bool saveToDatabase)
@@ -164,7 +187,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 return;
             }
 
-            // TODO: Send GuildCompleteInfo to game
+            guild.OnCreated();
 
             SendGuildFormResult(guildName, GuildFormResultCode.eGFCSuccess, player, guildForm.ItemId);
         }

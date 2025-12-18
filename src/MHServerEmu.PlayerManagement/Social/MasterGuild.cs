@@ -1,7 +1,11 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.PlayerManagement.Games;
+using MHServerEmu.PlayerManagement.Players;
+using MHServerEmu.PlayerManagement.Regions;
 
 namespace MHServerEmu.PlayerManagement.Social
 {
@@ -17,6 +21,9 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private readonly Dictionary<ulong, MemberEntry> _members = new();
 
+        private readonly Dictionary<ulong, PlayerHandle> _onlineMembers = new();
+        private readonly HashSet<GameHandle> _games = new();
+
         private MemberEntry? _leader;
 
         public ulong Id { get => (ulong)_data.Id; }
@@ -31,6 +38,14 @@ namespace MHServerEmu.PlayerManagement.Social
             foreach (DBGuildMember member in _data.Members)
                 AddMember(member);
 
+            ClientManager clientManager = PlayerManagerService.Instance.ClientManager;
+            foreach (MemberEntry member in _members.Values)
+            {
+                PlayerHandle player = clientManager.GetPlayer(member.PlayerDbId);
+                if (player != null)
+                    AddOnlineMember(player);
+            }
+
             if (saveToDatabase)
             {
                 SaveToDatabase();
@@ -43,6 +58,53 @@ namespace MHServerEmu.PlayerManagement.Social
         public override string ToString()
         {
             return _data.ToString();
+        }
+
+        public bool ContainsMember(ulong playerDbId)
+        {
+            return _members.ContainsKey(playerDbId);
+        }
+
+        public void OnCreated()
+        {
+            foreach (GameHandle game in _games)
+                SendToGame(game);
+        }
+
+        public void OnMemberOnline(PlayerHandle player)
+        {
+            if (player == null)
+                return;
+
+            if (ContainsMember(player.PlayerDbId) == false)
+                return;
+
+            AddOnlineMember(player);
+        }
+
+        public void OnMemberOffline(PlayerHandle player)
+        {
+            if (player == null)
+                return;
+
+            if (ContainsMember(player.PlayerDbId) == false)
+                return;
+
+            RemoveOnlineMember(player);
+        }
+
+        public void OnMemberRegionChanged(PlayerHandle player, RegionHandle newRegion, RegionHandle prevRegion)
+        {
+
+            if (newRegion != null)
+            {
+                GameHandle newGame = newRegion.Game;
+                if (AddGame(newGame))
+                    SendToGame(newGame);
+            }
+
+            if (prevRegion != null)
+                RemoveGame(prevRegion.Game);
         }
 
         private bool SaveToDatabase()
@@ -79,6 +141,9 @@ namespace MHServerEmu.PlayerManagement.Social
             if (isLeader)
                 _leader = member;
 
+            // TODO: Remove this lookup when we remove the member
+            PlayerManagerService.Instance.GuildManager.SetGuildForPlayer(playerDbId, this);
+
             return member;
         }
 
@@ -88,6 +153,75 @@ namespace MHServerEmu.PlayerManagement.Social
                 return null;
 
             return member;
+        }
+
+        private void AddOnlineMember(PlayerHandle player)
+        {
+            _onlineMembers.Add(player.PlayerDbId, player);
+            player.Guild = this;
+
+            if (player.State == PlayerHandleState.InGame && player.CurrentGame != null)
+                AddGame(player.CurrentGame);
+        }
+
+        private void RemoveOnlineMember(PlayerHandle player)
+        {
+            player.Guild = null;
+            _onlineMembers.Remove(player.PlayerDbId);
+        }
+
+        private bool AddGame(GameHandle game)
+        {
+            if (game == null) return Logger.WarnReturn(false, "AddGame(): game == null");
+
+            return _games.Add(game);
+        }
+
+        private bool RemoveGame(GameHandle game)
+        {
+            if (game == null) return Logger.WarnReturn(false, "RemoveGame(): game == null");
+
+            if (HasMembersInGame(game))
+                return false;
+
+            return _games.Remove(game);
+        }
+
+        private bool HasMembersInGame(GameHandle game)
+        {
+            foreach (PlayerHandle player in _onlineMembers.Values)
+            {
+                if (player.State == PlayerHandleState.InGame && player.CurrentGame == game)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool SendToGame(GameHandle game)
+        {
+            if (game == null) return Logger.WarnReturn(false, "SendToGame(): game == null");
+            if (game.IsRunning == false) return Logger.WarnReturn(false, "SendToGame(): game.IsRunning == false");
+
+            // TODO: Cache GuildCompleteInfo?
+            var guildCompleteInfo = GuildCompleteInfo.CreateBuilder()
+                .SetGuildId(Id)
+                .SetGuildName(Name);
+
+            foreach (MemberEntry member in _members.Values)
+                guildCompleteInfo.AddMembers(member.ToGuildMemberInfo());
+
+            if (string.IsNullOrWhiteSpace(Motd) == false)
+                guildCompleteInfo.SetGuildMotd(Motd);
+
+            GuildMessageSetToServer messages = GuildMessageSetToServer.CreateBuilder()
+                .SetGuildCompleteInfo(guildCompleteInfo)
+                .Build();
+
+            ServiceMessage.GuildMessageToServer message = new(game.Id, messages);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+
+            return true;
         }
 
         /// <summary>

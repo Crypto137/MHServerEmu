@@ -143,6 +143,9 @@ namespace MHServerEmu.PlayerManagement.Players
             SetTargetRegion(null);
             SetActualRegion(null);
 
+            // Remove from guild
+            Guild?.OnMemberOffline(this);
+
             // Remove from matchmaking
             RegionRequestGroup?.RemovePlayer(this);
 
@@ -841,6 +844,8 @@ namespace MHServerEmu.PlayerManagement.Players
             newRegion?.Reserve(RegionReservationType.Presence);
 
             // Community will be updated when we receive a broadcast from the game instance.
+
+            Guild?.OnMemberRegionChanged(this, newRegion, prevRegion);
 
             // Remove the previous region from the WorldView if it needs to be shut down.
             if (prevRegion != null && prevRegion.Flags.HasFlag(RegionFlags.ShutdownWhenVacant))
