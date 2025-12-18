@@ -204,11 +204,11 @@ namespace MHServerEmu.PlayerManagement.Social
             if (itemId != 0)
                 guildFormResult.SetItemId(itemId);
 
-            GuildMessageSetToServer serverMessages = GuildMessageSetToServer.CreateBuilder()
+            GuildMessageSetToServer messages = GuildMessageSetToServer.CreateBuilder()
                 .SetGuildFormResult(guildFormResult)
                 .Build();
 
-            ServiceMessage.GuildMessageToGame message = new(gameId, null, serverMessages, null);
+            ServiceMessage.GuildMessageToServer message = new(gameId, messages);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
 
             return true;

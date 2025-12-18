@@ -116,7 +116,7 @@ namespace MHServerEmu.Games.Social.Guilds
             }
 
             // Forward to the player manager if everything is okay.
-            ServiceMessage.GuildMessageFromGame message = new(messages);
+            ServiceMessage.GuildMessageToPlayerManager message = new(messages);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 

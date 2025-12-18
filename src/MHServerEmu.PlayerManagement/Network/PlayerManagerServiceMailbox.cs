@@ -97,7 +97,7 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnPartyBoostUpdate(partyBoostUpdate);
                     break;
 
-                case ServiceMessage.GuildMessageFromGame guildMessageFromGame:
+                case ServiceMessage.GuildMessageToPlayerManager guildMessageFromGame:
                     OnGuildMessageFromGame(guildMessageFromGame);
                     break;
 
@@ -388,7 +388,7 @@ namespace MHServerEmu.PlayerManagement.Network
             return true;
         }
 
-        private bool OnGuildMessageFromGame(in ServiceMessage.GuildMessageFromGame guildMessageFromGame)
+        private bool OnGuildMessageFromGame(in ServiceMessage.GuildMessageToPlayerManager guildMessageFromGame)
         {
             GuildMessageSetToPlayerManager messages = guildMessageFromGame.Messages;
             if (messages == null) return Logger.WarnReturn(false, "OnGuildMessageFromGame(): messages == null");

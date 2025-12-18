@@ -73,8 +73,12 @@ namespace MHServerEmu.Games.Network
                     OnPartyMemberInfoServerUpdate(partyMemberInfoServerUpdate);
                     break;
 
-                case ServiceMessage.GuildMessageToGame guildMessageToGame:
-                    OnGuildMessageToGame(guildMessageToGame);
+                case ServiceMessage.GuildMessageToServer guildMessageToServer:
+                    OnGuildMessageToServer(guildMessageToServer);
+                    break;
+
+                case ServiceMessage.GuildMessageToClient guildMessageToClient:
+                    OnGuildMessageToClient(guildMessageToClient);
                     break;
 
                 case ServiceMessage.MatchQueueUpdate matchQueueUpdate:
@@ -237,33 +241,25 @@ namespace MHServerEmu.Games.Network
             Game.PartyManager.OnPartyMemberInfoServerUpdate(playerDbId, groupId, memberDbId, memberEvent, memberInfo);
         }
 
-        private void OnGuildMessageToGame(in ServiceMessage.GuildMessageToGame guildMessageToGame)
+        private void OnGuildMessageToServer(in ServiceMessage.GuildMessageToServer guildMessageToServer)
         {
-            Logger.Debug("OnGuildMessageToGame()");
+            Logger.Debug("OnGuildMessageToServer()");
+            Game.GuildManager.OnGuildMessage(guildMessageToServer.Messages);
+        }
 
-            if (guildMessageToGame.ServerMessages != null)
-                Game.GuildManager.OnGuildMessage(guildMessageToGame.ServerMessages);
+        private void OnGuildMessageToClient(in ServiceMessage.GuildMessageToClient guildMessageToClient)
+        {
+            Logger.Debug("OnGuildMessageToClient()");
 
-            if (guildMessageToGame.ClientMessages != null)
-            {
-                IReadOnlyList<ulong> playerDbIds = guildMessageToGame.PlayerDbIds;
-                if (playerDbIds == null || playerDbIds.Count == 0)
-                {
-                    Logger.Warn("OnGuildMessageToGame(): Received GuildMessageSetToClient with no players specified");
-                    return;
-                }
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(guildMessageToClient.PlayerDbId);
+            if (player == null)
+                return;
 
-                EntityManager entityManager = Game.EntityManager;
-                NetMessageGuildMessageToClient clientMessage = NetMessageGuildMessageToClient.CreateBuilder()
-                    .SetMessages(guildMessageToGame.ClientMessages)
-                    .Build();
+            NetMessageGuildMessageToClient clientMessage = NetMessageGuildMessageToClient.CreateBuilder()
+                .SetMessages(guildMessageToClient.Messages)
+                .Build();
 
-                for (int i = 0; i < playerDbIds.Count; i++)
-                {
-                    Player player = entityManager.GetEntityByDbGuid<Player>(playerDbIds[i]);
-                    player?.SendMessage(clientMessage);
-                }
-            }
+            player.SendMessage(clientMessage);
         }
 
         private void OnMatchQueueUpdate(in ServiceMessage.MatchQueueUpdate matchQueueUpdate)

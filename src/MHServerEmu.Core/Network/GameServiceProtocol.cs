@@ -388,23 +388,34 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [Game -> PlayerManager] Routes guild messages to the player manager.
         /// </summary>
-        public readonly struct GuildMessageFromGame(GuildMessageSetToPlayerManager messages)
+        public readonly struct GuildMessageToPlayerManager(GuildMessageSetToPlayerManager messages)
             : IGameServiceMessage
         {
             public readonly GuildMessageSetToPlayerManager Messages = messages;
         }
 
+        // NOTE: In the protocol for 1.53 there is a single GuildMessageToServer protobuf that is used for both client and server guild messages.
+        // Server messages don't actually need a list of players, and it makes more sense to split them.
+
         /// <summary>
-        /// [PlayerManager -> Game] Routes guild messages from the player manager.
+        /// [PlayerManager -> Game] Routes guild messages from the player manager to a game instance.
         /// </summary>
-        public readonly struct GuildMessageToGame(ulong gameId, IReadOnlyList<ulong> playerDbIds, GuildMessageSetToServer serverMessages, GuildMessageSetToClient clientMessages)
+        public readonly struct GuildMessageToServer(ulong gameId, GuildMessageSetToServer serverMessages)
             : IGameServiceMessage
         {
-            // Based on GuildMessageToServer from 1.53.
             public readonly ulong GameId = gameId;
-            public readonly IReadOnlyList<ulong> PlayerDbIds = playerDbIds;
-            public readonly GuildMessageSetToServer ServerMessages = serverMessages;
-            public readonly GuildMessageSetToClient ClientMessages = clientMessages;
+            public readonly GuildMessageSetToServer Messages = serverMessages;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] Routes guilds messages from the player manager to a client in a game instance.
+        /// </summary>
+        public readonly struct GuildMessageToClient(ulong gameId, ulong playerDbId, GuildMessageSetToClient messages)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly GuildMessageSetToClient Messages = messages;
         }
 
         /// <summary>
