@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
@@ -10,9 +11,13 @@ namespace MHServerEmu.PlayerManagement.Social
 {
     public class MasterGuildManager
     {
+        private const string GuildNameBlacklistFile = "GuildNameBlacklist.txt";
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<ulong, MasterGuild> _guilds = new();
+        private readonly HashSet<string> _guildNamesInUse = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _guildNameBlacklist = new(StringComparer.OrdinalIgnoreCase);
 
         private readonly PlayerManagerService _playerManager;
 
@@ -65,6 +70,24 @@ namespace MHServerEmu.PlayerManagement.Social
                 numMembers += guild.MemberCount;
             }
 
+            string guildNameBlacklistPath = Path.Combine(FileHelper.DataDirectory, GuildNameBlacklistFile);
+            if (File.Exists(guildNameBlacklistPath))
+            {
+                using StreamReader reader = new(guildNameBlacklistPath);
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    line = line.Trim();
+                    
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
+
+                    _guildNameBlacklist.Add(line);
+                }
+
+                Logger.Info($"Loaded {_guildNameBlacklist.Count} blacklisted guild names");
+            }
+
             TimeSpan elapsed = Clock.UnixTime - startTime;
             Logger.Info($"Initialized in {(long)elapsed.TotalMilliseconds} ms (guilds={_guilds.Count}, members={numMembers}, currentGuildId={_currentGuildId})");
         }
@@ -72,8 +95,13 @@ namespace MHServerEmu.PlayerManagement.Social
         private MasterGuild CreateGuild(DBGuild data, bool writeToDatabase)
         {
             ulong guildId = (ulong)data.Id;
+            string guildName = data.Name;
+
             if (_guilds.ContainsKey(guildId))
                 return Logger.WarnReturn<MasterGuild>(null, $"CreateGuild(): Guild id {guildId} is already in use");
+
+            if (_guildNamesInUse.Add(guildName) == false)
+                return Logger.WarnReturn<MasterGuild>(null, $"CreateGuild(): Guild name {guildName} is already in use");
 
             MasterGuild guild = new(data, writeToDatabase);
             _guilds.Add(guild.Id, guild);
@@ -112,7 +140,6 @@ namespace MHServerEmu.PlayerManagement.Social
                 return;
 
             GuildFormResultCode result = ValidateGuildForm(player, guildForm);
-
             if (result != GuildFormResultCode.eGFCSuccess)
             {
                 SendGuildFormResult(guildForm.GuildName, result, player);
@@ -131,14 +158,31 @@ namespace MHServerEmu.PlayerManagement.Social
             dbGuild.Members.Add(creator);
 
             MasterGuild guild = CreateGuild(dbGuild, true);
+            if (guild == null)
+            {
+                SendGuildFormResult(guildName, GuildFormResultCode.eGFCInternalError, player);
+                return;
+            }
 
             // TODO: Send GuildCompleteInfo to game
 
-            SendGuildFormResult(guild.Name, GuildFormResultCode.eGFCSuccess, player, guildForm.ItemId);
+            SendGuildFormResult(guildName, GuildFormResultCode.eGFCSuccess, player, guildForm.ItemId);
         }
 
         private GuildFormResultCode ValidateGuildForm(PlayerHandle player, GuildForm guildForm)
         {
+            if (player.Guild != null)
+                return GuildFormResultCode.eGFCAlreadyInGuild;
+
+            // This should have already been trimmed by the client and validated game-side on the server.
+            string guildName = guildForm.GuildName;
+
+            if (_guildNamesInUse.Contains(guildForm.GuildName))
+                return GuildFormResultCode.eGFCDuplicateName;
+
+            if (_guildNameBlacklist.Contains(guildName))
+                return GuildFormResultCode.eGFCRestrictedName;
+
             return GuildFormResultCode.eGFCSuccess;
         }
 
