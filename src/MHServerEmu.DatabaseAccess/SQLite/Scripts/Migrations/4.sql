@@ -8,7 +8,7 @@ UPDATE Player SET LastLogoutTime=0;
 CREATE TABLE "Guild" (
 	"Id"	INTEGER NOT NULL UNIQUE,
 	"Name"	TEXT NOT NULL UNIQUE,
-	"Motd"	TEXT,
+	"Motd"	TEXT NOT NULL,
 	"CreatorDbGuid"	INTEGER,
 	"CreationTime"	INTEGER,
 	PRIMARY KEY("Id")

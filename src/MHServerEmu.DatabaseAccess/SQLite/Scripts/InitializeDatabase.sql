@@ -74,7 +74,7 @@ CREATE TABLE "ControlledEntity" (
 CREATE TABLE "Guild" (
 	"Id"	INTEGER NOT NULL UNIQUE,
 	"Name"	TEXT NOT NULL UNIQUE,
-	"Motd"	TEXT,
+	"Motd"	TEXT NOT NULL,
 	"CreatorDbGuid"	INTEGER,
 	"CreationTime"	INTEGER,
 	PRIMARY KEY("Id")

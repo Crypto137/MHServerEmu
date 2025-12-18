@@ -253,6 +253,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 if (inserted == 0)
                     connection.Execute("UPDATE Guild SET Name=@Name, Motd=@Motd WHERE Id=@Id", guild);
 
+                Logger.Trace($"SaveGuild(): {guild}");
                 return true;
             }
             catch (Exception e)
@@ -267,7 +268,10 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             try
             {
                 using SQLiteConnection connection = GetConnection();
-                connection.Execute("DELETE * FROM Guild WHERE Id = @Id", guild);
+
+                connection.Execute("DELETE FROM Guild WHERE Id = @Id", guild);
+
+                Logger.Trace($"DeleteGuild(): {guild}");
                 return true;
             }
             catch (Exception e)
@@ -289,6 +293,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 if (inserted == 0)
                     connection.Execute("UPDATE GuildMember SET Membership=@Membership WHERE PlayerDbGuid=@PlayerDbGuid", guildMember);
 
+                Logger.Trace($"SaveGuildMember(): {guildMember}");
                 return true;
             }
             catch (Exception e)
@@ -303,7 +308,10 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             try
             {
                 using SQLiteConnection connection = GetConnection();
-                connection.Execute("DELETE * FROM GuildMember WHERE PlayerDbGuid = @PlayerDbGuid", guildMember);
+
+                connection.Execute("DELETE FROM GuildMember WHERE PlayerDbGuid = @PlayerDbGuid", guildMember);
+
+                Logger.Trace($"DeleteGuildMember(): {guildMember}");
                 return true;
             }
             catch (Exception e)
