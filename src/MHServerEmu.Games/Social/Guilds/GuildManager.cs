@@ -32,6 +32,11 @@ namespace MHServerEmu.Games.Social.Guilds
             Game = game;
         }
 
+        public Dictionary<ulong, Guild>.ValueCollection.Enumerator GetEnumerator()
+        {
+            return _guilds.Values.GetEnumerator();
+        }
+
         public Guild CreateGuild(GuildCompleteInfo guildCompleteInfo)
         {
             Guild existingGuild = GetGuild(guildCompleteInfo.GuildId);
@@ -74,10 +79,65 @@ namespace MHServerEmu.Games.Social.Guilds
             return guild;
         }
 
-        #region Message Handling (Client -> Game)
+        public GuildMember GetGuildMember(ulong playerDbId)
+        {
+            foreach (Guild guild in this)
+            {
+                GuildMember member = guild.GetMember(playerDbId);
+                if (member != null)
+                    return member;
+            }
+
+            return null;
+        }
+
+        public void OnPlayerEnteringGame(Player player)
+        {
+            if (player == null)
+            {
+                Logger.Warn("OnPlayerEnteringGame(): player == null");
+                return;
+            }
+
+            GuildMember guildMember = GetGuildMember(player.DatabaseUniqueId);
+            if (guildMember == null)
+                return;
+
+            Guild guild = guildMember.Guild;
+
+            guild.OnMemberOnline(player);
+
+            player.SetGuildMembership(guild.Id, guild.Name, guildMember.Membership);
+        }
+
+        public void OnPlayerLeavingGame(Player player)
+        {
+            if (player == null)
+            {
+                Logger.Warn("OnPlayerLeavingGame(): player == null");
+                return;
+            }
+
+            if (player.IsInGuild == false)
+                return;
+
+            Guild guild = GetGuild(player.GuildId);
+            if (guild == null)
+            {
+                Logger.Warn($"OnPlayerRemoved(): Failed to retrieve guild {player.GuildId} for player [{player}]");
+                return;
+            }
+
+            player.SetGuildMembership(InvalidGuildId, string.Empty, GuildMembership.eGMNone);
+
+            if (guild.GetOnlineMemberCount() == 1)
+                RemoveGuild(guild);
+        }
+
+        #region Message Handling (Client -> GameServer)
 
         /// <summary>
-        /// Handles client -> Game guild messages.
+        /// Handles Client -> GameServer guild messages.
         /// </summary>
         public void OnGuildMessage(Player player, GuildMessageSetToPlayerManager messages)
         {
@@ -340,14 +400,97 @@ namespace MHServerEmu.Games.Social.Guilds
 
         #endregion
 
-        #region Message Handling (PlayerManager -> Game)
+        #region Message Handling (PlayerManager -> GameServer)
 
         /// <summary>
-        /// Handles PlayerManager -> Game guild messages.
+        /// Handles PlayerManager -> GameServer guild messages.
         /// </summary>
         public void OnGuildMessage(GuildMessageSetToServer messages)
         {
             Logger.Debug($"OnGuildMessage(): {messages}");
+
+            if (messages.HasGuildNameChanged)
+                OnGuildNameChanged(messages.GuildNameChanged);
+
+            if (messages.HasGuildMembersInfoChanged)
+                OnGuildMembersInfoChanged(messages.GuildMembersInfoChanged);
+
+            if (messages.HasGuildCompleteInfo)
+                OnGuildCompleteInfo(messages.GuildCompleteInfo);
+
+            if (messages.HasGuildDisbanded)
+            {
+                OnGuildDisbanded(messages.GuildDisbanded);
+                return;
+            }
+
+            if (messages.HasGuildFormResult)
+                OnGuildFormResult(messages.GuildFormResult);
+
+            if (messages.HasGuildMotdChanged)
+                OnGuildMotdChanged(messages.GuildMotdChanged);
+
+            if (messages.HasGuildMemberNameChanged)
+                OnGuildMemberNameChanged(messages.GuildMemberNameChanged);
+        }
+
+        private void OnGuildNameChanged(GuildNameChanged guildNameChanged)
+        {
+
+        }
+
+        private void OnGuildMembersInfoChanged(GuildMembersInfoChanged guildMembersInfoChanged)
+        {
+
+        }
+
+        private void OnGuildCompleteInfo(GuildCompleteInfo guildCompleteInfo)
+        {
+            EntityManager entityManager = Game.EntityManager;
+            
+            bool hasMembersInGame = false;
+            for (int i = 0; i < guildCompleteInfo.MembersCount; i++)
+            {
+                Player player = entityManager.GetEntityByDbGuid<Player>(guildCompleteInfo.MembersList[i].PlayerId);
+                if (player != null)
+                {
+                    hasMembersInGame = true;
+                    break;
+                }
+            }
+
+            if (hasMembersInGame == false)
+            {
+                Logger.Warn($"OnGuildCompleteInfo(): Game [{Game}] received GuildCompleteInfo for guild {guildCompleteInfo.GuildName} ({guildCompleteInfo.GuildId}), but no members are present");
+                return;
+            }
+
+            Guild guild = GetGuild(guildCompleteInfo.GuildId);
+
+            if (guild == null)
+                CreateGuild(guildCompleteInfo);
+            else
+                guild.Sync(guildCompleteInfo);
+        }
+
+        private void OnGuildDisbanded(GuildDisbanded guildDisbanded)
+        {
+        
+        }
+
+        private void OnGuildFormResult(GuildFormResult guildFormResult)
+        {
+
+        }
+
+        private void OnGuildMotdChanged(GuildMotdChanged guildMotdChanged)
+        {
+
+        }
+
+        private void OnGuildMemberNameChanged(GuildMemberNameChanged guildMemberNameChanged)
+        {
+
         }
 
         #endregion

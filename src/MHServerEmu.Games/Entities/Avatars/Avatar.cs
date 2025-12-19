@@ -149,8 +149,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (settings.InventoryLocation != null)
                 player = Game.EntityManager.GetEntity<Player>(settings.InventoryLocation.ContainerId);
 
-            if (player == null)
+            if (player != null)
+            {
+                SetPlayer(player);
+                SetGuildMembership(player.GuildId, player.GuildName, player.GuildMembership);
+            }
+            else
+            {
                 Logger.Warn("ApplyInitialReplicationState(): player == null");
+            }
 
             if (settings.ArchiveData != null)
             {

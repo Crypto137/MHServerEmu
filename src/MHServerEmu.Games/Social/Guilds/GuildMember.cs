@@ -26,6 +26,15 @@ namespace MHServerEmu.Games.Social.Guilds
             return $"{Name} (0x{Id:X}) - {Membership}";
         }
 
+        public GuildMemberInfo ToGuildMemberInfo()
+        {
+            return GuildMemberInfo.CreateBuilder()
+                .SetPlayerId(Id)
+                .SetPlayerName(Name)
+                .SetMembership(Membership)
+                .Build();
+        }
+
         // This static method is for serializing Player and Avatar entity guild information,
         // rather than anything to do with GuildMember instances directly. Client-accurate.
         public static bool SerializeReplicationRuntimeInfo(Archive archive, ref ulong guildId, ref string guildName, ref GuildMembership guildMembership)

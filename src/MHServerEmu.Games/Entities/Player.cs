@@ -111,9 +111,9 @@ namespace MHServerEmu.Games.Entities
 
         private RepVar_ulong _partyId = new();
 
-        private ulong _guildId;
-        private string _guildName;
-        private GuildMembership _guildMembership;
+        private ulong _guildId = GuildManager.InvalidGuildId;
+        private string _guildName = string.Empty;
+        private GuildMembership _guildMembership = GuildMembership.eGMNone;
 
         private Community _community;
         private List<PrototypeId> _unlockedInventoryList = new();
@@ -165,7 +165,6 @@ namespace MHServerEmu.Games.Entities
         public Avatar PrimaryAvatar { get => CurrentAvatar; } // Fix for PC
         public Avatar SecondaryAvatar { get; private set; }
         public int CurrentAvatarCharacterLevel { get => PrimaryAvatar?.CharacterLevel ?? 0; }
-        public GuildMembership GuildMembership { get; internal set; }
         public PrototypeId ActiveChapter { get => Properties[PropertyEnum.ActiveMissionChapter]; }
         public PrototypeId Faction { get => Properties[PropertyEnum.Faction]; }
         public ulong DialogTargetId { get; private set; }
@@ -180,6 +179,11 @@ namespace MHServerEmu.Games.Entities
         public override ulong PartyId { get => _partyId.Get(); }
         public bool IsInParty { get => PartyId != 0; }
         public List<PrototypeId> PartyFilters { get; } = new();
+
+        public ulong GuildId { get => _guildId; }
+        public string GuildName { get => _guildName; }
+        public GuildMembership GuildMembership { get => _guildMembership; }
+        public bool IsInGuild { get => _guildId != GuildManager.InvalidGuildId; }
 
         public PlayerTradeStatusCode PlayerTradeStatusCode { get; private set; } = PlayerTradeStatusCode.ePTSC_None;
         public string PlayerTradePartnerName { get; private set; } = string.Empty;
@@ -521,6 +525,8 @@ namespace MHServerEmu.Games.Entities
             InitializeVendors();
             ScheduleCheckHoursPlayedEvent();
             UpdateUISystemLocks();
+
+            Game.GuildManager.OnPlayerEnteringGame(this);
         }
 
         public override void ExitGame()
@@ -535,6 +541,8 @@ namespace MHServerEmu.Games.Entities
 
         public override void Destroy()
         {
+            Game.GuildManager.OnPlayerLeavingGame(this);
+
             var region = GetRegion();
             if (region != null)
                 MissionManager.Shutdown(region);

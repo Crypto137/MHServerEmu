@@ -62,7 +62,7 @@ namespace MHServerEmu.PlayerManagement.Social
             return _data.ToString();
         }
 
-        public bool ContainsMember(ulong playerDbId)
+        public bool HasMember(ulong playerDbId)
         {
             return _members.ContainsKey(playerDbId);
         }
@@ -78,7 +78,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (player == null)
                 return;
 
-            if (ContainsMember(player.PlayerDbId) == false)
+            if (HasMember(player.PlayerDbId) == false)
                 return;
 
             AddOnlineMember(player);
@@ -89,7 +89,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (player == null)
                 return;
 
-            if (ContainsMember(player.PlayerDbId) == false)
+            if (HasMember(player.PlayerDbId) == false)
                 return;
 
             RemoveOnlineMember(player);
