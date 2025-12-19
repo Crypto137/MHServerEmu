@@ -528,7 +528,8 @@ namespace MHServerEmu.Games.Social.Guilds
 
         private void OnGuildMemberNameChanged(GuildMemberNameChanged guildMemberNameChanged)
         {
-
+            Guild guild = GetGuild(guildMemberNameChanged.GuildId);
+            guild?.ChangeMemberName(guildMemberNameChanged);
         }
 
         #endregion

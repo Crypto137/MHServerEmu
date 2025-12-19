@@ -35,6 +35,11 @@ namespace MHServerEmu.Games.Social.Guilds
                 .Build();
         }
 
+        public void ChangeName(string newName)
+        {
+            Name = newName;
+        }
+
         public bool ChangeMembership(GuildMembership membership)
         {
             if (Membership == membership)

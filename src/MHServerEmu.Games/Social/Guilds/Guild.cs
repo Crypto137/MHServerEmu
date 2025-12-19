@@ -139,8 +139,7 @@ namespace MHServerEmu.Games.Social.Guilds
                 player?.SetGuildMembership(Id, Name, member.Membership);
             }
 
-            // Invalidate cache.
-            _guildCompleteInfoCache = null;
+            InvalidateGuildCompleteInfoCache();
 
             // Replicate to online members.
             var clientMessage = NetMessageGuildMessageToClient.CreateBuilder()
@@ -162,8 +161,7 @@ namespace MHServerEmu.Games.Social.Guilds
 
             Motd = newMotd;
 
-            // Invalidate cache.
-            _guildCompleteInfoCache = null;
+            InvalidateGuildCompleteInfoCache();
 
             // Replicate to online members.
             var clientMessage = NetMessageGuildMessageToClient.CreateBuilder()
@@ -264,8 +262,7 @@ namespace MHServerEmu.Games.Social.Guilds
             if (result == GuildChangeMemberResult.None)
                 return result;
 
-            // Invalidate cache if we have actual changes.
-            _guildCompleteInfoCache = null;
+            InvalidateGuildCompleteInfoCache();
 
             // Replicate to the added/removed player.
             if (player != null)
@@ -306,6 +303,30 @@ namespace MHServerEmu.Games.Social.Guilds
             SendMessageToOnlineMembers(clientMessage);
 
             return result;
+        }
+
+        public bool ChangeMemberName(GuildMemberNameChanged guildMemberNameChanged)
+        {
+            ulong playerDbId = guildMemberNameChanged.PlayerId;
+            string newMemberName = guildMemberNameChanged.NewMemberName;
+
+            GuildMember member = GetMember(playerDbId);
+            if (member == null)
+                return false;
+
+            member.ChangeName(newMemberName);
+
+            InvalidateGuildCompleteInfoCache();
+
+            // Replicate to online members.
+            var clientMessage = NetMessageGuildMessageToClient.CreateBuilder()
+                .SetMessages(GuildMessageSetToClient.CreateBuilder()
+                    .SetGuildMemberNameChanged(guildMemberNameChanged))
+                .Build();
+
+            SendMessageToOnlineMembers(clientMessage);
+
+            return true;
         }
 
         public int GetOnlineMemberCount()
@@ -380,6 +401,12 @@ namespace MHServerEmu.Games.Social.Guilds
                 .SetMessages(GuildMessageSetToClient.CreateBuilder()
                     .SetGuildCompleteInfo(guildCompleteInfo))
                 .Build();
+        }
+
+        private void InvalidateGuildCompleteInfoCache()
+        {
+            Logger.Debug($"InvalidateGuildCompleteInfoCache(): {this}");
+            _guildCompleteInfoCache = null;
         }
 
         private void SendMessageToOnlineMembers(IMessage message)
