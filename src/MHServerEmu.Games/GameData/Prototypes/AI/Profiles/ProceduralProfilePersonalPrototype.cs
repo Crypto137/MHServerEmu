@@ -1,21 +1,21 @@
 ﻿using MHServerEmu.Core.Collections;
-using MHServerEmu.Core.System.Random;
-using MHServerEmu.Games.Behavior.ProceduralAI;
-using MHServerEmu.Games.Behavior.StaticAI;
-using MHServerEmu.Games.Behavior;
-using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Properties;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Behavior.ProceduralAI;
+using MHServerEmu.Games.Behavior.StaticAI;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Core.Collisions;
-using MHServerEmu.Games.Regions;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Powers;
-using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -2702,7 +2702,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 if (condition == null) return;
                 var transferId = condition.Properties[PropertyEnum.DamageTransferID];
-                if (transferId != 0)
+                if (transferId != Entity.InvalidId)
                 {
                     var transfer = entityManager.GetEntity<WorldEntity>(transferId);
                     if (transfer != null)
@@ -2714,7 +2714,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             if (numTargets > 1)
-                agent.Properties[PropertyEnum.Health] = totalHealth / numTargets;
+                agent.Properties[PropertyEnum.Health] = Math.Max(totalHealth / numTargets, 1);
         }
 
         public override bool OnPowerPicked(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
