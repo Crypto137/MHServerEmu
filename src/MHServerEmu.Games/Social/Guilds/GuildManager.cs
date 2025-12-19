@@ -440,7 +440,8 @@ namespace MHServerEmu.Games.Social.Guilds
 
         private void OnGuildNameChanged(GuildNameChanged guildNameChanged)
         {
-
+            Guild guild = GetGuild(guildNameChanged.GuildId);
+            guild?.ChangeName(guildNameChanged);
         }
 
         private void OnGuildMembersInfoChanged(GuildMembersInfoChanged guildMembersInfoChanged)
@@ -521,7 +522,8 @@ namespace MHServerEmu.Games.Social.Guilds
 
         private void OnGuildMotdChanged(GuildMotdChanged guildMotdChanged)
         {
-
+            Guild guild = GetGuild(guildMotdChanged.GuildId);
+            guild?.ChangeMotd(guildMotdChanged);
         }
 
         private void OnGuildMemberNameChanged(GuildMemberNameChanged guildMemberNameChanged)

@@ -31,8 +31,8 @@ namespace MHServerEmu.Games.Social.Guilds
         public Game Game { get; }
 
         public ulong Id { get; }
-        public string Name { get; }
-        public string Motd { get; }
+        public string Name { get; private set; }
+        public string Motd { get; private set; }
 
         public ulong LeaderDbId { get; private set; }
 
@@ -121,6 +121,59 @@ namespace MHServerEmu.Games.Social.Guilds
 
             // The CancelAllEvents() call here is the same as the destructor in Gazillion's implementation.
             Game.GameEventScheduler.CancelAllEvents(_pendingEvents);
+        }
+
+        public bool ChangeName(GuildNameChanged guildNameChanged)
+        {
+            string newGuildName = guildNameChanged.NewGuildName;
+
+            if (string.Equals(Name, newGuildName, StringComparison.Ordinal))
+                return false;
+
+            Name = newGuildName;
+
+            EntityManager entityManager = Game.EntityManager;
+            foreach (GuildMember member in this)
+            {
+                Player player = entityManager.GetEntityByDbGuid<Player>(member.Id);
+                player?.SetGuildMembership(Id, Name, member.Membership);
+            }
+
+            // Invalidate cache.
+            _guildCompleteInfoCache = null;
+
+            // Replicate to online members.
+            var clientMessage = NetMessageGuildMessageToClient.CreateBuilder()
+                .SetMessages(GuildMessageSetToClient.CreateBuilder()
+                    .SetGuildNameChanged(guildNameChanged))
+                .Build();
+
+            SendMessageToOnlineMembers(clientMessage);
+
+            return true;
+        }
+
+        public bool ChangeMotd(GuildMotdChanged guildMotdChanged)
+        {
+            string newMotd = guildMotdChanged.NewGuildMotd;
+
+            if (string.Equals(Motd, newMotd, StringComparison.Ordinal))
+                return false;
+
+            Motd = newMotd;
+
+            // Invalidate cache.
+            _guildCompleteInfoCache = null;
+
+            // Replicate to online members.
+            var clientMessage = NetMessageGuildMessageToClient.CreateBuilder()
+                .SetMessages(GuildMessageSetToClient.CreateBuilder()
+                    .SetGuildMotdChanged(guildMotdChanged))
+                .Build();
+
+            SendMessageToOnlineMembers(clientMessage);
+
+            return true;
         }
 
         public GuildMember AddMember(GuildMemberInfo guildMemberInfo)
