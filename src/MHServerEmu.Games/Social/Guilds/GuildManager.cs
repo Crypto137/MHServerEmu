@@ -54,6 +54,8 @@ namespace MHServerEmu.Games.Social.Guilds
 
             Logger.Trace($"Created guild {guild}");
 
+            guild.ReplicateToOnlineMembers();
+
             return guild;
         }
 
@@ -105,7 +107,7 @@ namespace MHServerEmu.Games.Social.Guilds
 
             Guild guild = guildMember.Guild;
 
-            guild.OnMemberOnline(player);
+            guild.ReplicateToPlayer(player);
 
             player.SetGuildMembership(guild.Id, guild.Name, guildMember.Membership);
         }

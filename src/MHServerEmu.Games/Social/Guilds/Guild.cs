@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Social.Guilds
@@ -13,7 +14,9 @@ namespace MHServerEmu.Games.Social.Guilds
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<ulong, GuildMember> _members = new();
+
         private readonly EventGroup _pendingEvents = new();
+        private readonly EventPointer<CommunityUpdateEvent> _communityUpdateEvent = new();
 
         private NetMessageGuildMessageToClient _guildCompleteInfoCache = null;
 
@@ -34,6 +37,8 @@ namespace MHServerEmu.Games.Social.Guilds
             Id = guildCompleteInfo.GuildId;
             Name = guildCompleteInfo.GuildName;
             Motd = guildCompleteInfo.HasGuildMotd ? guildCompleteInfo.GuildMotd : string.Empty;
+
+            CacheGuildCompleteInfo(guildCompleteInfo);
         }
 
         public override string ToString()
@@ -92,7 +97,7 @@ namespace MHServerEmu.Games.Social.Guilds
                 return;
 
             CacheGuildCompleteInfo(guildCompleteInfo);
-            SendMessageToOnlineMembers(_guildCompleteInfoCache);
+            ReplicateToOnlineMembers();
         }
 
         public void Shutdown()
@@ -127,6 +132,8 @@ namespace MHServerEmu.Games.Social.Guilds
             Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
             player?.SetGuildMembership(Id, Name, member.Membership);
 
+            ScheduleCommunityUpdate();
+
             return member;
         }
 
@@ -143,6 +150,8 @@ namespace MHServerEmu.Games.Social.Guilds
 
             Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
             player?.SetGuildMembership(GuildManager.InvalidGuildId, string.Empty, GuildMembership.eGMNone);
+
+            ScheduleCommunityUpdate();
 
             return true;
         }
@@ -171,43 +180,49 @@ namespace MHServerEmu.Games.Social.Guilds
             return count;
         }
 
-        public void OnMemberOnline(Player player)
+        public void ReplicateToOnlineMembers()
+        {
+            if (_guildCompleteInfoCache == null)
+                CacheGuildCompleteInfo();
+
+            SendMessageToOnlineMembers(_guildCompleteInfoCache);
+        }
+
+        public void ReplicateToPlayer(Player player)
         {
             if (_members.ContainsKey(player.DatabaseUniqueId) == false)
             {
-                Logger.Warn($"OnMemberOnline(): Player [{player}] is not a member of guild [{this}]");
+                Logger.Warn($"ReplicateToPlayer(): Player [{player}] is not a member of guild [{this}]");
                 return;
             }
 
-            SendGuildCompleteInfoToPlayer(player);
-        }
-
-        private void CacheGuildCompleteInfo(GuildCompleteInfo guildCompleteInfo)
-        {
-            _guildCompleteInfoCache = NetMessageGuildMessageToClient.CreateBuilder()
-                .SetMessages(GuildMessageSetToClient.CreateBuilder()
-                    .SetGuildCompleteInfo(guildCompleteInfo))
-                .Build();
-        }
-
-        private void SendGuildCompleteInfoToPlayer(Player player)
-        {
             if (_guildCompleteInfoCache == null)
+                CacheGuildCompleteInfo();
+
+            player.SendMessage(_guildCompleteInfoCache);
+        }
+
+        private void CacheGuildCompleteInfo(GuildCompleteInfo guildCompleteInfo = null)
+        {
+            if (guildCompleteInfo == null)
             {
-                var guildCompleteInfo = GuildCompleteInfo.CreateBuilder()
+                var builder = GuildCompleteInfo.CreateBuilder()
                     .SetGuildId(Id)
                     .SetGuildName(Name);
 
                 foreach (GuildMember member in this)
-                    guildCompleteInfo.AddMembers(member.ToGuildMemberInfo());
+                    builder.AddMembers(member.ToGuildMemberInfo());
 
                 if (string.IsNullOrWhiteSpace(Motd) == false)
-                    guildCompleteInfo.SetGuildMotd(Motd);
+                    builder.SetGuildMotd(Motd);
 
-                CacheGuildCompleteInfo(guildCompleteInfo.Build());
+                guildCompleteInfo = builder.Build();
             }
 
-            player.SendMessage(_guildCompleteInfoCache);
+            _guildCompleteInfoCache = NetMessageGuildMessageToClient.CreateBuilder()
+                .SetMessages(GuildMessageSetToClient.CreateBuilder()
+                    .SetGuildCompleteInfo(guildCompleteInfo))
+                .Build();
         }
 
         private void SendMessageToOnlineMembers(IMessage message)
@@ -226,6 +241,31 @@ namespace MHServerEmu.Games.Social.Guilds
 
             Game.NetworkManager.SendMessageToMultiple(clients, message);
             ListPool<PlayerConnection>.Instance.Return(clients);
+        }
+
+        private void ScheduleCommunityUpdate()
+        {
+            if (_communityUpdateEvent.IsValid)
+                return;
+
+            Game.GameEventScheduler.ScheduleEvent(_communityUpdateEvent, TimeSpan.Zero, _pendingEvents);
+            _communityUpdateEvent.Get().Initialize(this);
+        }
+
+        private void UpdateCommunities()
+        {
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (GuildMember member in this)
+            {
+                Player player = entityManager.GetEntityByDbGuid<Player>(member.Id);
+                player?.Community.UpdateGuild(this);
+            }
+        }
+
+        private class CommunityUpdateEvent : CallMethodEvent<Guild>
+        {
+            protected override CallbackDelegate GetCallback() => static (t) => t.UpdateCommunities();
         }
     }
 }
