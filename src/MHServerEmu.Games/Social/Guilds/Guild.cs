@@ -9,6 +9,14 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Social.Guilds
 {
+    public enum GuildChangeMemberResult
+    {
+        None,
+        Removed,
+        Added,
+        Changed,
+    }
+
     public class Guild
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -164,6 +172,89 @@ namespace MHServerEmu.Games.Social.Guilds
             return member;
         }
 
+        public GuildChangeMemberResult ChangeMember(GuildMemberInfo guildMemberInfo, string initiatingMemberName)
+        {
+            GuildChangeMemberResult result = GuildChangeMemberResult.None;
+
+            GuildMember member = GetMember(guildMemberInfo.PlayerId);
+            GuildMembership newMembership = guildMemberInfo.Membership;
+
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(member.Id);
+
+            if (member != null)
+            {
+                if (newMembership != GuildMembership.eGMNone)
+                {
+                    if (member.ChangeMembership(newMembership))
+                        result = GuildChangeMemberResult.Changed;
+
+                    if (member.Membership == GuildMembership.eGMLeader)
+                        LeaderDbId = member.Id;
+
+                    player?.SetGuildMembership(Id, Name, member.Membership);
+                }
+                else
+                {
+                    if (RemoveMember(member.Id))
+                        result = GuildChangeMemberResult.Removed;
+                }
+            }
+            else
+            {
+                if (newMembership == GuildMembership.eGMNone)
+                    return Logger.WarnReturn(result, $"ChangeMember(): Changing guild member, but member not found, and new membership is none. memberInfo={guildMemberInfo}");
+
+                if (AddMember(guildMemberInfo) != null)
+                    result = GuildChangeMemberResult.Added;
+;            }
+
+            if (result == GuildChangeMemberResult.None)
+                return result;
+
+            // Invalidate cache if we have actual changes.
+            _guildCompleteInfoCache = null;
+
+            // Replicate to the added/removed player.
+            if (player != null)
+            {
+                switch (result)
+                {
+                    case GuildChangeMemberResult.Removed:
+                        GuildLeaveReason reason = string.Equals(player.GetName(), initiatingMemberName, StringComparison.Ordinal)
+                            ? GuildLeaveReason.eGLR_Left
+                            : GuildLeaveReason.eGLR_Kicked;
+
+                        player.SendMessage(NetMessageLeaveGuild.CreateBuilder()
+                            .SetGuildId(Id)
+                            .SetReason(reason)
+                            .SetInitiatingPlayerName(initiatingMemberName)
+                            .Build());
+
+                        break;
+
+                    case GuildChangeMemberResult.Added:
+                        ReplicateToPlayer(player);
+                        break;
+                }
+            }
+
+            // Replicate to existing members.
+            var guildMembersInfoChanged = GuildMembersInfoChanged.CreateBuilder()
+                 .SetGuildId(Id)
+                 .AddMembers(guildMemberInfo)
+                 .SetInitiatingMemberName(initiatingMemberName)
+                 .SetNewMember(result == GuildChangeMemberResult.Added);
+
+            var clientMessage = NetMessageGuildMessageToClient.CreateBuilder()
+                .SetMessages(GuildMessageSetToClient.CreateBuilder()
+                    .SetGuildMembersInfoChanged(guildMembersInfoChanged))
+                .Build();
+
+            SendMessageToOnlineMembers(clientMessage);
+
+            return result;
+        }
+
         public int GetOnlineMemberCount()
         {
             int count = 0;
@@ -200,6 +291,19 @@ namespace MHServerEmu.Games.Social.Guilds
                 CacheGuildCompleteInfo();
 
             player.SendMessage(_guildCompleteInfoCache);
+        }
+
+        public bool Disband(GuildDisbanded guildDisbanded)
+        {
+            var clientMessage = NetMessageGuildMessageToClient.CreateBuilder()
+                .SetMessages(GuildMessageSetToClient.CreateBuilder()
+                    .SetGuildDisbanded(guildDisbanded))
+                .Build();
+
+            SendMessageToOnlineMembers(clientMessage);
+
+            // Mirror client-side
+            return Game.GuildManager.RemoveGuild(this);
         }
 
         private void CacheGuildCompleteInfo(GuildCompleteInfo guildCompleteInfo = null)

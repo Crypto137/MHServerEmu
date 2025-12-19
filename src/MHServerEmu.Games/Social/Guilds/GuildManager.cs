@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.Social.Guilds
             return guild;
         }
 
-        public void RemoveGuild(Guild guild)
+        public bool RemoveGuild(Guild guild)
         {
             if (_guilds.Remove(guild.Id) == false)
                 Logger.Warn($"RemoveGuild(): Trying to remove guild, but not found in collection. guild={guild}");
@@ -68,6 +68,8 @@ namespace MHServerEmu.Games.Social.Guilds
 
             guild.Shutdown();
             // destroyGuild() merged with Shutdown().
+
+            return true;
         }
 
         public Guild GetGuild(ulong guildId)
@@ -443,7 +445,19 @@ namespace MHServerEmu.Games.Social.Guilds
 
         private void OnGuildMembersInfoChanged(GuildMembersInfoChanged guildMembersInfoChanged)
         {
+            Guild guild = GetGuild(guildMembersInfoChanged.GuildId);
+            if (guild == null)
+                return;
 
+            for (int i = 0; i < guildMembersInfoChanged.MembersCount; i++)
+            {
+                GuildMemberInfo guildMemberInfo = guildMembersInfoChanged.MembersList[i];
+                string initiatingMemberName = guildMembersInfoChanged.InitiatingMemberName;
+                guild.ChangeMember(guildMemberInfo, initiatingMemberName);
+            }
+
+            if (guild.MemberCount == 0)
+                RemoveGuild(guild);
         }
 
         private void OnGuildCompleteInfo(GuildCompleteInfo guildCompleteInfo)
@@ -477,7 +491,11 @@ namespace MHServerEmu.Games.Social.Guilds
 
         private void OnGuildDisbanded(GuildDisbanded guildDisbanded)
         {
-        
+            Guild guild = GetGuild(guildDisbanded.GuildId);
+            if (guild == null)
+                return;
+
+            guild.Disband(guildDisbanded);
         }
 
         private void OnGuildFormResult(GuildFormResult guildFormResult)

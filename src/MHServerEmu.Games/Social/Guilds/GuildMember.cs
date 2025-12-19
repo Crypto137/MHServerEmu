@@ -10,8 +10,8 @@ namespace MHServerEmu.Games.Social.Guilds
         public Guild Guild { get; }
 
         public ulong Id { get; }
-        public string Name { get; }
-        public GuildMembership Membership { get; }
+        public string Name { get; private set; }
+        public GuildMembership Membership { get; private set; }
 
         public GuildMember(Guild guild, GuildMemberInfo guildMemberInfo)
         {
@@ -33,6 +33,15 @@ namespace MHServerEmu.Games.Social.Guilds
                 .SetPlayerName(Name)
                 .SetMembership(Membership)
                 .Build();
+        }
+
+        public bool ChangeMembership(GuildMembership membership)
+        {
+            if (Membership == membership)
+                return false;
+
+            Membership = membership;
+            return true;
         }
 
         // This static method is for serializing Player and Avatar entity guild information,
