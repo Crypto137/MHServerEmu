@@ -98,7 +98,7 @@ namespace MHServerEmu.Commands
             ReadOnlySpan<char> span = input.AsSpan().Trim();
 
             // Only input that starts with our command prefix char followed by something else can be a command
-            if (span.Length < 2 || input[0] != CommandPrefix)
+            if (span.Length < 2 || span[0] != CommandPrefix)
                 return false;
 
             int whiteSpaceIndex = span.IndexOf(' ');
