@@ -482,7 +482,23 @@ namespace MHServerEmu.Games.Social.Guilds
 
         private void OnGuildFormResult(GuildFormResult guildFormResult)
         {
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(guildFormResult.PlayerId);
+            if (player == null)
+                return;
 
+            // Ownership of this item is validated when we receive the initial creation request from the client.
+            if (guildFormResult.HasItemId)
+            {
+                Item item = Game.EntityManager.GetEntityByDbGuid<Item>(guildFormResult.ItemId);
+                item?.DecrementStack();
+            }
+
+            var clientMessage = NetMessageGuildMessageToClient.CreateBuilder()
+                .SetMessages(GuildMessageSetToClient.CreateBuilder()
+                    .SetGuildFormResult(guildFormResult))
+                .Build();
+
+            player.SendMessage(clientMessage);
         }
 
         private void OnGuildMotdChanged(GuildMotdChanged guildMotdChanged)
