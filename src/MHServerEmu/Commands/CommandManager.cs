@@ -105,7 +105,7 @@ namespace MHServerEmu.Commands
 
             // Get the command.
             // The command ends at the first occurrence of white space or the end of the input string.
-            int commandLength = whiteSpaceIndex >= 0 ? whiteSpaceIndex - 1 : input.Length - 1;
+            int commandLength = whiteSpaceIndex >= 0 ? whiteSpaceIndex - 1 : span.Length - 1;
             command = span.Slice(1, commandLength).ToString();
 
             // Get parameters after the first space (if there are any)
