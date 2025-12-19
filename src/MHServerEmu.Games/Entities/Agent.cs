@@ -2099,7 +2099,20 @@ namespace MHServerEmu.Games.Entities
                     {
                         Property.FromParam(id, 0, out PrototypeId enemyBoost);
                         if (enemyBoost == PrototypeId.Invalid) break;
-                        if (newValue) AssignEnemyBoostActivePower(enemyBoost);
+
+                        if (newValue)
+                        {
+                            AssignEnemyBoostActivePower(enemyBoost);
+                        }
+                        else
+                        {
+                            var popGlobals = GameDatabase.PopulationGlobalsPrototype;
+                            if (enemyBoost == popGlobals.TwinEnemyBoost)
+                            {
+                                var condition = ConditionCollection.GetConditionByRef(popGlobals.TwinEnemyCondition);
+                                if (condition != null) ConditionCollection.RemoveCondition(condition.Id);
+                            }
+                        }
                     }
 
                     break;
