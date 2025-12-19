@@ -26,6 +26,8 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private MemberEntry? _leader;
 
+        private GuildMessageSetToServer _guildCompleteInfoCache;
+
         public ulong Id { get => (ulong)_data.Id; }
         public string Name { get => _data.Name; }
         public string Motd { get => _data.Motd; }
@@ -144,6 +146,9 @@ namespace MHServerEmu.PlayerManagement.Social
             // TODO: Remove this lookup when we remove the member
             PlayerManagerService.Instance.GuildManager.SetGuildForPlayer(playerDbId, this);
 
+            // Invalidate cache. (TODO: Also do it when change membership or guild name/motd)
+            _guildCompleteInfoCache = null;
+
             return member;
         }
 
@@ -203,22 +208,26 @@ namespace MHServerEmu.PlayerManagement.Social
             if (game == null) return Logger.WarnReturn(false, "SendToGame(): game == null");
             if (game.IsRunning == false) return Logger.WarnReturn(false, "SendToGame(): game.IsRunning == false");
 
-            // TODO: Cache GuildCompleteInfo?
-            var guildCompleteInfo = GuildCompleteInfo.CreateBuilder()
-                .SetGuildId(Id)
-                .SetGuildName(Name);
+            // The cache is invalidated when something about the guild changes (name / motd / memberships).
+            // (Re)build it if needed.
+            if (_guildCompleteInfoCache == null)
+            {
+                var guildCompleteInfo = GuildCompleteInfo.CreateBuilder()
+                    .SetGuildId(Id)
+                    .SetGuildName(Name);
 
-            foreach (MemberEntry member in _members.Values)
-                guildCompleteInfo.AddMembers(member.ToGuildMemberInfo());
+                foreach (MemberEntry member in _members.Values)
+                    guildCompleteInfo.AddMembers(member.ToGuildMemberInfo());
 
-            if (string.IsNullOrWhiteSpace(Motd) == false)
-                guildCompleteInfo.SetGuildMotd(Motd);
+                if (string.IsNullOrWhiteSpace(Motd) == false)
+                    guildCompleteInfo.SetGuildMotd(Motd);
 
-            GuildMessageSetToServer messages = GuildMessageSetToServer.CreateBuilder()
-                .SetGuildCompleteInfo(guildCompleteInfo)
-                .Build();
+                _guildCompleteInfoCache = GuildMessageSetToServer.CreateBuilder()
+                    .SetGuildCompleteInfo(guildCompleteInfo)
+                    .Build();
+            }
 
-            ServiceMessage.GuildMessageToServer message = new(game.Id, messages);
+            ServiceMessage.GuildMessageToServer message = new(game.Id, _guildCompleteInfoCache);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
 
             return true;
