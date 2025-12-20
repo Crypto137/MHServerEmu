@@ -134,9 +134,10 @@ namespace MHServerEmu.PlayerManagement.Social
             if (respondCode != GuildRespondToInviteCode.eGRICAccepted)
                 return GuildRespondToInviteResultCode.eGRIRCRejected;
 
-            // TODO: Add new member to guild
+            if (CreateNewMember(player, invitedByPlayerName) == false)
+                return GuildRespondToInviteResultCode.eGRIRCInternalError;
 
-            return GuildRespondToInviteResultCode.eGRIRCInternalError;
+            return GuildRespondToInviteResultCode.eGRIRCJoined;
         }
 
         public void OnCreated()
@@ -233,6 +234,37 @@ namespace MHServerEmu.PlayerManagement.Social
             return member;
         }
 
+        private bool CreateNewMember(PlayerHandle player, string initiatingMemberName)
+        {
+            if (player == null || player.State != PlayerHandleState.InGame)
+                return false;
+
+            DBGuildMember memberData = new((long)player.PlayerDbId, (long)Id, (long)GuildMembership.eGMMember);
+
+            if (AddMember(memberData) is not MemberEntry member)
+                return false;
+
+            if (AddOnlineMember(player))
+                SendToGame(player.CurrentGame);
+
+            // Replicate to game
+            GuildMessageSetToServer serverMessage = GuildMessageSetToServer.CreateBuilder()
+                .SetGuildMembersInfoChanged(GuildMembersInfoChanged.CreateBuilder()
+                    .SetGuildId(Id)
+                    .AddMembers(member.ToGuildMemberInfo())
+                    .SetInitiatingMemberName(initiatingMemberName)
+                    .SetNewMember(true))
+                .Build();
+
+            ServiceMessage.GuildMessageToServer message = new(player.CurrentGame.Id, serverMessage);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+
+            // Replicate to database
+            member.SaveToDatabase();
+
+            return true;
+        }
+
         private MemberEntry? GetMember(ulong playerDbId)
         {
             if (_members.TryGetValue(playerDbId, out MemberEntry member) == false)
@@ -241,13 +273,15 @@ namespace MHServerEmu.PlayerManagement.Social
             return member;
         }
 
-        private void AddOnlineMember(PlayerHandle player)
+        private bool AddOnlineMember(PlayerHandle player)
         {
             _onlineMembers.Add(player.PlayerDbId, player);
             player.Guild = this;
 
-            if (player.State == PlayerHandleState.InGame && player.CurrentGame != null)
-                AddGame(player.CurrentGame);
+            if (player.State == PlayerHandleState.InGame)
+                return AddGame(player.CurrentGame);
+
+            return false;
         }
 
         private void RemoveOnlineMember(PlayerHandle player)

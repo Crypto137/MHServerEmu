@@ -230,7 +230,7 @@ namespace MHServerEmu.Games.Social.Guilds
             GuildMember member = GetMember(guildMemberInfo.PlayerId);
             GuildMembership newMembership = guildMemberInfo.Membership;
 
-            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(member.Id);
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(guildMemberInfo.PlayerId);
 
             if (member != null)
             {
