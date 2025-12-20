@@ -71,6 +71,40 @@ namespace MHServerEmu.PlayerManagement.Social
             return _members.ContainsKey(playerDbId);
         }
 
+        public GuildChangeNameResultCode ChangeName(PlayerHandle player, string newName)
+        {
+            if (player == null || player.State != PlayerHandleState.InGame)
+                return GuildChangeNameResultCode.eGCNRCNotOnline;
+
+            // Should be validated before we get here.
+            if (string.IsNullOrWhiteSpace(newName))
+                return GuildChangeNameResultCode.eGCNRCInternalError;
+
+            if (GetMember(player.PlayerDbId) is not MemberEntry member)
+                return GuildChangeNameResultCode.eGCNRCNotInGuild;
+
+            if (member.CanChangeName == false)
+                return GuildChangeNameResultCode.eGCNRCNoPermission;
+
+            _data.Name = newName;
+            InvalidateGuildCompleteInfoCache();
+
+            // Replicate to games
+            var serverMessage = GuildMessageSetToServer.CreateBuilder()
+                .SetGuildNameChanged(GuildNameChanged.CreateBuilder()
+                    .SetGuildId(Id)
+                    .SetNewGuildName(newName)
+                    .SetChangedByPlayerName(player.PlayerName))
+                .Build();
+
+            SendMessageToAllGames(serverMessage);
+
+            // Replicate to database
+            SaveToDatabase();
+
+            return GuildChangeNameResultCode.eGCNRCSuccess;
+        }
+
         public GuildChangeMotdResultCode ChangeMotd(PlayerHandle player, string newMotd)
         {
             if (player == null || player.State != PlayerHandleState.InGame)
@@ -399,6 +433,7 @@ namespace MHServerEmu.PlayerManagement.Social
             public string PlayerName { get => GetPlayerName(); }
             public GuildMembership Membership { get => (GuildMembership)_data.Membership; }
 
+            public bool CanChangeName { get => Membership >= GuildMembership.eGMLeader; }
             public bool CanChangeMotd { get => Membership >= GuildMembership.eGMOfficer; }
             public bool CanInvite { get => Membership >= GuildMembership.eGMOfficer; }
 

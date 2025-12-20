@@ -243,7 +243,55 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void OnGuildChangeName(GuildChangeName guildChangeName)
         {
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(guildChangeName.PlayerId);
+            if (player == null || player.State != PlayerHandleState.InGame)
+                return;
 
+            // This should have already been trimmed by the client and validated game-side on the server.
+            string newGuildName = guildChangeName.GuildName;
+
+            GuildChangeNameResultCode result = ValidateGuildChangeName(newGuildName);
+
+            if (result == GuildChangeNameResultCode.eGCNRCSuccess)
+            {
+                MasterGuild guild = player.Guild;
+
+                if (guild != null)
+                {
+                    string oldGuildName = guild.Name;
+                    result = guild.ChangeName(player, newGuildName);
+
+                    if (result == GuildChangeNameResultCode.eGCNRCSuccess)
+                    {
+                        _guildNamesInUse.Remove(oldGuildName);
+                        _guildNamesInUse.Add(newGuildName);
+                    }
+                }
+                else
+                {
+                    result = GuildChangeNameResultCode.eGCNRCNotInGuild;
+                }
+            }
+
+            var clientMessage = GuildMessageSetToClient.CreateBuilder()
+                .SetGuildChangeNameResult(GuildChangeNameResult.CreateBuilder()
+                    .SetSubmittedName(newGuildName)
+                    .SetResultCode(result))
+                .Build();
+
+            ServiceMessage.GuildMessageToClient message = new(player.CurrentGame.Id, player.PlayerDbId, clientMessage);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+        }
+
+        private GuildChangeNameResultCode ValidateGuildChangeName(string newGuildName)
+        {
+            if (_guildNameBlacklist.Contains(newGuildName))
+                return GuildChangeNameResultCode.eGCNRCRestrictedName;
+
+            if (_guildNamesInUse.Contains(newGuildName))
+                return GuildChangeNameResultCode.eGCNRCDuplicateName;
+
+            return GuildChangeNameResultCode.eGCNRCSuccess;
         }
 
         private void OnGuildInvite(GuildInvite guildInvite)
