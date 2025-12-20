@@ -71,6 +71,39 @@ namespace MHServerEmu.PlayerManagement.Social
             return _members.ContainsKey(playerDbId);
         }
 
+        public GuildChangeMotdResultCode ChangeMotd(PlayerHandle player, string newMotd)
+        {
+            if (player == null || player.State != PlayerHandleState.InGame)
+                return GuildChangeMotdResultCode.eGCMotdRCNotOnline;
+
+            if (newMotd == null)
+                return GuildChangeMotdResultCode.eGCMotdRCInternalError;
+
+            if (GetMember(player.PlayerDbId) is not MemberEntry member)
+                return GuildChangeMotdResultCode.eGCMotdRCNotInGuild;
+
+            if (member.CanChangeMotd == false)
+                return GuildChangeMotdResultCode.eGCMotdRCNoPermission;
+
+            _data.Motd = newMotd;
+            InvalidateGuildCompleteInfoCache();
+
+            // Replicate to games
+            var serverMessage = GuildMessageSetToServer.CreateBuilder()
+                .SetGuildMotdChanged(GuildMotdChanged.CreateBuilder()
+                    .SetGuildId(Id)
+                    .SetNewGuildMotd(Motd)
+                    .SetChangedByPlayerName(player.PlayerName))
+                .Build();
+
+            SendMessageToAllGames(serverMessage);
+
+            // Replicate to database
+            SaveToDatabase();
+
+            return GuildChangeMotdResultCode.eGCMotdRCSuccess;
+        }
+
         public GuildInviteResultCode InvitePlayer(PlayerHandle toInvitePlayer, PlayerHandle invitedByPlayer)
         {
             if (toInvitePlayer == null || toInvitePlayer.State != PlayerHandleState.InGame)
@@ -89,11 +122,10 @@ namespace MHServerEmu.PlayerManagement.Social
 
             string invitedByPlayerName = invitedByPlayer.PlayerName;
 
-            MemberEntry? invitedByMember = GetMember(invitedByPlayer.PlayerDbId);
-            if (invitedByMember == null)
+            if (GetMember(invitedByPlayer.PlayerDbId) is not MemberEntry invitedByMember)
                 return GuildInviteResultCode.eGIRCInviterNotInGuild;
 
-            if (invitedByMember.Value.CanInvite == false)
+            if (invitedByMember.CanInvite == false)
                 return GuildInviteResultCode.eGIRCInviterNoPermission;
 
             if (IsFull)
@@ -236,7 +268,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
             AddOnlineMember(player);
 
-            // Replicate to game
+            // Replicate to games
             GuildMessageSetToServer serverMessage = GuildMessageSetToServer.CreateBuilder()
                 .SetGuildMembersInfoChanged(GuildMembersInfoChanged.CreateBuilder()
                     .SetGuildId(Id)
@@ -245,8 +277,7 @@ namespace MHServerEmu.PlayerManagement.Social
                     .SetNewMember(true))
                 .Build();
 
-            ServiceMessage.GuildMessageToServer message = new(player.CurrentGame.Id, serverMessage);
-            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            SendMessageToAllGames(serverMessage);
 
             // Replicate to database
             member.SaveToDatabase();
@@ -284,7 +315,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (_games.Add(game) == false)
                 return false;
 
-            SendToGame(game);
+            SendGuildCompleteInfo(game);
             return true;
         }
 
@@ -311,10 +342,10 @@ namespace MHServerEmu.PlayerManagement.Social
             return false;
         }
 
-        private bool SendToGame(GameHandle game)
+        private bool SendGuildCompleteInfo(GameHandle game)
         {
-            if (game == null) return Logger.WarnReturn(false, "SendToGame(): game == null");
-            if (game.IsRunning == false) return Logger.WarnReturn(false, "SendToGame(): game.IsRunning == false");
+            if (game == null) return Logger.WarnReturn(false, "SendGuildCompleteInfo(): game == null");
+            if (game.IsRunning == false) return Logger.WarnReturn(false, "SendGuildCompleteInfo(): game.IsRunning == false");
 
             // The cache is invalidated when something about the guild changes (name / motd / memberships).
             // (Re)build it if needed.
@@ -341,6 +372,17 @@ namespace MHServerEmu.PlayerManagement.Social
             return true;
         }
 
+        private void SendMessageToAllGames(GuildMessageSetToServer serverMessage)
+        {
+            ServerManager serverManager = ServerManager.Instance;
+
+            foreach (GameHandle game in _games)
+            {
+                ServiceMessage.GuildMessageToServer message = new(game.Id, serverMessage);
+                serverManager.SendMessageToService(GameServiceType.GameInstance, message);
+            }
+        }
+
         private void InvalidateGuildCompleteInfoCache()
         {
             _guildCompleteInfoCache = null;
@@ -357,6 +399,7 @@ namespace MHServerEmu.PlayerManagement.Social
             public string PlayerName { get => GetPlayerName(); }
             public GuildMembership Membership { get => (GuildMembership)_data.Membership; }
 
+            public bool CanChangeMotd { get => Membership >= GuildMembership.eGMOfficer; }
             public bool CanInvite { get => Membership >= GuildMembership.eGMOfficer; }
 
             public override string ToString()

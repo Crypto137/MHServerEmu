@@ -321,7 +321,26 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void OnGuildChangeMotd(GuildChangeMotd guildChangeMotd)
         {
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(guildChangeMotd.PlayerId);
+            if (player == null || player.State != PlayerHandleState.InGame)
+                return;
 
+            string submittedMotd = guildChangeMotd.GuildMotd;
+
+            MasterGuild guild = player.Guild;
+
+            GuildChangeMotdResultCode result = guild != null
+                ? guild.ChangeMotd(player, guildChangeMotd.GuildMotd)
+                : GuildChangeMotdResultCode.eGCMotdRCNotInGuild;
+
+            var clientMessage = GuildMessageSetToClient.CreateBuilder()
+                .SetGuildChangeMotdResult(GuildChangeMotdResult.CreateBuilder()
+                    .SetSubmittedMotd(submittedMotd)
+                    .SetResultCode(result))
+                .Build();
+
+            ServiceMessage.GuildMessageToClient message = new(player.CurrentGame.Id, player.PlayerDbId, clientMessage);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 
         #endregion
