@@ -193,8 +193,6 @@ namespace MHServerEmu.PlayerManagement.Social
                 return;
             }
 
-            guild.OnCreated();
-
             SendGuildFormResult(guildName, GuildFormResultCode.eGFCSuccess, player, guildForm.ItemId);
         }
 

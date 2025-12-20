@@ -140,12 +140,6 @@ namespace MHServerEmu.PlayerManagement.Social
             return GuildRespondToInviteResultCode.eGRIRCJoined;
         }
 
-        public void OnCreated()
-        {
-            foreach (GameHandle game in _games)
-                SendToGame(game);
-        }
-
         public void OnMemberOnline(PlayerHandle player)
         {
             if (player == null)
@@ -183,11 +177,7 @@ namespace MHServerEmu.PlayerManagement.Social
             }
 
             if (newRegion != null)
-            {
-                GameHandle newGame = newRegion.Game;
-                if (AddGame(newGame))
-                    SendToGame(newGame);
-            }
+                AddGame(newRegion.Game);
 
             if (prevRegion != null)
                 RemoveGame(prevRegion.Game);
@@ -244,8 +234,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (AddMember(memberData) is not MemberEntry member)
                 return false;
 
-            if (AddOnlineMember(player))
-                SendToGame(player.CurrentGame);
+            AddOnlineMember(player);
 
             // Replicate to game
             GuildMessageSetToServer serverMessage = GuildMessageSetToServer.CreateBuilder()
@@ -273,15 +262,13 @@ namespace MHServerEmu.PlayerManagement.Social
             return member;
         }
 
-        private bool AddOnlineMember(PlayerHandle player)
+        private void AddOnlineMember(PlayerHandle player)
         {
             _onlineMembers.Add(player.PlayerDbId, player);
             player.Guild = this;
 
             if (player.State == PlayerHandleState.InGame)
-                return AddGame(player.CurrentGame);
-
-            return false;
+                AddGame(player.CurrentGame);
         }
 
         private void RemoveOnlineMember(PlayerHandle player)
@@ -294,7 +281,11 @@ namespace MHServerEmu.PlayerManagement.Social
         {
             if (game == null) return Logger.WarnReturn(false, "AddGame(): game == null");
 
-            return _games.Add(game);
+            if (_games.Add(game) == false)
+                return false;
+
+            SendToGame(game);
+            return true;
         }
 
         private bool RemoveGame(GameHandle game)
@@ -304,6 +295,8 @@ namespace MHServerEmu.PlayerManagement.Social
             if (HasMembersInGame(game))
                 return false;
 
+            // NOTE: The game instance will remove its copy of the guild when all members leave the instance,
+            // so we don't need to explicitly send anything here.
             return _games.Remove(game);
         }
 
