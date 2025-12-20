@@ -3,6 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Games;
 using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Regions;
@@ -16,14 +17,14 @@ namespace MHServerEmu.PlayerManagement.Social
         private static bool PersistenceEnabled { get => PlayerManagerService.Instance.Config.EnablePersistence; }
         private static MasterGuildManager GuildManager { get => PlayerManagerService.Instance.GuildManager; }
 
-        // NOTE: All guild DB operations are currently synchronous.
-        // May need some kind of async job queue for these, especially for potential non-SQLite backends.
         private readonly DBGuild _data;
 
         private readonly Dictionary<ulong, MemberEntry> _members = new();
 
         private readonly Dictionary<ulong, PlayerHandle> _onlineMembers = new();
         private readonly HashSet<GameHandle> _games = new();
+
+        private readonly Dictionary<ulong, string> _pendingInvites = new();
 
         private MemberEntry? _leader;
 
@@ -32,7 +33,9 @@ namespace MHServerEmu.PlayerManagement.Social
         public ulong Id { get => (ulong)_data.Id; }
         public string Name { get => _data.Name; }
         public string Motd { get => _data.Motd; }
+
         public int MemberCount { get => _data.Members.Count; }
+        public bool IsFull { get => MemberCount >= GameDatabase.GlobalsPrototype.PlayerGuildMaxSize; }
 
         public MasterGuild(DBGuild data, bool saveToDatabase)
         {
@@ -66,6 +69,74 @@ namespace MHServerEmu.PlayerManagement.Social
         public bool HasMember(ulong playerDbId)
         {
             return _members.ContainsKey(playerDbId);
+        }
+
+        public GuildInviteResultCode InvitePlayer(PlayerHandle toInvitePlayer, PlayerHandle invitedByPlayer)
+        {
+            if (toInvitePlayer == null || toInvitePlayer.State != PlayerHandleState.InGame)
+                return GuildInviteResultCode.eGIRCInvitedUnkownPlayer;
+
+            ulong toInvitePlayerId = toInvitePlayer.PlayerDbId;
+
+            if (toInvitePlayer.Guild == this)
+                return GuildInviteResultCode.eGIRCInvitedInGuild;
+
+            if (toInvitePlayer.Guild != null)
+                return GuildInviteResultCode.eGIRCInvitedInOtherGuild;
+
+            if (invitedByPlayer == null)
+                return GuildInviteResultCode.eGIRCInternalError;
+
+            string invitedByPlayerName = invitedByPlayer.PlayerName;
+
+            MemberEntry? invitedByMember = GetMember(invitedByPlayer.PlayerDbId);
+            if (invitedByMember == null)
+                return GuildInviteResultCode.eGIRCInviterNotInGuild;
+
+            if (invitedByMember.Value.CanInvite == false)
+                return GuildInviteResultCode.eGIRCInviterNoPermission;
+
+            if (IsFull)
+                return GuildInviteResultCode.eGIRCGuildFull;
+
+            _pendingInvites[toInvitePlayerId] = invitedByPlayerName;
+
+            var clientMessage = GuildMessageSetToClient.CreateBuilder()
+                .SetGuildInvitedToJoin(GuildInvitedToJoin.CreateBuilder()
+                    .SetGuildId(Id)
+                    .SetGuildName(Name)
+                    .SetInvitedByPlayerName(invitedByPlayerName))
+                .Build();
+
+            ServiceMessage.GuildMessageToClient message = new(toInvitePlayer.CurrentGame.Id, toInvitePlayerId, clientMessage);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+
+            return GuildInviteResultCode.eGIRCSuccess;
+        }
+
+        public GuildRespondToInviteResultCode ReceiveInviteResponse(PlayerHandle player, GuildRespondToInviteCode respondCode)
+        {
+            if (player == null || player.State != PlayerHandleState.InGame)
+                return GuildRespondToInviteResultCode.eGRIRCNotOnline;
+
+            if (player.Guild == this)
+                return GuildRespondToInviteResultCode.eGRIRCAlreadyInGuild;
+
+            if (player.Guild != null)
+                return GuildRespondToInviteResultCode.eGRIRAlreadyInOtherGuild;
+
+            if (_pendingInvites.Remove(player.PlayerDbId, out string invitedByPlayerName) == false)
+                return GuildRespondToInviteResultCode.eGRIRCNotInvited;
+
+            if (IsFull)
+                return GuildRespondToInviteResultCode.eGRIRCGuildFull;
+
+            if (respondCode != GuildRespondToInviteCode.eGRICAccepted)
+                return GuildRespondToInviteResultCode.eGRIRCRejected;
+
+            // TODO: Add new member to guild
+
+            return GuildRespondToInviteResultCode.eGRIRCInternalError;
         }
 
         public void OnCreated()
@@ -258,6 +329,8 @@ namespace MHServerEmu.PlayerManagement.Social
             public ulong PlayerDbId { get => (ulong)_data.PlayerDbGuid; }
             public string PlayerName { get => GetPlayerName(); }
             public GuildMembership Membership { get => (GuildMembership)_data.Membership; }
+
+            public bool CanInvite { get => Membership >= GuildMembership.eGMOfficer; }
 
             public override string ToString()
             {

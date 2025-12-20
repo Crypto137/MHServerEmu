@@ -128,6 +128,9 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public PlayerHandle GetPlayer(string playerName)
         {
+            if (string.IsNullOrWhiteSpace(playerName))
+                return null;
+
             lock (_playerDict)
             {
                 if (_playersByName.TryGetValue(playerName, out PlayerHandle player) == false)

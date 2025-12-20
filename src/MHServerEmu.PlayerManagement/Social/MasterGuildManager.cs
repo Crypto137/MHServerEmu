@@ -94,6 +94,14 @@ namespace MHServerEmu.PlayerManagement.Social
             Logger.Info($"Initialized in {(long)elapsed.TotalMilliseconds} ms (guilds={_guilds.Count}, members={numMembers}, currentGuildId={_currentGuildId})");
         }
 
+        public MasterGuild GetGuild(ulong guildId)
+        {
+            if (_guilds.TryGetValue(guildId, out MasterGuild guild) == false)
+                return null;
+
+            return guild;
+        }
+
         public MasterGuild GetGuildForPlayer(ulong playerDbId)
         {
             if (_guildsByMember.TryGetValue(playerDbId, out MasterGuild guild) == false)
@@ -242,12 +250,70 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void OnGuildInvite(GuildInvite guildInvite)
         {
+            PlayerHandle invitedByPlayer = _playerManager.ClientManager.GetPlayer(guildInvite.InvitedByPlayerId);
+            if (invitedByPlayer == null || invitedByPlayer.State != PlayerHandleState.InGame)
+                return;
 
+            MasterGuild guild = invitedByPlayer.Guild;
+            if (guild == null)
+            {
+                Logger.Warn($"OnGuildInvite(): Player [{invitedByPlayer}] is not in a guild");
+                return;
+            }
+
+            // Cases where toInvitePlayer is null will be handled by InvitePlayer()
+            PlayerHandle toInvitePlayer = guildInvite.HasToInvitePlayerId && guildInvite.ToInvitePlayerId != 0
+                ? _playerManager.ClientManager.GetPlayer(guildInvite.ToInvitePlayerId)
+                : _playerManager.ClientManager.GetPlayer(guildInvite.ToInvitePlayerName);
+
+            GuildInviteResultCode result = guild.InvitePlayer(toInvitePlayer, invitedByPlayer);
+
+            // Send a response to invitedByPlayer.
+            if (toInvitePlayer != null)
+            {
+                // Make sure the GuildInvite has all the correct info (e.g. name case)
+                guildInvite = GuildInvite.CreateBuilder()
+                    .SetToInvitePlayerName(toInvitePlayer.PlayerName)
+                    .SetToInvitePlayerId(toInvitePlayer.PlayerDbId)
+                    .SetInvitedByPlayerId(invitedByPlayer.PlayerDbId)
+                    .Build();
+            }
+
+            var clientMessage = GuildMessageSetToClient.CreateBuilder()
+                .SetGuildInviteResult(GuildInviteResult.CreateBuilder()
+                    .SetInvite(guildInvite)
+                    .SetResultCode(result))
+                .Build();
+
+            ServiceMessage.GuildMessageToClient message = new(invitedByPlayer.CurrentGame.Id, invitedByPlayer.PlayerDbId, clientMessage);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 
         private void OnGuildRespondToInvite(GuildRespondToInvite guildRespondToInvite)
         {
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(guildRespondToInvite.PlayerId);
+            if (player == null || player.State != PlayerHandleState.InGame)
+                return;
 
+            GuildRespondToInviteCode respondCode = guildRespondToInvite.RespondCode;
+
+            MasterGuild guild = GetGuild(guildRespondToInvite.GuildId);
+
+            GuildRespondToInviteResultCode result = guild != null
+                ? guild.ReceiveInviteResponse(player, respondCode)
+                : GuildRespondToInviteResultCode.eGRIRCInvalidGuild;
+
+            if (respondCode != GuildRespondToInviteCode.eGRICAutoIgnored)
+            {
+                var clientMessage = GuildMessageSetToClient.CreateBuilder()
+                    .SetGuildRespondToInviteResult(GuildRespondToInviteResult.CreateBuilder()
+                        .SetResultCode(result)
+                        .SetGuildName(guild != null ? guild.Name : string.Empty))
+                    .Build();
+
+                ServiceMessage.GuildMessageToClient message = new(player.CurrentGame.Id, player.PlayerDbId, clientMessage);
+                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            }
         }
 
         private void OnGuildChangeMember(GuildChangeMember guildChangeMember)
