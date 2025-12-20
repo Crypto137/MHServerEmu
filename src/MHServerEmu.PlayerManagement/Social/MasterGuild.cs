@@ -14,6 +14,7 @@ namespace MHServerEmu.PlayerManagement.Social
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private static bool PersistenceEnabled { get => PlayerManagerService.Instance.Config.EnablePersistence; }
+        private static MasterGuildManager GuildManager { get => PlayerManagerService.Instance.GuildManager; }
 
         // NOTE: All guild DB operations are currently synchronous.
         // May need some kind of async job queue for these, especially for potential non-SQLite backends.
@@ -97,6 +98,17 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public void OnMemberRegionChanged(PlayerHandle player, RegionHandle newRegion, RegionHandle prevRegion)
         {
+            if (player == null)
+            {
+                Logger.Warn("OnMemberRegionChanged(): player == null");
+                return;
+            }
+
+            if (player.Guild != this)
+            {
+                Logger.Warn($"OnMemberRegionChanged(): Player [{player}] is not in guild [{this}]");
+                return;
+            }
 
             if (newRegion != null)
             {
@@ -143,11 +155,9 @@ namespace MHServerEmu.PlayerManagement.Social
             if (isLeader)
                 _leader = member;
 
-            // TODO: Remove this lookup when we remove the member
-            PlayerManagerService.Instance.GuildManager.SetGuildForPlayer(playerDbId, this);
+            GuildManager.SetGuildForPlayer(playerDbId, this);
 
-            // Invalidate cache. (TODO: Also do it when change membership or guild name/motd)
-            _guildCompleteInfoCache = null;
+            InvalidateGuildCompleteInfoCache();
 
             return member;
         }
@@ -231,6 +241,11 @@ namespace MHServerEmu.PlayerManagement.Social
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
 
             return true;
+        }
+
+        private void InvalidateGuildCompleteInfoCache()
+        {
+            _guildCompleteInfoCache = null;
         }
 
         /// <summary>

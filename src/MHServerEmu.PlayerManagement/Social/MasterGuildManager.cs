@@ -104,8 +104,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public void SetGuildForPlayer(ulong playerDbId, MasterGuild guild)
         {
-            // TODO: additional validation
-
             if (guild == null)
             {
                 _guildsByMember.Remove(playerDbId);
