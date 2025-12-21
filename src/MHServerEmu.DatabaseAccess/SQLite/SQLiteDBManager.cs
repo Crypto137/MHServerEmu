@@ -265,17 +265,24 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public bool DeleteGuild(DBGuild guild)
         {
+            using SQLiteConnection connection = GetConnection();
+            using SQLiteTransaction transaction = connection.BeginTransaction();
+
             try
             {
-                using SQLiteConnection connection = GetConnection();
+                // TODO: Enable strict foreign key constraints (PRAGMA foreign_keys = ON) and just delete the row from the parent table.
+                // We need to fix the Item table for that because it references foreign keys in multiple tables (player / avatar / team-up).
+                connection.Execute("DELETE FROM GuildMember WHERE GuildId = @Id", guild, transaction);
+                connection.Execute("DELETE FROM Guild WHERE Id = @Id", guild, transaction);
 
-                connection.Execute("DELETE FROM Guild WHERE Id = @Id", guild);
+                transaction.Commit();
 
                 Logger.Trace($"DeleteGuild(): {guild}");
                 return true;
             }
             catch (Exception e)
             {
+                transaction.Rollback();
                 Logger.ErrorException(e, nameof(DeleteGuild));
                 return false;
             }
