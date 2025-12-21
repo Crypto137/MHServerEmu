@@ -74,6 +74,20 @@ namespace MHServerEmu.PlayerManagement.Social
             Logger.Info($"Initialized in {(long)elapsed.TotalMilliseconds} ms (guilds={_guilds.Count}, members={numMembers}, currentGuildId={_currentGuildId})");
         }
 
+        public bool RemoveGuild(MasterGuild guild)
+        {
+            if (guild == null)
+                return Logger.WarnReturn(false, "RemoveGuild(): guild == null");
+
+            if (guild.MemberCount != 0)
+                Logger.Warn("RemoveGuild(): guild.MemberCount != 0");
+
+            if (_guilds.Remove(guild.Id) == false)
+                return Logger.WarnReturn(false, $"RemoveGuild(): Guild {guild} not found");
+
+            return true;
+        }
+
         public MasterGuild GetGuild(ulong guildId)
         {
             if (_guilds.TryGetValue(guildId, out MasterGuild guild) == false)
@@ -300,7 +314,27 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void OnGuildChangeMember(GuildChangeMember guildChangeMember)
         {
+            PlayerHandle sourcePlayer = _playerManager.ClientManager.GetPlayer(guildChangeMember.SourcePlayerId);
+            if (sourcePlayer == null || sourcePlayer.State != PlayerHandleState.InGame)
+                return;
 
+            ulong targetPlayerId = guildChangeMember.TargetPlayerId;
+            GuildMembership newMembership = guildChangeMember.TargetNewMembership;
+
+            MasterGuild guild = sourcePlayer.Guild;
+
+            GuildChangeMemberResultCode result = guild != null
+                ? guild.ChangeMember(sourcePlayer, targetPlayerId, newMembership)
+                : GuildChangeMemberResultCode.eGCMRCInitiatorNotInGuild;
+
+            var clientMessage = GuildMessageSetToClient.CreateBuilder()
+                .SetGuildChangeMemberResult(GuildChangeMemberResult.CreateBuilder()
+                    .SetTargetPlayerName(guildChangeMember.TargetPlayerName)
+                    .SetResultCode(result))
+                .Build();
+
+            ServiceMessage.GuildMessageToClient message = new(sourcePlayer.CurrentGame.Id, sourcePlayer.PlayerDbId, clientMessage);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 
         private void OnGuildChangeMotd(GuildChangeMotd guildChangeMotd)

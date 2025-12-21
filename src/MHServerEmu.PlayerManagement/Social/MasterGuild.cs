@@ -34,7 +34,7 @@ namespace MHServerEmu.PlayerManagement.Social
         public string Name { get => _data.Name; }
         public string Motd { get => _data.Motd; }
 
-        public int MemberCount { get => _data.Members.Count; }
+        public int MemberCount { get => _members.Count; }
         public bool IsFull { get => MemberCount >= GameDatabase.GlobalsPrototype.PlayerGuildMaxSize; }
 
         public MasterGuild(DBGuild data, bool saveToDatabase)
@@ -206,6 +206,148 @@ namespace MHServerEmu.PlayerManagement.Social
             return GuildRespondToInviteResultCode.eGRIRCJoined;
         }
 
+        public GuildChangeMemberResultCode ChangeMember(PlayerHandle sourcePlayer, ulong targetPlayerId, GuildMembership newMembership)
+        {
+            if (sourcePlayer == null)
+                return GuildChangeMemberResultCode.eGCMRCInternalError;
+
+            if (GetMember(sourcePlayer.PlayerDbId) is not MemberEntry sourceMember)
+                return GuildChangeMemberResultCode.eGCMRCInitiatorNotInGuild;
+
+            if (GetMember(targetPlayerId) is not MemberEntry targetMember)
+                return GuildChangeMemberResultCode.eGCMRCUnknownMember;
+
+            if (_leader is not MemberEntry leaderMember)
+                return GuildChangeMemberResultCode.eGCMRCInternalError;
+
+            bool isTargetingLeader = targetMember.Equals(leaderMember);
+            bool isRemovingTarget = newMembership == GuildMembership.eGMNone;
+
+            // Leaders can't demote themselves to officers without promoting somebody else to be the next leader (unless they leave the guild entirely).
+            if (isTargetingLeader && newMembership != GuildMembership.eGMNone)
+                return GuildChangeMemberResultCode.eGCMRCCantModifyLeader;
+
+            // Validate changes that require elevated privileges.
+            if (isRemovingTarget == false || targetMember.Equals(sourceMember) == false)
+            {
+                switch (sourceMember.Membership)
+                {
+                    case GuildMembership.eGMMember:
+                        return GuildChangeMemberResultCode.eGCMRCRequiresStaff;
+
+                    case GuildMembership.eGMOfficer:
+                        // Do not allow officers to promote to leader.
+                        if (newMembership == GuildMembership.eGMLeader)
+                            return GuildChangeMemberResultCode.eGCMRCRequiresLeader;
+
+                        // Do not allow officers to kick each other.
+                        if (isRemovingTarget && targetMember.Membership != GuildMembership.eGMMember)
+                            return GuildChangeMemberResultCode.eGCMRCRequiresLeader;
+
+                        break;
+
+                    // The leader has UNLIMITED POWER muahahaha
+                }
+            }
+
+            if (targetMember.Membership == newMembership)
+                return GuildChangeMemberResultCode.eGCMRCNoChange;
+
+            MemberEntry? nextLeader = null;
+            MemberEntry? secondaryTargetMember = null;
+
+            if (isRemovingTarget && isTargetingLeader)
+            {
+                // Leader leaving
+                nextLeader = GetNextLeader(targetMember);
+                secondaryTargetMember = nextLeader;
+            }
+            else if (newMembership == GuildMembership.eGMLeader)
+            {
+                // Leader passing leadership to another member
+                nextLeader = targetMember;
+                secondaryTargetMember = leaderMember;
+            }
+
+            // Modify memberships
+            if (nextLeader != null)
+            {
+                leaderMember.SetMembership(GuildMembership.eGMOfficer);
+                nextLeader.Value.SetMembership(GuildMembership.eGMLeader);
+                _leader = nextLeader;
+            }
+
+            // The guild will be disbanded if we don't have anyone to pass leadership to.
+            bool isDisbanding = false;
+            if (isTargetingLeader && isRemovingTarget && nextLeader == null)
+            {
+                isDisbanding = true;
+                foreach (MemberEntry member in _members.Values)
+                    member.SetMembership(GuildMembership.eGMNone);
+            }
+            else
+            {
+                targetMember.SetMembership(newMembership);
+            }
+
+            InvalidateGuildCompleteInfoCache();
+
+            // Replicate to games - this needs to be done before we remove members while we still have our game list.
+            GuildMessageSetToServer serverMessage;
+
+            if (isDisbanding == false)
+            {
+                var guildMembersInfoChanged = GuildMembersInfoChanged.CreateBuilder()
+                    .SetGuildId(Id)
+                    .SetInitiatingMemberName(sourcePlayer.PlayerName)
+                    .AddMembers(targetMember.ToGuildMemberInfo());
+
+                if (secondaryTargetMember != null)
+                    guildMembersInfoChanged.AddMembers(secondaryTargetMember.Value.ToGuildMemberInfo());
+
+                serverMessage = GuildMessageSetToServer.CreateBuilder()
+                    .SetGuildMembersInfoChanged(guildMembersInfoChanged)
+                    .Build();
+            }
+            else
+            {
+                serverMessage = GuildMessageSetToServer.CreateBuilder()
+                    .SetGuildDisbanded(GuildDisbanded.CreateBuilder()
+                        .SetGuildId(Id)
+                        .SetDisbandingPlayerName(sourcePlayer.PlayerName))
+                    .Build();
+            }
+
+            SendMessageToAllGames(serverMessage);
+
+            // Clean up members
+            if (targetMember.Membership == GuildMembership.eGMNone)
+            {
+                if (isDisbanding == false)
+                {
+                    // Remove just the target
+                    RemoveMember(targetMember);
+                }
+                else
+                {
+                    foreach (MemberEntry member in _members.Values)
+                        RemoveMember(member);
+                }
+            }
+
+            // Finalize dissolve if needed
+            if (MemberCount == 0)
+            {
+                GuildManager.RemoveGuild(this);
+                DeleteFromDatabase();
+                return GuildChangeMemberResultCode.eGCMRCSuccessGuildDissolved;
+            }
+
+            targetMember.SaveToDatabase();
+            secondaryTargetMember?.SaveToDatabase();
+            return GuildChangeMemberResultCode.eGCMRCSuccess;
+        }
+
         public void OnMemberOnline(PlayerHandle player)
         {
             if (player == null)
@@ -319,12 +461,57 @@ namespace MHServerEmu.PlayerManagement.Social
             return true;
         }
 
+        private void RemoveMember(in MemberEntry member)
+        {
+            ulong playerDbId = member.PlayerDbId;
+
+            _members.Remove(playerDbId);
+
+            if (_onlineMembers.TryGetValue(playerDbId, out PlayerHandle onlinePlayer))
+                RemoveOnlineMember(onlinePlayer);
+
+            GuildManager.SetGuildForPlayer(playerDbId, null);
+
+            InvalidateGuildCompleteInfoCache();
+        }
+
         private MemberEntry? GetMember(ulong playerDbId)
         {
             if (_members.TryGetValue(playerDbId, out MemberEntry member) == false)
                 return null;
 
             return member;
+        }
+
+        private MemberEntry? GetNextLeader(MemberEntry memberToIgnore)
+        {
+            MemberEntry? nextLeader = null;
+
+            foreach (MemberEntry member in _members.Values)
+            {
+                if (member.Equals(memberToIgnore))
+                    continue;
+
+                // If we don't have any candidate yet, just pick whoever we have for now.
+                if (nextLeader == null)
+                {
+                    nextLeader = member;
+                    continue;
+                }
+
+                if (member.Membership != GuildMembership.eGMOfficer)
+                    continue;
+
+                // Prioritize officers over regular members
+                if (nextLeader.Value.Membership == GuildMembership.eGMMember)
+                    nextLeader = member;
+
+                // Prioritize online member over offline
+                if (_onlineMembers.ContainsKey(member.PlayerDbId) && _onlineMembers.ContainsKey(nextLeader.Value.PlayerDbId) == false)
+                    nextLeader = member;
+            }
+
+            return nextLeader;
         }
 
         private void AddOnlineMember(PlayerHandle player)
@@ -340,6 +527,9 @@ namespace MHServerEmu.PlayerManagement.Social
         {
             player.Guild = null;
             _onlineMembers.Remove(player.PlayerDbId);
+
+            if (player.State == PlayerHandleState.InGame)
+                RemoveGame(player.CurrentGame);
         }
 
         private bool AddGame(GameHandle game)
@@ -425,7 +615,7 @@ namespace MHServerEmu.PlayerManagement.Social
         /// <summary>
         /// A wrapper for <see cref="DBGuildMember"/> for easier data access.
         /// </summary>
-        private readonly struct MemberEntry(DBGuildMember data)
+        private readonly struct MemberEntry(DBGuildMember data) : IEquatable<MemberEntry>
         {
             private readonly DBGuildMember _data = data;
 
@@ -442,6 +632,24 @@ namespace MHServerEmu.PlayerManagement.Social
                 return $"{PlayerName} (0x{PlayerDbId:X}) - {Membership}";
             }
 
+            public override int GetHashCode()
+            {
+                return _data.GetHashCode();
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is not MemberEntry other)
+                    return false;
+
+                return Equals(other);
+            }
+
+            public bool Equals(MemberEntry other)
+            {
+                return _data.Equals(other._data);
+            }
+
             public GuildMemberInfo ToGuildMemberInfo()
             {
                 return GuildMemberInfo.CreateBuilder()
@@ -451,20 +659,20 @@ namespace MHServerEmu.PlayerManagement.Social
                     .Build();
             }
 
+            public void SetMembership(GuildMembership newMembership)
+            {
+                _data.Membership = (long)newMembership;
+            }
+
             public bool SaveToDatabase()
             {
                 if (PersistenceEnabled == false)
                     return true;
 
+                if (Membership == GuildMembership.eGMNone)
+                    return IDBManager.Instance.DeleteGuildMember(_data);
+
                 return IDBManager.Instance.SaveGuildMember(_data);
-            }
-
-            public bool DeleteFromDatabase()
-            {
-                if (PersistenceEnabled == false)
-                    return true;
-
-                return IDBManager.Instance.DeleteGuildMember(_data);
             }
 
             private string GetPlayerName()
