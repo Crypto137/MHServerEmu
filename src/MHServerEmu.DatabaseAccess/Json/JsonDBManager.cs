@@ -88,6 +88,12 @@ namespace MHServerEmu.DatabaseAccess.Json
             return false;
         }
 
+        public bool TryGetLastLogoutTime(ulong playerDbId, out long lastLogoutTime)
+        {
+            lastLogoutTime = 0;
+            return false;
+        }
+
         public bool InsertAccount(DBAccount account)
         {
             return Logger.WarnReturn(false, "InsertAccount(): Operation not supported");

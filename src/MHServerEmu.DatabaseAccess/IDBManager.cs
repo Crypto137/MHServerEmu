@@ -38,12 +38,17 @@ namespace MHServerEmu.DatabaseAccess
         /// <summary>
         /// Queries the name of the player with the specified id. Returns <see langword="true"/> if successful.
         /// </summary>
-        public bool TryGetPlayerName(ulong id, out string playerName);
+        public bool TryGetPlayerName(ulong playerDbId, out string playerName);
 
         /// <summary>
         /// Queries the names of all registered players from the database and adds them to the provided <see cref="Dictionary{TKey, TValue}"/>.
         /// </summary>
         public bool GetPlayerNames(Dictionary<ulong, string> playerNames);
+
+        /// <summary>
+        /// Queries last logout time for the player with the specified id. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool TryGetLastLogoutTime(ulong playerDbId, out long lastLogoutTime);
 
         /// <summary>
         /// Inserts a new <see cref="DBAccount"/> with all of its data into the database.

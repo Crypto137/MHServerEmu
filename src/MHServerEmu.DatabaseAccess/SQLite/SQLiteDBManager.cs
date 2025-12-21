@@ -93,11 +93,11 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return true;
         }
 
-        public bool TryGetPlayerName(ulong id, out string playerName)
+        public bool TryGetPlayerName(ulong playerDbId, out string playerName)
         {
             using SQLiteConnection connection = GetConnection();
             
-            playerName = connection.QueryFirstOrDefault<string>("SELECT PlayerName FROM Account WHERE Id = @Id", new { Id = (long)id });
+            playerName = connection.QueryFirstOrDefault<string>("SELECT PlayerName FROM Account WHERE Id = @Id", new { Id = (long)playerDbId });
 
             return string.IsNullOrWhiteSpace(playerName) == false;
         }
@@ -112,6 +112,15 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 playerNames[(ulong)account.Id] = account.PlayerName;
 
             return playerNames.Count > 0;
+        }
+
+        public bool TryGetLastLogoutTime(ulong playerDbId, out long lastLogoutTime)
+        {
+            using SQLiteConnection connection = GetConnection();
+
+            lastLogoutTime = connection.QueryFirstOrDefault<long>("SELECT LastLogoutTime FROM Player WHERE DbGuid = @DbGuid", new { DbGuid = (long)playerDbId });
+
+            return lastLogoutTime > 0;
         }
 
         public bool InsertAccount(DBAccount account)
