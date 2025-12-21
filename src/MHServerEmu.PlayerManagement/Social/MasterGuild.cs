@@ -44,6 +44,8 @@ namespace MHServerEmu.PlayerManagement.Social
             foreach (DBGuildMember member in _data.Members)
                 AddMember(member);
 
+            _data.Members.Clear();  // we don't use this for anything but initialization, so just clear it
+
             ClientManager clientManager = PlayerManagerService.Instance.ClientManager;
             foreach (MemberEntry member in _members.Values)
             {
