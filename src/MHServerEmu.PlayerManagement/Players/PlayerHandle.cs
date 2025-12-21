@@ -847,13 +847,21 @@ namespace MHServerEmu.PlayerManagement.Players
 
             RegionHandle prevRegion = ActualRegion;
 
-            prevRegion?.Unreserve(RegionReservationType.Presence);
+            if (prevRegion != null)
+            {
+                prevRegion.Unreserve(RegionReservationType.Presence);
+                RemoveFromChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_LOCAL, prevRegion.Id);
+            }
 
             ActualRegion = newRegion;
 
-            // This additional reservation will prevent the region from shutting down if there are still any players in it,
-            // even if the region is no longer in any world views for whatever reason.
-            newRegion?.Reserve(RegionReservationType.Presence);
+            if (newRegion != null)
+            {
+                // This additional reservation will prevent the region from shutting down if there are still any players in it,
+                // even if the region is no longer in any world views for whatever reason.
+                newRegion.Reserve(RegionReservationType.Presence);
+                AddToChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_LOCAL, newRegion.Id);
+            }
 
             // Community will be updated when we receive a broadcast from the game instance.
 

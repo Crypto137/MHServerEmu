@@ -89,6 +89,7 @@ namespace MHServerEmu.Grouping.Chat
             switch (chat.RoomType)
             {
                 // Chat channels with room support (TODO: Add party/others)
+                case ChatRoomTypes.CHAT_ROOM_TYPE_LOCAL:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER:
                     if (SendMessageToChatRoom(message, chat.RoomType, (ulong)account.Id) == false)

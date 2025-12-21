@@ -41,9 +41,6 @@ namespace MHServerEmu.Games.Social
                     break;
 
                 case ChatRoomTypes.CHAT_ROOM_TYPE_LOCAL:
-                    SendChatToRegion(player, chat);
-                    break;
-
                 case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_EN:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_FR:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_DE:
@@ -240,19 +237,6 @@ namespace MHServerEmu.Games.Social
             List<ulong> playerFilter = new();
             foreach (CommunityMember member in community.IterateMembers(circle))
                 playerFilter.Add(member.DbId);
-
-            SendChat(player, chat, playerFilter);
-            return true;
-        }
-
-        private bool SendChatToRegion(Player player, NetMessageChat chat)
-        {
-            Region region = player.GetRegion();
-            if (region == null) return Logger.WarnReturn(false, "SendChatToRegion(): region == null");
-
-            List<ulong> playerFilter = new();
-            foreach (Player regionPlayer in new PlayerIterator(region))
-                playerFilter.Add(regionPlayer.DatabaseUniqueId);
 
             SendChat(player, chat, playerFilter);
             return true;
