@@ -78,6 +78,7 @@ namespace MHServerEmu.Grouping.Chat
 
             ChatRoomTypes roomType = chat.RoomType;
             ChatMessage theMessage = chat.TheMessage;
+            ulong roomId = 0;
 
             ChatNormalMessage message = ChatNormalMessage.CreateBuilder()
                 .SetRoomType(roomType)
@@ -97,12 +98,12 @@ namespace MHServerEmu.Grouping.Chat
             else
             {
                 // Chat rooms with multiple instances
-                if (SendMessageToChatRoom(message, chat.RoomType, (ulong)account.Id) == false)
+                if (SendMessageToChatRoom(message, chat.RoomType, (ulong)account.Id, out roomId) == false)
                     Logger.Warn($"OnChat(): Player [{account}] failed to send message to chat room {chat.RoomType}");
             }
 
             if (string.IsNullOrEmpty(chat.TheMessage.Body) == false)
-                Logger.Info($"[{chat.RoomType.GetRoomName()}] [{account})]: {chat.TheMessage.Body}", LogCategory.Chat);
+                Logger.Info($"[{chat.RoomType.GetRoomName()} (0x{roomId:X})] [{account})]: {chat.TheMessage.Body}", LogCategory.Chat);
         }
 
         public void OnTell(IFrontendClient senderClient, NetMessageTell tell, int prestigeLevel)
@@ -116,8 +117,6 @@ namespace MHServerEmu.Grouping.Chat
                 return;
             }
 
-            Logger.Info($"[Tell] [{fromPlayerName} => {tell.TargetPlayerName}]: {(_logTells ? tell.TheMessage.Body : "***")}", LogCategory.Chat);
-
             ChatTellMessage message = ChatTellMessage.CreateBuilder()
                 .SetFromPlayerName(fromPlayerName)
                 .SetTheMessage(tell.TheMessage)
@@ -125,6 +124,8 @@ namespace MHServerEmu.Grouping.Chat
                 .Build();
 
             SendMessage(message, targetClient);
+
+            Logger.Info($"[Tell] [{fromPlayerName} => {tell.TargetPlayerName}]: {(_logTells ? tell.TheMessage.Body : "***")}", LogCategory.Chat);
         }
 
         public void OnMetagameMessage(IFrontendClient client, string text, bool showSender)
@@ -168,14 +169,18 @@ namespace MHServerEmu.Grouping.Chat
             _groupingManager.ClientManager.SendMessageFiltered(message, playerFilter);
         }
 
-        private bool SendMessageToChatRoom(IMessage message, ChatRoomTypes roomType, ulong playerDbId)
+        private bool SendMessageToChatRoom(IMessage message, ChatRoomTypes roomType, ulong playerDbId, out ulong roomId)
         {
+            roomId = 0;
+
             ChatRoomManager chatRoomManager = GetChatRoomManager(roomType);
             if (chatRoomManager == null) return Logger.WarnReturn(false, "SendMessageToChatRoom(): chatRoomManager == null");
 
             ChatRoom chatRoom = chatRoomManager.GetRoomForPlayer(playerDbId);
             if (chatRoom == null)
                 return Logger.WarnReturn(false, $"SendMessageToChatRoom(): Player 0x{playerDbId:X} is not in a chat room of type {roomType}");
+
+            roomId = chatRoom.Id;
 
             List<ulong> playerFilter = ListPool<ulong>.Instance.Get();
             chatRoom.GetPlayers(playerFilter);
