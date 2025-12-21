@@ -23,7 +23,7 @@ namespace MHServerEmu.Grouping.Chat
 
         public override string ToString()
         {
-            return $"{Type} (0x{Id:X})";
+            return $"{Type.GetRoomName()} (0x{Id:X})";
         }
 
         public bool AddPlayer(ulong playerDbId)
