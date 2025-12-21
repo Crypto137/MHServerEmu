@@ -37,7 +37,10 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             var config = ConfigManager.Instance.GetConfig<SQLiteDBManagerConfig>();
 
             _dbFilePath = Path.Combine(FileHelper.DataDirectory, config.FileName);
-            _connectionString = $"Data Source={_dbFilePath};Synchronous=NORMAL;";
+            _connectionString = $"Data Source={_dbFilePath};Synchronous=NORMAL;foreign_keys=OFF;";
+
+            // TODO: Foreign key constraints are explicitly disabled for now because our Item table references
+            // multiple parent tables (Player / Avatar / TeamUp) at the same time. Need to find an elegant way to fix that.
 
             if (File.Exists(_dbFilePath) == false)
             {
@@ -270,8 +273,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
             try
             {
-                // TODO: Enable strict foreign key constraints (PRAGMA foreign_keys = ON) and just delete the row from the parent table.
-                // We need to fix the Item table for that because it references foreign keys in multiple tables (player / avatar / team-up).
+                // TODO: Enable foreign key constraints in the connection string and just delete the row from the parent table when we fix the Item table.
                 connection.Execute("DELETE FROM GuildMember WHERE GuildId = @Id", guild, transaction);
                 connection.Execute("DELETE FROM Guild WHERE Id = @Id", guild, transaction);
 
