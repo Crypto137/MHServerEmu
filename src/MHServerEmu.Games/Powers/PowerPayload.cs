@@ -1981,12 +1981,21 @@ namespace MHServerEmu.Games.Powers
             transferredDamageTotal.Clear();
 
             // Apply damage transfer from conditions
+            List<(ulong, Condition)> damageTransferConditions = ListPool<(ulong, Condition)>.Instance.Get();
+            
+            // Applying damage transfer can cause a chain reaction that will modify conditions on the target,
+            // so put damage transfer conditions into a temporary list for iteration.
             foreach (Condition condition in target.ConditionCollection)
             {
                 ulong transferTargetId = condition.Properties[PropertyEnum.DamageTransferID];
                 if (transferTargetId == Entity.InvalidId)
                     continue;
 
+                damageTransferConditions.Add((transferTargetId, condition));
+            }
+
+            foreach ((ulong transferTargetId, Condition condition) in damageTransferConditions)
+            {
                 // Transferring to itself can cause a loop
                 if (transferTargetId == target.Id)
                 {
@@ -2072,6 +2081,7 @@ namespace MHServerEmu.Games.Powers
                 results.SetDamageForClient(type, damageForClient);
             }
 
+            ListPool<(ulong, Condition)>.Instance.Return(damageTransferConditions);
             return true;
         }
 
