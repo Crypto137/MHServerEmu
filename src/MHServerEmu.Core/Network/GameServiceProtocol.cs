@@ -29,6 +29,12 @@ namespace MHServerEmu.Core.Network
         RemoveResponse,
     }
 
+    public enum ChatRoomOperationType
+    {
+        Add,
+        Remove,
+    }
+
     #endregion
 
     public static class ServiceMessage
@@ -511,6 +517,18 @@ namespace MHServerEmu.Core.Network
             : IGameServiceMessage
         {
             public readonly string NotificationText = notificationText;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> GroupingManager] Adds/removes a player to/from the specified chat room.
+        /// </summary>
+        public readonly struct GroupingManagerChatRoomOperation(ChatRoomTypes roomType, ulong roomId, ulong playerDbId, ChatRoomOperationType operation)
+            : IGameServiceMessage
+        {
+            public readonly ChatRoomTypes RoomType = roomType;
+            public readonly ulong RoomId = roomId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ChatRoomOperationType Operation = operation;
         }
 
         #endregion

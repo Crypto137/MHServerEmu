@@ -768,6 +768,18 @@ namespace MHServerEmu.PlayerManagement.Players
             _regionRequestQueueCommandHandler.HandleCommand(regionRef, difficultyTierRef, metaStateRef, command, regionRequestGroupId, targetPlayerDbId);
         }
 
+        public void AddToChatRoom(ChatRoomTypes roomType, ulong roomId)
+        {
+            ServiceMessage.GroupingManagerChatRoomOperation message = new(roomType, roomId, PlayerDbId, ChatRoomOperationType.Add);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, message);
+        }
+
+        public void RemoveFromChatRoom(ChatRoomTypes roomType, ulong roomId)
+        {
+            ServiceMessage.GroupingManagerChatRoomOperation message = new(roomType, roomId, PlayerDbId, ChatRoomOperationType.Remove);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, message);
+        }
+
         private void SetTransferParams(ulong gameId, NetStructTransferParams transferParams)
         {
             if (transferParams != null && _transferParams != null)

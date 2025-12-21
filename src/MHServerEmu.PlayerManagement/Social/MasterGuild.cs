@@ -289,7 +289,17 @@ namespace MHServerEmu.PlayerManagement.Social
             }
             else
             {
+                GuildMembership oldMembership = targetMember.Membership;
                 targetMember.SetMembership(newMembership);
+
+                // Update officer channel access if online
+                if (_onlineMembers.TryGetValue(targetMember.PlayerDbId, out PlayerHandle onlineTargetPlayer))
+                {
+                    if (oldMembership < GuildMembership.eGMOfficer && newMembership >= GuildMembership.eGMOfficer)
+                        onlineTargetPlayer.AddToChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER, Id);
+                    else if (oldMembership >= GuildMembership.eGMOfficer && newMembership < GuildMembership.eGMOfficer)
+                        onlineTargetPlayer.RemoveFromChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER, Id);
+                }
             }
 
             InvalidateGuildCompleteInfoCache();
@@ -523,6 +533,10 @@ namespace MHServerEmu.PlayerManagement.Social
 
             if (player.State == PlayerHandleState.InGame)
                 AddGame(player.CurrentGame);
+
+            player.AddToChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_GUILD, Id);
+            if (GetMember(player.PlayerDbId) is MemberEntry member && member.Membership >= GuildMembership.eGMOfficer)
+                player.AddToChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER, Id);
         }
 
         private void RemoveOnlineMember(PlayerHandle player)
@@ -532,6 +546,10 @@ namespace MHServerEmu.PlayerManagement.Social
 
             if (player.State == PlayerHandleState.InGame)
                 RemoveGame(player.CurrentGame);
+
+            player.RemoveFromChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_GUILD, Id);
+            if (GetMember(player.PlayerDbId) is MemberEntry member && member.Membership >= GuildMembership.eGMOfficer)
+                player.RemoveFromChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER, Id);
         }
 
         private bool AddGame(GameHandle game)

@@ -55,14 +55,17 @@ namespace MHServerEmu.Games.Social
                 case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_ZH:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_TRADE:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_LFG:
-                    SendChatToAll(player, chat);
+                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER:
+                    // Room filtering will be handled by the grouping manager.
+                    SendChat(player, chat);
                     break;
 
                 case ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS:
                     // Broadcasting requires a badge, which we currently grant based on the account's user level
                     if (player.HasBadge(AvailableBadges.CanBroadcastChat))
                     {
-                        SendChatToAll(player, chat);
+                        SendChat(player, chat);
                     }
                     else
                     {
@@ -80,12 +83,6 @@ namespace MHServerEmu.Games.Social
 
                 case ChatRoomTypes.CHAT_ROOM_TYPE_FACTION:
                     SendChatToPvPTeam(player, chat);
-                    break;
-
-                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD:
-                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER:
-                    // TODO, send a Service Unavailable message for now
-                    SendServiceUnavailableMessage(player);
                     break;
 
                 default:
@@ -233,11 +230,6 @@ namespace MHServerEmu.Games.Social
 
         // NOTE: It's not safe to pool filter lists here because the implementation of the grouping manager may change.
 
-        private void SendChatToAll(Player player, NetMessageChat chat)
-        {
-            SendChat(player, chat, null);
-        }
-
         private bool SendChatToNearby(Player player, NetMessageChat chat)
         {
             Community community = player.Community;
@@ -294,7 +286,7 @@ namespace MHServerEmu.Games.Social
             return true;
         }
 
-        private void SendChat(Player player, NetMessageChat chat, List<ulong> playerFilter)
+        private void SendChat(Player player, NetMessageChat chat, List<ulong> playerFilter = null)
         {
             int prestigeLevel = player.CurrentAvatar != null ? player.CurrentAvatar.PrestigeLevel : 0;
             ServiceMessage.GroupingManagerChat chatMessage = new(player.DatabaseUniqueId, chat, prestigeLevel, playerFilter);

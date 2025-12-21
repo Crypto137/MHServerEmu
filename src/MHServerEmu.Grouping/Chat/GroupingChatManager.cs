@@ -2,11 +2,12 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 
-namespace MHServerEmu.Grouping
+namespace MHServerEmu.Grouping.Chat
 {
     public class GroupingChatManager
     {
@@ -15,6 +16,8 @@ namespace MHServerEmu.Grouping
         private static readonly ChatErrorMessage NoSuchUserErrorMessage = ChatErrorMessage.CreateBuilder()
             .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER)
             .Build();
+
+        private readonly ChatRoomManager[] _chatRoomManager = new ChatRoomManager[(int)ChatRoomTypes.CHAT_ROOM_TYPE_NUM_TYPES];
 
         private readonly GroupingManagerService _groupingManager;
 
@@ -40,6 +43,28 @@ namespace MHServerEmu.Grouping
                 .Build();
 
             _logTells = config.LogTells;
+
+            // Initialize chat room types
+            for (ChatRoomTypes chatRoomType = 0; chatRoomType < ChatRoomTypes.CHAT_ROOM_TYPE_NUM_TYPES; chatRoomType++)
+                _chatRoomManager[(int)chatRoomType] = new(chatRoomType);
+        }
+
+        public bool AddPlayerToRoom(ChatRoomTypes roomType, ulong roomId, ulong playerDbId)
+        {
+            ChatRoomManager chatRoomManager = GetChatRoomManager(roomType);
+            if (chatRoomManager == null)
+                return false;
+
+            return chatRoomManager.AddPlayer(roomId, playerDbId);
+        }
+
+        public bool RemovePlayerFromRoom(ChatRoomTypes roomType, ulong roomId, ulong playerDbId)
+        {
+            ChatRoomManager chatRoomManager = GetChatRoomManager(roomType);
+            if (chatRoomManager == null)
+                return false;
+
+            return chatRoomManager.RemovePlayer(roomId, playerDbId);
         }
 
         public void OnClientAdded(IFrontendClient client)
@@ -61,10 +86,23 @@ namespace MHServerEmu.Grouping
                 .SetPrestigeLevel(prestigeLevel)
                 .Build();
 
-            if (playerFilter != null)
-                SendMessageFiltered(message, playerFilter);
-            else
-                SendMessageToAll(message);
+            switch (chat.RoomType)
+            {
+                // Chat channels with room support (TODO: Add party/others)
+                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER:
+                    if (SendMessageToChatRoom(message, chat.RoomType, (ulong)account.Id) == false)
+                        Logger.Warn($"OnChat(): Player [{account}] failed to send message to chat room {chat.RoomType}");
+                    break;
+
+                // Global channels
+                default:
+                    if (playerFilter != null)
+                        SendMessageFiltered(message, playerFilter);
+                    else
+                        SendMessageToAll(message);
+                    break;
+            }
         }
 
         public void OnTell(IFrontendClient senderClient, NetMessageTell tell, int prestigeLevel)
@@ -112,6 +150,14 @@ namespace MHServerEmu.Grouping
             SendMessageToAll(message);
         }
 
+        private ChatRoomManager GetChatRoomManager(ChatRoomTypes roomType)
+        {
+            if (roomType < 0 || roomType >= ChatRoomTypes.CHAT_ROOM_TYPE_NUM_TYPES)
+                return Logger.WarnReturn<ChatRoomManager>(null, $"Invalid room type {roomType}");
+
+            return _chatRoomManager[(int)roomType];
+        }
+
         private void SendMessage(IMessage message, IFrontendClient client)
         {
             _groupingManager.ClientManager.SendMessage(message, client);
@@ -120,6 +166,24 @@ namespace MHServerEmu.Grouping
         private void SendMessageFiltered(IMessage message, List<ulong> playerFilter)
         {
             _groupingManager.ClientManager.SendMessageFiltered(message, playerFilter);
+        }
+
+        private bool SendMessageToChatRoom(IMessage message, ChatRoomTypes roomType, ulong playerDbId)
+        {
+            ChatRoomManager chatRoomManager = GetChatRoomManager(roomType);
+            if (chatRoomManager == null) return Logger.WarnReturn(false, "SendMessageToChatRoom(): chatRoomManager == null");
+
+            ChatRoom chatRoom = chatRoomManager.GetRoomForPlayer(playerDbId);
+            if (chatRoom == null)
+                return Logger.WarnReturn(false, $"SendMessageToChatRoom(): Player 0x{playerDbId:X} is not in a chat room of type {roomType}");
+
+            List<ulong> playerFilter = ListPool<ulong>.Instance.Get();
+            chatRoom.GetPlayers(playerFilter);
+
+            SendMessageFiltered(message, playerFilter);
+
+            ListPool<ulong>.Instance.Return(playerFilter);
+            return true;
         }
 
         private void SendMessageToAll(IMessage message)
