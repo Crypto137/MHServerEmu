@@ -41,6 +41,7 @@ namespace MHServerEmu.Games.Social
                     break;
 
                 case ChatRoomTypes.CHAT_ROOM_TYPE_LOCAL:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_PARTY:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_EN:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_FR:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_DE:
@@ -72,10 +73,6 @@ namespace MHServerEmu.Games.Social
                             .Build());
                     }
 
-                    break;
-
-                case ChatRoomTypes.CHAT_ROOM_TYPE_PARTY:
-                    SendChatToParty(player, chat);
                     break;
 
                 case ChatRoomTypes.CHAT_ROOM_TYPE_FACTION:
@@ -237,20 +234,6 @@ namespace MHServerEmu.Games.Social
             List<ulong> playerFilter = new();
             foreach (CommunityMember member in community.IterateMembers(circle))
                 playerFilter.Add(member.DbId);
-
-            SendChat(player, chat, playerFilter);
-            return true;
-        }
-
-        private bool SendChatToParty(Player player, NetMessageChat chat)
-        {
-            Party party = player.GetParty();
-            if (party == null)
-                return false;
-
-            List<ulong> playerFilter = new();
-            foreach (var kvp in party)
-                playerFilter.Add(kvp.Value.PlayerDbId);
 
             SendChat(player, chat, playerFilter);
             return true;

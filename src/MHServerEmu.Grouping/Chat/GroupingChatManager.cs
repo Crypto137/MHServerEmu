@@ -76,34 +76,33 @@ namespace MHServerEmu.Grouping.Chat
         {
             DBAccount account = ((IDBAccountOwner)client).Account;
 
-            if (string.IsNullOrEmpty(chat.TheMessage.Body) == false)
-                Logger.Info($"[{GetRoomName(chat.RoomType)}] [{account})]: {chat.TheMessage.Body}", LogCategory.Chat);
+            ChatRoomTypes roomType = chat.RoomType;
+            ChatMessage theMessage = chat.TheMessage;
 
             ChatNormalMessage message = ChatNormalMessage.CreateBuilder()
-                .SetRoomType(chat.RoomType)
+                .SetRoomType(roomType)
                 .SetFromPlayerName(account.PlayerName)
-                .SetTheMessage(chat.TheMessage)
+                .SetTheMessage(theMessage)
                 .SetPrestigeLevel(prestigeLevel)
                 .Build();
 
-            switch (chat.RoomType)
+            if (roomType.IsGlobalChatRoom())
             {
-                // Chat channels with room support (TODO: Add party/others)
-                case ChatRoomTypes.CHAT_ROOM_TYPE_LOCAL:
-                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD:
-                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER:
-                    if (SendMessageToChatRoom(message, chat.RoomType, (ulong)account.Id) == false)
-                        Logger.Warn($"OnChat(): Player [{account}] failed to send message to chat room {chat.RoomType}");
-                    break;
-
-                // Global channels
-                default:
-                    if (playerFilter != null)
-                        SendMessageFiltered(message, playerFilter);
-                    else
-                        SendMessageToAll(message);
-                    break;
+                // Global chat rooms
+                if (playerFilter != null)
+                    SendMessageFiltered(message, playerFilter);
+                else
+                    SendMessageToAll(message);
             }
+            else
+            {
+                // Chat rooms with multiple instances
+                if (SendMessageToChatRoom(message, chat.RoomType, (ulong)account.Id) == false)
+                    Logger.Warn($"OnChat(): Player [{account}] failed to send message to chat room {chat.RoomType}");
+            }
+
+            if (string.IsNullOrEmpty(chat.TheMessage.Body) == false)
+                Logger.Info($"[{chat.RoomType.GetRoomName()}] [{account})]: {chat.TheMessage.Body}", LogCategory.Chat);
         }
 
         public void OnTell(IFrontendClient senderClient, NetMessageTell tell, int prestigeLevel)
@@ -190,40 +189,6 @@ namespace MHServerEmu.Grouping.Chat
         private void SendMessageToAll(IMessage message)
         {
             _groupingManager.ClientManager.SendMessageToAll(message);
-        }
-
-        /// <summary>
-        /// Returns the <see cref="string"/> name of the specified chat room type.
-        /// </summary>
-        private static string GetRoomName(ChatRoomTypes type)
-        {
-            return type switch
-            {
-                ChatRoomTypes.CHAT_ROOM_TYPE_LOCAL                  => "Local",
-                ChatRoomTypes.CHAT_ROOM_TYPE_SAY                    => "Say",
-                ChatRoomTypes.CHAT_ROOM_TYPE_PARTY                  => "Party",
-                ChatRoomTypes.CHAT_ROOM_TYPE_TELL                   => "Tell",
-                ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS  => "Broadcast",
-                ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_ZH              => "Social-CH",
-                ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_EN              => "Social-EN",
-                ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_FR              => "Social-FR",
-                ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_DE              => "Social-DE",
-                ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_EL              => "Social-EL",
-                ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_JP              => "Social-JP",
-                ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_KO              => "Social-KO",
-                ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_PT              => "Social-PT",
-                ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_RU              => "Social-RU",
-                ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_ES              => "Social-ES",
-                ChatRoomTypes.CHAT_ROOM_TYPE_TRADE                  => "Trade",
-                ChatRoomTypes.CHAT_ROOM_TYPE_LFG                    => "LFG",
-                ChatRoomTypes.CHAT_ROOM_TYPE_GUILD                  => "Supergroup",
-                ChatRoomTypes.CHAT_ROOM_TYPE_FACTION                => "Team",
-                ChatRoomTypes.CHAT_ROOM_TYPE_EMOTE                  => "Emote",
-                ChatRoomTypes.CHAT_ROOM_TYPE_ENDGAME                => "Endgame",
-                ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME               => "Match",
-                ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER          => "Officer",
-                _                                                   => type.ToString(),
-            };
         }
     }
 }
