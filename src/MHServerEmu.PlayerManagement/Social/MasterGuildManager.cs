@@ -1,5 +1,4 @@
 ﻿using Gazillion;
-using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
@@ -11,15 +10,12 @@ namespace MHServerEmu.PlayerManagement.Social
 {
     public class MasterGuildManager
     {
-        private const string GuildNameBlacklistFile = "GuildNameBlacklist.txt";
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<ulong, MasterGuild> _guilds = new();
-        private readonly HashSet<string> _guildNamesInUse = new(StringComparer.OrdinalIgnoreCase);
-        private readonly HashSet<string> _guildNameBlacklist = new(StringComparer.OrdinalIgnoreCase);
-
         private readonly Dictionary<ulong, MasterGuild> _guildsByMember = new();
+
+        private readonly GuildNameRegistry _guildNameRegistry = new();
 
         private readonly PlayerManagerService _playerManager;
 
@@ -72,23 +68,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 numMembers += guild.MemberCount;
             }
 
-            string guildNameBlacklistPath = Path.Combine(FileHelper.DataDirectory, GuildNameBlacklistFile);
-            if (File.Exists(guildNameBlacklistPath))
-            {
-                using StreamReader reader = new(guildNameBlacklistPath);
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    line = line.Trim();
-                    
-                    if (string.IsNullOrWhiteSpace(line))
-                        continue;
-
-                    _guildNameBlacklist.Add(line);
-                }
-
-                Logger.Info($"Loaded {_guildNameBlacklist.Count} blacklisted guild names");
-            }
+            _guildNameRegistry.Initialize();
 
             TimeSpan elapsed = Clock.UnixTime - startTime;
             Logger.Info($"Initialized in {(long)elapsed.TotalMilliseconds} ms (guilds={_guilds.Count}, members={numMembers}, currentGuildId={_currentGuildId})");
@@ -129,7 +109,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (_guilds.ContainsKey(guildId))
                 return Logger.WarnReturn<MasterGuild>(null, $"CreateGuild(): Guild id {guildId} is already in use");
 
-            if (_guildNamesInUse.Add(guildName) == false)
+            if (_guildNameRegistry.AddGuildNameInUse(guildName) == false)
                 return Logger.WarnReturn<MasterGuild>(null, $"CreateGuild(): Guild name {guildName} is already in use");
 
             MasterGuild guild = new(data, saveToDatabase);
@@ -168,58 +148,27 @@ namespace MHServerEmu.PlayerManagement.Social
             if (player == null || player.State != PlayerHandleState.InGame)
                 return;
 
-            GuildFormResultCode result = ValidateGuildForm(player, guildForm);
-            if (result != GuildFormResultCode.eGFCSuccess)
-            {
-                SendGuildFormResult(guildForm.GuildName, result, player);
-                return;
-            }
-
-            long guildId = (long)++_currentGuildId;
             string guildName = guildForm.GuildName;
-            string guildMotd = string.Empty;
-            long creatorDbGuid = (long)player.PlayerDbId;
-            long creationTime = (long)Clock.UnixTime.TotalMilliseconds;
+            ulong itemId = guildForm.ItemId;
 
-            DBGuild dbGuild = new(guildId, guildName, guildMotd, creatorDbGuid, creationTime);
+            GuildFormResultCode result = player.Guild == null
+                ? _guildNameRegistry.ValidateNameForGuildForm(guildName)
+                : GuildFormResultCode.eGFCAlreadyInGuild;
 
-            DBGuildMember creator = new(creatorDbGuid, guildId, (long)GuildMembership.eGMLeader);
-            dbGuild.Members.Add(creator);
-
-            MasterGuild guild = CreateGuild(dbGuild, true);
-            if (guild == null)
+            if (result == GuildFormResultCode.eGFCSuccess)
             {
-                SendGuildFormResult(guildName, GuildFormResultCode.eGFCInternalError, player);
-                return;
+                long guildId = (long)++_currentGuildId;
+                long creatorDbGuid = (long)player.PlayerDbId;
+                long creationTime = (long)Clock.UnixTime.TotalMilliseconds;
+
+                DBGuild dbGuild = new(guildId, guildName, string.Empty, creatorDbGuid, creationTime);
+
+                DBGuildMember creator = new(creatorDbGuid, guildId, (long)GuildMembership.eGMLeader);
+                dbGuild.Members.Add(creator);
+
+                if (CreateGuild(dbGuild, true) == null)
+                    result = GuildFormResultCode.eGFCInternalError;
             }
-
-            SendGuildFormResult(guildName, GuildFormResultCode.eGFCSuccess, player, guildForm.ItemId);
-        }
-
-        private GuildFormResultCode ValidateGuildForm(PlayerHandle player, GuildForm guildForm)
-        {
-            if (player.Guild != null)
-                return GuildFormResultCode.eGFCAlreadyInGuild;
-
-            // This should have already been trimmed by the client and validated game-side on the server.
-            string guildName = guildForm.GuildName;
-
-            if (_guildNamesInUse.Contains(guildForm.GuildName))
-                return GuildFormResultCode.eGFCDuplicateName;
-
-            if (_guildNameBlacklist.Contains(guildName))
-                return GuildFormResultCode.eGFCRestrictedName;
-
-            return GuildFormResultCode.eGFCSuccess;
-        }
-
-        private static bool SendGuildFormResult(string guildName, GuildFormResultCode result, PlayerHandle player, ulong itemId = 0)
-        {
-            if (player == null)
-                return Logger.WarnReturn(false, "SendGuildFormResult(): player == null");
-
-            if (player.State != PlayerHandleState.InGame)
-                return Logger.WarnReturn(false, $"SendGuildFormResult(): Player [{player}] is not in game");
 
             ulong gameId = player.CurrentGame.Id;
 
@@ -228,7 +177,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 .SetResultCode(result)
                 .SetPlayerId(player.PlayerDbId);
 
-            if (itemId != 0)
+            if (result == GuildFormResultCode.eGFCSuccess && itemId != 0)
                 guildFormResult.SetItemId(itemId);
 
             GuildMessageSetToServer messages = GuildMessageSetToServer.CreateBuilder()
@@ -237,8 +186,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
             ServiceMessage.GuildMessageToServer message = new(gameId, messages);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
-
-            return true;
         }
 
         private void OnGuildChangeName(GuildChangeName guildChangeName)
@@ -250,7 +197,7 @@ namespace MHServerEmu.PlayerManagement.Social
             // This should have already been trimmed by the client and validated game-side on the server.
             string newGuildName = guildChangeName.GuildName;
 
-            GuildChangeNameResultCode result = ValidateGuildChangeName(newGuildName);
+            GuildChangeNameResultCode result = _guildNameRegistry.ValidateNameForGuildChangeName(newGuildName);
 
             if (result == GuildChangeNameResultCode.eGCNRCSuccess)
             {
@@ -263,8 +210,8 @@ namespace MHServerEmu.PlayerManagement.Social
 
                     if (result == GuildChangeNameResultCode.eGCNRCSuccess)
                     {
-                        _guildNamesInUse.Remove(oldGuildName);
-                        _guildNamesInUse.Add(newGuildName);
+                        _guildNameRegistry.RemoveGuildNameInUse(oldGuildName);
+                        _guildNameRegistry.AddGuildNameInUse(newGuildName);
                     }
                 }
                 else
@@ -281,17 +228,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
             ServiceMessage.GuildMessageToClient message = new(player.CurrentGame.Id, player.PlayerDbId, clientMessage);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
-        }
-
-        private GuildChangeNameResultCode ValidateGuildChangeName(string newGuildName)
-        {
-            if (_guildNameBlacklist.Contains(newGuildName))
-                return GuildChangeNameResultCode.eGCNRCRestrictedName;
-
-            if (_guildNamesInUse.Contains(newGuildName))
-                return GuildChangeNameResultCode.eGCNRCDuplicateName;
-
-            return GuildChangeNameResultCode.eGCNRCSuccess;
         }
 
         private void OnGuildInvite(GuildInvite guildInvite)
