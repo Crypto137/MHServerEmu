@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Social.Guilds
                 guild.AddMember(guildMemberInfo);
             }
 
-            Logger.Trace($"Created guild {guild}");
+            Logger.Trace($"Created guild [{guild}] in game [{Game}]");
 
             guild.ReplicateToOnlineMembers();
 
@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.Social.Guilds
             if (_guilds.Remove(guild.Id) == false)
                 Logger.Warn($"RemoveGuild(): Trying to remove guild, but not found in collection. guild={guild}");
 
-            Logger.Trace($"Destroying guild {guild}");
+            Logger.Trace($"Destroying guild [{guild}] in game [{Game}]");
 
             guild.Shutdown();
             // destroyGuild() merged with Shutdown().
@@ -145,8 +145,6 @@ namespace MHServerEmu.Games.Social.Guilds
         /// </summary>
         public void OnGuildMessage(Player player, GuildMessageSetToPlayerManager messages)
         {
-            Logger.Debug($"OnGuildMessage(): {messages}");
-
             // Validate client input (guild name / motd).
             GuildMessageCode result = GuildMessageCode.eGMC_None;
 
@@ -411,8 +409,6 @@ namespace MHServerEmu.Games.Social.Guilds
         /// </summary>
         public void OnGuildMessage(GuildMessageSetToServer messages)
         {
-            Logger.Debug($"OnGuildMessage(): {messages}");
-
             if (messages.HasGuildNameChanged)
                 OnGuildNameChanged(messages.GuildNameChanged);
 

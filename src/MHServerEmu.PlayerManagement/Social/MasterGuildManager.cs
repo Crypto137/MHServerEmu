@@ -135,8 +135,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public void OnGuildMessage(GuildMessageSetToPlayerManager messages)
         {
-            Logger.Debug($"OnGuildMessage():\n{messages}");
-
             if (messages.HasGuildForm)
                 OnGuildForm(messages.GuildForm);
 

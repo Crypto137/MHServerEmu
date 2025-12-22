@@ -405,7 +405,6 @@ namespace MHServerEmu.Games.Social.Guilds
 
         private void InvalidateGuildCompleteInfoCache()
         {
-            Logger.Debug($"InvalidateGuildCompleteInfoCache(): {this}");
             _guildCompleteInfoCache = null;
         }
 

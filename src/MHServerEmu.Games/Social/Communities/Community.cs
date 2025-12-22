@@ -441,8 +441,6 @@ namespace MHServerEmu.Games.Social.Communities
 
         public void UpdateGuild(Guilds.Guild guild)
         {
-            Logger.Debug($"UpdateGuild(): {guild}");
-
             CommunityCircle guildCircle = GetCircle(CircleId.__Guild);
             if (guildCircle == null)
             {

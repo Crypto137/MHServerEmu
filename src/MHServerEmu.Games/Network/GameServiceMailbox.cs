@@ -243,14 +243,11 @@ namespace MHServerEmu.Games.Network
 
         private void OnGuildMessageToServer(in ServiceMessage.GuildMessageToServer guildMessageToServer)
         {
-            Logger.Debug("OnGuildMessageToServer()");
             Game.GuildManager.OnGuildMessage(guildMessageToServer.Messages);
         }
 
         private void OnGuildMessageToClient(in ServiceMessage.GuildMessageToClient guildMessageToClient)
         {
-            Logger.Debug("OnGuildMessageToClient()");
-
             Player player = Game.EntityManager.GetEntityByDbGuid<Player>(guildMessageToClient.PlayerDbId);
             if (player == null)
                 return;
