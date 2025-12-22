@@ -1,6 +1,6 @@
 -- Initialize a new database file using the current schema version
 
-PRAGMA user_version=4;
+PRAGMA user_version=5;
 PRAGMA journal_mode=WAL;
 
 CREATE TABLE "Account" (
@@ -20,6 +20,7 @@ CREATE TABLE "Player" (
 	"StartTarget"	INTEGER,
 	"AOIVolume"	INTEGER,
 	"GazillioniteBalance"	INTEGER,
+	"LastLogoutTime"	INTEGER,
 	FOREIGN KEY("DbGuid") REFERENCES "Account"("Id") ON DELETE CASCADE,
 	PRIMARY KEY("DbGuid")
 );
@@ -68,6 +69,24 @@ CREATE TABLE "ControlledEntity" (
 	"ArchiveData"	BLOB,
 	FOREIGN KEY("ContainerDbGuid") REFERENCES "Avatar"("DbGuid") ON DELETE CASCADE,
 	PRIMARY KEY("DbGuid")
+);
+
+CREATE TABLE "Guild" (
+	"Id"	INTEGER NOT NULL UNIQUE,
+	"Name"	TEXT NOT NULL UNIQUE,
+	"Motd"	TEXT NOT NULL,
+	"CreatorDbGuid"	INTEGER,
+	"CreationTime"	INTEGER,
+	PRIMARY KEY("Id")
+);
+
+CREATE TABLE "GuildMember" (
+	"PlayerDbGuid"	INTEGER NOT NULL UNIQUE,
+	"GuildId"	INTEGER NOT NULL,
+	"Membership"	INTEGER NOT NULL,
+	FOREIGN KEY("PlayerDbGuid") REFERENCES "Account"("Id") ON DELETE CASCADE,
+	FOREIGN KEY("GuildId") REFERENCES "Guild"("Id") ON DELETE CASCADE,
+	PRIMARY KEY("PlayerDbGuid")
 );
 
 CREATE INDEX "IX_Avatar_ContainerDbGuid" ON "Avatar" ("ContainerDbGuid");

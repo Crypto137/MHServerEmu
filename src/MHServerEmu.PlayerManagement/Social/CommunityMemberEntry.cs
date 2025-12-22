@@ -17,6 +17,9 @@ namespace MHServerEmu.PlayerManagement.Social
         {
             _broadcastBuilder.SetMemberPlayerDbId(playerDbId);
             _broadcastBuilder.SetCurrentPlayerName(currentPlayerName);
+
+            // Need to have a valid level for members to show up in the guild tab (WHY???)
+            _avatarSlotBuilder.SetLevel(1);
         }
 
         public CommunityMemberBroadcast GetBroadcast()

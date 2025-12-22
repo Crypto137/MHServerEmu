@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.DatabaseAccess;
 using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Social
@@ -178,7 +179,12 @@ namespace MHServerEmu.PlayerManagement.Social
 
                 queryMember = AddMemberEntry(playerDbId, playerName);
                 queryMember.SetIsOnline(false);
-                // TODO: query last logout time from the database, we don't really need it until we implement guilds.
+
+                if (_playerManager.GuildManager.GetGuildForPlayer(playerDbId) != null)
+                {
+                    if (IDBManager.Instance.TryGetLastLogoutTime(playerDbId, out long lastLogoutTime))
+                        queryMember.SetLastLogoutTime(TimeSpan.FromMilliseconds(lastLogoutTime));
+                }
             }
 
             return queryMember.GetBroadcast();

@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Grouping.Chat;
 
 namespace MHServerEmu.Grouping
 {

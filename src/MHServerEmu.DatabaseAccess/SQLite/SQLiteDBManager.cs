@@ -13,7 +13,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
     /// </summary>
     public class SQLiteDBManager : IDBManager
     {
-        private const int CurrentSchemaVersion = 4;         // Increment this when making changes to the database schema
+        private const int CurrentSchemaVersion = 5;         // Increment this when making changes to the database schema
         private const int NumTestAccounts = 5;              // Number of test accounts to create for new database files
         private const int NumPlayerDataWriteAttempts = 3;   // Number of write attempts to do when saving player data
 
@@ -37,7 +37,10 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             var config = ConfigManager.Instance.GetConfig<SQLiteDBManagerConfig>();
 
             _dbFilePath = Path.Combine(FileHelper.DataDirectory, config.FileName);
-            _connectionString = $"Data Source={_dbFilePath};Synchronous=NORMAL;";
+            _connectionString = $"Data Source={_dbFilePath};Synchronous=NORMAL;foreign_keys=OFF;";
+
+            // TODO: Foreign key constraints are explicitly disabled for now because our Item table references
+            // multiple parent tables (Player / Avatar / TeamUp) at the same time. Need to find an elegant way to fix that.
 
             if (File.Exists(_dbFilePath) == false)
             {
@@ -90,11 +93,11 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return true;
         }
 
-        public bool TryGetPlayerName(ulong id, out string playerName)
+        public bool TryGetPlayerName(ulong playerDbId, out string playerName)
         {
             using SQLiteConnection connection = GetConnection();
             
-            playerName = connection.QueryFirstOrDefault<string>("SELECT PlayerName FROM Account WHERE Id = @Id", new { Id = (long)id });
+            playerName = connection.QueryFirstOrDefault<string>("SELECT PlayerName FROM Account WHERE Id = @Id", new { Id = (long)playerDbId });
 
             return string.IsNullOrWhiteSpace(playerName) == false;
         }
@@ -109,6 +112,15 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 playerNames[(ulong)account.Id] = account.PlayerName;
 
             return playerNames.Count > 0;
+        }
+
+        public bool TryGetLastLogoutTime(ulong playerDbId, out long lastLogoutTime)
+        {
+            using SQLiteConnection connection = GetConnection();
+
+            lastLogoutTime = connection.QueryFirstOrDefault<long>("SELECT LastLogoutTime FROM Player WHERE DbGuid = @DbGuid", new { DbGuid = (long)playerDbId });
+
+            return lastLogoutTime > 0;
         }
 
         public bool InsertAccount(DBAccount account)
@@ -202,6 +214,129 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             }
 
             return Logger.WarnReturn(false, $"SavePlayerData(): Failed to write player data for account [{account}]");
+        }
+
+        public bool LoadGuilds(List<DBGuild> outGuilds)
+        {
+            try
+            {
+                using SQLiteConnection connection = GetConnection();
+
+                IEnumerable<DBGuild> guildQueryResult = connection.Query<DBGuild>("SELECT * FROM Guild");
+                IEnumerable<DBGuildMember> memberQueryResult = connection.Query<DBGuildMember>("SELECT * FROM GuildMember");
+
+                outGuilds.AddRange(guildQueryResult);
+
+                // This is going to be called only on server startup, so it's fine not to pool this.
+                Dictionary<long, DBGuild> guildLookup = new(outGuilds.Count);
+                foreach (DBGuild guild in outGuilds)
+                    guildLookup.Add(guild.Id, guild);
+
+                foreach (DBGuildMember member in memberQueryResult)
+                {
+                    if (guildLookup.TryGetValue(member.GuildId, out DBGuild guild) == false)
+                    {
+                        Logger.Warn($"LoadGuilds(): Found orphan member [{member}]");
+                        continue;
+                    }
+
+                    guild.Members.Add(member);
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                outGuilds.Clear();
+                Logger.ErrorException(e, nameof(LoadGuilds));
+                return false;
+            }
+        }
+
+        public bool SaveGuild(DBGuild guild)
+        {
+            try
+            {
+                using SQLiteConnection connection = GetConnection();
+
+                int inserted = connection.Execute("INSERT OR IGNORE INTO Guild (Id, Name, Motd, CreatorDbGuid, CreationTime) VALUES (@Id, @Name, @Motd, @CreatorDbGuid, @CreationTime)", guild);
+
+                // Only name and MOTD should be mutable after creation.
+                if (inserted == 0)
+                    connection.Execute("UPDATE Guild SET Name=@Name, Motd=@Motd WHERE Id=@Id", guild);
+
+                Logger.Trace($"SaveGuild(): {guild}");
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(SaveGuild));
+                return false;
+            }
+        }
+
+        public bool DeleteGuild(DBGuild guild)
+        {
+            using SQLiteConnection connection = GetConnection();
+            using SQLiteTransaction transaction = connection.BeginTransaction();
+
+            try
+            {
+                // TODO: Enable foreign key constraints in the connection string and just delete the row from the parent table when we fix the Item table.
+                connection.Execute("DELETE FROM GuildMember WHERE GuildId = @Id", guild, transaction);
+                connection.Execute("DELETE FROM Guild WHERE Id = @Id", guild, transaction);
+
+                transaction.Commit();
+
+                Logger.Trace($"DeleteGuild(): {guild}");
+                return true;
+            }
+            catch (Exception e)
+            {
+                transaction.Rollback();
+                Logger.ErrorException(e, nameof(DeleteGuild));
+                return false;
+            }
+        }
+
+        public bool SaveGuildMember(DBGuildMember guildMember)
+        {
+            try
+            {
+                using SQLiteConnection connection = GetConnection();
+
+                int inserted = connection.Execute("INSERT OR IGNORE INTO GuildMember (PlayerDbGuid, GuildId, Membership) VALUES (@PlayerDbGuid, @GuildId, @Membership)", guildMember);
+
+                // Only membership should be mutable after creation.
+                if (inserted == 0)
+                    connection.Execute("UPDATE GuildMember SET Membership=@Membership WHERE PlayerDbGuid=@PlayerDbGuid", guildMember);
+
+                Logger.Trace($"SaveGuildMember(): {guildMember}");
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(SaveGuildMember));
+                return false;
+            }
+        }
+
+        public bool DeleteGuildMember(DBGuildMember guildMember)
+        {
+            try
+            {
+                using SQLiteConnection connection = GetConnection();
+
+                connection.Execute("DELETE FROM GuildMember WHERE PlayerDbGuid = @PlayerDbGuid", guildMember);
+
+                Logger.Trace($"DeleteGuildMember(): {guildMember}");
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(DeleteGuildMember));
+                return false;
+            }
         }
 
         /// <summary>
@@ -323,9 +458,9 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     // Update player entity
                     if (account.Player != null)
                     {
-                        connection.Execute(@$"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
-                        connection.Execute(@$"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget,
-                                            AOIVolume=@AOIVolume, GazillioniteBalance=@GazillioniteBalance WHERE DbGuid = @DbGuid",
+                        connection.Execute(@"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
+                        connection.Execute(@"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget, AOIVolume=@AOIVolume,
+                                            GazillioniteBalance=@GazillioniteBalance, LastLogoutTime=@LastLogoutTime WHERE DbGuid = @DbGuid",
                                             account.Player, transaction);
                     }
                     else

@@ -108,6 +108,14 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     RouteMessageToGame(partyMemberInfoServerUpdate.GameId, partyMemberInfoServerUpdate);
                     break;
 
+                case ServiceMessage.GuildMessageToServer guildMessageToServer:
+                    RouteMessageToGame(guildMessageToServer.GameId, guildMessageToServer);
+                    break;
+
+                case ServiceMessage.GuildMessageToClient guildMessageToClient:
+                    RouteMessageToGame(guildMessageToClient.GameId, guildMessageToClient);
+                    break;
+
                 case ServiceMessage.MatchQueueUpdate matchQueueUpdate:
                     RouteMessageToGame(matchQueueUpdate.GameId, matchQueueUpdate);
                     break;

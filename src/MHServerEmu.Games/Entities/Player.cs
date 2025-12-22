@@ -111,9 +111,9 @@ namespace MHServerEmu.Games.Entities
 
         private RepVar_ulong _partyId = new();
 
-        private ulong _guildId;
-        private string _guildName;
-        private GuildMembership _guildMembership;
+        private ulong _guildId = GuildManager.InvalidGuildId;
+        private string _guildName = string.Empty;
+        private GuildMembership _guildMembership = GuildMembership.eGMNone;
 
         private Community _community;
         private List<PrototypeId> _unlockedInventoryList = new();
@@ -165,7 +165,6 @@ namespace MHServerEmu.Games.Entities
         public Avatar PrimaryAvatar { get => CurrentAvatar; } // Fix for PC
         public Avatar SecondaryAvatar { get; private set; }
         public int CurrentAvatarCharacterLevel { get => PrimaryAvatar?.CharacterLevel ?? 0; }
-        public GuildMembership GuildMembership { get; internal set; }
         public PrototypeId ActiveChapter { get => Properties[PropertyEnum.ActiveMissionChapter]; }
         public PrototypeId Faction { get => Properties[PropertyEnum.Faction]; }
         public ulong DialogTargetId { get; private set; }
@@ -180,6 +179,11 @@ namespace MHServerEmu.Games.Entities
         public override ulong PartyId { get => _partyId.Get(); }
         public bool IsInParty { get => PartyId != 0; }
         public List<PrototypeId> PartyFilters { get; } = new();
+
+        public ulong GuildId { get => _guildId; }
+        public string GuildName { get => _guildName; }
+        public GuildMembership GuildMembership { get => _guildMembership; }
+        public bool IsInGuild { get => _guildId != GuildManager.InvalidGuildId; }
 
         public PlayerTradeStatusCode PlayerTradeStatusCode { get; private set; } = PlayerTradeStatusCode.ePTSC_None;
         public string PlayerTradePartnerName { get; private set; } = string.Empty;
@@ -521,6 +525,8 @@ namespace MHServerEmu.Games.Entities
             InitializeVendors();
             ScheduleCheckHoursPlayedEvent();
             UpdateUISystemLocks();
+
+            Game.GuildManager.OnPlayerEnteringGame(this);
         }
 
         public override void ExitGame()
@@ -535,6 +541,8 @@ namespace MHServerEmu.Games.Entities
 
         public override void Destroy()
         {
+            Game.GuildManager.OnPlayerLeavingGame(this);
+
             var region = GetRegion();
             if (region != null)
                 MissionManager.Shutdown(region);
@@ -4621,6 +4629,59 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Guild
+
+        public Social.Guilds.Guild GetGuild()
+        {
+            return Game.GuildManager.GetGuild(_guildId);
+        }
+
+        public bool SetGuildMembership(ulong guildId, string guildName, GuildMembership guildMembership)
+        {
+            if (_guildId == guildId && _guildName == guildName && _guildMembership == guildMembership)
+                return false;
+
+            _guildId = guildId;
+            _guildName = guildName;
+            _guildMembership = guildMembership;
+
+            foreach (Avatar avatar in new AvatarIterator(this))
+                avatar.SetGuildMembership(guildId, guildName, guildMembership);
+
+            GuildMember.SendEntityGuildInfo(this, guildId, guildName, guildMembership);
+
+            if (guildId != GuildManager.InvalidGuildId)
+            {
+                Social.Guilds.Guild guild = Game.GuildManager.GetGuild(guildId);
+                if (guild != null)
+                    Community.UpdateGuild(guild);
+                else
+                    Logger.Warn("SetGuildMembership(): guild == null");
+            }
+            else
+            {
+                Community.UpdateGuild(null);
+            }
+
+            return true;
+        }
+
+        public bool GuildsAreUnlocked()
+        {
+            // This property check existed in older versions of the game (at least 1.10-1.25), but it had been removed as of 1.48.
+            // Although it's meaningless in later versions, I'm leaving this in for consistency / reference.
+            //return Properties[PropertyEnum.GuildsUnlocked];
+            return true;
+        }
+
+        public bool UnlockGuilds(bool value)
+        {
+            // See GuildsAreUnlocked()
+            return true;
+        }
+
+        #endregion
+
         #region MTXStore
 
         public bool IsGiftingAllowed()
@@ -4795,7 +4856,7 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(_accountCreationTimestamp)}: {Clock.UnixTimeToDateTime(_accountCreationTimestamp)}");
             sb.AppendLine($"{nameof(_partyId)}: {_partyId}");
 
-            if (_guildId != GuildMember.InvalidGuildId)
+            if (_guildId != GuildManager.InvalidGuildId)
             {
                 sb.AppendLine($"{nameof(_guildId)}: {_guildId}");
                 sb.AppendLine($"{nameof(_guildName)}: {_guildName}");

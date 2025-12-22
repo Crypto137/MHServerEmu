@@ -49,6 +49,10 @@ namespace MHServerEmu.Grouping
                     OnGroupingManagerServerNotification(groupingManagerServerNotification);
                     break;
 
+                case ServiceMessage.GroupingManagerChatRoomOperation groupingManagerChatRoomOperation:
+                    OnGroupingManagerChatRoomOperation(groupingManagerChatRoomOperation);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                     break;
@@ -135,6 +139,29 @@ namespace MHServerEmu.Grouping
             string notificationText = groupingManagerServerNotification.NotificationText;
 
             _groupingManager.ChatManager.OnServerNotification(notificationText);
+        }
+
+        private void OnGroupingManagerChatRoomOperation(in ServiceMessage.GroupingManagerChatRoomOperation groupingManagerChatRoomOperation)
+        {
+            ChatRoomTypes roomType = groupingManagerChatRoomOperation.RoomType;
+            ulong roomId = groupingManagerChatRoomOperation.RoomId;
+            ulong playerDbId = groupingManagerChatRoomOperation.PlayerDbId;
+            ChatRoomOperationType operation = groupingManagerChatRoomOperation.Operation;
+
+            switch (operation)
+            {
+                case ChatRoomOperationType.Add:
+                    _groupingManager.ChatManager.AddPlayerToRoom(roomType, roomId, playerDbId);
+                    break;
+
+                case ChatRoomOperationType.Remove:
+                    _groupingManager.ChatManager.RemovePlayerFromRoom(roomType, roomId, playerDbId);
+                    break;
+
+                default:
+                    Logger.Warn("OnGroupingManagerChatRoomOperation(): Unhandled operation");
+                    break;
+            }
         }
 
         #endregion

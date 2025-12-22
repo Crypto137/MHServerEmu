@@ -70,6 +70,8 @@ namespace MHServerEmu.PlayerManagement.Players
         public MasterParty PendingParty { get; internal set; }
         public MasterParty CurrentParty { get; internal set; }
 
+        public MasterGuild Guild { get; internal set; }
+
         public RegionRequestGroup RegionRequestGroup { get; internal set; }
 
         public bool HasTransferParams { get => _transferParams != null; }
@@ -140,6 +142,9 @@ namespace MHServerEmu.PlayerManagement.Players
             // Remove from region
             SetTargetRegion(null);
             SetActualRegion(null);
+
+            // Remove from guild
+            Guild?.OnMemberOffline(this);
 
             // Remove from matchmaking
             RegionRequestGroup?.RemovePlayer(this);
@@ -763,6 +768,18 @@ namespace MHServerEmu.PlayerManagement.Players
             _regionRequestQueueCommandHandler.HandleCommand(regionRef, difficultyTierRef, metaStateRef, command, regionRequestGroupId, targetPlayerDbId);
         }
 
+        public void AddToChatRoom(ChatRoomTypes roomType, ulong roomId)
+        {
+            ServiceMessage.GroupingManagerChatRoomOperation message = new(roomType, roomId, PlayerDbId, ChatRoomOperationType.Add);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, message);
+        }
+
+        public void RemoveFromChatRoom(ChatRoomTypes roomType, ulong roomId)
+        {
+            ServiceMessage.GroupingManagerChatRoomOperation message = new(roomType, roomId, PlayerDbId, ChatRoomOperationType.Remove);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, message);
+        }
+
         private void SetTransferParams(ulong gameId, NetStructTransferParams transferParams)
         {
             if (transferParams != null && _transferParams != null)
@@ -830,15 +847,25 @@ namespace MHServerEmu.PlayerManagement.Players
 
             RegionHandle prevRegion = ActualRegion;
 
-            prevRegion?.Unreserve(RegionReservationType.Presence);
+            if (prevRegion != null)
+            {
+                prevRegion.Unreserve(RegionReservationType.Presence);
+                RemoveFromChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_LOCAL, prevRegion.Id);
+            }
 
             ActualRegion = newRegion;
 
-            // This additional reservation will prevent the region from shutting down if there are still any players in it,
-            // even if the region is no longer in any world views for whatever reason.
-            newRegion?.Reserve(RegionReservationType.Presence);
+            if (newRegion != null)
+            {
+                // This additional reservation will prevent the region from shutting down if there are still any players in it,
+                // even if the region is no longer in any world views for whatever reason.
+                newRegion.Reserve(RegionReservationType.Presence);
+                AddToChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_LOCAL, newRegion.Id);
+            }
 
             // Community will be updated when we receive a broadcast from the game instance.
+
+            Guild?.OnMemberRegionChanged(this, newRegion, prevRegion);
 
             // Remove the previous region from the WorldView if it needs to be shut down.
             if (prevRegion != null && prevRegion.Flags.HasFlag(RegionFlags.ShutdownWhenVacant))

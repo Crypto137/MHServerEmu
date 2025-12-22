@@ -29,6 +29,12 @@ namespace MHServerEmu.Core.Network
         RemoveResponse,
     }
 
+    public enum ChatRoomOperationType
+    {
+        Add,
+        Remove,
+    }
+
     #endregion
 
     public static class ServiceMessage
@@ -386,6 +392,39 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
+        /// [Game -> PlayerManager] Routes guild messages to the player manager.
+        /// </summary>
+        public readonly struct GuildMessageToPlayerManager(GuildMessageSetToPlayerManager messages)
+            : IGameServiceMessage
+        {
+            public readonly GuildMessageSetToPlayerManager Messages = messages;
+        }
+
+        // NOTE: In the protocol for 1.53 there is a single GuildMessageToServer protobuf that is used for both client and server guild messages.
+        // Server messages don't actually need a list of players, and it makes more sense to split them.
+
+        /// <summary>
+        /// [PlayerManager -> Game] Routes guild messages from the player manager to a game instance.
+        /// </summary>
+        public readonly struct GuildMessageToServer(ulong gameId, GuildMessageSetToServer serverMessages)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly GuildMessageSetToServer Messages = serverMessages;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] Routes guilds messages from the player manager to a client in a game instance.
+        /// </summary>
+        public readonly struct GuildMessageToClient(ulong gameId, ulong playerDbId, GuildMessageSetToClient messages)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly GuildMessageSetToClient Messages = messages;
+        }
+
+        /// <summary>
         /// [Game -> PlayerManager] Relays a match region request command from a client.
         /// </summary>
         public readonly struct MatchRegionRequestQueueCommand(ulong playerDbId, ulong regionProtoId, ulong difficultyTierProtoId, ulong metaStateProtoId, RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId)
@@ -478,6 +517,18 @@ namespace MHServerEmu.Core.Network
             : IGameServiceMessage
         {
             public readonly string NotificationText = notificationText;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> GroupingManager] Adds/removes a player to/from the specified chat room.
+        /// </summary>
+        public readonly struct GroupingManagerChatRoomOperation(ChatRoomTypes roomType, ulong roomId, ulong playerDbId, ChatRoomOperationType operation)
+            : IGameServiceMessage
+        {
+            public readonly ChatRoomTypes RoomType = roomType;
+            public readonly ulong RoomId = roomId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ChatRoomOperationType Operation = operation;
         }
 
         #endregion

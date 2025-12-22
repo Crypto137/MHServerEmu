@@ -82,6 +82,7 @@ namespace MHServerEmu.Games.Entities.Items
         public bool IsTeamUpGear { get => Prototype is TeamUpGearPrototype; }
         public bool IsGem { get => ItemPrototype?.IsGem == true; }
         public bool IsClonedWhenPurchasedFromVendor { get => ItemPrototype?.ClonedWhenPurchasedFromVendor == true; }
+        public bool IsGuildUnlockItem { get => HasItemActionType(ItemActionType.GuildUnlock); }
 
         public Item(Game game) : base(game) 
         {

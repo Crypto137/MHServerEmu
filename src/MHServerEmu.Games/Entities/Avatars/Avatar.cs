@@ -69,9 +69,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         private List<AbilityKeyMapping> _transientAbilityKeyMappings;   // Non-persistent ability key mappings used for transform modes (init on demand)
         private AbilityKeyMapping _currentAbilityKeyMapping;            // Reference to the currently active ability key mapping
 
-        private ulong _guildId = GuildMember.InvalidGuildId;
+        private ulong _guildId = GuildManager.InvalidGuildId;
         private string _guildName = string.Empty;
         private GuildMembership _guildMembership = GuildMembership.eGMNone;
+
         private readonly PendingPowerData _continuousPowerData = new();
         private readonly PendingAction _pendingAction = new();
 
@@ -148,8 +149,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (settings.InventoryLocation != null)
                 player = Game.EntityManager.GetEntity<Player>(settings.InventoryLocation.ContainerId);
 
-            if (player == null)
+            if (player != null)
+            {
+                SetPlayer(player);
+                SetGuildMembership(player.GuildId, player.GuildName, player.GuildMembership);
+            }
+            else
+            {
                 Logger.Warn("ApplyInitialReplicationState(): player == null");
+            }
 
             if (settings.ArchiveData != null)
             {
@@ -6749,6 +6757,24 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
+        #region Guild
+
+        public bool SetGuildMembership(ulong guildId, string guildName, GuildMembership guildMembership)
+        {
+            if (_guildId == guildId && _guildName == guildName && _guildMembership == guildMembership)
+                return false;
+
+            _guildId = guildId;
+            _guildName = guildName;
+            _guildMembership = guildMembership;
+
+            GuildMember.SendEntityGuildInfo(this, guildId, guildName, guildMembership);
+
+            return true;
+        }
+
+        #endregion
+
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
@@ -6756,7 +6782,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
             sb.AppendLine($"{nameof(_ownerPlayerDbId)}: 0x{OwnerPlayerDbId:X}");
 
-            if (_guildId != GuildMember.InvalidGuildId)
+            if (_guildId != GuildManager.InvalidGuildId)
             {
                 sb.AppendLine($"{nameof(_guildId)}: {_guildId}");
                 sb.AppendLine($"{nameof(_guildName)}: {_guildName}");

@@ -95,6 +95,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
                 _members.Add(player);
                 player.CurrentParty = this;
+                player.AddToChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_PARTY, Id);
 
                 WorldView.AddOwner(player);
 
@@ -119,6 +120,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 return false;
 
             player.CurrentParty = null;
+            player.RemoveFromChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_PARTY, Id);
 
             WorldView.RemoveOwner(player);
 

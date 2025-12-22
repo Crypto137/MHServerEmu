@@ -88,6 +88,12 @@ namespace MHServerEmu.DatabaseAccess.Json
             return false;
         }
 
+        public bool TryGetLastLogoutTime(ulong playerDbId, out long lastLogoutTime)
+        {
+            lastLogoutTime = 0;
+            return false;
+        }
+
         public bool InsertAccount(DBAccount account)
         {
             return Logger.WarnReturn(false, "InsertAccount(): Operation not supported");
@@ -116,6 +122,37 @@ namespace MHServerEmu.DatabaseAccess.Json
 
             return true;
         }
+
+        #region Guilds
+
+        // TODO: Guilds are currently not supported by the JSON backend.
+
+        public bool LoadGuilds(List<DBGuild> guilds)
+        {
+            return true;
+        }
+
+        public bool SaveGuild(DBGuild guild)
+        {
+            return true;
+        }
+
+        public bool DeleteGuild(DBGuild guild)
+        {
+            return true;
+        }
+
+        public bool SaveGuildMember(DBGuildMember guildMember)
+        {
+            return true;
+        }
+
+        public bool DeleteGuildMember(DBGuildMember guildMember)
+        {
+            return true;
+        }
+
+        #endregion
 
         /// <summary>
         /// Creates a backup of the account file if enough time has passed since the last one.

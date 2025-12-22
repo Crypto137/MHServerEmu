@@ -7,6 +7,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Social.Guilds;
 using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Social.Communities
@@ -407,7 +408,7 @@ namespace MHServerEmu.Games.Social.Communities
             CommunityCircle partyCircle = GetCircle(CircleId.__Party);
             if (partyCircle == null)
             {
-                Logger.Warn("UpdateFromParty(): partyCircle == null");
+                Logger.Warn("UpdateParty(): partyCircle == null");
                 return;
             }
 
@@ -434,6 +435,38 @@ namespace MHServerEmu.Games.Social.Communities
 
             foreach (ulong playerDbId in membersToRemove)
                 RemoveMember(playerDbId, CircleId.__Party);
+
+            ListPool<ulong>.Instance.Return(membersToRemove);
+        }
+
+        public void UpdateGuild(Guilds.Guild guild)
+        {
+            CommunityCircle guildCircle = GetCircle(CircleId.__Guild);
+            if (guildCircle == null)
+            {
+                Logger.Warn("UpdateGuild(): guildCircle == null");
+                return;
+            }
+
+            // Add members
+            if (guild != null)
+            {
+                foreach (GuildMember member in guild)
+                    AddMember(member.Id, member.Name, CircleId.__Guild);
+            }
+
+            // Remove members
+            List<ulong> membersToRemove = ListPool<ulong>.Instance.Get();
+
+            foreach (CommunityMember member in IterateMembers(guildCircle))
+            {
+                ulong playerDbId = member.DbId;
+                if (guild == null || guild.GetMember(playerDbId) == null)
+                    membersToRemove.Add(playerDbId);
+            }
+
+            foreach (ulong playerDbId in membersToRemove)
+                RemoveMember(playerDbId, CircleId.__Guild);
 
             ListPool<ulong>.Instance.Return(membersToRemove);
         }
