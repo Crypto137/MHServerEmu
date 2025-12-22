@@ -6,8 +6,6 @@ The only currently supported version of the game client is **1.52.0.1700** (also
 
 We post development progress reports on our [blog](https://crypto137.github.io/MHServerEmu/). You can find additional information on various topics in the [documentation](./docs/Index.md). If you would like to discuss this project and/or help with its development, feel free to join our [Discord](https://discord.gg/hjR8Bj52t3).
 
-**Please make sure to read our [contribution guidelines](./CONTRIBUTING.md) if you would like to participate in the development of this project.**
-
 ## Download
 
 We provide two kinds of builds: stable and nightly.
@@ -34,17 +32,7 @@ You can always upgrade from stable to nightly simply by downloading the latest n
 
 ## Features
 
-MHServerEmu is feature-complete as a single player experience, and we are actively working on getting the remaining multiplayer features up and running:
-
-- Store Gifting
-
-- Supergroups
-
-- Matchmaking
-
-- PvP
-
-- Trade Window
+MHServerEmu is currently feature-complete, but still in the polishing stage. All the major gameplay and social systems that existed in 2017 have been restored, and we are currently focusing on optimization and bug fixes. **Currently we aim to release version 1.0 in the first quarter of 2026.**
 
 You can find up to date information on what we are working on in [our roadmap](https://github.com/users/Crypto137/projects/5).
 

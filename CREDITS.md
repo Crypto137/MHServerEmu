@@ -1,6 +1,6 @@
 # MHServerEmu Thanks/Credits file
 
-## Contributors
+## Developers
 
 - AlexBond
 
@@ -8,9 +8,27 @@
 
 - Kawaikikinou
 
-- SirLimbo
-
 - yn01
+
+## Discord MVPs
+
+Our Discord server MVPs are not directly involved with the development of MHServerEmu, but they all helped the Marvel Heroes community in various ways.
+
+- Astrid
+
+- Doods
+
+- DrUnkenMonk
+
+- FF_Lowthor
+
+- MonEll
+
+- Pyrox
+
+- Rylok
+
+- SinisterSpatula
 
 ## Special Thanks
 
@@ -18,8 +36,6 @@
 
 - mooege and diiis for inspiration.
 
-- All the Discord MVPs and taskmasters who help us.
-
 - Black Cat for her abilities of math and cheating death.
 
-- All the people who worked on the game in any capacity.
+- All the Gazillion developers who worked on the game in any capacity.
