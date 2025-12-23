@@ -16,7 +16,7 @@ The following instructions are intended for stable builds of the server. If you 
 
 1. Run `StartServer.bat` and wait for MHServerEmu to initialize. There should be two server windows, one of them should be minimized by default and blank.
 
-2. (Optional) Open http://localhost:8080/AccountManagement/Create and create an account. Please note that this link is going to work only when the server is running.
+2. (Optional) Open [http://localhost:8080/Dashboard/](http://localhost:8080/Dashboard/) and create an account. Please note that this link is going to work only when the server is running.
 
 3. Run `StartClient.bat` and log in with your created account OR run `StartClientAutoLogin.bat` to play with a default account.
 

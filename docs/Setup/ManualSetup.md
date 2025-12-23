@@ -31,7 +31,7 @@ Now you can actually start everything and get in-game.
 
 2. Start MHServerEmu and wait for it to load.
 
-3. Open the following link in your web browser and create your account: [http://localhost:8080/AccountManagement/Create](http://localhost:8080/AccountManagement/Create). This link is going to work only when MHServerEmu is fully up and running.
+3. Open the following link in your web browser and create your account: [http://localhost:8080/Dashboard/](http://localhost:8080/Dashboard/). This link is going to work only when MHServerEmu is fully up and running.
 
 4. Launch the game with the following argument: `-siteconfigurl=localhost/SiteConfig.xml`.
 
