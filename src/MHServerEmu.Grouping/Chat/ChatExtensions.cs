@@ -56,5 +56,23 @@ namespace MHServerEmu.Grouping.Chat
 
             return true;
         }
+
+        /// <summary>
+        /// Returns <see cref="true"/> if the specified chat room type is private
+        /// and should potentially be excluded from logs.
+        /// </summary>
+        public static bool IsPrivateChatRoom(this ChatRoomTypes roomType)
+        {
+            switch (roomType)
+            {
+                case ChatRoomTypes.CHAT_ROOM_TYPE_PARTY:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_TELL:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER:
+                    return true;
+            }
+
+            return false;
+        }
     }
 }
