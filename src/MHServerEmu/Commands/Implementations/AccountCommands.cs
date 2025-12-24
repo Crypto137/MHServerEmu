@@ -91,11 +91,20 @@ namespace MHServerEmu.Commands.Implementations
         public string UserLevel(string[] @params, NetClient client)
         {
             string email = @params[0].ToLower();
+            string userLevelString = @params[1];
 
-            if (uint.TryParse(@params[1], out uint userLevelValue) == false)
-                return "Failed to parse user level.";
+            AccountUserLevel userLevel;
 
-            AccountUserLevel userLevel = (AccountUserLevel)userLevelValue;
+            if (uint.TryParse(userLevelString, out uint userLevelValue))
+            {
+                userLevel = (AccountUserLevel)userLevelValue;
+            }
+            else
+            {
+                // Fall back to name parsing if the provided param is not a number.
+                if (Enum.TryParse(userLevelString, true, out userLevel) == false)
+                    return "Failed to parse user level.";
+            }
 
             if (userLevel > AccountUserLevel.Admin)
                 return "Invalid arguments. Type 'help account userlevel' to get help.";
