@@ -47,8 +47,7 @@ namespace MHServerEmu.PlayerManagement.Players
             IDBManager dbManager = IDBManager.Instance;
 
             // Try to query an account to check
-            string email = loginDataPB.EmailAddress.ToLower();
-            if (dbManager.TryQueryAccountByEmail(email, out DBAccount accountToCheck) == false)
+            if (dbManager.TryQueryAccountByEmail(loginDataPB.EmailAddress, out DBAccount accountToCheck) == false)
                 return AuthStatusCode.IncorrectUsernameOrPassword403;
 
             // Check the account we queried if our DB manager requires it
@@ -94,6 +93,8 @@ namespace MHServerEmu.PlayerManagement.Players
         public static AccountOperationResult CreateAccount(string email, string playerName, string password)
         {
             IDBManager dbManager = IDBManager.Instance;
+
+            email = email.ToLowerInvariant();
 
             // Validate input before doing database queries
             if (ValidateEmail(email) == false)

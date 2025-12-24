@@ -65,10 +65,10 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         public bool TryQueryAccountByEmail(string email, out DBAccount account)
         {
             using SQLiteConnection connection = GetConnection();
-            var accounts = connection.Query<DBAccount>("SELECT * FROM Account WHERE Email = @Email", new { Email = email });
 
-            // Associated player data is loaded separately
-            account = accounts.FirstOrDefault();
+            // This is just the base account entry, associated player data is loaded separately
+            account = connection.QueryFirstOrDefault<DBAccount>("SELECT * FROM Account WHERE Email = @Email COLLATE NOCASE", new { Email = email });
+
             return account != null;
         }
 

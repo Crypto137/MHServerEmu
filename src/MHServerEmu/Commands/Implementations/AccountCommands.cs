@@ -21,7 +21,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(3)]
         public string Create(string[] @params, NetClient client)
         {
-            string email = @params[0].ToLower();
+            string email = @params[0];
             string playerName = @params[1];
             string password = @params[2];
 
@@ -41,7 +41,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(2)]
         public string PlayerName(string[] @params, NetClient client)
         {
-            string email = @params[0].ToLower();
+            string email = @params[0];
             string playerName = @params[1];
 
             DBAccount account = CommandHelper.GetClientAccount(client);
@@ -65,7 +65,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(2)]
         public string Password(string[] @params, NetClient client)
         {
-            string email = @params[0].ToLower();
+            string email = @params[0];
             string password = @params[1];
 
             DBAccount account = CommandHelper.GetClientAccount(client);
@@ -90,7 +90,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(2)]
         public string UserLevel(string[] @params, NetClient client)
         {
-            string email = @params[0].ToLower();
+            string email = @params[0];
             string userLevelString = @params[1];
 
             AccountUserLevel userLevel;
@@ -126,7 +126,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(2)]
         public string Verify(string[] @params, NetClient client)
         {
-            var loginDataPB = LoginDataPB.CreateBuilder().SetEmailAddress(@params[0].ToLower()).SetPassword(@params[1]).Build();
+            var loginDataPB = LoginDataPB.CreateBuilder().SetEmailAddress(@params[0]).SetPassword(@params[1]).Build();
             AuthStatusCode statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, false, out _);
 
             if (statusCode == AuthStatusCode.Success)
@@ -142,7 +142,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Ban(string[] @params, NetClient client)
         {
-            string email = @params[0].ToLower();
+            string email = @params[0];
             return SetAccountFlag(email, AccountFlags.IsBanned);
         }
 
@@ -153,7 +153,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Unban(string[] @params, NetClient client)
         {
-            string email = @params[0].ToLower();
+            string email = @params[0];
             return ClearAccountFlag(email, AccountFlags.IsBanned);
         }
 
@@ -164,7 +164,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Whitelist(string[] @params, NetClient client)
         {
-            string email = @params[0].ToLower();
+            string email = @params[0];
             return SetAccountFlag(email, AccountFlags.IsWhitelisted);
         }
 
@@ -175,7 +175,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Unwhitelist(string[] @params, NetClient client)
         {
-            string email = @params[0].ToLower();
+            string email = @params[0];
             return ClearAccountFlag(email, AccountFlags.IsWhitelisted);
         }
 
