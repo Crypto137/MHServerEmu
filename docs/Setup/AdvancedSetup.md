@@ -41,11 +41,11 @@ Setting the server up for connections outside of your local network requires the
 
 ## Managing Accounts
 
-You can create and manage accounts by using ! commands in the server console or the in-game chat window. Here are some commands to get you started:
+You can create and manage accounts by using `!` commands in the server console or the in-game chat window. Here are some commands to get you started:
 
 - `!account create [email] [playerName] [password]` - creates a new account with the specified email, player name, and password. Email and player name must be unique for each account.
 
-- `!account userlevel [0|1|2]` - sets user level for the specified account to user (0), moderator (1), or admin (2). Higher user levels enable additional in-game command privileges, up to being able to manage other accounts and shut down the server.
+- `!account userlevel [email] [0|1|2]` - sets user level for the specified account to user (0), moderator (1), or admin (2). Higher user levels enable additional in-game command privileges, up to being able to manage other accounts and shut down the server.
 
 - `!account password [email] [newPassword]` - changes password for the specified account.
 
