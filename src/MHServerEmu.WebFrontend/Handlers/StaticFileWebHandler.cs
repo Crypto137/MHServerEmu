@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network.Web;
 
 namespace MHServerEmu.WebFrontend.Handlers
@@ -34,7 +35,7 @@ namespace MHServerEmu.WebFrontend.Handlers
             }
 
             _data = File.ReadAllBytes(_filePath);
-            Logger.Trace($"Loaded '{_filePath}'");
+            Logger.Trace($"Load(): {Path.GetRelativePath(FileHelper.ServerRoot, _filePath)}");
         }
 
         protected override async Task Get(WebRequestContext context)
