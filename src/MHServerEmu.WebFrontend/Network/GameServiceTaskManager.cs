@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Threading;
+using MHServerEmu.WebFrontend.Models;
 
 namespace MHServerEmu.WebFrontend.Network
 {
@@ -17,6 +18,7 @@ namespace MHServerEmu.WebFrontend.Network
         private readonly TaskManager<ServiceMessage.AuthResponse> _authTaskManager = new();
         private readonly TaskManager<ServiceMessage.MTXStoreESBalanceResponse> _esBalanceTaskManager = new();
         private readonly TaskManager<ServiceMessage.MTXStoreESConvertResponse> _esConvertTaskManager = new();
+        private readonly TaskManager<ServiceMessage.AccountOperationResponse> _accountOperationTaskManager = new();
 
         public static GameServiceTaskManager Instance { get; } = new();
 
@@ -43,7 +45,6 @@ namespace MHServerEmu.WebFrontend.Network
         /// <summary>
         /// Completes a previously started client authentication attempt.
         /// </summary>
-        /// <param name=""></param>
         public void OnAuthResponse(in ServiceMessage.AuthResponse response)
         {
             _authTaskManager.CompleteTask(response.RequestId, response);
@@ -99,6 +100,33 @@ namespace MHServerEmu.WebFrontend.Network
         public void OnMTXStoreESConvertResponse(in ServiceMessage.MTXStoreESConvertResponse response)
         {
             _esConvertTaskManager.CompleteTask(response.RequestId, response);
+        }
+
+        /// <summary>
+        /// Asynchronously requests an account operation from the Player Manager.
+        /// </summary>
+        public async Task<ServiceMessage.AccountOperationResponse> DoAccountOperationAsync(AccountOperation operation, string email = null,
+            string playerName = null, string password = null, byte userLevel = byte.MaxValue, int flags = 0)
+        {
+            var operationTask = _accountOperationTaskManager.CreateTask();
+
+            ServiceMessage.AccountOperationRequest request = new(operationTask.Id, operation, email, playerName, password, userLevel, flags);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, request);
+
+            ServiceMessage.AccountOperationResponse? response = await CompleteTaskWithTimeout(operationTask);
+
+            if (response == null)
+                return new(operationTask.Id, AccountOperationResponse.GenericFailure);
+
+            return response.Value;
+        }
+
+        /// <summary>
+        /// Completes a previously started account operation.
+        /// </summary>
+        public void OnAccountOperationResponse(in ServiceMessage.AccountOperationResponse response)
+        {
+            _accountOperationTaskManager.CompleteTask(response.RequestId, response);
         }
 
         /// <summary>

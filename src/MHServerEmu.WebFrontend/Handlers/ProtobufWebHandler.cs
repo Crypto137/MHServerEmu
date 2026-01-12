@@ -64,7 +64,7 @@ namespace MHServerEmu.WebFrontend.Handlers
             string ipAddress = context.GetIPAddress();
 
             // Hash the IP address to prevent it from appearing in logs if needed
-            string ipAddressHandle = HideSensitiveInformation ? $"0x{HashHelper.Djb2(ipAddress):X4}" : ipAddress;
+            string ipAddressHandle = HideSensitiveInformation ? $"0x{HashHelper.Djb2(ipAddress):X8}" : ipAddress;
 
             if (_loginRateLimiter != null && _loginRateLimiter.AddTime(ipAddress) == false)
             {

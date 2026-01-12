@@ -23,6 +23,10 @@ namespace MHServerEmu.WebFrontend.Network
                     GameServiceTaskManager.Instance.OnMTXStoreESConvertResponse(mtxStoreESConvertResponse);
                     break;
 
+                case ServiceMessage.AccountOperationResponse accountOperationResponse:
+                    GameServiceTaskManager.Instance.OnAccountOperationResponse(accountOperationResponse);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                     break;

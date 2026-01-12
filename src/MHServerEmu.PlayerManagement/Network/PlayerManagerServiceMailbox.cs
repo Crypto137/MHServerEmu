@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.RateLimiting;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Players;
@@ -127,6 +128,10 @@ namespace MHServerEmu.PlayerManagement.Network
 
                 case ServiceMessage.MTXStoreESConvertGameResponse mtxStoreESConvertGameResponse:
                     OnMTXStoreESConvertGameResponse(mtxStoreESConvertGameResponse);
+                    break;
+
+                case ServiceMessage.AccountOperationRequest accountOperationRequest:
+                    OnAccountOperationRequest(accountOperationRequest);
                     break;
 
                 default:
@@ -518,6 +523,91 @@ namespace MHServerEmu.PlayerManagement.Network
 
             // We should have already handled authentication before routing the request to the game instance, so just route the result back.
             ServiceMessage.MTXStoreESConvertResponse response = new(requestId, result ? (int)HttpStatusCode.OK : (int)HttpStatusCode.InternalServerError);
+            ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
+
+            return true;
+        }
+
+        private bool OnAccountOperationRequest(in ServiceMessage.AccountOperationRequest accountOperationRequest)
+        {
+            ulong requestId = accountOperationRequest.RequestId;
+            AccountOperation operation = accountOperationRequest.Operation;
+            string email = accountOperationRequest.Email;
+            string playerName = accountOperationRequest.PlayerName;
+            string password = accountOperationRequest.Password;
+            AccountUserLevel userLevel = (AccountUserLevel)accountOperationRequest.UserLevel;
+            AccountFlags flags = (AccountFlags)accountOperationRequest.Flags;
+
+            int resultCode = (int)AccountOperationResult.GenericFailure;
+
+            switch (operation)
+            {
+                case AccountOperation.Create:
+                    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(playerName) || string.IsNullOrWhiteSpace(password))
+                    {
+                        Logger.Warn("OnAccountOperationRequest(): Invalid arguments for the Create operation");
+                        break;
+                    }
+
+                    resultCode = (int)AccountManager.CreateAccount(email, playerName, password);
+                    break;
+
+                case AccountOperation.SetPlayerName:
+                    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(playerName))
+                    {
+                        Logger.Warn("OnAccountOperationRequest(): Invalid arguments for the SetPlayerName operation");
+                        break;
+                    }
+
+                    resultCode = (int)AccountManager.ChangeAccountPlayerName(email, playerName);
+                    break;
+
+                case AccountOperation.SetPassword:
+                    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+                    {
+                        Logger.Warn("OnAccountOperationRequest(): Invalid arguments for the SetPassword operation");
+                        break;
+                    }
+
+                    resultCode = (int)AccountManager.ChangeAccountPassword(email, password);
+                    break;
+
+                case AccountOperation.SetUserLevel:
+                    if (string.IsNullOrWhiteSpace(email) || userLevel < AccountUserLevel.User || userLevel > AccountUserLevel.Admin)
+                    {
+                        Logger.Warn("OnAccountOperationRequest(): Invalid arguments for the SetUserLevel operation");
+                        break;
+                    }
+
+                    resultCode = (int)AccountManager.SetAccountUserLevel(email, userLevel);
+                    break;
+
+                case AccountOperation.SetFlag:
+                    if (string.IsNullOrWhiteSpace(email) || flags == 0)
+                    {
+                        Logger.Warn("OnAccountOperationRequest(): Invalid arguments for the SetFlag operation");
+                        break;
+                    }
+
+                    resultCode = (int)AccountManager.SetFlag(email, flags);
+                    break;
+
+                case AccountOperation.ClearFlag:
+                    if (string.IsNullOrWhiteSpace(email) || flags == 0)
+                    {
+                        Logger.Warn("OnAccountOperationRequest(): Invalid arguments for the SetFlag operation");
+                        break;
+                    }
+
+                    resultCode = (int)AccountManager.ClearFlag(email, flags);
+                    break;
+
+                default:
+                    Logger.Warn($"OnAccountOperationRequest(): Unhandled account operation {operation}");
+                    break;
+            }
+
+            ServiceMessage.AccountOperationResponse response = new(requestId, resultCode);
             ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
 
             return true;
