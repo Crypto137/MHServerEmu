@@ -164,11 +164,11 @@ namespace MHServerEmu.WebFrontend
             // Register other files.
             foreach (string filePath in Directory.GetFiles(dashboardDirectory, "*", SearchOption.AllDirectories))
             {
-                ReadOnlySpan<char> fileName = Path.GetFileName(filePath.AsSpan());
-                if (fileName.Equals("index.html", StringComparison.InvariantCultureIgnoreCase))
+                string relativeFilePath = Path.GetRelativePath(dashboardDirectory, filePath);
+
+                if (string.Equals(relativeFilePath, "index.html", StringComparison.InvariantCultureIgnoreCase))
                     continue;
 
-                string relativeFilePath = Path.GetRelativePath(dashboardDirectory, filePath);
                 string subFilePath = $"{localPath}{relativeFilePath.Replace('\\', '/')}";
 
                 _webService.RegisterHandler(subFilePath, new StaticFileWebHandler(filePath));
