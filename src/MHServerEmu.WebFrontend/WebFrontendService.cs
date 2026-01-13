@@ -120,9 +120,13 @@ namespace MHServerEmu.WebFrontend
 
         private void InitializeWebBackend()
         {
-            _webService.RegisterHandler("/AccountManagement/Create", new AccountCreateWebHandler());
+            _webService.RegisterHandler("/AccountManagement/Create",        new AccountCreateWebHandler());
             _webService.RegisterHandler("/AccountManagement/SetPlayerName", new AccountSetPlayerNameWebHandler());
-            _webService.RegisterHandler("/AccountManagement/SetPassword", new AccountSetPasswordWebHandler());
+            _webService.RegisterHandler("/AccountManagement/SetPassword",   new AccountSetPasswordWebHandler());
+            _webService.RegisterHandler("/AccountManagement/SetUserLevel",  new AccountSetUserLevelWebHandler());
+            _webService.RegisterHandler("/AccountManagement/SetFlag",       new AccountSetFlagWebHandler());
+            _webService.RegisterHandler("/AccountManagement/ClearFlag",     new AccountClearFlagWebHandler());
+
             _webService.RegisterHandler("/ServerStatus", new ServerStatusWebHandler());
             _webService.RegisterHandler("/RegionReport", new RegionReportWebHandler());
             _webService.RegisterHandler("/Metrics/Performance", new MetricsPerformanceWebHandler());
