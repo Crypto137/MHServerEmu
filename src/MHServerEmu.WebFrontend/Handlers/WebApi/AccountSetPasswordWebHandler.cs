@@ -7,19 +7,20 @@ using MHServerEmu.WebFrontend.Network;
 
 namespace MHServerEmu.WebFrontend.Handlers.WebApi
 {
-    public class AccountCreateWebHandler : WebHandler
+    public class AccountSetPasswordWebHandler : WebHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override WebApiAccessType Access { get => WebApiAccessType.AccountManagement; }
 
         protected override async Task Post(WebRequestContext context)
         {
             AccountOperationRequest query = await context.ReadJsonAsync<AccountOperationRequest>();
 
             string email = query.Email;
-            string playerName = query.PlayerName;
             string password = query.Password;
 
-            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(playerName) || string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
                 await context.SendJsonAsync(new AccountOperationResponse(AccountOperationResponse.GenericFailure));
                 return;
@@ -30,14 +31,14 @@ namespace MHServerEmu.WebFrontend.Handlers.WebApi
 
             // Account creation does not require authorization, so just forward the request to the Player Manager.
             ServiceMessage.AccountOperationResponse opResponse = await GameServiceTaskManager.Instance.DoAccountOperationAsync(
-                AccountOperation.Create, email, playerName, password);
+                AccountOperation.SetPassword, email, null, password);
 
             int responseCode = opResponse.ResultCode;
 
             if (responseCode == AccountOperationResponse.Success)
-                Logger.Info($"Successfully created account {playerName} (requester={ipAddressHandle})");
+                Logger.Info($"Updated password for account {email} (requester={ipAddressHandle})");
             else
-                Logger.Info($"Failed to create account {playerName} (requester={ipAddressHandle}, resultCode={responseCode})");
+                Logger.Info($"Failed to update password for account {email} (requester={ipAddressHandle}, resultCode={responseCode})");
 
             await context.SendJsonAsync(new AccountOperationResponse(responseCode));
         }
