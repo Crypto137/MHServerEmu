@@ -12,6 +12,9 @@ namespace MHServerEmu.Core.System
 
         private readonly byte[] _buffer;
 
+        public int TokenSize { get => _buffer.Length; }
+        public int Count { get => _lookup.Count; }
+
         /// <summary>
         /// Constructs a new <see cref="TokenManager{T}"/> with the specified token size in bytes.
         /// </summary>
@@ -61,25 +64,18 @@ namespace MHServerEmu.Core.System
         }
 
         /// <summary>
-        /// Replaces tokens with the contents of the provided <see cref="IReadOnlyList{T}"/>.
+        /// Adds an existing token to this manager. Returns <see cref="true"/> if successful.
         /// </summary>
-        public void Import(IReadOnlyList<KeyValuePair<string, T>> tokens)
+        public bool ImportToken(string token, T value)
         {
             lock (_lookup)
-            {
-                Clear();
-                for (int i = 0; i < tokens.Count; i++)
-                {
-                    var kvp = tokens[i];
-                    _lookup.Add(kvp.Key, kvp.Value);
-                }
-            }
+                return _lookup.TryAdd(token, value);
         }
 
         /// <summary>
         /// Copies tokens to the provided <see cref="List{T}"/>.
         /// </summary>
-        public void Export(List<KeyValuePair<string, T>> tokens)
+        public void ExportTokens(List<KeyValuePair<string, T>> tokens)
         {
             lock (_lookup)
                 tokens.AddRange(_lookup);

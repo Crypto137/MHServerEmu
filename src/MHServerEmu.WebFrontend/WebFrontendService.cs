@@ -53,6 +53,7 @@ namespace MHServerEmu.WebFrontend
             if (config.EnableWebApi)
             {
                 InitializeWebBackend();
+                WebApiKeyManager.Instance.LoadKeys();
 
                 if (config.EnableDashboard)
                     InitializeWebDashboard(config.DashboardFileDirectory, config.DashboardUrlPath);
