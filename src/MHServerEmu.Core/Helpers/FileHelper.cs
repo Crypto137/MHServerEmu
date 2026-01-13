@@ -75,7 +75,7 @@ namespace MHServerEmu.Core.Helpers
             if (string.IsNullOrWhiteSpace(dirName) == false && Directory.Exists(dirName) == false)
                 Directory.CreateDirectory(dirName);
 
-            using FileStream fs = File.OpenWrite(path);
+            using FileStream fs = File.Create(path);
             JsonSerializer.Serialize(fs, @object, options);
         }
 
