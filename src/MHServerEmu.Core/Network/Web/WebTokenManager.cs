@@ -7,20 +7,25 @@ namespace MHServerEmu.Core.Network.Web
     /// </summary>
     public class WebTokenManager<T>
     {
-        private const int TokenSize = 16;
-
         private readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
-        private readonly byte[] _buffer = new byte[TokenSize];
         private readonly Dictionary<string, T> _lookup = new();
 
-        private readonly object _lock = new();
+        private readonly byte[] _buffer;
 
         /// <summary>
-        /// Generates a new token for the specified session id.
+        /// Constructs a new <see cref="WebTokenManager{T}"/> with the specified token size in bytes.
+        /// </summary>
+        public WebTokenManager(int tokenSize = 16)
+        {
+            _buffer = new byte[tokenSize];
+        }
+
+        /// <summary>
+        /// Generates a new token for the provided <typeparamref name="T"/> value.
         /// </summary>
         public string GenerateToken(T lookupValue)
         {
-            lock (_lock)
+            lock (_lookup)
             {
                 string token;
 
@@ -38,20 +43,20 @@ namespace MHServerEmu.Core.Network.Web
         }
 
         /// <summary>
-        /// Removes the provided token.
+        /// Removes the provided token. Returns <see langword="true"/> if successful.
         /// </summary>
         public bool RemoveToken(string token)
         {
-            lock (_lock)
+            lock (_lookup)
                 return _lookup.Remove(token);
         }
 
         /// <summary>
-        /// Retrieves the value for the provided token.
+        /// Retrieves the <typeparamref name="T"/> value associated with the provided token. Returns <see langword="true"/> if successful.
         /// </summary>
         public bool TryGetValue(string token, out T value)
         {
-            lock (_lock)
+            lock (_lookup)
                 return _lookup.TryGetValue(token, out value);
         }
     }
