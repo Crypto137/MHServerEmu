@@ -9,6 +9,7 @@ namespace MHServerEmu.Core.Network.Web
     public enum WebApiKeyVerificationResult
     {
         Success,
+        InvalidKey,
         KeyNotFound,
         AccessMismatch,
     }
@@ -89,6 +90,9 @@ namespace MHServerEmu.Core.Network.Web
         public WebApiKeyVerificationResult VerifyKey(string key, WebApiAccessType requiredAccess, out string keyName)
         {
             keyName = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(key))
+                return WebApiKeyVerificationResult.InvalidKey;
 
             if (_keys.TryGetValue(key, out WebApiKeyData keyData) == false)
                 return WebApiKeyVerificationResult.KeyNotFound;

@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Core.Network.Web
@@ -7,14 +8,18 @@ namespace MHServerEmu.Core.Network.Web
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public virtual WebApiAccessType Access { get => WebApiAccessType.None; }
+
         public WebService Service { get; private set; }
+        public string LocalPath { get; private set; }
 
         /// <summary>
         /// Adds a reference to the <see cref="WebService"/> this <see cref="WebHandler"/> is registered to.
         /// </summary>
-        internal void Register(WebService service)
+        internal void Register(WebService service, string localPath)
         {
             Service = service;
+            LocalPath = localPath;
         }
 
         /// <summary>
@@ -23,6 +28,7 @@ namespace MHServerEmu.Core.Network.Web
         internal void Unregister()
         {
             Service = null;
+            LocalPath = null;
         }
 
         /// <summary>
@@ -32,6 +38,12 @@ namespace MHServerEmu.Core.Network.Web
         {
             try
             {
+                if (Authorize(context) == false)
+                {
+                    context.StatusCode = (int)HttpStatusCode.Forbidden;
+                    return;
+                }
+
                 switch (context.HttpMethod)
                 {
                     case "GET":
@@ -90,6 +102,29 @@ namespace MHServerEmu.Core.Network.Web
             Logger.Warn($"Unsupported HTTP method {context.HttpMethod} for local path {context.LocalPath}");
             context.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
             return Task.CompletedTask;
+        }
+
+        private bool Authorize(WebRequestContext context)
+        {
+            // NOTE: If we decide to add global rate limiting of some kind, this can be done here.
+
+            WebApiAccessType access = Access;
+            if (access == WebApiAccessType.None)
+                return true;
+
+            string ipAddressHandle = context.GetIPAddressHandle();
+            string webApiKey = context.GetBearerToken();
+
+            WebApiKeyVerificationResult result = WebApiKeyManager.Instance.VerifyKey(webApiKey, access, out string keyName);
+
+            if (result != WebApiKeyVerificationResult.Success)
+            {
+                Logger.Warn($"Authorize(): Failed to authorize request to {LocalPath} from {ipAddressHandle} using key [{keyName}], result={result}");
+                return false;
+            }
+
+            Logger.Info($"Authorized request to {LocalPath} from {ipAddressHandle} using key [{keyName}]");
+            return true;
         }
     }
 }

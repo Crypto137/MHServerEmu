@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
@@ -11,8 +12,6 @@ namespace MHServerEmu.WebFrontend.Handlers.WebApi
     public class AccountCreateWebHandler : WebHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-
-        private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
 
         protected override async Task Post(WebRequestContext context)
         {
@@ -29,8 +28,7 @@ namespace MHServerEmu.WebFrontend.Handlers.WebApi
             }
 
             // Hash the IP address to prevent it from appearing in logs if needed
-            string ipAddress = context.GetIPAddress();
-            string ipAddressHandle = HideSensitiveInformation ? $"0x{HashHelper.Djb2(ipAddress):X8}" : ipAddress;
+            string ipAddressHandle = context.GetIPAddressHandle();
 
             // Account creation does not require authorization, so just forward the request to the Player Manager.
             ServiceMessage.AccountOperationResponse opResponse = await GameServiceTaskManager.Instance.DoAccountOperationAsync(

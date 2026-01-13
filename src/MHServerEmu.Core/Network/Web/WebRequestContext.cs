@@ -20,6 +20,7 @@ namespace MHServerEmu.Core.Network.Web
         public string LocalPath { get => _httpRequest.Url.LocalPath; }
         public string HttpMethod { get => _httpRequest.HttpMethod; }
         public string XForwardedFor { get => _httpRequest.Headers["X-Forwarded-For"]; }
+        public string Authorization { get => _httpRequest.Headers["Authorization"]; }
 
         public bool IsGameClientRequest { get => UserAgent.Equals("Secret Identity Studios Http Client", StringComparison.InvariantCulture); }
 
@@ -46,6 +47,22 @@ namespace MHServerEmu.Core.Network.Web
                 return forwardedFor;
 
             return _httpRequest.RemoteEndPoint.Address.ToString();
+        }
+
+        public string GetBearerToken()
+        {
+            string authorization = Authorization;
+            if (string.IsNullOrWhiteSpace(authorization))
+                return null;
+
+            string[] data = authorization.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (data == null || data.Length < 2)
+                return null;
+
+            if (data[0].Equals("Bearer", StringComparison.OrdinalIgnoreCase) == false)
+                return null;
+
+            return data[1];
         }
 
         public void Redirect(string url)

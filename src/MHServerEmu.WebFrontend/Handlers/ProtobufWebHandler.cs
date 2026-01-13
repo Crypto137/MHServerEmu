@@ -1,8 +1,7 @@
 ﻿using System.Net;
 using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Core.Config;
-using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Web;
@@ -14,8 +13,6 @@ namespace MHServerEmu.WebFrontend.Handlers
     public class ProtobufWebHandler : WebHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-
-        private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
 
         private readonly TimeLeakyBucketCollection<string> _loginRateLimiter;
 
@@ -61,10 +58,7 @@ namespace MHServerEmu.WebFrontend.Handlers
                 return;
             }
 
-            string ipAddress = context.GetIPAddress();
-
-            // Hash the IP address to prevent it from appearing in logs if needed
-            string ipAddressHandle = HideSensitiveInformation ? $"0x{HashHelper.Djb2(ipAddress):X8}" : ipAddress;
+            string ipAddressHandle = context.GetIPAddressHandle(out string ipAddress);
 
             if (_loginRateLimiter != null && _loginRateLimiter.AddTime(ipAddress) == false)
             {
