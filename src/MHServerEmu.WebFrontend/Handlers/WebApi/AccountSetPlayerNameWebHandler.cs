@@ -5,7 +5,7 @@ using MHServerEmu.WebFrontend.Network;
 
 namespace MHServerEmu.WebFrontend.Handlers.WebApi
 {
-    public class AccountSetPasswordWebHandler : WebHandler
+    internal class AccountSetPlayerNameWebHandler : WebHandler
     {
         public override WebApiAccessType Access { get => WebApiAccessType.AccountManagement; }
 
@@ -14,16 +14,16 @@ namespace MHServerEmu.WebFrontend.Handlers.WebApi
             AccountOperationRequest query = await context.ReadJsonAsync<AccountOperationRequest>();
 
             string email = query.Email;
-            string password = query.Password;
+            string playerName = query.PlayerName;
 
-            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(playerName))
             {
                 await context.SendJsonAsync(new AccountOperationResponse(AccountOperationResponse.GenericFailure));
                 return;
             }
 
             ServiceMessage.AccountOperationResponse opResponse = await GameServiceTaskManager.Instance.DoAccountOperationAsync(
-                AccountOperation.SetPassword, email, null, password);
+                AccountOperation.SetPlayerName, email, playerName);
 
             int responseCode = opResponse.ResultCode;
 

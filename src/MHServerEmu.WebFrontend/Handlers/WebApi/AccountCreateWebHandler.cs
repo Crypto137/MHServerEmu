@@ -25,7 +25,6 @@ namespace MHServerEmu.WebFrontend.Handlers.WebApi
                 return;
             }
 
-            // Hash the IP address to prevent it from appearing in logs if needed
             string ipAddressHandle = context.GetIPAddressHandle();
 
             // Account creation does not require authorization, so just forward the request to the Player Manager.
