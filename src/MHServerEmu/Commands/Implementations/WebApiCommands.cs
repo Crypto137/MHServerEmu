@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Web;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.WebFrontend.Network;
 
 namespace MHServerEmu.Commands.Implementations
 {

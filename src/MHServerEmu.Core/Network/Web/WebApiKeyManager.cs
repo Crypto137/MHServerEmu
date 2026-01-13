@@ -4,7 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System;
 
-namespace MHServerEmu.WebFrontend.Network
+namespace MHServerEmu.Core.Network.Web
 {
     public enum WebApiKeyVerificationResult
     {

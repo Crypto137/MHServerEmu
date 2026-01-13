@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.WebFrontend.Network
+﻿namespace MHServerEmu.Core.Network.Web
 {
     public enum WebApiAccessType
     {
