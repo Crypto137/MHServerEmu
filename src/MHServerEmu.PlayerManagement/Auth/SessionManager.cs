@@ -3,7 +3,6 @@ using Gazillion;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Network.Web;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
@@ -23,7 +22,7 @@ namespace MHServerEmu.PlayerManagement.Auth
         private readonly PlayerManagerService _playerManager;
 
         private readonly IdGenerator _idGenerator = new(IdType.Session, 0);
-        private readonly WebTokenManager<ulong> _platformTicketManager = new();
+        private readonly TokenManager<ulong> _platformTicketManager = new();
         // "Platform Tickets" are tokens used to access the Add G page from the MTX store.
 
         private readonly Dictionary<ulong, ClientSession> _pendingSessionDict = new();

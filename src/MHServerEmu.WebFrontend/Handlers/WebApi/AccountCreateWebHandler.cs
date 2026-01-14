@@ -1,7 +1,9 @@
-﻿using MHServerEmu.Core.Config;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Web;
-using MHServerEmu.PlayerManagement.Players;
+using MHServerEmu.WebFrontend.Models;
+using MHServerEmu.WebFrontend.Network;
 
 namespace MHServerEmu.WebFrontend.Handlers.WebApi
 {
@@ -9,11 +11,9 @@ namespace MHServerEmu.WebFrontend.Handlers.WebApi
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
-
         protected override async Task Post(WebRequestContext context)
         {
-            AccountCreateRequest query = await context.ReadJsonAsync<AccountCreateRequest>();
+            AccountOperationRequest query = await context.ReadJsonAsync<AccountOperationRequest>();
 
             string email = query.Email;
             string playerName = query.PlayerName;
@@ -21,30 +21,24 @@ namespace MHServerEmu.WebFrontend.Handlers.WebApi
 
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(playerName) || string.IsNullOrWhiteSpace(password))
             {
-                await context.SendJsonAsync(new AccountCreateResponse(AccountOperationResult.GenericFailure));
+                await context.SendJsonAsync(new AccountOperationResponse(AccountOperationResponse.GenericFailure));
                 return;
             }
 
-            email = email.ToLower();
+            string ipAddressHandle = context.GetIPAddressHandle();
 
-            AccountOperationResult result = AccountManager.CreateAccount(email, playerName, password);
+            // Account creation does not require authorization, so just forward the request to the Player Manager.
+            ServiceMessage.AccountOperationResponse opResponse = await GameServiceTaskManager.Instance.DoAccountOperationAsync(
+                AccountOperation.Create, email, playerName, password);
 
-            if (HideSensitiveInformation == false)
-                Logger.Trace($"Post(): {AccountManager.GetOperationResultString(result, email, playerName)}");
+            int responseCode = opResponse.ResultCode;
 
-            await context.SendJsonAsync(new AccountCreateResponse(result));
-        }
+            if (responseCode == AccountOperationResponse.Success)
+                Logger.Info($"Successfully created account {playerName} (requester={ipAddressHandle})");
+            else
+                Logger.Info($"Failed to create account {playerName} (requester={ipAddressHandle}, resultCode={responseCode})");
 
-        private readonly struct AccountCreateRequest
-        {
-            public string Email { get; init; }
-            public string PlayerName { get; init; }
-            public string Password { get; init; }
-        }
-
-        private readonly struct AccountCreateResponse(AccountOperationResult result)
-        {
-            public AccountOperationResult Result { get; } = result;
+            await context.SendJsonAsync(new AccountOperationResponse(responseCode));
         }
     }
 }

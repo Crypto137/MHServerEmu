@@ -35,6 +35,16 @@ namespace MHServerEmu.Core.Network
         Remove,
     }
 
+    public enum AccountOperation
+    {
+        Create,
+        SetPlayerName,
+        SetPassword,
+        SetUserLevel,
+        SetFlag,
+        ClearFlag,
+    }
+
     #endregion
 
     public static class ServiceMessage
@@ -764,6 +774,36 @@ namespace MHServerEmu.Core.Network
         {
             public readonly ulong RequestId = requestId;
             public readonly bool Result = result;
+        }
+
+        #endregion
+
+        #region Account
+
+        /// <summary>
+        /// [WebFrontend -> PlayerManager] Routes an account operation request to the Player Manager service.
+        /// </summary>
+        public readonly struct AccountOperationRequest(ulong requestId, AccountOperation operation, string email,
+            string playerName, string password, byte userLevel, int flags)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly AccountOperation Operation = operation;
+            public readonly string Email = email;
+            public readonly string PlayerName = playerName;
+            public readonly string Password = password;
+            public readonly byte UserLevel = userLevel;
+            public readonly int Flags = flags;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> WebFrontend] Routes a response to an account operation request back to the Web Frontend.
+        /// </summary>
+        public readonly struct AccountOperationResponse(ulong requestId, int resultCode)
+            : IGameServiceMessage
+        {
+            public readonly ulong RequestId = requestId;
+            public readonly int ResultCode = resultCode;
         }
 
         #endregion

@@ -41,7 +41,7 @@ namespace MHServerEmu.Core.Network.Tcp
                 return "NULL";
 
             if (HideSensitiveInformation)
-                return $"0x{HashHelper.Djb2(RemoteEndPoint.Address.ToString()):X4}";
+                return $"0x{HashHelper.Djb2(RemoteEndPoint.Address.ToString()):X8}";
 
             return RemoteEndPoint.ToString();
         }

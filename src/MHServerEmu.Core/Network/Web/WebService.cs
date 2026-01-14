@@ -96,7 +96,7 @@ namespace MHServerEmu.Core.Network.Web
             bool added = _handlers.TryAdd(localPath, handler);
 
             if (added)
-                handler.Register(this);
+                handler.Register(this, localPath);
             else
                 Logger.Warn($"RegisterHandler(): Local path {localPath} already has a registered handler");
 
