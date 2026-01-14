@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2025.11.12 14:50:01 UTC` using server version `0.8.0`.
+This list was automatically generated on `2026.01.14 21:04:56 UTC` using server version `0.8.1`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -24,9 +24,10 @@ Account management commands.
 ## Achievement
 Commands related to the achievement system.
 
-| Command                | Description                                 | User Level | Invoker Type  |
-| ---------------------- | ------------------------------------------- | ---------- | ------------  |
-| !achievement info [id] | Outputs info for the specified achievement. | Admin      | Any           |
+| Command                | Description                                             | User Level | Invoker Type  |
+| ---------------------- | ------------------------------------------------------- | ---------- | ------------  |
+| !achievement info [id] | Outputs info for the specified achievement.             | Admin      | Any           |
+| !achievement localeid  | Generates a LocaleStringId from the specified argument. | Admin      | Any           |
 
 ## AOI
 Commands for interacting with the invoker player's area of interest (AOI).
@@ -235,6 +236,14 @@ Commands for unlocking various things.
 | ----------------- | ---------------------- | ---------- | ------------  |
 | !unlock chapters  | Unlocks all chapters.  | Admin      | Client        |
 | !unlock waypoints | Unlocks all waypoints. | Admin      | Client        |
+
+## WebApi
+Web API management commands.
+
+| Command             | Description                  | User Level | Invoker Type   |
+| ------------------- | ---------------------------- | ---------- | -------------  |
+| !webapi generatekey | Generates a new web API key. | Admin      | ServerConsole  |
+| !webapi reloadkeys  | Reloads web API keys         | Admin      | ServerConsole  |
 
 ## Misc
 
