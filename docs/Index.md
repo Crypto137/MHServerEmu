@@ -17,6 +17,7 @@ If this is your first time using MHServerEmu, you may be interested in this.
 MHServerEmu-specific topics.
 
 - [Server Commands](./ServerEmu/ServerCommands.md) - a list of available server commands.
+- [Web API](./ServerEmu/WebApi.md) - web API documentation.
 
 ## Game
 
