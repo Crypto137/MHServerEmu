@@ -9,7 +9,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Auth;
 using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Regions;
-using MHServerEmu.PlayerManagement.Social;
 
 namespace MHServerEmu.PlayerManagement.Network
 {

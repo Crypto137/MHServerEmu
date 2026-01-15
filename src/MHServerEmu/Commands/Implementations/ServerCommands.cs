@@ -5,6 +5,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.MTXStore;
+using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.WebFrontend;
 
 namespace MHServerEmu.Commands.Implementations
@@ -91,6 +92,16 @@ namespace MHServerEmu.Commands.Implementations
         {
             WebFrontendService webFrontend = ServerManager.Instance.GetGameService(GameServiceType.WebFrontend) as WebFrontendService;
             webFrontend?.ReloadAddGPage();
+            return string.Empty;
+        }
+
+        [Command("reloadplayernameblacklist")]
+        [CommandDescription("Reloads the player name blacklist.")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.ServerConsole)]
+        public string ReloadPlayerNameBlacklist(string[] @params, NetClient client)
+        {
+            PlayerNameValidator.Instance.Initialize();
             return string.Empty;
         }
 

@@ -73,6 +73,7 @@ namespace MHServerEmu.PlayerManagement
             Instance = this;
             State = GameServiceState.Starting;
 
+            PlayerNameValidator.Instance.Initialize();
             GuildManager.Initialize();
             RegionRequestQueueManager.Initialize();
 
