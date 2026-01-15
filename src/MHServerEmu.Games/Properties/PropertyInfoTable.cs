@@ -216,7 +216,7 @@ namespace MHServerEmu.Games.Properties
 
             // Finish initialization
             stopwatch.Stop();
-            Logger.Info($"Initialized info for {_propertyInfos.Length} properties in {stopwatch.Elapsed.TotalMilliseconds} ms");
+            Logger.Info($"Initialized info for {_propertyInfos.Length} properties in {(long)stopwatch.Elapsed.TotalMilliseconds} ms");
         }
 
         public PropertyInfo LookupPropertyInfo(PropertyEnum propertyEnum)
