@@ -70,7 +70,7 @@ namespace MHServerEmu.Games.Properties
 
             // Sanity check in case somebody in the future goes crazy with adding data properties via mods.
             if (_propertyInfos.Length >= (int)Property.EnumMax)
-                throw new($"Property count overflow! ");
+                throw new($"Property count overflow! Total property count must be less than {(int)Property.EnumMax}.");
 
             // Create property infos
             int numDataProperties = 0;
