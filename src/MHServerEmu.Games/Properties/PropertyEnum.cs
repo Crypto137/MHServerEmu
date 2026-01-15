@@ -1003,38 +1003,11 @@
         XPTransfer,
         XPTransferToID,
         UISystemLock,
-        // Properties below are ordered by their property info prototype id rather than alphabetically because
-        // they are added to the PropertyInfoTable dynamically during initialization rather than being pre-defined.
-        // We just add them to the enum and save ourselves the hassle of dealing with this edge case.
-        InterruptRatingDefense,
-        CritChanceReductionPct,
-        LootBonusBIFStackCount,
-        InterruptRatingPowerBonusKeyword,
-        TestProp,
-        EvalLoopVarInt,
-        TeamUpItemRegisterFloat,
-        InterruptRatingPower,
-        SuperCritChanceReductionPct,
-        PowerStackCountRegisterFloat,
-        XPBonusStackCount,
-        MindPointsSpentRegisterInt,
-        DamageChgPowerPctTarg,
-        DamageBonusArmor,
-        DamagePctObscuredToPlayers,
-        LootBonusComboBarStackCount,
-        UserStanceEvalRegisterFloat,
-        ResistancePercentageChange,
-        HealthAddBonusHardcore,
-        ItemDefenseMultiplier,
-        IsDefenderPvP,
-        AIResurrectsDead,
-        MedkitHealBonus,
-        EvalRegisterAsset,
-        EvalRegisterBool,
-        InterpolateRotatioSpeed,
-        Charmed,
-        SendOrbToPowerUser,
-        ConditionPowerCount,
+
+        // Properties can be data-only and not have an enum entry here.
+        // Data-only properties are sorted by their prototype id and appended at the end of the property info table.
+        NumCodeProperties,
+
         // Invalid is defined as the highest possible enum value (which is 2047 because it's an unsigned 11-bit integer)
         Invalid = (int)Property.EnumMax
     }
