@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Core.System.Random
+﻿using MHServerEmu.Core.System.Time;
+
+namespace MHServerEmu.Core.System.Random
 {
     // More info on MWC random: https://en.wikipedia.org/wiki/Multiply-with-carry_pseudorandom_number_generator
     public class RandMwc
@@ -8,7 +10,7 @@
 
         public RandMwc(uint seed)
         {
-            SetSeed(seed == 0 ? (uint)DateTime.Now.Ticks : seed);
+            SetSeed(seed == 0 ? (uint)Clock.UtcNowPrecise.Ticks : seed);
         }
 
         public void SetSeed(uint seed)
