@@ -134,5 +134,21 @@
         "Description": "Fix old CH09Main2BattleForAsgard",
         "ValueType": "PrototypeId",
         "Value": 17539112805425617594
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Act0/CH00Raft/Controllers/RaftNPEQuinjetKismetController.prototype",
+        "Path": "ResetsWithRegion",
+        "Description": "Enable ResetsWithRegion for RaftNPEQuinjetKismetController. This has to be applied with the version increment patch below.",
+        "ValueType": "PrototypeId",
+        "Value": 11602117409128454445
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Act0/CH00Raft/Controllers/RaftNPEQuinjetKismetController.prototype",
+        "Path": "Version",
+        "Description": "Increment version for RaftNPEQuinjetKismetController to be able to save ResetsWithRegionId.",
+        "ValueType": "Integer",
+        "Value": 2
     }
 ]
