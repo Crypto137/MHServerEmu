@@ -1,0 +1,66 @@
+[
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/ItemType/SpecialsCostumesCardsTokens.prototype",
+    "Path": "NoDropPercent",
+    "Description": "Set NoDropPercent for SpecialsCostumesCardsTokens.",
+    "ValueType": "Float",
+    "Value": 0.99
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/ItemType/SpecialsCostumesCardsTokens.prototype",
+    "Path": "Choices[0].Choices[0].Weight",
+    "Description": "Set Weight for Costume drops in SpecialsCostumesCardsTokens.",
+    "ValueType": "Integer",
+    "Value": 10
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/ItemType/SpecialsCostumesCardsTokens.prototype",
+    "Path": "Choices[0].Choices[2].Weight",
+    "Description": "Set Weight for CharacterToken drops in SpecialsCostumesCardsTokens.",
+    "ValueType": "Integer",
+    "Value": 100
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/SharedEndgameDailiesGreen.prototype",
+    "Path": "Choices[]",
+    "Description": "Add SpecialsCostumesCardsTokens to Green terminal boss loot.",
+    "ValueType": "PrototypeDataRef",
+    "Value": 9518055978027522001
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/SharedEndgameDailiesRed.prototype",
+    "Path": "Choices[]",
+    "Description": "Add SpecialsCostumesCardsTokens to Red terminal boss loot.",
+    "ValueType": "PrototypeDataRef",
+    "Value": 9518055978027522001
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/SharedEndgameDailiesCosmic.prototype",
+    "Path": "Choices[]",
+    "Description": "Add SpecialsCostumesCardsTokens to Cosmic terminal boss loot.",
+    "ValueType": "PrototypeDataRef",
+    "Value": 9518055978027522001
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/NormalMobs/DoopSubTableExtra.prototype",
+    "Path": "Choices[]",
+    "Description": "Add SpecialsCostumesCardsTokens to Doop loot.",
+    "ValueType": "PrototypeDataRef",
+    "Value": 9518055978027522001
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Destructibles/Chapter03Plus/DangerRoomBaseLoot.prototype",
+    "Path": "Choices[]",
+    "Description": "Add SpecialsCostumesCardsTokens to Danger Room loot.",
+    "ValueType": "PrototypeDataRef",
+    "Value": 9518055978027522001
+  }
+]
