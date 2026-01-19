@@ -441,10 +441,14 @@ namespace MHServerEmu.Games.Loot
                     // TODO for 1.48
                     Logger.Warn("GiveLootFromSummary(): PowerPoints rewards are not yet implemented");
                 }
+
+                // This is used for the HiddenOneTimeGiveGs mission
+                if (lootTypes.HasFlag(LootType.RealMoney))
+                    player.AcquireGazillionite(lootResultSummary.RealMoney);
             }
             else
             {
-                if ((lootTypes & (LootType.Experience | LootType.HealthBonus | LootType.EnduranceBonus | LootType.PowerPoints)) != 0)
+                if ((lootTypes & (LootType.Experience | LootType.HealthBonus | LootType.EnduranceBonus | LootType.PowerPoints | LootType.RealMoney)) != 0)
                 {
                     Logger.Warn($"GiveLootFromSummary(): Mission-only loot types found in a non-mission summary, Types=[{lootResultSummary.Types}]");
                 }

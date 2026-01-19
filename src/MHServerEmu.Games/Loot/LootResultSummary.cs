@@ -76,25 +76,21 @@ namespace MHServerEmu.Games.Loot
                     break;
 
                 case LootType.PowerPoints:
-                    Logger.Debug($"Add(): powerPoints=[{lootResult.Amount}]");
                     PowerPoints += lootResult.Amount;
                     Types |= LootType.PowerPoints;
                     break;
 
                 case LootType.HealthBonus:
-                    Logger.Debug($"Add(): healthBonus=[{lootResult.Amount}]");
                     HealthBonus += lootResult.Amount;
                     Types |= LootType.HealthBonus;
                     break;
 
                 case LootType.EnduranceBonus:
-                    Logger.Debug($"Add(): enduranceBonus=[{lootResult.Amount}]");
                     EnduranceBonus += lootResult.Amount;
                     Types |= LootType.EnduranceBonus;
                     break;
 
                 case LootType.RealMoney:
-                    //Logger.Debug($"Add(): realMoney=[{lootResult.Amount}]");
                     RealMoney += lootResult.RealMoneyProto.NumMin;
                     Types |= LootType.RealMoney;
                     break;
