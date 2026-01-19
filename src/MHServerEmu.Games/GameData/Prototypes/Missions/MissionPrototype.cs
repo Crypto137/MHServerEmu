@@ -364,6 +364,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public bool HasMissionLogRewards { get; private set; }
         [DoNotCopy]
+        public bool HasPropertyRewards { get; private set; }
+        [DoNotCopy]
         public List<MissionConditionPrototype> HotspotConditionList { get; private set; }
 
         [DoNotCopy]
@@ -423,7 +425,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             HasClientInterest = GetHasClientInterest();
             HasItemDrops = GetHasItemDrops();
             HasMissionLogRewards = GetHasMissionLogRewards();
-            
+            HasPropertyRewards = GetHasPropertyRewards();
+
             PopulatePopulationForZoneLookups(PopulationRegions, PopulationAreas);
 
             MissionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetMissionBlueprintDataRef());
@@ -450,6 +453,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
                    new LootTableContainsNodeOfType<LootDropPowerPointsPrototype>(Rewards) ||
                    new LootTableContainsNodeOfType<LootDropRealMoneyPrototype>(Rewards) ||
                    new LootTableContainsNodeOfType<LootDropVanityTitlePrototype>(Rewards);
+        }
+
+        private bool GetHasPropertyRewards()
+        {
+            if (Rewards.IsNullOrEmpty())
+                return false;
+
+            return new LootTableContainsNodeOfType<LootDropEnduranceBonusPrototype>(Rewards) ||
+                   new LootTableContainsNodeOfType<LootDropHealthBonusPrototype>(Rewards) ||
+                   new LootTableContainsNodeOfType<LootDropPowerPointsPrototype>(Rewards);
         }
 
         private bool GetHasItemDrops()

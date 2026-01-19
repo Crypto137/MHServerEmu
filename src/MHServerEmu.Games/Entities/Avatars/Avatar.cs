@@ -162,7 +162,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (settings.ArchiveData != null)
             {
                 if (player != null)
+                {
                     TryLevelUp(player, true);
+                    RestoreMissionRewardProperties(player);
+                }
 
                 ResetResources(false);
             }
@@ -5019,6 +5022,106 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return multiplier;
+        }
+
+        #endregion
+
+        #region Mission Reward Properties
+
+        public bool AdjustMissionRewardProperty(PropertyId propertyId, int delta, PrototypeId missionProtoRef)
+        {
+            if (delta <= 0) return Logger.WarnReturn(false, "AdjustMissionRewardProperty(): delta <= 0");
+
+            if (ValidatePropertyRewardingMission(missionProtoRef) == false)
+                return false;
+
+            Properties.AdjustProperty(delta, propertyId);
+            return true;
+        }
+
+        public bool AdjustMissionRewardProperty(PropertyId propertyId, float delta, PrototypeId missionProtoRef)
+        {
+            if (delta <= 0f) return Logger.WarnReturn(false, "AdjustMissionRewardProperty(): delta <= 0f");
+
+            if (ValidatePropertyRewardingMission(missionProtoRef) == false)
+                return false;
+
+            Properties.AdjustProperty(delta, propertyId);
+            return true;
+        }
+
+        private void RestoreMissionRewardProperties(Player player)
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.MissionRewardReceived))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId missionProtoRef);
+                RestoreMissionRewardProperties(player, missionProtoRef);
+            }
+
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.MissionRewardReceived))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId missionProtoRef);
+                RestoreMissionRewardProperties(player, missionProtoRef);
+            }
+        }
+
+        private bool RestoreMissionRewardProperties(Player player, PrototypeId missionProtoRef)
+        {
+            if (missionProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "RestoreMissionRewardProperties(): missionProtoRef == PrototypeId.Invalid");
+
+            MissionPrototype missionProto = missionProtoRef.As<MissionPrototype>();
+            if (missionProto == null) return Logger.WarnReturn(false, "RestoreMissionRewardProperties(): missionProto == null");
+
+            if (missionProto.HasPropertyRewards == false)
+                return false;
+
+            bool result = false;
+
+            using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+
+            if (Mission.RollLootSummaryForPrototype(player, this, missionProto, missionProto.Rewards, (int)missionProto.Level, 1, lootSummary, true))
+            {
+                LootType lootTypes = lootSummary.Types;
+
+                if (lootTypes.HasFlag(LootType.HealthBonus))
+                {
+                    if (AdjustMissionRewardProperty(PropertyEnum.HealthAddBonus, lootSummary.HealthBonus, missionProtoRef) == false)
+                        Logger.Warn($"GiveLootFromSummary(): Failed to restore HealthBonus reward for avatar [{this}]");
+                }
+
+                if (lootTypes.HasFlag(LootType.EnduranceBonus))
+                {
+                    foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in GetPrimaryResourceManaBehaviors())
+                    {
+                        ManaType manaType = primaryManaBehaviorProto.ManaType;
+                        if (AdjustMissionRewardProperty(new(PropertyEnum.EnduranceAddBonus, manaType), (float)lootSummary.EnduranceBonus, missionProtoRef) == false)
+                            Logger.Warn($"GiveLootFromSummary(): Failed to restore EnduranceBonus reward for mana type {manaType} for avatar [{this}]");
+                    }
+                }
+
+                if (lootTypes.HasFlag(LootType.PowerPoints))
+                {
+                    if (AdjustMissionRewardProperty(PropertyEnum.AvatarPowerPointsBonus, lootSummary.PowerPoints, missionProtoRef) == false)
+                        Logger.Warn($"GiveLootFromSummary(): Failed to restore PowerPoints reward for avatar [{this}]");
+                }
+            }
+
+            return result;
+        }
+
+        private static bool ValidatePropertyRewardingMission(PrototypeId missionProtoRef)
+        {
+            if (missionProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "ValidatePropertyRewardingMission(): missionProtoRef == PrototypeId.Invalid");
+
+            MissionPrototype missionProto = missionProtoRef.As<MissionPrototype>();
+            if (missionProto == null)
+                return Logger.WarnReturn(false, "ValidatePropertyRewardingMission(): missionProto == null");
+
+            if (missionProto is OpenMissionPrototype)
+                return Logger.WarnReturn(false, "ValidatePropertyRewardingMission(): missionProto is OpenMissionPrototype");
+
+            return true;
         }
 
         #endregion

@@ -2148,11 +2148,11 @@ namespace MHServerEmu.Games.Missions
 
         private void GiveRewardToPlayer(Player player, int seedOffset, float contribution = 0.0f)
         {
-            Avatar avatar = player.CurrentAvatar;       
-            LootTablePrototype[] rewards = GetRewardLootTables();
-            if (rewards.IsNullOrEmpty()) return;
+            Avatar avatar = player.CurrentAvatar;
 
-            RollSummaryAndAwardLootToPlayer(player, rewards, seedOffset);
+            LootTablePrototype[] rewards = GetRewardLootTables();
+            if (rewards.HasValue())
+                RollSummaryAndAwardLootToPlayer(player, rewards, seedOffset);
 
             if (Prototype is OpenMissionPrototype openProto && openProto.RewardsByContribution.HasValue())
             {
@@ -2230,7 +2230,7 @@ namespace MHServerEmu.Games.Missions
             }
             else
             {
-                lootManager.GiveLootFromSummary(lootSummary, player, PrototypeId.Invalid, true);
+                lootManager.GiveLootFromSummary(lootSummary, player, PrototypeId.Invalid, missionProto.DataRef);
             }
 
             return true;
@@ -2281,16 +2281,22 @@ namespace MHServerEmu.Games.Missions
 
             Avatar avatar = player.CurrentAvatar;
             int lootLevel = (int)missionProto.Level;
+            bool firstTime = MissionManager.HasReceivedRewardsForMission(player, avatar, missionProto.DataRef) == false;
 
+            return RollLootSummaryForPrototype(player, avatar, missionProto, rewards, lootLevel, lootSeed, lootSummary, firstTime);
+        }
+
+        public static bool RollLootSummaryForPrototype(Player player, Avatar avatar, MissionPrototype missionProto, LootTablePrototype[] rewards,
+            int lootLevel, int lootSeed, LootResultSummary lootSummary, bool firstTime)
+        {
             using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
             resolver.Initialize(new(lootSeed));
             resolver.SetContext(null, player);
 
-            bool firstTime = MissionManager.HasReceivedRewardsForMission(player, avatar, missionProto.DataRef) == false;
             resolver.SetFlags(LootResolverFlags.FirstTime, firstTime);
 
             using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-            settings.Initialize(LootContext.MissionReward, player, player.CurrentAvatar, lootLevel);
+            settings.Initialize(LootContext.MissionReward, player, avatar, lootLevel);
             settings.LootRollSettings.DropChanceModifiers = LootDropChanceModifiers.PreviewOnly | LootDropChanceModifiers.IgnoreCooldown;
 
             foreach (LootTablePrototype reward in rewards)

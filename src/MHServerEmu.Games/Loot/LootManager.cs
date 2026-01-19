@@ -270,7 +270,8 @@ namespace MHServerEmu.Games.Loot
             return true;
         }
 
-        public bool GiveLootFromSummary(LootResultSummary lootResultSummary, Player player, PrototypeId inventoryProtoRef = PrototypeId.Invalid, bool isMissionLoot = false)
+        public bool GiveLootFromSummary(LootResultSummary lootResultSummary, Player player,
+            PrototypeId inventoryProtoRef = PrototypeId.Invalid, PrototypeId missionProtoRef = PrototypeId.Invalid)
         {
             LootType lootTypes = lootResultSummary.Types;
 
@@ -415,31 +416,50 @@ namespace MHServerEmu.Games.Loot
                     player.AwardVendorXP(vendorXPSummary.XPAmount, vendorXPSummary.VendorProtoRef);
             }
 
-            // Mission-exclusive rewards: experience, endurance / health bonuses, power points
-            if (isMissionLoot)
+            // Mission-exclusive rewards: experience, property bonuses, "real money" (G)
+            const LootType MissionLootTypes = LootType.Experience | LootType.HealthBonus | LootType.EnduranceBonus | LootType.PowerPoints | LootType.RealMoney;
+
+            if (missionProtoRef != PrototypeId.Invalid)
             {
-                if (lootTypes.HasFlag(LootType.Experience))
-                {
-                    Avatar avatar = player.CurrentAvatar;
-                    avatar?.AwardXP(lootResultSummary.Experience, 0, false);
-                }
+                Avatar avatar = player.CurrentAvatar;
 
-                if (lootTypes.HasFlag(LootType.HealthBonus))
+                if (avatar != null)
                 {
-                    // TODO for 1.48
-                    Logger.Warn("GiveLootFromSummary(): HealthBonus rewards are not yet implemented");
-                }
+                    if (lootTypes.HasFlag(LootType.Experience))
+                        avatar.AwardXP(lootResultSummary.Experience, 0, false);
 
-                if (lootTypes.HasFlag(LootType.EnduranceBonus))
-                {
-                    // TODO for 1.48
-                    Logger.Warn("GiveLootFromSummary(): EnduranceBonus rewards are not yet implemented");
-                }
+                    if ((lootTypes & (LootType.HealthBonus | LootType.EnduranceBonus | LootType.PowerPoints)) != 0)
+                    {
+                        // Property rewards should always be for the first completion only.
+                        if (MissionManager.HasReceivedRewardsForMission(player, avatar, missionProtoRef) == false)
+                        {
+                            if (lootTypes.HasFlag(LootType.HealthBonus))
+                            {
+                                if (avatar.AdjustMissionRewardProperty(PropertyEnum.HealthAddBonus, lootResultSummary.HealthBonus, missionProtoRef) == false)
+                                    Logger.Warn($"GiveLootFromSummary(): Failed to give HealthBonus reward to avatar [{avatar}]");
+                            }
 
-                if (lootTypes.HasFlag(LootType.PowerPoints))
-                {
-                    // TODO for 1.48
-                    Logger.Warn("GiveLootFromSummary(): PowerPoints rewards are not yet implemented");
+                            if (lootTypes.HasFlag(LootType.EnduranceBonus))
+                            {
+                                foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in avatar.GetPrimaryResourceManaBehaviors())
+                                {
+                                    ManaType manaType = primaryManaBehaviorProto.ManaType;
+                                    if (avatar.AdjustMissionRewardProperty(new(PropertyEnum.EnduranceAddBonus, manaType), (float)lootResultSummary.EnduranceBonus, missionProtoRef) == false)
+                                        Logger.Warn($"GiveLootFromSummary(): Failed to give EnduranceBonus reward for mana type {manaType} to avatar [{avatar}]");
+                                }
+                            }
+
+                            if (lootTypes.HasFlag(LootType.PowerPoints))
+                            {
+                                if (avatar.AdjustMissionRewardProperty(PropertyEnum.AvatarPowerPointsBonus, lootResultSummary.PowerPoints, missionProtoRef) == false)
+                                    Logger.Warn($"GiveLootFromSummary(): Failed to give PowerPoints reward to avatar [{avatar}]");
+                            }
+                        }
+                        else
+                        {
+                            Logger.Warn($"GiveLootFromSummary(): Avatar [{avatar}] rolled property mission reward for non-first mission completion");
+                        }
+                    }
                 }
 
                 // This is used for the HiddenOneTimeGiveGs mission
@@ -448,10 +468,8 @@ namespace MHServerEmu.Games.Loot
             }
             else
             {
-                if ((lootTypes & (LootType.Experience | LootType.HealthBonus | LootType.EnduranceBonus | LootType.PowerPoints | LootType.RealMoney)) != 0)
-                {
+                if ((lootTypes & (MissionLootTypes)) != 0)
                     Logger.Warn($"GiveLootFromSummary(): Mission-only loot types found in a non-mission summary, Types=[{lootResultSummary.Types}]");
-                }
             }
 
             // NOTE: We use goto here because returning a list to the pool while it's
