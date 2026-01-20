@@ -6,8 +6,7 @@ namespace MHServerEmu.PlayerManagement
 {
     public class PlayerManagerEventScheduler
     {
-        // TODO: Add an event for WorldView grace period expiration after leaving a party when we implement that.
-
+        public ServiceEventScheduler<ulong, ulong> GracePeriodRegionExpired { get; } = new();
         public ServiceEventScheduler<ulong, RegionRequestGroupState> MatchmakingGroupStateChange { get; } = new();
         public ServiceEventScheduler<ulong, bool> MatchmakingGroupStateUpdate { get; } = new();
         public ServiceEventScheduler<ulong, PlayerHandle> MatchmakingGroupInviteExpired { get; } = new();
@@ -20,6 +19,7 @@ namespace MHServerEmu.PlayerManagement
 
         public void TriggerEvents()
         {
+            GracePeriodRegionExpired.TriggerEvents();
             MatchmakingGroupStateChange.TriggerEvents();
             MatchmakingGroupStateUpdate.TriggerEvents();
             MatchmakingGroupInviteExpired.TriggerEvents();

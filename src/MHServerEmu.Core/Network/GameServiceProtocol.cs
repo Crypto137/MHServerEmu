@@ -354,6 +354,9 @@ namespace MHServerEmu.Core.Network
             public readonly PartyOperationPayload Request = request;
         }
 
+        /// <summary>
+        /// [Game -> PlayerManager] Notifies the Player Manager of a player's current party boosts. 
+        /// </summary>
         public readonly struct PartyBoostUpdate(ulong playerDbId, List<ulong> boosts)
             : IGameServiceMessage
         {
@@ -399,6 +402,18 @@ namespace MHServerEmu.Core.Network
             public readonly ulong MemberDbId = memberDbId;
             public readonly PartyMemberEvent MemberEvent = memberEvent;
             public readonly PartyMemberInfo MemberInfo = memberInfo;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] Notifies a player of a party kick grace period before they are removed from the current region.
+        /// </summary>
+        public readonly struct PartyKickGracePeriod(ulong gameId, ulong playerDbId, ulong expireTimeMicroseconds, GroupLeaveReason leaveReason)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ulong ExpireTimeMicroseconds = expireTimeMicroseconds;
+            public readonly GroupLeaveReason LeaveReason = leaveReason;
         }
 
         /// <summary>

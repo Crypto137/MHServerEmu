@@ -73,6 +73,10 @@ namespace MHServerEmu.Games.Network
                     OnPartyMemberInfoServerUpdate(partyMemberInfoServerUpdate);
                     break;
 
+                case ServiceMessage.PartyKickGracePeriod partyKickGracePeriod:
+                    OnPartyKickGracePeriod(partyKickGracePeriod);
+                    break;
+
                 case ServiceMessage.GuildMessageToServer guildMessageToServer:
                     OnGuildMessageToServer(guildMessageToServer);
                     break;
@@ -239,6 +243,15 @@ namespace MHServerEmu.Games.Network
             PartyMemberInfo memberInfo = partyMemberInfoServerUpdate.MemberInfo;
 
             Game.PartyManager.OnPartyMemberInfoServerUpdate(playerDbId, groupId, memberDbId, memberEvent, memberInfo);
+        }
+
+        private void OnPartyKickGracePeriod(in ServiceMessage.PartyKickGracePeriod partyKickGracePeriod)
+        {
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(partyKickGracePeriod.PlayerDbId);
+            player?.SendMessage(NetMessagePartyKickGracePeriod.CreateBuilder()
+                .SetExpireTimeMicroseconds(partyKickGracePeriod.ExpireTimeMicroseconds)
+                .SetLeaveReason(partyKickGracePeriod.LeaveReason)
+                .Build());
         }
 
         private void OnGuildMessageToServer(in ServiceMessage.GuildMessageToServer guildMessageToServer)
