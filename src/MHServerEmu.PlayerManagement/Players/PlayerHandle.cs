@@ -114,6 +114,7 @@ namespace MHServerEmu.PlayerManagement.Players
 
             RemoveFromCurrentGame();
             Client.Disconnect();
+            SetActualRegion(null);  // this fixes the edge case where duplicate login happens while in a hub region
 
             ClientSession oldSession = (ClientSession)Client.Session;
             ClientSession newSession = (ClientSession)newClient.Session;
