@@ -620,7 +620,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageRequestPetTechDonate:              OnRequestPetTechDonate(message); break;
                 case ClientToGameServerMessage.NetMessageSetActivePowerSpec:                OnSetActivePowerSpec(message); break;
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;
-                // case ClientToGameServerMessage.NetMessageRequestSocketAffix:             OnRequestSocketAffix(message); break;
+                case ClientToGameServerMessage.NetMessageRequestSocketAffix:                OnRequestSocketAffix(message); break;
                 case ClientToGameServerMessage.NetMessageUISystemLockState:                 OnUISystemLockState(message); break;
                 case ClientToGameServerMessage.NetMessageEnableTalentPower:                 OnEnableTalentPower(message); break;
                 case ClientToGameServerMessage.NetMessageStashInventoryViewed:              OnStashInventoryViewed(message); break;
@@ -2299,6 +2299,31 @@ namespace MHServerEmu.Games.Network
             if (changeCameraSettings == null) return Logger.WarnReturn(false, $"OnChangeCameraSettings(): Failed to retrieve message");
 
             AOI.InitializePlayerView((PrototypeId)changeCameraSettings.CameraSettings);
+            return true;
+        }
+
+        private bool OnRequestSocketAffix(in MailboxMessage message)
+        {
+            var requestSocketAffix = message.As<NetMessageRequestSocketAffix>();
+            if (requestSocketAffix == null) return Logger.WarnReturn(false, $"OnRequestSocketAffix(): Failed to retrieve message");
+
+            Item destItem = Game.EntityManager.GetEntity<Item>(requestSocketAffix.DestItemId);
+            if (destItem == null) return Logger.WarnReturn(false, "OnRequestSocketAffix(): destItem == null");
+
+            Player destItemOwner = destItem.GetOwnerOfType<Player>();
+            if (destItemOwner != Player)
+                return Logger.WarnReturn(false, $"OnRequestSocketAffix(): Player [{Player}] is attempting to socket affix into [{destItem}] owned by player [{destItemOwner}]");
+
+            Item gem = Game.EntityManager.GetEntity<Item>(requestSocketAffix.GemAffixItemId);
+            if (gem == null) return Logger.WarnReturn(false, "OnRequestSocketAffix(): destItem == null");
+
+            Player gemOwner = gem.GetOwnerOfType<Player>();
+            if (gemOwner != Player)
+                return Logger.WarnReturn(false, $"OnRequestSocketAffix(): Player [{Player}] is attempting to socket gem [{gem}] owned by player [{gemOwner}]");
+
+            if (destItem.CanSocketGem(gem))
+                destItem.SocketGem(gem);
+
             return true;
         }
 

@@ -1406,6 +1406,158 @@ namespace MHServerEmu.Games.Entities.Items
             return GameDatabase.AdvancementGlobalsPrototype.GetItemAffixLevelUpXPRequirement(level);
         }
 
+        public bool CanSocketGem(Item gem)
+        {
+            AffixPrototype gemAffixProto = null;
+
+            // Find a gem affix on the gem item
+            IReadOnlyList<AffixSpec> gemAffixes = gem.ItemSpec.AffixSpecs;
+            for (int i = 0; i < gemAffixes.Count; i++)
+            {
+                AffixSpec affixSpec = gemAffixes[i];
+                AffixPrototype affixProto = affixSpec.AffixProto;
+
+                if (affixProto == null)
+                {
+                    Logger.Warn("CanSocketGem(): affixProto == null");
+                    continue;
+                }
+
+                if (affixProto.IsGemAffix)
+                {
+                    gemAffixProto = affixProto;
+                    break;
+                }
+            }
+
+            if (gemAffixProto == null)
+                return Logger.WarnReturn(false, $"CanSocketGem(): Unable to find socket affix on gem.\nGem: {gem}");
+
+            // Find a matching socket affix on the destination item
+            IReadOnlyList<AffixSpec> itemAffixes = ItemSpec.AffixSpecs;
+            for (int i = 0; i < itemAffixes.Count; i++)
+            {
+                AffixSpec affixSpec = itemAffixes[i];
+                AffixPrototype affixProto = affixSpec.AffixProto;
+
+                if (affixProto == null)
+                {
+                    Logger.Warn("CanSocketGem(): affixProto == null");
+                    continue;
+                }
+
+                if (affixProto.Position == gemAffixProto.Position)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public bool SocketGem(Item gem)
+        {
+            ItemPrototype gemProto = gem.ItemPrototype;
+            if (gemProto == null) return Logger.WarnReturn(false, "SocketGem(): gemProto == null");
+
+            // The existence of the gem affix should have been already validated by CanSocketGem().
+            IReadOnlyList<AffixSpec> gemAffixes = gem.ItemSpec.AffixSpecs;
+            AffixSpec gemAffixSpec = gemAffixes.Count > 0 ? gemAffixes[0] : null;
+
+            AffixPrototype gemAffixProto = gemAffixSpec?.AffixProto;
+            if (gemAffixProto == null) return Logger.WarnReturn(false, "SocketGem(): gemAffixProto == null");
+
+            if (gemAffixProto.IsGemAffix == false)
+                return Logger.WarnReturn(false, $"SocketGem(): Trying to socket an affix that is not a supported!\n Affix: {gemAffixProto}\nItem: {this}");
+
+            // Find and remove the affix to replace
+            AffixPrototype removeAffixProto = null;
+
+            IReadOnlyList<AffixSpec> affixes = ItemSpec.AffixSpecs;
+            for (int i = 0; i < affixes.Count; i++)
+            {
+                AffixSpec affixSpec = affixes[i];
+                AffixPrototype affixProto = affixSpec.AffixProto;
+
+                if (affixProto == null)
+                {
+                    Logger.Warn("SocketGem(): affixProto == null");
+                    continue;
+                }
+
+                if (affixProto.Position == gemAffixProto.Position)
+                {
+                    removeAffixProto = affixProto;
+                    break;
+                }
+            }
+
+            if (removeAffixProto == null)
+                return Logger.WarnReturn(false, $"SocketGem(): Trying to set a socket on an item that doesn't have that affix position! Item: {this}");
+
+            RemoveSocketAffix(removeAffixProto);
+
+            // Add the affix from the gem item
+            ItemSpec.AddAffixSpec(gemAffixSpec);
+
+            GRandom random = new(gemAffixSpec.Seed);
+            OnAffixAdded(random, gemAffixSpec.AffixProto, gemAffixSpec.ScopeProtoRef, ItemSpec.EquippableBy, 0);
+
+            // Notify the clients
+            NetMessageSocketGem message = NetMessageSocketGem.CreateBuilder()
+                .SetGemId(gem.Id)
+                .SetDestItemId(Id)
+                .Build();
+
+            Game.NetworkManager.SendMessageToInterested(message, this, AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelOwner);
+
+            // Destroy the gem
+            gem.Destroy();
+            
+            return true;
+        }
+
+        private bool RemoveSocketAffix(AffixPrototype affixProto)
+        {
+            int removeSpecIt = -1;
+
+            // Break ItemSpec's incapsulation here a bit to remove the affix spec.
+            IList<AffixSpec> affixes = (IList<AffixSpec>)ItemSpec.AffixSpecs;
+            for (int i = 0; i < affixes.Count; i++)
+            {
+                AffixSpec affixSpec = affixes[i];
+                if (affixSpec.AffixProto.DataRef == affixProto.DataRef)
+                {
+                    removeSpecIt = i;
+                    break;
+                }
+            }
+
+            if (removeSpecIt == -1)
+                return Logger.WarnReturn(false, $"RemoveSocketAffix(): Failed to find AffixSpec to remove.\nItem: {this}");
+
+            affixes.RemoveAt(removeSpecIt);
+
+            // Remove the affix property entry.
+            bool erased = false;
+            for (int i = 0; i < _affixProperties.Count; i++)
+            {
+                AffixPropertiesCopyEntry entry = _affixProperties[i];
+                if (entry.AffixProto.DataRef != affixProto.DataRef)
+                    continue;
+
+                if (entry.Properties != null && Properties.HasChildCollection(entry.Properties))
+                    entry.Properties.RemoveFromParent(Properties);
+
+                erased = true;
+                _affixProperties.RemoveAt(i);
+                break;
+            }
+
+            if (erased == false)
+                return Logger.WarnReturn(false, $"RemoveSocketAffix(): Failed to find AffixPropertyCopyEntry to remove.\nItem: {this}");
+
+            return true;
+        }
+
         public int GetDisplayItemLevel()
         {
             var itemProto = ItemPrototype;
