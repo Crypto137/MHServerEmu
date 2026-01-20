@@ -1668,7 +1668,7 @@ namespace MHServerEmu.Games.Entities.Items
                     if (scopeProtoRef.As<PowerPrototype>() == null)
                     {
                         return Logger.WarnReturn(false, string.Format(
-                            $"OnAffixAdded(): AffixPowerModifier IsForSinglePowerOnly but scopeProtoRef is not a power! Affix=[{0}] Scope=[{1}] Item=[{2}]",
+                            "OnAffixAdded(): AffixPowerModifier IsForSinglePowerOnly but scopeProtoRef is not a power! Affix=[{0}] Scope=[{1}] Item=[{2}]",
                             affixProto.ToString(),
                             scopeProtoRef.GetName(),
                             _itemSpec.ItemProtoRef.GetName()));
@@ -1677,7 +1677,7 @@ namespace MHServerEmu.Games.Entities.Items
                     if (avatarProtoRef == PrototypeId.Invalid && affixProto.IsGemAffix == false)
                     {
                         return Logger.WarnReturn(false, string.Format(
-                            $"OnAffixAdded(): Non-gem AffixPowerModifier IsForSinglePowerOnly, but avatarProtoRef is invalid! Affix=[{0}] Scope=[{1}] Item=[{2}]",
+                            "OnAffixAdded(): Non-gem AffixPowerModifier IsForSinglePowerOnly, but avatarProtoRef is invalid! Affix=[{0}] Scope=[{1}] Item=[{2}]",
                             affixProto.ToString(),
                             scopeProtoRef.GetName(),
                             _itemSpec.ItemProtoRef.GetName()));
@@ -1687,7 +1687,7 @@ namespace MHServerEmu.Games.Entities.Items
                     if (avatarProto == null)
                     {
                         return Logger.WarnReturn(false, string.Format(
-                            $"OnAffixAdded(): Unable to get Avatar=[{0}]. Affix=[{1}] Item=[{2}]",
+                            "OnAffixAdded(): Unable to get Avatar=[{0}]. Affix=[{1}] Item=[{2}]",
                             avatarProtoRef.GetName(),
                             affixProto.ToString(),
                             _itemSpec.ItemProtoRef.GetName()));
@@ -1697,7 +1697,7 @@ namespace MHServerEmu.Games.Entities.Items
                     if (powerProgEntry == null)
                     {
                         return Logger.WarnReturn(false, string.Format(
-                            $"OnAffixAdded(): Unable to get Power[{0}] in Avatar[{1}] Power Progression Table. Affix=[{2}] Item=[{3}]",
+                            "OnAffixAdded(): Unable to get Power[{0}] in Avatar[{1}] Power Progression Table. Affix=[{2}] Item=[{3}]",
                             scopeProtoRef.GetName(),
                             avatarProtoRef.GetName(),
                             affixProto.ToString(),
@@ -1713,7 +1713,7 @@ namespace MHServerEmu.Games.Entities.Items
                     if (scopeProtoRef.As<AvatarPrototype>() == null)
                     {
                         return Logger.WarnReturn(false, string.Format(
-                            $"OnAffixAdded(): AffixPowerModifier is for PowerProgTableTabRef but scopeProtoRef is not an avatar! Affix=[{0}] Scope=[{1}] Item=[{2}]",
+                            "OnAffixAdded(): AffixPowerModifier is for PowerProgTableTabRef but scopeProtoRef is not an avatar! Affix=[{0}] Scope=[{1}] Item=[{2}]",
                             affixProto.ToString(),
                             scopeProtoRef.GetName(),
                             _itemSpec.ItemProtoRef.GetName()));
@@ -1724,7 +1724,7 @@ namespace MHServerEmu.Games.Entities.Items
                     if (scopeProtoRef != PrototypeId.Invalid)
                     {
                         return Logger.WarnReturn(false, string.Format(
-                            $"OnAffixAdded(): AffixPowerModifier is for PowerKeywordFilter but scopeProtoRef is NOT invalid as expected! Affix=[{0}] Scope=[{1}] Item=[{2}]",
+                            "OnAffixAdded(): AffixPowerModifier is for PowerKeywordFilter but scopeProtoRef is NOT invalid as expected! Affix=[{0}] Scope=[{1}] Item=[{2}]",
                             affixProto.ToString(),
                             scopeProtoRef.GetName(),
                             _itemSpec.ItemProtoRef.GetName()));
