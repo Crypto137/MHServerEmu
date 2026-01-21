@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2026.01.14 21:04:56 UTC` using server version `0.8.1`.
+This list was automatically generated on `2026.01.21 10:37:50 UTC` using server version `0.8.1`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -211,15 +211,16 @@ Region management commands.
 ## Server
 Server management commands.
 
-| Command                  | Description                               | User Level | Invoker Type   |
-| ------------------------ | ----------------------------------------- | ---------- | -------------  |
-| !server broadcast        | Broadcasts a notification to all players. | Admin      | Any            |
-| !server reloadaddg       | Reloads the Add G page.                   | Admin      | ServerConsole  |
-| !server reloadcatalog    | Reloads MTX store catalog.                | Admin      | ServerConsole  |
-| !server reloaddashboard  | Reloads the web dashboard.                | Admin      | ServerConsole  |
-| !server reloadlivetuning | Reloads live tuning settings.             | Admin      | ServerConsole  |
-| !server shutdown         | Shuts the server down.                    | Admin      | Any            |
-| !server status           | Prints server status.                     | Any        | Any            |
+| Command                           | Description                               | User Level | Invoker Type   |
+| --------------------------------- | ----------------------------------------- | ---------- | -------------  |
+| !server broadcast                 | Broadcasts a notification to all players. | Admin      | Any            |
+| !server reloadaddg                | Reloads the Add G page.                   | Admin      | ServerConsole  |
+| !server reloadcatalog             | Reloads MTX store catalog.                | Admin      | ServerConsole  |
+| !server reloaddashboard           | Reloads the web dashboard.                | Admin      | ServerConsole  |
+| !server reloadlivetuning          | Reloads live tuning settings.             | Admin      | ServerConsole  |
+| !server reloadplayernameblacklist | Reloads the player name blacklist.        | Admin      | ServerConsole  |
+| !server shutdown                  | Shuts the server down.                    | Admin      | Any            |
+| !server status                    | Prints server status.                     | Any        | Any            |
 
 ## Store
 Commands for interacting with the in-game store.
@@ -228,6 +229,14 @@ Commands for interacting with the in-game store.
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------- | ------------  |
 | !store addg [amount]      | Adds the specified number of Gs to this account.                                                                         | Admin      | Client        |
 | !store convertes [amount] | Converts Eternity Splinters to the equivalent amount of Gs. Defaults to 100 Eternity Splinters if no value is specified. | Any        | Client        |
+
+## UltimatePrestige
+Ultimate Prestige system commands.
+
+| Command                    | Description                                           | User Level | Invoker Type  |
+| -------------------------- | ----------------------------------------------------- | ---------- | ------------  |
+| !ultimateprestige activate | Activates the Ultimate Prestige for the current hero. | Any        | Client        |
+| !ultimateprestige level    | Prints the current Ultimate Prestige level.           | Any        | Client        |
 
 ## Unlock
 Commands for unlocking various things.

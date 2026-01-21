@@ -16,6 +16,7 @@ namespace MHServerEmu.Games
         public bool DisableAccountBinding { get; private set; } = false;
         public bool DisableCharacterBinding { get; private set; } = true;
         public bool UsePrestigeLootTable { get; private set; } = false;
+        public bool EnableUltimatePrestige { get; private set; } = false;
         public bool ApplyHiddenPvPDamageModifiers { get; private set; } = false;
     }
 }

@@ -80,6 +80,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private ulong _avatarSynergyConditionId = ConditionCollection.InvalidConditionId;
 
+        private ulong _ultimatePrestigeLevel = 0;
+
         public uint AvatarWorldInstanceId { get; } = 1;
         public string PlayerName { get => _playerName.Get(); }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
@@ -117,6 +119,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         public PrototypeGuid PrototypeGuid { get => GameDatabase.GetPrototypeGuid(PrototypeDataRef); }
         public Inventory ControlledInventory { get => GetInventory(InventoryConvenienceLabel.Controlled); }
         public Agent ControlledAgent { get => GetControlledAgent(); }
+
+        public ulong UltimatePrestigeLevel { get => _ultimatePrestigeLevel; }
 
         public Avatar(Game game) : base(game) { }
 
@@ -215,6 +219,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             success &= Serializer.Transfer(archive, ref _abilityKeyMappings);
+
+            // Custom data
+            if (archive.IsPersistent)
+            {
+                if (archive.Version >= ArchiveVersion.AddedUltimatePrestigeLevel)
+                    success &= Serializer.Transfer(archive, ref _ultimatePrestigeLevel);
+            }
 
             return success;
         }
@@ -6043,6 +6054,30 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        // CUSTOM: Ultimate Prestige (reset cosmic prestige)
+
+        public bool CanActivateUltimatePrestigeMode()
+        {
+            if (PartyId != InvalidId)
+                return false;
+
+            if (CharacterLevel < GetAvatarLevelCap())
+                return false;
+
+            if (IsAtMaxPrestigeLevel() == false)
+                return false;
+
+            return IsInTown();
+        }
+
+        public bool ActivateUltimatePrestigeMode()
+        {
+            Properties[PropertyEnum.AvatarPrestigeLevel] = 0;
+            _ultimatePrestigeLevel++;
+            Logger.Trace($"ActivateUltimatePrestigeMode(): [{this}] - {_ultimatePrestigeLevel}");
+            return ActivatePrestigeMode();
         }
 
         #endregion
