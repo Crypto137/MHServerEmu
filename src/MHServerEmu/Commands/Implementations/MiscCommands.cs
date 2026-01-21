@@ -21,6 +21,8 @@ namespace MHServerEmu.Commands.Implementations
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Tower(string[] @params, NetClient client)
         {
+            const PrototypeId AvengersTowerHUBEntryTarget = (PrototypeId)16780605467179883619;   // Regions/HUBS/AvengersTowerHUB/Portals/AvengersTowerHUBEntry.prototype
+
             Player player = ((PlayerConnection)client).Player;
 
             CanTeleportResult result = CanTeleport(player);
@@ -28,7 +30,10 @@ namespace MHServerEmu.Commands.Implementations
                 return $"You cannot teleport right now ({result}).";
 
             player.Properties[PropertyEnum.PowerCooldownStartTime, GameDatabase.GlobalsPrototype.ReturnToHubPower] = player.Game.CurrentTime;
-            Teleporter.DebugTeleportToTarget(player, (PrototypeId)16780605467179883619);    // Regions/HUBS/AvengersTowerHUB/Portals/AvengersTowerHUBEntry.prototype
+            
+            // Apparently people somehow get into instances with no difficulty tier specified when using this command.
+            // Force the default difficulty tier just in case.
+            Teleporter.DebugTeleportToTarget(player, AvengersTowerHUBEntryTarget, GameDatabase.GlobalsPrototype.DifficultyTierDefault);
 
             return "Teleporting to Avengers Tower (original).";
         }

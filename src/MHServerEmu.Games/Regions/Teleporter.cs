@@ -333,10 +333,11 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
-        public static void DebugTeleportToTarget(Player player, PrototypeId targetProtoRef)
+        public static void DebugTeleportToTarget(Player player, PrototypeId targetProtoRef, PrototypeId difficultyTierRef = PrototypeId.Invalid)
         {
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Debug);
+            teleporter.DifficultyTierRef = difficultyTierRef;
             teleporter.TeleportToTarget(targetProtoRef);
         }
 
