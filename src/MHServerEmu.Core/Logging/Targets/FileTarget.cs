@@ -31,7 +31,7 @@ namespace MHServerEmu.Core.Logging.Targets
                 {
                     string filePath = Path.Combine(logDirectory, $"{fileName}_{category}.log");
                     FileStream fs = new(filePath, fileMode, FileAccess.Write, FileShare.Read);
-                    _writers[(int)category] = new(fs) { AutoFlush = true };
+                    _writers[(int)category] = new(fs);
                 }
             }
             else
@@ -39,7 +39,7 @@ namespace MHServerEmu.Core.Logging.Targets
                 // Create a single writer for all categories
                 string filePath = Path.Combine(logDirectory, $"{fileName}.log");
                 FileStream fs = new(filePath, fileMode, FileAccess.Write, FileShare.Read);
-                _writers = [new(fs) { AutoFlush = true }];
+                _writers = [new(fs)];
             }
         }
 
@@ -51,8 +51,9 @@ namespace MHServerEmu.Core.Logging.Targets
             if (_disposed)
                 return;
 
-            int index = _splitOutput ? (int)message.Category : 0;
-            message.WriteTo(_writers[index], IncludeTimestamps, true);
+            StreamWriter writer = _writers[_splitOutput ? (int)message.Category : 0];
+            message.WriteTo(writer, IncludeTimestamps, true);
+            writer.Flush();
         }
 
         #region IDisposable Implementation
