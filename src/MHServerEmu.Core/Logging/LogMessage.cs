@@ -9,8 +9,6 @@ namespace MHServerEmu.Core.Logging
     {
         private const string TimeFormat = "yyyy.MM.dd HH:mm:ss.fff";
 
-        private static readonly StringBuilder StringBuilder = new();
-
         public DateTime Timestamp { get; }
         public LoggingLevel Level { get; }
         public string Logger { get; }
@@ -36,7 +34,9 @@ namespace MHServerEmu.Core.Logging
 
         public override string ToString()
         {
-            return $"[{Timestamp.ToString(TimeFormat)}] [{Level,5}] [{Logger}] {Message}";
+            Span<char> formattedTimestamp = stackalloc char[TimeFormat.Length];
+            Timestamp.TryFormat(formattedTimestamp, out _, TimeFormat);
+            return $"[{formattedTimestamp}] [{Level,5}] [{Logger}] {Message}";
         }
 
         /// <summary>
@@ -44,18 +44,10 @@ namespace MHServerEmu.Core.Logging
         /// </summary>
         public string ToString(bool includeTimestamps)
         {
-            lock (StringBuilder)    // This shouldn't be called from multiple threads unless in synchronous mode
-            {
-                if (includeTimestamps)
-                    StringBuilder.Append($"[{Timestamp.ToString(TimeFormat)}] ");
+            if (includeTimestamps)
+                return ToString();
 
-                StringBuilder.Append($"[{Level,5}] [{Logger}] {Message}");
-
-                string str = StringBuilder.ToString();
-                StringBuilder.Clear();
-
-                return str;
-            }
+            return $"[{Level,5}] [{Logger}] {Message}";
         }
     }
 }
