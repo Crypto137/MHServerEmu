@@ -173,7 +173,8 @@ namespace MHServerEmu.Core.Logging
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Log(LoggingLevel level, string message, LogChannels channels = LogChannels.General, LogCategory category = LogCategory.Common)
         {
-            LogRouter.AddMessage(level, _name, message, channels, category);
+            LogMessage logMessage = new(level, _name, message, channels, category);
+            LogRouter.AddLogMessage(logMessage);
         }
 
         /// <summary>
