@@ -8,7 +8,7 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Navi
 {
-    public class NaviSweep
+    public readonly struct NaviSweep
     {
         private readonly NaviMesh _naviMesh;
         private readonly Region _region;
