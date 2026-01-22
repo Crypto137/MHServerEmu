@@ -120,7 +120,8 @@ namespace MHServerEmu.Games.Entities
             if (PowerPrototype == null) return -1;
             if (other.PowerPrototype == null) return 1;
 
-            return PowerPrototype.DataRef.CompareTo(other.PowerPrototype.DataRef);
+            // Cast to ulong to avoid boxing enums in CompareTo().
+            return ((ulong)PowerPrototype.DataRef).CompareTo((ulong)other.PowerPrototype.DataRef);
         }
     }
 
