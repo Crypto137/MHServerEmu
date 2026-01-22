@@ -66,7 +66,8 @@
                 writer.Write(' ');
             }
 
-            writer.Write("[{0,5}] [{1}] {2}", Level.ToString(), Logger, Message);
+            // Enum.GetName() doesn't allocate memory unlike ToString().
+            writer.Write("[{0,5}] [{1}] {2}", Enum.GetName(Level), Logger, Message);
 
             if (writeLine)
                 writer.WriteLine();
