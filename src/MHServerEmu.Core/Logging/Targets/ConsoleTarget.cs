@@ -18,7 +18,7 @@
         public override void ProcessLogMessage(in LogMessage message)
         {
             SetForegroundColor(message.Level);
-            Console.WriteLine(message.ToString(IncludeTimestamps));
+            message.WriteTo(Console.Out, IncludeTimestamps, true);
             Console.ResetColor();
         }
 

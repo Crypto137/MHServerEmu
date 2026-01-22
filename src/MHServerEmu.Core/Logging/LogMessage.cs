@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace MHServerEmu.Core.Logging
+﻿namespace MHServerEmu.Core.Logging
 {
     /// <summary>
     /// A timestamped log message.
@@ -42,12 +40,36 @@ namespace MHServerEmu.Core.Logging
         /// <summary>
         /// Returns a string that represents this <see cref="LogMessage"/> with or without a timestamp.
         /// </summary>
-        public string ToString(bool includeTimestamps)
+        public string ToString(bool includeTimestamp)
         {
-            if (includeTimestamps)
+            if (includeTimestamp)
                 return ToString();
 
             return $"[{Level,5}] [{Logger}] {Message}";
+        }
+
+        public void WriteTo(TextWriter writer, bool includeTimestamp, bool writeLine)
+        {
+            // TextWriter.Write() with format arguments causes less memory allocation than string interpolation as of .NET 8.
+            // We can't use this for our timestamp though because Span cannot be cast to an object.
+
+            // We can potentially make use of interpolated strings here without sacrificing performance with a custom InterpolatedStringHandler implementation.
+            // https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/performance/interpolated-string-handler
+
+            if (includeTimestamp)
+            {
+                Span<char> formattedTimestamp = stackalloc char[TimeFormat.Length];
+                Timestamp.TryFormat(formattedTimestamp, out _, TimeFormat);
+                writer.Write('[');
+                writer.Write(formattedTimestamp);
+                writer.Write(']');
+                writer.Write(' ');
+            }
+
+            writer.Write("[{0,5}] [{1}] {2}", Level.ToString(), Logger, Message);
+
+            if (writeLine)
+                writer.WriteLine();
         }
     }
 }

@@ -52,7 +52,7 @@ namespace MHServerEmu.Core.Logging.Targets
                 return;
 
             int index = _splitOutput ? (int)message.Category : 0;
-            _writers[index].WriteLine(message.ToString(IncludeTimestamps));
+            message.WriteTo(_writers[index], IncludeTimestamps, true);
         }
 
         #region IDisposable Implementation
