@@ -781,8 +781,6 @@ namespace MHServerEmu.Games.Entities
                         FXRandomSeed = Properties[PropertyEnum.VariationSeed]
                     };
 
-                    // EntityHelper.CrateOrb(EntityHelper.TestOrb.Blue, RegionLocation.Position, Region);
-                    // EntityHelper.CrateOrb(EntityHelper.TestOrb.Red, position, Region);
                     ActivateMissilePower(power, ref powerSettings, target);
                 }
             }

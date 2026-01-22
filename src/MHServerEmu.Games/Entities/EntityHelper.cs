@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Entities
             Violet = 18337403507337860830, // MagnetoMetalOrb = 18337403507337860830,
         }
 
-        public static Agent CrateOrb(TestOrb orbProto, Vector3 position, Region region)
+        public static Agent CreateOrb(TestOrb orbProto, Vector3 position, Region region)
         {
             if (DebugOrb == false) return null;
 

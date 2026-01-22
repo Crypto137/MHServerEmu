@@ -3132,10 +3132,12 @@ namespace MHServerEmu.Games.Entities
 
         public void DrawPath(EntityHelper.TestOrb orbRef)
         {
+#if DEBUG
             if (EntityHelper.DebugOrb == false) return;
             if (Locomotor.HasPath)
                 foreach(var node in Locomotor.LocomotionState.PathNodes)
-                    EntityHelper.CrateOrb(orbRef, node.Vertex, Region);
+                    EntityHelper.CreateOrb(orbRef, node.Vertex, Region);
+#endif
         }
 
         public void StartHitReactionCooldown()
