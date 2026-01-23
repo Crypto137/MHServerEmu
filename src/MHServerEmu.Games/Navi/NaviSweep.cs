@@ -578,7 +578,7 @@ namespace MHServerEmu.Games.Navi
             Vector3 direction = velocity / magnitude;
 
             Stack<NaviTriangle> triStack = new();
-            NaviSerialCheck naviSerialCheck = new (_naviMesh.NaviCdt);
+            using NaviSerialCheck naviSerialCheck = new(_naviMesh.NaviCdt);
 
             triStack.Push(GetFacingStartTriangle(start2d, direction));
 

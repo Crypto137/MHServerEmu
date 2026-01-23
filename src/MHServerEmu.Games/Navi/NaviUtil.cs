@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.Navi
             if (flagsCheck.PathingFlagsCheck(triangle.PathingFlags) == false) return false;
             if (radius > 0.0f)
             {
-                NaviSerialCheck naviSerialCheck = new(naviCdt);
+                using NaviSerialCheck naviSerialCheck = new(naviCdt);
                 for (int i = 0; i < 3; ++i)
                 {
                     if (NaviInteriorContainsCircleInternal(naviSerialCheck, position, radius, triangle, triangle.Edges[i], flagsCheck) == false)

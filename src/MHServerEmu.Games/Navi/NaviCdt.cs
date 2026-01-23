@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.Navi
         {
             List<NaviEdge> checkedEdges = new ();
             List<NaviEdge> collinearEdges = new ();
-            var naviSerialCheck = new NaviSerialCheck(this);
+            using NaviSerialCheck naviSerialCheck = new(this);
 
             foreach (var triangle in TriangleList.Iterate())
                 foreach (var edge in triangle.Edges)

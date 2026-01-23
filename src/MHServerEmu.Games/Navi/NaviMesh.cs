@@ -430,7 +430,7 @@ namespace MHServerEmu.Games.Navi
             if (triangle == null) return;
             triangle.PathingFlags |= PathFlags.BlackOutZone;
             Stack<NaviTriangle> triStack = new();
-            var naviSerialCheck = new NaviSerialCheck(NaviCdt);
+            using NaviSerialCheck naviSerialCheck = new(NaviCdt);
             float radiousSq = radius * radius;
             triStack.Push(triangle);
             while (triStack.Count > 0)
@@ -457,7 +457,7 @@ namespace MHServerEmu.Games.Navi
             if (triangle == null) return spawnableArea;
             spawnableArea += triangle.CalcSpawnableArea();
             Stack<NaviTriangle> triStack = new();
-            var naviSerialCheck = new NaviSerialCheck(NaviCdt);
+            using NaviSerialCheck naviSerialCheck = new(NaviCdt);
             triStack.Push(triangle);
             while (triStack.Count > 0)
             {

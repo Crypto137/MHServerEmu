@@ -96,17 +96,26 @@ namespace MHServerEmu.Games.Navi
         public NaviEdge Edge;
     }
 
-    public class NaviSerialCheck
+    public readonly struct NaviSerialCheck : IDisposable
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private readonly NaviCdt _naviCdt;
+
+        public uint Serial { get; }
+
         public NaviSerialCheck(NaviCdt naviCdt)
         {
-            NaviCdt = naviCdt;
-            Serial = ++NaviCdt.Serial;
+            _naviCdt = naviCdt;
+            Serial = ++_naviCdt.Serial;
         }
 
-        public uint Serial { get; private set; }
-        protected NaviCdt NaviCdt { get; private set; }
-
+        public void Dispose()
+        {
+            // This checks mimicks the destructor in the client.
+            if (Serial != _naviCdt.Serial)
+                Logger.Warn("Dispose(): Serial != _naviCdt.Serial");
+        }
     }
 
     public class NavigationInfluence
