@@ -125,7 +125,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             blackboard.PropertyCollection[PropertyEnum.NavigationInfluenceBeforeMoving] = agent.HasNavigationInfluence;
             agent.DisableNavigationInfluence();
 
-            if (locomotor.FollowPath(cachedPath, locomotionOptions) == false) return;
+            if (locomotor.FollowPath(cachedPath, ref locomotionOptions) == false) return;
 
             if (moveToContext.MoveTo == MoveToType.Target 
                 || moveToContext.MoveTo == MoveToType.AssistedEntity
@@ -138,7 +138,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 {
                     float rangeStart = blackboard.PropertyCollection[PropertyEnum.AIMoveToPathingRangeStart];
                     float rangeEnd = blackboard.PropertyCollection[PropertyEnum.AIMoveToPathingRangeEnd];
-                    if (locomotor.FollowEntity(followEntity.Id, rangeStart, rangeEnd, locomotionOptions, false) == false)
+                    if (locomotor.FollowEntity(followEntity.Id, rangeStart, rangeEnd, ref locomotionOptions, false) == false)
                         return;
                 }
             }
@@ -207,7 +207,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                             var locomotionOptions = new LocomotionOptions { RepathDelay = TimeSpan.FromMilliseconds(250) };
                             if (isWalking)
                                 locomotionOptions.Flags |= LocomotionFlags.IsWalking;
-                            locomotor.FollowEntity(followEntity.Id, boundsRange + halfRangeStart, boundsRange + halfRangeEnd, locomotionOptions, true);
+                            locomotor.FollowEntity(followEntity.Id, boundsRange + halfRangeStart, boundsRange + halfRangeEnd, ref locomotionOptions, true);
 
                             return StaticBehaviorReturnType.Running;
                         }

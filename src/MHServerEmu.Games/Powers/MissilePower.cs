@@ -510,12 +510,12 @@ namespace MHServerEmu.Games.Powers
                     var target = entityManager.GetEntity<WorldEntity>(targetId);
                     if (target != null && target.IsDead == false)
                     {
-                        locomotor.FollowEntity(targetId, 0.0f, locomotionOptions);
+                        locomotor.FollowEntity(targetId, 0.0f, ref locomotionOptions);
                         locomotor.FollowEntityMissingEvent.AddActionBack(missile.SeekTargetMissingAction);
                     }
                     else
                     {
-                        locomotor.MoveTo(powerApplication.TargetPosition, locomotionOptions);
+                        locomotor.MoveTo(powerApplication.TargetPosition, ref locomotionOptions);
                     }
                 } 
                 else
@@ -530,7 +530,7 @@ namespace MHServerEmu.Games.Powers
                             missile.AIController?.SetTargetEntity(target);
                     }
 
-                    locomotor.MoveForward(locomotionOptions);
+                    locomotor.MoveForward(ref locomotionOptions);
                     var missileProto = missile.MissilePrototype;
                     if (missileProto.GetSeekDelayTime() > TimeSpan.Zero)
                         locomotor.SetMethod(LocomotorMethod.Default, missileProto.GetSeekDelaySpeed());

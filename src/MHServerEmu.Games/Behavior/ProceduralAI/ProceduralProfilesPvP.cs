@@ -78,7 +78,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                 if (locomotor.SupportsWalking && collection[PropertyEnum.AIMoveToPathNodeWalk])
                     locomotionOptions.Flags = LocomotionFlags.IsWalking;
 
-                return locomotor.PathTo(destination, locomotionOptions);
+                return locomotor.PathTo(destination, ref locomotionOptions);
             }
             else
             {

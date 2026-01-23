@@ -5706,7 +5706,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 float jumpDistance = game.Random.Next(JumpDistanceMin, JumpDistanceMax + 1);
                 LocomotionOptions locomotionOptions = new();
                 locomotionOptions.PathGenerationFlags |= PathGenerationFlags.IncompletedPath;
-                locomotor.MoveTo(agent.RegionLocation.Position + (direction * jumpDistance), locomotionOptions);
+                locomotor.MoveTo(agent.RegionLocation.Position + (direction * jumpDistance), ref locomotionOptions);
             }
         }
     }

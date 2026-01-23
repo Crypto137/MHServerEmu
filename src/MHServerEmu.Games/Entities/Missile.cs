@@ -247,7 +247,7 @@ namespace MHServerEmu.Games.Entities
                 case LocomotorMethod.Ground:
                 case LocomotorMethod.Missile:
                     if (!Segment.IsNearZero(Properties[PropertyEnum.MissileBaseMoveSpeed]))
-                        locomotor.MoveForward(locomotionOptions);
+                        locomotor.MoveForward(ref locomotionOptions);
                     break;
 
                 case LocomotorMethod.MissileSeeking:
@@ -432,7 +432,7 @@ namespace MHServerEmu.Games.Entities
                 if (_contextPrototype.OneShot == false)
                     locomotionOptions.Flags |= LocomotionFlags.LocomotionNoEntityCollide;
 
-                locomotor.FollowEntity(ownerId, 0f, locomotionOptions);
+                locomotor.FollowEntity(ownerId, 0f, ref locomotionOptions);
                 locomotor.FollowEntityMissingEvent.AddActionBack(ReturnTargetMissingAction);
             }
             else Kill();

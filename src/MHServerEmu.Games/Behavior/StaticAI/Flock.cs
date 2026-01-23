@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 + flockContext.RangeMin + random.NextFloat() * (flockContext.RangeMax - flockContext.RangeMin);
 
             LocomotionOptions locomotionOptions = new() { RepathDelay = TimeSpan.FromMilliseconds(250) };
-            locomotor.FollowEntity(target.Id, followRange, locomotionOptions, true);
+            locomotor.FollowEntity(target.Id, followRange, ref locomotionOptions, true);
 
             if (locomotor.IsPathComplete())
                 return StaticBehaviorReturnType.Completed;
@@ -173,7 +173,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             Vector3 wanderTo = wanderFrom + (Vector3.RandomUnitVector2D(random) * random.NextFloat() * flockContext.WanderRadius);
             Vector3? resultNorm = null;
             locomotor.SweepFromTo(wanderFrom, wanderTo, ref wanderTo, ref resultNorm);
-            if (locomotor.PathTo(wanderTo, new()) == false)
+            LocomotionOptions locomotionOptions = new();
+            if (locomotor.PathTo(wanderTo, ref locomotionOptions) == false)
                 return StaticBehaviorReturnType.Failed;
 
             return StaticBehaviorReturnType.Running;
@@ -280,7 +281,10 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                                   forceToLeader * flockContext.ForceToLeaderWeight;
 
             if (Vector3.LengthSqr(flockOffset) > Segment.Epsilon)
-                locomotor.PathTo(agentPosition + Vector3.Truncate(flockOffset, flockContext.MaxSteeringForce), new());
+            {
+                LocomotionOptions locomotionOptions = new();
+                locomotor.PathTo(agentPosition + Vector3.Truncate(flockOffset, flockContext.MaxSteeringForce), ref locomotionOptions);
+            }
 
             return StaticBehaviorReturnType.Running;
         }

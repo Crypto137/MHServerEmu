@@ -3866,7 +3866,7 @@ namespace MHServerEmu.Games.Powers
                             locomotionOptions.Flags |= LocomotionFlags.DisableOrientation;
 
                         // NOTE: locomotor.FollowPath is client-only, so we just use 
-                        locomotor.MoveTo(powerApplication.TargetPosition, locomotionOptions);
+                        locomotor.MoveTo(powerApplication.TargetPosition, ref locomotionOptions);
                     }
                 }
             }

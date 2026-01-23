@@ -180,7 +180,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 RepathDelay = TimeSpan.FromSeconds(1.0f),
                 PathGenerationFlags = PathGenerationFlags.IncompletedPath
             };
-            if (agentsLocomotor.PathTo(sidePosition, locomotionOptions) == false) return false;
+            if (agentsLocomotor.PathTo(sidePosition, ref locomotionOptions) == false) return false;
             agent.DrawPath(EntityHelper.TestOrb.BigRed);
             return true;
         }
@@ -200,7 +200,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 RepathDelay = TimeSpan.FromSeconds(1.0f),
                 PathGenerationFlags = PathGenerationFlags.IncompletedPath | PathGenerationFlags.IgnoreSweep
             };
-            if (agentsLocomotor.PathTo(targetEntity.RegionLocation.Position, locomotionOptions) == false) return false;
+            if (agentsLocomotor.PathTo(targetEntity.RegionLocation.Position, ref locomotionOptions) == false) return false;
             agent.DrawPath(EntityHelper.TestOrb.Red);
             return true;
         }

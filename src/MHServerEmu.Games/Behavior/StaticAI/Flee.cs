@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     var locomotionOptions = new LocomotionOptions
                     { PathGenerationFlags = PathGenerationFlags.IncompletedPath };
 
-                    if (locomotor.PathTo(targetPosition, locomotionOptions) == false)
+                    if (locomotor.PathTo(targetPosition, ref locomotionOptions) == false)
                         return StaticBehaviorReturnType.Failed;
                 }
             }
@@ -161,7 +161,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 { PathGenerationFlags = PathGenerationFlags.IncompletedPath };
 
                 foreach (var pathResult in pathResults)
-                    if (locomotor.PathTo(pathResult.Position, locomotionOptions))
+                    if (locomotor.PathTo(pathResult.Position, ref locomotionOptions))
                         return true;
             }
             finally
@@ -258,7 +258,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
                     if (locomotor.SweepFromTo(curPosition, entity.RegionLocation.Position, ref resultPosition, ref resultNorm) != SweepResult.Failed
                         && Vector3.Distance2D(curPosition, resultPosition) > fleeContext.FleeDistanceMin
-                        && locomotor.PathTo(resultPosition, locomotionOptions))
+                        && locomotor.PathTo(resultPosition, ref locomotionOptions))
                         return true;
                 }
             }

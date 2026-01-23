@@ -899,7 +899,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 float speed = locomotor.GetCurrentSpeed() + random.Next(-MovementSpeedVariance, MovementSpeedVariance);
                 agent.Properties[PropertyEnum.MovementSpeedOverride] = Math.Abs(speed);
                 LocomotionOptions locomotionOptions = new() { BaseMoveSpeed = speed };
-                locomotor.MoveForward(locomotionOptions);
+                locomotor.MoveForward(ref locomotionOptions);
             }
         }
     }

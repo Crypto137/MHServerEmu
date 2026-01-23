@@ -329,7 +329,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                                     if (_owner.ActivePowerOrientsToTarget() || locomotorProto.DisableOrientationForSyncMove || _owner.ActivePowerDisablesOrientation())
                                         locomotionOptions.Flags |= LocomotionFlags.DisableOrientation;
 
-                                    if (PathTo(_syncPosition, locomotionOptions))
+                                    if (PathTo(_syncPosition, ref locomotionOptions))
                                         _syncSpeed = LocomotionState.BaseMoveSpeed * 1.5f;
                                     else
                                     {
@@ -340,7 +340,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                                             Vector3 resultPosition = Vector3.Zero;
                                             Vector3? resultNormal = null;
                                             if (SweepTo(_syncPosition, ref resultPosition, ref resultNormal) == SweepResult.Success)
-                                                if (MoveTo(_syncPosition, locomotionOptions))
+                                                if (MoveTo(_syncPosition, ref locomotionOptions))
                                                     _syncSpeed = LocomotionState.BaseMoveSpeed * 1.5f;
                                         }
                                     }
@@ -913,7 +913,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return true;
         }
 
-        public bool PathTo(Vector3 position, LocomotionOptions options)
+        public bool PathTo(Vector3 position, ref LocomotionOptions options)
         {
             if (!Vector3.IsFinite(position)) return false;
             ResetState(); 
@@ -926,7 +926,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 _repathDelay = options.RepathDelay;
                 if (_repathDelay != TimeSpan.Zero)
                     _repathTime = GameTimeNow() + _repathDelay;
-                LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
+                LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(ref options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting;
                 LocomotionState.PathNodes.Set(_generatedPath.Path.PathNodeList);
@@ -953,7 +953,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 _repathDelay = options.RepathDelay;
                 if (_repathDelay != TimeSpan.Zero)
                     _repathTime = GameTimeNow() + _repathDelay;
-                LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
+                LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(ref options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting;
                 LocomotionState.PathNodes.Set(_generatedPath.Path.PathNodeList);
@@ -964,13 +964,18 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return success;
         }
 
-        public bool FollowEntity(ulong targetId, float range = 0.0f, LocomotionOptions options = null, bool clearPath = true)
+        public bool FollowEntity(ulong targetId, float range = 0.0f)
         {
-            options ??= DefaultFollowEntityLocomotionOptions;
-            return FollowEntity(targetId, range, range, options, clearPath);
+            LocomotionOptions options = DefaultFollowEntityLocomotionOptions;
+            return FollowEntity(targetId, range, range, ref options, true);
         }
 
-        public bool FollowEntity(ulong targetId, float rangeStart, float rangeEnd, LocomotionOptions options, bool clearPath = true)
+        public bool FollowEntity(ulong targetId, float range, ref LocomotionOptions options, bool clearPath = true)
+        {
+            return FollowEntity(targetId, range, range, ref options, clearPath);
+        }
+
+        public bool FollowEntity(ulong targetId, float rangeStart, float rangeEnd, ref LocomotionOptions options, bool clearPath = true)
         {
             if (targetId != 0 && _owner.IsInWorld == false) return false;
             if (FollowEntityId != targetId) ResetState(clearPath);
@@ -983,7 +988,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             UnregisterFollowEvents();
             _pathGenerationFlags = options.PathGenerationFlags | PathGenerationFlags.IncompletedPath;
             _incompleteDistance = options.IncompleteDistance;
-            LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
+            LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(ref options);
             LocomotionState.Height = options.MoveHeight;
             LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting;
 
@@ -992,7 +997,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return _generatedPath.PathResult == NaviPathResult.Success || _generatedPath.PathResult == NaviPathResult.IncompletedPath;
         }
 
-        public bool FollowPath(GeneratedPath followPath, LocomotionOptions options)
+        public bool FollowPath(GeneratedPath followPath, ref LocomotionOptions options)
         {
             bool success = followPath.PathResult == NaviPathResult.Success || 
                 (options.PathGenerationFlags.HasFlag(PathGenerationFlags.IncompletedPath) && followPath.PathResult == NaviPathResult.IncompletedPath);
@@ -1005,7 +1010,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 _repathDelay = options.RepathDelay;
                 if (_repathDelay != TimeSpan.Zero) 
                     _repathTime = GameTimeNow() + _repathDelay;
-                LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
+                LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(ref options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting;
                 LocomotionState.PathNodes.Set(_generatedPath.Path.PathNodeList);
@@ -1016,7 +1021,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 return false;
         }
 
-        private float CalcBaseMoveSpeedForLocomotion(LocomotionOptions options)
+        private float CalcBaseMoveSpeedForLocomotion(ref LocomotionOptions options)
         {
             if (options.BaseMoveSpeed > 0.0f)
                 return options.BaseMoveSpeed;
@@ -1086,7 +1091,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             FollowEntityMissingEvent.UnregisterCallbacks();
         }
 
-        public bool MoveTo(Vector3 position, LocomotionOptions options)
+        public bool MoveTo(Vector3 position, ref LocomotionOptions options)
         {
             if (!Vector3.IsFinite(position)) return false;
             ResetState();
@@ -1095,7 +1100,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             bool success = _generatedPath.PathResult == NaviPathResult.Success;
             if (success)
             {
-                LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
+                LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(ref options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting | LocomotionFlags.MoveTo;
                 LocomotionState.PathNodes.Set(_generatedPath.Path.PathNodeList);
@@ -1104,10 +1109,10 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return success;
         }
 
-        public bool MoveForward(LocomotionOptions options)
+        public bool MoveForward(ref LocomotionOptions options)
         {
             ResetState();
-            LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
+            LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(ref options);
             LocomotionState.Height = options.MoveHeight;
             LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting | LocomotionFlags.MoveForward;
             SetEnabled(true);
@@ -1470,7 +1475,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         }
     }
 
-    public class LocomotionOptions
+    public struct LocomotionOptions
     {
         public TimeSpan RepathDelay;
         public PathGenerationFlags PathGenerationFlags;
