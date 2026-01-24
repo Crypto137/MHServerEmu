@@ -45,6 +45,16 @@ namespace MHServerEmu.Core.Memory
         }
 
         /// <summary>
+        /// Retrieves a <typeparamref name="TCollection"/> from the pool or allocates a new one if the pool is empty.
+        /// Returns a <see cref="CollectionHandle"/> that automatically returns the collection to the pool when it goes out of scope.
+        /// </summary>
+        public CollectionHandle Get(out TCollection collection)
+        {
+            collection = Get();
+            return new(this, collection);
+        }
+
+        /// <summary>
         /// Clears the provided <typeparamref name="TCollection"/> and returns it to the pool.
         /// </summary>
         public void Return(TCollection collection)
@@ -58,6 +68,26 @@ namespace MHServerEmu.Core.Memory
             {
                 lock (_sharedNode)
                     _sharedNode.Return(collection);
+            }
+        }
+
+        /// <summary>
+        /// A handle that implements <see cref="IDisposable"/> that can automatically return a collection to the pool when it goes out of scope.
+        /// </summary>
+        public readonly struct CollectionHandle : IDisposable
+        {
+            private readonly CollectionPool<TCollection, TValue> _pool;
+            private readonly TCollection _collection;
+
+            public CollectionHandle(CollectionPool<TCollection, TValue> pool, TCollection collection)
+            {
+                _pool = pool;
+                _collection = collection;
+            }
+
+            public void Dispose()
+            {
+                _pool.Return(_collection);
             }
         }
 
