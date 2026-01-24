@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
@@ -443,7 +444,7 @@ namespace MHServerEmu.Games.Network
             Region region = Region;
 
             RegionManager manager = _game.RegionManager;
-            Stack<Cell> invisibleCells = new();
+            PoolableStack<Cell> invisibleCells = StackPool<Cell>.Instance.Get();
             bool regenNavi = false;
 
             // search invisible cells
@@ -476,6 +477,7 @@ namespace MHServerEmu.Games.Network
                 }
             }
 
+            StackPool<Cell>.Instance.Return(invisibleCells);
             return regenNavi;
         }
 

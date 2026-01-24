@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using System.Globalization;
 using System.Text;
@@ -359,7 +360,7 @@ namespace MHServerEmu.Games.Navi
                 }
             }
 
-            Stack<NaviTriangle> triStack = new ();
+            PoolableStack<NaviTriangle> triStack = StackPool<NaviTriangle>.Instance.Get();
 
             NaviEdge[] pointEdges = {
                 new (point, p0, NaviEdgeFlags.None),
@@ -425,6 +426,7 @@ namespace MHServerEmu.Games.Navi
             point.SetFlag(NaviPointFlags.Attached);
             CheckDelaunaySwap(triStack, point, split);
 
+            StackPool<NaviTriangle>.Instance.Return(triStack);
             return true;
         }
 
@@ -610,7 +612,7 @@ namespace MHServerEmu.Games.Navi
             sidePoint1 = splitEdge.Points[side ? 1 : 0];
             pseudoList1.Insert(0, triangle.FindEdge(p0, sidePoint1));            
 
-            Stack<NaviTriangle> triStack = new ();
+            PoolableStack<NaviTriangle> triStack = StackPool<NaviTriangle>.Instance.Get();
 
             while (triangle.Contains(p1) == false)
             {
@@ -619,6 +621,7 @@ namespace MHServerEmu.Games.Navi
                 if (splitEdge.TestFlag(NaviEdgeFlags.Constraint))
                 {
                     SplitEdge(splitEdge, edge, edges);
+                    StackPool<NaviTriangle>.Instance.Return(triStack);
                     return;
                 }
 
@@ -643,6 +646,7 @@ namespace MHServerEmu.Games.Navi
                 {
                     edges.PushBack(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
                     edges.PushBack(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
+                    StackPool<NaviTriangle>.Instance.Return(triStack);
                     return;
                 }
 
@@ -671,6 +675,8 @@ namespace MHServerEmu.Games.Navi
 
             TriangulatepseudopolygonDelaunay(pseudoList0, p0, p1, edge, triangleState);
             TriangulatepseudopolygonDelaunay(pseudoList1, p1, p0, edge, triangleState);
+
+            StackPool<NaviTriangle>.Instance.Return(triStack);
         }
 
         private NaviEdge TriangulatepseudopolygonDelaunay(List<NaviEdge> pseudoList, NaviPoint p0, NaviPoint p1, NaviEdge edge, NaviTriangleState triangleState)
@@ -779,7 +785,7 @@ namespace MHServerEmu.Games.Navi
             var p0 = edge.Points[0];
             var p1 = edge.Points[1];
 
-            Stack<NaviEdge> edgeStack = new ();
+            PoolableStack<NaviEdge> edgeStack = StackPool<NaviEdge>.Instance.Get();
             edge.SetFlag(NaviEdgeFlags.Delaunay);
             edgeStack.Push(edge);
 
@@ -795,6 +801,8 @@ namespace MHServerEmu.Games.Navi
                 if (t1 != null && NaviUtil.IsPointConstraint(p1, t1) == false)
                     RemovePoint(p1, t1);
             }
+
+            StackPool<NaviEdge>.Instance.Return(edgeStack);
         }
 
         private void CheckDelaunaySwap(Stack<NaviEdge> edgeStack)

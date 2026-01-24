@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Core.Memory
 {
@@ -149,5 +150,15 @@ namespace MHServerEmu.Core.Memory
         public static HashSetPool<T> Instance { get; } = new();
 
         private HashSetPool() { }
+    }
+
+    /// <summary>
+    /// Provides a pool of reusable <see cref="PoolableStack{T}"/> instances, similar to ArrayPool.
+    /// </summary>
+    public sealed class StackPool<T> : CollectionPool<PoolableStack<T>, T>
+    {
+        public static StackPool<T> Instance { get; } = new();
+
+        private StackPool() { }
     }
 }
