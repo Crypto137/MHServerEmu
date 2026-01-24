@@ -54,7 +54,8 @@ namespace MHServerEmu.Games.Entities.Physics
 
             SwapCurrentForceReadWriteIndices();
             ApplyForceSystems();
-            PhysicsContext physicsContext = new();
+
+            using PhysicsContext physicsContext = new();
             ResolveEntitiesAllowPenetration(physicsContext, _entitiesResolving);
             ResolveEntitiesOverlapState(physicsContext);
 
@@ -64,7 +65,7 @@ namespace MHServerEmu.Games.Entities.Physics
                 region.ClearCollidedEntities();
         }
 
-        private void ResolveEntitiesOverlapState(PhysicsContext physicsContext)
+        private void ResolveEntitiesOverlapState(in PhysicsContext physicsContext)
         {
             var entityManager = _game.EntityManager;
 
@@ -108,7 +109,7 @@ namespace MHServerEmu.Games.Entities.Physics
             }
         }
 
-        private void ResolveEntitiesAllowPenetration(PhysicsContext physicsContext, List<ulong> entitiesResolving)
+        private void ResolveEntitiesAllowPenetration(in PhysicsContext physicsContext, List<ulong> entitiesResolving)
         {
             if (_game == null) return;
             RegionManager regionManager = _game.RegionManager;
@@ -149,7 +150,7 @@ namespace MHServerEmu.Games.Entities.Physics
             }
         }
 
-        private void UpdateAttachedEntityPositions(PhysicsContext physicsContext, WorldEntity parentEntity)
+        private void UpdateAttachedEntityPositions(in PhysicsContext physicsContext, WorldEntity parentEntity)
         {
             if (parentEntity == null) return;
 
@@ -724,13 +725,18 @@ namespace MHServerEmu.Games.Entities.Physics
         SendToClients = 1 << 4,
     }
 
-    public class PhysicsContext
+    public readonly struct PhysicsContext : IDisposable
     {
-        public List<WorldEntity> AttachedEntities { get; private set; }
+        public List<WorldEntity> AttachedEntities { get; }
 
         public PhysicsContext()
         {
-            AttachedEntities = new();
+            AttachedEntities = ListPool<WorldEntity>.Instance.Get();
+        }
+
+        public void Dispose()
+        {
+            ListPool<WorldEntity>.Instance.Return(AttachedEntities);
         }
     }
 
