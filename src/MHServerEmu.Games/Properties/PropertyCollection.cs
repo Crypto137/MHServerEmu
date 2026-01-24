@@ -26,14 +26,16 @@ namespace MHServerEmu.Games.Properties
         private readonly PropertyList _aggregateList = new();
         private readonly Dictionary<PropertyId, CurveProperty> _curveList = new();
 
+        // Many PropertyCollections don't use parent/child relationships and watchers, so we allocate HashSets for these on demand.
+
         // Parent and child collections
         // NOTE: The client uses a tabletree structure to store these with PropertyCollection as key and an empty struct called EmptyDummyValue as value.
         // I'm not sure what the intention there was, but it makes zero sense for us to do it the same way.
-        private readonly HashSet<PropertyCollection> _parentCollections = new();
-        private readonly HashSet<PropertyCollection> _childCollections = new();
+        private HashSet<PropertyCollection> _parentCollections;
+        private HashSet<PropertyCollection> _childCollections;
 
         // A collection of registered watchers
-        private readonly HashSet<IPropertyChangeWatcher> _watchers = new();
+        private HashSet<IPropertyChangeWatcher> _watchers;
 
         public bool IsEmpty { get => _baseList.Count == 0 && _aggregateList.Count == 0 && _curveList.Count == 0; }
 
@@ -444,8 +446,11 @@ namespace MHServerEmu.Games.Properties
             }
 
             // Notify watchers
-            foreach (IPropertyChangeWatcher watcher in _watchers)
-                watcher.OnPropertyChange(id, newValue, oldValue, flags);
+            if (_watchers != null)
+            {
+                foreach (IPropertyChangeWatcher watcher in _watchers)
+                    watcher.OnPropertyChange(id, newValue, oldValue, flags);
+            }
         }
 
         /// <summary>
@@ -499,7 +504,7 @@ namespace MHServerEmu.Games.Properties
                 return Logger.WarnReturn(false, "AddChildCollection(): Attempted to add itself as a child");
 
             // To make this more safe we might want to add a recursive check of all ancestors here
-            if (_parentCollections.Contains(childCollection))
+            if (_parentCollections?.Contains(childCollection) == true)
                 return Logger.WarnReturn(false, "AddChildCollection(): Attempted to add a parent as a child");
 
             // Check for protections
@@ -508,6 +513,10 @@ namespace MHServerEmu.Games.Properties
 
             if (childCollection.IsNotProtected(Protection.Parent) == false)
                 return Logger.WarnReturn(false, "AddChildCollection(): Property collection protection check failed (child's parent collection)");
+
+            // Allocate parent/child sets on demand
+            _childCollections ??= new();
+            childCollection._parentCollections ??= new();
 
             // Try to add the child collection
             bool addedToChildCollection = _childCollections.Add(childCollection);
@@ -547,8 +556,8 @@ namespace MHServerEmu.Games.Properties
                 Logger.Warn("RemoveChildCollection(): Property collection protection check failed (child's parent collection)");
 
             // Remove parent / child references
-            bool childErasedInParent = _childCollections.Remove(childCollection);
-            bool parentErasedInChild = childCollection._parentCollections.Remove(this);
+            bool childErasedInParent = _childCollections?.Remove(childCollection) == true;
+            bool parentErasedInChild = childCollection._parentCollections?.Remove(this) == true;
 
             if (childErasedInParent == false)
                 return Logger.WarnReturn(false, "RemoveChildCollection(): Failed to remove from parent's child collection");
@@ -589,12 +598,24 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Checks if this <see cref="PropertyCollection"/> is a child of the provided collection.
         /// </summary>
-        public bool IsChildOf(PropertyCollection parentCollection) => _parentCollections.Contains(parentCollection);
+        public bool IsChildOf(PropertyCollection parentCollection)
+        {
+            if (_parentCollections == null)
+                return false;
+
+            return _parentCollections.Contains(parentCollection);
+        }
 
         /// <summary>
         /// Checks if this <see cref="PropertyCollection"/> is a parent of the provided collection.
         /// </summary>
-        public bool HasChildCollection(PropertyCollection childCollection) => _childCollections.Contains(childCollection);
+        public bool HasChildCollection(PropertyCollection childCollection)
+        {
+            if (_childCollections == null)
+                return false;
+
+            return _childCollections.Contains(childCollection);
+        }
 
         /// <summary>
         /// Subscribes the provided <see cref="IPropertyChangeWatcher"/> for property changes happening in this <see cref="PropertyCollection"/>.
@@ -602,6 +623,8 @@ namespace MHServerEmu.Games.Properties
         public bool AttachWatcher(IPropertyChangeWatcher watcher)
         {
             // VERIFY: m_isDeallocating == false
+
+            _watchers ??= new();
 
             if (_watchers.Add(watcher) == false)
                 return Logger.WarnReturn(false, $"AttachWatcher(): Failed to attach property change watcher {watcher}");
@@ -620,7 +643,7 @@ namespace MHServerEmu.Games.Properties
             if (watcher == null)
                 return Logger.WarnReturn(false, "DetachWatcher(): watcher == null");
 
-            if (_watchers.Remove(watcher) == false)
+            if (_watchers?.Remove(watcher) != true)
                 return Logger.WarnReturn(false, $"DetachWatcher(): Failed to detach property change watcher {watcher}");
 
             watcher.Detach(false);
@@ -633,6 +656,9 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public void RemoveAllWatchers()
         {
+            if (_watchers == null)
+                return;
+
             while (_watchers.Count > 0)
                 DetachWatcher(_watchers.First());
         }
@@ -1070,6 +1096,9 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         private void RemoveAllChildren()
         {
+            if (_childCollections == null)
+                return;
+
             while (_childCollections.Count > 0)
                 RemoveChildCollection(_childCollections.First());
         }
@@ -1079,7 +1108,9 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         private void RemoveFromAllParents()
         {
-            // TODO: Call this during disposal if we implement IDisposable
+            if (_parentCollections == null)
+                return;
+
             while (_parentCollections.Count > 0)
                 RemoveChildCollection(this);
         }
@@ -1102,10 +1133,13 @@ namespace MHServerEmu.Games.Properties
             }
 
             // Aggregate all child collections, protect to prevent new child collections from being added during iteration
-            Protect(Protection.Child);
-            foreach (PropertyCollection child in _childCollections)
-                AggregateChildCollection(child);
-            ReleaseProtection(Protection.Child);
+            if (_childCollections != null)
+            {
+                Protect(Protection.Child);
+                foreach (PropertyCollection child in _childCollections)
+                    AggregateChildCollection(child);
+                ReleaseProtection(Protection.Child);
+            }
         }
 
         /// <summary>
@@ -1148,11 +1182,14 @@ namespace MHServerEmu.Games.Properties
 
             if (valueHasChanged)
             {
-                // Update parent aggregate values, protect to prevent new parent collections from being added during iteration
-                Protect(Protection.Parent);
-                foreach (PropertyCollection parent in _parentCollections)
-                    parent.UpdateAggregateValue(id, info, SetPropertyFlags.None);
-                ReleaseProtection(Protection.Parent);
+                if (_parentCollections != null)
+                {
+                    // Update parent aggregate values, protect to prevent new parent collections from being added during iteration
+                    Protect(Protection.Parent);
+                    foreach (PropertyCollection parent in _parentCollections)
+                        parent.UpdateAggregateValue(id, info, SetPropertyFlags.None);
+                    ReleaseProtection(Protection.Parent);
+                }
 
                 OnPropertyChange(id, aggregateValue, oldValue, SetPropertyFlags.None);
             }
@@ -1192,7 +1229,7 @@ namespace MHServerEmu.Games.Properties
         {
             PropertyValue aggregateValue = baseValue;
 
-            if (info.Prototype.AggMethod != AggregationMethod.None)
+            if (info.Prototype.AggMethod != AggregationMethod.None && _childCollections != null)
             {
                 // Aggregate values from all children, protect to prevent new child collections from being added during iteration
                 Protect(Protection.Child);
@@ -1230,10 +1267,13 @@ namespace MHServerEmu.Games.Properties
             }
 
             // Update parents, protect to prevent new parents from being added during iteration
-            Protect(Protection.Parent);
-            foreach (PropertyCollection parent in _parentCollections)
-                parent.UpdateAggregateValue(id, info, flags);
-            ReleaseProtection(Protection.Parent);
+            if (_parentCollections != null)
+            {
+                Protect(Protection.Parent);
+                foreach (PropertyCollection parent in _parentCollections)
+                    parent.UpdateAggregateValue(id, info, flags);
+                ReleaseProtection(Protection.Parent);
+            }
         }
 
         /// <summary>
