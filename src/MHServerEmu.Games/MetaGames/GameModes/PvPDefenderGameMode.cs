@@ -143,13 +143,11 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             if (_proto.BannerMsgPlayerDefeatLock != LocaleStringId.Blank)
             {
-                var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+                using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
                 GetInterestedClients(interestedClients, player);
-                var intArgs = ListPool<long>.Instance.Get();
+                using var intArgsHandle = ListPool<long>.Instance.Get(out List<long> intArgs);
                 intArgs.Add((long)respawnSeconds);
                 SendMetaGameBanner(interestedClients, _proto.BannerMsgPlayerDefeatLock, intArgs);
-                ListPool<PlayerConnection>.Instance.Return(interestedClients);
-                ListPool<long>.Instance.Return(intArgs);
             }
         }
 
@@ -312,7 +310,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             _turrets.Clear();
             var populationManager = Region.PopulationManager;
 
-            var spawnedTurrets = ListPool<WorldEntity>.Instance.Get();
+            using var spawnedTurretsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> spawnedTurrets);
             foreach (var turretData in _proto.Turrets)
             {
                 spawnedTurrets.Clear();
@@ -326,7 +324,6 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                         turret.Properties[PropertyEnum.MetaGameTeam] = turretData.Team;
                 }
             }
-            ListPool<WorldEntity>.Instance.Return(spawnedTurrets);
         }
 
         private void DestroyEntities()
@@ -399,7 +396,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         {
             if (Game == null || Region == null) return;
 
-            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+            using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
 
             GetInterestedClients(interestedClients);
             Game.ChatManager.SendChatFromMetaGame(_proto.ChatMessagePlayerDefeatedPlayer, interestedClients, attacker, defender);
@@ -418,8 +415,6 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                     interestedClients.Add(regionPlayer.PlayerConnection);
             
             SendMetaGameBanner(interestedClients, _proto.BannerMsgPlayerDefeatOther, null, attacker.GetName(), defender.GetName());
-
-            ListPool<PlayerConnection>.Instance.Return(interestedClients);
         }
 
         private void SendNPDefeatPlayer(WorldEntity attacker, Player defender)
@@ -427,7 +422,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             var attackerName = attacker.Prototype.DisplayName;
             if (attackerName == LocaleStringId.Blank) return;
 
-            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+            using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
 
             GetInterestedClients(interestedClients);
             Game.ChatManager.SendChatFromMetaGame(_proto.ChatMessageNPDefeatedPlayer, interestedClients, defender, null, attackerName);
@@ -442,8 +437,6 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                     interestedClients.Add(regionPlayer.PlayerConnection);
 
             SendMetaGameBanner(interestedClients, _proto.BannerMsgNPDefeatPlayerOther, null, "", defender.GetName(), attackerName);
-
-            ListPool<PlayerConnection>.Instance.Return(interestedClients);
         }
 
         private void SendPlayerMetaGameComplete(PrototypeId teamRef)
@@ -883,10 +876,9 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             if (_proto.BannerMsgPlayerDefeatUnlock != LocaleStringId.Blank)
             {
-                var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+                using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
                 GetInterestedClients(interestedClients, player);
                 SendMetaGameBanner(interestedClients, _proto.BannerMsgPlayerDefeatUnlock);
-                ListPool<PlayerConnection>.Instance.Return(interestedClients);
             }
 
             CancelScheduledTimedBannersEvents(guid);
@@ -911,13 +903,11 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             if (_respawnPlayers.TryGetValue(guid, out var respawnTime) == false) return;
             respawnTime -= Game.CurrentTime;
 
-            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+            using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
             GetInterestedClients(interestedClients, player);
-            var intArgs = ListPool<long>.Instance.Get();
+            using var intArgsHandle = ListPool<long>.Instance.Get(out List<long> intArgs);
             intArgs.Add((long)respawnTime.TotalSeconds);
             SendMetaGameBanner(interestedClients, banner, intArgs);
-            ListPool<PlayerConnection>.Instance.Return(interestedClients);
-            ListPool<long>.Instance.Return(intArgs);
 
             if (timer > 0)
             {
@@ -969,8 +959,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             var registry = Region.SpawnMarkerRegistry;
             var random = Game.Random;
 
-            var spawnPositions = ListPool<Vector3>.Instance.Get();
-            var spawnedAttackers = ListPool<WorldEntity>.Instance.Get();
+            using var spawnPositionsHandle = ListPool<Vector3>.Instance.Get(out List<Vector3> spawnPositions);
+            using var spawnedAttackersHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> spawnedAttackers);
             foreach (var attackerData in _proto.Attackers)
             {
                 if (attackerData.WaveSpawnPosition == PrototypeId.Invalid) continue;
@@ -991,9 +981,6 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             foreach (var attacker in spawnedAttackers)
                 if (attacker != null) _attackers.Add(attacker.Id, attacker.Alliance.DataRef);
-
-            ListPool<WorldEntity>.Instance.Return(spawnedAttackers);
-            ListPool<Vector3>.Instance.Return(spawnPositions);
 
             ScheduleEvent(_attackerWaveEvent, _proto.AttackerWaveCycleMS);
         }

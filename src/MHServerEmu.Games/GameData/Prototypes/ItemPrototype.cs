@@ -188,8 +188,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public static MutationResults UpdatePetTechAffixes(GRandom random, PrototypeId rollFor, ItemSpec itemSpec)
         {
             // *slaps function declaration* this bad boy can fit so much pooling in it
-            Dictionary<AffixPosition, AffixSpec> affixes = DictionaryPool<AffixPosition, AffixSpec>.Instance.Get();
-            List<Picker<AffixPrototype>> affixPickers = ListPool<Picker<AffixPrototype>>.Instance.Get(PetTechAffixPositions);
+            using var affixesHandle = DictionaryPool<AffixPosition, AffixSpec>.Instance.Get(out Dictionary<AffixPosition, AffixSpec> affixes);
+            using var affixPickersHandle = ListPool<Picker<AffixPrototype>>.Instance.Get(PetTechAffixPositions, out List<Picker<AffixPrototype>> affixPickers);
 
             // Build pickers
             for (int i = 0; i < PetTechAffixPositions; i++)
@@ -239,9 +239,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     AffixSpec affixSpec = new();
                     affixes[position] = affixSpec;
 
-                    HashSet<ScopedAffixRef> affixSet = HashSetPool<ScopedAffixRef>.Instance.Get();
+                    using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
                     result |= affixSpec.RollAffix(random, rollFor, itemSpec, affixPickers[i], affixSet);
-                    HashSetPool<ScopedAffixRef>.Instance.Return(affixSet);
 
                     if (result.HasFlag(MutationResults.AffixChange) == false)
                         Logger.Warn("UpdatePetTechAffixes(): result.HasFlag(MutationResults.AffixChange) == false");
@@ -249,21 +248,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             // Overwrite affixes
-            List<AffixSpec> newAffixSpecs = ListPool<AffixSpec>.Instance.Get();
+            using var newAffixSpecsHandle = ListPool<AffixSpec>.Instance.Get(out List<AffixSpec> newAffixSpecs);
             
             for (int i = 0; i < PetTechAffixPositions; i++)
                 newAffixSpecs.Add(affixes[AffixPosition.PetTech1 + i]);
 
             itemSpec.SetAffixes(newAffixSpecs);
 
-            ListPool<AffixSpec>.Instance.Return(newAffixSpecs);
-
             // Add metadata
             if (affixes.TryGetValue(AffixPosition.Metadata, out AffixSpec metadataAffix))
                 itemSpec.AddAffixSpec(metadataAffix);
 
-            DictionaryPool<AffixPosition, AffixSpec>.Instance.Return(affixes);
-            ListPool<Picker<AffixPrototype>>.Instance.Return(affixPickers);
             return result;
         }
 
@@ -292,7 +287,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 // See if we can replace an existing affix
                 bool replaced = false;
 
-                List<AffixSpec> destAffixSpecs = ListPool<AffixSpec>.Instance.Get(destItemSpec.AffixSpecs);
+                using var destAffixSpecsHandle = ListPool<AffixSpec>.Instance.Get(destItemSpec.AffixSpecs, out List<AffixSpec> destAffixSpecs);
                 for (int j = 0; j < destAffixSpecs.Count; j++)
                 {
                     AffixSpec destAffixSpec = destAffixSpecs[j];
@@ -317,7 +312,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 // Update affixes on the destination spec
                 destItemSpec.SetAffixes(destAffixSpecs);
 
-                ListPool<AffixSpec>.Instance.Return(destAffixSpecs);
                 return MutationResults.AffixChange;
             }
 
@@ -583,10 +577,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool GenerateBuiltInAffixDetails(ItemSpec itemSpec, List<BuiltInAffixDetails> detailsList)
         {
-            List<AffixEntryPrototype> affixEntryList = ListPool<AffixEntryPrototype>.Instance.Get();
+            using var affixEntryListHandle = ListPool<AffixEntryPrototype>.Instance.Get(out List<AffixEntryPrototype> affixEntryList);
             if (GetBuiltInAffixEntries(affixEntryList, itemSpec.RarityProtoRef))
             {
-                Dictionary<ulong, int> affixSeedDict = DictionaryPool<ulong, int>.Instance.Get();
+                using var affixSeedDictHandle = DictionaryPool<ulong, int>.Instance.Get(out Dictionary<ulong, int> affixSeedDict);
 
                 foreach (AffixEntryPrototype affixEntryProto in affixEntryList)
                 {
@@ -605,11 +599,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                     detailsList.Add(builtInAffixDetails);
                 }
-
-                DictionaryPool<ulong, int>.Instance.Return(affixSeedDict);
             }
 
-            ListPool<AffixEntryPrototype>.Instance.Return(affixEntryList);
             return detailsList.Count > 0;
         }
 

@@ -580,7 +580,7 @@ namespace MHServerEmu.Games.Missions
             if (Player == null || HasMissions == false) return;
 
             // initialize and clear old missions
-            List<Mission> oldMissions = ListPool<Mission>.Instance.Get();
+            using var oldMissionsHandle = ListPool<Mission>.Instance.Get(out List<Mission> oldMissions);
             foreach (var mission in _missionDict.Values)
             {
                 if (mission == null) continue;
@@ -595,7 +595,6 @@ namespace MHServerEmu.Games.Missions
                 else
                     DeleteMission(mission.PrototypeDataRef);
             }
-            ListPool<Mission>.Instance.Return(oldMissions);
 
             ResetMissionsToCheckpoint();
 
@@ -1433,14 +1432,13 @@ namespace MHServerEmu.Games.Missions
                 }
             }
 
-            var legendaryMissions = ListPool<Mission>.Instance.Get();
+            using var legendaryMissionsHandle = ListPool<Mission>.Instance.Get(out List<Mission> legendaryMissions);
             foreach (var mission in _missionDict.Values)
                 if (mission.IsLegendaryMission)
                     legendaryMissions.Add(mission);
 
             foreach (var mission in legendaryMissions)
                 mission.RestoreLegendaryMissionState(properties);
-            ListPool<Mission>.Instance.Return(legendaryMissions);
 
             InitializeMissions();
 
@@ -1523,13 +1521,12 @@ namespace MHServerEmu.Games.Missions
 
         public void UpdateMissionEntities(Mission mission)
         {
-            List<Player> participants = ListPool<Player>.Instance.Get();
+            using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
             if (mission.GetParticipants(participants))
             {
                 foreach (var player in participants)
                     UpdateMissionEntitiesForPlayer(mission, player);
             }
-            ListPool<Player>.Instance.Return(participants);
         }
 
         public static void UpdateMissionEntitiesForPlayer(Mission mission, Player player)

@@ -149,10 +149,9 @@ namespace MHServerEmu.Games.Entities
 
         private void OnOutOfWorld()
         {
-            List<Power> powerList = ListPool<Power>.Instance.Get();
+            using var powerListHandle = ListPool<Power>.Instance.Get(out List<Power> powerList);
             GetMissilePowersWithActivationEvent(powerList, null, MissilePowerActivationEventType.OnOutOfWorld);
             ActivateMissilePowers(powerList, null, RegionLocation.Position);
-            ListPool<Power>.Instance.Return(powerList);
             Kill();
         }
 
@@ -168,10 +167,9 @@ namespace MHServerEmu.Games.Entities
             if (Game == null) return;
             if (IsInWorld)
             {
-                List<Power> powerList = ListPool<Power>.Instance.Get();
+                using var powerListHandle = ListPool<Power>.Instance.Get(out List<Power> powerList);
                 GetMissilePowersWithActivationEvent(powerList, null, MissilePowerActivationEventType.OnLifespanExpired);
                 ActivateMissilePowers(powerList, null, RegionLocation.Position);
-                ListPool<Power>.Instance.Return(powerList);
             }
             if (IsReturningMissile && IsSimulated)
                 ReturnMissile();
@@ -338,7 +336,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             bool collideWithWhom = false;
-            List<Power> collisionPowers = ListPool<Power>.Instance.Get();
+            using var collisionPowersHandle = ListPool<Power>.Instance.Get(out List<Power> collisionPowers);
             GetCollisionPowers(collisionPowers, collidedWith);
 
             if (collisionPowers.Count > 0 || missileAlwaysCollides)
@@ -347,10 +345,7 @@ namespace MHServerEmu.Games.Entities
                 if (collidedWith != null)
                 {
                     if (CheckAndApplyMissileReflection(collidedWith, position))
-                    {
-                        ListPool<Power>.Instance.Return(collisionPowers);
                         return;
-                    }
 
                     OnValidTargetHit(collidedWith);
                 }
@@ -392,8 +387,6 @@ namespace MHServerEmu.Games.Entities
             }
 
             if (kill) Kill(collidedWith);
-
-            ListPool<Power>.Instance.Return(collisionPowers);
         }
 
         private bool OnCollideWithWorldGeometry()
@@ -742,10 +735,9 @@ namespace MHServerEmu.Games.Entities
             var gravitatedContext = GravitatedContext;
             if (gravitatedContext == null) return false;
 
-            List<Power> powerList = ListPool<Power>.Instance.Get();
+            using var powerListHandle = ListPool<Power>.Instance.Get(out List<Power> powerList);
             GetMissilePowersWithActivationEvent(powerList, null, MissilePowerActivationEventType.OnBounce);
             ActivateMissilePowers(powerList, null, position);
-            ListPool<Power>.Instance.Return(powerList);
 
             int numBounces = Properties[PropertyEnum.NumMissileBounces];
             if (++numBounces >= gravitatedContext.NumBounces)

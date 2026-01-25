@@ -35,13 +35,12 @@ namespace MHServerEmu.Games.Missions.Actions
                 | InventoryIterationFlags.PlayerStashGeneral 
                 | InventoryIterationFlags.SortByPrototypeRef;
 
-            List<Player> participants = ListPool<Player>.Instance.Get();
+            using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
             if (Mission.GetParticipants(participants))
             {
                 foreach (Player player in participants)
                     RemoveItemsFromInventory(new InventoryIterator(player, flags), itemRef, itemCount);
             }
-            ListPool<Player>.Instance.Return(participants);
         }
 
         private void RemoveItemsFromInventory(InventoryIterator inventoryIterator, PrototypeId itemRef, long count)

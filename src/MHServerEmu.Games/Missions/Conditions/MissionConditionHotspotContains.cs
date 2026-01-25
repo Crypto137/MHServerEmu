@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             bool result = false;
             if (_proto.TargetFilter != null)
             {
-                List<Hotspot> hotspots = ListPool<Hotspot>.Instance.Get();
+                using var hotspotsHandle = ListPool<Hotspot>.Instance.Get(out List<Hotspot> hotspots);
                 if (Mission.GetMissionHotspots(hotspots))
                 {
                     foreach (var hotspot in hotspots)
@@ -41,7 +41,6 @@ namespace MHServerEmu.Games.Missions.Conditions
                             break;
                         }
                 }
-                ListPool<Hotspot>.Instance.Return(hotspots);
             }
 
             return result;
@@ -54,14 +53,13 @@ namespace MHServerEmu.Games.Missions.Conditions
             {
                 var missionRef = Mission.PrototypeDataRef;
 
-                List<Hotspot> hotspots = ListPool<Hotspot>.Instance.Get();
+                using var hotspotsHandle = ListPool<Hotspot>.Instance.Get(out List<Hotspot> hotspots);
                 if (Mission.GetMissionHotspots(hotspots))
                 {
                     foreach (var hotspot in hotspots)
                         if (EvaluateEntityFilter(_proto.EntityFilter, hotspot))
                             count += hotspot.GetMissionConditionCount(missionRef, _proto);
                 }
-                ListPool<Hotspot>.Instance.Return(hotspots);
             }
 
             SetCount(count);
@@ -95,7 +93,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             var entity = evt.Defender;
             if (entity == null) return;
 
-            List<Hotspot> hotspots = ListPool<Hotspot>.Instance.Get();
+            using var hotspotsHandle = ListPool<Hotspot>.Instance.Get(out List<Hotspot> hotspots);
             if (Mission.GetMissionHotspots(hotspots))
             {
                 foreach (var hotspot in hotspots)
@@ -106,7 +104,6 @@ namespace MHServerEmu.Games.Missions.Conditions
                         break;
                     }
             }
-            ListPool<Hotspot>.Instance.Return(hotspots);
         }
 
         public override void RegisterEvents(Region region)

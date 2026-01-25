@@ -271,7 +271,7 @@ namespace MHServerEmu.Games.Network
             Region = newRegion;
             _lastUpdatePosition = null;
 
-            List<ulong> removedEntities = ListPool<ulong>.Instance.Get();
+            using var removedEntitiesHandle = ListPool<ulong>.Instance.Get(out List<ulong> removedEntities);
             RemoveEntitiesOnRegionChange(removedEntities, clearingAllInterest);
 
             // Fill in required region change message fields
@@ -303,7 +303,6 @@ namespace MHServerEmu.Games.Network
             }
 
             SendMessage(regionChangeBuilder.Build());
-            ListPool<ulong>.Instance.Return(removedEntities);
 
             // TODO?: Prefetch other regions
 
@@ -444,7 +443,7 @@ namespace MHServerEmu.Games.Network
             Region region = Region;
 
             RegionManager manager = _game.RegionManager;
-            PoolableStack<Cell> invisibleCells = StackPool<Cell>.Instance.Get();
+            using var invisibleCellsHandle = StackPool<Cell>.Instance.Get(out PoolableStack<Cell> invisibleCells);
             bool regenNavi = false;
 
             // search invisible cells
@@ -477,7 +476,6 @@ namespace MHServerEmu.Games.Network
                 }
             }
 
-            StackPool<Cell>.Instance.Return(invisibleCells);
             return regenNavi;
         }
 

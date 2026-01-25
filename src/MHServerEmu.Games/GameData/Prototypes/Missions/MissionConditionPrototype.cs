@@ -459,7 +459,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (EntityFilter != null)
             {
-                HashSet<PrototypeId> refs = HashSetPool<PrototypeId>.Instance.Get();
+                using var refsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> refs);
                 EntityFilter.GetRegionDataRefs(refs);
                 foreach (var region in refs)
                     regions.Add(region);
@@ -468,8 +468,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 EntityFilter.GetAreaDataRefs(refs);
                 foreach (var area in refs)
                     areas.Add(area);
-
-                HashSetPool<PrototypeId>.Instance.Return(refs);
             }
         }
 

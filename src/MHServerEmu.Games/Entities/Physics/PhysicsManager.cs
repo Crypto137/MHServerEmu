@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.Entities.Physics
                 var entityPhysics = worldEntity.Physics;
                 var manager = _game.EntityManager;
 
-                var overlappedEntities = ListPool<KeyValuePair<ulong, OverlapEntityEntry>>.Instance.Get();
+                using var overlappedEntitiesHandle = ListPool<KeyValuePair<ulong, OverlapEntityEntry>>.Instance.Get(out var overlappedEntities);
                 overlappedEntities.AddRange(entityPhysics.OverlappedEntities);
 
                 foreach (var overlappedEntry in overlappedEntities)
@@ -104,8 +104,6 @@ namespace MHServerEmu.Games.Entities.Physics
                             entityPhysics.OverlappedEntities.Remove(overlappedEntry.Key);
                     }
                 }
-
-                ListPool<KeyValuePair<ulong, OverlapEntityEntry>>.Instance.Return(overlappedEntities);
             }
         }
 
@@ -154,7 +152,7 @@ namespace MHServerEmu.Games.Entities.Physics
         {
             if (parentEntity == null) return;
 
-            List<ulong> attachedEntities = ListPool<ulong>.Instance.Get();
+            using var attachedEntitiesHandle = ListPool<ulong>.Instance.Get(out List<ulong> attachedEntities);
             if (parentEntity.Physics.GetAttachedEntities(attachedEntities))
             {
                 Vector3 parentEntityPosition = parentEntity.RegionLocation.Position;
@@ -180,7 +178,6 @@ namespace MHServerEmu.Games.Entities.Physics
                     }
                 }
             }
-            ListPool<ulong>.Instance.Return(attachedEntities);
         }
 
         private void ApplyForceSystems()
@@ -237,7 +234,7 @@ namespace MHServerEmu.Games.Entities.Physics
             if (_game == null || entity == null || entity.IsInWorld == false || entity.TestStatus(EntityStatus.Destroyed))
                 return false;
 
-            List<EntityCollision> entityCollisionList = ListPool<EntityCollision>.Instance.Get();
+            using var entityCollisionListHandle = ListPool<EntityCollision>.Instance.Get(out List<EntityCollision> entityCollisionList);
             bool moved = false;
 
             if (Vector3.IsNearZero(vector))
@@ -245,11 +242,7 @@ namespace MHServerEmu.Games.Entities.Physics
             else
             {
                 var locomotor = entity.Locomotor;
-                if (locomotor == null)
-                {
-                    ListPool<EntityCollision>.Instance.Return(entityCollisionList);
-                    return Logger.WarnReturn(false, "MoveEntity(): locomotor == null");
-                }
+                if (locomotor == null) return Logger.WarnReturn(false, "MoveEntity(): locomotor == null");
 
                 bool noMissile = locomotor.IsMissile == false;
                 bool sliding = noMissile && moveFlags.HasFlag(MoveEntityFlags.Sliding);
@@ -289,7 +282,6 @@ namespace MHServerEmu.Games.Entities.Physics
                 }
             }
 
-            ListPool<EntityCollision>.Instance.Return(entityCollisionList);
             return moved;
         }
 
@@ -448,7 +440,7 @@ namespace MHServerEmu.Games.Entities.Physics
             Aabb bound = entity.EntityCollideBounds.ToAabb();            
             Vector3 position = entity.RegionLocation.Position;
 
-            List<WorldEntity> collisions = ListPool<WorldEntity>.Instance.Get();
+            using var collisionsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> collisions);
             var context = entity.GetEntityRegionSPContext();
             foreach (var otherEntity in region.IterateEntitiesInVolume(bound, context))
                 if (entity != otherEntity)
@@ -459,8 +451,6 @@ namespace MHServerEmu.Games.Entities.Physics
                 EntityCollision entityCollision = new (otherEntity, 0.0f, position, Vector3.ZAxis);
                 HandlePossibleEntityCollision(entity, entityCollision, applyRepulsionForces, true);
             }
-
-            ListPool<WorldEntity>.Instance.Return(collisions);
         }
 
         private void HandlePossibleEntityCollision(WorldEntity entity, in EntityCollision entityCollision, bool applyRepulsionForces, bool boundsCheck)

@@ -245,7 +245,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 record.Power?.OnOwnerExitedWorld();
 
             // Copy to a temporary list to be able to remove entries while iterating
-            var records = ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Instance.Get();
+            using var recordsHandle = ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Instance.Get(out var records);
 
             // This needs to be done in a loop to remove all copies of powers with RefCount higher than 0.
             const int MaxCount = 100;
@@ -300,8 +300,6 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     break;
                 }
             }
-
-            ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Instance.Return(records);
         }
 
         public void OnOwnerCastSpeedChange(PrototypeId keywordProtoRef)
@@ -544,7 +542,9 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 power.Properties[PropertyEnum.CombatLevel], power.Properties[PropertyEnum.ItemLevel]);
 
             int assignedPowers = 0;
-            List<PrototypeId> triggeredPowerRefList = ListPool<PrototypeId>.Instance.Get();    // NOTE: We reuse the same list for all iterations
+
+            // NOTE: We reuse the same list for all iterations
+            using var triggeredPowerRefListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> triggeredPowerRefList);
 
             foreach (PowerEventActionPrototype triggeredPowerEventProto in powerProto.ActionsTriggeredOnPowerEvent)
             {
@@ -636,16 +636,12 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                         continue;
 
                     if (AssignPower(triggeredPowerRef, indexProps, powerProtoRef, false) == null)
-                    {
-                        ListPool<PrototypeId>.Instance.Return(triggeredPowerRefList);
                         return Logger.WarnReturn(false, "AssignTriggeredPowers(): AssignPower() == null");
-                    }
                 }
 
                 triggeredPowerRefList.Clear();
             }
 
-            ListPool<PrototypeId>.Instance.Return(triggeredPowerRefList);
             return true;
         }
 
@@ -752,7 +748,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             if (powerProto.ActionsTriggeredOnPowerEvent.IsNullOrEmpty())
                 return true;
 
-            List<PrototypeId> triggeredPowerRefList = ListPool<PrototypeId>.Instance.Get();    // NOTE: We reuse the same list for all iterations
+            // NOTE: We reuse the same list for all iterations
+            using var triggeredPowerRefListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> triggeredPowerRefList);
 
             foreach (PowerEventActionPrototype triggeredPowerEventProto in powerProto.ActionsTriggeredOnPowerEvent)
             {
@@ -846,7 +843,6 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 triggeredPowerRefList.Clear();
             }
 
-            ListPool<PrototypeId>.Instance.Return(triggeredPowerRefList);
             return true;
         }
     }

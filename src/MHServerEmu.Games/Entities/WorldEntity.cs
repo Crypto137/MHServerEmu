@@ -475,7 +475,7 @@ namespace MHServerEmu.Games.Entities
             }
             else
             {
-                List<WorldEntity> destroyList = ListPool<WorldEntity>.Instance.Get();
+                using var destroyListHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> destroyList);
 
                 foreach (var summoned in new SummonedEntityIterator(this))
                     if (summoned.IsDead 
@@ -495,8 +495,6 @@ namespace MHServerEmu.Games.Entities
                         summoned.Destroy();
                     }
                 }
-
-                ListPool<WorldEntity>.Instance.Return(destroyList);
             }
         }
 
@@ -836,7 +834,7 @@ namespace MHServerEmu.Games.Entities
                 bool excludeOwner = flags.HasFlag(ChangePositionFlags.DoNotSendToOwner);
 
                 PlayerConnectionManager networkManager = Game.NetworkManager;
-                List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+                using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
                 if (networkManager.GetInterestedClients(interestedClientList, this, AOINetworkPolicyValues.AOIChannelProximity, excludeOwner))
                 {
                     var entityPositionMessageBuilder = NetMessageEntityPosition.CreateBuilder()
@@ -848,8 +846,6 @@ namespace MHServerEmu.Games.Entities
 
                     networkManager.SendMessageToMultiple(interestedClientList, entityPositionMessageBuilder.Build());
                 }
-
-                ListPool<PlayerConnection>.Instance.Return(interestedClientList);
             }
 
             // Update map location if needed
@@ -2328,7 +2324,7 @@ namespace MHServerEmu.Games.Entities
             if (conditionCollection == null)
                 return;
 
-            Dictionary<DamageType, float> adjustDict = DictionaryPool<DamageType, float>.Instance.Get();
+            using var adjustDictHandle = DictionaryPool<DamageType, float>.Instance.Get(out Dictionary<DamageType, float> adjustDict);
 
             foreach (Condition condition in conditionCollection)
             {
@@ -2354,8 +2350,6 @@ namespace MHServerEmu.Games.Entities
 
                 adjustDict.Clear();
             }
-
-            DictionaryPool<DamageType, float>.Instance.Return(adjustDict);
         }
 
         public void ApplyPropertyTicker(PropertyTicker.TickData tickData)
@@ -2494,7 +2488,7 @@ namespace MHServerEmu.Games.Entities
         private void ApplyDamageConversionInternal(ref DamageConversionContext context)
         {
             // Defer property changes because we are likely converting properties on the same collection (target -> target or user -> user)
-            List<(PropertyEnum, float)> conversionResults = ListPool<(PropertyEnum, float)>.Instance.Get();
+            using var conversionResultsHandle = ListPool<(PropertyEnum, float)>.Instance.Get(out List<(PropertyEnum, float)> conversionResults);
 
             PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
 
@@ -2571,8 +2565,6 @@ namespace MHServerEmu.Games.Entities
 
             foreach (var result in conversionResults)
                 target.SetDamageConvertedProperty(result.Item1, result.Item2);
-
-            ListPool<(PropertyEnum, float)>.Instance.Return(conversionResults);
         }
 
         private void SetDamageConvertedProperty(PropertyEnum propertyEnum, float delta)
@@ -3761,7 +3753,7 @@ namespace MHServerEmu.Games.Entities
             // Send locomotion update to interested clients
             // NOTE: Avatars are locomoted on their local client independently, so they are excluded from locomotion updates.
             PlayerConnectionManager networkManager = Game.NetworkManager;
-            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
             if (networkManager.GetInterestedClients(interestedClientList, this, AOINetworkPolicyValues.AOIChannelProximity, IsMovementAuthoritative == false))
             {
                 NetMessageLocomotionStateUpdate locomotionStateUpdateMessage = ArchiveMessageBuilder.BuildLocomotionStateUpdateMessage(
@@ -3769,8 +3761,6 @@ namespace MHServerEmu.Games.Entities
 
                 networkManager.SendMessageToMultiple(interestedClientList, locomotionStateUpdateMessage);
             }
-
-            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
         }
 
         public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) { }
@@ -3831,7 +3821,7 @@ namespace MHServerEmu.Games.Entities
             var manager = Game?.EntityManager;
             if (manager == null) return;
 
-            List<ulong> overlappingEntities = ListPool<ulong>.Instance.Get();
+            using var overlappingEntitiesHandle = ListPool<ulong>.Instance.Get(out List<ulong> overlappingEntities);
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.NegateHotspots))
             {
                 Property.FromParam(kvp.Key, 0, out int type);
@@ -3852,8 +3842,6 @@ namespace MHServerEmu.Games.Entities
                         hotspot.OnHotspotNegated(this, allianceType, keywordRef, users);
                     }
             }
-
-            ListPool<ulong>.Instance.Return(overlappingEntities);
         }
 
         private void ScheduleNegateHotspots(bool schedule)
@@ -3893,7 +3881,7 @@ namespace MHServerEmu.Games.Entities
 
             bool requireCombatActive = WorldEntityPrototype.RequireCombatActiveForKillCredit;
 
-            List<Player> playerList = ListPool<Player>.Instance.Get();
+            using var playerListHandle = ListPool<Player>.Instance.Get(out List<Player> playerList);
             // NOTE: Compute nearby players on demand for performance reasons
 
             // Loot Tables
@@ -3927,7 +3915,6 @@ namespace MHServerEmu.Games.Entities
                 AwardKillXP(playerList);
             }
 
-            ListPool<Player>.Instance.Return(playerList);
             return true;
         }
 
@@ -3935,7 +3922,7 @@ namespace MHServerEmu.Games.Entities
         {
             bool requireCombatActive = WorldEntityPrototype.RequireCombatActiveForKillCredit;
 
-            List<Player> playerList = ListPool<Player>.Instance.Get();
+            using var playerListHandle = ListPool<Player>.Instance.Get(out List<Player> playerList);
             Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, requireCombatActive, playerList);
             if (playerList.Count > 0)
             {
@@ -3948,8 +3935,6 @@ namespace MHServerEmu.Games.Entities
                 AwardLootForDropEvent(LootDropEventType.OnHit, playerList);
                 AwardLootForDropEvent(LootDropEventType.OnDamagedForPctHealth, playerList, healthDelta);
             }
-
-            ListPool<Player>.Instance.Return(playerList);
         }
 
         private bool AwardInteractionLoot(ulong interactorEntityId)
@@ -3959,7 +3944,7 @@ namespace MHServerEmu.Games.Entities
 
             // NOTE: Bowling ball dispenser is not per-player cloned, so interacting
             // with it will give a ball to all players nearby. This doesn't seem right.
-            List<Player> playerList = ListPool<Player>.Instance.Get();
+            using var playerListHandle = ListPool<Player>.Instance.Get(out List<Player> playerList);
 
             if (IsClonePerPlayer)
             {
@@ -3976,7 +3961,6 @@ namespace MHServerEmu.Games.Entities
 
             AwardLootForDropEvent(LootDropEventType.OnInteractedWith, playerList);
 
-            ListPool<Player>.Instance.Return(playerList);
             return true;
         }
 
@@ -3986,8 +3970,8 @@ namespace MHServerEmu.Games.Entities
             if (playerList.Count == 0)
                 return true;
 
-            List<(PrototypeId, LootActionType)> tables = ListPool<(PrototypeId, LootActionType)>.Instance.Get();
-            List<PropertyId> tablesToRemove = ListPool<PropertyId>.Instance.Get();
+            using var tablesHandle = ListPool<(PrototypeId, LootActionType)>.Instance.Get(out List<(PrototypeId, LootActionType)> tables);
+            using var tablesToRemoveHandle = ListPool<PropertyId>.Instance.Get(out List<PropertyId> tablesToRemove);
 
             // Property loot tables
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.LootTablePrototype, (int)eventType))
@@ -4081,8 +4065,6 @@ namespace MHServerEmu.Games.Entities
                     Properties.RemoveProperty(tableProp);
             }
 
-            ListPool<(PrototypeId, LootActionType)>.Instance.Return(tables);
-            ListPool<PropertyId>.Instance.Return(tablesToRemove);
             return true;
         }
 
@@ -4154,7 +4136,7 @@ namespace MHServerEmu.Games.Entities
             WorldEntityPrototype worldEntityProto = WorldEntityPrototype;
             RegionPrototype regionProto = region.Prototype;
 
-            Dictionary<PropertyId, PropertyValue> overrides = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+            using var overridesHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> overrides);
 
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.LootTablePrototype))
             {
@@ -4199,7 +4181,6 @@ namespace MHServerEmu.Games.Entities
             foreach (var kvp in overrides)
                 Properties[kvp.Key] = kvp.Value;
 
-            DictionaryPool<PropertyId, PropertyValue>.Instance.Return(overrides);
             return true;
         }
 
@@ -4315,7 +4296,7 @@ namespace MHServerEmu.Games.Entities
             {
                 // Apply mods from boosts and rank
 
-                Dictionary<PropertyId, PropertyValue> enemyBoosts = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+                using var enemyBoostsHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> enemyBoosts);
 
                 foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.EnemyBoost))
                     enemyBoosts.Add(kvp.Key, kvp.Value);
@@ -4331,8 +4312,6 @@ namespace MHServerEmu.Games.Entities
 
                     ModChangeModEffects(modProtoRef, kvp.Value);
                 }
-
-                DictionaryPool<PropertyId, PropertyValue>.Instance.Return(enemyBoosts);
 
                 if (Properties.HasProperty(PropertyEnum.Rank))
                 {

@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             bool factionFound = false;
             if (_proto.EventOnly == false)
             {
-                List<Player> participants = ListPool<Player>.Instance.Get();
+                using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
                 foreach (var player in participants)
                 {
                     if (player.Faction == _proto.Faction)
@@ -33,7 +33,6 @@ namespace MHServerEmu.Games.Missions.Conditions
                         break;
                     }
                 }
-                ListPool<Player>.Instance.Return(participants);
             }
 
             SetCompletion(factionFound);

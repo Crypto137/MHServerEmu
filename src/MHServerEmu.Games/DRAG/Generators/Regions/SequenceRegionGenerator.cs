@@ -276,10 +276,9 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
                     {
                         if (!PickAreaPlacement(random, entry, false, origin))
                         {
-                            var areas = ListPool<PrototypeId>.Instance.Get();
+                            using var areasHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> areas);
                             entry.GetAreaSequence(areas);
                             if (Log) Logger.Error("Area couldn't place next to previous.");
-                            ListPool<PrototypeId>.Instance.Return(areas);
                             break;
                         }
 
@@ -309,14 +308,13 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
                             Area area = entry.Area;
                             if (area != null)
                             {
-                                var areas = ListPool<PrototypeId>.Instance.Get();
+                                using var areasHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> areas);
                                 entry.GetAreaSequence(areas);
                                 success &= area.Generate(Generator, areas, GenerateFlag.Background);
                                 if (success == false)
                                 {
                                     if (Log) Logger.Error("Area failed to generate.");
                                 }
-                                ListPool<PrototypeId>.Instance.Return(areas);
                             }
                             else
                             {
@@ -470,10 +468,9 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
 
                             if (report && picker == null)
                             {
-                                var areas = ListPool<PrototypeId>.Instance.Get();
+                                using var areasHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> areas);
                                 entry.GetAreaSequence(areas);
                                 if (Log) Logger.Error("Area couldn't build any shared edges with previous area.");
-                                ListPool<PrototypeId>.Instance.Return(areas);
                             }
                         }
 
@@ -498,10 +495,9 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
 
                                     if (report)
                                     {
-                                        var areas = ListPool<PrototypeId>.Instance.Get();
+                                        using var areasHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> areas);
                                         entry.GetAreaSequence(areas);
                                         if (Log) Logger.Error("Area collided with AREA");
-                                        ListPool<PrototypeId>.Instance.Return(areas);
                                     }
 
                                     break;
@@ -518,10 +514,9 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
                                 {
                                     if (report)
                                     {
-                                        var areas = ListPool<PrototypeId>.Instance.Get();
+                                        using var areasHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> areas);
                                         entry.GetAreaSequence(areas);
                                         if (Log) Logger.Error("Area's SharedEdgeMinimum prevented placement.");
-                                        ListPool<PrototypeId>.Instance.Return(areas);
                                     }
 
                                     continue;

@@ -174,10 +174,10 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             if (MetaGame.ApplyMetaState(stateRef, skipCooldown) == false) return false;
 
-            var interestedClients = ListPool<PlayerConnection>.Instance.Get();
+            using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
             GetInterestedClients(interestedClients);
 
-            var intArgs = ListPool<long>.Instance.Get();
+            using var intArgsHandle = ListPool<long>.Instance.Get(out List<long> intArgs);
             intArgs.Add((int)MetaGame.Properties[PropertyEnum.MetaGameWaveCount]);
 
             if (_proto.DifficultyPerStateActivate > 0)
@@ -187,8 +187,6 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             }
 
             SendMetaGameBanner(interestedClients, _proto.UIStateChangeBannerText, intArgs);
-            ListPool<PlayerConnection>.Instance.Return(interestedClients);
-            ListPool<long>.Instance.Return(intArgs);
 
             return true;
         }

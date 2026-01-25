@@ -255,10 +255,9 @@ namespace MHServerEmu.Games.Network
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
                 {
-                    List<ulong> attachedEntityList = ListPool<ulong>.Instance.Get();
+                    using var attachedEntityListHandle = ListPool<ulong>.Instance.Get(out List<ulong> attachedEntityList);
                     worldEntity.Physics.GetAttachedEntities(attachedEntityList);
                     Serializer.Transfer(archive, ref attachedEntityList);
-                    ListPool<ulong>.Instance.Return(attachedEntityList);
                 }
 
                 baseData = archive.ToByteString();
@@ -596,10 +595,9 @@ namespace MHServerEmu.Games.Network
 
             if (extraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAttachedEntities))
             {
-                List<ulong> attachedEntityList = ListPool<ulong>.Instance.Get();
+                using var attachedEntityListHandle = ListPool<ulong>.Instance.Get(out List<ulong> attachedEntityList);
                 worldEntity.Physics.GetAttachedEntities(attachedEntityList);
                 Serializer.Transfer(archive, ref attachedEntityList);
-                ListPool<ulong>.Instance.Return(attachedEntityList);
             }
 
             return NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();

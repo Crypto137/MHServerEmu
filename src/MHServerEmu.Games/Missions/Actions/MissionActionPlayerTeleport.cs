@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override void Run()
         {
-            List<Player> players = ListPool<Player>.Instance.Get();
+            using var playersHandle = ListPool<Player>.Instance.Get(out List<Player> players);
             if (GetDistributors(_proto.SendTo, players))
             {
                 bool hasTarget = _proto.TeleportRegionTarget != PrototypeId.Invalid;
@@ -33,7 +33,6 @@ namespace MHServerEmu.Games.Missions.Actions
                         teleporter.TeleportToLastTown();
                 }
             }
-            ListPool<Player>.Instance.Return(players);
         }
     }
 }

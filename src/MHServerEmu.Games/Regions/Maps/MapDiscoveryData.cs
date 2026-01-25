@@ -118,8 +118,8 @@ namespace MHServerEmu.Games.Regions.Maps
             bool regenNavi = false;
             bool update = false;
 
-            HashSet<Area> areas = HashSetPool<Area>.Instance.Get();
-            HashSet<Cell> cells = HashSetPool<Cell>.Instance.Get();
+            using var areasHandle = HashSetPool<Area>.Instance.Get(out HashSet<Area> areas);
+            using var cellsHandle = HashSetPool<Cell>.Instance.Get(out HashSet<Cell> cells);
 
             if (position.HasValue)
             {
@@ -149,9 +149,6 @@ namespace MHServerEmu.Games.Regions.Maps
 
             if (aoi.RemoveCells(areas, cells)) 
                 aoi.RegenerateClientNavi();
-
-            HashSetPool<Area>.Instance.Return(areas);
-            HashSetPool<Cell>.Instance.Return(cells);
 
             return true;
         }

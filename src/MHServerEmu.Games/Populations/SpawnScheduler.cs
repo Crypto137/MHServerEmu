@@ -43,7 +43,7 @@ namespace MHServerEmu.Games.Populations
 
         public void Destroy()
         {
-            List<SpawnReservation> reservations = ListPool<SpawnReservation>.Instance.Get();
+            using var reservationsHandle = ListPool<SpawnReservation>.Instance.Get(out List<SpawnReservation> reservations);
             foreach (var popObj in MissionObjects)
                 if (popObj.MarkerReservation != null && popObj.MarkerReservation.State == MarkerState.Pending)
                     reservations.Add(popObj.MarkerReservation);
@@ -52,8 +52,6 @@ namespace MHServerEmu.Games.Populations
 
             foreach (var reservation in reservations)
                 reservation.ResetReservation(false);
-
-            ListPool<SpawnReservation>.Instance.Return(reservations);
         }
 
         public bool Pending()
@@ -106,7 +104,7 @@ namespace MHServerEmu.Games.Populations
 
                 if (CanSpawnMissionMarkers(critical))
                 {
-                    List<WorldEntity> entities = ListPool<WorldEntity>.Instance.Get();
+                    using var entitiesHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> entities);
 
                     foreach(var missionObject in SpawnMissionObjects.Values)
                         foreach (var spawnObject in missionObject.MissionObjects)
@@ -121,7 +119,6 @@ namespace MHServerEmu.Games.Populations
                             else
                             {
                                 spawnObject.ResetMarker();
-                                ListPool<WorldEntity>.Instance.Return(entities);
 
                                 if (PopulationManager.DebugMarker(spawnObject.MarkerRef))
                                     Logger.Warn($"ScheduleMissionObjects failed SpawnByMarker {spawnObject}");
@@ -137,8 +134,6 @@ namespace MHServerEmu.Games.Populations
                         missionObject.Destroy();
 
                     SpawnMissionObjects.Clear();
-
-                    ListPool<WorldEntity>.Instance.Return(entities);
                 }
             }
         }
@@ -256,7 +251,7 @@ namespace MHServerEmu.Games.Populations
             var populationObject = Pop(critical);
             if (populationObject != null)
             {
-                List<WorldEntity> entities = ListPool<WorldEntity>.Instance.Get();
+                using var entitiesHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> entities);
 
                 if (populationObject.SpawnByMarker(entities))
                 {
@@ -267,8 +262,6 @@ namespace MHServerEmu.Games.Populations
                 }
                 else if (populationObject.RemoveOnSpawnFail == false)
                     AddFailedObject(populationObject);
-
-                ListPool<WorldEntity>.Instance.Return(entities);
             }
         }
 

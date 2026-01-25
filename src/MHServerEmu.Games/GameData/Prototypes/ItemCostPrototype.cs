@@ -319,7 +319,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             int price = GetBuyPrice(player, item);
 
-            List<ulong> currencyItemList = ListPool<ulong>.Instance.Get();
+            using var currencyItemListHandle = ListPool<ulong>.Instance.Get(out List<ulong> currencyItemList);
             InventoryIterationFlags flags = InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra | InventoryIterationFlags.PlayerStashGeneral;
             InventoryIterator.GetMatchingContained(player, CurrencyItem, flags, currencyItemList);
 
@@ -339,8 +339,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 remaining -= numToSpend;
                 currencyItem.DecrementStack(numToSpend);
             }
-
-            ListPool<ulong>.Instance.Return(currencyItemList);
 
             if (remaining != 0)
                 return Logger.WarnReturn(false, $"PayItemCost(): Player [{player}] was not able to spend enough currency item {CurrencyItem.GetName()} to pay for [{item}]");

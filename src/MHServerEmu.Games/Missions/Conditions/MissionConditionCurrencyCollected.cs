@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
             bool collected = false;
 
-            List<Player> participants = ListPool<Player>.Instance.Get();
+            using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
             if (Mission.GetParticipants(participants))
             {
                 foreach (var player in participants)
@@ -41,7 +41,6 @@ namespace MHServerEmu.Games.Missions.Conditions
                     }
                 }
             }
-            ListPool<Player>.Instance.Return(participants);
 
             SetCompletion(collected);
             return true;

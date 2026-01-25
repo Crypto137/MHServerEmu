@@ -19,13 +19,12 @@ namespace MHServerEmu.Games.Missions.Actions
             var banterRef = _proto.BanterAsset;
             if (banterRef == AssetId.Invalid) return;
 
-            List<Player> players = ListPool<Player>.Instance.Get();
+            using var playersHandle = ListPool<Player>.Instance.Get(out List<Player> players);
             if (GetDistributors(_proto.SendTo, players))
             {
                 foreach (Player player in players)
                     player.SendPlayStoryBanter(banterRef);
             }
-            ListPool<Player>.Instance.Return(players);
         }
     }
 }

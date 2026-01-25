@@ -134,9 +134,8 @@ namespace MHServerEmu.Games.Loot
 
             if (affixCountBehavior == AffixCountBehavior.Roll)
             {
-                HashSet<ScopedAffixRef> affixSet = HashSetPool<ScopedAffixRef>.Instance.Get();
+                using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
                 result = UpdateAffixesHelper(resolver, settings, args, itemSpec, affixSet);
-                HashSetPool<ScopedAffixRef>.Instance.Return(affixSet);
             }
 
             if (result.HasFlag(MutationResults.Error) == false)
@@ -163,7 +162,7 @@ namespace MHServerEmu.Games.Loot
             if ((affixLimits != null && affixLimits.CategorizedAffixes.HasValue()) ||
                 (settings != null && settings.AffixLimitByCategoryModifierDict.Count > 0))
             {
-                Dictionary<PrototypeId, short> affixCategoryDict = DictionaryPool<PrototypeId, short>.Instance.Get();
+                using var affixCategoryDictHandle = DictionaryPool<PrototypeId, short>.Instance.Get(out Dictionary<PrototypeId, short> affixCategoryDict);
 
                 // Get category limits from the prototype
                 if (affixLimits != null)
@@ -195,8 +194,6 @@ namespace MHServerEmu.Games.Loot
                     if (numAffixesNeeded > 0)
                         result |= AddCategorizedAffixesToItemSpec(resolver, args, categoryProto, numAffixesNeeded, itemSpec, affixSet);
                 }
-
-                DictionaryPool<PrototypeId, short>.Instance.Return(affixCategoryDict);
             }
 
             // Apply affixes by position
@@ -649,7 +646,7 @@ namespace MHServerEmu.Games.Loot
 
             MutationResults result = MutationResults.None;
             
-            List<AffixSpec> filteredAffixSpecs = ListPool<AffixSpec>.Instance.Get();
+            using var filteredAffixSpecsHandle = ListPool<AffixSpec>.Instance.Get(out List<AffixSpec> filteredAffixSpecs);
 
             bool hasKeywords = keywords.HasValue();
             bool hasCategories = categories.HasValue();
@@ -695,7 +692,6 @@ namespace MHServerEmu.Games.Loot
             if (result.HasFlag(MutationResults.Error) == false)
                 itemSpec.SetAffixes(filteredAffixSpecs);
 
-            ListPool<AffixSpec>.Instance.Return(filteredAffixSpecs);
             return result;
         }
 
@@ -708,9 +704,9 @@ namespace MHServerEmu.Games.Loot
 
             MutationResults result = MutationResults.None;
 
-            List<AffixSpec> affixSpecsToAdd = ListPool<AffixSpec>.Instance.Get();
-            List<int> addedPositionCounts = ListPool<int>.Instance.Get();
-            Dictionary<AffixCategoryPrototype, int> addedCategoryCounts = DictionaryPool<AffixCategoryPrototype, int>.Instance.Get();
+            using var affixSpecsToAddHandle = ListPool<AffixSpec>.Instance.Get(out List<AffixSpec> affixSpecsToAdd);
+            using var addedPositionCountsHandle = ListPool<int>.Instance.Get(out List<int> addedPositionCounts);
+            using var addedCategoryCountsHandle = DictionaryPool<AffixCategoryPrototype, int>.Instance.Get(out Dictionary<AffixCategoryPrototype, int> addedCategoryCounts);
 
             addedPositionCounts.Fill(0, (int)AffixPosition.NumPositions);
 
@@ -720,12 +716,7 @@ namespace MHServerEmu.Games.Loot
                 AffixSpec sourceAffixSpecIt = sourceAffixSpecs[i];
                 AffixPrototype affixProto = sourceAffixSpecIt.AffixProto;
 
-                if (affixProto == null)
-                {
-                    Logger.Warn("CopyAffixSpecs(): affixProto == null");
-                    result = MutationResults.Error;
-                    goto end;
-                }
+                if (affixProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyAffixSpecs(): affixProto == null");
 
                 // Filter affixes by provided position / keywords / categories
                 if (position != AffixPosition.None && affixProto.Position != position)
@@ -826,10 +817,6 @@ namespace MHServerEmu.Games.Loot
             if (result.HasFlag(MutationResults.Error) == false)
                 destItemSpec.AddAffixSpecs(affixSpecsToAdd);
 
-            end:
-            ListPool<AffixSpec>.Instance.Return(affixSpecsToAdd);
-            ListPool<int>.Instance.Return(addedPositionCounts);
-            DictionaryPool<AffixCategoryPrototype, int>.Instance.Return(addedCategoryCounts);
             return result;
         }
 

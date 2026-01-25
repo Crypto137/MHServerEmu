@@ -235,14 +235,12 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     targetRef = region.Prototype.StartTarget;
             }
 
-            List<Player> players = ListPool<Player>.Instance.Get();
+            using var playersHandle = ListPool<Player>.Instance.Get(out List<Player> players);
             foreach (Player player in MetaGame.Players)
                 players.Add(player);
 
             foreach (var player in players)
                 TeleportPlayer(player, targetRef);
-
-            ListPool<Player>.Instance.Return(players);
         }
 
         private void TeleportPlayer(Player player, PrototypeId targetRef)

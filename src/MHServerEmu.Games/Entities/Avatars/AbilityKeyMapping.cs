@@ -217,17 +217,13 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// </summary>
         public void SlotDefaultAbilities(Avatar avatar)
         {
-            AvatarPrototype avatarProto = avatar.AvatarPrototype;
-
-            List<HotkeyData> hotkeyDataList = ListPool<HotkeyData>.Instance.Get();
+            using var hotkeyDataListHandle = ListPool<HotkeyData>.Instance.Get(out List<HotkeyData> hotkeyDataList);
 
             if (GetDefaultAbilities(hotkeyDataList, avatar))
             {
                 foreach (HotkeyData hotkeyData in hotkeyDataList)
                     SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
             }
-
-            ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
         }
 
         public void SlotDefaultAbilitiesForTransformMode(TransformModePrototype transformModeProto)
@@ -272,7 +268,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             AvatarPrototype avatarProto = avatar.AvatarPrototype;
             if (avatarProto == null) return Logger.WarnReturn(false, "GetDefaultAbilities(): avatarProto == null");
 
-            List<PowerProgressionEntryPrototype> powerProgEntryList = ListPool<PowerProgressionEntryPrototype>.Instance.Get();
+            using var powerProgEntryListHandle = ListPool<PowerProgressionEntryPrototype>.Instance.Get(out List<PowerProgressionEntryPrototype> powerProgEntryList);
             if (avatarProto.GetPowersUnlockedAtLevel(powerProgEntryList, avatar.CharacterLevel, true, startingLevel))
             {
                 foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgEntryList)
@@ -320,7 +316,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                 }
             }
 
-            ListPool<PowerProgressionEntryPrototype>.Instance.Return(powerProgEntryList);
             return hotkeyDataList.Count > 0;
         }
 

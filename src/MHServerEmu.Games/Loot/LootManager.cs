@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.Loot
                 inputSettings.EventType >= LootDropEventType.OnKilled &&
                 inputSettings.EventType <= LootDropEventType.OnKilledMiniBoss)
             {
-                List<MissionLootTable> missionLootTableList = ListPool<MissionLootTable>.Instance.Get();
+                using var missionLootTableListHandle = ListPool<MissionLootTable>.Instance.Get(out List<MissionLootTable> missionLootTableList);
 
                 if (MissionManager.GetMissionLootTablesForEnemy(inputSettings.SourceEntity, inputSettings.Player, missionLootTableList))
                 {
@@ -103,8 +103,6 @@ namespace MHServerEmu.Games.Loot
                     // We are not using these settings anymore, but let's clear the mission prototype ref just in case something changes
                     inputSettings.MissionProtoRef = PrototypeId.Invalid;
                 }
-
-                ListPool<MissionLootTable>.Instance.Return(missionLootTableList);
             }
         }
 
@@ -278,10 +276,8 @@ namespace MHServerEmu.Games.Loot
             if (lootTypes == LootType.None)
                 return true;
 
-            bool success = true;
-
             // Use a list to process ItemSpec + item CurrencySpec loot together
-            List<Item> itemList = ListPool<Item>.Instance.Get();
+            using var itemListHandle = ListPool<Item>.Instance.Get(out List<Item> itemList);
 
             // Reusable property collection for applying extra properties
             using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
@@ -313,8 +309,7 @@ namespace MHServerEmu.Games.Loot
                         foreach (Item itemToDestroy in itemList)
                             itemToDestroy.Destroy();
 
-                        success = false;
-                        goto end;
+                        return false;
                     }
 
                     item.Properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
@@ -351,8 +346,7 @@ namespace MHServerEmu.Games.Loot
                             foreach (Item itemToDestroy in itemList)
                                 itemToDestroy.Destroy();
 
-                            success = false;
-                            goto end;
+                            return false;
                         }
 
                         item.Properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
@@ -380,8 +374,7 @@ namespace MHServerEmu.Games.Loot
                     foreach (Item itemToDestroy in itemList)
                         itemToDestroy.Destroy();
 
-                    success = false;
-                    goto end;
+                    return false;
                 }
             }
 
@@ -472,11 +465,7 @@ namespace MHServerEmu.Games.Loot
                     Logger.Warn($"GiveLootFromSummary(): Mission-only loot types found in a non-mission summary, Types=[{lootResultSummary.Types}]");
             }
 
-            // NOTE: We use goto here because returning a list to the pool while it's
-            // being iterated will clear it and cause it to be modified during iteration.
-            end:
-            ListPool<Item>.Instance.Return(itemList);
-            return success;
+            return true;
         }
 
         public bool SpawnItem(PrototypeId itemProtoRef, LootContext lootContext, Player player, WorldEntity sourceEntity)

@@ -1234,7 +1234,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             EntityManager entityManager = game.EntityManager;
-            List<int> syncAttackIndices = ListPool<int>.Instance.Get();
+            using var syncAttackIndicesHandle = ListPool<int>.Instance.Get(out List<int> syncAttackIndices);
 
             for (int i = 0; i < IDPropertiesLength && i < SyncAttacks.Length; i++)
             {
@@ -1250,8 +1250,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 int randomIndex = game.Random.Next(0, syncAttackIndices.Count);
                 index = syncAttackIndices[randomIndex];
             }
-
-            ListPool<int>.Instance.Return(syncAttackIndices);
 
             return index;
         }

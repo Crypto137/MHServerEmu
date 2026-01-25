@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Missions.Actions
             var teamUpRef = _proto.TeamUpPrototype;
             if (teamUpRef == PrototypeId.Invalid) return;
 
-            List<Player> participants = ListPool<Player>.Instance.Get();
+            using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
             if (Mission.GetParticipants(participants))
             {
                 foreach (Player player in participants)
@@ -30,7 +30,6 @@ namespace MHServerEmu.Games.Missions.Actions
                     player.UnlockTeamUpAgent(teamUpRef);
                 }
             }
-            ListPool<Player>.Instance.Return(participants);
         }
     }
 }

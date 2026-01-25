@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Missions.Actions
             var keywordRef = _proto.Keyword;
             if (keywordRef == PrototypeId.Invalid) return;
 
-            List<Player> players = ListPool<Player>.Instance.Get();
+            using var playersHandle = ListPool<Player>.Instance.Get(out List<Player> players);
             if (GetDistributors(_proto.SendTo, players))
             {
                 foreach (Player player in players)
@@ -30,7 +30,6 @@ namespace MHServerEmu.Games.Missions.Actions
                     conditions.RemoveConditionsWithKeyword(keywordRef);
                 }
             }
-            ListPool<Player>.Instance.Return(players);
         }
     }
 }

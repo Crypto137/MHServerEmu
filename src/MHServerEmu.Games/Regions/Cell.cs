@@ -656,13 +656,11 @@ namespace MHServerEmu.Games.Regions
             {
                 SpawnSpecScheduler.Spawn(false);
 
-                List<WorldEntity> entityList = ListPool<WorldEntity>.Instance.Get();
+                using var entityListHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> entityList);
                 GetEntitiesInCellBounds(entityList);
 
                 foreach (WorldEntity worldEntity in entityList)
                     worldEntity.UpdateSimulationState();
-
-                ListPool<WorldEntity>.Instance.Return(entityList);
             } 
             else
                 SpawnSpecScheduler.Spawn(true);
@@ -683,13 +681,11 @@ namespace MHServerEmu.Games.Regions
 
             if (_numInterestedPlayers == 0)
             {
-                List<WorldEntity> entityList = ListPool<WorldEntity>.Instance.Get();
+                using var entityListHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> entityList);
                 GetEntitiesInCellBounds(entityList);
 
                 foreach (WorldEntity worldEntity in entityList)
                     worldEntity.UpdateSimulationState();
-
-                ListPool<WorldEntity>.Instance.Return(entityList);
             }
         }
 

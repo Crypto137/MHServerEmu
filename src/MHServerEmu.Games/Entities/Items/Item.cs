@@ -602,7 +602,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             bool isInRecipeLibrary = false;
 
-            List<PrototypeId> inventoryList = ListPool<PrototypeId>.Instance.Get();
+            using var inventoryListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> inventoryList);
             if (vendorTypeProto.GetInventories(inventoryList))
             {
                 foreach (PrototypeId crafterVendorInvProtoRef in inventoryList)
@@ -634,8 +634,6 @@ namespace MHServerEmu.Games.Entities.Items
                         break;
                 }
             }
-
-            ListPool<PrototypeId>.Instance.Return(inventoryList);
 
             if (isInRecipeLibrary == false)
                 return CraftingResult.RecipeNotInRecipeLibrary;
@@ -1001,7 +999,7 @@ namespace MHServerEmu.Games.Entities.Items
             int indexSeed = random.GetSeed();
 
             // Apply built-in affixes
-            List<BuiltInAffixDetails> detailsList = ListPool<BuiltInAffixDetails>.Instance.Get();
+            using var detailsListHandle = ListPool<BuiltInAffixDetails>.Instance.Get(out List<BuiltInAffixDetails> detailsList);
             if (itemProto.GenerateBuiltInAffixDetails(_itemSpec, detailsList))
             {
                 foreach (BuiltInAffixDetails builtInAffixDetails in detailsList)
@@ -1017,8 +1015,6 @@ namespace MHServerEmu.Games.Entities.Items
                     OnAffixAdded(random, affixProto, builtInAffixDetails.ScopeProtoRef, builtInAffixDetails.AvatarProtoRef, builtInAffixDetails.LevelRequirement);
                 }
             }
-
-            ListPool<BuiltInAffixDetails>.Instance.Return(detailsList);
 
             // Apply rolled affixes
             IReadOnlyList<AffixSpec> affixSpecs = _itemSpec.AffixSpecs;

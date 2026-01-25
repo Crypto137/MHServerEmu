@@ -18,13 +18,12 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override void Run()
         {
-            List<Player> players = ListPool<Player>.Instance.Get();
+            using var playersHandle = ListPool<Player>.Instance.Get(out List<Player> players);
             if (GetDistributors(_proto.SendTo, players))
             {
                 foreach (Player player in players)
                     player.QueuePlayKismetSeq(_proto.KismetSeqPrototype);
             }
-            ListPool<Player>.Instance.Return(players);
 
             if (MissionManager.Debug) Logger.Debug($"QueuePlayKismetSeq {Mission.PrototypeName} {_proto.KismetSeqPrototype.GetNameFormatted()}");
         }

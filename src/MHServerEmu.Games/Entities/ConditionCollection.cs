@@ -243,7 +243,7 @@ namespace MHServerEmu.Games.Entities
         {
             bool hasNegativeStatus = false;
 
-            List<PrototypeId> negativeStatusList = ListPool<PrototypeId>.Instance.Get();
+            using var negativeStatusListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> negativeStatusList);
 
             foreach (Condition condition in this)
             {
@@ -263,7 +263,6 @@ namespace MHServerEmu.Games.Entities
                 negativeStatusList.Clear();
             }
 
-            ListPool<PrototypeId>.Instance.Return(negativeStatusList);
             return hasNegativeStatus;
         }
 
@@ -303,11 +302,10 @@ namespace MHServerEmu.Games.Entities
             existingStackCount = 0;
             longestTimeRemaining = TimeSpan.Zero;
             
-            int numStacksToApply = 0;
             int maxNumStacksToApply = stackingBehaviorProto.NumStacksToApply;
             int numStacksAvailable = stackingBehaviorProto.MaxNumStacks;
 
-            List<(int, ulong)> conditionsByRankList = ListPool<(int, ulong)>.Instance.Get();
+            using var conditionsByRankListHandle = ListPool<(int, ulong)>.Instance.Get(out List<(int, ulong)> conditionsByRankList);
 
             foreach (Condition condition in _currentConditions.Values)
             {
@@ -351,12 +349,11 @@ namespace MHServerEmu.Games.Entities
 
             // The available number of stack slots should always be >= 0
             if (numStacksAvailable < 0)
-            {
-                Logger.Warn("GetStackingData(): numStacksAvailable < 0");
-                goto end;
-            }
+                return Logger.WarnReturn(0, "GetStackingData(): numStacksAvailable < 0");
 
             // Determine the number of stacks to apply based on the application style
+            int numStacksToApply = 0;
+
             switch (stackingBehaviorProto.ApplicationStyle)
             {
                 case StackingApplicationStyleType.DontRefresh:
@@ -394,12 +391,9 @@ namespace MHServerEmu.Games.Entities
                     break;
 
                 default:
-                    Logger.Warn($"GetStackingData(): Unsupported application style {stackingBehaviorProto.ApplicationStyle}");
-                    goto end;
+                    return Logger.WarnReturn(0, $"GetStackingData(): Unsupported application style {stackingBehaviorProto.ApplicationStyle}");
             }
 
-            end:
-            ListPool<(int, ulong)>.Instance.Return(conditionsByRankList);
             return numStacksToApply;
         }
 
@@ -509,14 +503,12 @@ namespace MHServerEmu.Games.Entities
                 // Notify interested clients if any
                 PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
 
-                List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+                using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
                 if (networkManager.GetInterestedClients(interestedClientList, _owner))
                 {
                     NetMessageAddCondition addConditionMessage = ArchiveMessageBuilder.BuildAddConditionMessage(_owner, condition);
                     networkManager.SendMessageToMultiple(interestedClientList, addConditionMessage);
                 }
-
-                ListPool<PlayerConnection>.Instance.Return(interestedClientList);
 
                 OnInsertCondition(condition);
 
@@ -998,7 +990,7 @@ namespace MHServerEmu.Games.Entities
             // Notify interested clients if any
             PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
 
-            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
             if (networkManager.GetInterestedClients(interestedClientList, _owner))
             {
                 var deleteConditionMessage = NetMessageDeleteCondition.CreateBuilder()
@@ -1008,8 +1000,6 @@ namespace MHServerEmu.Games.Entities
 
                 networkManager.SendMessageToMultiple(interestedClientList, deleteConditionMessage);
             }
-
-            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
 
             // Remove the condition
             if (condition.IsInCollection)
@@ -1193,7 +1183,7 @@ namespace MHServerEmu.Games.Entities
             PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
 
             // Notify clients
-            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
             if (networkManager.GetInterestedClients(interestedClientList, _owner))
             {
                 NetMessageEnableCondition enableConditionMessage = NetMessageEnableCondition.CreateBuilder()
@@ -1204,8 +1194,6 @@ namespace MHServerEmu.Games.Entities
 
                 networkManager.SendMessageToMultiple(interestedClientList, enableConditionMessage);
             }
-
-            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
 
             // Enable/disable the condition
             if (enable && condition.IsEnabled == false)

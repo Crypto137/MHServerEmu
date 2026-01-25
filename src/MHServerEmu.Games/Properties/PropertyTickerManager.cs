@@ -51,9 +51,8 @@ namespace MHServerEmu.Games.Properties
         public void StopAllTickers()
         {
             // Store tickers in a temp list and clear the dict to prevent recursion on stop
-            List<PropertyTicker> tickerList = ListPool<PropertyTicker>.Instance.Get();
-            foreach (PropertyTicker ticker in _tickerDict.Values)
-                tickerList.Add(ticker);
+            using var tickerListHandle = ListPool<PropertyTicker>.Instance.Get(out List<PropertyTicker> tickerList);
+            tickerList.AddRange(_tickerDict.Values);
 
             _tickerDict.Clear();
 
@@ -62,8 +61,6 @@ namespace MHServerEmu.Games.Properties
                 ticker.Stop(false);
                 DeleteTicker(ticker);
             }
-
-            ListPool<PropertyTicker>.Instance.Return(tickerList);
         }
 
         public void UpdateTicker(ulong tickerId, TimeSpan duration, bool isPaused)

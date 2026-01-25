@@ -136,8 +136,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ConditionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetConditionBlueprintDataRef());
 
             // Find all index properties for this condition
-            HashSet<PropertyEnum> enumSet = HashSetPool<PropertyEnum>.Instance.Get();
-            List<PropertyId> evalPropertyIdList = ListPool<PropertyId>.Instance.Get();
+            using var enumSetHandle = HashSetPool<PropertyEnum>.Instance.Get(out HashSet<PropertyEnum> enumSet);
+            using var evalPropertyIdListHandle = ListPool<PropertyId>.Instance.Get(out List<PropertyId> evalPropertyIdList);
 
             // Duration
             if (DurationMSCurve != CurveId.Invalid)
@@ -205,10 +205,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         break;
                 }
             }
-
-            // Clean up
-            HashSetPool<PropertyEnum>.Instance.Return(enumSet);
-            ListPool<PropertyId>.Instance.Return(evalPropertyIdList);
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)

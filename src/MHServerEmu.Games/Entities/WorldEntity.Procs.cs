@@ -974,7 +974,7 @@ namespace MHServerEmu.Games.Entities
             if (propertyId.Enum != PropertyEnum.Proc)
                 return;
 
-            List<ulong> overlappingEntities = ListPool<ulong>.Instance.Get();
+            using var overlappingEntitiesHandle = ListPool<ulong>.Instance.Get(out List<ulong> overlappingEntities);
             if (Physics.GetOverlappingEntities(overlappingEntities))
             {
                 KeyValuePair<PropertyId, PropertyValue> procProperty = new(propertyId, Properties[propertyId]);
@@ -990,8 +990,6 @@ namespace MHServerEmu.Games.Entities
                     TryActivateOnOverlapBeginProcHelper(procProperty, target, overlapPosition);
                 }
             }
-
-            ListPool<ulong>.Instance.Return(overlappingEntities);
         }
 
         private void TryActivateOnOverlapBeginProcHelper(in KeyValuePair<PropertyId, PropertyValue> procProperty, WorldEntity target, Vector3 overlapPosition)
@@ -1684,7 +1682,7 @@ namespace MHServerEmu.Games.Entities
 
             // Check for infinite loops
             bool success = true;
-            HashSet<PrototypeId> triggeringPowers = HashSetPool<PrototypeId>.Instance.Get(); 
+            using var triggeringPowersHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> triggeringPowers); 
 
             PrototypeId parentTriggeringPowerRef = triggeringPower.Properties[PropertyEnum.TriggeringPowerRef, triggeringPowerProto.DataRef];
             while (parentTriggeringPowerRef != PrototypeId.Invalid)
@@ -1710,7 +1708,6 @@ namespace MHServerEmu.Games.Entities
             if (success == false)
                 Logger.Warn($"CheckOnHitRecursion(): Recursion check failed for procPower=[{procPower}], triggeringPower=[{triggeringPowerProto}]");
 
-            HashSetPool<PrototypeId>.Instance.Return(triggeringPowers);
             return success;
         }
 

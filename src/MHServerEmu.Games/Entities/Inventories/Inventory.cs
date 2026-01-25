@@ -194,7 +194,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             TimeSpan expirationTime = TimeSpan.FromSeconds(inventoryProto.DestroyContainedAfterSecs);
 
             EntityManager entityManager = Game.EntityManager;
-            List<ulong> entitiesToDestroy = ListPool<ulong>.Instance.Get();
+            using var entitiesToDestroyHandle = ListPool<ulong>.Instance.Get(out List<ulong> entitiesToDestroy);
 
             foreach (var entry in this)
             {
@@ -226,8 +226,6 @@ namespace MHServerEmu.Games.Entities.Inventories
 
                 entity.Destroy();
             }
-
-            ListPool<ulong>.Instance.Return(entitiesToDestroy);
         }
 
         public int GetCapacity()

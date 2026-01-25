@@ -152,7 +152,7 @@ namespace MHServerEmu.Games.Entities.Physics
             if (Entity == null) return;
             var manager = Entity.Game.EntityManager;
 
-            List<ulong> attachedEntities = ListPool<ulong>.Instance.Get();
+            using var attachedEntitiesHandle = ListPool<ulong>.Instance.Get(out List<ulong> attachedEntities);
             if (GetAttachedEntities(attachedEntities))
                 foreach (var entityId in attachedEntities)
                 {
@@ -161,7 +161,6 @@ namespace MHServerEmu.Games.Entities.Physics
                         DetachChild(childEntity.Physics);
                 }
             AttachedEntities?.Clear();
-            ListPool<ulong>.Instance.Return(attachedEntities);
         }
 
         public void AttachChild(EntityPhysics physics)

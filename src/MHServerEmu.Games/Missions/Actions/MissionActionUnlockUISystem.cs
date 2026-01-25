@@ -26,14 +26,13 @@ namespace MHServerEmu.Games.Missions.Actions
                 var uiSystemLockProto = GameDatabase.GetPrototype<UISystemLockPrototype>(uiSystemLockRef);
                 if (uiSystemLockProto != null && uiSystemLockProto.UISystem == _proto.UISystem)
                 {
-                    List<Player> participants = ListPool<Player>.Instance.Get();
+                    using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
                     if (Mission.GetParticipants(participants))
                     {
                         foreach (var player in participants)
                             player.Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = 1;
 
                     }
-                    ListPool<Player>.Instance.Return(participants);
                     return;
                 }
             }

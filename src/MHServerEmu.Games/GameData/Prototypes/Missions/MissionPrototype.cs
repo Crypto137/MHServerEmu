@@ -513,7 +513,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private void PopulateMissionActionReferencedPowers()
         {
             bool hasPowers = false;
-            HashSet<PrototypeId> powers = HashSetPool<PrototypeId>.Instance.Get();
+            using var powersHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> powers);
 
             hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnAvailableActions);
             hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnStartActions);
@@ -532,8 +532,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (hasPowers)
                 MissionActionReferencedPowers = new(powers);
-
-            HashSetPool<PrototypeId>.Instance.Return(powers);
         }
 
         private bool AddMissionActionEntityPerformPowerPrototypePowerFromList(HashSet<PrototypeId> powers, MissionActionPrototype[] actions)
@@ -662,7 +660,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 if (regions.Count > 0)
                 {
-                    List<PrototypeId> regionList = ListPool<PrototypeId>.Instance.Get(regions);
+                    using var regionListHandle = ListPool<PrototypeId>.Instance.Get(regions, out List<PrototypeId> regionList);
                     foreach (PrototypeId regionRef in regionList)
                     {
                         RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
@@ -672,7 +670,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
                                 regions.Add(altRegionRef);
                         }
                     }
-                    ListPool<PrototypeId>.Instance.Return(regionList);
                 }
             }
 
@@ -755,14 +752,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (_activeAreas.Count == 0)
             {
-                HashSet<PrototypeId> activeAreas = HashSetPool<PrototypeId>.Instance.Get();
+                using var activeAreasHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> activeAreas);
                 foreach (var regionRef in _activeRegions)
                 {
                     activeAreas.Clear();
                     RegionPrototype.GetAreasInGenerator(regionRef, activeAreas);
                     _activeAreas.Insert(activeAreas);
                 }
-                HashSetPool<PrototypeId>.Instance.Return(activeAreas);
             }
 
             // cache for mission active cells

@@ -157,7 +157,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
         private void TeleportPlayersToStart()
         {
-            List<Player> players = ListPool<Player>.Instance.Get();
+            using var playersHandle = ListPool<Player>.Instance.Get(out List<Player> players);
             foreach (Player player in MetaGame.Players)
                 players.Add(player);
 
@@ -186,8 +186,6 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     teleporter.TeleportToTarget(startTarget);
                 }
             }
-
-            ListPool<Player>.Instance.Return(players);
         }
 
         private void ScheduleStateInterval(TimeSpan interval)

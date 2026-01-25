@@ -579,7 +579,7 @@ namespace MHServerEmu.Games.Navi
             float magnitude = MathHelper.SquareRoot(magnitudeSq);
             Vector3 direction = velocity / magnitude;
 
-            PoolableStack<NaviTriangle> triStack = StackPool<NaviTriangle>.Instance.Get();
+            using var triStackHandle = StackPool<NaviTriangle>.Instance.Get(out PoolableStack<NaviTriangle> triStack);
             using NaviSerialCheck naviSerialCheck = new(_naviMesh.NaviCdt);
 
             triStack.Push(GetFacingStartTriangle(start2d, direction));
@@ -676,7 +676,6 @@ namespace MHServerEmu.Games.Navi
                 result = SweepResult.Success;
             }
 
-            StackPool<NaviTriangle>.Instance.Return(triStack);
             return result;
         }
 

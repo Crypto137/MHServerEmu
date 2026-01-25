@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.Social.Guilds
             bool hasChanged = false;
 
             // Remove members that are not listed in the GuildCompleteInfo.
-            HashSet<ulong> removedMembers = HashSetPool<ulong>.Instance.Get();
+            using var removedMembersHandle = HashSetPool<ulong>.Instance.Get(out HashSet<ulong> removedMembers);
 
             foreach (GuildMember member in this)
             {
@@ -85,8 +85,6 @@ namespace MHServerEmu.Games.Social.Guilds
 
             foreach (ulong playerDbId in removedMembers)
                 hasChanged |= RemoveMember(playerDbId);
-
-            HashSetPool<ulong>.Instance.Return(removedMembers);
 
             // Add new members
             for (int i = 0; i < guildCompleteInfo.MembersCount; i++)
@@ -410,7 +408,7 @@ namespace MHServerEmu.Games.Social.Guilds
 
         private void SendMessageToOnlineMembers(IMessage message)
         {
-            List<PlayerConnection> clients = ListPool<PlayerConnection>.Instance.Get();
+            using var clientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> clients);
             EntityManager entityManager = Game.EntityManager;
 
             foreach (GuildMember member in this)
@@ -423,7 +421,6 @@ namespace MHServerEmu.Games.Social.Guilds
             }
 
             Game.NetworkManager.SendMessageToMultiple(clients, message);
-            ListPool<PlayerConnection>.Instance.Return(clients);
         }
 
         private void ScheduleCommunityUpdate()

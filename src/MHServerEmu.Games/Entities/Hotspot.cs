@@ -82,7 +82,7 @@ namespace MHServerEmu.Games.Entities
             var manager = Game.EntityManager;
             if (manager == null) return;
 
-            List<ulong> overlappingEntities = ListPool<ulong>.Instance.Get();
+            using var overlappingEntitiesHandle = ListPool<ulong>.Instance.Get(out List<ulong> overlappingEntities);
             if (Physics.GetOverlappingEntities(overlappingEntities))
             {
                 var overlapPosition = RegionLocation.Position;
@@ -93,7 +93,6 @@ namespace MHServerEmu.Games.Entities
                     OnOverlapBegin(target, overlapPosition, target.RegionLocation.Position);
                 }
             }
-            ListPool<ulong>.Instance.Return(overlappingEntities);
         }
 
         public override void OnEnteredWorld(EntitySettings settings)
@@ -637,7 +636,7 @@ namespace MHServerEmu.Games.Entities
                 int index = Array.IndexOf(hotspotProto.AppliesPowers, powerRef);
                 if (index == -1 || index >= 32) return;
 
-                var changed = ListPool <(ulong, PowerTargetMap)>.Instance.Get();
+                using var changedHandle = ListPool<(ulong, PowerTargetMap)>.Instance.Get(out List<(ulong, PowerTargetMap)> changed);
 
                 foreach (var kvp in _overlapPowerTargets)
                 {
@@ -652,8 +651,6 @@ namespace MHServerEmu.Games.Entities
 
                 foreach(var kv in changed)
                     _overlapPowerTargets[kv.Item1] = kv.Item2;
-
-                ListPool<(ulong, PowerTargetMap)>.Instance.Return(changed);
             }
         }
 
@@ -898,7 +895,7 @@ namespace MHServerEmu.Games.Entities
 
             var manager = Game.EntityManager;
 
-            var changed = ListPool<(ulong, PowerTargetMap)>.Instance.Get();
+            using var changedHandle = ListPool<(ulong, PowerTargetMap)>.Instance.Get(out List<(ulong, PowerTargetMap)> changed);
 
             foreach (var entry in _overlapPowerTargets)
             {
@@ -912,8 +909,6 @@ namespace MHServerEmu.Games.Entities
 
             foreach (var kv in changed)
                 _overlapPowerTargets[kv.Item1] = kv.Item2;
-
-            ListPool<(ulong, PowerTargetMap)>.Instance.Return(changed);
 
             ScheduleActivePowersEvent();
         }

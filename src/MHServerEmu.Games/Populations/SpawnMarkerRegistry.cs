@@ -183,7 +183,7 @@ namespace MHServerEmu.Games.Populations
 
         public void RemoveCell(Cell cell)
         {
-            var reservations = ListPool<SpawnReservation>.Instance.Get();
+            using var reservationsHandle = ListPool<SpawnReservation>.Instance.Get(out List<SpawnReservation> reservations);
             GetReservationsInCell(cell.Id, reservations);
 
             foreach (SpawnReservation reservation in reservations)
@@ -197,7 +197,6 @@ namespace MHServerEmu.Games.Populations
                 success &= RemoveFromCellLookup(reservation);
                 if (success == false) Logger.Warn($"RemoveCell failed {cell}");
             }
-            ListPool<SpawnReservation>.Instance.Return(reservations);
         }
 
         private void GetReservationsInCell(uint cellId, List<SpawnReservation> reservations)
@@ -392,7 +391,7 @@ namespace MHServerEmu.Games.Populations
 
         public void OnSimulation(Cell cell, int numPlayers)
         {
-            var reservations = ListPool<SpawnReservation>.Instance.Get();
+            using var reservationsHandle = ListPool<SpawnReservation>.Instance.Get(out List<SpawnReservation> reservations);
 
             if (numPlayers == 0)
             {
@@ -411,8 +410,6 @@ namespace MHServerEmu.Games.Populations
                     if (reservation.Cell == cell)
                         reservation.Simulated = true;
             }
-
-            ListPool<SpawnReservation>.Instance.Return(reservations);
         }
 
         public bool TestReservation(SpawnReservation reservation, SpawnFlags flag, bool checkRespawn = false, bool checkFree = true)

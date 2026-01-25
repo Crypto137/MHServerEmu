@@ -935,7 +935,7 @@ namespace MHServerEmu.Games.Powers.Conditions
             }
 
             // Assign proc properties
-            List<PrototypeId> procPowerRefList = ListPool<PrototypeId>.Instance.Get();
+            using var procPowerRefListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> procPowerRefList);
             foreach (var kvp in conditionProperties.IteratePropertyRange(Property.ProcPropertyTypesAll))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId procPowerRef);
@@ -947,8 +947,6 @@ namespace MHServerEmu.Games.Powers.Conditions
                 conditionProperties[PropertyEnum.ProcPowerItemLevel, procPowerRef] = conditionProperties[PropertyEnum.ItemLevel];
                 conditionProperties[PropertyEnum.ProcPowerItemVariation, procPowerRef] = conditionProperties[PropertyEnum.ItemVariation];
             }
-
-            ListPool<PrototypeId>.Instance.Return(procPowerRefList);
 
             return success;
         }

@@ -289,7 +289,7 @@ namespace MHServerEmu.Games.Populations
 
                 if (markerEventScheduler.MissionSchedulers.Count > 0)
                 {
-                    List<SpawnMissionScheduler> missionSchedulers = ListPool<SpawnMissionScheduler>.Instance.Get();
+                    using var missionSchedulersHandle = ListPool<SpawnMissionScheduler>.Instance.Get(out List<SpawnMissionScheduler> missionSchedulers);
                     markerEventScheduler.GetSortedMissionSchedulers(missionSchedulers);
 
                     foreach (bool critical in Priority)
@@ -299,8 +299,6 @@ namespace MHServerEmu.Games.Populations
 
                     foreach (var scheduler in missionSchedulers)
                         scheduler.PushFailedObjects();
-
-                    ListPool<SpawnMissionScheduler>.Instance.Return(missionSchedulers);
                 }
 
                 if (markerEventScheduler.MarkerSchedulers.Count > 0)

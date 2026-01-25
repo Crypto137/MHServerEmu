@@ -516,7 +516,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
             if (success)
             {
-                List<PrototypeId> list = ListPool<PrototypeId>.Instance.Get();
+                using var listHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> list);
                 foreach (SuperCellEntryPrototype superCellEntry in superCell.Entries)
                 {
                     if (superCellEntry == null) continue;
@@ -535,7 +535,6 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
                     RemoveCellFromRegionTransitionSpecList(superCellEntry.Cell);
                 }
-                ListPool<PrototypeId>.Instance.Return(list);
             }
 
             return success;
@@ -1057,14 +1056,11 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
             if (roadB == pointA || roadA == pointB) return true;
 
-            List<Point2> road = ListPool<Point2>.Instance.Get();
+            using var roadHandle = ListPool<Point2>.Instance.Get(out List<Point2> road);
             DijkstraRoad(buildGrid, roadA, roadB, road);
 
             if (road.Count == 0)
-            {
-                ListPool<Point2>.Instance.Return(road);
                 return false;
-            }
 
             for (int i = 0; i < road.Count; ++i)
             {
@@ -1080,7 +1076,6 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 ProcessRoadInfo(road[i], pointB, info);
             }
 
-            ListPool<Point2>.Instance.Return(road);
             return true;
         }
 
@@ -1177,7 +1172,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
         private bool DijkstraRoad(List<RoadInfo> buildGrid, Point2 pointA, Point2 pointB, List<Point2> road)
         {
             Point2 invalidPoint = new(-1, -1);
-            List<Point2> visitedNodes = ListPool<Point2>.Instance.Get();
+            using var visitedNodesHandle = ListPool<Point2>.Instance.Get(out List<Point2> visitedNodes);
 
             foreach (var roadInfo in buildGrid)
             {
@@ -1224,7 +1219,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                         road.Add(info.PrevPoint);
                         info = buildGrid[CellContainer.GetIndex(info.PrevPoint.X, info.PrevPoint.Y)];
                     }
-                    ListPool<Point2>.Instance.Return(visitedNodes);
+
                     return true;
                 }
 
@@ -1236,8 +1231,6 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 ProcessNeighbor(currentNode, distance, Cell.Type.S);
                 ProcessNeighbor(currentNode, distance, Cell.Type.W);
             }
-
-            ListPool<Point2>.Instance.Return(visitedNodes);
 
             return true;
         }
@@ -1292,7 +1285,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
             if (workingStack.Count == count)
                 results.Add(new(workingStack));
 
-            List<int> indexes = ListPool<int>.Instance.Get(setIndexes);
+            using var indexesHandle = ListPool<int>.Instance.Get(setIndexes, out List<int> indexes);
             foreach (var index in indexes)
             {
                 workingStack.Add(index);
@@ -1301,7 +1294,6 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 setIndexes.Add(workingStack[workingStack.Count - 1]);
                 workingStack.RemoveAt(workingStack.Count - 1);
             }
-            ListPool<int>.Instance.Return(indexes);
 
             return true;
         }

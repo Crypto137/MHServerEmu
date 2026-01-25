@@ -297,20 +297,18 @@ namespace MHServerEmu.Games.Navi
 
         public static NaviPathResult CheckCanPathTo(NaviMesh naviMesh, Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags)
         {
-            List<NaviPathNode> pathNodes = ListPool<NaviPathNode>.Instance.Get(MaxPathNodes);
+            using var pathNodesHandle = ListPool<NaviPathNode>.Instance.Get(MaxPathNodes, out List<NaviPathNode> pathNodes);
             var pathGen = new NaviPathGenerator(naviMesh);
             NaviPathResult result = pathGen.GeneratePath(position, goalPosition, radius, pathFlags, pathNodes, true, 0, 0f);
-            ListPool<NaviPathNode>.Instance.Return(pathNodes);
             return result;
         }
 
         public NaviPathResult GeneratePath(NaviMesh naviMesh, Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags, PathGenerationFlags pathGenerationFlags, float incompleteDistance)
         {
-            List<NaviPathNode> pathNodes = ListPool<NaviPathNode>.Instance.Get(MaxPathNodes);
+            using var pathNodesHandle = ListPool<NaviPathNode>.Instance.Get(MaxPathNodes, out List<NaviPathNode> pathNodes);
             var generator = new NaviPathGenerator(naviMesh);
             NaviPathResult result = generator.GeneratePath(position, goalPosition, radius, pathFlags, pathNodes, false, pathGenerationFlags, incompleteDistance);
             Init(radius, pathFlags, pathNodes);
-            ListPool<NaviPathNode>.Instance.Return(pathNodes);
             return result;
         }
 
@@ -361,10 +359,9 @@ namespace MHServerEmu.Games.Navi
 
         public NaviPathResult GenerateSimpleMove(Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags)
         {
-            List<NaviPathNode> pathNodes = ListPool<NaviPathNode>.Instance.Get(MaxPathNodes);
+            using var pathNodesHandle = ListPool<NaviPathNode>.Instance.Get(MaxPathNodes, out List<NaviPathNode> pathNodes);
             NaviPathGenerator.GenerateDirectMove(position, goalPosition, pathNodes);
             Init(radius, pathFlags, pathNodes);
-            ListPool<NaviPathNode>.Instance.Return(pathNodes);
             return NaviPathResult.Success;
         }
 

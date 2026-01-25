@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             bool leave = true;
             if (_proto.TargetFilter != null)
             {
-                List<Hotspot> hotspots = ListPool<Hotspot>.Instance.Get();
+                using var hotspotsHandle = ListPool<Hotspot>.Instance.Get(out List<Hotspot> hotspots);
                 if (Mission.GetMissionHotspots(hotspots))
                 {
                     foreach (var hotspot in hotspots)
@@ -38,11 +38,10 @@ namespace MHServerEmu.Games.Missions.Conditions
                             break;
                         }
                 }
-                ListPool<Hotspot>.Instance.Return(hotspots);
             }
             else
             {
-                List<Player> participants = ListPool<Player>.Instance.Get();
+                using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
                 if (Mission.GetParticipants(participants))
                 {
                     foreach (var player in participants)
@@ -58,7 +57,6 @@ namespace MHServerEmu.Games.Missions.Conditions
                         }
                     }
                 }
-                ListPool<Player>.Instance.Return(participants);
             }
 
             SetCompletion(leave);

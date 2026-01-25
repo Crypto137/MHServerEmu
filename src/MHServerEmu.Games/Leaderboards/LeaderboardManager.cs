@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.Leaderboards
 
             ClearActiveRules();
 
-            List<LeaderboardPrototype> activeLeaderboards = ListPool<LeaderboardPrototype>.Instance.Get();
+            using var activeLeaderboardsHandle = ListPool<LeaderboardPrototype>.Instance.Get(out List<LeaderboardPrototype> activeLeaderboards);
             LeaderboardInfoCache.Instance.GetActiveLeaderboardPrototypes(activeLeaderboards);
             foreach (var leaderboard in activeLeaderboards)
                 if (leaderboard.ScoringRules.HasValue())
@@ -165,7 +165,6 @@ namespace MHServerEmu.Games.Leaderboards
 
                         AddActiveRule(eventProto.Type, ruleProto);
                     }
-            ListPool<LeaderboardPrototype>.Instance.Return(activeLeaderboards);
         }
 
         public void OnUpdateEventContext()
@@ -186,7 +185,7 @@ namespace MHServerEmu.Games.Leaderboards
         {
             if (LeaderboardsEnabled == false) return;
 
-            List<LeaderboardPrototype> activeLeaderboards = ListPool<LeaderboardPrototype>.Instance.Get();
+            using var activeLeaderboardsHandle = ListPool<LeaderboardPrototype>.Instance.Get(out List<LeaderboardPrototype> activeLeaderboards);
             LeaderboardInfoCache.Instance.GetActiveLeaderboardPrototypes(activeLeaderboards);
             foreach (var leaderboard in activeLeaderboards)
                 if (leaderboard.ScoringRules.HasValue())
@@ -211,7 +210,6 @@ namespace MHServerEmu.Games.Leaderboards
                                 UpdateEvent(ruleProto, count, 0);
                         }
                     }
-            ListPool<LeaderboardPrototype>.Instance.Return(activeLeaderboards);
 
             RequestRewards();
         }

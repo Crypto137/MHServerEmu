@@ -1614,7 +1614,7 @@ namespace MHServerEmu.Games.Regions
             if (IsFirstLoaded) return;
             IsFirstLoaded = true;
 
-            List<PrototypeId> timerRefList = ListPool<PrototypeId>.Instance.Get();
+            using var timerRefListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> timerRefList);
 
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.ScoringEventTimerStartTimeMS))
             {
@@ -1627,8 +1627,6 @@ namespace MHServerEmu.Games.Regions
 
             foreach (PrototypeId timerRef in timerRefList)
                 ScoringEventTimerStart(timerRef);
-
-            ListPool<PrototypeId>.Instance.Return(timerRefList);
         }
 
         public bool GetInterestedClients(List<PlayerConnection> interestedClientList, AOINetworkPolicyValues interestPolicies)

@@ -377,7 +377,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 result |= MutationResults.ItemPrototypeChange;
 
             // Update affixes
-            HashSet<ScopedAffixRef> affixSet = HashSetPool<ScopedAffixRef>.Instance.Get();
+            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
 
             ItemSpec itemSpec = new(destItem);
             for (int i = 0; i < itemSpec.AffixSpecs.Count; i++)
@@ -400,7 +400,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (affixResult != MutationResults.None && affixResult.HasFlag(MutationResults.Error) == false)
                 destItem.SetAffixes(itemSpec.AffixSpecs);
 
-            HashSetPool<ScopedAffixRef>.Instance.Return(affixSet);
             return result | affixResult;
         }
     }

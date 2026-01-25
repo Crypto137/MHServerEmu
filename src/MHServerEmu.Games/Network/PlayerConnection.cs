@@ -1749,7 +1749,7 @@ namespace MHServerEmu.Games.Network
 
             // Replicate this AkEvent to nearby players
             PlayerConnectionManager networkManager = Game.NetworkManager;
-            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
             if (networkManager.GetInterestedClients(interestedClientList, avatar, AOINetworkPolicyValues.AOIChannelProximity, true))
             {
                 var builder = NetMessageRecvAkEventFromEntity.CreateBuilder()
@@ -1764,7 +1764,6 @@ namespace MHServerEmu.Games.Network
                 networkManager.SendMessageToMultiple(interestedClientList, builder.Build());
             }
 
-            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
             return true;
         }
 

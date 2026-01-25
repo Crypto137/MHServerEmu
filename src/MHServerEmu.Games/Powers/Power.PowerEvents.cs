@@ -821,7 +821,7 @@ namespace MHServerEmu.Games.Powers
             if (delta == 0)
                 return false;
 
-            List<Power> powersToOperateOnList = ListPool<Power>.Instance.Get();
+            using var powersToOperateOnListHandle = ListPool<Power>.Instance.Get(out List<Power> powersToOperateOnList);
             if (GetPowersToOperateOnForPowerEvent(ultimateOwner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 foreach (Power power in powersToOperateOnList)
@@ -853,7 +853,6 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            ListPool<Power>.Instance.Return(powersToOperateOnList);
             return true;
         }
 
@@ -994,15 +993,13 @@ namespace MHServerEmu.Games.Powers
 
             if (lootTableContext.IncludeNearbyAvatars)
             {
-                List<Player> nearbyPlayerList = ListPool<Player>.Instance.Get();
+                using var nearbyPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> nearbyPlayerList);
 
                 bool requireCombatActive = Owner.WorldEntityPrototype.RequireCombatActiveForKillCredit;
                 ComputeNearbyPlayers(Owner.Region, Owner.RegionLocation.Position, 0, requireCombatActive, nearbyPlayerList);
 
                 foreach (Player player in nearbyPlayerList)
                     recipientPlayers.Add(player);
-
-                ListPool<Player>.Instance.Return(nearbyPlayerList);
             }
             else if (avatar == null)
             {
@@ -1190,7 +1187,7 @@ namespace MHServerEmu.Games.Powers
             Power masterControlPower = null;
             TimeSpan maxTime = TimeSpan.Zero;
 
-            List<Power> controlPowerEndList = ListPool<Power>.Instance.Get();
+            using var controlPowerEndListHandle = ListPool<Power>.Instance.Get(out List<Power> controlPowerEndList);
 
             foreach (var condition in conditionCollection)
             {
@@ -1224,19 +1221,13 @@ namespace MHServerEmu.Games.Powers
             if (masterAvatar != null)
             {
                 if (target is Agent targetAgent && masterAvatar.SetControlledAgent(targetAgent) == false)
-                {
-                    ListPool<Power>.Instance.Return(controlPowerEndList);
-                    return Logger.WarnReturn(false,
-                        $"DoPowerEventActionControlAgentAI(): Failed SetControlledAgent {targetAgent}");
-                }
+                    return Logger.WarnReturn(false, $"DoPowerEventActionControlAgentAI(): Failed SetControlledAgent {targetAgent}");
 
                 masterControlPower?.HandleTriggerPowerEventOnEntityControlled();
             }
 
             foreach (var controlPower in controlPowerEndList)
                 controlPower?.SchedulePowerEnd(TimeSpan.Zero, EndPowerFlags.ExplicitCancel);
-
-            ListPool<Power>.Instance.Return(controlPowerEndList);
 
             return true;
         }
@@ -1273,7 +1264,7 @@ namespace MHServerEmu.Games.Powers
             if (settings.Flags.HasFlag(PowerActivationSettingsFlags.AutoActivate))
                 return;
 
-            List<Power> powersToOperateOnList = ListPool<Power>.Instance.Get();
+            using var powersToOperateOnListHandle = ListPool<Power>.Instance.Get(out List<Power> powersToOperateOnList);
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 TimeSpan cooldownDuration = TimeSpan.FromSeconds(triggeredPowerEvent.GetEventParam(Properties, Owner));
@@ -1288,14 +1279,12 @@ namespace MHServerEmu.Games.Powers
                     power.StartCooldown(cooldownDuration);
                 }
             }
-
-            ListPool<Power>.Instance.Return(powersToOperateOnList);
         }
 
         // 25
         private void DoPowerEventActionCooldownEnd(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            List<Power> powersToOperateOnList = ListPool<Power>.Instance.Get();
+            using var powersToOperateOnListHandle = ListPool<Power>.Instance.Get(out List<Power> powersToOperateOnList);
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 foreach (Power power in powersToOperateOnList)
@@ -1309,14 +1298,12 @@ namespace MHServerEmu.Games.Powers
                     power.EndCooldown();
                 }
             }
-
-            ListPool<Power>.Instance.Return(powersToOperateOnList);
         }
 
         // 26
         private void DoPowerEventActionCooldownModifySecs(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            List<Power> powersToOperateOnList = ListPool<Power>.Instance.Get();
+            using var powersToOperateOnListHandle = ListPool<Power>.Instance.Get(out List<Power> powersToOperateOnList);
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 TimeSpan offset = TimeSpan.FromSeconds(triggeredPowerEvent.GetEventParam(Properties, Owner));
@@ -1332,14 +1319,12 @@ namespace MHServerEmu.Games.Powers
                     power.ModifyCooldown(offset);
                 }
             }
-
-            ListPool<Power>.Instance.Return(powersToOperateOnList);
         }
 
         // 27
         private void DoPowerEventActionCooldownModifyPct(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            List<Power> powersToOperateOnList = ListPool<Power>.Instance.Get();
+            using var powersToOperateOnListHandle = ListPool<Power>.Instance.Get(out List<Power> powersToOperateOnList);
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 float eventParam = triggeredPowerEvent.GetEventParam(Properties, Owner);
@@ -1355,8 +1340,6 @@ namespace MHServerEmu.Games.Powers
                     power.ModifyCooldownByPercentage(eventParam);
                 }
             }
-
-            ListPool<Power>.Instance.Return(powersToOperateOnList);
         }
 
         // 28
@@ -1456,7 +1439,7 @@ namespace MHServerEmu.Games.Powers
             BlueprintId donationBlueprint = dataDirectory.GetPrototypeBlueprintDataRef(GameDatabase.AdvancementGlobalsPrototype.PetTechDonationItemPrototype);
             RarityPrototype rarityThresholdProto = itemDonateContext.RarityThreshold.As<RarityPrototype>();
 
-            List<Item> vacuumedItems = ListPool<Item>.Instance.Get();
+            using var vacuumedItemsHandle = ListPool<Item>.Instance.Get(out List<Item> vacuumedItems);
             foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(vacuumVolume, new()))
             {
                 // Skip non-item world entities
@@ -1500,7 +1483,6 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            ListPool<Item>.Instance.Return(vacuumedItems);
             return true;
         }
 

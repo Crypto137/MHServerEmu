@@ -97,13 +97,12 @@ namespace MHServerEmu.Games.Network
         public bool GetInterestedClients(List<PlayerConnection> interestedClientList, Entity entity,
             AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.AllChannels, bool skipOwner = false)
         {
-            List<Player> interestedPlayerList = ListPool<Player>.Instance.Get();
+            using var interestedPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> interestedPlayerList);
             GetInterestedPlayers(interestedPlayerList, entity, interestFilter, skipOwner);
 
             foreach (Player player in interestedPlayerList)
                 interestedClientList.Add(player.PlayerConnection);
 
-            ListPool<Player>.Instance.Return(interestedPlayerList);
             return interestedClientList.Count > 0;
         }
 
@@ -116,13 +115,12 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public bool GetInterestedClients(List<PlayerConnection> interestedClientList, Region region)
         {
-            List<Player> interestedPlayerList = ListPool<Player>.Instance.Get();
+            using var interestedPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> interestedPlayerList);
             GetInterestedPlayers(interestedPlayerList, region);
 
             foreach (Player player in interestedPlayerList)
                 interestedClientList.Add(player.PlayerConnection);
 
-            ListPool<Player>.Instance.Return(interestedPlayerList);
             return interestedClientList.Count > 0;
         }
 
@@ -144,13 +142,11 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void SendMessageToInterested(IMessage message, Region region)
         {
-            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
             GetInterestedClients(interestedClientList, region);
 
             foreach (PlayerConnection playerConnection in interestedClientList)
                 playerConnection.SendMessage(message);
-
-            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
         }
 
         /// <summary>
@@ -158,13 +154,11 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void SendMessageToInterested(IMessage message, Entity entity, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.AllChannels, bool skipOwner = false)
         {
-            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
             GetInterestedClients(interestedClientList, entity, interestFilter, skipOwner);
 
             foreach (PlayerConnection playerConnection in interestedClientList)
                 playerConnection.SendMessage(message);
-
-            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
         }
 
         /// <summary>

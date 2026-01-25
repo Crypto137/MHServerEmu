@@ -519,14 +519,13 @@ namespace MHServerEmu.Games.Missions
                     var missionRef = Mission.PrototypeDataRef;
                     var objectiveId = namedProto.ObjectiveID;
 
-                    var playerActivities = DictionaryPool<ulong, PlayerActivity>.Instance.Get();
+                    using var playerActivitiesHandle = DictionaryPool<ulong, PlayerActivity>.Instance.Get(out var playerActivities);
                     if (Mission.GetPlayerActivities(playerActivities))
                     {
                         foreach (var activity in playerActivities.Values)
                             region.PlayerCompletedMissionObjectiveEvent.Invoke(
                                 new(activity.Player, missionRef, objectiveId, activity.Participant, activity.Contributor || isOpenMission == false));
                     }
-                    DictionaryPool<ulong, PlayerActivity>.Instance.Return(playerActivities);
                 }
             }
 
@@ -544,23 +543,21 @@ namespace MHServerEmu.Games.Missions
             if (mission.IsOpenMission)
             {
                 // TODO: check MinimumContributionForCredit
-                List<Player> sortedContributors = ListPool<Player>.Instance.Get();
+                using var sortedContributorsHandle = ListPool<Player>.Instance.Get(out List<Player> sortedContributors);
                 if (mission.GetSortedContributors(sortedContributors))
                 {
                     foreach (Player player in sortedContributors)
                         mission.RollSummaryAndAwardLootToPlayer(player, rewards, seed);
                 }
-                ListPool<Player>.Instance.Return(sortedContributors);
             }
             else
             {
-                List<Player> participants = ListPool<Player>.Instance.Get();
+                using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
                 if (mission.GetParticipants(participants))
                 {
                     foreach (Player player in participants)
                         mission.RollSummaryAndAwardLootToPlayer(player, rewards, seed);
                 }
-                ListPool<Player>.Instance.Return(participants);
             }            
         }
 
@@ -688,14 +685,13 @@ namespace MHServerEmu.Games.Missions
                 var region = Region;
                 if (region == null) return;
 
-                List<Player> participants = ListPool<Player>.Instance.Get();
+                using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
                 if (Mission.GetParticipants(participants))
                 {
                     var missionRef = Mission.PrototypeDataRef;
                     foreach (var player in participants)
                         region.MissionObjectiveUpdatedEvent.Invoke(new(player, missionRef, namedProto.ObjectiveID));
-                }
-                ListPool<Player>.Instance.Return(participants);               
+                }              
             }
         }
 
@@ -811,13 +807,12 @@ namespace MHServerEmu.Games.Missions
             var missionProto = Mission.Prototype;
             if (missionProto == null || missionProto.HasClientInterest == false) return;
 
-            List<Player> participants = ListPool<Player>.Instance.Get();
+            using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
             if (Mission.GetParticipants(participants))
             {
                 foreach (var player in participants)
                     SendUpdateToPlayer(player, objectiveFlags);
             }
-            ListPool<Player>.Instance.Return(participants);
         }
 
         public void SendUpdateToPlayer(Player player, MissionObjectiveUpdateFlags objectiveFlags)

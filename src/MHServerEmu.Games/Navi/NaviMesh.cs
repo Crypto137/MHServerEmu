@@ -231,8 +231,8 @@ namespace MHServerEmu.Games.Navi
             if (removeExterior && _exteriorSeedEdge == null)  return;
             ClearMarkup();
 
-            PoolableStack<MarkupState> stateStack = StackPool<MarkupState>.Instance.Get();
-            PoolableStack<NaviEdge> edgeStack = StackPool<NaviEdge>.Instance.Get();
+            using var stateStackHandle = StackPool<MarkupState>.Instance.Get(out PoolableStack<MarkupState> stateStack);
+            using var edgeStackHandle = StackPool<NaviEdge>.Instance.Get(out PoolableStack<NaviEdge> edgeStack);
             NaviTriangle triangle = _exteriorSeedEdge.Triangles[0] ?? _exteriorSeedEdge.Triangles[1];
 
             MarkupState state = new()
@@ -340,9 +340,6 @@ namespace MHServerEmu.Games.Navi
             if (removeExterior) _exteriorSeedEdge = null;
             ReverseMarkupMesh();
             IsMarkupValid = true;
-
-            StackPool<MarkupState>.Instance.Return(stateStack);
-            StackPool<NaviEdge>.Instance.Return(edgeStack);
         }
 
         private void ReverseMarkupMesh()
@@ -433,7 +430,7 @@ namespace MHServerEmu.Games.Navi
             var triangle = NaviCdt.FindTriangleAtPoint(center);
             if (triangle == null) return;
             triangle.PathingFlags |= PathFlags.BlackOutZone;
-            PoolableStack<NaviTriangle> triStack = StackPool<NaviTriangle>.Instance.Get();
+            using var triStackHandle = StackPool<NaviTriangle>.Instance.Get(out PoolableStack<NaviTriangle> triStack);
             using NaviSerialCheck naviSerialCheck = new(NaviCdt);
             float radiousSq = radius * radius;
             triStack.Push(triangle);
@@ -452,7 +449,6 @@ namespace MHServerEmu.Games.Navi
                     }
                 }
             }
-            StackPool<NaviTriangle>.Instance.Return(triStack);
         }
 
         public float CalcSpawnableArea(in Aabb bound)
@@ -461,7 +457,7 @@ namespace MHServerEmu.Games.Navi
             var triangle = NaviCdt.FindTriangleAtPoint(bound.Center);
             if (triangle == null) return spawnableArea;
             spawnableArea += triangle.CalcSpawnableArea();
-            PoolableStack<NaviTriangle> triStack = StackPool<NaviTriangle>.Instance.Get();
+            using var triStackHandle = StackPool<NaviTriangle>.Instance.Get(out PoolableStack<NaviTriangle> triStack);
             using NaviSerialCheck naviSerialCheck = new(NaviCdt);
             triStack.Push(triangle);
             while (triStack.Count > 0)
@@ -479,7 +475,6 @@ namespace MHServerEmu.Games.Navi
                     }
                 }
             }
-            StackPool<NaviTriangle>.Instance.Return(triStack);
             return spawnableArea;
         }
 

@@ -787,7 +787,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             const int MaxProcRank = 100;
             int procRank = (int)(MaxProcRank * shrinkRatio);
 
-            List<PrototypeId> procPowerRefs = ListPool<PrototypeId>.Instance.Get();
+            using var procPowerRefsHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> procPowerRefs);
             foreach (var kvp in agent.Properties.IteratePropertyRange(PropertyEnum.Proc))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId procPowerRef);
@@ -802,8 +802,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             foreach (PrototypeId procPowerRef in procPowerRefs)
                 agent.Properties[PropertyEnum.ProcPowerRank, procPowerRef] = procRank;
-
-            ListPool<PrototypeId>.Instance.Return(procPowerRefs);
         }
 
         private TimeSpan GetShrinkageDurationRemaining(Agent agent)

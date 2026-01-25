@@ -78,13 +78,12 @@ namespace MHServerEmu.Games.Missions.Conditions
             var storyNotification = Prototype.StoryNotification;
             if (storyNotification != null)
             {
-                List<Player> participants = ListPool<Player>.Instance.Get();
+                using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
                 if (Mission.GetParticipants(participants))
                 {
                     foreach (var player in participants)
                         player.SendStoryNotification(storyNotification, Mission.PrototypeDataRef);
                 }
-                ListPool<Player>.Instance.Return(participants);
             }
 
             return Owner.OnConditionCompleted();

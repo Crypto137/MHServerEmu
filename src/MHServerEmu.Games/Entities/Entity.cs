@@ -901,7 +901,7 @@ namespace MHServerEmu.Games.Entities
 
             Power.CopyPowerIndexProperties(indexProperties, modProperties);
 
-            List<PrototypeId> procPowerRefList = ListPool<PrototypeId>.Instance.Get();
+            using var procPowerRefListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> procPowerRefList);
             foreach (var kvp in modProperties.IteratePropertyRange(Property.ProcPropertyTypesAll))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId procPowerRef);
@@ -910,8 +910,6 @@ namespace MHServerEmu.Games.Entities
 
             foreach (PrototypeId procPowerRef in procPowerRefList)
                 modProperties[PropertyEnum.ProcPowerRank, procPowerRef] = rank;
-
-            ListPool<PrototypeId>.Instance.Return(procPowerRefList);
 
             OnAttachedPropertiesPreAdd(modProperties);
             Properties.AddChildCollection(modProperties);

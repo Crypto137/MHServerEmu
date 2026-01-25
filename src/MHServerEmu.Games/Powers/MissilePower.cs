@@ -50,12 +50,10 @@ namespace MHServerEmu.Games.Powers
             // missile on their own, including the player who used the power in the first place.
             _interestedPlayers.Clear();
 
-            List<Player> interestedPlayerList = ListPool<Player>.Instance.Get();
+            using var interestedPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> interestedPlayerList);
             Game.NetworkManager.GetInterestedPlayers(interestedPlayerList, Owner, AOINetworkPolicyValues.AOIChannelProximity);
             foreach (Player player in interestedPlayerList)
-                _interestedPlayers.Add(player);
-
-            ListPool<Player>.Instance.Return(interestedPlayerList);                
+                _interestedPlayers.Add(player);             
 
             CancelCreationDelayEvent();
             return base.Activate(ref settings);
@@ -71,8 +69,8 @@ namespace MHServerEmu.Games.Powers
         protected override bool ApplyInternal(PowerApplication powerApplication)
         {
             // Remove interested players who became no longer interested between activation and application of this power
-            HashSet<Player> interestedPlayerSet = HashSetPool<Player>.Instance.Get();
-            List<Player> interestedPlayerList = ListPool<Player>.Instance.Get();
+            using var interestedPlayerSetHandle = HashSetPool<Player>.Instance.Get(out HashSet<Player> interestedPlayerSet);
+            using var interestedPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> interestedPlayerList);
 
             Game.NetworkManager.GetInterestedPlayers(interestedPlayerList, Owner, AOINetworkPolicyValues.AOIChannelProximity);
 
@@ -85,9 +83,6 @@ namespace MHServerEmu.Games.Powers
                 if (interestedPlayerSet.Contains(player) == false)
                     _interestedPlayers.Remove(player);
             }
-
-            HashSetPool<Player>.Instance.Return(interestedPlayerSet);
-            ListPool<Player>.Instance.Return(interestedPlayerList);
 
             // Do the application
             if (base.ApplyInternal(powerApplication) == false) return false;

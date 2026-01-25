@@ -145,7 +145,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
 
-            List<PrototypeId> categoryList = ListPool<PrototypeId>.Instance.Get();
+            using var categoryListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> categoryList);
             foreach (var affixCategoryTableEntry in GameDatabase.LootGlobalsPrototype.AffixCategoryTable)
             {
                 foreach (PrototypeId affixProtoRef in affixCategoryTableEntry.Affixes)
@@ -156,7 +156,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             _categoryKeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(categoryList);
-            ListPool<PrototypeId>.Instance.Return(categoryList);
 
             // Skipping UI stuff since we probably don't need it server-side
         }

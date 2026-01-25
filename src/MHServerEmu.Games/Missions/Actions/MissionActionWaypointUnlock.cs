@@ -15,13 +15,12 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override void Run()
         {
-            List<Player> participants = ListPool<Player>.Instance.Get();
+            using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
             if (Mission.GetParticipants(participants))
             {
                 foreach (Player player in participants)
                     player.UnlockWaypoint(_proto.WaypointToUnlock);
             }
-            ListPool<Player>.Instance.Return(participants);
         }
     }
 }

@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override void Run()
         {
-            List<Player> players = ListPool<Player>.Instance.Get();
+            using var playersHandle = ListPool<Player>.Instance.Get(out List<Player> players);
             if (GetDistributors(_proto.ApplyTo, players))
             {
                 foreach (Player player in players)
@@ -30,7 +30,6 @@ namespace MHServerEmu.Games.Missions.Actions
                     avatar.Properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTimePersistent, ultimateRef));
                 }
             }
-            ListPool<Player>.Instance.Return(players);
         }
     }
 }
