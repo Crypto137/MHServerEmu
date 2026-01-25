@@ -640,22 +640,15 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         public LeaderboardInstance FindInstance(ulong instanceId)
         {
-            List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
+            using var leaderboardsHandle = ListPool<Leaderboard>.Instance.Get(out List<Leaderboard> leaderboards);
             GetLeaderboards(leaderboards);
 
-            try
-            {
-                foreach (Leaderboard leaderboard in leaderboards)
-                    foreach (LeaderboardInstance instance in leaderboard.Instances)
-                        if (instance.InstanceId == instanceId)
-                            return instance;
+            foreach (Leaderboard leaderboard in leaderboards)
+                foreach (LeaderboardInstance instance in leaderboard.Instances)
+                    if (instance.InstanceId == instanceId)
+                        return instance;
 
-                return null;
-            }
-            finally
-            {
-                ListPool<Leaderboard>.Instance.Return(leaderboards);
-            }
+            return null;
         }
     }
 }

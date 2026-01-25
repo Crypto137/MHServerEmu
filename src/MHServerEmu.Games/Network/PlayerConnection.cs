@@ -1219,46 +1219,39 @@ namespace MHServerEmu.Games.Network
                 return Logger.WarnReturn(false, $"OnTryCraft(): Player [{Player}] is attempting to use recipe item [{recipeItem}] that does not belong to them");
 
             // Validate ingredients
-            List<ulong> ingredientIds = ListPool<ulong>.Instance.Get();
+            using var ingredientIdsHandle = ListPool<ulong>.Instance.Get(out List<ulong> ingredientIds);
 
-            try     // Entering a try block here to ensure the ingredient list is returned to the pool
+            int numIngredientIds = tryCraft.IdIngredientsCount;
+            for (int i = 0; i < numIngredientIds; i++)
             {
-                int numIngredientIds = tryCraft.IdIngredientsCount;
-                for (int i = 0; i < numIngredientIds; i++)
+                ulong ingredientId = tryCraft.IdIngredientsList[i];
+
+                // Invalid ingredient id indicates it needs to be picked by the server
+                if (ingredientId != Entity.InvalidId)
                 {
-                    ulong ingredientId = tryCraft.IdIngredientsList[i];
+                    Entity ingredient = entityManager.GetEntity<Entity>(ingredientId);
+                    if (ingredient == null) return Logger.WarnReturn(false, "OnTryCraft(): ingredient == null");
 
-                    // Invalid ingredient id indicates it needs to be picked by the server
-                    if (ingredientId != Entity.InvalidId)
-                    {
-                        Entity ingredient = entityManager.GetEntity<Entity>(ingredientId);
-                        if (ingredient == null) return Logger.WarnReturn(false, "OnTryCraft(): ingredient == null");
-
-                        if (Player.Owns(ingredient) == false)
-                            return Logger.WarnReturn(false, $"OnTryCraft(): Player [{Player}] is attempting to use ingredient [{ingredient}] that does not belong to them");
-                    }
-
-                    ingredientIds.Add(ingredientId);
+                    if (Player.Owns(ingredient) == false)
+                        return Logger.WarnReturn(false, $"OnTryCraft(): Player [{Player}] is attempting to use ingredient [{ingredient}] that does not belong to them");
                 }
 
-                CraftingResult craftingResult = Player.Craft(recipeItemId, tryCraft.IdVendor, ingredientIds, tryCraft.IsRecraft);
-
-                if (craftingResult != CraftingResult.Success)
-                {
-                    SendMessage(NetMessageCraftingFailure.CreateBuilder()
-                        .SetCraftingResult((uint)craftingResult)
-                        .Build());
-
-                    return false;
-                }
-
-                SendMessage(NetMessageCraftingSuccess.DefaultInstance);
-                return true;
+                ingredientIds.Add(ingredientId);
             }
-            finally
+
+            CraftingResult craftingResult = Player.Craft(recipeItemId, tryCraft.IdVendor, ingredientIds, tryCraft.IsRecraft);
+
+            if (craftingResult != CraftingResult.Success)
             {
-                ListPool<ulong>.Instance.Return(ingredientIds);
+                SendMessage(NetMessageCraftingFailure.CreateBuilder()
+                    .SetCraftingResult((uint)craftingResult)
+                    .Build());
+
+                return false;
             }
+
+            SendMessage(NetMessageCraftingSuccess.DefaultInstance);
+            return true;
         }
 
         private bool OnUseWaypoint(in MailboxMessage message)

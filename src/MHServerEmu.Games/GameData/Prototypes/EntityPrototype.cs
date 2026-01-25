@@ -887,40 +887,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (SpawnSequence.IsNullOrEmpty()) return null;
 
-            HashSet<PrototypeId> entities = HashSetPool<PrototypeId>.Instance.Get();
-            try
-            {
-                foreach (var sequenceProto in SpawnSequence)
-                {
-                    if (sequenceProto == null) continue;
-                    PopulationObjectPrototype popObject = sequenceProto.GetPopObject();
-                    popObject?.GetContainedEntities(entities);
-                }
+            using var entitiesHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> entities);
 
-                foreach (var entityRef in entities)
+            foreach (var sequenceProto in SpawnSequence)
+            {
+                if (sequenceProto == null) continue;
+                PopulationObjectPrototype popObject = sequenceProto.GetPopObject();
+                popObject?.GetContainedEntities(entities);
+            }
+
+            foreach (var entityRef in entities)
+            {
+                if (entityRef == PrototypeId.Invalid) continue;
+                var proto = GameDatabase.GetPrototype<Prototype>(entityRef);
+                if (proto is AgentPrototype agentProto && agentProto.Alliance != PrototypeId.Invalid)
                 {
-                    if (entityRef == PrototypeId.Invalid) continue;
-                    var proto = GameDatabase.GetPrototype<Prototype>(entityRef);
-                    if (proto is AgentPrototype agentProto && agentProto.Alliance != PrototypeId.Invalid)
-                    {
-                        var allianceProto = agentProto.Alliance.As<AlliancePrototype>();
-                        if (resultProto == null || resultProto == allianceProto)
-                            resultProto = allianceProto;
-                        else
-                            return null;
-                    }
+                    var allianceProto = agentProto.Alliance.As<AlliancePrototype>();
+                    if (resultProto == null || resultProto == allianceProto)
+                        resultProto = allianceProto;
                     else
-                    {
                         return null;
-                    }
                 }
+                else
+                {
+                    return null;
+                }
+            }
 
-                return resultProto;
-            }
-            finally
-            {
-                HashSetPool<PrototypeId>.Instance.Return(entities);
-            }
+            return resultProto;
         }
 
     }

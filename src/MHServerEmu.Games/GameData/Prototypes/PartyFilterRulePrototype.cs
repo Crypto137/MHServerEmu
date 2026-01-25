@@ -69,42 +69,36 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             int numMembers = matches;
             int numMatches = 0;
-            var matchedAvatars = ListPool<AvatarPrototype>.Instance.Get();
+            
+            using var matchedAvatarsHandle = ListPool<AvatarPrototype>.Instance.Get(out List<AvatarPrototype> matchedAvatars);
 
-            try
+            for (int i = 0; i < numMembers; i++)
             {
-                for (int i = 0; i < numMembers; i++)
+                var avatarProto = members[i];
+                if (avatarProto == null) continue;
+
+                var costumeProto = costumes[i];
+                if (costumeProto == null) continue;
+
+                if (EvaluateAvatar(avatarProto, costumeProto))
                 {
-                    var avatarProto = members[i];
-                    if (avatarProto == null) continue;
-
-                    var costumeProto = costumes[i];
-                    if (costumeProto == null) continue;
-
-                    if (EvaluateAvatar(avatarProto, costumeProto))
+                    if (AllUniqueAvatars)
                     {
-                        if (AllUniqueAvatars)
-                        {
-                            if (matchedAvatars.Contains(avatarProto)) return false;
-                            matchedAvatars.Add(avatarProto);
-                        }
+                        if (matchedAvatars.Contains(avatarProto)) return false;
+                        matchedAvatars.Add(avatarProto);
+                    }
 
-                        if ((++numMatches) == NumberRequired && AllowOutsiders && AllUniqueAvatars == false)
-                            return true;
-                    }
-                    else if (i == playerIndex || AllowOutsiders == false)
-                    {
-                        return false;
-                    }
-                    else if ((--matches) < NumberRequired)
-                    {
-                        return false;
-                    }
+                    if ((++numMatches) == NumberRequired && AllowOutsiders && AllUniqueAvatars == false)
+                        return true;
                 }
-            } 
-            finally 
-            {
-                ListPool<AvatarPrototype>.Instance.Return(matchedAvatars);
+                else if (i == playerIndex || AllowOutsiders == false)
+                {
+                    return false;
+                }
+                else if ((--matches) < NumberRequired)
+                {
+                    return false;
+                }
             }
 
             if (numMatches < NumberRequired) return false;

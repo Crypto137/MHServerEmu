@@ -293,42 +293,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ItemSpec itemSpec = new(lootCloneRecord);
             AffixSpec affixSpec = new();
 
-            HashSet<ScopedAffixRef> affixSet = HashSetPool<ScopedAffixRef>.Instance.Get();
+            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
 
-            try
+            List<AffixRecord> affixRecords = lootCloneRecord.AffixRecords;
+            for (int i = 0; i < affixRecords.Count; i++)
             {
-                List<AffixRecord> affixRecords = lootCloneRecord.AffixRecords;
-                for (int i = 0; i < affixRecords.Count; i++)
+                AffixPrototype affixProto = affixRecords[i].AffixProtoRef.As<AffixPrototype>();
+                if (affixProto == null)
                 {
-                    AffixPrototype affixProto = affixRecords[i].AffixProtoRef.As<AffixPrototype>();
-                    if (affixProto == null)
-                    {
-                        Logger.Warn("Mutate(): affixProto == null");
-                        continue;
-                    }
-
-                    if (affixProto.HasKeywords(OldItemKeywords, OnlyReplaceIfAllMatched) == false)
-                        continue;
-
-                    Picker<AffixPrototype> picker = pickerTable.GetPicker(affixProto.Position);
-                    if (picker == null)
-                        continue;
-
-                    result |= affixSpec.RollAffix(resolver.Random, lootCloneRecord.RollFor, itemSpec, picker, affixSet);
-                    
-                    if (result.HasFlag(MutationResults.Error))
-                        return result;
-
-                    affixRecords[i] = new(affixSpec);
-                    result |= MutationResults.AffixChange;
+                    Logger.Warn("Mutate(): affixProto == null");
+                    continue;
                 }
 
-                return FinalizeMutation(resolver, lootCloneRecord) | result;
+                if (affixProto.HasKeywords(OldItemKeywords, OnlyReplaceIfAllMatched) == false)
+                    continue;
+
+                Picker<AffixPrototype> picker = pickerTable.GetPicker(affixProto.Position);
+                if (picker == null)
+                    continue;
+
+                result |= affixSpec.RollAffix(resolver.Random, lootCloneRecord.RollFor, itemSpec, picker, affixSet);
+                    
+                if (result.HasFlag(MutationResults.Error))
+                    return result;
+
+                affixRecords[i] = new(affixSpec);
+                result |= MutationResults.AffixChange;
             }
-            finally
-            {
-                HashSetPool<ScopedAffixRef>.Instance.Return(affixSet);
-            }
+
+            return FinalizeMutation(resolver, lootCloneRecord) | result;
         }
     }
 

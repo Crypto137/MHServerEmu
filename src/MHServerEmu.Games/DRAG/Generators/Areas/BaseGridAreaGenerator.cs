@@ -876,7 +876,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
         {
             if (CellContainer == null || roadGeneratorProto == null || roadGeneratorProto.Cells == null) return true;
             if (LogDebug) Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
-            List<Point2> roadPoints = ListPool<Point2>.Instance.Get();
+            using var roadPointsHandle = ListPool<Point2>.Instance.Get(out List<Point2> roadPoints);
 
             for (int x = 0; x < CellContainer.Width; ++x)
             {
@@ -907,7 +907,6 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
             if (count < 2)
             {
                 if (Log) Logger.Trace($"RoadGenerator specified in Area, but only {count} Road Point found. AREA={Area}");
-                ListPool<Point2>.Instance.Return(roadPoints);
                 return true;
             }
 
@@ -951,13 +950,12 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 }
             }
 
-            HashSet<int> setIndexes = HashSetPool<int>.Instance.Get();
-            List<int> workingStack = ListPool<int>.Instance.Get();
-            List<List<int>> results = ListPool<List<int>>.Instance.Get();
+            using var setIndexesHandle = HashSetPool<int>.Instance.Get(out HashSet<int> setIndexes);
+            using var workingStackHandle = ListPool<int>.Instance.Get(out List<int> workingStack);
+            using var resultsHandle = ListPool<List<int>>.Instance.Get(out List<List<int>> results);
 
             for (int i = 0; i < count; ++i) setIndexes.Add(i);
             Permutations(setIndexes, workingStack, results, count);
-            HashSetPool<int>.Instance.Return(setIndexes);
 
             List<int> bestResult = null;
             float bestDistance = float.MaxValue;
@@ -988,58 +986,47 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 workingStack.AddRange(bestResult);
 
             foreach (var result in results) result.Clear();
-            ListPool<List<int>>.Instance.Return(results);
 
-            List<RoadInfo> listRoads = ListPool<RoadInfo>.Instance.Get(roadGrid);
-            List<RoadInfo> buildGrid = ListPool<RoadInfo>.Instance.Get(roadGrid.Length);
+            using var listRoadsHandle = ListPool<RoadInfo>.Instance.Get(roadGrid, out List<RoadInfo> listRoads);
+            using var buildGridHandle = ListPool<RoadInfo>.Instance.Get(roadGrid.Length, out List<RoadInfo> buildGrid);
 
-            try
+            for (int i = 0; i < workingStack.Count - 1; ++i)
             {
-                for (int i = 0; i < workingStack.Count - 1; ++i)
+                int indexA = workingStack[i];
+                int indexB = workingStack[i + 1];
+
+                buildGrid.Set(roadGrid);
+                if (BuildRoad(buildGrid, roadPoints[indexA], roadPoints[indexB]))
                 {
-                    int indexA = workingStack[i];
-                    int indexB = workingStack[i + 1];
-
-                    buildGrid.Set(roadGrid);
-                    if (BuildRoad(buildGrid, roadPoints[indexA], roadPoints[indexB]))
-                    {
-                        for (int n = 0; n < buildGrid.Count; ++n)
-                            listRoads[n].RoadType |= buildGrid[n].RoadType;
-                    }
-                    else return false;
+                    for (int n = 0; n < buildGrid.Count; ++n)
+                        listRoads[n].RoadType |= buildGrid[n].RoadType;
                 }
-
-                for (int i = 0; i < listRoads.Count; ++i)
-                {
-                    RoadInfo info = listRoads[i];
-                    if (info.RoadType != Cell.Type.None && !info.InCell)
-                    {
-                        Picker<PrototypeId> picker = new(random);
-                        foreach (var cellAsset in roadGeneratorProto.Cells)
-                        {
-                            PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cellAsset);
-                            CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
-                            if (cellProto != null && cellProto.RoadConnections == info.RoadType)
-                                picker.Add(cellRef);
-                        }
-
-                        if (!picker.Empty() && picker.Pick(out PrototypeId pickedCell))
-                        {
-                            int x = i % CellContainer.Width;
-                            int y = i / CellContainer.Width;
-
-                            if (CellContainer.ReservableCell(x, y, pickedCell))
-                                CellContainer.ReserveCell(x, y, pickedCell, GenCell.GenCellType.None);
-                        }
-                    }
-                }
+                else return false;
             }
-            finally
+
+            for (int i = 0; i < listRoads.Count; ++i)
             {
-                ListPool<RoadInfo>.Instance.Return(listRoads);
-                ListPool<RoadInfo>.Instance.Return(buildGrid);
-                ListPool<int>.Instance.Return(workingStack);
-                ListPool<Point2>.Instance.Return(roadPoints);
+                RoadInfo info = listRoads[i];
+                if (info.RoadType != Cell.Type.None && !info.InCell)
+                {
+                    Picker<PrototypeId> picker = new(random);
+                    foreach (var cellAsset in roadGeneratorProto.Cells)
+                    {
+                        PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cellAsset);
+                        CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
+                        if (cellProto != null && cellProto.RoadConnections == info.RoadType)
+                            picker.Add(cellRef);
+                    }
+
+                    if (!picker.Empty() && picker.Pick(out PrototypeId pickedCell))
+                    {
+                        int x = i % CellContainer.Width;
+                        int y = i / CellContainer.Width;
+
+                        if (CellContainer.ReservableCell(x, y, pickedCell))
+                            CellContainer.ReserveCell(x, y, pickedCell, GenCell.GenCellType.None);
+                    }
+                }
             }
 
             return true;

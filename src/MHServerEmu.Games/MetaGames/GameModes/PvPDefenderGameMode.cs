@@ -232,47 +232,35 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             int count = 0;
             if (_attackers.Count == 0) return count;
 
-            var entities = HashSetPool<PrototypeId>.Instance.Get();
-            try
-            {
-                popObject.GetContainedEntities(entities);
-                foreach (var entityRef in entities)
-                {
-                    var attackerProto = GameDatabase.GetPrototype<WorldEntityPrototype>(entityRef);
-                    if (attackerProto == null) continue;
+            using var entitiesHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> entities);
 
-                    var allianceRef = attackerProto.Alliance;
-                    foreach (var alliance in _attackers.Values)
-                        if (alliance == allianceRef) count++;
-
-                    break;
-                }
-                return count;
-            }
-            finally
+            popObject.GetContainedEntities(entities);
+            foreach (var entityRef in entities)
             {
-                HashSetPool<PrototypeId>.Instance.Return(entities);
+                var attackerProto = GameDatabase.GetPrototype<WorldEntityPrototype>(entityRef);
+                if (attackerProto == null) continue;
+
+                var allianceRef = attackerProto.Alliance;
+                foreach (var alliance in _attackers.Values)
+                    if (alliance == allianceRef) count++;
+
+                break;
             }
+            return count;
         }
 
         private PvPTurretDataPrototype GetTurretData(PrototypeId prototypeDataRef)
         {
-            var entities = HashSetPool<PrototypeId>.Instance.Get();
-            try
+            using var entitiesHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> entities);
+
+            foreach (var turretData in _proto.Turrets)
             {
-                foreach (var turretData in _proto.Turrets)
-                {
-                    entities.Clear();
-                    turretData.TurretPopulation.GetContainedEntities(entities);
-                    if (entities.Contains(prototypeDataRef))
-                        return turretData;
-                }
-                return null;
+                entities.Clear();
+                turretData.TurretPopulation.GetContainedEntities(entities);
+                if (entities.Contains(prototypeDataRef))
+                    return turretData;
             }
-            finally
-            {
-                HashSetPool<PrototypeId>.Instance.Return(entities);
-            }
+            return null;
         }
 
         private PvPDefenderDataPrototype GetDefenderData(PrototypeId defenderRef)

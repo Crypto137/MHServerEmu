@@ -364,35 +364,23 @@ namespace MHServerEmu.Games.Populations
         {
             int cellId = pid / 1000;
             int markerId = pid % 1000;
-            var reservations = ListPool<SpawnReservation>.Instance.Get();
-            try
-            {
-                GetReservationsInCell((uint)cellId, reservations);
-                foreach (var reservation in reservations)
-                    if (reservation.Id == markerId) return reservation;
+            using var reservationsHandle = ListPool<SpawnReservation>.Instance.Get(out List<SpawnReservation> reservations);
 
-                return null;
-            }
-            finally
-            {
-                ListPool<SpawnReservation>.Instance.Return(reservations);
-            }
+            GetReservationsInCell((uint)cellId, reservations);
+            foreach (var reservation in reservations)
+                if (reservation.Id == markerId) return reservation;
+
+            return null;
         }
 
         public SpawnReservation GetReservationInCell(uint cellId, int id)
         {
-            var reservations = ListPool<SpawnReservation>.Instance.Get();
-            try
-            {
-                GetReservationsInCell(cellId, reservations);
-                foreach (var reservation in reservations)
-                    if (reservation.Id == id) return reservation;
-                return null;
-            }
-            finally
-            {
-                ListPool<SpawnReservation>.Instance.Return(reservations);
-            }
+            using var reservationsHandle = ListPool<SpawnReservation>.Instance.Get(out List<SpawnReservation> reservations);
+
+            GetReservationsInCell(cellId, reservations);
+            foreach (var reservation in reservations)
+                if (reservation.Id == id) return reservation;
+            return null;
         }
 
         public void GetPositionsByMarker(PrototypeId markerRef, List<Vector3> positions)

@@ -1466,57 +1466,49 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public ulong FindAbilityItem(ItemPrototype itemProto, ulong skipItemId = InvalidId)
         {
-            List<Inventory> inventoryList = ListPool<Inventory>.Instance.Get();
+            using var inventoryListHandle = ListPool<Inventory>.Instance.Get(out List<Inventory> inventoryList);
 
-            try
+            // Add equipment inventories
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+                inventoryList.Add(inventory);
+
+            // Add general inventories if needed
+            if (itemProto.AbilitySettings == null || itemProto.AbilitySettings.OnlySlottableWhileEquipped == false)
             {
-                // Add equipment inventories
-                foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+                Player playerOwner = GetOwnerOfType<Player>();
+                if (playerOwner == null) return Logger.WarnReturn(InvalidId, "FindAbilityItem(): playerOwner == null");
+
+                foreach (Inventory inventory in new InventoryIterator(playerOwner, InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra))
                     inventoryList.Add(inventory);
-
-                // Add general inventories if needed
-                if (itemProto.AbilitySettings == null || itemProto.AbilitySettings.OnlySlottableWhileEquipped == false)
-                {
-                    Player playerOwner = GetOwnerOfType<Player>();
-                    if (playerOwner == null) return Logger.WarnReturn(InvalidId, "FindAbilityItem(): playerOwner == null");
-
-                    foreach (Inventory inventory in new InventoryIterator(playerOwner, InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra))
-                        inventoryList.Add(inventory);
-                }
-
-                // Do the search
-                EntityManager entityManager = Game.EntityManager;
-
-                foreach (Inventory inventory in inventoryList)
-                {
-                    foreach (var entry in inventory)
-                    {
-                        ulong itemId = entry.Id;
-
-                        Item item = entityManager.GetEntity<Item>(itemId);
-                        if (item == null)
-                        {
-                            Logger.Warn("FindAbilityItem(): item == null");
-                            continue;
-                        }
-
-                        if (item.PrototypeDataRef != itemProto.DataRef)
-                            continue;
-
-                        if (skipItemId != InvalidId && itemId == skipItemId)
-                            continue;
-
-                        return itemId;
-                    }
-                }
-
-                return InvalidId;
             }
-            finally
+
+            // Do the search
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (Inventory inventory in inventoryList)
             {
-                // Make sure our inventory list is returned to the pool for reuse when we are done
-                ListPool<Inventory>.Instance.Return(inventoryList);
+                foreach (var entry in inventory)
+                {
+                    ulong itemId = entry.Id;
+
+                    Item item = entityManager.GetEntity<Item>(itemId);
+                    if (item == null)
+                    {
+                        Logger.Warn("FindAbilityItem(): item == null");
+                        continue;
+                    }
+
+                    if (item.PrototypeDataRef != itemProto.DataRef)
+                        continue;
+
+                    if (skipItemId != InvalidId && itemId == skipItemId)
+                        continue;
+
+                    return itemId;
+                }
             }
+
+            return InvalidId;
         }
 
         public ulong FindOwnedItemThatGrantsPower(PrototypeId powerProtoRef)
@@ -1615,81 +1607,73 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player playerOwner = GetOwnerOfType<Player>();
             if (playerOwner == null) return Logger.WarnReturn(false, "AssignItemPowers(): playerOwner == null");
 
-            List<Inventory> inventoryList = ListPool<Inventory>.Instance.Get();
+            using var inventoryListHandle = ListPool<Inventory>.Instance.Get(out List<Inventory> inventoryList);
 
-            try
+            // Add equipment inventories
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+                inventoryList.Add(inventory);
+
+            // Add general inventories
+            foreach (Inventory inventory in new InventoryIterator(playerOwner, InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra))
+                inventoryList.Add(inventory);
+
+            EntityManager entityManager = Game.EntityManager;
+            int characterLevel = CharacterLevel;
+            int combatLevel = CombatLevel;
+
+            foreach (Inventory inventory in inventoryList)
             {
-                // Add equipment inventories
-                foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
-                    inventoryList.Add(inventory);
-
-                // Add general inventories
-                foreach (Inventory inventory in new InventoryIterator(playerOwner, InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra))
-                    inventoryList.Add(inventory);
-
-                EntityManager entityManager = Game.EntityManager;
-                int characterLevel = CharacterLevel;
-                int combatLevel = CombatLevel;
-
-                foreach (Inventory inventory in inventoryList)
+                foreach (var entry in inventory)
                 {
-                    foreach (var entry in inventory)
+                    ulong itemId = entry.Id;
+
+                    Item item = entityManager.GetEntity<Item>(itemId);
+                    if (item == null)
                     {
-                        ulong itemId = entry.Id;
+                        Logger.Warn("AssignItemPowers(): item == null");
+                        continue;
+                    }
 
-                        Item item = entityManager.GetEntity<Item>(itemId);
-                        if (item == null)
+                    ItemPrototype itemProto = item.ItemPrototype;
+                    if (itemProto == null)
+                    {
+                        Logger.Warn("AssignItemPowers(): itemProto == null");
+                        continue;
+                    }
+
+                    PrototypeId itemPowerProtoRef = PrototypeId.Invalid;
+
+                    PrototypeId onUsePowerProtoRef = item.OnUsePower;
+                    PrototypeId onEquipPowerProtoRef = item.OnEquipPower;
+
+                    if (onUsePowerProtoRef != PrototypeId.Invalid)
+                    {
+                        if (itemProto.AbilitySettings == null ||
+                            itemProto.AbilitySettings.OnlySlottableWhileEquipped == false ||
+                            inventory.IsEquipment)
                         {
-                            Logger.Warn("AssignItemPowers(): item == null");
-                            continue;
-                        }
-
-                        ItemPrototype itemProto = item.ItemPrototype;
-                        if (itemProto == null)
-                        {
-                            Logger.Warn("AssignItemPowers(): itemProto == null");
-                            continue;
-                        }
-
-                        PrototypeId itemPowerProtoRef = PrototypeId.Invalid;
-
-                        PrototypeId onUsePowerProtoRef = item.OnUsePower;
-                        PrototypeId onEquipPowerProtoRef = item.OnEquipPower;
-
-                        if (onUsePowerProtoRef != PrototypeId.Invalid)
-                        {
-                            if (itemProto.AbilitySettings == null ||
-                                itemProto.AbilitySettings.OnlySlottableWhileEquipped == false ||
-                                inventory.IsEquipment)
-                            {
-                                itemPowerProtoRef = onUsePowerProtoRef;
-                            }
-                        }
-                        else if (onEquipPowerProtoRef != PrototypeId.Invalid)
-                        {
-                            if (inventory.IsEquipment)
-                                itemPowerProtoRef = onEquipPowerProtoRef;
-                        }
-
-                        if (itemPowerProtoRef != PrototypeId.Invalid && GetPower(itemPowerProtoRef) == null)
-                        {
-                            int itemLevel = item.Properties[PropertyEnum.ItemLevel];
-                            float itemVariation = item.Properties[PropertyEnum.ItemVariation];
-                            PowerIndexProperties indexProps = new(0, characterLevel, combatLevel, itemLevel, itemVariation);
-
-                            if (AssignPower(itemPowerProtoRef, indexProps) == null)
-                                Logger.Warn($"AssignItemPowers(): Failed to assign item power {itemPowerProtoRef.GetName()} to avatar {this}");
+                            itemPowerProtoRef = onUsePowerProtoRef;
                         }
                     }
-                }
+                    else if (onEquipPowerProtoRef != PrototypeId.Invalid)
+                    {
+                        if (inventory.IsEquipment)
+                            itemPowerProtoRef = onEquipPowerProtoRef;
+                    }
 
-                return true;
+                    if (itemPowerProtoRef != PrototypeId.Invalid && GetPower(itemPowerProtoRef) == null)
+                    {
+                        int itemLevel = item.Properties[PropertyEnum.ItemLevel];
+                        float itemVariation = item.Properties[PropertyEnum.ItemVariation];
+                        PowerIndexProperties indexProps = new(0, characterLevel, combatLevel, itemLevel, itemVariation);
+
+                        if (AssignPower(itemPowerProtoRef, indexProps) == null)
+                            Logger.Warn($"AssignItemPowers(): Failed to assign item power {itemPowerProtoRef.GetName()} to avatar {this}");
+                    }
+                }
             }
-            finally
-            {
-                // Make sure our inventory list is returned to the pool for reuse when we are done
-                ListPool<Inventory>.Instance.Return(inventoryList);
-            }
+
+            return true;
         }
 
         private bool AssignEmotePowers(in PowerIndexProperties indexProps)
@@ -4428,7 +4412,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (toInvLoc.IsArtifactInventory == false || fromInvLoc.IsArtifactInventory)
                 return InventoryResult.Success;
 
-            List<Inventory> otherArtifactInvs = ListPool<Inventory>.Instance.Get();
+            using var otherArtifactInvsHandle = ListPool<Inventory>.Instance.Get(out List<Inventory> otherArtifactInvs);
 
             switch (toInvLoc.InventoryConvenienceLabel)
             {
@@ -4457,37 +4441,30 @@ namespace MHServerEmu.Games.Entities.Avatars
                     break;
             }
 
-            try
-            {
-                if (otherArtifactInvs[0] == null || otherArtifactInvs[1] == null || otherArtifactInvs[2] == null)
-                    return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): otherArtifactInvs[0] == null || otherArtifactInvs[1] == null || otherArtifactInvs[2] == null");
+            if (otherArtifactInvs[0] == null || otherArtifactInvs[1] == null || otherArtifactInvs[2] == null)
+                return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): otherArtifactInvs[0] == null || otherArtifactInvs[1] == null || otherArtifactInvs[2] == null");
 
-                EntityManager entityManager = game.EntityManager;
-                for (int i = 0; i < otherArtifactInvs.Count; i++)
+            EntityManager entityManager = game.EntityManager;
+            for (int i = 0; i < otherArtifactInvs.Count; i++)
+            {
+                if (otherArtifactInvs[i].Count == 0)
+                    continue;
+
+                ulong otherArtifactId = otherArtifactInvs[i].GetEntityInSlot(0);
+                Item otherArtifact = entityManager.GetEntity<Item>(otherArtifactId);
+                if (otherArtifact == null) return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): otherArtifact == null");
+
+                if (itemToBeMoved.PrototypeDataRef == otherArtifact.PrototypeDataRef)
+                    return InventoryResult.InvalidTwoOfSameArtifact;
+
+                if (itemToBeMoved.CanBeEquippedWithItem(otherArtifact) == false)
                 {
-                    if (otherArtifactInvs[i].Count == 0)
-                        continue;
-
-                    ulong otherArtifactId = otherArtifactInvs[i].GetEntityInSlot(0);
-                    Item otherArtifact = entityManager.GetEntity<Item>(otherArtifactId);
-                    if (otherArtifact == null) return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): otherArtifact == null");
-
-                    if (itemToBeMoved.PrototypeDataRef == otherArtifact.PrototypeDataRef)
-                        return InventoryResult.InvalidTwoOfSameArtifact;
-
-                    if (itemToBeMoved.CanBeEquippedWithItem(otherArtifact) == false)
-                    {
-                        resultItem = otherArtifact;
-                        return InventoryResult.InvalidRestrictedByOtherItem;
-                    }
+                    resultItem = otherArtifact;
+                    return InventoryResult.InvalidRestrictedByOtherItem;
                 }
+            }
 
-                return InventoryResult.Success;
-            }
-            finally
-            {
-                ListPool<Inventory>.Instance.Return(otherArtifactInvs);
-            }
+            return InventoryResult.Success;
         }
 
         public override void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
