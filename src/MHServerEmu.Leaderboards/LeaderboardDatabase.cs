@@ -611,14 +611,12 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         public void UpdateState()
         {
-            List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
+            using var leaderboardsHandle = ListPool<Leaderboard>.Instance.Get(out List<Leaderboard> leaderboards);
             GetLeaderboards(leaderboards);
 
             DateTime updateTime = Clock.UtcNowPrecise;
             foreach (Leaderboard leaderboard in leaderboards)
                 leaderboard.UpdateState(updateTime);
-
-            ListPool<Leaderboard>.Instance.Return(leaderboards);
         }
 
         /// <summary>
@@ -626,13 +624,11 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         public void Save()
         {
-            List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
+            using var leaderboardsHandle = ListPool<Leaderboard>.Instance.Get(out List<Leaderboard> leaderboards);
             GetLeaderboards(leaderboards);
 
             foreach (var leaderboard in leaderboards)                
                 leaderboard.ActiveInstance?.SaveEntries(true);
-
-            ListPool<Leaderboard>.Instance.Return(leaderboards);
         }
 
         /// <summary>

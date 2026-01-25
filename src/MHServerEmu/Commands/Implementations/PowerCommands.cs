@@ -57,7 +57,7 @@ namespace MHServerEmu.Commands.Implementations
                 avatar.Properties.RemovePropertyRange(cooldownProperty);
 
             // Avatar charges
-            Dictionary<PropertyId, PropertyValue> setDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+            using var setDictHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> setDict);
             foreach (var kvp in avatar.Properties.IteratePropertyRange(PropertyEnum.PowerChargesMax))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
@@ -69,8 +69,6 @@ namespace MHServerEmu.Commands.Implementations
 
             foreach (var kvp in setDict)
                 avatar.Properties[kvp.Key] = kvp.Value;
-
-            DictionaryPool<PropertyId, PropertyValue>.Instance.Return(setDict);
 
             return $"All cooldowns and charges have been reset.";
         }

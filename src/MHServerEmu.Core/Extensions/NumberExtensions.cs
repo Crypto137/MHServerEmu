@@ -66,14 +66,13 @@ namespace MHServerEmu.Core.Extensions
             if (count == 0)
                 return 0f;
 
-            List<float> list = ListPool<float>.Instance.Get(count);
+            using var listHandle = ListPool<float>.Instance.Get(count, out List<float> list);
             foreach (float value in values)
                 list.Add(value);
 
             list.Sort();
             float median = list[count / 2];
 
-            ListPool<float>.Instance.Return(list);
             return median;
         }
     }

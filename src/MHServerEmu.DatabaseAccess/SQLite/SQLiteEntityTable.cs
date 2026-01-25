@@ -67,19 +67,11 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         public void UpdateEntities(SQLiteConnection connection, SQLiteTransaction transaction, long containerDbGuid, DBEntityCollection dbEntityCollection)
         {
             // Delete items that no longer belong to this account
-            List<long> entitiesToDelete = ListPool<long>.Instance.Get();
+            using var entitiesToDeleteHandle = ListPool<long>.Instance.Get(out List<long> entitiesToDelete);
             GetEntitiesToDelete(connection, containerDbGuid, dbEntityCollection, entitiesToDelete);
 
-            try
-            {
-                if (entitiesToDelete.Count > 0)
-                    connection.Execute(_deleteQuery, new { EntitiesToDelete = entitiesToDelete });
-            }
-            finally
-            {
-                // Make sure the list is returned to the pool even if the deletion query fails.
-                ListPool<long>.Instance.Return(entitiesToDelete);
-            }
+            if (entitiesToDelete.Count > 0)
+                connection.Execute(_deleteQuery, new { EntitiesToDelete = entitiesToDelete });
 
             // Insert and update
             IReadOnlyList<DBEntity> entries = dbEntityCollection.GetEntriesForContainer(containerDbGuid);

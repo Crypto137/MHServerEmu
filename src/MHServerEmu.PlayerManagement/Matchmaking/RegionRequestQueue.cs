@@ -41,7 +41,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             bool hasGroups = true;
 
             // Try to fill existing matches.
-            List<Match> lfmMatches = ListPool<Match>.Instance.Get();
+            using var lfmMatchesHandle = ListPool<Match>.Instance.Get(out List<Match> lfmMatches);
 
             foreach (Match match in _matches)
             {
@@ -58,8 +58,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 if (hasGroups == false)
                     break;
             }
-
-            ListPool<Match>.Instance.Return(lfmMatches);
 
             // Set up new matches.
             if (hasGroups)

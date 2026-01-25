@@ -392,7 +392,7 @@ namespace MHServerEmu.Leaderboards
         /// <param name="forceUpdate">Forces entries that haven't changed to be saved.</param>
         public void SaveEntries(bool forceUpdate = false)
         {
-            List<DBLeaderboardEntry> dbEntries = ListPool<DBLeaderboardEntry>.Instance.Get();
+            using var dbEntriesHandle = ListPool<DBLeaderboardEntry>.Instance.Get(out List<DBLeaderboardEntry> dbEntries);
 
             lock (_lock)
             {
@@ -411,8 +411,6 @@ namespace MHServerEmu.Leaderboards
 
                 ScheduleNextAutoSave();
             }
-
-            ListPool<DBLeaderboardEntry>.Instance.Return(dbEntries);
         }
 
         /// <summary>
@@ -489,7 +487,7 @@ namespace MHServerEmu.Leaderboards
                 if (Entries.Count == 0)
                     return true;
 
-                List<DBRewardEntry> rewardsList = ListPool<DBRewardEntry>.Instance.Get();
+                using var rewardsListHandle = ListPool<DBRewardEntry>.Instance.Get(out List<DBRewardEntry> rewardsList);
 
                 LeaderboardRewardEntryPrototype[] rewards = LeaderboardPrototype.Rewards;
                 if (rewards.HasValue())
@@ -500,8 +498,6 @@ namespace MHServerEmu.Leaderboards
 
                 var dbManager = LeaderboardDatabase.Instance.DBManager;
                 dbManager.InsertRewards(rewardsList);
-
-                ListPool<DBRewardEntry>.Instance.Return(rewardsList);
             }
 
             return true;

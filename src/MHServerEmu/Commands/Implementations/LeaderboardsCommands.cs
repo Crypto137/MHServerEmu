@@ -67,7 +67,7 @@ namespace MHServerEmu.Commands.Implementations
             var sb = new StringBuilder();
             sb.AppendLine($"Current Time: [{Clock.UtcNowTimestamp}] {Clock.UtcNowPrecise}");
 
-            List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
+            using var leaderboardsHandle = ListPool<Leaderboard>.Instance.Get(out List<Leaderboard> leaderboards);
             LeaderboardDatabase.Instance.GetLeaderboards(leaderboards);
 
             foreach (var leaderboard in leaderboards)
@@ -78,7 +78,6 @@ namespace MHServerEmu.Commands.Implementations
                         $"{leaderboard.ActiveInstance.ActivationTime} - " +
                         $"{leaderboard.ActiveInstance.ExpirationTime}");
 
-            ListPool<Leaderboard>.Instance.Return(leaderboards);
             return sb.ToString();
         }
 
@@ -90,7 +89,7 @@ namespace MHServerEmu.Commands.Implementations
             var sb = new StringBuilder();
             sb.AppendLine($"Current Time: [{Clock.UtcNowTimestamp}] {Clock.UtcNowPrecise}");
 
-            List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
+            using var leaderboardsHandle = ListPool<Leaderboard>.Instance.Get(out List<Leaderboard> leaderboards);
             LeaderboardDatabase.Instance.GetLeaderboards(leaderboards);
 
             foreach (var leaderboard in leaderboards)
@@ -101,7 +100,6 @@ namespace MHServerEmu.Commands.Implementations
                         $"{leaderboard.ActiveInstance.ActivationTime} - " +
                         $"{leaderboard.ActiveInstance.ExpirationTime}");
 
-            ListPool<Leaderboard>.Instance.Return(leaderboards);
             return sb.ToString();
         }
 
@@ -113,7 +111,7 @@ namespace MHServerEmu.Commands.Implementations
             var sb = new StringBuilder();
             sb.AppendLine($"Current Time: [{Clock.UtcNowTimestamp}] {Clock.UtcNowPrecise}");
 
-            List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
+            using var leaderboardsHandle = ListPool<Leaderboard>.Instance.Get(out List<Leaderboard> leaderboards);
             LeaderboardDatabase.Instance.GetLeaderboards(leaderboards);
 
             foreach (var leaderboard in leaderboards)
@@ -123,7 +121,6 @@ namespace MHServerEmu.Commands.Implementations
                     $"{leaderboard.Prototype.DataRef.GetNameFormatted()} = " +
                     $"{leaderboard.Scheduler.StartTime}");
 
-            ListPool<Leaderboard>.Instance.Return(leaderboards);
             return sb.ToString();
         }
     }

@@ -70,8 +70,8 @@ namespace MHServerEmu.PlayerManagement.Regions
                 return;
 
             // SortedSet cannot be modified during iteration, so we need to store regions we want to remove in separate lists.
-            List<RegionHandle> shutdownRegions = ListPool<RegionHandle>.Instance.Get();
-            List<RegionHandle> expiredRegions = ListPool<RegionHandle>.Instance.Get();
+            using var shutdownRegionsHandle = ListPool<RegionHandle>.Instance.Get(out List<RegionHandle> shutdownRegions);
+            using var expiredRegionsHandle = ListPool<RegionHandle>.Instance.Get(out List<RegionHandle> expiredRegions);
 
             foreach (RegionHandle region in _regions)
             {
@@ -92,9 +92,6 @@ namespace MHServerEmu.PlayerManagement.Regions
             // This will shut down expired regions if they are already empty.
             foreach (RegionHandle region in expiredRegions)
                 region.ShutdownIfVacant();
-
-            ListPool<RegionHandle>.Instance.Return(shutdownRegions);
-            ListPool<RegionHandle>.Instance.Return(expiredRegions);
         }
 
         private class RegionLoadComparer : IComparer<RegionHandle>

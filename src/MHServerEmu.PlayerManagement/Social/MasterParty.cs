@@ -262,10 +262,9 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public void SyncPartyInfo(PlayerHandle player)
         {
-            List<PlayerHandle> recipients = ListPool<PlayerHandle>.Instance.Get();
+            using var recipientsHandle = ListPool<PlayerHandle>.Instance.Get(out List<PlayerHandle> recipients);
             recipients.Add(player);
             SendPartyInfo(true, recipients);
-            ListPool<PlayerHandle>.Instance.Return(recipients);
         }
 
         private void SendPartyInfo(bool includeMemberInfo, List<PlayerHandle> recipients)

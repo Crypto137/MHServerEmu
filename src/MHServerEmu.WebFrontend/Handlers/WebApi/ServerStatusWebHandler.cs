@@ -8,12 +8,10 @@ namespace MHServerEmu.WebFrontend.Handlers.WebApi
     {
         protected override async Task Get(WebRequestContext context)
         {
-            Dictionary<string, long> statusDict = DictionaryPool<string, long>.Instance.Get();
+            using var statusDictHandle = DictionaryPool<string, long>.Instance.Get(out Dictionary<string, long> statusDict);
             ServerManager.Instance.GetServerStatus(statusDict);
 
             await context.SendJsonAsync(statusDict);
-
-            DictionaryPool<string, long>.Instance.Return(statusDict);
         }
     }
 }

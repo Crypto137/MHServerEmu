@@ -23,7 +23,7 @@ namespace MHServerEmu.Core.System.Time
 
             TimeSpan now = Clock.UnixTime;
 
-            List<ServiceEvent> events = ListPool<ServiceEvent>.Instance.Get();
+            using var eventsHandle = ListPool<ServiceEvent>.Instance.Get(out List<ServiceEvent> events);
             events.AddRange(_events.Values);
 
             foreach (ServiceEvent serviceEvent in events)
@@ -35,8 +35,6 @@ namespace MHServerEmu.Core.System.Time
                 _events.Remove(serviceEvent.Handle);
                 serviceEvent.Trigger();
             }
-
-            ListPool<ServiceEvent>.Instance.Return(events);
         }
 
         public bool ScheduleEvent(THandle handle, TimeSpan delay, Action<TEventData> callback, TEventData eventData = default)

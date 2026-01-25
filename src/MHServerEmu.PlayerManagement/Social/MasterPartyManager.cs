@@ -362,7 +362,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (party == null) return Logger.WarnReturn(false, "DisbandParty(): party == null");
 
             // Clean up remaining members
-            HashSet<PlayerHandle> members = HashSetPool<PlayerHandle>.Instance.Get();
+            using var membersHandle = HashSetPool<PlayerHandle>.Instance.Get(out HashSet<PlayerHandle> members);
             party.GetMembers(members);
 
             foreach (PlayerHandle member in members)
@@ -389,7 +389,6 @@ namespace MHServerEmu.PlayerManagement.Social
             foreach (PlayerHandle member in members)
                 member.CheckWorldViewRegionAvailability();
 
-            HashSetPool<PlayerHandle>.Instance.Return(members);
             return true;
         }
 

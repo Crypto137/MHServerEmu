@@ -61,12 +61,10 @@ namespace MHServerEmu.Core.Network.Web
 
         public void SaveKeys()
         {
-            var keys = ListPool<KeyValuePair<string, WebApiKeyData>>.Instance.Get();
+            using var keysHandle = ListPool<KeyValuePair<string, WebApiKeyData>>.Instance.Get(out var keys);
             _keys.ExportTokens(keys);
 
             FileHelper.SerializeJson(KeyFilePath, keys, JsonOptions);
-
-            ListPool<KeyValuePair<string, WebApiKeyData>>.Instance.Return(keys);
         }
 
         public string CreateKey(string name, WebApiAccessType access)

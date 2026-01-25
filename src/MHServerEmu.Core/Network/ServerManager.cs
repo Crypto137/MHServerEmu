@@ -250,7 +250,7 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public string GetServerStatusString()
         {
-            Dictionary<string, long> statusDict = DictionaryPool<string, long>.Instance.Get();
+            using var statusDictHandle = DictionaryPool<string, long>.Instance.Get(out Dictionary<string, long> statusDict);
             GetServerStatus(statusDict);
 
             StringBuilder sb = new();
@@ -258,10 +258,7 @@ namespace MHServerEmu.Core.Network
             foreach (var kvp in statusDict)
                 sb.AppendLine($"{kvp.Key}: {kvp.Value}");
 
-            string statusString = sb.ToString();
-
-            DictionaryPool<string, long>.Instance.Return(statusDict);
-            return statusString;
+            return sb.ToString();
         }
     }
 }
