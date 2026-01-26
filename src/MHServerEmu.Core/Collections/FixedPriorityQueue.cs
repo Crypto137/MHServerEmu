@@ -1,8 +1,12 @@
 ﻿namespace MHServerEmu.Core.Collections
 {
-    public class FixedPriorityQueue<T> where T : IComparable<T>
+    public readonly struct FixedPriorityQueue<T> where T : IComparable<T>
     {
+        // Our implementation is just a List<T> wrapper with no data of its own, so we can get away with making it a readonly struct.
+        // If this ever needs to stop being the case, turn it into a fully featured ICollection<T> implementation and pool it.
+
         private readonly List<T> _items;
+
         public bool Empty => _items.Count == 0;
         public int Count => _items.Count;
         public T Top => _items[0];
@@ -10,6 +14,11 @@
         public FixedPriorityQueue(int capacity) 
         { 
             _items = new(capacity); 
+        }
+
+        public FixedPriorityQueue(List<T> items)
+        {
+            _items = items;
         }
 
         public void Push(T value)
@@ -27,7 +36,10 @@
             _items.RemoveAt(_items.Count - 1);
         }
 
-        public void Clear() => _items.Clear();
+        public void Clear()
+        {
+            _items.Clear();
+        }
 
         public void Heapify()
         {
