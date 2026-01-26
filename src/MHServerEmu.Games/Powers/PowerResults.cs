@@ -52,8 +52,7 @@ namespace MHServerEmu.Games.Powers
         {
             base.Clear();
 
-            for (int i = 0; i < _damageForClient.Length; i++)
-                _damageForClient[i] = default;
+            _damageForClient.Clear();
 
             ClearConditionInstances();
             _conditionRemoveList?.Clear();
@@ -85,9 +84,9 @@ namespace MHServerEmu.Games.Powers
 
         public bool HasDamageForClient()
         {
-            for (int i = 0; i < _damageForClient.Length; i++)
+            foreach (float damage in _damageForClient)
             {
-                if (_damageForClient[i] > 0f)
+                if (damage > 0f)
                     return true;
             }
 
@@ -105,8 +104,8 @@ namespace MHServerEmu.Games.Powers
         public float GetTotalDamageForClient()
         {
             float totalDamage = 0f;
-            for (int i = 0; i < _damageForClient.Length; i++)
-                totalDamage += _damageForClient[i];
+            foreach (float damage in _damageForClient)
+                totalDamage += damage;
             return totalDamage;
         }
 
@@ -224,12 +223,21 @@ namespace MHServerEmu.Games.Powers
             [FieldOffset(8)]
             public float Mental;
 
-            public readonly int Length { get => (int)DamageType.NumDamageTypes; }
             public float this[int index] { get => AsSpan()[index]; set => AsSpan()[index] = value; }
 
             public Span<float> AsSpan()
             {
-                return MemoryMarshal.CreateSpan(ref Physical, Length);
+                return MemoryMarshal.CreateSpan(ref Physical, (int)DamageType.NumDamageTypes);
+            }
+
+            public void Clear()
+            {
+                AsSpan().Clear();
+            }
+
+            public Span<float>.Enumerator GetEnumerator()
+            {
+                return AsSpan().GetEnumerator();
             }
         }
     }
