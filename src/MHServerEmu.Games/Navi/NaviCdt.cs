@@ -161,7 +161,7 @@ namespace MHServerEmu.Games.Navi
 
             if (edge.TestFlag(NaviEdgeFlags.Constraint) == false) return false;
 
-            var points = new NaviPoint[2];
+            using PoolSpan<NaviPoint> points = PoolSpan<NaviPoint>.Allocate(2);
             var dir = Vector3.Normalize2D(edge.Point(1) - edge.Point(0));
 
             for (int i = 0; i < 2; i++)
@@ -334,7 +334,11 @@ namespace MHServerEmu.Games.Navi
             var p0 = triangle.PointCW(0);
             var p1 = triangle.PointCW(1);
             var p2 = triangle.PointCW(2);
-            NaviPoint[] points = { p0, p1, p2 };
+
+            using PoolSpan<NaviPoint> points = PoolSpan<NaviPoint>.Allocate(3);
+            points[0] = p0;
+            points[1] = p1;
+            points[2] = p2;
 
             Span<bool> degenerates = stackalloc bool[3];
             Span<bool> splits = stackalloc bool[3];
@@ -362,13 +366,15 @@ namespace MHServerEmu.Games.Navi
 
             using var triStackHandle = StackPool<NaviTriangle>.Instance.Get(out PoolableStack<NaviTriangle> triStack);
 
-            NaviEdge[] pointEdges = {
-                new (point, p0, NaviEdgeFlags.None),
-                new (point, p1, NaviEdgeFlags.None),
-                new (point, p2, NaviEdgeFlags.None)
-            };
+            using PoolSpan<NaviEdge> pointEdges = PoolSpan<NaviEdge>.Allocate(3);
+            pointEdges[0] = new(point, p0, NaviEdgeFlags.None);
+            pointEdges[1] = new(point, p1, NaviEdgeFlags.None);
+            pointEdges[2] = new(point, p2, NaviEdgeFlags.None);
 
-            NaviEdge[] triangleEdges = { triangle.Edges[0], triangle.Edges[1], triangle.Edges[2] };
+            using PoolSpan<NaviEdge> triangleEdges = PoolSpan<NaviEdge>.Allocate(3);
+            triangleEdges[0] = triangle.Edges[0];
+            triangleEdges[1] = triangle.Edges[1];
+            triangleEdges[2] = triangle.Edges[2];
 
             NaviTriangleState triangleState = new (triangle);
             RemoveTriangle(triangle);
