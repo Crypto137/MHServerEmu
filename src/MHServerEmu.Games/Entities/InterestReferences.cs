@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Network;
@@ -10,10 +11,12 @@ namespace MHServerEmu.Games.Entities
     /// </summary>
     public class InterestReferences
     {
+        private const int NumInterestPolicies = 8;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly HashSet<ulong> _interestedPlayerIds = new();
-        private readonly int[] _accumulatedPolicyCounts = new int[8];
+        private PolicyCounts _accumulatedPolicyCounts = new();
 
         public int PlayerCount { get => _interestedPlayerIds.Count; }
         public bool IsEmpty { get => PlayerCount == 0 && GetInterestedPoliciesUnion() == AOINetworkPolicyValues.AOIChannelNone; }
@@ -67,7 +70,7 @@ namespace MHServerEmu.Games.Entities
         {
             AOINetworkPolicyValues interestPolicies = AOINetworkPolicyValues.AOIChannelNone;
 
-            for (int i = 0; i < _accumulatedPolicyCounts.Length; i++)
+            for (int i = 0; i < NumInterestPolicies; i++)
             {
                 if (_accumulatedPolicyCounts[i] > 0)
                     interestPolicies |= (AOINetworkPolicyValues)(1 << i);
@@ -130,6 +133,12 @@ namespace MHServerEmu.Games.Entities
             }
 
             return true;
+        }
+
+        [InlineArray(NumInterestPolicies)]
+        private struct PolicyCounts
+        {
+            private int _element0;
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Runtime.CompilerServices;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -1443,7 +1442,7 @@ namespace MHServerEmu.Games.Properties
         [InlineArray((int)ProtectionType.NumProtectionTypes)]
         private struct ProtectionCounts
         {
-            private int _field0;
+            private int _element0;
         }
 
         private readonly struct ProtectionScope : IDisposable
