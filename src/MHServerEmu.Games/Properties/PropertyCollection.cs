@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Runtime.CompilerServices;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
@@ -508,10 +509,10 @@ namespace MHServerEmu.Games.Properties
                 return Logger.WarnReturn(false, "AddChildCollection(): Attempted to add a parent as a child");
 
             // Check for protections
-            if (IsNotProtected(Protection.Child) == false)
+            if (IsNotProtected(ProtectionType.Child) == false)
                 return Logger.WarnReturn(false, "AddChildCollection(): Property collection protection check failed (parent's child collection)");
 
-            if (childCollection.IsNotProtected(Protection.Parent) == false)
+            if (childCollection.IsNotProtected(ProtectionType.Parent) == false)
                 return Logger.WarnReturn(false, "AddChildCollection(): Property collection protection check failed (child's parent collection)");
 
             // Allocate parent/child sets on demand
@@ -549,10 +550,10 @@ namespace MHServerEmu.Games.Properties
                 return Logger.WarnReturn(false, "RemoveChildCollection(): childCollection is null");
 
             // Check for protections, but continue anyway
-            if (IsNotProtected(Protection.Child) == false)
+            if (IsNotProtected(ProtectionType.Child) == false)
                 Logger.Warn("RemoveChildCollection(): Property collection protection check failed (parent's child collection)");
 
-            if (childCollection.IsNotProtected(Protection.Parent) == false)
+            if (childCollection.IsNotProtected(ProtectionType.Parent) == false)
                 Logger.Warn("RemoveChildCollection(): Property collection protection check failed (child's parent collection)");
 
             // Remove parent / child references
@@ -1135,10 +1136,9 @@ namespace MHServerEmu.Games.Properties
             // Aggregate all child collections, protect to prevent new child collections from being added during iteration
             if (_childCollections != null)
             {
-                Protect(Protection.Child);
+                using ProtectionScope protectionScope = new(this, ProtectionType.Child);
                 foreach (PropertyCollection child in _childCollections)
                     AggregateChildCollection(child);
-                ReleaseProtection(Protection.Child);
             }
         }
 
@@ -1185,10 +1185,9 @@ namespace MHServerEmu.Games.Properties
                 if (_parentCollections != null)
                 {
                     // Update parent aggregate values, protect to prevent new parent collections from being added during iteration
-                    Protect(Protection.Parent);
+                    using ProtectionScope protectionScope = new(this, ProtectionType.Parent);
                     foreach (PropertyCollection parent in _parentCollections)
                         parent.UpdateAggregateValue(id, info, SetPropertyFlags.None);
-                    ReleaseProtection(Protection.Parent);
                 }
 
                 OnPropertyChange(id, aggregateValue, oldValue, SetPropertyFlags.None);
@@ -1232,7 +1231,7 @@ namespace MHServerEmu.Games.Properties
             if (info.Prototype.AggMethod != AggregationMethod.None && _childCollections != null)
             {
                 // Aggregate values from all children, protect to prevent new child collections from being added during iteration
-                Protect(Protection.Child);
+                using ProtectionScope protectionScope = new(this, ProtectionType.Child);
                 foreach (PropertyCollection child in _childCollections)
                 {
                     if (child.GetAggregateValue(id, out PropertyValue childValue) == false)
@@ -1248,7 +1247,6 @@ namespace MHServerEmu.Games.Properties
                         hasValue = true;
                     }
                 }
-                ReleaseProtection(Protection.Child);
             }
 
             if (hasValue)
@@ -1269,10 +1267,9 @@ namespace MHServerEmu.Games.Properties
             // Update parents, protect to prevent new parents from being added during iteration
             if (_parentCollections != null)
             {
-                Protect(Protection.Parent);
+                using ProtectionScope protectionScope = new(this, ProtectionType.Parent);
                 foreach (PropertyCollection parent in _parentCollections)
                     parent.UpdateAggregateValue(id, info, flags);
-                ReleaseProtection(Protection.Parent);
             }
         }
 
@@ -1425,29 +1422,48 @@ namespace MHServerEmu.Games.Properties
 
         #endregion
 
-        #region Protection Implementation
+        #region Protection
 
         // Protection flags to prevent parent / child collections from being added during iteration.
 
-        // NOTE: What the client does is that it creates a struct that increments a flag variable in its constructor
-        // and decrements it in the destructor. So when you leave the scope the destructor gets called and it "releases"
-        // the protection. We could potentially implement something similar with IDisposable and using, but that would be
-        // pretty hacky, so we are just going to increment and decrement everything manually.
+        private ProtectionCounts _protections = new();
 
-        // NOTE: Do we even need this?
+        private bool IsNotProtected(ProtectionType protection)
+        {
+            return _protections[(int)protection] == 0;
+        }
 
-        private enum Protection
+        private enum ProtectionType
         {
             Parent,
             Child,
-            NumProtections
+            NumProtectionTypes
         }
 
-        private readonly int[] _protections = new int[(int)Protection.NumProtections];
+        [InlineArray((int)ProtectionType.NumProtectionTypes)]
+        private struct ProtectionCounts
+        {
+            private int _field0;
+        }
 
-        private void Protect(Protection protection) => _protections[(int)protection]++;
-        private void ReleaseProtection(Protection protection) => _protections[(int)protection]--;
-        private bool IsNotProtected(Protection protection) => _protections[(int)protection] == 0;
+        private readonly struct ProtectionScope : IDisposable
+        {
+            private readonly PropertyCollection _collection;
+            private readonly int _index;
+
+            public ProtectionScope(PropertyCollection collection, ProtectionType type)
+            {
+                _collection = collection;
+                _index = (int)type;
+
+                _collection._protections[_index]++;
+            }
+
+            public void Dispose()
+            {
+                _collection._protections[_index]--;
+            }
+        }
 
         #endregion
 
