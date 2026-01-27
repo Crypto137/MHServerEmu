@@ -1,8 +1,8 @@
-﻿using System.Net;
+﻿using System.Runtime.InteropServices;
 
 namespace MHServerEmu.Core.Extensions
 {
-    public static class MiscExtensions
+    public static class ListExtensions
     {
         public static void Set<T>(this List<T> list, IEnumerable<T> other)
         {
@@ -19,23 +19,14 @@ namespace MHServerEmu.Core.Extensions
                 list.Add(value);
         }
 
-        public static void Set<T>(this HashSet<T> hashSet, HashSet<T> other)
+        /// <summary>
+        /// Copies a range from another <see cref="List{T}"/> instance avoiding intermediary heap allocations.
+        /// </summary>
+        public static void AddRange<T>(this List<T> list, List<T> other, int start, int count)
         {
-            hashSet.Clear();
-            foreach (T item in other) 
-                hashSet.Add(item);
-        }
-
-        public static void Insert<T>(this HashSet<T> hashSet, HashSet<T> other)
-        {
-            foreach (T item in other)
-                hashSet.Add(item);
-        }
-
-        public static void Insert<T>(this HashSet<T> hashSet, T[] other)
-        {
-            foreach (T item in other)
-                hashSet.Add(item);
+            Span<T> items = CollectionsMarshal.AsSpan(other);
+            items = items.Slice(start, count);
+            list.AddRange(items);
         }
     }
 }

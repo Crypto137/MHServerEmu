@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
@@ -121,8 +122,8 @@ namespace MHServerEmu.Games.Navi
 
         public void RemoveCollinearEdges()
         {
-            List<NaviEdge> checkedEdges = new ();
-            List<NaviEdge> collinearEdges = new ();
+            using var checkedEdgesHandle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> checkedEdges);
+            using var collinearEdgesHandle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> collinearEdges);
             using NaviSerialCheck naviSerialCheck = new(this);
 
             foreach (var triangle in TriangleList.Iterate())
@@ -593,8 +594,8 @@ namespace MHServerEmu.Games.Navi
                 return;
             }
 
-            List<NaviEdge> pseudoList0 = new ();
-            List<NaviEdge> pseudoList1 = new ();
+            using var pseudoList0Handle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> pseudoList0);
+            using var pseudoList1Handle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> pseudoList1);
 
             NaviPoint sidePoint0, sidePoint1;
             NaviPoint point = p0;
@@ -705,10 +706,14 @@ namespace MHServerEmu.Games.Navi
                     }
                 }
 
-                List<NaviEdge> pseudoList0 = new(pseudoList.GetRange(0, indexC + 1));
-                pseudoList.RemoveRange(0, indexC + 1);
+                // Split this into two lists, with the first one having everything up to indexC inclusive.
+                int countC = indexC + 1;
+                using var pseudoList0Handle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> pseudoList0);
+                pseudoList0.AddRange(pseudoList, 0, countC);
 
-                List<NaviEdge> pseudoList1 = new(pseudoList);
+                using var pseudoList1Handle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> pseudoList1);
+                pseudoList1.AddRange(pseudoList, countC, pseudoList.Count - countC);
+
                 pseudoList.Clear();
 
                 edge0 = TriangulatepseudopolygonDelaunay(pseudoList0, p0, pointC, null, triangleState);
