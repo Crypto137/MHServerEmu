@@ -328,9 +328,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             CraftingResult result = inputProtoToUse.AllowItem(ingredientSpec, avatar);
             if (result == CraftingResult.Success && autoPopulatedIngredientProto == null && usedStackCounts != null)
             {
-                usedStackCounts.TryGetValue(ingredientId, out int count);
-                usedStackCounts[ingredientId] = ++count;
-                if (count > ingredientSpec.StackCount)
+                ref int count = ref usedStackCounts.GetValueRefOrAddDefault(ingredientId);
+                if (++count > ingredientSpec.StackCount)
                     return CraftingResult.InsufficientIngredients;
             }
 

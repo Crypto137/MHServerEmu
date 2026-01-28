@@ -289,8 +289,7 @@ namespace MHServerEmu.Games.Powers
         /// </summary>
         public void IncrementHitCount(ulong targetId)
         {
-            _hitCountDict.TryGetValue(targetId, out int count);
-            _hitCountDict[targetId] = ++count;
+            _hitCountDict.GetValueRefOrAddDefault(targetId)++;
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
@@ -173,18 +174,16 @@ namespace MHServerEmu.Games.Achievements
 
                 // check category
                 var key = info.CategoryStr;
-                _categoryStats.TryGetValue(key, out var categoryStats);                
+                ref CategoryStats categoryStats = ref _categoryStats.GetValueRefOrAddDefault(key);           
                 categoryStats.Score += info.Score;
                 if (info.SubCategoryStr == LocaleStringId.Blank)
                     categoryStats.CompleteCount += completed;
-                _categoryStats[key] = categoryStats;
 
                 // check sub category
                 var subKey = (info.CategoryStr, info.SubCategoryStr);
-                _subCategoryStats.TryGetValue(subKey, out var subCategoryStats);
+                ref CategoryStats subCategoryStats = ref _subCategoryStats.GetValueRefOrAddDefault(subKey);
                 subCategoryStats.Score += info.Score;
                 subCategoryStats.CompleteCount += completed;
-                _subCategoryStats[subKey] = subCategoryStats;
             }
         }
 

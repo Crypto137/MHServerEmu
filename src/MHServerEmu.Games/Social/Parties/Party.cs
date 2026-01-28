@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Helpers;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -247,10 +248,7 @@ namespace MHServerEmu.Games.Social.Parties
             foreach (PartyMemberInfo member in _members.Values)
             {
                 foreach (PrototypeId boostProtoRef in member.Boosts)
-                {
-                    _boostCounts.TryGetValue(boostProtoRef, out int value);
-                    _boostCounts[boostProtoRef] = ++value;
-                }
+                    _boostCounts.GetValueRefOrAddDefault(boostProtoRef)++;
             }
 
             // Update party boost conditions on members in this game instance.

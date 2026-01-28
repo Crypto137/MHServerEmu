@@ -168,10 +168,7 @@ namespace MHServerEmu.Games.Loot
                 if (affixLimits != null)
                 {
                     foreach (CategorizedAffixEntryPrototype entry in affixLimits.CategorizedAffixes)
-                    {
-                        affixCategoryDict.TryGetValue(entry.Category, out short numAffixes);
-                        affixCategoryDict[entry.Category] = (short)(numAffixes + entry.MinAffixes);
-                    }
+                        affixCategoryDict.GetValueRefOrAddDefault(entry.Category) += entry.MinAffixes;
                 }
 
                 // Apply modifiers from loot roll settings
@@ -179,8 +176,8 @@ namespace MHServerEmu.Games.Loot
                 {
                     foreach (var kvp in settings.AffixLimitByCategoryModifierDict)
                     {
-                        affixCategoryDict.TryGetValue(kvp.Key, out short numAffixes);
-                        affixCategoryDict[kvp.Key] = (short)Math.Max(0, numAffixes + kvp.Value);
+                        ref short numAffixes = ref affixCategoryDict.GetValueRefOrAddDefault(kvp.Key);
+                        numAffixes = (short)Math.Max(0, numAffixes + kvp.Value);
                     }
                 }
 
@@ -770,14 +767,9 @@ namespace MHServerEmu.Games.Loot
                     affixSpecsToAdd.Add(affixSpecCopy);
 
                     if (categoryProto != null)
-                    {
-                        addedCategoryCounts.TryGetValue(categoryProto, out int count);
-                        addedCategoryCounts[categoryProto] = count + 1;
-                    }
+                        addedCategoryCounts.GetValueRefOrAddDefault(categoryProto)++;
                     else
-                    {
                         addedPositionCounts[(int)affixProto.Position]++;
-                    }
                 }
             }
 

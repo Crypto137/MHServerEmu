@@ -283,8 +283,7 @@ namespace MHServerEmu.Games.Entities
             ulong playerUid = player.DatabaseUniqueId;
 
             TankingContributors ??= new();
-            TankingContributors.TryGetValue(playerUid, out long oldDamage);
-            TankingContributors[playerUid] = oldDamage + damage;
+            TankingContributors.GetValueRefOrAddDefault(playerUid) += damage;
         }
 
         public void AddDamageContributor(Player player, long damage)
@@ -293,8 +292,7 @@ namespace MHServerEmu.Games.Entities
             ulong playerUid = player.DatabaseUniqueId;
 
             DamageContributors ??= new();
-            DamageContributors.TryGetValue(playerUid, out long oldDamage);
-            DamageContributors[playerUid] = oldDamage + damage;
+            DamageContributors.GetValueRefOrAddDefault(playerUid) += damage;
         }
 
         public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)

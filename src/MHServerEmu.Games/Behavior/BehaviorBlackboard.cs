@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Helpers;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -96,8 +97,7 @@ namespace MHServerEmu.Games.Behavior
         public void OnTrackIncomingDamage(ulong attackerId, long damage)
         {
             DamageMap ??= new();
-            DamageMap.TryGetValue(attackerId, out long oldDamage);
-            DamageMap[attackerId] = oldDamage + damage;
+            DamageMap.GetValueRefOrAddDefault(attackerId) += damage;
         }
 
         private GeneratedPath _cachedGenPath;

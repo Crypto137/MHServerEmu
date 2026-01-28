@@ -704,10 +704,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (scopeProtoRef != PrototypeId.Invalid)
                 affixSeed ^= (ulong)GameDatabase.GetPrototypeGuid(scopeProtoRef);
 
-            affixSeedDict.TryGetValue(affixSeed, out int count);
-            affixSeedDict[affixSeed] = count + 1;
+            ref int count = ref affixSeedDict.GetValueRefOrAddDefault(affixSeed);
 
-            affixSeed = (affixSeed >> count) & 0xFFFFFFFF;
+            affixSeed = (affixSeed >> count++) & 0xFFFFFFFF;
 
             return itemSeed ^ (int)affixSeed;
         }

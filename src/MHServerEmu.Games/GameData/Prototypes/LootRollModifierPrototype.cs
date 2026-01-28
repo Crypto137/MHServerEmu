@@ -229,16 +229,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (Position != AffixPosition.None)
             {
-                settings.AffixLimitMinByPositionModifierDict.TryGetValue(Position, out short currentMinValue);
-                settings.AffixLimitMinByPositionModifierDict[Position] = (short)(currentMinValue + ModifyMinBy);
-
-                settings.AffixLimitMaxByPositionModifierDict.TryGetValue(Position, out short currentMaxValue);
-                settings.AffixLimitMaxByPositionModifierDict[Position] = (short)(currentMaxValue + ModifyMaxBy);
+                settings.AffixLimitMinByPositionModifierDict.GetValueRefOrAddDefault(Position) += ModifyMinBy;
+                settings.AffixLimitMaxByPositionModifierDict.GetValueRefOrAddDefault(Position) += ModifyMaxBy;
             }
             else if (Category != PrototypeId.Invalid)
             {
-                settings.AffixLimitByCategoryModifierDict.TryGetValue(Category, out short currentValue);
-                settings.AffixLimitByCategoryModifierDict[Category] = (short)(currentValue + ModifyMinBy);
+                settings.AffixLimitByCategoryModifierDict.GetValueRefOrAddDefault(Category) += ModifyMinBy;
             }
         }
     }

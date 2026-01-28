@@ -1319,11 +1319,7 @@ namespace MHServerEmu.Games.Entities
                 return;
 
             StackId stackId = condition.StackId;
-
-            if (_stackCountCache.TryGetValue(stackId, out int stackCount) == false)
-                _stackCountCache.Add(stackId, 1);
-            else
-                _stackCountCache[stackId] = ++stackCount;
+            _stackCountCache.GetValueRefOrAddDefault(stackId)++;
         }
 
         private void DecrementStackCountCache(Condition condition)
@@ -1333,24 +1329,15 @@ namespace MHServerEmu.Games.Entities
                 return;
 
             StackId stackId = condition.StackId;
-            if (_stackCountCache.TryGetValue(stackId, out int stackCount) == false)
-            {
-                Logger.Warn($"DecrementStackCountCache(): Condition being removed but there is no cache entry for it! {stackId}");
-                return;
-            }
-
+            ref int stackCount = ref _stackCountCache.GetValueRefOrAddDefault(stackId);
             stackCount--;
-            
+
             if (stackCount <= 0)
             {
-                if (stackCount < 0)
-                    Logger.Warn("DecrementStackCountCache(): stackCount < 0");
+                if (stackCount != 0)
+                    Logger.Warn("DecrementStackCountCache(): stackCount != 0");
 
                 _stackCountCache.Remove(stackId);
-            }
-            else
-            {
-                _stackCountCache[stackId] = stackCount;
             }
         }
 
