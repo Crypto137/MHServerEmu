@@ -43,7 +43,8 @@ namespace MHServerEmu.Games.Entities
         private Dictionary<ulong, WorldEntityRegionSpatialPartition> _players;
         private Aabb _bounds;
         private float _minRadius;
-        public int AvatarIteratorCount { get; protected set; }
+
+        public int AvatarIteratorCount { get; private set; }
         public int TotalElements { get; protected set; }
 
         public EntityRegionSpatialPartition(in Aabb bound, float minRadius = 64.0f)
@@ -227,23 +228,9 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public IEnumerable<Avatar> IterateAvatarsInVolume(Sphere volume)
+        public RegionAvatarIterator IterateAvatarsInVolume(Sphere volume)
         {
-            var iterator = new RegionAvatarIterator(this, volume);
-
-            try
-            {
-                while (iterator.End() == false)
-                {
-                    var element = iterator.Current;
-                    iterator.MoveNext();
-                    yield return element;
-                }
-            }
-            finally
-            {
-                iterator.Clear();
-            }
+            return new(this, volume);
         }
 
         public void GetElementsInVolume<B>(List<WorldEntity> elements, B volume, EntityRegionSPContext context) where B : IBounds
@@ -252,64 +239,73 @@ namespace MHServerEmu.Games.Entities
                 elements.Add(element);
         }
 
-        public class RegionAvatarIterator : IEnumerator<Avatar>
+        public readonly struct RegionAvatarIterator
         {
-            private EntityRegionSpatialPartition _spatialPartition;
-            private Sphere _volume;
-            private int _current;
+            private readonly EntityRegionSpatialPartition _spatialPartition;
+            private readonly Sphere _volume;
 
             public RegionAvatarIterator(EntityRegionSpatialPartition spatialPartition, in Sphere volume)
             {
                 _spatialPartition = spatialPartition;
                 _volume = volume;
-                _current = 0;
+            }
 
-                IncrementIteratorCount();
-                if (_spatialPartition != null)
+            public Enumerator GetEnumerator()
+            {
+                return new(this);
+            }
+
+            public struct Enumerator : IEnumerator<Avatar>
+            {
+                private readonly EntityRegionSpatialPartition _spatialPartition;
+                private readonly Sphere _volume;
+
+                private int _current;
+
+                public Avatar Current { get; private set; }
+                object IEnumerator.Current { get => Current; }
+
+                public Enumerator(RegionAvatarIterator iterator)
                 {
-                    for (int index = 0; index < _spatialPartition._avatars.Count; index++)
-                    {
-                        Avatar entity = _spatialPartition._avatars[index];
-                        if (entity != null && DoesSphereContainAvatar(_volume, entity))
-                        {
-                            _current = index;
-                            return;
-                        }
-                    }
-                    _current = int.MaxValue;
-                }
-            }
+                    _spatialPartition = iterator._spatialPartition;
+                    _volume = iterator._volume;
 
-            public bool MoveNext()
-            {
-                if (_spatialPartition != null && _current < _spatialPartition._avatars.Count)
+                    if (_spatialPartition != null)
+                        _spatialPartition.AvatarIteratorCount++;
+
+                    _current = -1;
+                }
+
+                public bool MoveNext()
                 {
-                    _current++;
-                    for (; _current < _spatialPartition._avatars.Count; _current++)
+                    if (_spatialPartition == null)
+                        return false;
+
+                    while (++_current < _spatialPartition._avatars.Count)
                     {
-                        Avatar entity = _spatialPartition._avatars[_current];
-                        if (entity != null && DoesSphereContainAvatar(_volume, entity))
-                            break;
+                        Avatar avatar = _spatialPartition._avatars[_current];
+
+                        if (DoesSphereContainAvatar(_volume, avatar) == false)
+                            continue;
+
+                        Current = avatar;
+                        return true;
                     }
+
+                    Current = null;
+                    return false;
                 }
-                return true;
-            }
 
-            public Avatar Current => End() ? null : _spatialPartition._avatars[_current];
-            object IEnumerator.Current => Current;
-            public void Dispose() { }
-            public void Reset() { }
-            public bool End() => _spatialPartition == null || _current >= _spatialPartition._avatars.Count;
-            public void Clear() => DecrementIteratorCount();
+                public void Reset()
+                {
+                    _current = -1;
+                }
 
-            private void IncrementIteratorCount()
-            {
-                if (_spatialPartition != null) _spatialPartition.AvatarIteratorCount++;
-            }
-
-            private void DecrementIteratorCount()
-            {
-                if (_spatialPartition != null) _spatialPartition.AvatarIteratorCount--;
+                public void Dispose()
+                {
+                    if (_spatialPartition != null)
+                        _spatialPartition.AvatarIteratorCount--;
+                }
             }
         }
     }

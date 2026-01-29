@@ -718,12 +718,12 @@ namespace MHServerEmu.Games.Regions
                 return Enumerable.Empty<WorldEntity>();
         }
 
-        public IEnumerable<Avatar> IterateAvatarsInVolume(in Sphere bound)
+        public EntityRegionSpatialPartition.RegionAvatarIterator IterateAvatarsInVolume(in Sphere bound)
         {
-            if (EntitySpatialPartition != null)
-                return EntitySpatialPartition.IterateAvatarsInVolume(bound);
-            else
-                return Enumerable.Empty<Avatar>();
+            if (EntitySpatialPartition == null)
+                return default;
+
+            return EntitySpatialPartition.IterateAvatarsInVolume(bound);
         }
 
         public void GetEntitiesInVolume<B>(List<WorldEntity> entities, B volume, EntityRegionSPContext context) where B : IBounds
