@@ -44,7 +44,8 @@ namespace MHServerEmu.Games.Entities
         private Aabb _bounds;
         private float _minRadius;
 
-        public int AvatarIteratorCount { get; private set; }
+        private int _avatarIteratorCount;
+
         public int TotalElements { get; protected set; }
 
         public EntityRegionSpatialPartition(in Aabb bound, float minRadius = 64.0f)
@@ -55,7 +56,7 @@ namespace MHServerEmu.Games.Entities
             _activeSpatialPartition = new(bound, minRadius, EntityRegionSPContextFlags.ActivePartition);
             _players = new();
             _avatars = new();
-            AvatarIteratorCount = 0;
+            _avatarIteratorCount = 0;
             TotalElements = 0;
         }
 
@@ -87,7 +88,12 @@ namespace MHServerEmu.Games.Entities
             TotalElements--;
 
             if (element is Avatar avatar)
-                if (AvatarIteratorCount == 0) _avatars.Remove(avatar);
+            {
+                if (_avatarIteratorCount != 0)
+                    Logger.Warn("Remove(): _avatarIteratorCount != 0");
+
+                _avatars.Remove(avatar);
+            }
 
             var node = loc.Node;
             if (node != null)
@@ -112,7 +118,9 @@ namespace MHServerEmu.Games.Entities
 
                 if (element is Avatar avatar)
                 {
-                    // Debug.Assert(_avatarIteratorCount == 0);
+                    if (_avatarIteratorCount != 0)
+                        Logger.Warn("Insert(): _avatarIteratorCount != 0");
+
                     if (_avatars.Contains(avatar) == false)
                         _avatars.Add(avatar);
                 }
@@ -271,7 +279,7 @@ namespace MHServerEmu.Games.Entities
                     _volume = iterator._volume;
 
                     if (_spatialPartition != null)
-                        _spatialPartition.AvatarIteratorCount++;
+                        _spatialPartition._avatarIteratorCount++;
 
                     _current = -1;
                 }
@@ -304,7 +312,7 @@ namespace MHServerEmu.Games.Entities
                 public void Dispose()
                 {
                     if (_spatialPartition != null)
-                        _spatialPartition.AvatarIteratorCount--;
+                        _spatialPartition._avatarIteratorCount--;
                 }
             }
         }
