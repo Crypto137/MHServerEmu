@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Text;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Properties
@@ -72,14 +73,8 @@ namespace MHServerEmu.Games.Properties
         {
             oldValue = default;
             PropertyEnum propertyEnum = id.Enum;
-            bool isNewNode = false;
 
-            // Created a new node if needed
-            if (_nodeDict.TryGetValue(propertyEnum, out PropertyEnumNode node) == false)
-            {
-                node = new();
-                isNewNode = true;
-            }
+            ref PropertyEnumNode node = ref _nodeDict.GetValueRefOrAddDefault(propertyEnum, out bool isNewNode);
 
             // If we do not have an existing property array, either update the non-parameterized value,
             // or create a new property array to store the parameterized value.
@@ -102,7 +97,6 @@ namespace MHServerEmu.Games.Properties
                         _version++;
                     }
 
-                    _nodeDict[propertyEnum] = node;     // Update the struct stored in the enum dictionary when we change non-parameterized value
                     return;
                 }
 
@@ -116,8 +110,6 @@ namespace MHServerEmu.Games.Properties
                     propertyArray.Add(propertyEnum, node.PropertyValue);
                     node.PropertyValue = default;
                 }
-
-                _nodeDict[propertyEnum] = node;         // Update the struct stored in the enum dictionary when we create a new property array
 
                 // Add the new value
                 propertyArray.Add(id, newValue);
@@ -152,8 +144,6 @@ namespace MHServerEmu.Games.Properties
                 _count++;
                 _version++;
             }
-
-            // No need to update the enum dictionary if we are just changing the contents of an existing property array
         }
 
         /// <summary>
