@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
@@ -411,8 +412,7 @@ namespace MHServerEmu.Games.Achievements
             if (itemProto != null && ScoringEvents.FilterPrototype(itemProto, item.Prototype, itemChilden) == false) return;
             if (rarityProto != null && ScoringEvents.FilterPrototype(rarityProto, item.RarityPrototype, rarityChildren) == false) return;
 
-            achievementsCount.TryGetValue(info, out int count);
-            achievementsCount[info] = count + item.CurrentStackSize;
+            achievementsCount.GetValueRefOrAddDefault(info) += item.CurrentStackSize;
         }
 
         private void RecountAchievement(AchievementInfo info)
