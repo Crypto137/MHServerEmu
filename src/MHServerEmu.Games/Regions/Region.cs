@@ -705,17 +705,17 @@ namespace MHServerEmu.Games.Regions
         public void UpdateEntityInSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Update(entity);
         public bool RemoveEntityFromSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Remove(entity);
 
-        public IEnumerable<WorldEntity> IterateEntitiesInRegion(EntityRegionSPContext context)
+        public EntityRegionSpatialPartition.ElementIterator<Aabb> IterateEntitiesInRegion(EntityRegionSPContext context)
         {
             return IterateEntitiesInVolume(Aabb, context);
         }
 
-        public IEnumerable<WorldEntity> IterateEntitiesInVolume<B>(B bound, EntityRegionSPContext context) where B : IBounds
+        public EntityRegionSpatialPartition.ElementIterator<TVolume> IterateEntitiesInVolume<TVolume>(TVolume volume, EntityRegionSPContext context) where TVolume : IBounds
         {
-            if (EntitySpatialPartition != null)
-                return EntitySpatialPartition.IterateElementsInVolume(bound, context);
-            else
-                return Enumerable.Empty<WorldEntity>();
+            if (EntitySpatialPartition == null)
+                return default;
+
+            return EntitySpatialPartition.IterateElementsInVolume(volume, context);
         }
 
         public EntityRegionSpatialPartition.RegionAvatarIterator IterateAvatarsInVolume(in Sphere bound)

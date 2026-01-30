@@ -2,6 +2,7 @@
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Collisions;
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
@@ -26,7 +27,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             var cell = agent.Cell;
             if (cell == null) return returnType;
 
-            IEnumerable<WorldEntity> iterator;
+            EntityRegionSpatialPartition.ElementIterator<Aabb> iterator;
             if (triggerSpawnersContext.SearchWholeRegion)
                 iterator = region.IterateEntitiesInRegion(new(EntityRegionSPContextFlags.UnrestrictedPartitions));
             else

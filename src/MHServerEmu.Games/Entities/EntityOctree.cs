@@ -1,12 +1,16 @@
 ﻿using System.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Common.SpatialPartitions;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
 {
+    // NOTE: This file is named EntityOctree.cs even though it contains the EntityRegionSpatialPartition class
+    // because that's how it was in the original game based on the client.
+
     [Flags]
     public enum EntityRegionSPContextFlags
     {
@@ -48,11 +52,11 @@ namespace MHServerEmu.Games.Entities
 
         private readonly WorldEntityRegionSpatialPartition _primaryPartition;
         private readonly WorldEntityRegionSpatialPartition _notAffectedByPowersPartition;
-        private Dictionary<ulong, WorldEntityRegionSpatialPartition> _playerRestrictedPartitions = new();
-        private List<Avatar> _avatars = new();
+        private readonly Dictionary<ulong, WorldEntityRegionSpatialPartition> _playerRestrictedPartitions = new();
+        private readonly List<Avatar> _avatars = new();
 
-        private Aabb _bounds;
-        private float _minRadius;
+        private readonly Aabb _bounds;
+        private readonly float _minRadius;
 
         private int _avatarIteratorCount = 0;
 
@@ -62,6 +66,8 @@ namespace MHServerEmu.Games.Entities
         {
             _primaryPartition = new(bound, minRadius, EntityRegionSPContextFlags.PrimaryPartition);
             _notAffectedByPowersPartition = new(bound, minRadius, EntityRegionSPContextFlags.NotAffectedByPowersPartition);
+
+            // AABB and radius are saved to create player-restricted partitions for each player on demand.
             _bounds = bound;
             _minRadius = minRadius;
         }
@@ -153,105 +159,166 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        public class ElementIterator<B> : IEnumerator<WorldEntity> where B : IBounds
+        public ElementIterator<TVolume> IterateElementsInVolume<TVolume>(TVolume volume, EntityRegionSPContext context) where TVolume : IBounds
         {
-            private List<WorldEntityRegionSpatialPartition> _partitions;
-            public WorldEntityRegionSpatialPartition.ElementIterator<B> Iterator { get; private set; }
-            public WorldEntity Current => Iterator.Current;
-            object IEnumerator.Current => Current;
+            ElementIterator<TVolume> iterator = new(volume);
 
-            public ElementIterator(B bound)
-            {
-                _partitions = new();
-                Iterator = new(bound);
-            }
+            // NOTE: We do not need to call reserve like the client does because we are using pooled lists here that only need to be resized once.
+            // We also do not initialize the subiterator for the primary partition here directly, because we handle this inside Push().
 
-            public void Push(WorldEntityRegionSpatialPartition partition)
-            {
-                if (Iterator.Tree == null)
-                    Iterator.Initialize(partition);
-                else if (Iterator.End())
-                {
-                    var volume = Iterator.Volume;
-                    Iterator.Clear();
-                    Iterator = new(partition, volume);
-                }
-                else
-                    _partitions.Add(partition);
-            }
-
-            public bool MoveNext()
-            {
-                Iterator.MoveNext();
-                while (Iterator.End() && _partitions.Count > 0)
-                {
-                    var partition = _partitions.LastOrDefault();
-                    _partitions.Remove(partition);
-                    if (partition == null) return true;
-                    var iterator = new WorldEntityRegionSpatialPartition.ElementIterator<B>(partition, Iterator.Volume);
-                    Iterator.Clear();
-                    Iterator = iterator;
-
-                }
-                return true;
-            }
-
-            public void Reserve(int size) => _partitions.Capacity = size;
-            public IEnumerator<WorldEntity> GetEnumerator() => this;
-            public void Reset() => Iterator.Reset();
-            public void Dispose() { }
-            public void Clear() => Iterator.Clear();
-            public bool End() => Iterator.End();
-        }
-
-        public IEnumerable<WorldEntity> IterateElementsInVolume<B>(B bound, EntityRegionSPContext context) where B : IBounds
-        {
-            var iterator = new ElementIterator<B>(bound);
             if (context.Flags.HasFlag(EntityRegionSPContextFlags.PrimaryPartition))
-                iterator.Iterator.Initialize(_primaryPartition);
+                iterator.Push(_primaryPartition);
 
             if (context.Flags.HasFlag(EntityRegionSPContextFlags.PlayerRestrictedPartitions))
             {
-                iterator.Reserve(_playerRestrictedPartitions.Count + (context.Flags.HasFlag(EntityRegionSPContextFlags.NotAffectedByPowersPartition) ? 1 : 0));
-
-                foreach (var pair in _playerRestrictedPartitions)
-                    iterator.Push(pair.Value);
+                foreach (WorldEntityRegionSpatialPartition partition in _playerRestrictedPartitions.Values)
+                    iterator.Push(partition);
             }
             else if (context.PlayerRestrictedGuid != 0)
             {
-                if (_playerRestrictedPartitions.TryGetValue(context.PlayerRestrictedGuid, out var partition))
-                {
-                    iterator.Reserve(1 + (context.Flags.HasFlag(EntityRegionSPContextFlags.NotAffectedByPowersPartition) ? 1 : 0));
+                if (_playerRestrictedPartitions.TryGetValue(context.PlayerRestrictedGuid, out WorldEntityRegionSpatialPartition partition))
                     iterator.Push(partition);
-                }
             }
 
             if (context.Flags.HasFlag(EntityRegionSPContextFlags.NotAffectedByPowersPartition))
                 iterator.Push(_notAffectedByPowersPartition);
 
-            try
+            return iterator;
+        }
+
+        public struct ElementIterator<TVolume> : IDisposable where TVolume: IBounds
+        {
+            private readonly TVolume _volume;
+
+            private WorldEntityRegionSpatialPartition _initialPartition;
+            private List<WorldEntityRegionSpatialPartition> _partitions;
+
+            public ElementIterator(TVolume volume)
             {
-                while (iterator.End() == false)
+                _partitions = ListPool<WorldEntityRegionSpatialPartition>.Instance.Get();
+                _volume = volume;
+            }
+
+            public void Dispose()
+            {
+                // Ownership of the partition list should be transferred to the Enumerator instance,
+                // see the Enumerator constructor below for more information.
+                if (_partitions != null)
                 {
-                    var element = iterator.Current;
-                    iterator.MoveNext();
-                    yield return element;
+                    Logger.Warn("Dispose(): _partitions != null");
+                    ListPool<WorldEntityRegionSpatialPartition>.Instance.Return(_partitions);
+                    _partitions = null;
                 }
             }
-            finally
+
+            public Enumerator GetEnumerator()
             {
-                iterator.Clear();
+                return new(ref this);
+            }
+
+            public void Push(WorldEntityRegionSpatialPartition partition)
+            {
+                // This should not be called after we create the Enumerator for this ElementIterator.
+                if (_partitions == null)
+                    throw new InvalidOperationException();
+
+                if (_initialPartition == null)
+                    _initialPartition = partition;
+                else
+                    _partitions.Add(partition);
+            }
+
+            public struct Enumerator : IEnumerator<WorldEntity>
+            {
+                private readonly WorldEntityRegionSpatialPartition _initialPartition;
+                private readonly List<WorldEntityRegionSpatialPartition> _partitions;
+                private readonly TVolume _volume;
+
+                private WorldEntityRegionSpatialPartition.ElementIterator<TVolume> _subIterator;
+
+                public WorldEntity Current { get; private set; }
+                object IEnumerator.Current { get => Current; }
+
+                public Enumerator(ref ElementIterator<TVolume> iterator)
+                {
+                    // Right now we use the partition list from our base ElementIterator directly
+                    // because we need to return it to the pool after we finish iterating.
+                    // To avoid going back and adding using / Dispose() to existing code everywhere,
+                    // we do this in the Dispose() implementation of the Enumerator, which is called by foreach.
+                    // This makes each iterator "one-off", but for our use case this is okay.
+
+                    _initialPartition = iterator._initialPartition;
+                    _partitions = iterator._partitions;
+                    _volume = iterator._volume;
+
+                    iterator._initialPartition = null;
+                    iterator._partitions = null;
+                }
+
+                public bool MoveNext()
+                {
+                    if (_initialPartition == null || _partitions == null)
+                        return false;
+
+                    if (_subIterator == null)
+                    {
+                        // Initialize the first partition subiterator.
+                        _subIterator = new(_initialPartition, _volume);
+                    }
+                    else
+                    {
+                        // Move to the next element in the current subiterator.
+                        _subIterator.MoveNext();
+                    }                                 
+
+                    // Move over to the next partition if we are finished with the current one.
+                    while (_subIterator.End() && _partitions.Count > 0)
+                    {
+                        int index = _partitions.Count - 1;
+                        WorldEntityRegionSpatialPartition partition = _partitions[index];
+                        _partitions.RemoveAt(index);
+
+                        if (partition == null)
+                            return Logger.WarnReturn(false, "MoveNext(): partition == null");
+
+                        WorldEntityRegionSpatialPartition.ElementIterator<TVolume> nextSubIterator = new(partition, _subIterator.Volume);
+                        _subIterator.Clear();   // Dispose()
+                        _subIterator = nextSubIterator;
+                    }
+
+                    // Return the element if the current one is valid.
+                    if (_subIterator.End() == false)
+                    {
+                        Current = _subIterator.Current;
+                        return true;
+                    }
+
+                    // We are out of elements and partitions.
+                    Current = null;
+                    return false;
+                }
+
+                public void Reset()
+                {
+                }
+
+                public void Dispose()
+                {
+                    _subIterator.Clear();   // Dispose()
+                    ListPool<WorldEntityRegionSpatialPartition>.Instance.Return(_partitions);
+                }
             }
         }
+
 
         public RegionAvatarIterator IterateAvatarsInVolume(Sphere volume)
         {
             return new(this, volume);
         }
 
-        public void GetElementsInVolume<B>(List<WorldEntity> elements, B volume, EntityRegionSPContext context) where B : IBounds
+        public void GetElementsInVolume<TVolume>(List<WorldEntity> elements, TVolume volume, EntityRegionSPContext context) where TVolume : IBounds
         {
-            foreach (var element in IterateElementsInVolume(volume, context))
+            foreach (WorldEntity element in IterateElementsInVolume(volume, context))
                 elements.Add(element);
         }
 
@@ -334,15 +401,26 @@ namespace MHServerEmu.Games.Entities
 
     public class WorldEntityRegionSpatialPartition : Quadtree<WorldEntity>
     {
+        public EntityRegionSPContextFlags Flag { get; private set; }
+
         public WorldEntityRegionSpatialPartition(in Aabb bound, float minRadius, EntityRegionSPContextFlags flag) : base(bound, minRadius)
         {
             Flag = flag;
         }
 
-        public override QuadtreeLocation<WorldEntity> GetLocation(WorldEntity element) => element.SpatialPartitionLocation;
-        public override Aabb GetElementBounds(WorldEntity element) => element.RegionBounds;
+        public override string ToString()
+        {
+            return Enum.GetName(Flag);
+        }
 
-        public EntityRegionSPContextFlags Flag { get; private set; }
+        public override QuadtreeLocation<WorldEntity> GetLocation(WorldEntity element)
+        {
+            return element.SpatialPartitionLocation;
+        }
 
+        public override Aabb GetElementBounds(WorldEntity element)
+        {
+            return element.RegionBounds;
+        }
     }
 }
