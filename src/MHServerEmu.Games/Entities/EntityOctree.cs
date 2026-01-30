@@ -3,6 +3,7 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Common.SpatialPartitions;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -112,7 +113,7 @@ namespace MHServerEmu.Games.Entities
         public bool Insert(WorldEntity element)
         {
             bool result;
-            ulong restrictedToPlayerGuid = 0; // TODO element.GetProperty<ulong>(PropertyEnum.RestrictedToPlayerGuid);
+            ulong restrictedToPlayerGuid = element.Properties[PropertyEnum.RestrictedToPlayerGuid];
 
             if (restrictedToPlayerGuid == 0)
             {
