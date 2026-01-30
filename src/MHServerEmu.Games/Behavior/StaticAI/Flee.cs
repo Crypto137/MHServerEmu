@@ -215,7 +215,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (potentialAllies.Count > 0)
             {
                 Sphere volume = new Sphere(curPosition, ownerController.AggroRangeAlly);
-                foreach (var entity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+                foreach (var entity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
                     if (entity is WorldEntity worldEntity && worldEntity.Id != owner.Id && owner.IsFriendlyTo(worldEntity))
                         potentialAllies.Add(worldEntity.Id);
             }

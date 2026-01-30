@@ -939,7 +939,7 @@ namespace MHServerEmu.Games.Entities
 
         public EntityRegionSPContext GetEntityRegionSPContext()
         {
-            EntityRegionSPContextFlags flags = EntityRegionSPContextFlags.ActivePartition;
+            EntityRegionSPContextFlags flags = EntityRegionSPContextFlags.PrimaryPartition;
             ulong playerRestrictedGuid = 0;
 
             WorldEntityPrototype entityProto = WorldEntityPrototype;
@@ -953,7 +953,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             if (!(IsNeverAffectedByPowers || (IsHotspot && !IsCollidableHotspot && !IsReflectingHotspot)))
-                flags |= EntityRegionSPContextFlags.StaticPartition;
+                flags |= EntityRegionSPContextFlags.NotAffectedByPowersPartition;
 
             return new(flags, playerRestrictedGuid);
         }

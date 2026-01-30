@@ -2168,7 +2168,7 @@ namespace MHServerEmu.Games.Powers
             bool requiresLineOfSight = RequiresLineOfSight(powerProto);
             Sphere bounds = new(Owner.RegionLocation.Position, powerProto.Radius);
 
-            foreach (WorldEntity entity in region.IterateEntitiesInVolume(bounds, new(EntityRegionSPContextFlags.ActivePartition)))
+            foreach (WorldEntity entity in region.IterateEntitiesInVolume(bounds, new(EntityRegionSPContextFlags.PrimaryPartition)))
             {
                 if (IsValidTarget(entity) == false)
                     continue;
@@ -4587,11 +4587,11 @@ namespace MHServerEmu.Games.Powers
                 aabb.Max.Z = float.MaxValue;
                 aabb.Min.Z = -float.MaxValue;
 
-                region.GetEntitiesInVolume(potentialTargetList, aabb, new(EntityRegionSPContextFlags.ActivePartition));
+                region.GetEntitiesInVolume(potentialTargetList, aabb, new(EntityRegionSPContextFlags.PrimaryPartition));
                 return;
             }
 
-            region.GetEntitiesInVolume(potentialTargetList, new Sphere(position, radius), new(EntityRegionSPContextFlags.ActivePartition));
+            region.GetEntitiesInVolume(potentialTargetList, new Sphere(position, radius), new(EntityRegionSPContextFlags.PrimaryPartition));
         }
 
         private static bool GetNextTargetInAOE(List<WorldEntity> potentialTargetList, ref int index, bool pickRandom, GRandom random, out WorldEntity target)
@@ -4685,7 +4685,7 @@ namespace MHServerEmu.Games.Powers
             Sphere sphere = new(userPosition + offset, 25f);
 
             // Look for a target in the volume
-            foreach (WorldEntity target in region.IterateEntitiesInVolume(sphere, new(EntityRegionSPContextFlags.ActivePartition)))
+            foreach (WorldEntity target in region.IterateEntitiesInVolume(sphere, new(EntityRegionSPContextFlags.PrimaryPartition)))
             {
                 if (IsValidTarget(powerProto, user, userAllianceProto, target))
                 {
@@ -4876,7 +4876,7 @@ namespace MHServerEmu.Games.Powers
 
                 float minIntersection = float.MaxValue;
 
-                foreach (WorldEntity worldEntity in region.IterateEntitiesInRegion(new()))
+                foreach (WorldEntity worldEntity in region.IterateEntitiesInRegion(new(EntityRegionSPContextFlags.UnrestrictedPartitions)))
                 {
                     if (worldEntity.Properties.HasProperty(PropertyEnum.BlocksTeleports) == false)
                         continue;
@@ -4992,7 +4992,7 @@ namespace MHServerEmu.Games.Powers
                 int lowestTargetIndex = int.MaxValue;
 
                 Sphere bounds = new(lastTargetPosition, range);
-                foreach (WorldEntity potentialTarget in region.IterateEntitiesInVolume(bounds, new(EntityRegionSPContextFlags.ActivePartition)))
+                foreach (WorldEntity potentialTarget in region.IterateEntitiesInVolume(bounds, new(EntityRegionSPContextFlags.PrimaryPartition)))
                 {
                     if (potentialTarget.Id == lastTargetId)
                         continue;

@@ -55,7 +55,7 @@ namespace MHServerEmu.Games.Common
             }
 
             Sphere volume = new(aggressor.RegionLocation.Position, rangeMax + aggressor.Bounds.GetRadius());
-            foreach (WorldEntity target in aggressor.Region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            foreach (WorldEntity target in aggressor.Region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
             {
                 if (target == null) continue;
                 if (ValidTarget(aggressor.Game, aggressor, target, targetType, false, flags)
@@ -79,7 +79,7 @@ namespace MHServerEmu.Games.Common
             }
 
             Sphere volume = new(aggressor.RegionLocation.Position, rangeMax + aggressor.Bounds.GetRadius());
-            foreach (WorldEntity target in aggressor.Region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            foreach (WorldEntity target in aggressor.Region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
             {
                 if (target == null) continue;
                 if (ValidTarget(aggressor.Game, aggressor, target, targetType, false, flags)
@@ -203,7 +203,7 @@ namespace MHServerEmu.Games.Common
             float closestDistanceSq = float.MaxValue;
             ulong closestTargetId = 0;
             Sphere volume = new(aggressorPosition, aggroRange);
-            foreach (var target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            foreach (var target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
             {
                 if (target == null) continue;
                 if (ValidTarget(aggressor.Game, aggressor, target, CombatTargetType.Hostile, false))
@@ -229,7 +229,7 @@ namespace MHServerEmu.Games.Common
             if (game == null) return false;
 
             Sphere volume = new(aggressor.RegionLocation.Position, aggroRange);
-            foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
             {
                 if (worldEntity == null) continue;
                 if (ValidTarget(game, aggressor, worldEntity, targetType, false, flags, null, aggroRange))

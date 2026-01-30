@@ -522,7 +522,7 @@ namespace MHServerEmu.Games.Network
             Region region = Region;
 
             // Update proximity
-            foreach (var worldEntity in region.IterateEntitiesInVolume(_entitiesVolume, new()))
+            foreach (var worldEntity in region.IterateEntitiesInVolume(_entitiesVolume, new(_playerConnection.PlayerDbId)))
             {
                 AOINetworkPolicyValues newInterestPolicies = GetNewInterestPolicies(worldEntity);
                 bool wasInterested = _trackedEntities.TryGetValue(worldEntity.Id, out EntityInterestStatus interestStatus);

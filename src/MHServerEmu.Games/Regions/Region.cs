@@ -1233,9 +1233,8 @@ namespace MHServerEmu.Games.Regions
             float minTime = 1.0f;
             float minDot = -1f;
             WorldEntity hitEntity = null;
-            var spContext = new EntityRegionSPContext(EntityRegionSPContextFlags.All);
 
-            foreach (var otherEntity in IterateEntitiesInVolume(sweepBox, spContext))
+            foreach (var otherEntity in IterateEntitiesInVolume(sweepBox, new()))
             {
                 if (canBlockFunc(otherEntity))
                 {
@@ -1350,7 +1349,7 @@ namespace MHServerEmu.Games.Regions
             if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity) || posFlags.HasFlag(PositionCheckFlags.CanPathToEntities))
             {
                 entitiesInRadius.Capacity = 256;
-                GetEntitiesInVolume(entitiesInRadius, new Sphere(point, maxDistanceFromPoint), new EntityRegionSPContext(EntityRegionSPContextFlags.ActivePartition));
+                GetEntitiesInVolume(entitiesInRadius, new Sphere(point, maxDistanceFromPoint), new EntityRegionSPContext(EntityRegionSPContextFlags.PrimaryPartition));
 
                 if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity) && checkPredicate != null)
                 {
@@ -1494,7 +1493,7 @@ namespace MHServerEmu.Games.Regions
             if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity) || posFlags.HasFlag(PositionCheckFlags.CanBeBlockedAvatar))
             {
                 var volume = new Sphere(bounds.Center, bounds.Radius);
-                foreach (WorldEntity entity in IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+                foreach (WorldEntity entity in IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
                 {
                     if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedAvatar) && entity is not Avatar) continue;
                     if (IsBoundsBlockedByEntity(bounds, entity, blockFlags))

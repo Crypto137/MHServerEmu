@@ -642,7 +642,7 @@ namespace MHServerEmu.Games.Regions
             Region region = Region;
             if (region == null) return Logger.WarnReturn(false, "GetEntitiesInCellBounds(): region == null");
 
-            region.GetEntitiesInVolume(entityList, RegionBounds, new(EntityRegionSPContextFlags.All));
+            region.GetEntitiesInVolume(entityList, RegionBounds, new());
             return true;
         }
 

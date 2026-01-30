@@ -977,7 +977,7 @@ namespace MHServerEmu.Games.Populations
             if (SpawnFlags.HasFlag(SpawnFlags.IgnoreSpawned) == false)
             {
                 Sphere sphere = new(bounds.Center, bounds.Radius);
-                foreach (var entity in Region.IterateEntitiesInVolume(sphere, new()))
+                foreach (var entity in Region.IterateEntitiesInVolume(sphere, new(EntityRegionSPContextFlags.UnrestrictedPartitions)))
                     if (Region.IsBoundsBlockedByEntity(bounds, entity, BlockingCheckFlags.CheckSpawns))
                         return false;
             }

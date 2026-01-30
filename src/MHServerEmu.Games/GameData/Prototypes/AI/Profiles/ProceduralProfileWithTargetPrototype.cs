@@ -1404,7 +1404,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             var region = agent.Region;
             if (region == null) return;
             var volume = new Sphere(agent.RegionLocation.Position, ownerController.AggroRangeAlly);
-            foreach (var entity in region.IterateEntitiesInVolume(volume, new (EntityRegionSPContextFlags.ActivePartition)))
+            foreach (var entity in region.IterateEntitiesInVolume(volume, new (EntityRegionSPContextFlags.PrimaryPartition)))
             {
                 if (entity is not Agent otherTrap 
                     || otherTrap.Id == agent.Id 

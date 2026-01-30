@@ -9,10 +9,12 @@ namespace MHServerEmu.Games.Entities
     [Flags]
     public enum EntityRegionSPContextFlags
     {
-        ActivePartition = 1 << 0,
-        StaticPartition = 1 << 1,
-        PlayersPartition = 1 << 2,
-        All = ActivePartition | StaticPartition | PlayersPartition
+        PrimaryPartition                = 1 << 0,   // Most things go here.
+        NotAffectedByPowersPartition    = 1 << 1,   // Entities not affected by powers and hotspots that are not collidable / reflecting.
+        PlayerRestrictedPartitions      = 1 << 2,   // Player-specific entities (e.g. instanced loot).
+
+        UnrestrictedPartitions          = PrimaryPartition | NotAffectedByPowersPartition,
+        AllPartitions                   = PrimaryPartition | NotAffectedByPowersPartition | PlayerRestrictedPartitions
     }
 
     public readonly struct EntityRegionSPContext
@@ -22,7 +24,7 @@ namespace MHServerEmu.Games.Entities
 
         public EntityRegionSPContext()
         {
-            Flags = EntityRegionSPContextFlags.ActivePartition | EntityRegionSPContextFlags.StaticPartition;
+            Flags = EntityRegionSPContextFlags.AllPartitions;
             PlayerRestrictedGuid = 0;
         }
 
@@ -31,33 +33,36 @@ namespace MHServerEmu.Games.Entities
             Flags = flags;
             PlayerRestrictedGuid = playerRestrictedGuid;
         }
+
+        public EntityRegionSPContext(ulong playerRestrictedGuid)
+        {
+            Flags = EntityRegionSPContextFlags.UnrestrictedPartitions;
+            PlayerRestrictedGuid = playerRestrictedGuid;
+        }
     }
 
     public class EntityRegionSpatialPartition
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private WorldEntityRegionSpatialPartition _staticSpatialPartition;
-        private WorldEntityRegionSpatialPartition _activeSpatialPartition;
-        private List<Avatar> _avatars;
-        private Dictionary<ulong, WorldEntityRegionSpatialPartition> _players;
+        private readonly WorldEntityRegionSpatialPartition _primaryPartition;
+        private readonly WorldEntityRegionSpatialPartition _notAffectedByPowersPartition;
+        private Dictionary<ulong, WorldEntityRegionSpatialPartition> _playerRestrictedPartitions = new();
+        private List<Avatar> _avatars = new();
+
         private Aabb _bounds;
         private float _minRadius;
 
-        private int _avatarIteratorCount;
+        private int _avatarIteratorCount = 0;
 
-        public int TotalElements { get; protected set; }
+        public int TotalElements { get; private set; } = 0;
 
         public EntityRegionSpatialPartition(in Aabb bound, float minRadius = 64.0f)
         {
+            _primaryPartition = new(bound, minRadius, EntityRegionSPContextFlags.PrimaryPartition);
+            _notAffectedByPowersPartition = new(bound, minRadius, EntityRegionSPContextFlags.NotAffectedByPowersPartition);
             _bounds = bound;
             _minRadius = minRadius;
-            _staticSpatialPartition = new(bound, minRadius, EntityRegionSPContextFlags.StaticPartition);
-            _activeSpatialPartition = new(bound, minRadius, EntityRegionSPContextFlags.ActivePartition);
-            _players = new();
-            _avatars = new();
-            _avatarIteratorCount = 0;
-            TotalElements = 0;
         }
 
         public bool Update(WorldEntity element)
@@ -108,13 +113,14 @@ namespace MHServerEmu.Games.Entities
         {
             bool result;
             ulong restrictedToPlayerGuid = 0; // TODO element.GetProperty<ulong>(PropertyEnum.RestrictedToPlayerGuid);
+
             if (restrictedToPlayerGuid == 0)
             {
-                if (element.IsNeverAffectedByPowers
-                    || element.IsHotspot && element.IsCollidableHotspot == false && element.IsReflectingHotspot == false)
-                    result = _staticSpatialPartition.Insert(element);
+                if (element.IsNeverAffectedByPowers ||
+                    (element.IsHotspot && element.IsCollidableHotspot == false && element.IsReflectingHotspot == false))
+                    result = _notAffectedByPowersPartition.Insert(element);
                 else
-                    result = _activeSpatialPartition.Insert(element);
+                    result = _primaryPartition.Insert(element);
 
                 if (element is Avatar avatar)
                 {
@@ -127,14 +133,15 @@ namespace MHServerEmu.Games.Entities
             }
             else
             {
-                var spatialPartition = _players.GetValueOrDefault(restrictedToPlayerGuid);
-                if (spatialPartition == null)
+                if (_playerRestrictedPartitions.TryGetValue(restrictedToPlayerGuid, out var spatialPartition) == false)
                 {
-                    spatialPartition = new(_bounds, _minRadius, EntityRegionSPContextFlags.PlayersPartition);
-                    _players[restrictedToPlayerGuid] = spatialPartition;
+                    spatialPartition = new(_bounds, _minRadius, EntityRegionSPContextFlags.PlayerRestrictedPartitions);
+                    _playerRestrictedPartitions.Add(restrictedToPlayerGuid, spatialPartition);
                 }
+
                 result = spatialPartition.Insert(element);
             }
+
             TotalElements++;
             return result;
         }
@@ -199,27 +206,27 @@ namespace MHServerEmu.Games.Entities
         public IEnumerable<WorldEntity> IterateElementsInVolume<B>(B bound, EntityRegionSPContext context) where B : IBounds
         {
             var iterator = new ElementIterator<B>(bound);
-            if (context.Flags.HasFlag(EntityRegionSPContextFlags.ActivePartition))
-                iterator.Iterator.Initialize(_activeSpatialPartition);
+            if (context.Flags.HasFlag(EntityRegionSPContextFlags.PrimaryPartition))
+                iterator.Iterator.Initialize(_primaryPartition);
 
-            if (context.Flags.HasFlag(EntityRegionSPContextFlags.PlayersPartition))
+            if (context.Flags.HasFlag(EntityRegionSPContextFlags.PlayerRestrictedPartitions))
             {
-                iterator.Reserve(_players.Count + (context.Flags.HasFlag(EntityRegionSPContextFlags.StaticPartition) ? 1 : 0));
+                iterator.Reserve(_playerRestrictedPartitions.Count + (context.Flags.HasFlag(EntityRegionSPContextFlags.NotAffectedByPowersPartition) ? 1 : 0));
 
-                foreach (var pair in _players)
+                foreach (var pair in _playerRestrictedPartitions)
                     iterator.Push(pair.Value);
             }
             else if (context.PlayerRestrictedGuid != 0)
             {
-                if (_players.TryGetValue(context.PlayerRestrictedGuid, out var partition))
+                if (_playerRestrictedPartitions.TryGetValue(context.PlayerRestrictedGuid, out var partition))
                 {
-                    iterator.Reserve(1 + (context.Flags.HasFlag(EntityRegionSPContextFlags.StaticPartition) ? 1 : 0));
+                    iterator.Reserve(1 + (context.Flags.HasFlag(EntityRegionSPContextFlags.NotAffectedByPowersPartition) ? 1 : 0));
                     iterator.Push(partition);
                 }
             }
 
-            if (context.Flags.HasFlag(EntityRegionSPContextFlags.StaticPartition))
-                iterator.Push(_staticSpatialPartition);
+            if (context.Flags.HasFlag(EntityRegionSPContextFlags.NotAffectedByPowersPartition))
+                iterator.Push(_notAffectedByPowersPartition);
 
             try
             {

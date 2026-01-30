@@ -191,7 +191,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             int targetsFound = 0;
             Sphere volume = new (agent.RegionLocation.Position, ownerController.AggroRangeHostile);
-            foreach (WorldEntity targetEntity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            foreach (WorldEntity targetEntity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
             {
                 if (targetEntity != null)
                     foreach (var target in Targets)

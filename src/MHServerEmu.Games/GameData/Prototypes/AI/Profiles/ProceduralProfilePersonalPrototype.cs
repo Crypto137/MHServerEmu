@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 List<WorldEntity> validTargets = new (MaxTargets);
 
                 var volume = new Sphere(agent.RegionLocation.Position, SpecialPowerMaxRadius);
-                foreach (var targetInSphere in region.IterateEntitiesInVolume(volume, new (EntityRegionSPContextFlags.ActivePartition)))
+                foreach (var targetInSphere in region.IterateEntitiesInVolume(volume, new (EntityRegionSPContextFlags.PrimaryPartition)))
                 {
                     if (validTargets.Count >= MaxTargets) break;
                     if (targetInSphere == null) continue;
@@ -2588,7 +2588,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 List<WorldEntity> validTargets = new(MaxTargets);
 
                 var volume = new Sphere(agent.RegionLocation.Position, SpecialPowerMaxRadius);
-                foreach (var targetInSphere in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+                foreach (var targetInSphere in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
                 {
                     if (validTargets.Count >= MaxTargets) break;
                     if (targetInSphere == null) continue;
@@ -2960,7 +2960,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         if (region == null) return;
 
                         var volume = new Sphere(agent.RegionLocation.Position, 3200.0f);
-                        foreach (var targetEntity in region.IterateEntitiesInVolume(volume, new (EntityRegionSPContextFlags.ActivePartition)))
+                        foreach (var targetEntity in region.IterateEntitiesInVolume(volume, new (EntityRegionSPContextFlags.PrimaryPartition)))
                             if (targetEntity != null && targetEntity.PrototypeDataRef == obeliskDataRef)
                             {
                                 blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = targetEntity.Id;
@@ -3211,7 +3211,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Region region = agent.Region;
             if (region == null) return;
             Sphere volume = new(agent.RegionLocation.Position, ownerController.AggroRangeHostile);
-            foreach(WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            foreach(WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
             {
                 if (target != null && target.PrototypeDataRef == WeaponsCrate)
                     blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = target.Id;
@@ -3718,7 +3718,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Sphere volume = new (agent.RegionLocation.Position, ownerController.AggroRangeHostile);
             Picker<ulong> targetPicker = new (game.Random);
 
-            foreach (var target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            foreach (var target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
                 if (target != null && target.IsHostileTo(agent) && target.IsDead == false 
                     && target != target1 && target != target2 && target != target3)
                 {
@@ -3828,7 +3828,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (region == null) return;
 
             Sphere volume = new(agent.RegionLocation.Position, ownerController.AggroRangeHostile);
-            foreach (WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            foreach (WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
             {
                 if (target == null) continue;
                 if (target.PrototypeDataRef == PlatformMarkerLeft)
@@ -4426,7 +4426,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (game == null) return;
 
                 Sphere volume = new(agent.RegionLocation.Position, NullifierSearchRadius);
-                foreach (WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+                foreach (WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
                     if (target is Agent nullifier && PsychicNullifierTargets.Contains(nullifier.PrototypeDataRef))
                     {
                         var nullifierController = nullifier.AIController;
@@ -4505,7 +4505,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 List<WorldEntity> spawnersToDestroy = new();
 
                 var volume = new Sphere(agent.RegionLocation.Position, SpawnerSearchRadius);
-                foreach (var spawnerTarget in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+                foreach (var spawnerTarget in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
                     if (spawnerTarget != null && spawnerTarget.PrototypeDataRef == ShieldEngineerSpawner)
                         spawnersToDestroy.Add(spawnerTarget);
 

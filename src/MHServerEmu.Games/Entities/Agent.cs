@@ -3105,7 +3105,7 @@ namespace MHServerEmu.Games.Entities
                         return false;
 
                     var volume = new Sphere(RegionLocation.Position, broadcastEventProto.BroadcastRange);
-                    foreach (var entity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+                    foreach (var entity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
                         entity.TriggerEntityActionEvent(broadcastEventProto.EventToBroadcast);
                 }
             }

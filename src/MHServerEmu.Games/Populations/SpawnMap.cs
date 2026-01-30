@@ -324,7 +324,7 @@ namespace MHServerEmu.Games.Populations
             var region = Area.Region;
             List<WorldEntity> entities = new(256);
             var volume = new Sphere(position, CrowdSupressionRadius);
-            region.GetEntitiesInVolume(entities, volume, new(EntityRegionSPContextFlags.ActivePartition));
+            region.GetEntitiesInVolume(entities, volume, new(EntityRegionSPContextFlags.PrimaryPartition));
 
             int crowdSize = 0;
             bool hasPlayer = false;

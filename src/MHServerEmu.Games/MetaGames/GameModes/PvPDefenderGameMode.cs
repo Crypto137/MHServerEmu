@@ -291,7 +291,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         private void GetDefenders()
         {
             _defenders.Clear();
-            var active = new EntityRegionSPContext(EntityRegionSPContextFlags.ActivePartition);
+            var active = new EntityRegionSPContext(EntityRegionSPContextFlags.PrimaryPartition);
             foreach (var defenderData in _proto.Defenders)
                 foreach (var defender in Region.IterateEntitiesInRegion(active))
                     if (defender.PrototypeDataRef == defenderData.Defender)

@@ -220,9 +220,9 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             var region = ownerAgent.Region;
             if (region == null) return false;
 
-            var spFlags = EntityRegionSPContextFlags.ActivePartition;
-            if (selectionContext.StaticEntities)
-                spFlags |= EntityRegionSPContextFlags.StaticPartition;
+            var spFlags = EntityRegionSPContextFlags.PrimaryPartition;
+            if (selectionContext.NotAffectedByPowers)
+                spFlags |= EntityRegionSPContextFlags.NotAffectedByPowersPartition;
             var spatialPartitionContext = new EntityRegionSPContext(spFlags);
 
             if (selectionContext.SelectionMethod == SelectEntityMethodType.RandomEntity)
@@ -557,7 +557,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             public float CellOrRegionAABBScale;
             public PrototypeId AlliancePriority;
             public PropertyEnum ComparisonEnum;
-            public bool StaticEntities;
+            public bool NotAffectedByPowers;
             public PropertyDataType ComparisonDataType;
 
             public SelectEntityContext(AIController ownerController, SelectEntityContextPrototype proto)
@@ -573,7 +573,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 CellOrRegionAABBScale = proto.CellOrRegionAABBScale;
                 AlliancePriority = proto.AlliancePriority;
                 ComparisonEnum = 0;
-                StaticEntities = false;
+                NotAffectedByPowers = false;
                 ComparisonDataType = PropertyDataType.Invalid;
                 if (FindPropertyInfoForPropertyComparison(ref ComparisonEnum, ref ComparisonDataType, proto.EntitiesPropertyForComparison) == false)
                     Logger.Warn("SelectEntityInfo()::Could not find property info for targets property for comparison");

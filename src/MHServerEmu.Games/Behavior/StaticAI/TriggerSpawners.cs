@@ -28,9 +28,9 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             IEnumerable<WorldEntity> iterator;
             if (triggerSpawnersContext.SearchWholeRegion)
-                iterator = region.IterateEntitiesInRegion(new());
+                iterator = region.IterateEntitiesInRegion(new(EntityRegionSPContextFlags.UnrestrictedPartitions));
             else
-                iterator = region.IterateEntitiesInVolume(cell.RegionBounds, new());
+                iterator = region.IterateEntitiesInVolume(cell.RegionBounds, new(EntityRegionSPContextFlags.UnrestrictedPartitions));
             
             List<Spawner> spawners = new();
             foreach (var entity in iterator)

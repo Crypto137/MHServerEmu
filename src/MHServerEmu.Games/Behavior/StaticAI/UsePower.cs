@@ -210,7 +210,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
                         var volume = new Sphere(regionLocation.Position, powerProto.Radius);
 
-                        foreach (WorldEntity target in region.IterateEntitiesInVolume(volume, new EntityRegionSPContext(EntityRegionSPContextFlags.ActivePartition)))
+                        foreach (WorldEntity target in region.IterateEntitiesInVolume(volume, new EntityRegionSPContext(EntityRegionSPContextFlags.PrimaryPartition)))
                         {
                             if (target == null)
                             {

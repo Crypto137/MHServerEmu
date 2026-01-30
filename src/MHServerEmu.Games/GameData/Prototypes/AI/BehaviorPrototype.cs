@@ -370,7 +370,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Cell cell = targetAgent.Cell;
             if (cell == null) return false;
             List<WorldEntity> entities = new(); 
-            region.GetEntitiesInVolume(entities, cell.RegionBounds, new(EntityRegionSPContextFlags.ActivePartition));
+            region.GetEntitiesInVolume(entities, cell.RegionBounds, new(EntityRegionSPContextFlags.PrimaryPartition));
 
             Agent otherAgent = null;
             foreach (var entity in entities)
