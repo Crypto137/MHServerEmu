@@ -3,32 +3,36 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 
-namespace MHServerEmu.Games.Common.SpatialPartitions
+namespace MHServerEmu.Games.SpatialPartitions
 {
     // NOTE: Even though this is a quadtree structure, the original source file referenced by client verify messages is called "Octree.h".
     // D:\mirrorBuilds_source05\MarvelGame_v52\Source\Game\Game\SpacialPartition\Octree.h
 
     // Logically it probably makes more sense to have this in the Core.Collections namespace, but for now we are sticking to how it is in the client.
 
-    public class Quadtree<T>
+    public abstract class Quadtree<T>
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public Node<T> Root;
-        private Aabb _bounds;
-        private readonly int _targetThreshold = 6;
-        private readonly float _loose = 2.0f;
-        private int _nodesCount;
-        private int _outstandingIteratorCount;
-        private int _elementsCount;
-        private float _minLoose;
+        private const int TargetThreshold = 6;
+        private const float Loose = 2.0f;
 
-        public Quadtree(in Aabb bound, float minRadius)
+        private readonly Aabb _bounds;
+        private readonly float _minLoose;
+
+        private int _nodesCount;
+        private int _elementsCount;
+        private int _outstandingIteratorCount;
+
+        public QuadtreeNode<T> Root { get; private set; }
+
+        public Quadtree(in Aabb bounds, float minRadius)
         {
-            _bounds = bound;
-            _minLoose = MathF.Max(minRadius * _loose, bound.Radius2D() * _loose / 16777216);
-            _elementsCount = 0;
+            _bounds = bounds;
+            _minLoose = MathF.Max(minRadius * Loose, bounds.Radius2D() * Loose / 16777216);
+
             _nodesCount = 0;
+            _elementsCount = 0;
         }
 
         public bool Update(T element)
@@ -36,17 +40,25 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
             if (element == null) return Logger.WarnReturn(false, "Update(): element == null");
             if (_outstandingIteratorCount > 0) return Logger.WarnReturn(false, $"Update(): _outstandingIteratorCount > 0 ({_outstandingIteratorCount})");
 
-            var location = GetLocation(element);
-            var node = location.Node;
-            if (node == null) return Insert(element);
+            QuadtreeLocation<T> location = GetLocation(element);
+            QuadtreeNode<T> node = location.Node;
 
-            var elementBounds = GetElementBounds(element);
-            if (node.LooseBounds.FullyContainsXY(elementBounds)) return false;
-            if (node.RemoveElement(location) == false) return Logger.WarnReturn(false, "Update(): node.RemoveElement(location) == false");
+            if (node == null)
+                return Insert(element);
+
+            Aabb elementBounds = GetElementBounds(element);
+
+            if (node.LooseBounds.FullyContainsXY(elementBounds))
+                return false;
+
+            if (node.RemoveElement(location) == false)
+                return Logger.WarnReturn(false, "Update(): node.RemoveElement(location) == false");
+
             _elementsCount--;
 
-            var parent = node.Parent;
+            QuadtreeNode<T> parent = node.Parent;
             RewindNode(node, parent);
+
             while (parent != null)
             {
                 if (parent.LooseBounds.FullyContainsXY(elementBounds))
@@ -64,20 +76,24 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
             if (element == null) return Logger.WarnReturn(false, "Insert(): element == null");
             if (_outstandingIteratorCount > 0) return Logger.WarnReturn(false, $"Insert(): _outstandingIteratorCount > 0 ({_outstandingIteratorCount})");
 
-            if (Root == null) AllocateNode(new(_bounds.Center, _bounds.Radius2D() * _loose), null);
+            if (Root == null)
+                AllocateNode(new(_bounds.Center, _bounds.Radius2D() * Loose), null);
+
             if (Root == null) return Logger.WarnReturn(false, "Insert(): Root == null");
 
             Aabb elementBounds = GetElementBounds(element);
             float elementRadius = elementBounds.Radius2D();
+
             if ((elementRadius > 0.0f && Root.LooseBounds.FullyContainsXY(elementBounds)) == false)
                 return Logger.WarnReturn(false, $"Trying to insert element into quadtree with invalid size. ElementRadius={elementRadius}, ElementBounds={elementBounds}, Element={element}");
 
             return Insert(Root, element, elementBounds, elementBounds.Center, elementRadius);
         }
 
-        private bool Insert(Node<T> node, T element, in Aabb elementBounds, in Vector3 elementCenter, float elementRadius)
+        private bool Insert(QuadtreeNode<T> node, T element, in Aabb elementBounds, in Vector3 elementCenter, float elementRadius)
         {
             if (node == null) return Logger.WarnReturn(false, "Insert(): node == null");
+
             QuadtreeLocation<T> location = GetLocation(element);
 
             while (true)
@@ -93,7 +109,7 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
                 int x = elementCenter.X > center.X ? 1 : 0;
                 int y = elementCenter.Y > center.Y ? 1 : 0;
                 int index = x << 1 | y;
-                Node<T> child = node.Children[index];
+                QuadtreeNode<T> child = node.Children[index];
 
                 if (child != null)
                 {
@@ -118,55 +134,62 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
             }
         }
 
-        public virtual QuadtreeLocation<T> GetLocation(T element) => default;
+        public bool AtTargetLevel(QuadtreeNode<T> node, float elementRadius)
+        {
+            float nodeRadius = node.Radius;
+            return nodeRadius <= _minLoose || elementRadius >= nodeRadius * 0.5;
+        }
 
-        private Node<T> PushDown(Node<T> node, in Vector2 center, int x, int y)
+        // We could potentially replace these two abstract methods with an interface, but that would be less accurate to how the client does it.
+        public abstract QuadtreeLocation<T> GetLocation(T element);
+
+        public abstract Aabb GetElementBounds(T element);
+
+        private QuadtreeNode<T> PushDown(QuadtreeNode<T> node, in Vector2 center, int x, int y)
         {
             int notAtTargetCount = node.Elements.Count - node.AtTargetLevelCount;
-            if (notAtTargetCount >= 0 && notAtTargetCount >= _targetThreshold)
+
+            if (notAtTargetCount >= 0 && notAtTargetCount >= TargetThreshold)
             {
-                var childBounds = ConstructChildBounds(node, center, x, y);
-                var child = AllocateNode(childBounds, node, x << 1 | y);
+                Aabb2 childBounds = ConstructChildBounds(node, center, x, y);
+                QuadtreeNode<T> child = AllocateNode(childBounds, node, x << 1 | y);
+
                 if (child != null)
                 {
                     node.PushDown(this, child);
                     return child;
                 }
             }
+
             return null;
         }
 
-        private Aabb2 ConstructChildBounds(Node<T> node, in Vector2 center, int x, int y)
+        private Aabb2 ConstructChildBounds(QuadtreeNode<T> node, in Vector2 center, int x, int y)
         {
             float childDiameter = node.LooseBounds.Width / 2.0f;
-            float looseRadius = childDiameter / (_loose * 2.0f);
+            float looseRadius = childDiameter / (Loose * 2.0f);
             Vector2 offset = new(x == 0 ? -looseRadius : looseRadius, y == 0 ? -looseRadius : looseRadius);
             Vector2 childCenter = center + offset;
             return new(childCenter, childDiameter);
         }
 
-        public bool AtTargetLevel(Node<T> node, float elementRadius)
+        private QuadtreeNode<T> AllocateNode(in Aabb2 bound, QuadtreeNode<T> parent, int index = 0)
         {
-            float nodeRadius = node.GetRadius();
-            return nodeRadius <= _minLoose || elementRadius >= nodeRadius * 0.5;
-        }
+            QuadtreeNode<T> child = new(this, parent, bound);
 
-        public virtual Aabb GetElementBounds(T element) => default;
-
-        private Node<T> AllocateNode(in Aabb2 bound, Node<T> parent, int index = 0)
-        {
-            Node<T> child = new(this, parent, bound);
             if (parent != null)
                 parent.Children[index] = child;
             else
                 Root = child;
+
             _nodesCount++;
             return child;
         }
 
-        private void DeallocateNode(Node<T> node)
+        private void DeallocateNode(QuadtreeNode<T> node)
         {
-            if (node != null) _nodesCount--;
+            if (node != null)
+                _nodesCount--;
         }
 
         public bool Remove(T element)
@@ -174,8 +197,8 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
             if (element == null) return Logger.WarnReturn(false, "Remove(): element == null");
             if (_outstandingIteratorCount > 0) return Logger.WarnReturn(false, $"Remove(): _outstandingIteratorCount > 0 ({_outstandingIteratorCount})");
 
-            var location = GetLocation(element);
-            var node = location.Node;
+            QuadtreeLocation<T> location = GetLocation(element);
+            QuadtreeNode<T> node = location.Node;
 
             if (node == null) return Logger.WarnReturn(false, "Remove(): node == null");
             if (node.RemoveElement(location) == false) return Logger.WarnReturn(false, "Remove(): node.RemoveElement(location) == false");
@@ -185,23 +208,27 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
             return RewindNode(node);
         }
 
-        private bool RewindNode(Node<T> node, Node<T> root = default)
+        private bool RewindNode(QuadtreeNode<T> node, QuadtreeNode<T> root = default)
         {
             bool result = false;
+
             while (node.IsEmpty())
             {
-                var parent = node.Parent;
+                QuadtreeNode<T> parent = node.Parent;
                 UnlinkChild(parent, node);
                 DeallocateNode(node);
                 result = true;
 
-                if (parent == root) break;
+                if (parent == root)
+                    break;
+
                 node = parent;
             }
+
             return result;
         }
 
-        private bool UnlinkChild(Node<T> parent, Node<T> child)
+        private bool UnlinkChild(QuadtreeNode<T> parent, QuadtreeNode<T> child)
         {
             if (parent != null)
             {
@@ -219,6 +246,7 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
                 Root = null;
                 return true;
             }
+
             return false;
         }
 
@@ -241,6 +269,22 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
             }
         }
 
+        private void IncrementIteratorCount()
+        {
+            _outstandingIteratorCount++;
+        }
+
+        private void DecrementIteratorCount()
+        {
+            if (_outstandingIteratorCount <= 0)
+            {
+                Logger.Warn("DecrementIteratorCount(): _outstandingIteratorCount <= 0");
+                return;
+            }
+
+            _outstandingIteratorCount--;
+        }
+
         public class ElementIterator<B> : IEnumerator<T> where B : IBounds
         {
             public Quadtree<T> Tree { get; private set; }
@@ -251,10 +295,10 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
 
             private struct CandidateNode // Struct, not class!
             {
-                public Node<T> Node;
+                public QuadtreeNode<T> Node;
                 public bool Contains;
 
-                public CandidateNode(Node<T> node = null, bool contains = false)
+                public CandidateNode(QuadtreeNode<T> node = null, bool contains = false)
                 {
                     Node = node;
                     Contains = contains;
@@ -425,13 +469,5 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
 
             public IEnumerator<T> GetEnumerator() => this;
         }
-
-        private void DecrementIteratorCount()
-        {
-            if (_outstandingIteratorCount > 0) _outstandingIteratorCount--;
-        }
-
-        private void IncrementIteratorCount() => _outstandingIteratorCount++;
-
     }
 }

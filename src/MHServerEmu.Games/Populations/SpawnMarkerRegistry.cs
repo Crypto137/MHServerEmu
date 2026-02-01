@@ -141,7 +141,7 @@ namespace MHServerEmu.Games.Populations
             if (_reservationOctree != null)
             {
                 SpawnReservation managedObject = spot;
-                if (managedObject != null && !managedObject.SpatialPartitionLocation.IsValid())
+                if (managedObject != null && !managedObject.SpatialPartitionLocation.IsValid)
                     _reservationOctree.Insert(managedObject);
             }
 
@@ -189,7 +189,7 @@ namespace MHServerEmu.Games.Populations
             foreach (SpawnReservation reservation in reservations)
             {
                 if (reservation == null || reservation.Cell != cell) continue;
-                if (_reservationOctree != null && reservation.SpatialPartitionLocation.IsValid()) _reservationOctree.Remove(reservation);
+                if (_reservationOctree != null && reservation.SpatialPartitionLocation.IsValid) _reservationOctree.Remove(reservation);
                 bool success = true;
                 success &= RemoveFromMasterVector(reservation);
                 success &= RemoveFromRegionLookup(reservation);

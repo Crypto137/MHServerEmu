@@ -4,7 +4,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Common.SpatialPartitions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
@@ -14,6 +13,7 @@ using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.SpatialPartitions;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -255,7 +255,7 @@ namespace MHServerEmu.Games.Regions
             _hotspotDict.Clear();
 
             Region region = Region;
-            if (region != null && SpatialPartitionLocation.IsValid())
+            if (region != null && SpatialPartitionLocation.IsValid)
                 region.PartitionCell(this, RegionPartitionContext.Remove);
         }
 
@@ -263,7 +263,7 @@ namespace MHServerEmu.Games.Regions
         {
             if (Prototype == null) return;
 
-            if (SpatialPartitionLocation.IsValid())
+            if (SpatialPartitionLocation.IsValid)
                 Region.PartitionCell(this, RegionPartitionContext.Remove);
 
             AreaPosition = positionInArea;
@@ -277,7 +277,7 @@ namespace MHServerEmu.Games.Regions
             RegionBounds = Prototype.BoundingBox.Translate(AreaOffset);
             RegionBounds.RoundToNearestInteger();
 
-            if (SpatialPartitionLocation.IsValid() == false)
+            if (SpatialPartitionLocation.IsValid == false)
                 Region.PartitionCell(this, RegionPartitionContext.Insert);
         }
 
@@ -801,13 +801,14 @@ namespace MHServerEmu.Games.Regions
         #endregion
     }
 
-    public class CellRegionSpatialPartitionLocation : QuadtreeLocation<Cell>
+    public sealed class CellRegionSpatialPartitionLocation : QuadtreeLocation<Cell>
     {
+        public override Aabb Bounds { get => Element.RegionBounds; }
+
         public CellRegionSpatialPartitionLocation(Cell element) : base(element) { }
-        public override Aabb GetBounds() => Element.RegionBounds;
     }
 
-    public class CellSpatialPartition : Quadtree<Cell>
+    public sealed class CellSpatialPartition : Quadtree<Cell>
     {
         public CellSpatialPartition(in Aabb bound) : base(bound, 128.0f) { }
 

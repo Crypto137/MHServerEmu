@@ -2,9 +2,9 @@
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
-using MHServerEmu.Games.Common.SpatialPartitions;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.SpatialPartitions;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -75,7 +75,7 @@ namespace MHServerEmu.Games.Entities
         public bool Update(WorldEntity element)
         {
             var loc = element.SpatialPartitionLocation;
-            if (loc.IsValid() == false)
+            if (loc.IsValid == false)
             {
                 return Insert(element);
             }
@@ -96,7 +96,7 @@ namespace MHServerEmu.Games.Entities
         public bool Remove(WorldEntity element)
         {
             var loc = element.SpatialPartitionLocation;
-            if (loc.IsValid() == false) return false;
+            if (loc.IsValid == false) return false;
             TotalElements--;
 
             if (element is Avatar avatar)
@@ -393,13 +393,14 @@ namespace MHServerEmu.Games.Entities
         }
     }
 
-    public class EntityRegionSpatialPartitionLocation : QuadtreeLocation<WorldEntity>
+    public sealed class EntityRegionSpatialPartitionLocation : QuadtreeLocation<WorldEntity>
     {
+        public override Aabb Bounds { get => Element.RegionBounds; }
+
         public EntityRegionSpatialPartitionLocation(WorldEntity element) : base(element) { }
-        public override Aabb GetBounds() => Element.RegionBounds;
     }
 
-    public class WorldEntityRegionSpatialPartition : Quadtree<WorldEntity>
+    public sealed class WorldEntityRegionSpatialPartition : Quadtree<WorldEntity>
     {
         public EntityRegionSPContextFlags Flag { get; private set; }
 

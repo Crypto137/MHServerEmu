@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Common.SpatialPartitions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.SpatialPartitions;
 
 namespace MHServerEmu.Games.Populations
 {
@@ -25,13 +25,14 @@ namespace MHServerEmu.Games.Populations
         }
     }
 
-    public class BlackOutSpatialPartitionLocation : QuadtreeLocation<BlackOutZone>
+    public sealed class BlackOutSpatialPartitionLocation : QuadtreeLocation<BlackOutZone>
     {
+        public override Aabb Bounds { get => Element.RegionBounds; }
+
         public BlackOutSpatialPartitionLocation(BlackOutZone element) : base(element) { }
-        public override Aabb GetBounds() => Element.RegionBounds;
     }
 
-    public class BlackOutSpatialPartition : Quadtree<BlackOutZone>
+    public sealed class BlackOutSpatialPartition : Quadtree<BlackOutZone>
     {
         public BlackOutSpatialPartition(in Aabb bound) : base(bound, 128.0f) { }
 
