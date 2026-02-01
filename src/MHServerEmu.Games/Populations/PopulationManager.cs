@@ -419,10 +419,10 @@ namespace MHServerEmu.Games.Populations
             }
         }
 
-        public IEnumerable<BlackOutZone> IterateBlackOutZoneInVolume<B>(B bound) where B : IBounds
+        public IEnumerable<BlackOutZone> IterateBlackOutZoneInVolume<TVolume>(TVolume volume) where TVolume : IBounds
         {
             if (_blackOutSpatialPartition != null)
-                return _blackOutSpatialPartition.IterateElementsInVolume(bound);
+                return _blackOutSpatialPartition.IterateElementsInVolume(volume);
             else
                 return Enumerable.Empty<BlackOutZone>();
         }

@@ -689,10 +689,10 @@ namespace MHServerEmu.Games.Regions
             return null;
         }
 
-        public IEnumerable<Cell> IterateCellsInVolume<B>(B bounds) where B : IBounds
+        public IEnumerable<Cell> IterateCellsInVolume<TVolume>(TVolume volume) where TVolume : IBounds
         {
             if (CellSpatialPartition != null)
-                return CellSpatialPartition.IterateElementsInVolume(bounds);
+                return CellSpatialPartition.IterateElementsInVolume(volume);
             else
                 return Enumerable.Empty<Cell>(); //new CellSpatialPartition.ElementIterator();
         }
@@ -726,7 +726,7 @@ namespace MHServerEmu.Games.Regions
             return EntitySpatialPartition.IterateAvatarsInVolume(bound);
         }
 
-        public void GetEntitiesInVolume<B>(List<WorldEntity> entities, B volume, EntityRegionSPContext context) where B : IBounds
+        public void GetEntitiesInVolume<TVolume>(List<WorldEntity> entities, TVolume volume, EntityRegionSPContext context) where TVolume : IBounds
         {
             EntitySpatialPartition?.GetElementsInVolume(entities, volume, context);
         }

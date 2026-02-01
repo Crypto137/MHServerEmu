@@ -64,10 +64,10 @@ namespace MHServerEmu.Games.Populations
             _reservationOctree = null;
         }
 
-        public IEnumerable<SpawnReservation> IterateReservationsInVolume<B>(B bound) where B : IBounds
+        public IEnumerable<SpawnReservation> IterateReservationsInVolume<TVolume>(TVolume volume) where TVolume : IBounds
         {
             if (_reservationOctree != null)
-                return _reservationOctree.IterateElementsInVolume(bound);
+                return _reservationOctree.IterateElementsInVolume(volume);
             else
                 return Enumerable.Empty<SpawnReservation>();
         }
