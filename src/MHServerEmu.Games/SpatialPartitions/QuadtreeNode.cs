@@ -9,8 +9,8 @@ namespace MHServerEmu.Games.SpatialPartitions
         public Aabb2 LooseBounds { get; }
         public float Radius { get => LooseBounds.Width; }
 
-        public QuadtreeNode<T>[] Children { get; } = new QuadtreeNode<T>[4];    // TODO: use inline array for this?
-        public LinkedList<QuadtreeLocation<T>> Elements { get; } = new();       // intr_circ_list
+        public QuadtreeNode<T>[] Children { get; } = new QuadtreeNode<T>[Quadtree<T>.NodeChildCount];   // TODO: use inline array for this?
+        public LinkedList<QuadtreeLocation<T>> Elements { get; } = new();   // intr_circ_list
 
         public int AtTargetLevelCount { get; set; } = 0;
 
@@ -41,8 +41,7 @@ namespace MHServerEmu.Games.SpatialPartitions
             {
                 element.Node = this;
                 element.AtTargetLevel = atTargetLevel;
-                Elements.AddFirst(element);
-                element.Linked = true;
+                element.LinkedListNode = Elements.AddFirst(element);
 
                 if (atTargetLevel)
                     AtTargetLevelCount++;
@@ -60,8 +59,8 @@ namespace MHServerEmu.Games.SpatialPartitions
             if (element.AtTargetLevel)
                 AtTargetLevelCount--;
 
-            Elements.Remove(element);
-            element.Linked = false;
+            Elements.Remove(element.LinkedListNode);
+            element.LinkedListNode = null;
             element.Node = null;
             element.AtTargetLevel = false;
 
@@ -75,13 +74,13 @@ namespace MHServerEmu.Games.SpatialPartitions
             for (var current = next; next != null; current = next)
             {
                 next = current.Next;
-                var element = current.Value;
+                QuadtreeLocation<T> element = current.Value;
 
                 Aabb elementBounds = element.Bounds;
                 if (child.LooseBounds.FullyContainsXY(elementBounds))
                 {
-                    Elements.Remove(element);
-                    element.Linked = false;
+                    Elements.Remove(element.LinkedListNode);
+                    element.LinkedListNode = null;
 
                     if (element.AtTargetLevel)
                         AtTargetLevelCount--;

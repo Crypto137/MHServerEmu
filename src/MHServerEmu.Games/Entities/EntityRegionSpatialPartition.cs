@@ -234,7 +234,10 @@ namespace MHServerEmu.Games.Entities
                 private readonly List<WorldEntityRegionSpatialPartition> _partitions;
                 private readonly TVolume _volume;
 
-                private WorldEntityRegionSpatialPartition.ElementIterator<TVolume> _subIterator;
+                private bool _isInitialized;
+                private WorldEntityRegionSpatialPartition.ElementIterator<TVolume>.Enumerator _subIterator;
+
+                private bool _isDisposed;
 
                 public WorldEntity Current { get; private set; }
                 object IEnumerator.Current { get => Current; }
@@ -260,19 +263,22 @@ namespace MHServerEmu.Games.Entities
                     if (_initialPartition == null || _partitions == null)
                         return false;
 
-                    if (_subIterator == null)
+                    // Initialize the first partition subiterator.
+                    if (_isInitialized == false)
                     {
-                        // Initialize the first partition subiterator.
-                        _subIterator = new(_initialPartition, _volume);
+                        _subIterator = _initialPartition.IterateElementsInVolume(_volume).GetEnumerator();
+                        _isInitialized = true;
                     }
-                    else
+
+                    // Move to the next element in the current subiterator.
+                    if (_subIterator.MoveNext())
                     {
-                        // Move to the next element in the current subiterator.
-                        _subIterator.MoveNext();
-                    }                                 
+                        Current = _subIterator.Current;
+                        return true;
+                    }
 
                     // Move over to the next partition if we are finished with the current one.
-                    while (_subIterator.End() && _partitions.Count > 0)
+                    while (_partitions.Count > 0)
                     {
                         int index = _partitions.Count - 1;
                         WorldEntityRegionSpatialPartition partition = _partitions[index];
@@ -281,16 +287,15 @@ namespace MHServerEmu.Games.Entities
                         if (partition == null)
                             return Logger.WarnReturn(false, "MoveNext(): partition == null");
 
-                        WorldEntityRegionSpatialPartition.ElementIterator<TVolume> nextSubIterator = new(partition, _subIterator.Volume);
-                        _subIterator.Clear();   // Dispose()
-                        _subIterator = nextSubIterator;
-                    }
+                        _subIterator.Dispose();
+                        _subIterator = partition.IterateElementsInVolume(_volume).GetEnumerator();
 
-                    // Return the element if the current one is valid.
-                    if (_subIterator.End() == false)
-                    {
-                        Current = _subIterator.Current;
-                        return true;
+                        // Return if this partition has valid elements.
+                        if (_subIterator.MoveNext())
+                        {
+                            Current = _subIterator.Current;
+                            return true;
+                        }
                     }
 
                     // We are out of elements and partitions.
@@ -304,8 +309,16 @@ namespace MHServerEmu.Games.Entities
 
                 public void Dispose()
                 {
-                    _subIterator.Clear();   // Dispose()
-                    ListPool<WorldEntityRegionSpatialPartition>.Instance.Return(_partitions);
+                    if (_isDisposed)
+                        return;
+
+                    if (_isInitialized)
+                        _subIterator.Dispose();
+
+                    if (_partitions != null)
+                        ListPool<WorldEntityRegionSpatialPartition>.Instance.Return(_partitions);
+
+                    _isDisposed = true;
                 }
             }
         }

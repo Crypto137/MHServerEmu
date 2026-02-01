@@ -8,10 +8,10 @@ namespace MHServerEmu.Games.SpatialPartitions
 
         public QuadtreeNode<T> Node { get; set; }
         public bool AtTargetLevel { get; set; }
-        public bool Linked { get; set; }
+        public LinkedListNode<QuadtreeLocation<T>> LinkedListNode { get; set; }
 
         public bool IsValid { get => Node != null; }
-        public bool IsUnlinked { get => Linked == false; }
+        public bool IsUnlinked { get => LinkedListNode == null; }
 
         public virtual Aabb Bounds { get; }
 
@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.SpatialPartitions
         {
             if (Node != null)
             {
-                Node.Elements.Remove(this);
+                Node.Elements.Remove(LinkedListNode);
 
                 if (AtTargetLevel)
                     --Node.AtTargetLevelCount;

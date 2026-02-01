@@ -419,12 +419,12 @@ namespace MHServerEmu.Games.Populations
             }
         }
 
-        public IEnumerable<BlackOutZone> IterateBlackOutZoneInVolume<TVolume>(TVolume volume) where TVolume : IBounds
+        public BlackOutSpatialPartition.ElementIterator<TVolume> IterateBlackOutZoneInVolume<TVolume>(TVolume volume) where TVolume : IBounds
         {
-            if (_blackOutSpatialPartition != null)
-                return _blackOutSpatialPartition.IterateElementsInVolume(volume);
-            else
-                return Enumerable.Empty<BlackOutZone>();
+            if (_blackOutSpatialPartition == null)
+                return default;
+
+            return _blackOutSpatialPartition.IterateElementsInVolume(volume);
         }
 
         public void InitializeSpacialPartition(in Aabb bound)
@@ -445,8 +445,12 @@ namespace MHServerEmu.Games.Populations
                     if (zone.MissionRef != missionRef)
                         return false;
             }
-            else if (IterateBlackOutZoneInVolume(sphere).Any() == false)
-                return false;
+            else
+            {
+                using var enumerator = IterateBlackOutZoneInVolume(sphere).GetEnumerator();
+                if (enumerator.MoveNext() == false)
+                    return false;
+            }
 
             return true;
         }

@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.Regions
         public int PlayerCount { get => _players.Count; }
 
         public Dictionary<uint, Area> Areas { get; } = new();
-        public IEnumerable<Cell> Cells { get => IterateCellsInVolume(Aabb); }
+        public CellSpatialPartition.ElementIterator<Aabb> Cells { get => IterateCellsInVolume(Aabb); }
         public IEnumerable<Entity> Entities { get => Game.EntityManager.IterateEntities(this); }
 
         // ArchiveData
@@ -689,12 +689,12 @@ namespace MHServerEmu.Games.Regions
             return null;
         }
 
-        public IEnumerable<Cell> IterateCellsInVolume<TVolume>(TVolume volume) where TVolume : IBounds
+        public CellSpatialPartition.ElementIterator<TVolume> IterateCellsInVolume<TVolume>(TVolume volume) where TVolume : IBounds
         {
-            if (CellSpatialPartition != null)
-                return CellSpatialPartition.IterateElementsInVolume(volume);
-            else
-                return Enumerable.Empty<Cell>(); //new CellSpatialPartition.ElementIterator();
+            if (CellSpatialPartition == null)
+                return default;
+
+            return CellSpatialPartition.IterateElementsInVolume(volume);
         }
 
         #endregion

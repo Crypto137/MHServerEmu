@@ -64,12 +64,12 @@ namespace MHServerEmu.Games.Populations
             _reservationOctree = null;
         }
 
-        public IEnumerable<SpawnReservation> IterateReservationsInVolume<TVolume>(TVolume volume) where TVolume : IBounds
+        public SpawnReservationSpatialPartition.ElementIterator<TVolume> IterateReservationsInVolume<TVolume>(TVolume volume) where TVolume : IBounds
         {
-            if (_reservationOctree != null)
-                return _reservationOctree.IterateElementsInVolume(volume);
-            else
-                return Enumerable.Empty<SpawnReservation>();
+            if (_reservationOctree == null)
+                return default;
+
+            return _reservationOctree.IterateElementsInVolume(volume);
         }
 
         public void InitializeSpacialPartition(in Aabb bound)

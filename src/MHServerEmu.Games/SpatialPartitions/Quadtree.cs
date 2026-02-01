@@ -1,6 +1,8 @@
 ﻿using System.Collections;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.SpatialPartitions
@@ -16,6 +18,8 @@ namespace MHServerEmu.Games.SpatialPartitions
 
         private const int TargetThreshold = 6;
         private const float Loose = 2.0f;
+
+        public const int NodeChildCount = 4;
 
         private readonly Aabb _bounds;
         private readonly float _minLoose;
@@ -140,6 +144,11 @@ namespace MHServerEmu.Games.SpatialPartitions
             return nodeRadius <= _minLoose || elementRadius >= nodeRadius * 0.5;
         }
 
+        public Aabb GetElementBounds(QuadtreeLocation<TElement> location)
+        {
+            return GetElementBounds(location.Element);
+        }
+
         // We could potentially replace these two abstract methods with an interface, but that would be less accurate to how the client does it.
         public abstract QuadtreeLocation<TElement> GetLocation(TElement element);
 
@@ -250,23 +259,9 @@ namespace MHServerEmu.Games.SpatialPartitions
             return false;
         }
 
-        public IEnumerable<TElement> IterateElementsInVolume<TVolume>(TVolume volume) where TVolume : IBounds
+        public ElementIterator<TVolume> IterateElementsInVolume<TVolume>(TVolume volume) where TVolume : IBounds
         {
-            var iterator = new ElementIterator<TVolume>(this, volume);
-
-            try
-            {
-                while (iterator.End() == false)
-                {
-                    var element = iterator.Current;
-                    iterator.MoveNext();
-                    yield return element;
-                }
-            }
-            finally
-            {
-                iterator.Clear();
-            }
+            return new(this, volume);
         }
 
         private void IncrementIteratorCount()
@@ -285,189 +280,271 @@ namespace MHServerEmu.Games.SpatialPartitions
             _outstandingIteratorCount--;
         }
 
-        public class ElementIterator<TVolume> : IEnumerator<TElement> where TVolume : IBounds
+        public readonly struct ElementIterator<TVolume> where TVolume : IBounds
         {
-            public Quadtree<TElement> Tree { get; private set; }
-            public TVolume Volume { get; private set; }
-            private CandidateNode _currentNode;
-            private QuadtreeLocation<TElement> _currentElement;
-            private Stack<CandidateNode> _stack = new();
-
-            private struct CandidateNode // Struct, not class!
-            {
-                public QuadtreeNode<TElement> Node;
-                public bool Contains;
-
-                public CandidateNode(QuadtreeNode<TElement> node = null, bool contains = false)
-                {
-                    Node = node;
-                    Contains = contains;
-                }
-            }
-
-            public ElementIterator(TVolume volume)
-            {
-                Tree = null;
-                _currentNode = new();
-                _currentElement = default;
-                Volume = volume;
-            }
+            private readonly Quadtree<TElement> _tree;
+            private readonly TVolume _volume;
 
             public ElementIterator(Quadtree<TElement> tree, TVolume volume)
             {
-                Tree = tree;
-                Volume = volume;
-                _currentNode = new();
-                _currentElement = default;
-                Tree.IncrementIteratorCount();
-                Reset();
+                _tree = tree;
+                _volume = volume;
             }
 
-            public void Initialize(Quadtree<TElement> tree)
+            public Enumerator GetEnumerator()
             {
-                Tree = tree;
-                _currentNode = new();
-                _currentElement = default;
-                Tree.IncrementIteratorCount();
-                Reset();
+                return new(_tree, _volume);
             }
 
-            public bool End() => _currentElement == null;
-
-            public void Reset() // init
+            public struct Enumerator : IEnumerator<TElement>
             {
-                if (Tree == null || Tree.Root == null) return;
+                private readonly Quadtree<TElement> _tree;
+                private readonly TVolume _volume;
 
-                ContainmentType contains = Volume.Contains(Tree.Root.LooseBounds);
-                if (contains == ContainmentType.Disjoint) return;
+                private readonly PoolableStack<CandidateNode> _candidateStack;
 
-                _currentNode.Node = Tree.Root;
-                _currentNode.Contains = contains == ContainmentType.Contains;
+                private bool _isInitialized;
+                private CandidateNode _currentNode;
+                private QuadtreeLocation<TElement> _currentElement;
 
-                _currentElement = GetFirstElement(_currentNode);
-                if (_currentElement == null) NextNode();
-            }
+                private bool _isDisposed;
 
-            public void Dispose() { }
+                public TElement Current { get => _currentElement.Element; }
+                object IEnumerator.Current { get => Current; }
 
-            public void Clear()
-            {
-                if (Tree != null) Tree.DecrementIteratorCount();
-                _stack.Clear();
-            }
-
-            public TElement Current { get => _currentElement.Element; }
-            object IEnumerator.Current => Current;
-
-            public bool MoveNext() // advanceNext
-            {
-                if (_currentNode.Node == null || _currentElement == null) return false;
-
-                var linkNode = _currentNode.Node.Elements.Find(_currentElement).Next;
-                while (linkNode != null)
+                public Enumerator(Quadtree<TElement> tree, TVolume volume)
                 {
-                    _currentElement = linkNode.Value;
-                    if (_currentNode.Contains || Volume.Intersects(Tree.GetElementBounds(_currentElement.Element))) return true;
-                    linkNode = linkNode.Next;
+                    _tree = tree;
+                    _volume = volume;
+
+                    _candidateStack = StackPool<CandidateNode>.Instance.Get();
+
+                    _tree?.IncrementIteratorCount();
+
+                    // Init() will be called in the first call of MoveNext().
                 }
-                return NextNode();
-            }
 
-            private bool NextNode()
-            {
-                var node = _currentNode;
-                while (node.Node != null)
+                public bool MoveNext()
                 {
-                    bool hasChildren = false;
-                    if (IterateChildren(ref node, ref hasChildren)) return true;
+                    if (_tree == null || _tree.Root == null)
+                        return false;
 
-                    if (hasChildren == false)
+                    // Do the initialization on the first call of MoveNext().
+                    if (_isInitialized == false)
                     {
-                        if (_stack.Count == 0)
-                        {
-                            _currentNode = new(null, false);
-                            _currentElement = null;
-                            return false;
-                        }
-                        else
-                        {
-                            node = _stack.Pop();
-                            if (SetCurrentNode(node)) return true;
-                        }
+                        Init();
+                        return _currentElement != null;
                     }
-                }
-                return false;
-            }
 
-            private bool IterateChildren(ref CandidateNode node, ref bool checkChildren)
-            {
-                for (int index = 0; index < 4; index++)
-                {
-                    var child = node.Node.Children[index];
-                    if (child == null) continue;
+                    // We will get down here on consequent calls.
 
-                    if (node.Contains)
+                    if (_currentNode.Node == null || _currentElement == null)
+                        return false;
+
+                    // Iterate the current quadtree node using an intrusive linked list.
+                    LinkedListNode<QuadtreeLocation<TElement>> linkedListNode = _currentElement.LinkedListNode.Next;
+                    while (linkedListNode != null)
                     {
-                        for (index++; index < 4; index++)
-                            if (node.Node.Children[index] != null)
-                                _stack.Push(new(node.Node.Children[index], true));
+                        _currentElement = linkedListNode.Value;
+                        if (_currentNode.Contains || _volume.Intersects(_tree.GetElementBounds(_currentElement)))
+                            return true;
+
+                        linkedListNode = linkedListNode.Next;
+                    }
+
+                    // Move onto the next quadtree node.
+                    NextNode();
+                    return _currentElement != null;
+                }
+
+                public void Reset()
+                {
+                    _candidateStack.Clear();
+
+                    _isInitialized = false;
+                    _currentNode = default;
+                    _currentElement = default;
+                }
+
+                public void Dispose()
+                {
+                    if (_isDisposed)
+                        return;
+
+                    if (_candidateStack != null)
+                        StackPool<CandidateNode>.Instance.Return(_candidateStack);
+
+                    _tree?.DecrementIteratorCount();
+
+                    _isDisposed = true;
+                }
+
+                private void Init()
+                {
+                    if (_tree == null)
+                    {
+                        Logger.Warn("Init(): _tree == null");
+                        return;
+                    }
+
+                    if (_tree.Root == null)
+                        return;
+
+                    ContainmentType contains = _volume.Contains(_tree.Root.LooseBounds);
+                    if (contains == ContainmentType.Disjoint)
+                        return;
+
+                    _currentNode.Node = _tree.Root;
+                    _currentNode.Contains = contains == ContainmentType.Contains;
+
+                    _currentElement = GetFirstElement(ref _currentNode);
+                    if (_currentElement == null)
+                        NextNode();
+
+                    _isInitialized = true;
+                }
+
+                private QuadtreeLocation<TElement> GetFirstElement(ref CandidateNode candidate)
+                {
+                    return GetFirstElement(candidate.Node, candidate.Contains);
+                }
+
+                private QuadtreeLocation<TElement> GetFirstElement(QuadtreeNode<TElement> node, bool contains)
+                {
+                    if (contains)
+                    {
+                        return node.Elements.First?.Value;
                     }
                     else
                     {
-                        var childContains = Volume.Contains(child.LooseBounds);
-                        if (childContains == ContainmentType.Disjoint) continue;
-
-                        for (index++; index < 4; index++)
+                        foreach (QuadtreeLocation<TElement> element in node.Elements)
                         {
-                            var otherChild = node.Node.Children[index];
-                            if (otherChild == null) continue;
-
-                            var otherContains = Volume.Contains(otherChild.LooseBounds);
-                            if (otherContains != ContainmentType.Disjoint)
-                                _stack.Push(new(otherChild, otherContains == ContainmentType.Contains));
+                            if (_volume.Intersects(_tree.GetElementBounds(element)))
+                                return element;
                         }
-                        node.Contains = childContains == ContainmentType.Contains;
                     }
 
-                    node.Node = child;
-                    if (SetCurrentNode(node)) return true;
-
-                    checkChildren = true;
-                    break;
+                    return null;
                 }
-                return false;
-            }
 
-            private bool SetCurrentNode(in CandidateNode node)
-            {
-                var element = GetFirstElement(node);
-                if (element != null)
+                private void NextNode()
                 {
-                    _currentNode = node;
-                    _currentElement = element;
-                    return true;
-                }
-                return false;
-            }
+                    QuadtreeNode<TElement> node = _currentNode.Node;
+                    bool contains = _currentNode.Contains;
 
-            private QuadtreeLocation<TElement> GetFirstElement(in CandidateNode node)
-            {
-                if (node.Contains)
-                {
-                    QuadtreeLocation<TElement> element = null;
-                    if (node.Node.Elements.Count > 0)
-                        element = node.Node.Elements.First.Value;
-                    if (element != null) return element;
-                }
-                else
-                {
-                    foreach (var element in node.Node.Elements)
-                        if (Volume.Intersects(Tree.GetElementBounds(element.Element))) return element;
-                }
-                return default;
-            }
+                    while (node != null)
+                    {
+                        // Continue calling CheckNode() until we find the next node or run out of children for this branch.
+                        bool hasChildren = true;
+                        while (hasChildren)
+                        {
+                            if (CheckNode(ref node, ref contains, ref hasChildren))
+                                return;
+                        }
 
-            public IEnumerator<TElement> GetEnumerator() => this;
+                        // When we run out of children for a branch, move onto the next candidate node on the stack.
+                        // It will contain siblings of the most recently iterated nodes.
+                        if (_candidateStack.Count > 0)
+                        {
+                            CandidateNode candidate = _candidateStack.Pop();
+                            node = candidate.Node;
+                            contains = candidate.Contains;
+
+                            QuadtreeLocation<TElement> element = GetFirstElement(ref candidate);
+                            if (element != null)
+                            {
+                                _currentNode = candidate;
+                                _currentElement = element;
+                                return;
+                            }
+
+                            // Continue iteration, search children of this candidate next.
+                        }
+                        else
+                        {
+                            // Out of children and out of candidates, this is the end.
+                            _currentNode = new(null, false);
+                            _currentElement = null;
+                            return;
+                        }
+                    }
+                }
+
+                private bool CheckNode(ref QuadtreeNode<TElement> node, ref bool contains, ref bool hasChildren)
+                {
+                    // Look for a valid child.
+                    for (int i = 0; i < NodeChildCount; i++)
+                    {
+                        QuadtreeNode<TElement> child = node.Children[i];
+                        if (child == null)
+                            continue;
+
+                        // We found a valid child, put siblings aside for now by pushing them to the stack as candidates.
+                        // They will be iterated when we are finished with the branch of the child we encountered just now.
+                        if (contains)
+                        {
+                            for (i++; i < NodeChildCount; i++)
+                            {
+                                QuadtreeNode<TElement> sibling = node.Children[i];
+                                if (sibling == null)
+                                    continue;
+
+                                _candidateStack.Push(new(sibling, true));
+                            }
+
+                            // No need to update contains if all children are fully contained.
+                        }
+                        else
+                        {
+                            ContainmentType containsChild = _volume.Contains(child.LooseBounds);
+                            if (containsChild == ContainmentType.Disjoint)
+                                continue;
+
+                            for (i++; i < NodeChildCount; i++)
+                            {
+                                QuadtreeNode<TElement> sibling = node.Children[i];
+                                if (sibling == null)
+                                    continue;
+
+                                ContainmentType containsSibling = _volume.Contains(sibling.LooseBounds);
+                                if (containsSibling == ContainmentType.Disjoint)
+                                    continue;
+
+                                _candidateStack.Push(new(sibling, containsSibling == ContainmentType.Contains));
+                            }
+
+                            // Update contains for the child we are now looking at.
+                            contains = containsChild == ContainmentType.Contains;
+                        }
+
+                        // Assign the child to select it as the next target of CheckNode().
+                        // This allows us to check its descendants recursively before moving onto its siblings.
+                        node = child;
+
+                        // See if we have elements in this child.
+                        QuadtreeLocation<TElement> element = GetFirstElement(node, contains);
+                        if (element != null)
+                        {
+                            _currentNode = new(node, contains);
+                            _currentElement = element;
+                            return true;
+                        }
+
+                        // No elements, but we still have descendants to check, so CheckNode() will get called again.
+                        return false;
+                    }
+
+                    // No valid children, move onto siblings of the most recently encountered node.
+                    hasChildren = false;
+                    return false;
+                }
+
+                private struct CandidateNode(QuadtreeNode<TElement> node, bool contains)
+                {
+                    public QuadtreeNode<TElement> Node = node;
+                    public bool Contains = contains;
+                }
+            }
         }
     }
 }
