@@ -8,8 +8,8 @@ using MHServerEmu.Games.SpatialPartitions;
 
 namespace MHServerEmu.Games.Entities
 {
-    // NOTE: This file is named EntityOctree.cs even though it contains the EntityRegionSpatialPartition class
-    // because that's how it was in the original game based on the client.
+    // NOTE: This file contains the EntityRegionSpatialPartition class, which in the original game appears to had been located in
+    // D:\mirrorBuilds_source05\MarvelGame_v52\Source\Game\Game\Entity\EntityOctree.h / .cpp
 
     [Flags]
     public enum EntityRegionSPContextFlags
