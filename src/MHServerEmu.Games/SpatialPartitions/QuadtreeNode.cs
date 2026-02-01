@@ -1,16 +1,19 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using System.Runtime.CompilerServices;
+using MHServerEmu.Core.Collisions;
 
 namespace MHServerEmu.Games.SpatialPartitions
 {
     public class QuadtreeNode<T>
     {
+        private ChildArray _children = new();
+
         public Quadtree<T> Tree { get; }
         public QuadtreeNode<T> Parent { get; }
         public Aabb2 LooseBounds { get; }
         public float Radius { get => LooseBounds.Width; }
 
-        public QuadtreeNode<T>[] Children { get; } = new QuadtreeNode<T>[Quadtree<T>.NodeChildCount];   // TODO: use inline array for this?
-        public LinkedList<QuadtreeLocation<T>> Elements { get; } = new();   // intr_circ_list
+        public ref ChildArray Children { get => ref _children; }
+        public LinkedList<QuadtreeLocation<T>> Elements { get; } = new();   // Replacement for Gazillion's intr_circ_list
 
         public int AtTargetLevelCount { get; set; } = 0;
 
@@ -88,6 +91,12 @@ namespace MHServerEmu.Games.SpatialPartitions
                     child.AddElement(element, tree.AtTargetLevel(child, elementBounds.Radius2D()));
                 }
             }
+        }
+
+        [InlineArray(Quadtree<T>.NodeChildCount)]
+        public struct ChildArray
+        {
+            private QuadtreeNode<T> _element0;
         }
     }
 }
