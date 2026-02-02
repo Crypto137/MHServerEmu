@@ -830,10 +830,11 @@ namespace MHServerEmu.Games.Navi
                     int edgeIndex0 = t0.EdgeIndex(edge);
                     int edgeIndex1 = t1.EdgeIndex(edge);
 
-                    NaviEdge[] edges = {
-                        t0.EdgeMod(edgeIndex0 + 1), t0.EdgeMod(edgeIndex0 + 2),
-                        t1.EdgeMod(edgeIndex1 + 1), t1.EdgeMod(edgeIndex1 + 2)
-                    };
+                    using PoolSpan<NaviEdge> edges = PoolSpan<NaviEdge>.Allocate(4);
+                    edges[0] = t0.EdgeMod(edgeIndex0 + 1);
+                    edges[1] = t0.EdgeMod(edgeIndex0 + 2);
+                    edges[2] = t1.EdgeMod(edgeIndex1 + 1);
+                    edges[3] = t1.EdgeMod(edgeIndex1 + 2);
 
                     foreach (var e in edges)
                         if (e.TestFlag(NaviEdgeFlags.Delaunay) == false)
