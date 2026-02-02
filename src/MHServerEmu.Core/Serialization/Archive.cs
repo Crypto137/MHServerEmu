@@ -45,11 +45,13 @@ namespace MHServerEmu.Core.Serialization
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        // Reuse the same buffers for all archives on the same thread. In practice this means one buffer instance of each type per game.
+        // Reuse the same buffers for all archives on the same game thread.
+        [ThreadStatic]
+        private static byte[] ReadBuffer;
+        [ThreadStatic]
+        private static byte[] WriteBuffer;
         [ThreadStatic]
         private static MemoryStream SharedAutoBuffer;
-        [ThreadStatic]
-        private static byte[] CodedOutputStreamBuffer; 
 
         private readonly MemoryStream _bufferStream;  // MemoryStream replaces AutoBuffer from the original implementation
 
@@ -109,12 +111,7 @@ namespace MHServerEmu.Core.Serialization
             if ((serializeType == ArchiveSerializeType.Replication || serializeType == ArchiveSerializeType.Database) == false)
                 throw new NotImplementedException($"Unsupported archive serialize type {serializeType}.");
 
-            // Initialize new buffers if this is being called for the first time on this thread.
-            if (SharedAutoBuffer == null)
-            {
-                SharedAutoBuffer = new(1024);
-                CodedOutputStreamBuffer = new byte[32];     // We flush after every value, so we can use very small buffer sizes (default is 4096).
-            }      
+            InitializeBuffers();
 
             // Reuse the same stream for all packing archives
             _bufferStream = SharedAutoBuffer;
@@ -122,7 +119,7 @@ namespace MHServerEmu.Core.Serialization
                 _bufferStream.SetLength(0);
 
             // Use reflection hackery to reuse the same buffer for all coded output streams, see ProtobufHelper for details.
-            _cos = ProtobufHelper.CodedOutputStreamEx.CreateInstance(_bufferStream, CodedOutputStreamBuffer);
+            _cos = ProtobufHelper.CodedOutputStreamEx.CreateInstance(_bufferStream, WriteBuffer);
 
             SerializeType = serializeType;
             ReplicationPolicy = replicationPolicy;
@@ -140,8 +137,10 @@ namespace MHServerEmu.Core.Serialization
             if ((serializeType == ArchiveSerializeType.Replication || serializeType == ArchiveSerializeType.Database) == false)
                 throw new NotImplementedException($"Unsupported archive serialize type {serializeType}.");
 
+            InitializeBuffers();
+
             _bufferStream = new(buffer);
-            _cis = CodedInputStream.CreateInstance(_bufferStream);
+            _cis = CodedInputStream.CreateInstance(_bufferStream, ReadBuffer);
 
             SerializeType = serializeType;
             IsPacking = false;
@@ -158,13 +157,27 @@ namespace MHServerEmu.Core.Serialization
             // We use ByteString.Unsafe here to avoid copying data one extra time (ByteString -> Stream instead of ByteString -> Buffer -> Stream).
         }
 
+        private static void InitializeBuffers()
+        {
+            // Initialize new buffers if this is being called for the first time on this thread.
+            if (ReadBuffer == null || WriteBuffer == null || SharedAutoBuffer == null)
+            {
+                ReadBuffer = new byte[4096];
+                WriteBuffer = new byte[32];     // We flush after every value, so we can use very small buffer sizes for output (default is 4096).
+                SharedAutoBuffer = new(1024);
+            }
+        }
+
         /// <summary>
         /// Returns the <see cref="MemoryStream"/> instance that acts as the AutoBuffer for this <see cref="Archive"/>.
         /// </summary>
         /// <remarks>
         /// AutoBuffer is the name of the data structure that backs archives in the client.
         /// </remarks>
-        public MemoryStream AccessAutoBuffer() => _bufferStream;
+        public MemoryStream AccessAutoBuffer()
+        {
+            return _bufferStream;
+        }
 
         /// <summary>
         /// Converts the underlying <see cref="MemoryStream"/> to <see cref="ByteString"/>.
