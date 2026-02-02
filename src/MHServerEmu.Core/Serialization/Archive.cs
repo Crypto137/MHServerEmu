@@ -41,7 +41,7 @@ namespace MHServerEmu.Core.Serialization
     /// <summary>
     /// An implementation of the custom Gazillion serialization archive format.
     /// </summary>
-    public class Archive : IDisposable
+    public sealed class Archive : IDisposable
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -160,12 +160,19 @@ namespace MHServerEmu.Core.Serialization
         private static void InitializeBuffers()
         {
             // Initialize new buffers if this is being called for the first time on this thread.
+            // NOTE: This approach prevents us from doing recursive writing of multiple archives on the same thread.
+            // In practice this is not a limitation that affects us, but it is something to keep in mind.
             if (ReadBuffer == null || WriteBuffer == null || SharedAutoBuffer == null)
             {
                 ReadBuffer = new byte[4096];
                 WriteBuffer = new byte[32];     // We flush after every value, so we can use very small buffer sizes for output (default is 4096).
                 SharedAutoBuffer = new(1024);
             }
+        }
+
+        public void Dispose()
+        {
+            _bufferStream.SetLength(0);
         }
 
         /// <summary>
@@ -989,32 +996,6 @@ namespace MHServerEmu.Core.Serialization
             _encodedBitsRead++;
 
             return true;
-        }
-
-        #endregion
-
-        #region IDisposable Implementation
-
-        private bool _isDisposed;
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_isDisposed) return;
-
-            if (disposing)
-            {
-                // Not sure if we even still need IDisposable for archives with reusable streams,
-                // we can just rely on doing cleanup after the previous use in the constructor.
-                _bufferStream.SetLength(0);
-            }
-
-            _isDisposed = true;
         }
 
         #endregion
