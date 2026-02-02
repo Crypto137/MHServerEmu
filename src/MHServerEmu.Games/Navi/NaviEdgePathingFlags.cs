@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace MHServerEmu.Games.Navi
 {
@@ -173,7 +174,7 @@ namespace MHServerEmu.Games.Navi
 
     public class NaviEdgePathingFlags
     {
-        public ContentFlagCounts[] ContentFlagCounts = new ContentFlagCounts[2];
+        public ContentFlagCountArray ContentFlagCounts;
 
         public NaviEdgePathingFlags()
         {
@@ -252,6 +253,12 @@ namespace MHServerEmu.Games.Navi
             hash = (hash ^ ContentFlagCounts[0].GetHash64()) * 1099511628211;
             hash = hash ^ ContentFlagCounts[1].GetHash64();
             return hash;
+        }
+
+        [InlineArray(2)]
+        public struct ContentFlagCountArray
+        {
+            private ContentFlagCounts _element0;
         }
     }
 }
