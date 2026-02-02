@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Navi
@@ -16,13 +16,13 @@ namespace MHServerEmu.Games.Navi
 
     public class NaviEdge
     {
-        private NaviPointArray _points;
-        private NaviTriangleArray _triangles;
+        private InlineArray2<NaviPoint> _points;
+        private InlineArray2<NaviTriangle> _triangles;
 
         public NaviEdgeFlags EdgeFlags { get; private set; }
         public NaviEdgePathingFlags PathingFlags { get; set; }
-        public ref NaviPointArray Points { get => ref _points; }
-        public ref NaviTriangleArray Triangles { get => ref _triangles; }
+        public ref InlineArray2<NaviPoint> Points { get => ref _points; }
+        public ref InlineArray2<NaviTriangle> Triangles { get => ref _triangles; }
         public bool IsAttached => Triangles[0] != null || Triangles[1] != null;
 
         public uint Serial { get; private set; }
@@ -171,18 +171,6 @@ namespace MHServerEmu.Games.Navi
                 return edge1.Points[0];
             else
                 return edge1.Points[1];
-        }
-
-        [InlineArray(2)]
-        public struct NaviPointArray
-        {
-            private NaviPoint _element0;
-        }
-
-        [InlineArray(2)]
-        public struct NaviTriangleArray
-        {
-            private NaviTriangle _element0;
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -16,7 +17,7 @@ namespace MHServerEmu.Games.Powers
         private List<Condition> _conditionAddList;
         private List<ulong> _conditionRemoveList;
 
-        private DamageForClient _damageForClient = new();
+        private InlineArray3<float> _damageForClient;
 
         public float HealingForClient { get; set; }
         public AssetId PowerAssetRefOverride { get; private set; }
@@ -52,7 +53,7 @@ namespace MHServerEmu.Games.Powers
         {
             base.Clear();
 
-            _damageForClient.Clear();
+            ((Span<float>)_damageForClient).Clear();
 
             ClearConditionInstances();
             _conditionRemoveList?.Clear();
@@ -208,37 +209,6 @@ namespace MHServerEmu.Games.Powers
                 return false;
 
             return powerProto.PowerCategory == PowerCategoryType.ProcEffect && Properties[PropertyEnum.ProcRecursionDepth] >= MaxRecursionDepth;
-        }
-
-        /// <summary>
-        /// Specialized struct to avoid allocating a <see cref="float"/> array for each <see cref="PowerResults"/> instance.
-        /// </summary>
-        [StructLayout(LayoutKind.Explicit)]
-        private struct DamageForClient
-        {
-            [FieldOffset(0)]
-            public float Physical;
-            [FieldOffset(4)]
-            public float Energy;
-            [FieldOffset(8)]
-            public float Mental;
-
-            public float this[int index] { get => AsSpan()[index]; set => AsSpan()[index] = value; }
-
-            public Span<float> AsSpan()
-            {
-                return MemoryMarshal.CreateSpan(ref Physical, (int)DamageType.NumDamageTypes);
-            }
-
-            public void Clear()
-            {
-                AsSpan().Clear();
-            }
-
-            public Span<float>.Enumerator GetEnumerator()
-            {
-                return AsSpan().GetEnumerator();
-            }
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using MHServerEmu.Core.Collections;
+﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
 
@@ -20,9 +19,9 @@ namespace MHServerEmu.Games.Navi
 
     public class NaviTriangle
     {
-        private NaviEdgeArray _edges;
+        private InlineArray3<NaviEdge> _edges;
 
-        public ref NaviEdgeArray Edges { get => ref _edges; }
+        public ref InlineArray3<NaviEdge> Edges { get => ref _edges; }
         public byte EdgeSideFlags { get; private set; }
         public NaviTriangleFlags Flags { get; private set; }
         public PathFlags PathingFlags { get; set; }
@@ -337,12 +336,6 @@ namespace MHServerEmu.Games.Navi
             NaviPoint point = NaviEdge.SharedVertex(edge1, edge2);
             NaviEdge edge = OpposedEdge(point);
             return SearchWidth(point, this, edge, float.MaxValue);
-        }
-
-        [InlineArray(3)]
-        public struct NaviEdgeArray
-        {
-            private NaviEdge _element0;
         }
     }
 

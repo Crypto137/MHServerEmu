@@ -1,5 +1,5 @@
 ﻿using System.Collections;
-using System.Runtime.CompilerServices;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -1430,7 +1430,7 @@ namespace MHServerEmu.Games.Properties
 
         // Protection flags to prevent parent / child collections from being added during iteration.
 
-        private ProtectionCounts _protections = new();
+        private InlineArray2<int> _protections = new();
 
         private bool IsNotProtected(ProtectionType protection)
         {
@@ -1442,12 +1442,6 @@ namespace MHServerEmu.Games.Properties
             Parent,
             Child,
             NumProtectionTypes
-        }
-
-        [InlineArray((int)ProtectionType.NumProtectionTypes)]
-        private struct ProtectionCounts
-        {
-            private int _element0;
         }
 
         private readonly struct ProtectionScope : IDisposable

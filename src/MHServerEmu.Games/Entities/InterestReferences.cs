@@ -1,5 +1,5 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Text;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Network;
@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly HashSet<ulong> _interestedPlayerIds = new();
-        private PolicyCounts _accumulatedPolicyCounts = new();
+        private InlineArray8<int> _accumulatedPolicyCounts = new();
 
         public int PlayerCount { get => _interestedPlayerIds.Count; }
         public bool IsEmpty { get => PlayerCount == 0 && GetInterestedPoliciesUnion() == AOINetworkPolicyValues.AOIChannelNone; }
@@ -133,12 +133,6 @@ namespace MHServerEmu.Games.Entities
             }
 
             return true;
-        }
-
-        [InlineArray(NumInterestPolicies)]
-        private struct PolicyCounts
-        {
-            private int _element0;
         }
     }
 }
