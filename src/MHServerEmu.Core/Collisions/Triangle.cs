@@ -1,15 +1,15 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
 {
     public struct Triangle
     {
-        public Vector3[] Points;
+        public InlineArray3<Vector3> Points;
 
         public Triangle(Vector3 p0, Vector3 p1, Vector3 p2)
         {
-            Points = new Vector3[3];
             Points[0] = p0;
             Points[1] = p1;
             Points[2] = p2;
