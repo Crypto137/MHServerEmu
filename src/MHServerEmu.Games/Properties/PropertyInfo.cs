@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Text;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
@@ -10,12 +13,12 @@ namespace MHServerEmu.Games.Properties
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly PropertyParamType[] _paramTypes = new PropertyParamType[Property.MaxParamCount];
-        private readonly AssetTypeId[] _paramAssetTypes = new AssetTypeId[Property.MaxParamCount];
-        private readonly BlueprintId[] _paramPrototypeBlueprints = new BlueprintId[Property.MaxParamCount];
-        private readonly int[] _paramBitCounts = new int[Property.MaxParamCount];
-        private readonly int[] _paramOffsets = new int[Property.MaxParamCount];
-        private readonly PropertyParam[] _paramMaxValues = new PropertyParam[Property.MaxParamCount];
+        private InlineArray4<PropertyParamType> _paramTypes;
+        private InlineArray4<AssetTypeId> _paramAssetTypes;
+        private InlineArray4<BlueprintId> _paramPrototypeBlueprints;
+        private InlineArray4<int> _paramBitCounts;
+        private InlineArray4<int> _paramOffsets;
+        private InlineArray4<PropertyParam> _paramMaxValues;
 
         private bool _updatedInfo = false;
 
@@ -85,9 +88,9 @@ namespace MHServerEmu.Games.Properties
                 @params[i] = 0;
         }
 
-        // There's a bunch of (client-accurate) copypasted code here for encoding that allows us to avoid allocating param arrays in some cases.
-        // Feel free to make this more DRY if there is a smarter way of doing this without losing performance.
+        // NOTE: Parameters are frequently encoded in loops, so use asserts instead of regular checks and inline as much as possible.
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public PropertyId EncodeParameters(PropertyEnum propertyEnum, in ReadOnlySpan<PropertyParam> @params)
         {
             switch (ParamCount)
@@ -101,9 +104,10 @@ namespace MHServerEmu.Games.Properties
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public PropertyId EncodeParameters(PropertyEnum propertyEnum, PropertyParam param0)
         {
-            if (param0 > _paramMaxValues[0]) throw new OverflowException($"Property param 0 overflow.");
+            Debug.Assert(param0 <= _paramMaxValues[0]);
 
             var id = new PropertyId(propertyEnum);
             id.Raw |= (ulong)param0 << _paramOffsets[0];
@@ -111,10 +115,11 @@ namespace MHServerEmu.Games.Properties
             return id;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public PropertyId EncodeParameters(PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1)
         {
-            if (param0 > _paramMaxValues[0]) throw new OverflowException($"Property param 0 overflow.");
-            if (param1 > _paramMaxValues[1]) throw new OverflowException($"Property param 1 overflow.");
+            Debug.Assert(param0 <= _paramMaxValues[0]);
+            Debug.Assert(param1 <= _paramMaxValues[1]);
 
             var id = new PropertyId(propertyEnum);
             id.Raw |= (ulong)param0 << _paramOffsets[0];
@@ -123,11 +128,12 @@ namespace MHServerEmu.Games.Properties
             return id;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public PropertyId EncodeParameters(PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1, PropertyParam param2)
         {
-            if (param0 > _paramMaxValues[0]) throw new OverflowException($"Property param 0 overflow.");
-            if (param1 > _paramMaxValues[1]) throw new OverflowException($"Property param 1 overflow.");
-            if (param2 > _paramMaxValues[2]) throw new OverflowException($"Property param 2 overflow.");
+            Debug.Assert(param0 <= _paramMaxValues[0]);
+            Debug.Assert(param1 <= _paramMaxValues[1]);
+            Debug.Assert(param2 <= _paramMaxValues[2]);
 
             var id = new PropertyId(propertyEnum);
             id.Raw |= (ulong)param0 << _paramOffsets[0];
@@ -137,12 +143,13 @@ namespace MHServerEmu.Games.Properties
             return id;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public PropertyId EncodeParameters(PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1, PropertyParam param2, PropertyParam param3)
         {
-            if (param0 > _paramMaxValues[0]) throw new OverflowException($"Property param 0 overflow.");
-            if (param1 > _paramMaxValues[1]) throw new OverflowException($"Property param 1 overflow.");
-            if (param2 > _paramMaxValues[2]) throw new OverflowException($"Property param 2 overflow.");
-            if (param3 > _paramMaxValues[3]) throw new OverflowException($"Property param 3 overflow.");
+            Debug.Assert(param0 <= _paramMaxValues[0]);
+            Debug.Assert(param1 <= _paramMaxValues[1]);
+            Debug.Assert(param2 <= _paramMaxValues[2]);
+            Debug.Assert(param3 <= _paramMaxValues[3]);
 
             var id = new PropertyId(propertyEnum);
             id.Raw |= (ulong)param0 << _paramOffsets[0];
