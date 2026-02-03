@@ -100,7 +100,7 @@ namespace MHServerEmu.Games.Entities
         private ReplicatedPropertyCollection _avatarProperties = new();
         private ulong _shardId;     // This was probably used for database sharding, we don't need this
         private RepVar_string _playerName = new();
-        private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
+        private InlineArray2<ulong> _consoleAccountIds;
         private RepVar_string _secondaryPlayerName = new();
 
         // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that

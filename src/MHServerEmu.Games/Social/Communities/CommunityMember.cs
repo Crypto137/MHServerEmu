@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -55,7 +56,7 @@ namespace MHServerEmu.Games.Social.Communities
         private string _secondaryPlayerName = string.Empty;
         private readonly BitArray _systemCircles = new((int)CircleId.NumCircles);
 
-        private readonly ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
+        private InlineArray2<ulong> _consoleAccountIds;
 
         public Community Community { get; }
 
