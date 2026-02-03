@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.SpatialPartitions
 {
     public class QuadtreeNode<T>
     {
-        private InlineArray4<QuadtreeNode<T>> _children = new();
+        private InlineArray4<QuadtreeNode<T>> _children;
 
         public Quadtree<T> Tree { get; }
         public QuadtreeNode<T> Parent { get; }

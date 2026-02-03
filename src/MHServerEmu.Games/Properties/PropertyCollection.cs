@@ -1430,7 +1430,7 @@ namespace MHServerEmu.Games.Properties
 
         // Protection flags to prevent parent / child collections from being added during iteration.
 
-        private InlineArray2<int> _protections = new();
+        private InlineArray2<int> _protections;
 
         private bool IsNotProtected(ProtectionType protection)
         {

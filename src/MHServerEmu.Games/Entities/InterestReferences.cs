@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly HashSet<ulong> _interestedPlayerIds = new();
-        private InlineArray8<int> _accumulatedPolicyCounts = new();
+        private InlineArray8<int> _accumulatedPolicyCounts;
 
         public int PlayerCount { get => _interestedPlayerIds.Count; }
         public bool IsEmpty { get => PlayerCount == 0 && GetInterestedPoliciesUnion() == AOINetworkPolicyValues.AOIChannelNone; }
