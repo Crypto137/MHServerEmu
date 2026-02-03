@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
-using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -9,33 +8,18 @@ namespace MHServerEmu.Games.Entities.Physics
 {
     public class EntityPhysics
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        private InlineArray2<Vector3> _externalForces;
+        private InlineArray2<Vector3> _repulsionForces;
+        private InlineArray2<bool> _hasExternalForces;
 
-        public WorldEntity Entity;
-        public uint RegisteredPhysicsFrameId { get; set; }
-        public int CollisionId { get; private set; }
-        public SortedDictionary<ulong, OverlapEntityEntry> OverlappedEntities { get; private set; }
+        public WorldEntity Entity { get; private set; } = null;
+        public uint RegisteredPhysicsFrameId { get; set; } = 0;
+        public int CollisionId { get; private set; } = -1;
+        public SortedDictionary<ulong, OverlapEntityEntry> OverlappedEntities { get; } = new();
         public SortedVector<ulong> AttachedEntities { get; private set; }
-
-        private readonly Vector3[] _externalForces;
-        private readonly Vector3[] _repulsionForces;
-        private readonly bool[] _hasExternalForces;
 
         public EntityPhysics()
         {
-            Entity = null;
-            RegisteredPhysicsFrameId = 0;
-            CollisionId = -1;
-            OverlappedEntities = new();
-            AttachedEntities = null;
-            _externalForces = new Vector3[2];
-            _repulsionForces = new Vector3[2];
-            for (int i = 0;  i < 2; i++)
-            {
-                _externalForces[i] = Vector3.Zero;
-                _repulsionForces[i] = Vector3.Zero;
-            }
-            _hasExternalForces = new bool[2];
         }
 
         public void Initialize(WorldEntity entity)
@@ -43,9 +27,20 @@ namespace MHServerEmu.Games.Entities.Physics
             Entity = entity;
         }
 
-        public bool HasExternalForces() => _hasExternalForces[GetCurrentForceReadIndex()];
-        public Vector3 GetExternalForces() => _externalForces[GetCurrentForceReadIndex()];
-        public Vector3 GetRepulsionForces() => _repulsionForces[GetCurrentForceReadIndex()];
+        public bool HasExternalForces()
+        {
+            return _hasExternalForces[GetCurrentForceReadIndex()];
+        }
+
+        public Vector3 GetExternalForces()
+        {
+            return _externalForces[GetCurrentForceReadIndex()];
+        }
+
+        public Vector3 GetRepulsionForces()
+        {
+            return _repulsionForces[GetCurrentForceReadIndex()];
+        }
 
         private int GetCurrentForceReadIndex()
         {
