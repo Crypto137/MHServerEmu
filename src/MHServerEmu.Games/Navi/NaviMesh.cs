@@ -233,7 +233,8 @@ namespace MHServerEmu.Games.Navi
 
             using var stateStackHandle = StackPool<MarkupState>.Instance.Get(out PoolableStack<MarkupState> stateStack);
             using var edgeStackHandle = StackPool<NaviEdge>.Instance.Get(out PoolableStack<NaviEdge> edgeStack);
-            NaviTriangle triangle = _exteriorSeedEdge.Triangles[0] ?? _exteriorSeedEdge.Triangles[1];
+            // Using the null coalescing operator here causes the compiler to crash on Ubuntu as of 2026/02/03.
+            NaviTriangle triangle = _exteriorSeedEdge.Triangles[0] != null ? _exteriorSeedEdge.Triangles[0] : _exteriorSeedEdge.Triangles[1];
 
             MarkupState state = new()
             {

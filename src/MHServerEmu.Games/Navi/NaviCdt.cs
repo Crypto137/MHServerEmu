@@ -406,7 +406,8 @@ namespace MHServerEmu.Games.Navi
 
                 if (degenerates[i])
                 {
-                    NaviTriangle degTriangle = edge.Triangles[0] ?? edge.Triangles[1];
+                    // Using the null coalescing operator here causes the compiler to crash on Ubuntu as of 2026/02/03.
+                    NaviTriangle degTriangle = edge.Triangles[0] != null ? edge.Triangles[0] : edge.Triangles[1];
                     var oppoPoint = degTriangle.OpposedVertex(edge);
 
                     if (Pred.Clockwise2D(point, points[i0], oppoPoint) && 
