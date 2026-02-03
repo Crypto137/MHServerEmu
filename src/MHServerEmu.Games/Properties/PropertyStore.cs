@@ -1,5 +1,4 @@
-﻿#pragma warning disable CS0169, CS0414
-using System.Runtime.InteropServices;
+﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -29,44 +28,15 @@ namespace MHServerEmu.Games.Properties
         private PrototypeId _propertyValueProtoRef;
         private ulong _propertyValueGuid;
 
-        // Use "unrolled" arrays to avoid heap allocations
-        private sbyte _paramTypes0 = (sbyte)PropertyParamType.Invalid;
-        private sbyte _paramTypes1 = (sbyte)PropertyParamType.Invalid;
-        private sbyte _paramTypes2 = (sbyte)PropertyParamType.Invalid;
-        private sbyte _paramTypes3 = (sbyte)PropertyParamType.Invalid;
-        private readonly Span<sbyte> _paramTypes;
-
-        private int _paramValueInts0;
-        private int _paramValueInts1;
-        private int _paramValueInts2;
-        private int _paramValueInts3;
-        private readonly Span<int> _paramValueInts;
-
-        private AssetId _paramValueAssetRefs0;
-        private AssetId _paramValueAssetRefs1;
-        private AssetId _paramValueAssetRefs2;
-        private AssetId _paramValueAssetRefs3;
-        private readonly Span<AssetId> _paramValueAssetRefs;
-
-        private PrototypeId _paramValueProtoRefs0;
-        private PrototypeId _paramValueProtoRefs1;
-        private PrototypeId _paramValueProtoRefs2;
-        private PrototypeId _paramValueProtoRefs3;
-        private readonly Span<PrototypeId> _paramValueProtoRefs;
-
-        private ulong _paramValueGuids0;
-        private ulong _paramValueGuids1;
-        private ulong _paramValueGuids2;
-        private ulong _paramValueGuids3;
-        private readonly Span<ulong> _paramValueGuids;
+        private InlineArray4<sbyte> _paramTypes;
+        private InlineArray4<int> _paramValueInts;
+        private InlineArray4<AssetId> _paramValueAssetRefs;
+        private InlineArray4<PrototypeId> _paramValueProtoRefs;
+        private InlineArray4<ulong> _paramValueGuids;
 
         public PropertyStore()
         {
-            _paramTypes = MemoryMarshal.CreateSpan(ref _paramTypes0, Property.MaxParamCount);
-            _paramValueInts = MemoryMarshal.CreateSpan(ref _paramValueInts0, Property.MaxParamCount);
-            _paramValueAssetRefs = MemoryMarshal.CreateSpan(ref _paramValueAssetRefs0, Property.MaxParamCount);
-            _paramValueProtoRefs = MemoryMarshal.CreateSpan(ref _paramValueProtoRefs0, Property.MaxParamCount);
-            _paramValueGuids = MemoryMarshal.CreateSpan(ref _paramValueGuids0, Property.MaxParamCount);
+            ((Span<sbyte>)_paramTypes).Fill((sbyte)PropertyParamType.Invalid);
         }
 
         public bool Serialize(ref PropertyId propertyId, ref PropertyValue propertyValue, PropertyCollection propertyCollection, Archive archive)
