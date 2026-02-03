@@ -282,11 +282,11 @@ namespace MHServerEmu.Games.Navi
 
         private static bool CanCrossTriangle(NaviTriangle triangle, Vector3 startPosition, Vector3 goalPosition, float width)
         {
-            var vert = new Vector3[3];
+            Span<Vector3> vert = stackalloc Vector3[3];
             for (int index = 0; index < 3; index++)
                 vert[index] = triangle.PointCW(index).Pos;
 
-            var isObtuse = new bool[3];
+            Span<bool> isObtuse = stackalloc bool[3];
             isObtuse[0] = NaviUtil.IsAngleObtuse2D(vert[2], vert[0], vert[1]);
             isObtuse[1] = NaviUtil.IsAngleObtuse2D(vert[0], vert[1], vert[2]);
             isObtuse[2] = NaviUtil.IsAngleObtuse2D(vert[1], vert[2], vert[0]);
