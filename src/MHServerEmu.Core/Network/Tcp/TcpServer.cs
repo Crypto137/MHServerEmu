@@ -345,13 +345,22 @@ namespace MHServerEmu.Core.Network.Tcp
         /// </summary>
         private async Task<int> SendAsync<T>(TcpClientConnection connection, T packet, SocketFlags flags = SocketFlags.None) where T: IPacket
         {
+            int sent = 0;
+
             int size = packet.SerializedSize;
             byte[] buffer = _bufferPool.Rent(size);
 
-            packet.Serialize(buffer);
-            int sent = await SendAsync(connection, buffer, size, flags);
+            try
+            {
+                packet.Serialize(buffer);
+                sent = await SendAsync(connection, buffer, size, flags);
+            }
+            finally
+            {
+                _bufferPool.Return(buffer);
+                packet.Dispose();
+            }
 
-            _bufferPool.Return(buffer);
             return sent;
         }
 

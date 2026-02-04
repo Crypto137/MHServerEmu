@@ -3,7 +3,7 @@
     /// <summary>
     /// Exposes a packet's serialization routine.
     /// </summary>
-    public interface IPacket
+    public interface IPacket : IDisposable
     {
         public int SerializedSize { get; }
 

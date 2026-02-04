@@ -3,6 +3,7 @@ using System.Collections;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Core.Network
@@ -13,6 +14,8 @@ namespace MHServerEmu.Core.Network
     public readonly struct MuxPacket : IPacket
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private static readonly ConcurrentPool<List<MessagePackageOut>> MessageListPool = new(4096, static () => new());
         private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Create();
 
         private readonly List<MessagePackageOut> _outboundMessageList = null;
@@ -39,7 +42,16 @@ namespace MHServerEmu.Core.Network
             Command = command;
 
             if (IsDataPacket)
-                _outboundMessageList = new();
+                _outboundMessageList = MessageListPool.Get();
+        }
+
+        public void Dispose()
+        {
+            if (IsDataPacket)
+            {
+                _outboundMessageList.Clear();
+                MessageListPool.Return(_outboundMessageList);
+            }
         }
 
         /// <summary>
