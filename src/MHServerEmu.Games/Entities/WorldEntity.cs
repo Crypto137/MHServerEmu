@@ -87,7 +87,8 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<ScheduledKillEvent> _scheduledKillEvent = new();
         private readonly EventPointer<NegateHotspotsEvent> _negateHotspotsEvent = new();
 
-        private AlliancePrototype _allianceProto;
+        private RegionLocationSafe _exitWorldRegionLocation;
+
         private Transform3 _transform = Transform3.Identity();
 
         // We keep track of the last interest update position to avoid updating interest too often when moving around.
@@ -96,6 +97,8 @@ namespace MHServerEmu.Games.Entities
         // Same with map location
         private Vector3 _lastMapPosition = Vector3.Zero;
         private float _lastMapOrientation = 0f;
+
+        private AlliancePrototype _allianceProto;
 
         protected EntityTrackingContextMap _trackingContextMap;
         protected ConditionCollection _conditionCollection;
@@ -117,7 +120,7 @@ namespace MHServerEmu.Games.Entities
         public RegionLocation RegionLocation { get; private set; } = new();
         public Cell Cell { get => RegionLocation.Cell; }
         public Area Area { get => RegionLocation.Area; }
-        public RegionLocationSafe ExitWorldRegionLocation { get; private set; } = new();
+        public ref RegionLocationSafe ExitWorldRegionLocation { get => ref _exitWorldRegionLocation; }
         public EntityRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Aabb RegionBounds { get; set; }
         public Bounds Bounds { get; set; } = new();
@@ -809,7 +812,7 @@ namespace MHServerEmu.Games.Entities
             SendLocationChangeEvents(preChangeLocation, RegionLocation, flags);
             SetStatus(EntityStatus.ToTransform, true);
             if (RegionLocation.IsValid())
-                ExitWorldRegionLocation.Set(RegionLocation);
+                _exitWorldRegionLocation.Set(RegionLocation);
 
             if (positionChanged && Vector3.EpsilonSphereTest(preChangeLocation.Position, RegionLocation.Position, 0.1f) == false) 
             {                
@@ -919,8 +922,12 @@ namespace MHServerEmu.Games.Entities
 
         public RegionLocation ClearWorldLocation()
         {
-            if (RegionLocation.IsValid()) ExitWorldRegionLocation.Set(RegionLocation);
-            if (Region != null && SpatialPartitionLocation.IsValid) Region.RemoveEntityFromSpatialPartition(this);
+            if (RegionLocation.IsValid())
+                _exitWorldRegionLocation.Set(RegionLocation);
+
+            if (Region != null && SpatialPartitionLocation.IsValid)
+                Region.RemoveEntityFromSpatialPartition(this);
+
             RegionLocation oldLocation = new(RegionLocation);
             RegionLocation.Set(RegionLocation.Invalid);
             return oldLocation;

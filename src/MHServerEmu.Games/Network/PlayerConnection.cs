@@ -354,7 +354,7 @@ namespace MHServerEmu.Games.Network
                 Avatar avatar = Player.CurrentAvatar;
                 if (avatar != null && avatar.IsInWorld == false)
                 {
-                    RegionLocationSafe exitLocation = avatar.ExitWorldRegionLocation;
+                    ref RegionLocationSafe exitLocation = ref avatar.ExitWorldRegionLocation;
                     ulong regionId = exitLocation.RegionId;
                     Vector3 position = exitLocation.Position;
                     Orientation orientation = exitLocation.Orientation;
