@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.Entities
             return manager?.GetRegion(RegionId);
         }
 
-        public RegionLocationSafe Set(RegionLocation regionLocation)
+        public RegionLocationSafe Set(ref RegionLocation regionLocation)
         {
             Region region = regionLocation.Region;
             if (region != null)

@@ -2161,7 +2161,7 @@ namespace MHServerEmu.Games.Missions
             Avatar avatar = player.CurrentAvatar;
             if (avatar == null) return;
 
-            RegionLocation location = avatar.RegionLocation;
+            ref RegionLocation location = ref avatar.RegionLocation;
             if (location.IsValid() == false) return;
 
             EntityManager entityManager = Game.EntityManager;

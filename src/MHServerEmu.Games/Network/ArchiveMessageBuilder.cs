@@ -129,8 +129,9 @@ namespace MHServerEmu.Games.Network
                     {
                         fieldFlags |= EntityCreateMessageFlags.HasPositionAndOrientation;
 
-                        position = worldEntity.RegionLocation.Position;
-                        orientation = worldEntity.RegionLocation.Orientation;
+                        ref RegionLocation regionLocation = ref worldEntity.RegionLocation;
+                        position = regionLocation.Position;
+                        orientation = regionLocation.Orientation;
 
                         if (orientation.Pitch != 0f || orientation.Roll != 0f)
                             locoFieldFlags |= LocomotionMessageFlags.HasFullOrientation;
@@ -285,7 +286,7 @@ namespace MHServerEmu.Games.Network
             // Build flags
             LocomotionMessageFlags fieldFlags = LocomotionMessageFlags.None;
 
-            RegionLocation regionLocation = worldEntity.RegionLocation;
+            ref RegionLocation regionLocation = ref worldEntity.RegionLocation;
             Vector3 position = regionLocation.Position;
             Orientation orientation = regionLocation.Orientation;
 
@@ -529,7 +530,7 @@ namespace MHServerEmu.Games.Network
             EnterGameWorldMessageFlags extraFieldFlags = EnterGameWorldMessageFlags.None;
 
             // Position
-            RegionLocation regionLocation = worldEntity.RegionLocation;
+            ref RegionLocation regionLocation = ref worldEntity.RegionLocation;
             Vector3 position = regionLocation.Position;
             Orientation orientation = regionLocation.Orientation;
 

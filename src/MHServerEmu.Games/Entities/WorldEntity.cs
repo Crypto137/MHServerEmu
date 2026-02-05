@@ -87,6 +87,7 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<ScheduledKillEvent> _scheduledKillEvent = new();
         private readonly EventPointer<NegateHotspotsEvent> _negateHotspotsEvent = new();
 
+        private RegionLocation _regionLocation;
         private RegionLocationSafe _exitWorldRegionLocation;
 
         private Transform3 _transform = Transform3.Identity();
@@ -112,20 +113,23 @@ namespace MHServerEmu.Games.Entities
         public Event<EntityCollisionEvent> CollideEvent = new();
         public Event<EntityCollisionEvent> OverlapEndEvent = new();
 
+        public ref RegionLocation RegionLocation { get => ref _regionLocation; }
+        public bool IsInWorld { get => _regionLocation.IsValid(); }
+        public Region Region { get => _regionLocation.Region; }
+        public NaviMesh NaviMesh { get => _regionLocation.NaviMesh; }
+        public Cell Cell { get => _regionLocation.Cell; }
+        public Area Area { get => _regionLocation.Area; }
+        public Orientation Orientation { get => _regionLocation.Orientation; }
+        public ref RegionLocationSafe ExitWorldRegionLocation { get => ref _exitWorldRegionLocation; }
+
         public EntityTrackingContextMap TrackingContextMap { get => _trackingContextMap; }
         public ConditionCollection ConditionCollection { get => _conditionCollection; }
         public PowerCollection PowerCollection { get => _powerCollection; }
+
         public AlliancePrototype Alliance { get => GetAlliance(); }
-        public RegionLocation RegionLocation { get; private set; } = new();
-        public Cell Cell { get => RegionLocation.Cell; }
-        public Area Area { get => RegionLocation.Area; }
-        public ref RegionLocationSafe ExitWorldRegionLocation { get => ref _exitWorldRegionLocation; }
         public EntityRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Aabb RegionBounds { get; set; }
         public Bounds Bounds { get; set; } = new();
-        public Region Region { get => RegionLocation.Region; }
-        public NaviMesh NaviMesh { get => RegionLocation.NaviMesh; }
-        public Orientation Orientation { get => RegionLocation.Orientation; }
         public WorldEntityPrototype WorldEntityPrototype { get => Prototype as WorldEntityPrototype; }
         public bool ShouldSnapToFloorOnSpawn { get; private set; }
         public EntityActionComponent EntityActionComponent { get; protected set; }
@@ -134,7 +138,6 @@ namespace MHServerEmu.Games.Entities
         public Locomotor Locomotor { get; protected set; }
         public virtual Bounds EntityCollideBounds { get => Bounds; set { } }
         public virtual bool IsTeamUpAgent { get => false; }
-        public bool IsInWorld { get => RegionLocation.IsValid(); }
         public bool IsAliveInWorld { get => IsInWorld && IsDead == false; }
         public bool IsInPvPMatch { get => Region?.ContainsPvPMatch() == true; }
         public bool CanHeal { get => Properties[PropertyEnum.Health] > 0L && Properties[PropertyEnum.HealingBlocked] == false; }
@@ -203,7 +206,7 @@ namespace MHServerEmu.Games.Entities
                 : worldEntityProto.SnapToFloorOnSpawn;
 
             OnAllianceChanged(Properties[PropertyEnum.AllianceOverride]);
-            RegionLocation.Initialize(this);
+            _regionLocation.Initialize(this);
             SpawnSpec = settings.SpawnSpec;
             SetFlag(EntityFlags.IsPopulation, settings.IsPopulation);
 
@@ -652,7 +655,7 @@ namespace MHServerEmu.Games.Entities
         {
             SetStatus(EntityStatus.EnteringWorld, true);
 
-            RegionLocation.Region = region;
+            _regionLocation.Region = region;
 
             Physics.AcquireCollisionId();
 
@@ -710,7 +713,7 @@ namespace MHServerEmu.Games.Entities
             entityManager.PhysicsManager?.OnExitedWorld(Physics);
             OnExitedWorld();
             var oldLocation = ClearWorldLocation();
-            SendLocationChangeEvents(oldLocation, RegionLocation, ChangePositionFlags.None);
+            SendLocationChangeEvents(ref oldLocation, ref _regionLocation, ChangePositionFlags.None);
             ModifyCollectionMembership(EntityCollection.Simulated, false);
             ModifyCollectionMembership(EntityCollection.Locomotion, false);
 
@@ -721,7 +724,7 @@ namespace MHServerEmu.Games.Entities
         public override void UpdateInterestPolicies(bool updateForAllPlayers, EntitySettings settings = null)
         {
             base.UpdateInterestPolicies(updateForAllPlayers, settings);
-            _lastInterestUpdatePosition = IsInWorld ? RegionLocation.Position : Vector3.Zero;
+            _lastInterestUpdatePosition = IsInWorld ? _regionLocation.Position : Vector3.Zero;
         }
 
         public SimulateResult UpdateSimulationState()
@@ -764,19 +767,19 @@ namespace MHServerEmu.Games.Entities
             bool orientationChanged = false;
             Cell previousCell = Cell;
 
-            RegionLocation preChangeLocation = new(RegionLocation);
+            RegionLocation preChangeLocation = _regionLocation;  // copy
             Region region = Game.RegionManager.GetRegion(preChangeLocation.RegionId);
             if (region == null) return ChangePositionResult.NotChanged;
 
             if (position.HasValue && (flags.HasFlag(ChangePositionFlags.ForceUpdate) || preChangeLocation.Position != position))
             {
-                var result = RegionLocation.SetPosition(position.Value);
+                RegionLocation.SetPositionResult result = _regionLocation.SetPosition(position.Value);
 
                 if (result != RegionLocation.SetPositionResult.Success)     // onSetPositionFailure()
                 {
                     return Logger.WarnReturn(ChangePositionResult.NotChanged, string.Format(
                         "ChangeRegionPosition(): Failed to set entity new position (Moved out of world)\n\tEntity: {0}\n\tResult: {1}\n\tPrev Loc: {2}\n\tNew Pos: {3}",
-                        this, result, RegionLocation, position));
+                        this, result, _regionLocation.ToString(), position));
                 }
 
                 if (Bounds.Geometry != GeometryType.None)
@@ -790,7 +793,7 @@ namespace MHServerEmu.Games.Entities
 
             if (orientation.HasValue && (flags.HasFlag(ChangePositionFlags.ForceUpdate) || preChangeLocation.Orientation != orientation))
             {
-                RegionLocation.Orientation = orientation.Value;
+                _regionLocation.Orientation = orientation.Value;
 
                 if (Bounds.Geometry != GeometryType.None)
                     Bounds.Orientation = orientation.Value;
@@ -811,24 +814,24 @@ namespace MHServerEmu.Games.Entities
                 return ChangePositionResult.NotChanged;
 
             UpdateRegionBounds(); // Add to Quadtree
-            SendLocationChangeEvents(preChangeLocation, RegionLocation, flags);
+            SendLocationChangeEvents(ref preChangeLocation, ref _regionLocation, flags);
             SetStatus(EntityStatus.ToTransform, true);
-            if (RegionLocation.IsValid())
-                _exitWorldRegionLocation.Set(RegionLocation);
+            if (_regionLocation.IsValid())
+                _exitWorldRegionLocation.Set(ref _regionLocation);
 
-            if (positionChanged && Vector3.EpsilonSphereTest(preChangeLocation.Position, RegionLocation.Position, 0.1f) == false) 
+            if (positionChanged && Vector3.EpsilonSphereTest(preChangeLocation.Position, _regionLocation.Position, 0.1f) == false) 
             {                
                 if (flags.HasFlag(ChangePositionFlags.SkipInterestUpdate) == false)
                 {
                     // Update interest when this world entity moves to another cell or it has moved far enough from the last interest update position
                     if (Cell != null &&
-                       (Cell != previousCell || Vector3.DistanceSquared2D(_lastInterestUpdatePosition, RegionLocation.Position) >= AreaOfInterest.UpdateDistanceSquared))
+                       (Cell != previousCell || Vector3.DistanceSquared2D(_lastInterestUpdatePosition, _regionLocation.Position) >= AreaOfInterest.UpdateDistanceSquared))
                     {
                         UpdateInterestPolicies(true);
                     }
                 }
 
-                UpdateHotspotData(previousCell, Cell, RegionLocation.Position);
+                UpdateHotspotData(previousCell, Cell, _regionLocation.Position);
             }
 
             // Send position to clients if needed
@@ -924,14 +927,15 @@ namespace MHServerEmu.Games.Entities
 
         public RegionLocation ClearWorldLocation()
         {
-            if (RegionLocation.IsValid())
-                _exitWorldRegionLocation.Set(RegionLocation);
+            if (_regionLocation.IsValid())
+                _exitWorldRegionLocation.Set(ref _regionLocation);
 
             if (Region != null && SpatialPartitionLocation.IsValid)
                 Region.RemoveEntityFromSpatialPartition(this);
 
-            RegionLocation oldLocation = new(RegionLocation);
-            RegionLocation.Set(RegionLocation.Invalid);
+            RegionLocation oldLocation = _regionLocation;
+            _regionLocation = RegionLocation.Invalid;
+
             return oldLocation;
         }
 
@@ -977,7 +981,7 @@ namespace MHServerEmu.Games.Entities
         public float GetDistanceTo(WorldEntity other, bool calcRadius)
         {
             if (other == null) return 0f;
-            float distance = Vector3.Distance2D(RegionLocation.Position, other.RegionLocation.Position);
+            float distance = Vector3.Distance2D(_regionLocation.Position, other.RegionLocation.Position);
             if (calcRadius)
                 distance -= Bounds.Radius + other.Bounds.Radius;
             return Math.Max(0.0f, distance);
@@ -993,7 +997,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool OrientToward(Vector3 point, bool ignorePitch = false, ChangePositionFlags changeFlags = ChangePositionFlags.None)
         {
-            return OrientToward(point, RegionLocation.Position, ignorePitch, changeFlags);
+            return OrientToward(point, _regionLocation.Position, ignorePitch, changeFlags);
         }
 
         private bool OrientToward(Vector3 point, Vector3 origin, bool ignorePitch = false, ChangePositionFlags changeFlags = ChangePositionFlags.None)
@@ -1009,20 +1013,20 @@ namespace MHServerEmu.Games.Entities
         public Vector3 GetVectorFrom(WorldEntity other)
         {
             if (other == null) return Vector3.Zero;
-            return RegionLocation.GetVectorFrom(other.RegionLocation);
+            return _regionLocation.GetVectorFrom(other.RegionLocation);
         }
 
         private Transform3 GetTransform()
         {
             if (TestStatus(EntityStatus.ToTransform))
             {
-                _transform = Transform3.BuildTransform(RegionLocation.Position, RegionLocation.Orientation);
+                _transform = Transform3.BuildTransform(_regionLocation.Position, _regionLocation.Orientation);
                 SetStatus(EntityStatus.ToTransform, false);
             }
             return _transform;
         }
 
-        private void SendLocationChangeEvents(RegionLocation oldLocation, RegionLocation newLocation, ChangePositionFlags flags)
+        private void SendLocationChangeEvents(ref RegionLocation oldLocation, ref RegionLocation newLocation, ChangePositionFlags flags)
         {
             if (flags.HasFlag(ChangePositionFlags.EnterWorld))
                 OnRegionChanged(null, newLocation.Region);
@@ -1030,10 +1034,10 @@ namespace MHServerEmu.Games.Entities
                 OnRegionChanged(oldLocation.Region, newLocation.Region);
 
             if (oldLocation.Area != newLocation.Area)
-                OnAreaChanged(oldLocation, newLocation);
+                OnAreaChanged(ref oldLocation, ref newLocation);
 
             if (oldLocation.Cell != newLocation.Cell)
-                OnCellChanged(oldLocation, newLocation, flags);
+                OnCellChanged(ref oldLocation, ref newLocation, flags);
         }
 
         private void UpdateMapLocation()
@@ -1042,7 +1046,7 @@ namespace MHServerEmu.Games.Entities
             const float MapOrientationThreshold = 0.1f;
 
             // Remove from the map if no longer in the world
-            if (RegionLocation.IsValid() == false)
+            if (_regionLocation.IsValid() == false)
             {
                 Properties.RemoveProperty(PropertyEnum.MapPosition);
                 Properties.RemoveProperty(PropertyEnum.MapOrientation);
@@ -1050,18 +1054,18 @@ namespace MHServerEmu.Games.Entities
             }
 
             if (Properties.HasProperty(PropertyEnum.MapPosition) == false ||
-                Vector3.DistanceSquared2D(RegionLocation.Position, _lastMapPosition) > MapPositionThreshold)
+                Vector3.DistanceSquared2D(_regionLocation.Position, _lastMapPosition) > MapPositionThreshold)
             {
-                _lastMapPosition = RegionLocation.Position;
+                _lastMapPosition = _regionLocation.Position;
                 Properties[PropertyEnum.MapPosition] = _lastMapPosition;
             }
 
             if (Properties.HasProperty(PropertyEnum.MapOrientation) == false ||
-                Segment.EpsilonTest(RegionLocation.Orientation.Yaw, _lastMapOrientation, MapOrientationThreshold) == false)
+                Segment.EpsilonTest(_regionLocation.Orientation.Yaw, _lastMapOrientation, MapOrientationThreshold) == false)
             {
                 // NOTE: The MapOrientation property has an interval of [0;65535], so it can't store negative values.
                 // To work around this, we use WrapAngleRadians() instead of GetYawNormalized() to get a [0:2PI] value instead of [-PI:PI].
-                _lastMapOrientation = RegionLocation.Orientation.Yaw;
+                _lastMapOrientation = _regionLocation.Orientation.Yaw;
                 Properties[PropertyEnum.MapOrientation] = Orientation.WrapAngleRadians(_lastMapOrientation);
             }
         }
@@ -1180,7 +1184,7 @@ namespace MHServerEmu.Games.Entities
             {
                 var region = Region;
                 if (region == null) return;
-                if (region.NaviMesh.AddInfluence(RegionLocation.Position, Bounds.Radius, NaviInfluence) == false)
+                if (region.NaviMesh.AddInfluence(_regionLocation.Position, Bounds.Radius, NaviInfluence) == false)
                     Logger.Warn($"Failed to add navi influence for ENTITY={this} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");
                 HasNavigationInfluence = true;
             }
@@ -1216,7 +1220,7 @@ namespace MHServerEmu.Games.Entities
 
             Region region = Region;
             if (region == null) return;
-            var regionPosition = RegionLocation.Position;
+            var regionPosition = _regionLocation.Position;
             if (NaviInfluence.Point != null)
             {
                 if (NaviInfluence.Point.Pos.X != regionPosition.X ||
@@ -1257,7 +1261,7 @@ namespace MHServerEmu.Games.Entities
                 hasNaviInfluence = HasNavigationInfluence;
             }
 
-            var result = NaviPath.CheckCanPathTo(region.NaviMesh, RegionLocation.Position, toPosition, Bounds.Radius, pathFlags);
+            var result = NaviPath.CheckCanPathTo(region.NaviMesh, _regionLocation.Position, toPosition, Bounds.Radius, pathFlags);
             if (hasNaviInfluence) EnableNavigationInfluence();
 
             return result;
@@ -1291,7 +1295,7 @@ namespace MHServerEmu.Games.Entities
 
         private Vector3 GetEyesPosition()
         {
-            Vector3 retPos = RegionLocation.Position;
+            Vector3 retPos = _regionLocation.Position;
             Bounds bounds = Bounds;
             retPos.Z += bounds.EyeHeight;
             return retPos;
@@ -1506,7 +1510,7 @@ namespace MHServerEmu.Games.Entities
                 var pathFlags = GetPathFlags();
                 pathFlags |= PathFlags.Fly;
                 pathFlags &= ~PathFlags.Walk;
-                if (naviMesh.Contains(RegionLocation.Position, Bounds.Radius, new DefaultContainsPathFlagsCheck(pathFlags)) == false)
+                if (naviMesh.Contains(_regionLocation.Position, Bounds.Radius, new DefaultContainsPathFlagsCheck(pathFlags)) == false)
                     return PowerUseResult.RegionRestricted;
             }
 
@@ -2031,9 +2035,9 @@ namespace MHServerEmu.Games.Entities
                 bool reverseOrientation = powerResults.Properties[PropertyEnum.KnockbackReverseTargetOri];
 
                 if ((isMovingAway && reverseOrientation == false) || (isMovingAway == false && reverseOrientation))
-                    orientation = Orientation.FromDeltaVector(powerResults.KnockbackSourcePosition - RegionLocation.Position);  // Face away from source
+                    orientation = Orientation.FromDeltaVector(powerResults.KnockbackSourcePosition - _regionLocation.Position);  // Face away from source
                 else
-                    orientation = Orientation.FromDeltaVector(RegionLocation.Position - powerResults.KnockbackSourcePosition);  // Face towards source
+                    orientation = Orientation.FromDeltaVector(_regionLocation.Position - powerResults.KnockbackSourcePosition);  // Face towards source
 
                 ChangeRegionPosition(null, orientation, ChangePositionFlags.Orientation);
             }
@@ -3234,7 +3238,7 @@ namespace MHServerEmu.Games.Entities
                 checkRange += InteractFallbackRange;
 
             float checkRangeSq = checkRange * checkRange;
-            float rangeSq = Vector3.DistanceSquared2D(interactee.RegionLocation.Position, RegionLocation.Position);
+            float rangeSq = Vector3.DistanceSquared2D(interactee.RegionLocation.Position, _regionLocation.Position);
 
             return rangeSq <= checkRangeSq;
         }
@@ -3306,9 +3310,9 @@ namespace MHServerEmu.Games.Entities
 
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.EntityRef = PrototypeDataRef;
-            settings.RegionId = RegionLocation.RegionId;
-            settings.Position = RegionLocation.Position;
-            settings.Orientation = RegionLocation.Orientation;
+            settings.RegionId = _regionLocation.RegionId;
+            settings.Position = _regionLocation.Position;
+            settings.Orientation = _regionLocation.Orientation;
             settings.Properties = properties;
 
             if (Game.EntityManager.CreateEntity(settings) == null)
@@ -3698,7 +3702,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public virtual void OnCellChanged(RegionLocation oldLocation, RegionLocation newLocation, ChangePositionFlags flags)
+        public virtual void OnCellChanged(ref RegionLocation oldLocation, ref RegionLocation newLocation, ChangePositionFlags flags)
         {
             Cell oldCell = oldLocation.Cell;
             Cell newCell = newLocation.Cell;
@@ -3713,7 +3717,7 @@ namespace MHServerEmu.Games.Entities
             // TODO other events
         }
 
-        public virtual void OnAreaChanged(RegionLocation oldLocation, RegionLocation newLocation)
+        public virtual void OnAreaChanged(ref RegionLocation oldLocation, ref RegionLocation newLocation)
         {
             Area oldArea = oldLocation.Area;
             Area newArea = newLocation.Area;
@@ -3894,7 +3898,7 @@ namespace MHServerEmu.Games.Entities
             // Loot Tables
             if (killFlags.HasFlag(KillFlags.NoLoot) == false && Properties[PropertyEnum.NoLootDrop] == false)
             {
-                Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, requireCombatActive, playerList);
+                Power.ComputeNearbyPlayers(Region, _regionLocation.Position, 0, requireCombatActive, playerList);
 
                 // Add faraway mission participants if needed
                 if (this is Agent agent)
@@ -3917,7 +3921,7 @@ namespace MHServerEmu.Games.Entities
             {
                 // Compute player count if we haven't done so already for loot tables
                 if (playerList.Count == 0)
-                    Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, requireCombatActive, playerList);
+                    Power.ComputeNearbyPlayers(Region, _regionLocation.Position, 0, requireCombatActive, playerList);
 
                 AwardKillXP(playerList);
             }
@@ -3930,7 +3934,7 @@ namespace MHServerEmu.Games.Entities
             bool requireCombatActive = WorldEntityPrototype.RequireCombatActiveForKillCredit;
 
             using var playerListHandle = ListPool<Player>.Instance.Get(out List<Player> playerList);
-            Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, requireCombatActive, playerList);
+            Power.ComputeNearbyPlayers(Region, _regionLocation.Position, 0, requireCombatActive, playerList);
             if (playerList.Count > 0)
             {
                 // NOTE: Only OnDamagedForPctHealth is used in 1.52, and only for Doop credit drops,
@@ -3963,7 +3967,7 @@ namespace MHServerEmu.Games.Entities
             else
             {
                 // For regular entities award loot to all nearby players.
-                Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, false, playerList);
+                Power.ComputeNearbyPlayers(Region, _regionLocation.Position, 0, false, playerList);
             }
 
             AwardLootForDropEvent(LootDropEventType.OnInteractedWith, playerList);
@@ -4238,7 +4242,7 @@ namespace MHServerEmu.Games.Entities
                 if (doorStateProto.IsOpen == false) 
                 {
                     if (region != null && _naviDoorHandle == null)
-                        _naviDoorHandle = region.NaviMesh.CreateDoorEdge(RegionLocation.Position, Vector3.Perp2D(Forward), NaviContentTags.Blocking, 1024.0f);
+                        _naviDoorHandle = region.NaviMesh.CreateDoorEdge(_regionLocation.Position, Vector3.Perp2D(Forward), NaviContentTags.Blocking, 1024.0f);
                 }
                 else if (_naviDoorHandle != null)
                 {
@@ -4357,7 +4361,7 @@ namespace MHServerEmu.Games.Entities
             if (region == Region)
             {
                 DisableNavigationInfluence();
-                RegionLocation = null;
+                _regionLocation = RegionLocation.Invalid;
                 SpatialPartitionLocation.Clear();
             }
         }
@@ -4429,7 +4433,7 @@ namespace MHServerEmu.Games.Entities
                         PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
                         AssignPower(powerRef, indexProps);
 
-                        PowerActivationSettings powerSettings = new(Id, Vector3.Zero, RegionLocation.Position);
+                        PowerActivationSettings powerSettings = new(Id, Vector3.Zero, _regionLocation.Position);
                         powerSettings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
                         var result = ActivatePower(powerRef, ref powerSettings);
                         if (result == PowerUseResult.Success)

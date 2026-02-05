@@ -578,11 +578,11 @@ namespace MHServerEmu.Games.Powers
                         settings.UserPosition = settings.TargetPosition;
 
                     // Do a sweep
-                    RegionLocation sweepLocation = new(agentOwner.RegionLocation);
+                    RegionLocation sweepLocation = agentOwner.RegionLocation;   // copy
                     sweepLocation.SetPosition(settings.UserPosition);
 
                     Vector3? sweepPosition = settings.TargetPosition;
-                    PowerPositionSweep(sweepLocation, settings.TargetPosition, settings.TargetEntityId, ref sweepPosition);
+                    PowerPositionSweep(ref sweepLocation, settings.TargetPosition, settings.TargetEntityId, ref sweepPosition);
                     settings.TargetPosition = sweepPosition.Value;
                 }
 

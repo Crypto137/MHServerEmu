@@ -2680,7 +2680,7 @@ namespace MHServerEmu.Games.Powers
 
                 Property.FromParam(kvp.Key, 0, out int ownerId);
 
-                var targetLocation = target.RegionLocation;
+                ref RegionLocation targetLocation = ref target.RegionLocation;
                 var region = targetLocation.Region;
                 if (region == null) return;
 

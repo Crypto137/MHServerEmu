@@ -2179,7 +2179,7 @@ namespace MHServerEmu.Games.Powers
                 if (requiresLineOfSight)
                 {
                     Vector3? resultPosition = null;
-                    if (PowerLOSCheck(Owner.RegionLocation, entity.RegionLocation.Position, entity.Id, ref resultPosition, LOSCheckAlongGround()) == false)
+                    if (PowerLOSCheck(ref Owner.RegionLocation, entity.RegionLocation.Position, entity.Id, ref resultPosition, LOSCheckAlongGround()) == false)
                         continue;
                 }
 
@@ -4235,7 +4235,7 @@ namespace MHServerEmu.Games.Powers
                 if (movementPowerProto.MoveFullDistance == false || movementPowerProto.TeleportMethod != TeleportMethodType.None)
                 {
                     Vector3? resultPostion = actualTargetPosition;
-                    var result = PowerPositionSweep(Owner.RegionLocation, actualTargetPosition, targetId, ref resultPostion, isBlocked, rangeOverride);
+                    var result = PowerPositionSweep(ref Owner.RegionLocation, actualTargetPosition, targetId, ref resultPostion, isBlocked, rangeOverride);
                     actualTargetPosition = resultPostion.Value;
 
                     if (result == PowerPositionSweepResult.Error || result == PowerPositionSweepResult.TargetPositionInvalid)
@@ -4716,10 +4716,10 @@ namespace MHServerEmu.Games.Powers
         private void GenerateMovementPathToTarget(MovementPowerPrototype movementPowerProto, ref PowerActivationSettings settings)
         {
             Vector3? resultPosition = settings.TargetPosition;
-            RegionLocation regionLocation = new(Owner.RegionLocation);
+            RegionLocation regionLocation = Owner.RegionLocation;   // copy
             regionLocation.SetPosition(settings.UserPosition);
 
-            PowerPositionSweepResult result = PowerPositionSweepInternal(regionLocation, settings.TargetPosition,
+            PowerPositionSweepResult result = PowerPositionSweepInternal(ref regionLocation, settings.TargetPosition,
                 settings.TargetEntityId, ref resultPosition, false, false);
 
             if (result == PowerPositionSweepResult.Clipped)

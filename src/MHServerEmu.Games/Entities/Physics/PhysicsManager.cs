@@ -289,7 +289,7 @@ namespace MHServerEmu.Games.Entities.Physics
         {
             if (entity == null || entity.Region == null) return false;
 
-            var location = entity.RegionLocation;
+            ref RegionLocation location = ref entity.RegionLocation;
             Vector3 velocity = desiredDestination - location.Position;
 
             Aabb collideBounds = entity.EntityCollideBounds.ToAabb();
@@ -343,7 +343,7 @@ namespace MHServerEmu.Games.Entities.Physics
         private static void SweepEntityCollideToDestinationHelper(WorldEntity entity, in Aabb volume, Vector3 position, Vector3 destination, WorldEntity blockedEntity, out EntityCollision outCollision, List<EntityCollision> entityCollisionList)
         {
             Bounds bounds = entity.EntityCollideBounds;
-            RegionLocation location = entity.RegionLocation;
+            ref RegionLocation location = ref entity.RegionLocation;
             Vector3 velocity = destination - position;
             Vector3 velocity2D = velocity.To2D();
             outCollision = new();
@@ -375,7 +375,7 @@ namespace MHServerEmu.Games.Entities.Physics
 
         private static bool GetDesiredDestination(WorldEntity entity, Vector3 vector, bool allowSweep, ref Vector3 resultPosition, out bool clipped)
         {
-            RegionLocation location = entity.RegionLocation;
+            ref RegionLocation location = ref entity.RegionLocation;
             Vector3 destination = location.Position + vector;
             clipped = false;
             Locomotor locomotor = entity.Locomotor;

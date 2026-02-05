@@ -181,8 +181,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
             else
             {
-                RegionLocation ownerLocation = entity.GetOwnerLocation();
-                if (ownerLocation != null)
+                ref RegionLocation ownerLocation = ref entity.GetOwnerLocation(out bool hasOwnerLocation);
+                if (hasOwnerLocation)
                 {
                     area = ownerLocation.Area;
                     if (area != null)
@@ -241,8 +241,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return entity.RegionLocation.HasKeyword(keywordProto);
             else
             {
-                RegionLocation ownerLocation = entity.GetOwnerLocation();
-                if (ownerLocation != null)
+                ref RegionLocation ownerLocation = ref entity.GetOwnerLocation(out bool hasOwnerLocation);
+                if (hasOwnerLocation)
                     return ownerLocation.HasKeyword(keywordProto);
                 else
                     return entity.ExitWorldRegionLocation.HasKeyword(keywordProto);
@@ -265,8 +265,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Region region = entity.Region;
             if (region == null)
             {
-                RegionLocation ownerLocation = entity.GetOwnerLocation();
-                if (ownerLocation != null)
+                ref RegionLocation ownerLocation = ref entity.GetOwnerLocation(out bool hasOwnerLocation);
+                if (hasOwnerLocation)
                     region = ownerLocation.Region;
                 else
                     region = entity.ExitWorldRegionLocation.GetRegion();

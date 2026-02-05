@@ -115,7 +115,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 {
                     if (validTarget == null) return;
 
-                    RegionLocation targetRegionLoc = validTarget.RegionLocation;
+                    ref RegionLocation targetRegionLoc = ref validTarget.RegionLocation;
                     if (ownerController.AttemptActivatePower(SpecialSummonPower, validTarget.Id, targetRegionLoc.ProjectToFloor()) == false) return;
 
                     targetSummoned++;
@@ -2602,7 +2602,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 {
                     if (validTarget == null) return;
 
-                    RegionLocation targetRegionLoc = validTarget.RegionLocation;
+                    ref RegionLocation targetRegionLoc = ref validTarget.RegionLocation;
                     if (ownerController.AttemptActivatePower(SpecialSummonPower, validTarget.Id, targetRegionLoc.ProjectToFloor()) == false) return;
 
                     targetSummoned++;

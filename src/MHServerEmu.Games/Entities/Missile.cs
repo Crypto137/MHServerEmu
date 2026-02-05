@@ -290,7 +290,7 @@ namespace MHServerEmu.Games.Entities
         private void InitializeEntityCollideBounds(MissileCreationContextPrototype creationContext)
         {
             float radius = creationContext.RadiusEffectOverride > 0 ? creationContext.RadiusEffectOverride : Bounds.GetRadius();
-            var location = RegionLocation;
+            ref RegionLocation location = ref RegionLocation;
             float height = Math.Max(radius, location.Position.Z - location.ProjectToFloor().Z);
             _entityCollideBounds.InitializeCapsule(radius, height, BoundsCollisionType.Overlapping, BoundsFlags.None);
         }

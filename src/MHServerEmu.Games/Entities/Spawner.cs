@@ -191,7 +191,7 @@ namespace MHServerEmu.Games.Entities
             if (SpawnGroup != null)
                 properties[PropertyEnum.ParentSpawnerGroupId] = SpawnGroup.SpawnerId;
 
-            populationManager.SpawnObject(popObject, RegionLocation, properties, spawnFlags, this, spawnedEntities);
+            populationManager.SpawnObject(popObject, ref RegionLocation, properties, spawnFlags, this, spawnedEntities);
         }
 
         public bool SpawnLifetimeMaxOut()

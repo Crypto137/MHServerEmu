@@ -543,7 +543,7 @@ namespace MHServerEmu.Games.Powers
                 var offsetVector = contextProto.SummonOffsetVector.ToVector3();
                 if (owner != null && owner.IsInWorld)
                 {
-                    var regionLocation = owner.RegionLocation;
+                    ref RegionLocation regionLocation = ref owner.RegionLocation;
                     var transform = Transform3.BuildTransform(regionLocation.Position, regionLocation.Orientation);
                     offsetVector = transform * offsetVector;
                 }

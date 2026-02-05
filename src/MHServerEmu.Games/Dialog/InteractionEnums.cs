@@ -209,8 +209,8 @@ namespace MHServerEmu.Games.Dialog
                 Region region = entity.Region;
                 if (region == null)
                 {
-                    RegionLocation ownerLocation = entity.GetOwnerLocation();
-                    if (ownerLocation != null)
+                    ref RegionLocation ownerLocation = ref entity.GetOwnerLocation(out bool hasOwnerLocation);
+                    if (hasOwnerLocation)
                         region = ownerLocation.Region;
                     else
                         region = entity.ExitWorldRegionLocation.GetRegion();

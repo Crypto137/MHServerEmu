@@ -322,7 +322,7 @@ namespace MHServerEmu.Games.Entities
             {               
                 Vector3? resultPosition = new();
                 ulong targetId = (target != null ? target.Id : InvalidId);
-                if (power.PowerLOSCheck(RegionLocation, position, targetId, ref resultPosition, power.LOSCheckAlongGround()) == false)
+                if (power.PowerLOSCheck(ref RegionLocation, position, targetId, ref resultPosition, power.LOSCheckAlongGround()) == false)
                     return IsInPositionForPowerResult.NoPowerLOS;
             }
 

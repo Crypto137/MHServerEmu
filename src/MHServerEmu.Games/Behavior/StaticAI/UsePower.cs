@@ -139,7 +139,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             WorldEntity targetWorldEntity = senses.GetCurrentTarget();
             ulong targetIdForPower;
 
-            RegionLocation regionLocation = agent.RegionLocation;
+            ref RegionLocation regionLocation = ref agent.RegionLocation;
             RegionLocation targetRegionLocation;
             TargetingShapeType targetingShape = power.GetTargetingShape();
 
@@ -292,7 +292,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     var targetEntityId = Entity.InvalidId;
                     if (targetWorldEntity != null) targetEntityId = targetWorldEntity.Id;
                     Vector3? sweepPosition = Vector3.Zero;
-                    if (movementPower.PowerPositionSweep(regionLocation, targetPositionForPower, targetEntityId, ref sweepPosition) == PowerPositionSweepResult.Clipped)
+                    if (movementPower.PowerPositionSweep(ref regionLocation, targetPositionForPower, targetEntityId, ref sweepPosition) == PowerPositionSweepResult.Clipped)
                         return PowerUseResult.OutOfPosition;
                 }
 

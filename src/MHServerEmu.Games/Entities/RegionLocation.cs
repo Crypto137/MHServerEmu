@@ -9,7 +9,7 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
-    public class RegionLocation
+    public struct RegionLocation
     {
         public enum SetPositionResult
         {
@@ -20,6 +20,8 @@ namespace MHServerEmu.Games.Entities
         };
 
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public static RegionLocation Invalid { get; }
 
         private Region _region;
         public Region Region { get => _region; set { _region = value; Cell = null; } }
@@ -43,8 +45,6 @@ namespace MHServerEmu.Games.Entities
                 if (Orientation.IsFinite(value)) _orientation = value;
             }
         }
-
-        public static RegionLocation Invalid = new();
 
         public RegionLocation(RegionLocation other)
         {
