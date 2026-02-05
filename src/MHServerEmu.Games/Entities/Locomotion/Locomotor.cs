@@ -215,7 +215,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     if (region == null) return SweepResult.Failed;
 
                     Cell cell = region.GetCellAtPosition(resultPosition);
-                    if (cell == null || RegionLocation.ProjectToFloor(cell, resultPosition).Z > toPosition.Z)
+                    if (cell == null || RegionLocation.ProjectToFloor(cell, ref resultPosition).Z > toPosition.Z)
                         sweepResult = SweepResult.Clipped;
                 }
                 else

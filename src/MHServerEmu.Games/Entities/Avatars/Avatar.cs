@@ -356,7 +356,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override ChangePositionResult ChangeRegionPosition(Vector3? position, Orientation? orientation, ChangePositionFlags flags = ChangePositionFlags.None)
         {
-            if (RegionLocation.IsValid() == false)
+            if (RegionLocation.IsValid == false)
                 return Logger.WarnReturn(ChangePositionResult.NotChanged, "ChangeRegionPosition(): Cannot change region position without entering the world first");
 
             // We only need to do AOI processing if the avatar is changing its position
@@ -1322,7 +1322,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                     if (targetIsValid)
                     {
-                        if (target?.RegionLocation.IsValid() == true)
+                        if (target?.RegionLocation.IsValid == true)
                         {
                             // Update target position
                             switch (continuousPower.GetTargetingShape())

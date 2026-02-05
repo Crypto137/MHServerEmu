@@ -703,7 +703,7 @@ namespace MHServerEmu.Games.Navi
             Cell pointCell = cell.Region.GetCellAtPosition(point);
             if (pointCell != null)
             {
-                Vector3 position = RegionLocation.ProjectToFloor(pointCell, point);
+                Vector3 position = RegionLocation.ProjectToFloor(pointCell, ref point);
                 return (short)position.Z;
             }
             else

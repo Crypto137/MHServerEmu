@@ -2162,7 +2162,7 @@ namespace MHServerEmu.Games.Missions
             if (avatar == null) return;
 
             ref RegionLocation location = ref avatar.RegionLocation;
-            if (location.IsValid() == false) return;
+            if (location.IsValid == false) return;
 
             EntityManager entityManager = Game.EntityManager;
             LootManager lootManager = Game.LootManager;

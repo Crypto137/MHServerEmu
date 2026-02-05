@@ -65,7 +65,7 @@ namespace MHServerEmu.Core.VectorMath
             return Yaw == other.Yaw && Pitch == other.Pitch && Roll == other.Roll;
         }
 
-        public static bool IsFinite(Orientation v)
+        public static bool IsFinite(ref Orientation v)
         {
             return float.IsFinite(v.Yaw) && float.IsFinite(v.Pitch) && float.IsFinite(v.Roll);
         }

@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.Entities
         public Event<EntityCollisionEvent> OverlapEndEvent = new();
 
         public ref RegionLocation RegionLocation { get => ref _regionLocation; }
-        public bool IsInWorld { get => _regionLocation.IsValid(); }
+        public bool IsInWorld { get => _regionLocation.IsValid; }
         public Region Region { get => _regionLocation.Region; }
         public NaviMesh NaviMesh { get => _regionLocation.NaviMesh; }
         public Cell Cell { get => _regionLocation.Cell; }
@@ -206,7 +206,7 @@ namespace MHServerEmu.Games.Entities
                 : worldEntityProto.SnapToFloorOnSpawn;
 
             OnAllianceChanged(Properties[PropertyEnum.AllianceOverride]);
-            _regionLocation.Initialize(this);
+
             SpawnSpec = settings.SpawnSpec;
             SetFlag(EntityFlags.IsPopulation, settings.IsPopulation);
 
@@ -655,7 +655,7 @@ namespace MHServerEmu.Games.Entities
         {
             SetStatus(EntityStatus.EnteringWorld, true);
 
-            _regionLocation.Region = region;
+            _regionLocation.SetRegion(region);
 
             Physics.AcquireCollisionId();
 
@@ -793,7 +793,7 @@ namespace MHServerEmu.Games.Entities
 
             if (orientation.HasValue && (flags.HasFlag(ChangePositionFlags.ForceUpdate) || preChangeLocation.Orientation != orientation))
             {
-                _regionLocation.Orientation = orientation.Value;
+                _regionLocation.SetOrientation(orientation.Value);
 
                 if (Bounds.Geometry != GeometryType.None)
                     Bounds.Orientation = orientation.Value;
@@ -816,7 +816,7 @@ namespace MHServerEmu.Games.Entities
             UpdateRegionBounds(); // Add to Quadtree
             SendLocationChangeEvents(ref preChangeLocation, ref _regionLocation, flags);
             SetStatus(EntityStatus.ToTransform, true);
-            if (_regionLocation.IsValid())
+            if (_regionLocation.IsValid)
                 _exitWorldRegionLocation.Set(ref _regionLocation);
 
             if (positionChanged && Vector3.EpsilonSphereTest(preChangeLocation.Position, _regionLocation.Position, 0.1f) == false) 
@@ -927,7 +927,7 @@ namespace MHServerEmu.Games.Entities
 
         public RegionLocation ClearWorldLocation()
         {
-            if (_regionLocation.IsValid())
+            if (_regionLocation.IsValid)
                 _exitWorldRegionLocation.Set(ref _regionLocation);
 
             if (Region != null && SpatialPartitionLocation.IsValid)
@@ -1012,8 +1012,10 @@ namespace MHServerEmu.Games.Entities
 
         public Vector3 GetVectorFrom(WorldEntity other)
         {
-            if (other == null) return Vector3.Zero;
-            return _regionLocation.GetVectorFrom(other.RegionLocation);
+            if (other == null)
+                return Vector3.Zero;
+
+            return _regionLocation.GetVectorFrom(ref other.RegionLocation);
         }
 
         private Transform3 GetTransform()
@@ -1046,7 +1048,7 @@ namespace MHServerEmu.Games.Entities
             const float MapOrientationThreshold = 0.1f;
 
             // Remove from the map if no longer in the world
-            if (_regionLocation.IsValid() == false)
+            if (_regionLocation.IsValid == false)
             {
                 Properties.RemoveProperty(PropertyEnum.MapPosition);
                 Properties.RemoveProperty(PropertyEnum.MapOrientation);
