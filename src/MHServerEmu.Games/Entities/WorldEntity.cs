@@ -103,7 +103,6 @@ namespace MHServerEmu.Games.Entities
         protected EntityTrackingContextMap _trackingContextMap;
         protected ConditionCollection _conditionCollection;
         protected PowerCollection _powerCollection;
-        protected int _unkEvent;
 
         // Clone data is initialized on demand for ClonePerPlayer world entities (primarily DR reward chests).
         private Event<PlayerEnteredRegionGameEvent>.Action _playerEnteredRegionAction;
@@ -220,7 +219,6 @@ namespace MHServerEmu.Games.Entities
             _trackingContextMap = new();
             _conditionCollection = new(this);
             _powerCollection = new(this);
-            _unkEvent = 0;
 
             if (Properties.HasProperty(PropertyEnum.Rank) == false && worldEntityProto.Rank != PrototypeId.Invalid)
                 Properties[PropertyEnum.Rank] = worldEntityProto.Rank;
@@ -268,8 +266,12 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
+            // Unknown replication-only integer, appears to be unused as of 1.52.
             if (archive.IsReplication)
-                success &= Serializer.Transfer(archive, ref _unkEvent);
+            {
+                int unknown = 0;
+                success &= Serializer.Transfer(archive, ref unknown);
+            }
 
             return success;
         }
@@ -4541,8 +4543,6 @@ namespace MHServerEmu.Games.Entities
                     sb.AppendLine(kvp.Value.ToString());
                 sb.AppendLine();
             }
-
-            sb.AppendLine($"{nameof(_unkEvent)}: 0x{_unkEvent:X}");
         }
 
         public bool ModifyTrackingContext(PrototypeId contextRef, EntityTrackingFlag flags)
