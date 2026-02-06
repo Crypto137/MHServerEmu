@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -59,8 +60,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<PowerTeleportEvent> _powerTeleportEvent = new();
         private readonly EventPointer<DeathDialogEvent> _deathDialogEvent = new();
 
-        private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
-        private readonly EventPointer<UpdateEnduranceEvent>[] _updateEnduranceEvents = new EventPointer<UpdateEnduranceEvent>[(int)ManaType.NumTypes];
+        private InlineArray2<EventPointer<EnableEnduranceRegenEvent>> _enableEnduranceRegenEvents;
+        private InlineArray2<EventPointer<UpdateEnduranceEvent>> _updateEnduranceEvents;
 
         private RepVar_string _playerName = new();
         private ulong _ownerPlayerDbId;
