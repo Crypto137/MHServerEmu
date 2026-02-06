@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
@@ -44,9 +45,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         private PrototypeId _associatedTransformMode;
 
         // Assignable slots
-        private PrototypeId _primaryAction = PrototypeId.Invalid;
-        private PrototypeId _secondaryAction = PrototypeId.Invalid;
-        private PrototypeId[] _actionKeys = new PrototypeId[NumActionKeySlots];
+        private PrototypeId _primaryAction;
+        private PrototypeId _secondaryAction;
+        private InlineArray6<PrototypeId> _actionKeys;
 
         public int PowerSpecIndex { get => _powerSpecIndex; set => _powerSpecIndex = value; }
         public bool ShouldPersist { get => _shouldPersist; set => _shouldPersist = value; }
@@ -62,7 +63,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             sb.AppendLine($"{nameof(_associatedTransformMode)}: {GameDatabase.GetPrototypeName(_associatedTransformMode)}");
             sb.AppendLine($"{nameof(_primaryAction)}: {GameDatabase.GetPrototypeName(_primaryAction)}");
             sb.AppendLine($"{nameof(_secondaryAction)}: {GameDatabase.GetPrototypeName(_secondaryAction)}");
-            for (int i = 0; i < _actionKeys.Length; i++)
+            for (int i = 0; i < NumActionKeySlots; i++)
                 sb.AppendLine($"{nameof(_actionKeys)}[{i}]: {GameDatabase.GetPrototypeName(_actionKeys[i])}");
             return sb.ToString();
         }
@@ -118,7 +119,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // TODO: DedicatedHealSlot, DedicatedPetTechSlot, DedicatedTeamUpSlot, DedicatedUltimateSlot
 
-            for (int i = 0; i < _actionKeys.Length; i++)
+            for (int i = 0; i < NumActionKeySlots; i++)
             {
                 if (_actionKeys[i] == abilityProtoRef)
                     abilitySlotList.Add(AbilitySlot.ActionKey0 + i);

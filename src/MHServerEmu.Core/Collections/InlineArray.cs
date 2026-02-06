@@ -30,6 +30,15 @@ namespace MHServerEmu.Core.Collections
     }
 
     /// <summary>
+    /// Generic inline array of 6 elements of type <typeparamref name="T"/>.
+    /// </summary>
+    [InlineArray(6)]
+    public struct InlineArray6<T>
+    {
+        private T _element0;
+    }
+
+    /// <summary>
     /// Generic inline array of 8 elements of type <typeparamref name="T"/>.
     /// </summary>
     [InlineArray(8)]
