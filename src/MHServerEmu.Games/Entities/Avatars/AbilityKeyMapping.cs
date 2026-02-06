@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             success &= Serializer.Transfer(archive, ref _associatedTransformMode);
             success &= Serializer.Transfer(archive, ref _primaryAction);
             success &= Serializer.Transfer(archive, ref _secondaryAction);
-            success &= Serializer.Transfer(archive, ref _actionKeys);
+            success &= Serializer.Transfer(archive, _actionKeys);
 
             return success;
         }

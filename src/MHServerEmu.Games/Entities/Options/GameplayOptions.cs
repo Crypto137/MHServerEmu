@@ -134,8 +134,8 @@ namespace MHServerEmu.Games.Entities.Options
             // The client implementation includes a lot of legacy backward compatibility code that we don't really need.
 
             success &= Serializer.Transfer(archive, ref _chatChannelFilterDict);
-            success &= Serializer.Transfer(archive, ref _chatTabChannels);
-            success &= Serializer.Transfer(archive, ref _optionSettings);
+            success &= Serializer.Transfer(archive, _chatTabChannels);
+            success &= Serializer.Transfer(archive, _optionSettings);
             success &= Serializer.Transfer(archive, ref _armorRarityVaporizeThresholdDict);
 
             return success;

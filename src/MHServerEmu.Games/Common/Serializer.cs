@@ -226,9 +226,9 @@ namespace MHServerEmu.Games.Common
         // Collections
         // TODO: Find a good way to make this more DRY without sacrificing performance
 
-        #region Arrays
+        #region Arrays / Spans
 
-        public static bool Transfer(Archive archive, ref ulong[] ioData)
+        public static bool Transfer(Archive archive, Span<ulong> ioData)
         {
             bool success = true;
 
@@ -244,14 +244,14 @@ namespace MHServerEmu.Games.Common
             }
             else
             {
-                Array.Clear(ioData);
+                ioData.Clear();
 
                 ulong rawNumElements = 0;
                 success &= Transfer(archive, ref rawNumElements);
                 int numElements = (int)rawNumElements;  // Cast to int for easier comparisons
 
                 if (ioData.Length < numElements)
-                    Logger.Warn($"Transfer(): Array length {ioData} is not enough to hold {numElements} elements");
+                    Logger.Warn($"Transfer(): Span length {ioData.Length} is not enough to hold {numElements} elements");
                 
                 for (int i = 0; i < numElements && i < ioData.Length; i++)
                 {
@@ -271,7 +271,7 @@ namespace MHServerEmu.Games.Common
             return success;
         }
 
-        public static bool Transfer(Archive archive, ref long[] ioData)
+        public static bool Transfer(Archive archive, Span<long> ioData)
         {
             bool success = true;
 
@@ -287,14 +287,14 @@ namespace MHServerEmu.Games.Common
             }
             else
             {
-                Array.Clear(ioData);
+                ioData.Clear();
 
                 ulong rawNumElements = 0;
                 success &= Transfer(archive, ref rawNumElements);
                 int numElements = (int)rawNumElements;  // Cast to int for easier comparisons
 
                 if (ioData.Length < numElements)
-                    Logger.Warn($"Transfer(): Array length {ioData} is not enough to hold {numElements} elements");
+                    Logger.Warn($"Transfer(): Span length {ioData.Length} is not enough to hold {numElements} elements");
 
                 for (int i = 0; i < numElements && i < ioData.Length; i++)
                 {
@@ -314,7 +314,7 @@ namespace MHServerEmu.Games.Common
             return success;
         }
 
-        public static bool Transfer(Archive archive, ref PrototypeId[] ioData)
+        public static bool Transfer(Archive archive, Span<PrototypeId> ioData)
         {
             bool success = true;
 
@@ -330,14 +330,14 @@ namespace MHServerEmu.Games.Common
             }
             else
             {
-                Array.Clear(ioData);
+                ioData.Clear();
 
                 ulong rawNumElements = 0;
                 success &= Transfer(archive, ref rawNumElements);
                 int numElements = (int)rawNumElements;  // Cast to int for easier comparisons
 
                 if (ioData.Length < numElements)
-                    Logger.Warn($"Transfer(): Array length {ioData} is not enough to hold {numElements} elements");
+                    Logger.Warn($"Transfer(): Span length {ioData.Length} is not enough to hold {numElements} elements");
 
                 for (int i = 0; i < numElements && i < ioData.Length; i++)
                 {
@@ -357,7 +357,7 @@ namespace MHServerEmu.Games.Common
             return success;
         }
 
-        public static bool Transfer<T>(Archive archive, ref T[] ioData) where T: ISerialize, new()
+        public static bool Transfer<T>(Archive archive, Span<T> ioData) where T: ISerialize, new()
         {
             bool success = true;
 
@@ -370,14 +370,14 @@ namespace MHServerEmu.Games.Common
             }
             else
             {
-                Array.Clear(ioData);
+                ioData.Clear();
 
                 ulong rawNumElements = 0;
                 success &= Transfer(archive, ref rawNumElements);
                 int numElements = (int)rawNumElements;  // Cast to int for easier comparisons
 
                 if (ioData.Length < numElements)
-                    Logger.Warn($"Transfer(): Array length {ioData} is not enough to hold {numElements} elements");
+                    Logger.Warn($"Transfer(): Span length {ioData.Length} is not enough to hold {numElements} elements");
 
                 for (int i = 0; i < numElements && i < ioData.Length; i++)
                 {
