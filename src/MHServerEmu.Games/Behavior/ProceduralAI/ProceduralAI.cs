@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -14,20 +15,23 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         public static readonly Logger Logger = LogManager.CreateLogger();
 
         public const short MaxConcurrentStates = 2;
-        private Game _game;
+
+        private readonly Game _game;
         private readonly AIController _owningController;
+        
         private short _curState;
-        private readonly PState[] _states;
+        private InlineArray2<PState> _states;
         private ProfilePtr _proceduralPtr;
+
         public ProceduralAIProfilePrototype Behavior { get => _proceduralPtr.Profile; }
         public BrainPrototype BrainPrototype { get; private set; }
         public ulong LastThinkQTime { get; set; }
         public uint ThinkCountPerFrame { get; set; }
 
-        private ProfilePtr _partialOverridePtr;
+        private readonly ProfilePtr _partialOverridePtr;
         public ProceduralAIProfilePrototype PartialOverrideBehavior { get => _partialOverridePtr.Profile; }
 
-        private ProfilePtr _fullOverridePtr;
+        private readonly ProfilePtr _fullOverridePtr;
         public ProceduralAIProfilePrototype FullOverrideBehavior { get => _fullOverridePtr.Profile; }
         public StaticBehaviorReturnType LastPowerResult { get; set; }
 
@@ -35,11 +39,10 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         {
             _game = game;
             _owningController = owningController;
-            _proceduralPtr = new ();
+            _proceduralPtr = new();
             _partialOverridePtr = new();
             _fullOverridePtr = new();
             _curState = 0;
-            _states = new PState[MaxConcurrentStates];
         }
 
         public void Initialize(BehaviorProfilePrototype profile)
