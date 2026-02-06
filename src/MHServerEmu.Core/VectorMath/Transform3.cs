@@ -100,7 +100,8 @@ namespace MHServerEmu.Core.VectorMath
 
         public static Aabb2 operator *(in Transform3 t, in Aabb2 b)
         {
-            var points = b.GetPoints();
+            Span<Point2> points = stackalloc Point2[4];
+            b.GetPoints(points);
             var box = new Aabb2();
             foreach (Point2 point in points)
                 box.Expand(t * new Point2(point.X, point.Y));

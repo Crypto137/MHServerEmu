@@ -1506,7 +1506,8 @@ namespace MHServerEmu.Games.Regions
 
         public bool ProjectBoundsIntoRegion(ref Bounds bounds, in Vector3 direction)
         {
-            Point2[] points = Aabb2.Expand(-bounds.GetRadius()).GetPoints();
+            Span<Point2> points = stackalloc Point2[4];
+            Aabb2.Expand(-bounds.GetRadius()).GetPoints(points);
 
             float minDistance = float.MaxValue;
             Vector3 closestPoint = Vector3.Zero;

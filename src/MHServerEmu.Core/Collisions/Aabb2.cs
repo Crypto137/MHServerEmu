@@ -70,15 +70,12 @@ namespace MHServerEmu.Core.Collisions
         /// <summary>
         /// Return the coordinates of the corners
         /// </summary>
-        public Point2[] GetPoints()
+        public void GetPoints(Span<Point2> points)
         {
-            return new Point2[]
-            {
-                new (Min.X, Min.Y),
-                new (Min.X, Max.Y),
-                new (Max.X, Max.Y),
-                new (Max.X, Min.Y)
-            };
+            points[0] = new(Min.X, Min.Y);
+            points[1] = new(Min.X, Max.Y);
+            points[2] = new(Max.X, Max.Y);
+            points[3] = new(Max.X, Min.Y);
         }
 
         public Aabb2 Translate(Vector2 newPosition) => new(Min + newPosition, Max + newPosition);
