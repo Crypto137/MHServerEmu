@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Entities.Persistence
 
         public static void StoreInventoryEntities(Player player, DBAccount dbAccount)
         {
-            dbAccount.ClearEntities();
+            using DBAccount.EntityUpdateScope entityUpdateScope = dbAccount.BeginEntityUpdate();
 
             StoreContainer(player, dbAccount, true);
 
@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.Entities.Persistence
                 entities = dbAccount.Items;
             }
 
-            // Common data everything stored in this inventory
+            // Common data for everything stored in this inventory.
             long containerDbGuid = (long)inventory.Owner.DatabaseUniqueId;
             long inventoryProtoGuid = (long)GameDatabase.GetPrototypeGuid(inventory.PrototypeDataRef);
 
@@ -129,25 +129,15 @@ namespace MHServerEmu.Games.Entities.Persistence
                     continue;
                 }
 
-                DBEntity dbEntity = new();
-                dbEntity.DbGuid = (long)entity.DatabaseUniqueId;
-                dbEntity.ContainerDbGuid = containerDbGuid;
-                dbEntity.InventoryProtoGuid = inventoryProtoGuid;
-                dbEntity.Slot = entry.Slot;
-                dbEntity.EntityProtoGuid = (long)GameDatabase.GetPrototypeGuid(entity.PrototypeDataRef);
-
-                using (Archive archive = new(ArchiveSerializeType.Database))
+                using Archive archive = new(ArchiveSerializeType.Database);
+                if (Serializer.Transfer(archive, ref entity) == false)
                 {
-                    if (Serializer.Transfer(archive, ref entity) == false)
-                    {
-                        Logger.Error($"StoreInventory(): Failed to serialize entity {entity}");
-                        continue;
-                    }
-
-                    dbEntity.ArchiveData = archive.AccessAutoBuffer().ToArray();
+                    Logger.Error($"StoreInventory(): Failed to serialize entity {entity}");
+                    continue;
                 }
 
-                entities.Add(dbEntity);
+                entities.UpdateEntity((long)entity.DatabaseUniqueId, containerDbGuid, inventoryProtoGuid, entry.Slot,
+                    (long)GameDatabase.GetPrototypeGuid(entity.PrototypeDataRef), archive.AsSpan());
 
                 //Logger.Debug($"StoreInventory(): Archived entity {entity}");
             }

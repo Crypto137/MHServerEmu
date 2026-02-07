@@ -75,8 +75,11 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
             // Insert and update
             IReadOnlyList<DBEntity> entries = dbEntityCollection.GetEntriesForContainer(containerDbGuid);
-            connection.Execute(_insertQuery, entries, transaction);
-            connection.Execute(_updateQuery, entries, transaction);
+            if (entries.Count > 0)
+            {
+                connection.Execute(_insertQuery, entries, transaction);
+                connection.Execute(_updateQuery, entries, transaction);
+            }
         }
 
         /// <summary>

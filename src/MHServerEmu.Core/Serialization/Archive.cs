@@ -195,6 +195,12 @@ namespace MHServerEmu.Core.Serialization
             return ByteString.Unsafe.FromBytes(_bufferStream.ToArray());
         }
 
+        public Span<byte> AsSpan()
+        {
+            byte[] buffer = _bufferStream.GetBuffer();
+            return buffer.AsSpan(0, (int)CurrentOffset);
+        }
+
         /// <summary>
         /// Writes the header for this <see cref="Archive"/>. Returns <see langword="true"/> if successful.
         /// </summary>

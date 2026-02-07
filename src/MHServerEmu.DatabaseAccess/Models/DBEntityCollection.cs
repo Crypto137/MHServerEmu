@@ -16,11 +16,14 @@ namespace MHServerEmu.DatabaseAccess.Models
     /// </summary>
     public class DBEntityCollection
     {
-        // TODO: Calculate checksum for added entities and update only those that changed
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<long, DBEntity> _allEntities = new();               // All DBEntity instances stored in this collection
         private readonly Dictionary<long, List<DBEntity>> _bucketedEntities = new();    // Stored DBEntity bucketed per container
+
+        private Dictionary<long, DBEntity> _allEntities = new();    // All DBEntity instances stored in this collection
+
+        private Dictionary<long, DBEntity> _dirtyEntities = new();
+        private bool _isUpdating;
 
         public IEnumerable<DBEntity> Entries { get => _allEntities.Values; }
         public int Count { get => _allEntities.Count; }
@@ -75,6 +78,54 @@ namespace MHServerEmu.DatabaseAccess.Models
 
             foreach (List<DBEntity> bucket in _bucketedEntities.Values)
                 bucket.Clear();
+        }
+
+        public void BeginUpdate()
+        {
+            if (_isUpdating)
+                throw new InvalidOperationException("Entity update is already in progress.");
+
+            // Do not remove entities yet, we will reuse them if they are added back.
+            (_allEntities, _dirtyEntities) = (_dirtyEntities, _allEntities);
+
+            foreach (List<DBEntity> bucket in _bucketedEntities.Values)
+                bucket.Clear();
+
+            _isUpdating = true;
+        }
+
+        public void EndUpdate()
+        {
+            if (_isUpdating == false)
+                throw new InvalidOperationException("Entity update is not in progress.");
+
+            _dirtyEntities.Clear();
+
+            _isUpdating = false;
+        }
+
+        public bool UpdateEntity(long dbGuid, long containerDbGuid, long inventoryProtoGuid, uint slot, long entityProtoGuid, Span<byte> archiveData)
+        {
+            if (_isUpdating == false)
+                throw new InvalidOperationException("Entity update is not in progress.");
+
+            // Reuse existing DBEntity instances if possible.
+            if (_dirtyEntities.Remove(dbGuid, out DBEntity dbEntity) == false)
+                dbEntity = new();
+
+            dbEntity.DbGuid = dbGuid;
+            dbEntity.ContainerDbGuid = containerDbGuid;
+            dbEntity.InventoryProtoGuid = inventoryProtoGuid;
+            dbEntity.Slot = slot;
+            dbEntity.EntityProtoGuid = entityProtoGuid;
+
+            // Do not allocate new archive data buffers if they match the data we already have.
+            byte[] oldArchiveData = dbEntity.ArchiveData;
+
+            if (oldArchiveData == null || archiveData.SequenceEqual(oldArchiveData) == false)
+                dbEntity.ArchiveData = archiveData.ToArray();
+
+            return Add(dbEntity);
         }
 
         public bool Contains(long dbGuid)

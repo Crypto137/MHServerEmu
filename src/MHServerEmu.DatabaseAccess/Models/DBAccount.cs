@@ -100,5 +100,35 @@ namespace MHServerEmu.DatabaseAccess.Models
             ControlledEntities.Clear();
             TransferredEntities.Clear();
         }
+
+        public EntityUpdateScope BeginEntityUpdate()
+        {
+            Avatars.BeginUpdate();
+            TeamUps.BeginUpdate();
+            Items.BeginUpdate();
+            ControlledEntities.BeginUpdate();
+            TransferredEntities.BeginUpdate();
+
+            return new(this);
+        }
+
+        public void EndEntityUpdate()
+        {
+            Avatars.EndUpdate();
+            TeamUps.EndUpdate();
+            Items.EndUpdate();
+            ControlledEntities.EndUpdate();
+            TransferredEntities.EndUpdate();
+        }
+
+        public readonly struct EntityUpdateScope(DBAccount account) : IDisposable
+        {
+            public readonly DBAccount Account = account;
+
+            public void Dispose()
+            {
+                Account.EndEntityUpdate();
+            }
+        }
     }
 }
