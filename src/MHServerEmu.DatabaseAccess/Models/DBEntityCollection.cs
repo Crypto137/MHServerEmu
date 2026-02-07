@@ -119,11 +119,16 @@ namespace MHServerEmu.DatabaseAccess.Models
             dbEntity.Slot = slot;
             dbEntity.EntityProtoGuid = entityProtoGuid;
 
-            // Do not allocate new archive data buffers if they match the data we already have.
-            byte[] oldArchiveData = dbEntity.ArchiveData;
-
-            if (oldArchiveData == null || archiveData.SequenceEqual(oldArchiveData) == false)
-                dbEntity.ArchiveData = archiveData.ToArray();
+            // Do not allocate new archive data buffers if we can reuse the ones we already have.
+            Span<byte> oldArchiveData = dbEntity.ArchiveData ?? Span<byte>.Empty;
+            if (archiveData.SequenceEqual(oldArchiveData) == false)
+            {
+                // Overwrite existing buffer if the size matches.
+                if (archiveData.Length == oldArchiveData.Length)
+                    archiveData.CopyTo(oldArchiveData);
+                else
+                    dbEntity.ArchiveData = archiveData.ToArray();
+            }
 
             return Add(dbEntity);
         }
