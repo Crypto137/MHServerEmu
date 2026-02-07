@@ -9,7 +9,7 @@ using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Entities.Persistence
 {
-    public static class PersistenceHelper
+    public static class PersistenceUtility
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 

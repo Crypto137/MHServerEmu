@@ -180,7 +180,7 @@ namespace MHServerEmu.Games.Network
                     Player.Properties[PropertyEnum.UISystemLock, UIGlobalsPrototype.ChatSystemLock] = 1;
             }
 
-            PersistenceHelper.RestoreInventoryEntities(Player, _dbAccount);
+            PersistenceUtility.RestoreInventoryEntities(Player, _dbAccount);
 
             // Create missing avatar entities if there are any (this should happen only for new players if there are no issue).
             foreach (PrototypeId avatarRef in dataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
@@ -222,7 +222,7 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Updates the <see cref="DBAccount"/> instance bound to this <see cref="PlayerConnection"/>.
         /// </summary>
-        private bool UpdateDBAccount(bool updateMigrationData)
+        private bool SaveToDBAccount(bool saveMigrationData)
         {
             if (_doNotUpdateDBAccount)
                 return true;
@@ -254,14 +254,14 @@ namespace MHServerEmu.Games.Network
 
                 _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
-                PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
+                PersistenceUtility.StoreInventoryEntities(Player, _dbAccount);
 
                 // Update migration data unless requested not to
                 MigrationData migrationData = _dbAccount.MigrationData;
                 
                 if (migrationData.SkipNextUpdate == false)
                 {
-                    if (updateMigrationData)
+                    if (saveMigrationData)
                     {
                         MigrationUtility.Store(migrationData, Player);
 
@@ -292,7 +292,7 @@ namespace MHServerEmu.Games.Network
             if (avatar != null && avatar.IsInWorld)
                 avatar.ExitWorld();
             
-            UpdateDBAccount(true);
+            SaveToDBAccount(true);
 
             AOI.SetRegion(0, true);
             if (Player != null)
@@ -331,7 +331,7 @@ namespace MHServerEmu.Games.Network
 
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            UpdateDBAccount(false);
+            SaveToDBAccount(false);
 
             stopwatch.Stop();
             if (stopwatch.Elapsed > TimeSpan.FromMilliseconds(300))
