@@ -218,7 +218,7 @@ namespace MHServerEmu.Games.Navi
             if (collinearEdges.Count > 0)
             {
                 collinearEdges.Add(edge);
-                outEdge = new NaviEdge (points[0], points[1], NaviEdgeFlags.Constraint, edge.PathingFlags);
+                outEdge = new NaviEdge (points[0], points[1], NaviEdgeFlags.Constraint, ref edge.PathingFlags);
                 return true;
             }
             else
@@ -549,7 +549,7 @@ namespace MHServerEmu.Games.Navi
                 {
                     NaviEdge maskEdge = nextTriangle.FindEdge(p0, p1);
                     bool flip = (maskEdge.Points[0] != edge.Points[0]);
-                    maskEdge.PathingFlags.Merge(edge.PathingFlags, flip);
+                    maskEdge.PathingFlags.Merge(ref edge.PathingFlags, flip);
                     maskEdge.SetFlag(edge.EdgeFlags & NaviEdgeFlags.Mask);
                     return;
                 }
@@ -584,8 +584,8 @@ namespace MHServerEmu.Games.Navi
             if (splitEdge != null)
             {
                 splitPoint = splitEdge.OpposedPoint(p0);
-                edges.PushBack(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
-                edges.PushBack(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
+                edges.PushBack(new(p0, splitPoint, edge.EdgeFlags, ref edge.PathingFlags));
+                edges.PushBack(new(splitPoint, p1, edge.EdgeFlags, ref edge.PathingFlags));
                 return;
             }
 
@@ -650,8 +650,8 @@ namespace MHServerEmu.Games.Navi
 
                 if (Segment.SegmentPointDistanceSq2D(p0.Pos, p1.Pos, splitPoint.Pos) < SplitEpsilonSq)
                 {
-                    edges.PushBack(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
-                    edges.PushBack(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
+                    edges.PushBack(new(p0, splitPoint, edge.EdgeFlags, ref edge.PathingFlags));
+                    edges.PushBack(new(splitPoint, p1, edge.EdgeFlags, ref edge.PathingFlags));
                     return;
                 }
 
@@ -769,13 +769,13 @@ namespace MHServerEmu.Games.Navi
             }
             else if (splitEdge.Contains(splitPoint) == false)
             {
-                edges.PushBack(new(splitEdge.Points[0], splitPoint, splitEdge.EdgeFlags, splitEdge.PathingFlags));
-                edges.PushBack(new(splitPoint, splitEdge.Points[1], splitEdge.EdgeFlags, splitEdge.PathingFlags));
+                edges.PushBack(new(splitEdge.Points[0], splitPoint, splitEdge.EdgeFlags, ref splitEdge.PathingFlags));
+                edges.PushBack(new(splitPoint, splitEdge.Points[1], splitEdge.EdgeFlags, ref splitEdge.PathingFlags));
                 RemoveEdge(splitEdge, false);
             }
 
-            if (p0 != splitPoint) edges.PushBack(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
-            if (splitPoint != p1) edges.PushBack(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
+            if (p0 != splitPoint) edges.PushBack(new(p0, splitPoint, edge.EdgeFlags, ref edge.PathingFlags));
+            if (splitPoint != p1) edges.PushBack(new(splitPoint, p1, edge.EdgeFlags, ref edge.PathingFlags));
         }
 
         public void RemoveEdge(NaviEdge edge, bool check = true)

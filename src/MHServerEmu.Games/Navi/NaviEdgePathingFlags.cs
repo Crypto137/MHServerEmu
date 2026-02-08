@@ -172,7 +172,7 @@ namespace MHServerEmu.Games.Navi
         }
     }
 
-    public class NaviEdgePathingFlags
+    public struct NaviEdgePathingFlags
     {
         public InlineArray2<ContentFlagCounts> ContentFlagCounts;
 
@@ -187,15 +187,6 @@ namespace MHServerEmu.Games.Navi
             foreach (var flag in flags0) flag0 |= flag;
             foreach (var flag in flags1) flag1 |= flag;
             SetContentFlags(flag0, flag1);
-        }
-
-        public NaviEdgePathingFlags(NaviEdgePathingFlags pathingFlags)
-        {
-            if (pathingFlags != null)
-            {
-               ContentFlagCounts[0] = pathingFlags.ContentFlagCounts[0];
-               ContentFlagCounts[1] = pathingFlags.ContentFlagCounts[1];
-            }
         }
 
         public void SetContentFlags(NaviContentFlags flag0, NaviContentFlags flag1)
@@ -223,7 +214,7 @@ namespace MHServerEmu.Games.Navi
             return ContentFlagCounts[side].ToContentFlags();
         }
 
-        public void Merge(NaviEdgePathingFlags other, bool flip)
+        public void Merge(ref NaviEdgePathingFlags other, bool flip)
         {
             int side0 = flip ? 1 : 0;
             int side1 = flip ? 0 : 1;

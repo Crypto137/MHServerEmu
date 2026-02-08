@@ -218,7 +218,7 @@ namespace MHServerEmu.Games.Navi
                 if (_navi.HasErrors() && _navi.CheckErrorLog(false, patch.ToString())) return false;
                 if (p0 == p1) continue;
 
-                NaviCdt.AddEdge(new(p0, p1, NaviEdgeFlags.Constraint, new(edge.Flags0, edge.Flags1)));
+                NaviCdt.AddEdge(new(p0, p1, NaviEdgeFlags.Constraint, edge.Flags0, edge.Flags1));
             }
 
             if (_navi.HasErrors() && _navi.CheckErrorLog(false, patch.ToString())) return false;

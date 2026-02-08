@@ -16,21 +16,38 @@ namespace MHServerEmu.Games.Navi
 
     public class NaviEdge
     {
+        private NaviEdgePathingFlags _pathingFlags;
         private InlineArray2<NaviPoint> _points;
         private InlineArray2<NaviTriangle> _triangles;
 
         public NaviEdgeFlags EdgeFlags { get; private set; }
-        public NaviEdgePathingFlags PathingFlags { get; set; }
+        public ref NaviEdgePathingFlags PathingFlags { get => ref _pathingFlags; }
         public ref InlineArray2<NaviPoint> Points { get => ref _points; }
         public ref InlineArray2<NaviTriangle> Triangles { get => ref _triangles; }
+
         public bool IsAttached => Triangles[0] != null || Triangles[1] != null;
 
         public uint Serial { get; private set; }
 
-        public NaviEdge(NaviPoint p0, NaviPoint p1, NaviEdgeFlags edgeFlags, NaviEdgePathingFlags pathingFlags = null)
+        public NaviEdge(NaviPoint p0, NaviPoint p1, NaviEdgeFlags edgeFlags)
         {
             EdgeFlags = edgeFlags;
-            PathingFlags = new(pathingFlags);
+            Points[0] = p0;
+            Points[1] = p1;
+        }
+
+        public NaviEdge(NaviPoint p0, NaviPoint p1, NaviEdgeFlags edgeFlags, ref NaviEdgePathingFlags pathingFlags)
+        {
+            EdgeFlags = edgeFlags;
+            PathingFlags = pathingFlags;
+            Points[0] = p0;
+            Points[1] = p1;
+        }
+
+        public NaviEdge(NaviPoint p0, NaviPoint p1, NaviEdgeFlags edgeFlags, NaviContentFlags[] flags0, NaviContentFlags[] flags1)
+        {
+            EdgeFlags = edgeFlags;
+            PathingFlags = new(flags0, flags1);
             Points[0] = p0;
             Points[1] = p1;
         }
@@ -129,7 +146,7 @@ namespace MHServerEmu.Games.Navi
         public void ConstraintMerge(NaviEdge edge)
         {
             bool flip = Points[0] != edge.Points[0] && Points[1] != edge.Points[1];
-            PathingFlags.Merge(edge.PathingFlags, flip);
+            PathingFlags.Merge(ref edge.PathingFlags, flip);
             SetFlag(NaviEdgeFlags.Constraint);
         }
 
