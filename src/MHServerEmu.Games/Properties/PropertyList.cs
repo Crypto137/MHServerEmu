@@ -25,6 +25,10 @@ namespace MHServerEmu.Games.Properties
         //
         // NOTE: This implementation is based on NewPropertyList from the client.
 
+        // Same as the client.
+        private const int InitialNodeDictionaryCapacity = 15;
+        private const int InitialPropertyArrayCapacity = 3;
+
         private readonly Dictionary<PropertyEnum, PropertyEnumNode> _nodeDict = new();
         private int _count = 0;
         private int _version = 0;
@@ -74,6 +78,9 @@ namespace MHServerEmu.Games.Properties
             oldValue = default;
             PropertyEnum propertyEnum = id.Enum;
 
+            if (_count == 0)
+                _nodeDict.EnsureCapacity(InitialNodeDictionaryCapacity);
+
             ref PropertyEnumNode node = ref _nodeDict.GetValueRefOrAddDefault(propertyEnum, out bool isNewNode);
 
             // If we do not have an existing property array, either update the non-parameterized value,
@@ -101,7 +108,7 @@ namespace MHServerEmu.Games.Properties
                 }
 
                 // If our id has params, we need to create a property array to store it
-                propertyArray = new(3);      // Initial capacity is the same as the client
+                propertyArray = new(InitialPropertyArrayCapacity);
                 node.PropertyArray = propertyArray;
 
                 // Add our existing non-parameterized value to the new property array
