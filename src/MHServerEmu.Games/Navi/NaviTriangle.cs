@@ -339,11 +339,11 @@ namespace MHServerEmu.Games.Navi
         }
     }
 
-    public class NaviTriangleState
+    public readonly struct NaviTriangleState
     {
-        public NaviTriangleFlags Flags { get; private set; }
-        public PathFlags PathingFlags { get; private set; }
-        public ContentFlagCounts ContentFlagCounts { get; private set; }    
+        public readonly NaviTriangleFlags Flags;
+        public readonly PathFlags PathingFlags;
+        public readonly ContentFlagCounts ContentFlagCounts;
         
         public NaviTriangleState(NaviTriangle triangle)
         {
