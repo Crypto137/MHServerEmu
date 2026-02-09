@@ -894,6 +894,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        public override bool IsMelee()
+        {
+            Power primarySlotPower = GetPowerInSlot(AbilitySlot.PrimaryAction);
+            return primarySlotPower != null && primarySlotPower.IsMelee();
+        }
+
         public override bool OnPowerAssigned(Power power)
         {
             if (base.OnPowerAssigned(power) == false)

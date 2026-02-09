@@ -1307,10 +1307,25 @@ namespace MHServerEmu.Games.Entities
 
         #region Powers
 
-        public Power GetPower(PrototypeId powerProtoRef) => _powerCollection?.GetPower(powerProtoRef);
-        public Power GetThrowablePower() => _powerCollection?.ThrowablePower;
-        public Power GetThrowableCancelPower() => _powerCollection?.ThrowableCancelPower;
-        public virtual bool IsMelee() => false;
+        public Power GetPower(PrototypeId powerProtoRef)
+        {
+            return _powerCollection?.GetPower(powerProtoRef);
+        }
+
+        public Power GetThrowablePower()
+        {
+            return _powerCollection?.ThrowablePower;
+        }
+
+        public Power GetThrowableCancelPower()
+        {
+            return _powerCollection?.ThrowableCancelPower;
+        }
+        
+        public virtual bool IsMelee()
+        {
+            return false;
+        }
 
         public bool HasPowerInPowerCollection(PrototypeId powerProtoRef)
         {
