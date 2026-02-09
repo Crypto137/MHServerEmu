@@ -86,7 +86,8 @@ namespace MHServerEmu.Games.Entities
             if (agentProto.Locomotion.Immobile == false)
                 Locomotor = new();
 
-            // GetPowerCollectionAllocateIfNull()
+            GetPowerCollectionAllocateIfNull();
+
             base.Initialize(settings);
 
             // InitPowersCollection

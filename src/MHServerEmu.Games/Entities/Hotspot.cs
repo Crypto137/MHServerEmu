@@ -58,7 +58,8 @@ namespace MHServerEmu.Games.Entities
         {
             base.Initialize(settings);
 
-            // if (GetPowerCollectionAllocateIfNull() == null) return false;
+            GetPowerCollectionAllocateIfNull();
+
             var hotspotProto = HotspotPrototype;
             _skipCollide = settings.HotspotSkipCollide;
             HasApplyEffectsDelay = hotspotProto.ApplyEffectsDelayMS > 0;

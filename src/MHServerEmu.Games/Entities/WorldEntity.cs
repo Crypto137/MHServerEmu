@@ -221,7 +221,7 @@ namespace MHServerEmu.Games.Entities
 
             _trackingContextMap = new();
             _conditionCollection = new(this);
-            _powerCollection = new(this);
+            // PowerCollection is allocated on demand when the first power is assigned.
 
             if (Properties.HasProperty(PropertyEnum.Rank) == false && worldEntityProto.Rank != PrototypeId.Invalid)
                 Properties[PropertyEnum.Rank] = worldEntityProto.Rank;
@@ -264,7 +264,7 @@ namespace MHServerEmu.Games.Entities
                 }
                 else
                 {
-                    if (_powerCollection == null) _powerCollection = new(this);
+                    GetPowerCollectionAllocateIfNull();
                     success &= PowerCollection.SerializeFrom(archive, _powerCollection, numRecords);
                 }
             }
@@ -1307,6 +1307,12 @@ namespace MHServerEmu.Games.Entities
 
         #region Powers
 
+        public PowerCollection GetPowerCollectionAllocateIfNull()
+        {
+            _powerCollection ??= new(this);
+            return _powerCollection;
+        }
+
         public Power GetPower(PrototypeId powerProtoRef)
         {
             return _powerCollection?.GetPower(powerProtoRef);
@@ -1335,9 +1341,12 @@ namespace MHServerEmu.Games.Entities
 
         public Power AssignPower(PrototypeId powerProtoRef, in PowerIndexProperties indexProps, bool sendPowerAssignmentToClients = true, PrototypeId triggeringPowerRef = PrototypeId.Invalid)
         {
-            if (_powerCollection == null) return Logger.WarnReturn<Power>(null, "AssignPower(): _powerCollection == null");
-            Power assignedPower = _powerCollection.AssignPower(powerProtoRef, indexProps, triggeringPowerRef, sendPowerAssignmentToClients);
+            PowerCollection powerCollection = GetPowerCollectionAllocateIfNull();
+            if (powerCollection == null) return Logger.WarnReturn<Power>(null, "AssignPower(): powerCollection == null");
+            
+            Power assignedPower = powerCollection.AssignPower(powerProtoRef, indexProps, triggeringPowerRef, sendPowerAssignmentToClients);
             if (assignedPower == null) return Logger.WarnReturn(assignedPower, "AssignPower(): assignedPower == null");
+            
             return assignedPower;
         }
 
