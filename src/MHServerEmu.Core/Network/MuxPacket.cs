@@ -15,6 +15,7 @@ namespace MHServerEmu.Core.Network
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        // Packets apparently go as high as 2800+ messages based on logs, so we presize pooled lists to 4096 to fit that and extra.
         private static readonly ConcurrentPool<List<MessagePackageOut>> MessageListPool = new(4096, static () => new(4096));
         private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Create();
 
@@ -74,11 +75,6 @@ namespace MHServerEmu.Core.Network
         {
             if (IsDataPacket == false)
                 return Logger.WarnReturn(false, "AddMessages(): Attempted to add messages to a non-data packet");
-
-            // Packets apparently go as high as 2800+ messages based on logs, so we presize pooled lists to 4096 to fit that.
-            // Log this in case we end up somehow getting even higher numbers.
-            if (messageList.Count > 4096)
-                Logger.Debug($"AddMessageList(): messageList.Count == {messageList.Count}");
 
             foreach (IMessage message in messageList)
             {
