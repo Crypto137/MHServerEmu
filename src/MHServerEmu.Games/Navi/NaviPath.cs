@@ -298,7 +298,7 @@ namespace MHServerEmu.Games.Navi
         public static NaviPathResult CheckCanPathTo(NaviMesh naviMesh, Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags)
         {
             using var pathNodesHandle = ListPool<NaviPathNode>.Instance.Get(MaxPathNodes, out List<NaviPathNode> pathNodes);
-            var pathGen = new NaviPathGenerator(naviMesh);
+            using var pathGen = new NaviPathGenerator(naviMesh);
             NaviPathResult result = pathGen.GeneratePath(position, goalPosition, radius, pathFlags, pathNodes, true, 0, 0f);
             return result;
         }
@@ -306,7 +306,7 @@ namespace MHServerEmu.Games.Navi
         public NaviPathResult GeneratePath(NaviMesh naviMesh, Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags, PathGenerationFlags pathGenerationFlags, float incompleteDistance)
         {
             using var pathNodesHandle = ListPool<NaviPathNode>.Instance.Get(MaxPathNodes, out List<NaviPathNode> pathNodes);
-            var generator = new NaviPathGenerator(naviMesh);
+            using var generator = new NaviPathGenerator(naviMesh);
             NaviPathResult result = generator.GeneratePath(position, goalPosition, radius, pathFlags, pathNodes, false, pathGenerationFlags, incompleteDistance);
             Init(radius, pathFlags, pathNodes);
             return result;
@@ -321,7 +321,7 @@ namespace MHServerEmu.Games.Navi
             using var wpPathHandle = ListPool<NaviPathNode>.Instance.Get(MaxPathNodes, out List<NaviPathNode> wpPath);
 
             var startNode = new NaviPathNode(position, NaviSide.Point, 0f, false);
-            var generator = new NaviPathGenerator(naviMesh);
+            using var generator = new NaviPathGenerator(naviMesh);
             NaviPathResult result = NaviPathResult.Success;
 
             foreach (var wp in waypoints)

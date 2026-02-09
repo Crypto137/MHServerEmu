@@ -9,9 +9,10 @@ using NaviPathChannel = System.Collections.Generic.List<MHServerEmu.Games.Navi.N
 
 namespace MHServerEmu.Games.Navi
 {
-    public class NaviPathGenerator
+    public struct NaviPathGenerator : IDisposable
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
         private NaviMesh _naviMesh;
         private float _radius;
         private float _width;
@@ -23,13 +24,21 @@ namespace MHServerEmu.Games.Navi
         private NaviTriangle _startTriangle;
         private NaviTriangle _goalTriangle;
         private NaviPoint _goalPoint;
-        private readonly FixedPriorityQueue<NaviPathSearchState> _searchStateQueue;
+        private List<NaviPathSearchState> _searchStateQueueList;
+        private FixedPriorityQueue<NaviPathSearchState> _searchStateQueue;
 
         public NaviPathGenerator(NaviMesh naviMesh)
         {
             // _navi = naviMesh.NaviSystem; // not used
             _naviMesh = naviMesh;
-            _searchStateQueue = new(128);
+
+            _searchStateQueueList = ListPool<NaviPathSearchState>.Instance.Get(128);
+            _searchStateQueue = new(_searchStateQueueList);
+        }
+
+        public void Dispose()
+        {
+            ListPool<NaviPathSearchState>.Instance.Return(_searchStateQueueList);
         }
 
         public static void GenerateDirectMove(Vector3 startPosition, Vector3 goalPosition, List<NaviPathNode> pathNodes)
