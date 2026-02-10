@@ -162,18 +162,16 @@ namespace MHServerEmu.PlayerManagement.Players
             Client.SendMessage(MuxChannel, message);
         }
 
-        // NOTE: We are locking on the account instance to prevent account data from being modified while
-        // it is being written to the database. This could potentially cause deadlocks if not used correctly.
-
         public bool LoadPlayerData()
         {
             DBAccount account = Account;
 
-            lock (account)
-            {
-                if (AccountManager.LoadPlayerDataForAccount(account) == false)
-                    return Logger.WarnReturn(false, $"LoadPlayerData(): Failed to load player data for account [{account}] from the database");
-            }
+            using var lockScope = account.Lock();
+            if (lockScope.LockTaken == false)
+                return Logger.ErrorReturn(false, $"LoadPlayerData(): Timed out acquiring lock for [{account}]");
+
+            if (AccountManager.LoadPlayerDataForAccount(account) == false)
+                return Logger.WarnReturn(false, $"LoadPlayerData(): Failed to load player data for account [{account}] from the database");
 
             Logger.Info($"Loaded player data for account [{account}] from the database");
 
@@ -195,14 +193,15 @@ namespace MHServerEmu.PlayerManagement.Players
 
             DBAccount account = Account;
 
-            lock (account)
-            {
-                if (IsConnected == false)
-                    account.Player.LastLogoutTime = (long)Clock.UnixTime.TotalMilliseconds;
+            using var lockScope = account.Lock();
+            if (lockScope.LockTaken == false)
+                return Logger.ErrorReturn(false, $"SavePlayerData(): Timed out acquiring lock for [{account}]");
 
-                if (IDBManager.Instance.SavePlayerData(account) == false)
-                    return Logger.WarnReturn(false, $"SavePlayerData(): Failed to save player data for account [{account}] to the database");
-            }
+            if (IsConnected == false)
+                account.Player.LastLogoutTime = (long)Clock.UnixTime.TotalMilliseconds;
+
+            if (IDBManager.Instance.SavePlayerData(account) == false)
+                return Logger.WarnReturn(false, $"SavePlayerData(): Failed to save player data for account [{account}] to the database");
 
             Logger.Info($"Saved player data for account [{account}] to the database");
 

@@ -227,52 +227,51 @@ namespace MHServerEmu.Games.Network
             if (_doNotUpdateDBAccount)
                 return true;
 
-            if (Player == null) return Logger.WarnReturn(false, "UpdateDBAccount(): Player == null");
+            if (Player == null) return Logger.WarnReturn(false, "SaveToDBAccount(): Player == null");
 
-            // NOTE: We are locking on the account instance to prevent account data from being modified while
-            // it is being written to the database. This could potentially cause deadlocks if not used correctly.
-            lock (_dbAccount)
+            using var lockScope = _dbAccount.Lock();
+            if (lockScope.LockTaken == false)
+                return Logger.ErrorReturn(false, $"SaveToDBAccount(): Timed out acquiring lock for [{_dbAccount}]");
+
+            using (Archive archive = new(ArchiveSerializeType.Database))
             {
-                using (Archive archive = new(ArchiveSerializeType.Database))
-                {
-                    // NOTE: Use Transfer() and NOT Player.Serialize() to make sure we pack the size of the player
-                    Serializer.Transfer(archive, Player);
-                    _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
-                }
+                // NOTE: Use Transfer() and NOT Player.Serialize() to make sure we pack the size of the player
+                Serializer.Transfer(archive, Player);
+                _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
+            }
 
-                // Save last town as a separate database field to be able to access it without deserializing the player entity
-                PrototypeId lastTownProtoRef = Player.Properties[PropertyEnum.LastTownRegionForAccount];
-                if (lastTownProtoRef != PrototypeId.Invalid)
-                {
-                    RegionPrototype lastTownProto = lastTownProtoRef.As<RegionPrototype>();
-                    _dbAccount.Player.StartTarget = (long)lastTownProto.StartTarget;
-                }
-                else
-                {
-                    _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
-                }
+            // Save last town as a separate database field to be able to access it without deserializing the player entity
+            PrototypeId lastTownProtoRef = Player.Properties[PropertyEnum.LastTownRegionForAccount];
+            if (lastTownProtoRef != PrototypeId.Invalid)
+            {
+                RegionPrototype lastTownProto = lastTownProtoRef.As<RegionPrototype>();
+                _dbAccount.Player.StartTarget = (long)lastTownProto.StartTarget;
+            }
+            else
+            {
+                _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
+            }
 
-                _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
+            _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
-                PersistenceUtility.StoreInventoryEntities(Player, _dbAccount);
+            PersistenceUtility.StoreInventoryEntities(Player, _dbAccount);
 
-                // Update migration data unless requested not to
-                MigrationData migrationData = _dbAccount.MigrationData;
+            // Update migration data unless requested not to
+            MigrationData migrationData = _dbAccount.MigrationData;
                 
-                if (migrationData.SkipNextUpdate == false)
+            if (migrationData.SkipNextUpdate == false)
+            {
+                if (saveMigrationData)
                 {
-                    if (saveMigrationData)
-                    {
-                        MigrationUtility.Store(migrationData, Player);
+                    MigrationUtility.Store(migrationData, Player);
 
-                        foreach (Avatar avatar in new AvatarIterator(Player))
-                            MigrationUtility.Store(migrationData, avatar);
-                    }
+                    foreach (Avatar avatar in new AvatarIterator(Player))
+                        MigrationUtility.Store(migrationData, avatar);
                 }
-                else
-                {
-                    migrationData.SkipNextUpdate = false;
-                }
+            }
+            else
+            {
+                migrationData.SkipNextUpdate = false;
             }
 
             Logger.Trace($"Updated DBAccount {_dbAccount}");

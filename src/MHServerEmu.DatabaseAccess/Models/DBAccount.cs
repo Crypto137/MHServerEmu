@@ -29,7 +29,11 @@ namespace MHServerEmu.DatabaseAccess.Models
     /// </summary>
     public class DBAccount
     {
+        private const int LockTimeoutMS = 3000;
+
         private static readonly IdGenerator IdGenerator = new(IdType.Player, 0);
+
+        private readonly SemaphoreSlim _semaphore = new(1, 1);
 
         public long Id { get; set; }
         public string Email { get; set; }
@@ -92,6 +96,17 @@ namespace MHServerEmu.DatabaseAccess.Models
             return $"{PlayerName} (0x{Id:X})";
         }
 
+        public LockScope Lock()
+        {
+            bool lockTaken = _semaphore.Wait(LockTimeoutMS);
+            return new(this, lockTaken);
+        }
+
+        public void Unlock()
+        {
+            _semaphore.Release();
+        }
+
         public void ClearEntities()
         {
             Avatars.Clear();
@@ -119,6 +134,18 @@ namespace MHServerEmu.DatabaseAccess.Models
             Items.EndUpdate();
             ControlledEntities.EndUpdate();
             TransferredEntities.EndUpdate();
+        }
+
+        public readonly struct LockScope(DBAccount account, bool lockTaken) : IDisposable
+        {
+            public readonly DBAccount Account = account;
+            public readonly bool LockTaken = lockTaken;
+
+            public void Dispose()
+            {
+                if (LockTaken)
+                    Account.Unlock();
+            }
         }
 
         public readonly struct EntityUpdateScope(DBAccount account) : IDisposable
