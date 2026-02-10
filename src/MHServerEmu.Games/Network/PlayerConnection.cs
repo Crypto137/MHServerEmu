@@ -115,6 +115,24 @@ namespace MHServerEmu.Games.Network
         }
 
         /// <summary>
+        /// Updates player data for the bound <see cref="DBAccount"/> instance and notifies the Player Manager.
+        /// </summary>
+        public bool SaveWithNotification()
+        {
+            if (SaveToDBAccount(false) == false)
+            {
+                Logger.Error($"SaveWithNotification(): Save failed for {this}");
+                return false;
+            }
+
+            // Notify the Player Manager to trigger a database update if needed.
+            ServiceMessage.PlayerDataUpdated message = new(PlayerDbId);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+
+            return true;
+        }
+
+        /// <summary>
         /// Initializes this <see cref="PlayerConnection"/> from the bound <see cref="DBAccount"/>.
         /// </summary>
         private bool LoadFromDBAccount()
@@ -233,6 +251,8 @@ namespace MHServerEmu.Games.Network
             if (lockScope.LockTaken == false)
                 return Logger.ErrorReturn(false, $"SaveToDBAccount(): Timed out acquiring lock for [{_dbAccount}]");
 
+            TimeSpan startTime = Clock.UnixTime;
+
             using (Archive archive = new(ArchiveSerializeType.Database))
             {
                 // NOTE: Use Transfer() and NOT Player.Serialize() to make sure we pack the size of the player
@@ -274,7 +294,8 @@ namespace MHServerEmu.Games.Network
                 migrationData.SkipNextUpdate = false;
             }
 
-            Logger.Trace($"Updated DBAccount {_dbAccount}");
+            TimeSpan elapsed = Clock.UnixTime - startTime;
+            Logger.Trace($"Saved player data for {_dbAccount} in {(long)elapsed.TotalMilliseconds} ms");
             return true;
         }
 

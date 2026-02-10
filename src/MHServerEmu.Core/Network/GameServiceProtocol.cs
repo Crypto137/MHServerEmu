@@ -257,6 +257,15 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
+        /// [Game -> PlayerManager] Notifies the Player Manager that a save happened and player data needs to be written to the database.
+        /// </summary>
+        public readonly struct PlayerDataUpdated(ulong playerDbId)
+            : IGameServiceMessage
+        {
+            public readonly ulong PlayerDbId = playerDbId;
+        }
+
+        /// <summary>
         /// [Game -> PlayerManager] Requests player dbid and properly cased name from the player manager.
         /// </summary>
         public readonly struct PlayerLookupByNameRequest(ulong gameId, ulong playerDbId, ulong remoteJobId, string requestPlayerName)

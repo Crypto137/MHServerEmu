@@ -73,6 +73,10 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnSetDifficultyTierPreference(setDifficultyTierPreference);
                     break;
 
+                case ServiceMessage.PlayerDataUpdated playerDataUpdated:
+                    OnPlayerDataUpdated(playerDataUpdated);
+                    break;
+
                 case ServiceMessage.PlayerLookupByNameRequest playerLookupByNameRequest:
                     OnPlayerLookupByNameRequest(playerLookupByNameRequest);
                     break;
@@ -287,6 +291,18 @@ namespace MHServerEmu.PlayerManagement.Network
                 return Logger.WarnReturn(false, $"OnSetDifficultyTierPreference(): No handle found for playerDbId 0x{playerDbId:X}");
 
             player.SetDifficultyTierPreference(difficultyTierProtoRef);
+            return true;
+        }
+
+        private bool OnPlayerDataUpdated(in ServiceMessage.PlayerDataUpdated playerDataUpdated)
+        {
+            ulong playerDbId = playerDataUpdated.PlayerDbId;
+
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
+            if (player == null)
+                return Logger.WarnReturn(false, $"OnPlayerDataUpdated(): No handle found for playerDbId 0x{playerDbId:X}");
+
+            player.SavePlayerData();
             return true;
         }
 
