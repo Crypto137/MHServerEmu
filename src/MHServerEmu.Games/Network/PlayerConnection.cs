@@ -340,22 +340,14 @@ namespace MHServerEmu.Games.Network
 
             oldRegion?.PlayerBeginTravelToRegionEvent.Invoke(new(Player, remoteRegionProtoRef));
 
-            // The message for the loading screen we are queueing here will be flushed to the client
-            // as soon as we set the connection as pending to keep things nice and responsive.
             Player.QueueLoadingScreen(remoteRegionProtoRef);
 
             oldRegion?.PlayerLeftRegionEvent.Invoke(new(Player, oldRegion.PrototypeDataRef));
 
-            // Exit world and save
             Player.CurrentAvatar.ExitWorld();
 
-            Stopwatch stopwatch = Stopwatch.StartNew();
-
-            SaveToDBAccount(false);
-
-            stopwatch.Stop();
-            if (stopwatch.Elapsed > TimeSpan.FromMilliseconds(300))
-                Logger.Warn($"ExitGame() took {stopwatch.Elapsed.TotalMilliseconds} ms for {this}");
+            // We are likely to be on our way to another game instance, so don't save player data just yet.
+            // The save will happen when we exit this game instance or an autosave triggers.
 
             HasPendingRegionTransfer = true;
         }
