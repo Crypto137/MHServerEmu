@@ -83,7 +83,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private ulong _ultimatePrestigeLevel = 0;
 
-        public uint AvatarWorldInstanceId { get; } = 1;
+        public uint AvatarWorldInstanceId { get; private set; } = 0;
         public string PlayerName { get => _playerName.Get(); }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
         public Agent CurrentTeamUpAgent { get => GetTeamUpAgent(Properties[PropertyEnum.AvatarTeamUpAgent]); }
@@ -383,7 +383,13 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // Do a normal position change and update AOI if the position is loaded
                 result = base.ChangeRegionPosition(position, orientation, flags);
                 if (result == ChangePositionResult.PositionChanged)
+                {
+                    // Increment AvatarWorldInstanceId before updating AOI to make sure it reaches clients.
+                    if (flags.HasFlag(ChangePositionFlags.EnterWorld))
+                        AvatarWorldInstanceId++;
+
                     player.AOI.Update(RegionLocation.Position);
+                }
 
                 if (flags.HasFlag(ChangePositionFlags.Teleport))
                     RespawnPersistentAgents();
