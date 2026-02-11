@@ -180,7 +180,7 @@ namespace MHServerEmu.Games.Network
                     fieldFlags |= EntityCreateMessageFlags.HasInvLoc;
 
                     // We need a second null check for settings here because we send invLocPrev only if we have a current invLoc
-                    if (settings != null && settings.InventoryLocationPrevious.Equals(entity.InventoryLocation) == false)
+                    if (settings != null && settings.InventoryLocationPrevious != entity.InventoryLocation)
                         fieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;
                 }
 
@@ -249,10 +249,13 @@ namespace MHServerEmu.Games.Network
                     Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref activePowerPrototypeRef);
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
-                    InventoryLocation.SerializeTo(archive, entity.InventoryLocation);
+                    InventoryLocation.SerializeTo(archive, ref entity.InventoryLocation);
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
-                    InventoryLocation.SerializeTo(archive, settings.InventoryLocationPrevious);
+                {
+                    InventoryLocation prevInvLoc = settings.InventoryLocationPrevious;
+                    InventoryLocation.SerializeTo(archive, ref prevInvLoc);
+                }
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
                 {

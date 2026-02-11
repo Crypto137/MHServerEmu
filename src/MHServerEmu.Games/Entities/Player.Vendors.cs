@@ -1131,7 +1131,7 @@ namespace MHServerEmu.Games.Entities
                 return VendorResult.OpFailure;
 
             // Check if this player owns this item
-            InventoryLocation invLoc = item.InventoryLocation;
+            ref InventoryLocation invLoc = ref item.InventoryLocation;
             if (invLoc.ContainerId != Id)
                 return VendorResult.OpFailure;
 

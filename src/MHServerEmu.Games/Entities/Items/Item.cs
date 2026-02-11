@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         public override void OnSelfAddedToOtherInventory()
         {
-            InventoryLocation invLoc = InventoryLocation;
+            ref InventoryLocation invLoc = ref InventoryLocation;
 
             if (invLoc.IsValid)
             {
@@ -231,9 +231,9 @@ namespace MHServerEmu.Games.Entities.Items
             base.OnSelfAddedToOtherInventory();
         }
 
-        public override void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
+        public override void OnSelfRemovedFromOtherInventory(ref InventoryLocation prevInvLoc)
         {
-            base.OnSelfRemovedFromOtherInventory(prevInvLoc);
+            base.OnSelfRemovedFromOtherInventory(ref prevInvLoc);
 
             if (prevInvLoc.IsValid == false)
                 return;
@@ -368,7 +368,7 @@ namespace MHServerEmu.Games.Entities.Items
                     if (region == null)
                         return;
 
-                    InventoryPrototype inventoryProto = InventoryLocation?.InventoryPrototype;
+                    InventoryPrototype inventoryProto = InventoryLocation.InventoryPrototype;
                     if (inventoryProto == null)
                         return;
 
@@ -442,7 +442,7 @@ namespace MHServerEmu.Games.Entities.Items
             return PlayerCanUse(player, avatar, checkPower, checkInventory) == InteractionValidateResult.Success;
         }
 
-        public bool PlayerCanMove(Player player, InventoryLocation destInvLoc, out InventoryResult result, out PropertyEnum resultProperty, out Item resultItem)
+        public bool PlayerCanMove(Player player, ref InventoryLocation destInvLoc, out InventoryResult result, out PropertyEnum resultProperty, out Item resultItem)
         {
             result = InventoryResult.Invalid;
             resultProperty = PropertyEnum.Invalid;
@@ -452,7 +452,7 @@ namespace MHServerEmu.Games.Entities.Items
             if (player.Owns(this) == false) return Logger.WarnReturn(false, "PlayerCanMove(): player.Owns(this) == false");
 
             // Validate inventories
-            InventoryLocation fromInvLoc = InventoryLocation;
+            ref InventoryLocation fromInvLoc = ref InventoryLocation;
 
             if (fromInvLoc.IsValid == false)
                 return Logger.WarnReturn(false, $"PlayerCanMove() is being called with a fromInvLoc that isn't valid (the pickup interaction should be used for that case!)\nItem: [{this}]");
@@ -481,11 +481,11 @@ namespace MHServerEmu.Games.Entities.Items
             if (result != InventoryResult.Success)
                 return false;
 
-            result = Avatar.ValidateEquipmentChange(Game, this, fromInvLoc, destInvLoc, out resultItem);
+            result = Avatar.ValidateEquipmentChange(Game, this, ref fromInvLoc, ref destInvLoc, out resultItem);
             if (result != InventoryResult.Success)
                 return false;
 
-            result = player.ValidatePlayerInventoryMoveConstraints(fromInvLoc, destInvLoc);
+            result = player.ValidatePlayerInventoryMoveConstraints(ref fromInvLoc, ref destInvLoc);
             if (result != InventoryResult.Success)
                 return false;
 
@@ -511,11 +511,11 @@ namespace MHServerEmu.Games.Entities.Items
                     if (result != InventoryResult.Success)
                         return false;
 
-                    result = Avatar.ValidateEquipmentChange(Game, itemInSlot, destInvLoc, fromInvLoc, out resultItem);
+                    result = Avatar.ValidateEquipmentChange(Game, itemInSlot, ref destInvLoc, ref fromInvLoc, out resultItem);
                     if (result != InventoryResult.Success)
                         return false;
 
-                    result = player.ValidatePlayerInventoryMoveConstraints(destInvLoc, fromInvLoc);
+                    result = player.ValidatePlayerInventoryMoveConstraints(ref destInvLoc, ref fromInvLoc);
                     if (result != InventoryResult.Success)
                         return false;
                 }
@@ -535,7 +535,8 @@ namespace MHServerEmu.Games.Entities.Items
             if (itemProto.CanBeDestroyed == false)
                 return false;
 
-            if (Avatar.ValidateEquipmentChange(Game, this, InventoryLocation, InventoryLocation.Invalid, out _) != InventoryResult.Success)
+            InventoryLocation toInvLoc = InventoryLocation.Invalid;
+            if (Avatar.ValidateEquipmentChange(Game, this, ref InventoryLocation, ref toInvLoc, out _) != InventoryResult.Success)
                 return false;
 
             return true;
@@ -833,7 +834,7 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
-        public InventoryResult SplitStack(InventoryLocation toInvLoc, int count)
+        public InventoryResult SplitStack(ref InventoryLocation toInvLoc, int count)
         {
             // Some stacks are not splittable
             if (StacksCanBeSplit == false)
@@ -844,8 +845,8 @@ namespace MHServerEmu.Games.Entities.Items
                 return InventoryResult.SplitParamExceedsStackSize;
 
             // Cannot split to the same slot
-            InventoryLocation fromInvLoc = InventoryLocation;
-            if (fromInvLoc.Equals(toInvLoc))
+            ref InventoryLocation fromInvLoc = ref InventoryLocation;
+            if (fromInvLoc == toInvLoc)
                 return InventoryResult.InvalidSlotParam;
 
             // Check inventories
@@ -875,11 +876,11 @@ namespace MHServerEmu.Games.Entities.Items
             }
 
             // Do move validation
-            if (PlayerCanMove(player, toInvLoc, out InventoryResult canMoveResult, out _, out _) == false)
+            if (PlayerCanMove(player, ref toInvLoc, out InventoryResult canMoveResult, out _, out _) == false)
                 return canMoveResult;
 
             // Do the split
-            InventoryResult splitResult = DoStackSplit(toInvLoc, toInventory, count, out ulong newItemId);
+            InventoryResult splitResult = DoStackSplit(ref toInvLoc, toInventory, count, out ulong newItemId);
 
             if (splitResult != InventoryResult.Success)
             {
@@ -901,7 +902,7 @@ namespace MHServerEmu.Games.Entities.Items
             return splitResult;
         }
 
-        private InventoryResult DoStackSplit(InventoryLocation toInvLoc, Inventory toInventory, int count, out ulong newItemId)
+        private InventoryResult DoStackSplit(ref InventoryLocation toInvLoc, Inventory toInventory, int count, out ulong newItemId)
         {
             newItemId = InvalidId;
 
@@ -1688,7 +1689,7 @@ namespace MHServerEmu.Games.Entities.Items
             RefreshProcPowerIndexProperties();
 
             // Restart tickers
-            InventoryLocation invLoc = InventoryLocation;
+            ref InventoryLocation invLoc = ref InventoryLocation;
             if (invLoc.IsValid)
             {
                 InventoryPrototype inventoryProto = invLoc.InventoryPrototype;
@@ -2319,7 +2320,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             if (checkInventory)
             {
-                InventoryLocation invLoc = InventoryLocation;
+                ref InventoryLocation invLoc = ref InventoryLocation;
                 InventoryCategory category = invLoc.InventoryCategory;
                 InventoryConvenienceLabel convenienceLabel = invLoc.InventoryConvenienceLabel;
 

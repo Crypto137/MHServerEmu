@@ -417,14 +417,14 @@ namespace MHServerEmu.Games.Entities
         public override void OnSelfAddedToOtherInventory()
         {
             base.OnSelfAddedToOtherInventory();
-            var invLoc = InventoryLocation;
+            ref var invLoc = ref InventoryLocation;
             if (invLoc.IsValid && invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.Summoned)
                 AddSummonerCondition(invLoc.ContainerId);
         }
 
-        public override void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
+        public override void OnSelfRemovedFromOtherInventory(ref InventoryLocation prevInvLoc)
         {
-            base.OnSelfRemovedFromOtherInventory(prevInvLoc);
+            base.OnSelfRemovedFromOtherInventory(ref prevInvLoc);
             if (prevInvLoc.IsValid && prevInvLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.Summoned)
                 RemoveSummonerCondition(prevInvLoc.ContainerId);
         }

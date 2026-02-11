@@ -331,7 +331,7 @@ namespace MHServerEmu.Games.Entities.Items
             }
 
             // If this is the last item in the stack, move it out of the inventory while we try to replace it
-            InventoryLocation oldInvLoc = new(InventoryLocation);
+            InventoryLocation oldInvLoc = InventoryLocation;    // copy
 
             if (CurrentStackSize <= 1 && ChangeInventoryLocation(null) != InventoryResult.Success)
                 return Logger.WarnReturn(false, $"ReplaceSelfHelper(): Failed to remove the last item in the stack from its inventory\nItem=[{this}]\nInvLoc=[{InventoryLocation}]");
@@ -355,7 +355,7 @@ namespace MHServerEmu.Games.Entities.Items
                 if (replacementItem == null)
                 {
                     Logger.Warn("ReplaceSelfHelper(): replacementItem == null");
-                    CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
+                    CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, ref oldInvLoc);
                     return false;
                 }
 
@@ -366,7 +366,7 @@ namespace MHServerEmu.Games.Entities.Items
                 {
                     Logger.Warn($"ReplaceSelfHelper(): Replacement item [{replacementItem}] cannot be put into inventory {inventory}");
                     replacementItemList.Add((replacementItem.Id, replacementItem.CurrentStackSize));
-                    CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
+                    CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, ref oldInvLoc);
                     return false;
                 }
 
@@ -396,7 +396,7 @@ namespace MHServerEmu.Games.Entities.Items
                 {
                     replacementItemList.Add((replacementItem.Id, replacementItem.CurrentStackSize));
                     Logger.Warn($"ReplaceSelfHelper(): Failed to put replacement item [{replacementItem}] anywhere");
-                    CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
+                    CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, ref oldInvLoc);
                     return false;
                 }
 
@@ -434,7 +434,7 @@ namespace MHServerEmu.Games.Entities.Items
                 if (currencySpec.IsItem == false)
                 {
                     Logger.Warn($"ReplaceSelfHelper(): Attempted to replace item [{this}] with a non-item currency {currencySpec.AgentOrItemProtoRef.GetName()}");
-                    CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
+                    CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, ref oldInvLoc);
                     return false;
                 }
 
@@ -449,7 +449,7 @@ namespace MHServerEmu.Games.Entities.Items
                 if (currencyItem == null)
                 {
                     Logger.Warn("ReplaceSelfHelper(): currencyItem == null");
-                    CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
+                    CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, ref oldInvLoc);
                     return false;
                 }
 
@@ -461,7 +461,7 @@ namespace MHServerEmu.Games.Entities.Items
                 if (acquired == false)
                 {
                     Logger.Warn($"ReplaceSelfHelper(): Failed to acquire replacement currency from item [{currencyItem}]");
-                    CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
+                    CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, ref oldInvLoc);
                     return false;
                 }
 
@@ -491,7 +491,7 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
-        private void CleanUpReplaceSelfError(Player player, List<(ulong, int)> replacementItemList, PropertyCollection propertiesToRestore, InventoryLocation invLoc)
+        private void CleanUpReplaceSelfError(Player player, List<(ulong, int)> replacementItemList, PropertyCollection propertiesToRestore, ref InventoryLocation invLoc)
         {
             EntityManager entityManager = Game.EntityManager;
 

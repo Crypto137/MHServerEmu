@@ -222,7 +222,7 @@ namespace MHServerEmu.Games.Powers
 
             if (target.IsInWorld == false) return false;
 
-            var invLoc = target.InventoryLocation;
+            ref var invLoc = ref target.InventoryLocation;
             if (invLoc.ContainerId != powerOwner.Id) return false;
             if (invLoc.InventoryRef != _proto.InventoryRef) return false;
 

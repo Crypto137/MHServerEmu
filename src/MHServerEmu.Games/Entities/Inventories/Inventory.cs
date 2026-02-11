@@ -378,7 +378,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public static InventoryResult ChangeEntityInventoryLocation(Entity entity, Inventory destInventory, uint destSlot, ref ulong? stackEntityId, bool allowStacking)
         {
-            InventoryLocation invLoc = entity.InventoryLocation;
+            ref InventoryLocation invLoc = ref entity.InventoryLocation;
 
             if (destInventory != null)
             {
@@ -386,7 +386,10 @@ namespace MHServerEmu.Games.Entities.Inventories
                 // or it is already present in the destination inventory, and we are moving it to another slot.
                 
                 if (invLoc.IsValid == false)
-                    return destInventory.AddEntity(entity, ref stackEntityId, allowStacking, destSlot, InventoryLocation.Invalid);
+                {
+                    InventoryLocation prevInvLoc = InventoryLocation.Invalid;
+                    return destInventory.AddEntity(entity, ref stackEntityId, allowStacking, destSlot, ref prevInvLoc);
+                }
 
                 Inventory prevInventory = entity.GetOwnerInventory();
 
@@ -415,7 +418,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         }
 
         public static InventoryResult ChangeEntityInventoryLocationOnCreate(Entity entity, Inventory destInventory, uint destSlot, bool isPacked,
-            bool allowStacking, InventoryLocation prevInvLoc)
+            bool allowStacking, ref InventoryLocation prevInvLoc)
         {
             if (entity.InventoryLocation.IsValid)
                 return Logger.WarnReturn(InventoryResult.SourceEntityAlreadyInAnInventory, "ChangeEntityInventoryLocationOnCreate(): Entity is already in an inventory");
@@ -424,7 +427,7 @@ namespace MHServerEmu.Games.Entities.Inventories
                 return destInventory.UnpackArchivedEntity(entity, destSlot);
 
             ulong? stackEntityId = null;
-            return destInventory.AddEntity(entity, ref stackEntityId, allowStacking, destSlot, prevInvLoc);
+            return destInventory.AddEntity(entity, ref stackEntityId, allowStacking, destSlot, ref prevInvLoc);
         }
 
         public static bool IsPlayerStashInventory(PrototypeId inventoryRef)
@@ -439,7 +442,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             return inventoryProto.IsPlayerStashInventory;
         }
 
-        private InventoryResult AddEntity(Entity entity, ref ulong? stackEntityId, bool allowStacking, uint destSlot, InventoryLocation prevInvLoc)
+        private InventoryResult AddEntity(Entity entity, ref ulong? stackEntityId, bool allowStacking, uint destSlot, ref InventoryLocation prevInvLoc)
         {
             // NOTE: The entity is actually added at the very end in DoAddEntity(). Everything before it is validation.
 
@@ -467,7 +470,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             InventoryResult result = CheckAddEntity(entity, destSlot);
             if (result != InventoryResult.Success) return result;
 
-            return DoAddEntity(entity, destSlot, prevInvLoc);
+            return DoAddEntity(entity, destSlot, ref prevInvLoc);
         }
 
         private InventoryResult CheckAddEntity(Entity entity, uint destSlot)
@@ -484,7 +487,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             return InventoryResult.Success;
         }
 
-        private InventoryResult DoAddEntity(Entity entity, uint destSlot, InventoryLocation prevInvLoc)
+        private InventoryResult DoAddEntity(Entity entity, uint destSlot, ref InventoryLocation prevInvLoc)
         {
             if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "DoAddEntity(): entity == null");
 
@@ -495,7 +498,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             if (GetEntityInSlot(destSlot) != Entity.InvalidId) return InventoryResult.SlotAlreadyOccupied;
 
-            InventoryLocation existingInvLoc = entity.InventoryLocation;
+            ref InventoryLocation existingInvLoc = ref entity.InventoryLocation;
 
             if (existingInvLoc.IsValid)
                 return Logger.WarnReturn(InventoryResult.SourceEntityAlreadyInAnInventory,
@@ -505,11 +508,11 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             _entities.Add(destSlot, new InvEntry(entity.Id, entity.PrototypeDataRef, null));
             entity.InventoryLocation.Set(OwnerId, PrototypeDataRef, destSlot);
-            InventoryLocation invLoc = entity.InventoryLocation;
+            ref InventoryLocation invLoc = ref entity.InventoryLocation;
 
-            PostAdd(entity, prevInvLoc, invLoc);
-            PostFinalMove(entity, prevInvLoc, invLoc);
-            inventoryOwner.OnOtherEntityAddedToMyInventory(entity, invLoc, false);
+            PostAdd(entity, ref prevInvLoc, ref invLoc);
+            PostFinalMove(entity, ref prevInvLoc, ref invLoc);
+            inventoryOwner.OnOtherEntityAddedToMyInventory(entity, ref invLoc, false);
 
             return InventoryResult.Success;
         }
@@ -527,7 +530,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             Entity inventoryOwner = Owner;
             if (inventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "DoRemoveEntity(): inventoryOwner == null");
 
-            InventoryLocation invLoc = new(entity.InventoryLocation);
+            InventoryLocation invLoc = entity.InventoryLocation;    // copy
 
             if (entity.GetOwnerInventory() != this)
                 return Logger.WarnReturn(InventoryResult.NotInInventory, 
@@ -545,15 +548,15 @@ namespace MHServerEmu.Games.Entities.Inventories
             PreRemove(entity);
 
             _entities.Remove(slot);
-            InventoryLocation prevInvLoc = new(entity.InventoryLocation);
+            InventoryLocation prevInvLoc = entity.InventoryLocation;    // copy
             entity.InventoryLocation.Clear();
 
-            PostRemove(entity, prevInvLoc, withinSameInventory);
+            PostRemove(entity, ref prevInvLoc, withinSameInventory);
 
             if (finalMove)
-                PostFinalMove(entity, prevInvLoc, entity.InventoryLocation);
+                PostFinalMove(entity, ref prevInvLoc, ref entity.InventoryLocation);
 
-            inventoryOwner.OnOtherEntityRemovedFromMyInventory(entity, invLoc);
+            inventoryOwner.OnOtherEntityRemovedFromMyInventory(entity, ref invLoc);
 
             return InventoryResult.Success;
         }
@@ -613,20 +616,24 @@ namespace MHServerEmu.Games.Entities.Inventories
             bool withinSameInventory = Owner == destInventory.Owner && entity.InventoryLocation.InventoryRef == destInventory.PrototypeDataRef;
 
             // Remember previous inventory location of the entity we are moving
-            InventoryLocation prevInvLoc = new(entity.InventoryLocation);
+            InventoryLocation prevInvLoc = entity.InventoryLocation;    // copy
 
             // Start moving things around
             InventoryResult result;
 
-            InventoryLocation existingEntityAtDestPrevInvLoc = null;
+            InventoryLocation existingEntityAtDestPrevInvLoc;
             if (existingEntityAtDest != null)
             {
                 // Remember previous inventory location of the entity that is already present at our destination's slot
-                existingEntityAtDestPrevInvLoc = new(existingEntityAtDest.InventoryLocation);
+                existingEntityAtDestPrevInvLoc = existingEntityAtDest.InventoryLocation;    // copy
 
                 // Remove it
                 result = destInventory.DoRemoveEntity(existingEntityAtDest, false, withinSameInventory);
                 if (result != InventoryResult.Success) return Logger.WarnReturn(result, "MoveEntityTo(): Failed to remove existing entity at destination");
+            }
+            else
+            {
+                existingEntityAtDestPrevInvLoc = InventoryLocation.Invalid;
             }
 
             // Remove the entity we are moving from its place
@@ -634,13 +641,13 @@ namespace MHServerEmu.Games.Entities.Inventories
             if (result != InventoryResult.Success) return Logger.WarnReturn(result, "MoveEntityTo(): Failed to remove entity from its original location");
 
             // Add the entity we are moving to its destination
-            result = destInventory.DoAddEntity(entity, destSlot, prevInvLoc);
+            result = destInventory.DoAddEntity(entity, destSlot, ref prevInvLoc);
             if (result != InventoryResult.Success) return Logger.WarnReturn(result, "MoveEntityTo(): Failed to add entity to its destination");
 
             // Add the entity that was present at our destination's slot to where the entity we moved used to be
             if (existingEntityAtDest != null)
             {
-                result = DoAddEntity(existingEntityAtDest, prevInvLoc.Slot, existingEntityAtDestPrevInvLoc);
+                result = DoAddEntity(existingEntityAtDest, prevInvLoc.Slot, ref existingEntityAtDestPrevInvLoc);
                 if (result != InventoryResult.Success) return Logger.WarnReturn(result, "MoveEntityTo(): Failed to add existing entity to the location of the original entity");
             }
 
@@ -697,7 +704,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             }
         }
 
-        private bool PostAdd(Entity entity, InventoryLocation prevInvLoc, InventoryLocation invLoc)
+        private bool PostAdd(Entity entity, ref InventoryLocation prevInvLoc, ref InventoryLocation invLoc)
         {
             if (entity == null) return Logger.WarnReturn(false, "PostAdd(): entity == null");
 
@@ -706,7 +713,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.InventoryLocationPrevious = prevInvLoc;
 
-            if (prevInvLoc?.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarLibrary
+            if (prevInvLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarLibrary
                 && invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarInPlay)
             {
                 settings.OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden;
@@ -740,11 +747,11 @@ namespace MHServerEmu.Games.Entities.Inventories
             }
         }
 
-        private bool PostRemove(Entity entity, InventoryLocation prevInvLoc, bool withinSameInventory)
+        private bool PostRemove(Entity entity, ref InventoryLocation prevInvLoc, bool withinSameInventory)
         {
             if (entity == null) return Logger.WarnReturn(false, "PostRemove(): entity == null");
 
-            entity.OnSelfRemovedFromOtherInventory(prevInvLoc);
+            entity.OnSelfRemovedFromOtherInventory(ref prevInvLoc);
             entity.UpdateInterestPolicies(true);
 
             if (withinSameInventory == false)
@@ -753,7 +760,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             return true;
         }
 
-        private void PostFinalMove(Entity entity, InventoryLocation prevInvLoc, InventoryLocation invLoc)
+        private void PostFinalMove(Entity entity, ref InventoryLocation prevInvLoc, ref InventoryLocation invLoc)
         {
             if (entity == null) return;
             var manager = Game?.EntityManager;

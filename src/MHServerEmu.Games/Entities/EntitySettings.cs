@@ -56,7 +56,7 @@ namespace MHServerEmu.Games.Entities
         public float BoundsScaleOverride { get; set; } = 1f;
         public bool IgnoreNavi { get; set; }
 
-        public InventoryLocation InventoryLocation { get; set; }
+        public InventoryLocation InventoryLocation { get; set; } = InventoryLocation.Invalid;
         public InventoryLocation InventoryLocationPrevious { get; set; } = InventoryLocation.Invalid;
 
         public EntitySettingsOptionFlags OptionFlags { get; set; } = EntitySettingsOptionFlags.DefaultOptions;
@@ -100,7 +100,7 @@ namespace MHServerEmu.Games.Entities
             BoundsScaleOverride = 1f;
             IgnoreNavi = false;
 
-            InventoryLocation = null;
+            InventoryLocation = InventoryLocation.Invalid;
             InventoryLocationPrevious = InventoryLocation.Invalid;
 
             OptionFlags = EntitySettingsOptionFlags.DefaultOptions;

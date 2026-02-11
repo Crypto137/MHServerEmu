@@ -218,7 +218,7 @@ namespace MHServerEmu.Games.Entities
 
             // Add the new entity to an inventory if there is a location specified
             InventoryLocation invLoc = settings.InventoryLocation;
-            if (invLoc != null && invLoc.ContainerId != Entity.InvalidId)
+            if (invLoc.ContainerId != Entity.InvalidId)
             {
                 ulong ownerId = invLoc.ContainerId;
                 PrototypeId ownerInventoryRef = invLoc.InventoryRef;
@@ -238,9 +238,10 @@ namespace MHServerEmu.Games.Entities
                     return Logger.WarnReturn(false, $"FinalizeEntity(): Unable to find inventory {ownerInventory} in owner entity {owner} to put entity {entity} in it");
 
                 // Attempt to put the entity in the inventory it belongs to
+                InventoryLocation prevInvLoc = settings.InventoryLocationPrevious;
                 settings.Results.InventoryResult = Inventory.ChangeEntityInventoryLocationOnCreate(entity, ownerInventory, invLoc.Slot,
                     settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.IsPacked), settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.DoNotAllowStackingOnCreate) == false,
-                    settings.InventoryLocationPrevious);
+                    ref prevInvLoc);
 
                 // Report error if something went wrong
                 if (settings.Results.InventoryResult != InventoryResult.Success)

@@ -135,7 +135,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             base.Initialize(settings);
 
             // NOTE: We need to set owner player dbid asap for it to be restored in persistent conditions
-            if (settings.InventoryLocation != null)
+            if (settings.InventoryLocation.IsValid)
             {
                 Player player = Game.EntityManager.GetEntity<Player>(settings.InventoryLocation.ContainerId);
                 if (player != null)
@@ -151,7 +151,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return false;
 
             Player player = null;
-            if (settings.InventoryLocation != null)
+            if (settings.InventoryLocation.IsValid)
                 player = Game.EntityManager.GetEntity<Player>(settings.InventoryLocation.ContainerId);
 
             if (player != null)
@@ -4385,12 +4385,12 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// <remarks>
         /// In practice this validates only artifacts equipment.
         /// </remarks>
-        public static InventoryResult ValidateEquipmentChange(Game game, Item itemToBeMoved, InventoryLocation fromInvLoc, InventoryLocation toInvLoc, out Item resultItem)
+        public static InventoryResult ValidateEquipmentChange(Game game, Item itemToBeMoved, ref InventoryLocation fromInvLoc, ref InventoryLocation toInvLoc, out Item resultItem)
         {
             resultItem = null;
 
-            if (itemToBeMoved.InventoryLocation.Equals(fromInvLoc) == false)
-                return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): itemToBeMoved.InventoryLocation.Equals(fromInvLoc) == false");
+            if (itemToBeMoved.InventoryLocation != fromInvLoc)
+                return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): itemToBeMoved.InventoryLocation != fromInvLoc");
             
             // Validate only items that are being moved to avatar inventories (i.e. being equipped)
             Avatar containerAvatar = game.EntityManager.GetEntity<Avatar>(toInvLoc.ContainerId);
@@ -4456,9 +4456,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             return InventoryResult.Success;
         }
 
-        public override void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
+        public override void OnOtherEntityAddedToMyInventory(Entity entity, ref InventoryLocation invLoc, bool unpackedArchivedEntity)
         {
-            base.OnOtherEntityAddedToMyInventory(entity, invLoc, unpackedArchivedEntity);
+            base.OnOtherEntityAddedToMyInventory(entity, ref invLoc, unpackedArchivedEntity);
 
             if (entity is not Item item)
                 return;
@@ -4497,9 +4497,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             OnChangeInventory(item);
         }
 
-        public override void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        public override void OnOtherEntityRemovedFromMyInventory(Entity entity, ref InventoryLocation invLoc)
         {
-            base.OnOtherEntityRemovedFromMyInventory(entity, invLoc);
+            base.OnOtherEntityRemovedFromMyInventory(entity, ref invLoc);
 
             if (entity is not Item item)
                 return;
@@ -5587,7 +5587,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             var result = controlled.ChangeInventoryLocation(controlledInventory);
             if (result == InventoryResult.Success)
             {
-                var invLocation = controlled.InventoryLocation;
+                ref InventoryLocation invLocation = ref controlled.InventoryLocation;
                 var message = NetMessageInventoryMove.CreateBuilder()
                             .SetEntityId(controlled.Id)
                             .SetInvLocContainerEntityId(invLocation.ContainerId)

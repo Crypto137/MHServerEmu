@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.Entities
             if (base.ApplyInitialReplicationState(ref settings) == false)
                 return false;
 
-            if (IsTeamUpAgent && settings.ArchiveData != null && settings.InventoryLocation != null)
+            if (IsTeamUpAgent && settings.ArchiveData != null && settings.InventoryLocation.IsValid)
             {
                 Player player = Game.EntityManager.GetEntity<Player>(settings.InventoryLocation.ContainerId);
                 if (player != null)
@@ -1861,7 +1861,7 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public override void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
+        public override void OnOtherEntityAddedToMyInventory(Entity entity, ref InventoryLocation invLoc, bool unpackedArchivedEntity)
         {
             InventoryPrototype inventoryPrototype = invLoc.InventoryPrototype;
             if (inventoryPrototype == null) { Logger.Warn("OnOtherEntityAddedToMyInventory(): inventoryPrototype == null"); return; }
@@ -1879,10 +1879,10 @@ namespace MHServerEmu.Games.Entities
                 Properties.AddChildCollection(entity.Properties);
             }
 
-            base.OnOtherEntityAddedToMyInventory(entity, invLoc, unpackedArchivedEntity);
+            base.OnOtherEntityAddedToMyInventory(entity, ref invLoc, unpackedArchivedEntity);
         }
 
-        public override void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        public override void OnOtherEntityRemovedFromMyInventory(Entity entity, ref InventoryLocation invLoc)
         {
             InventoryPrototype inventoryPrototype = invLoc.InventoryPrototype;
             if (inventoryPrototype == null) { Logger.Warn("OnOtherEntityRemovedFromMyInventory(): inventoryPrototype == null"); return; }
@@ -1899,7 +1899,7 @@ namespace MHServerEmu.Games.Entities
                 UpdateProcEffectPowers(entity.Properties, false);
             }
 
-            base.OnOtherEntityRemovedFromMyInventory(entity, invLoc);
+            base.OnOtherEntityRemovedFromMyInventory(entity, ref invLoc);
         }
 
         protected override bool InitInventories(bool populateInventories)

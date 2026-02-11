@@ -34,7 +34,7 @@ namespace MHServerEmu.Games.Dialog
                 isAvailable = isUsable && player.Owns(localInteractee);
                 if (isAvailable)
                 {
-                    var inventoryLocation = localInteractee.InventoryLocation;
+                    ref InventoryLocation inventoryLocation = ref localInteractee.InventoryLocation;
                     var inventoryCategory = inventoryLocation.InventoryCategory;
                     if (localInteractee.Prototype is not ItemPrototype itemProto) return false;
                     if (inventoryCategory != InventoryCategory.PlayerGeneral 

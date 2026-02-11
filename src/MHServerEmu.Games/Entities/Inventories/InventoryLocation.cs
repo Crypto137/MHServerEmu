@@ -9,10 +9,8 @@ namespace MHServerEmu.Games.Entities.Inventories
     /// <summary>
     /// Represents the location of an <see cref="Entity"/> in an <see cref="Inventory"/>.
     /// </summary>
-    public class InventoryLocation : IEquatable<InventoryLocation>
+    public struct InventoryLocation : IEquatable<InventoryLocation>
     {
-        // NOTE/TODO: This would not be client-accurate, but maybe we can potentially refactor this as a readonly struct for optimization.
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public static readonly InventoryLocation Invalid = new();
@@ -45,17 +43,9 @@ namespace MHServerEmu.Games.Entities.Inventories
         }
 
         /// <summary>
-        /// Constructs a copy of the provided <see cref="InventoryLocation"/>.
-        /// </summary>
-        public InventoryLocation(InventoryLocation other)
-        {
-            Set(other);
-        }
-
-        /// <summary>
         /// Serializes the provided <see cref="InventoryLocation"/> to an <see cref="Archive"/>.
         /// </summary>
-        public static bool SerializeTo(Archive archive, InventoryLocation invLoc)
+        public static bool SerializeTo(Archive archive, ref InventoryLocation invLoc)
         {
             if (archive.IsPacking == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsPacking == false");
 
@@ -75,7 +65,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         /// <summary>
         /// Deserializes an <see cref="InventoryLocation"/> from the provided <see cref="Archive"/>.
         /// </summary>
-        public static bool SerializeFrom(Archive archive, InventoryLocation invLoc)
+        public static bool SerializeFrom(Archive archive, ref InventoryLocation invLoc)
         {
             if (archive.IsUnpacking == false) return Logger.WarnReturn(false, "SerializeFrom(): archive.IsUnpacking == false");
 
@@ -141,22 +131,34 @@ namespace MHServerEmu.Games.Entities.Inventories
             return $"{nameof(ContainerId)}={ContainerId}, {nameof(InventoryRef)}={GameDatabase.GetPrototypeName(InventoryRef)}, {nameof(Slot)}={Slot}";
         }
 
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             return HashCode.Combine(ContainerId, InventoryPrototype, Slot);
         }
 
-        public override bool Equals(object obj)
+        public override readonly bool Equals(object obj)
         {
-            if (obj is not InventoryLocation other) return false;
+            if (obj is not InventoryLocation other)
+                return false;
+
             return Equals(other);
         }
 
-        public bool Equals(InventoryLocation other)
+        public readonly bool Equals(InventoryLocation other)
         {
             return ContainerId.Equals(other.ContainerId)
                 && InventoryPrototype.Equals(other.InventoryPrototype)
                 && Slot.Equals(other.Slot);
+        }
+
+        public static bool operator ==(InventoryLocation left, InventoryLocation right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(InventoryLocation left, InventoryLocation right)
+        {
+            return !(left == right);
         }
     }
 }

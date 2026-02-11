@@ -1022,9 +1022,9 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public override void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
+        public override void OnOtherEntityAddedToMyInventory(Entity entity, ref InventoryLocation invLoc, bool unpackedArchivedEntity)
         {
-            base.OnOtherEntityAddedToMyInventory(entity, invLoc, unpackedArchivedEntity);
+            base.OnOtherEntityAddedToMyInventory(entity, ref invLoc, unpackedArchivedEntity);
 
             if (entity is Avatar avatar)
             {
@@ -1118,9 +1118,9 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public override void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        public override void OnOtherEntityRemovedFromMyInventory(Entity entity, ref InventoryLocation invLoc)
         {
-            base.OnOtherEntityRemovedFromMyInventory(entity, invLoc);
+            base.OnOtherEntityRemovedFromMyInventory(entity, ref invLoc);
 
             if (IsInGame == false || entity is not Item item)
                 return;
@@ -1206,8 +1206,8 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Repeat PlayerCanMove validation done by the client
-            InventoryLocation invLoc = new(containerId, inventoryProtoRef, slot);   // <-- This is heap allocated, which is not great. TODO: pooling?
-            if (item.PlayerCanMove(this, invLoc, out InventoryResult canMoveResult, out PropertyEnum canMoveResultProperty, out _) == false)
+            InventoryLocation invLoc = new(containerId, inventoryProtoRef, slot);
+            if (item.PlayerCanMove(this, ref invLoc, out InventoryResult canMoveResult, out PropertyEnum canMoveResultProperty, out _) == false)
                 return Logger.WarnReturn(false, $"TryInventoryMove(): PlayerCanMove check failed, player=[{this}], item={item}, canMoveResult={canMoveResult}, canMoveResultProperty=[{canMoveResultProperty}]");
 
             // Move
@@ -1251,8 +1251,8 @@ namespace MHServerEmu.Games.Entities
             if (inventory == null) return Logger.WarnReturn(false, "TryInventoryStackSplit(): inventory == null");
 
             // Do the split
-            InventoryLocation invLoc = new(containerId, inventoryProtoRef, slot);   // <-- This is heap allocated, which is not great. TODO: pooling?
-            InventoryResult result = item.SplitStack(invLoc, 1);
+            InventoryLocation invLoc = new(containerId, inventoryProtoRef, slot);
+            InventoryResult result = item.SplitStack(ref invLoc, 1);
 
             if (result == InventoryResult.InventoryFull)
             {
@@ -1538,16 +1538,16 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public InventoryResult ValidatePlayerInventoryMoveConstraints(InventoryLocation fromInvLoc, InventoryLocation toInvLoc)
+        public InventoryResult ValidatePlayerInventoryMoveConstraints(ref InventoryLocation fromInvLoc, ref InventoryLocation toInvLoc)
         {
-            InventoryResult result = ValidatePlayerCanMoveDirectlyOutOfInventory(fromInvLoc);
+            InventoryResult result = ValidatePlayerCanMoveDirectlyOutOfInventory(ref fromInvLoc);
             if (result != InventoryResult.Success)
                 return result;
 
             return ValidatePlayerCanMoveDirectlyIntoInventory(toInvLoc);
         }
 
-        public InventoryResult ValidatePlayerCanMoveDirectlyOutOfInventory(InventoryLocation fromInvLoc)
+        public InventoryResult ValidatePlayerCanMoveDirectlyOutOfInventory(ref InventoryLocation fromInvLoc)
         {
             if (fromInvLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.CraftingResults)
             {
