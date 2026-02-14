@@ -2981,7 +2981,7 @@ namespace MHServerEmu.Games.Entities
             return GetMapDiscoveryData(region.Id);
         }
 
-        public bool DiscoverEntity(WorldEntity worldEntity, bool updateInterest)
+        public bool DiscoverEntity(WorldEntity worldEntity, bool updateInterest, bool syncWithParty = true)
         {
             MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(worldEntity);
             if (mapDiscoveryData == null) return Logger.WarnReturn(false, "DiscoverEntity(): mapDiscoveryData == null");
@@ -2991,6 +2991,21 @@ namespace MHServerEmu.Games.Entities
 
             if (updateInterest)
                 AOI.ConsiderEntity(worldEntity);
+
+            if (syncWithParty)
+            {
+                Party party = GetParty();
+                if (party != null)
+                {
+                    EntityManager entityManager = Game.EntityManager;
+                    foreach (var kvp in party)
+                    {
+                        Player partyMember = entityManager.GetEntityByDbGuid<Player>(kvp.Key);
+                        if (ShouldSyncMapDiscoveryData(partyMember))
+                            partyMember.DiscoverEntity(worldEntity, true, false);
+                    }
+                }
+            }
 
             return true;
         }
@@ -3015,7 +3030,7 @@ namespace MHServerEmu.Games.Entities
             return mapDiscoveryData != null && mapDiscoveryData.IsEntityDiscovered(worldEntity);
         }
 
-        public bool RevealDiscoveryMap(Vector3 position)
+        public bool DiscoverMapPosition(Vector3 position, bool syncWithParty = true)
         {
             var region = CurrentAvatar?.Region;
             if (region == null) return Logger.WarnReturn(false, "UpdateMapDiscovery(): region == null");
@@ -3025,7 +3040,20 @@ namespace MHServerEmu.Games.Entities
 
             bool reveal = mapDiscoveryData.RevealPosition(this, position);
 
-            // TODO party reveal
+            if (syncWithParty)
+            {
+                Party party = GetParty();
+                if (party != null)
+                {
+                    EntityManager entityManager = Game.EntityManager;
+                    foreach (var kvp in party)
+                    {
+                        Player partyMember = entityManager.GetEntityByDbGuid<Player>(kvp.Key);
+                        if (ShouldSyncMapDiscoveryData(partyMember))
+                            partyMember.DiscoverMapPosition(position, false);
+                    }
+                }
+            }
 
             return reveal;
         }
@@ -4476,7 +4504,7 @@ namespace MHServerEmu.Games.Entities
                 avatar.SyncPartyBoostConditions();
             }
 
-            // TODO: sync discovery data
+            SyncMapDiscoveryDataWithParty();
 
             // we should receive a OnPartySizeChanged callback after this
         }
@@ -4527,6 +4555,7 @@ namespace MHServerEmu.Games.Entities
             _partyId.Set(party.PartyId);
             UpdatePartyAOI(party);
             Community.UpdateParty(party);
+            SyncMapDiscoveryDataWithParty();
         }
 
         private void UpdatePartyAOI(Party party)
@@ -4552,6 +4581,50 @@ namespace MHServerEmu.Games.Entities
                 AOI.ConsiderEntity(partyMember);
                 partyMember.AOI.ConsiderEntity(this);
             }
+        }
+
+        private void SyncMapDiscoveryDataWithParty()
+        {
+            Party party = GetParty();
+            if (party == null)
+                return;
+
+            Region region = GetRegion();
+            if (region == null)
+                return;
+
+            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryData(region.Id);
+            if (mapDiscoveryData == null)
+                return;
+
+            using var partyMembersHandle = ListPool<Player>.Instance.Get(out List<Player> partyMembers);
+
+            EntityManager entityManager = Game.EntityManager;
+            foreach (var kvp in party)
+            {
+                Player partyMember = entityManager.GetEntityByDbGuid<Player>(kvp.Key);
+                if (ShouldSyncMapDiscoveryData(partyMember))
+                    partyMembers.Add(partyMember);
+            }
+
+            mapDiscoveryData.Sync(this, partyMembers);
+        }
+
+        private bool ShouldSyncMapDiscoveryData(Player other)
+        {
+            if (other == null || other.Id == Id)
+                return false;
+
+            Region region = GetRegion();
+            Region otherRegion = other.GetRegion();
+
+            if (region == null || otherRegion == null)
+                return false;
+
+            if (region.Id != otherRegion.Id)
+                return false;
+
+            return true;
         }
 
         private bool TeleportToPartyMember(ulong targetPlayerDbId)

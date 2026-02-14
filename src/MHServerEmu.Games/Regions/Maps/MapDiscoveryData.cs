@@ -7,6 +7,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions.Maps
 {
@@ -161,6 +162,55 @@ namespace MHServerEmu.Games.Regions.Maps
         public bool RevealPosition(Player player, Vector3 position)
         {
             return LowResMap.RevealPosition(position) && LowResMapUpdate(player, position);
+        }
+
+        public void Sync(Player owner, List<Player> otherPlayers)
+        {
+            // Share our entities with other players.
+            EntityManager entityManager = owner.Game.EntityManager;
+            foreach (ulong discoveredEntityId in _discoveredEntities)
+            {
+                WorldEntity discoveredEntity = entityManager.GetEntity<WorldEntity>(discoveredEntityId);
+                if (discoveredEntity == null)
+                    continue;
+
+                ulong restrictedToPlayerGuid = discoveredEntity.Properties[PropertyEnum.RestrictedToPlayerGuid];
+                if (restrictedToPlayerGuid == owner.DatabaseUniqueId)
+                    continue;
+
+                foreach (Player otherPlayer in otherPlayers)
+                    otherPlayer.DiscoverEntity(discoveredEntity, true, false);
+            }
+
+            // Get entities and low res map from other members.
+            using var otherDiscoveredEntitiesHandle = HashSetPool<ulong>.Instance.Get(out HashSet<ulong> otherDiscoveredEntities);
+            bool lowResMapChanged = false;
+
+            foreach (Player otherPlayer in otherPlayers)
+            {
+                MapDiscoveryData otherMapDiscoveryData = otherPlayer.GetMapDiscoveryData(_regionId);
+                if (otherMapDiscoveryData == null)
+                    continue;
+
+                foreach (ulong otherDiscoveredEntityId in otherMapDiscoveryData._discoveredEntities)
+                    otherDiscoveredEntities.Add(otherDiscoveredEntityId);
+
+                if (otherMapDiscoveryData.LowResMap.Combine(LowResMap))
+                {
+                    lowResMapChanged = true;
+                    otherMapDiscoveryData.LowResMapUpdate(otherPlayer);
+                }
+            }
+
+            foreach (ulong otherDiscoveredEntityId in otherDiscoveredEntities)
+            {
+                WorldEntity otherDiscoveredEntity = entityManager.GetEntity<WorldEntity>(otherDiscoveredEntityId);
+                if (otherDiscoveredEntity != null)
+                    owner.DiscoverEntity(otherDiscoveredEntity, true, false);
+            }
+
+            if (lowResMapChanged)
+                LowResMapUpdate(owner);
         }
     }
 }

@@ -94,6 +94,38 @@ namespace MHServerEmu.Games.Regions.Maps
             return _region.TranslateLowResMap(index, ref position);
         }
 
+        public bool Combine(LowResMap other)
+        {
+            bool hasChanged = false;
+
+            if (_isRevealAll || other._isRevealAll)
+            {
+                // This is probably where RevealAll breaks client-side when moving from a RevealAll region to non-RevealAll one in the same game instance.
+                hasChanged = _isRevealAll ^ other._isRevealAll;
+                RevealAll();
+                other.RevealAll();
+                return hasChanged;
+            }
+
+            if (_map.Size != other._map.Size)
+            {
+                _map.Clear();
+                _map.Resize(other._map.Size);
+            }
+
+            for (int i = 0; i < _map.Size; i++)
+            {
+                if (_map[i] ^ other._map[i])
+                {
+                    _map.Set(i);
+                    other._map.Set(i);
+                    hasChanged = true;
+                }
+            }
+
+            return hasChanged;
+        }
+
         private void Clear()
         {
             _region = null;
