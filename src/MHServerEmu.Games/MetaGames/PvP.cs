@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using System.Text;
+using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
@@ -10,7 +11,6 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
-using System.Text;
 
 namespace MHServerEmu.Games.MetaGames
 {
@@ -41,9 +41,6 @@ namespace MHServerEmu.Games.MetaGames
 
             CreateGameModes(pvpProto.GameModes);
 
-            // foreach (var player in new PlayerIterator(Region))
-            //    player.RevealDiscoveryMap();
-
             return true;
         }
 
@@ -66,9 +63,13 @@ namespace MHServerEmu.Games.MetaGames
         public override bool Serialize(Archive archive)
         {
             bool success = base.Serialize(archive);
-            // if (archive.IsTransient)
-            success &= Serializer.Transfer(archive, ref _team1);
-            success &= Serializer.Transfer(archive, ref _team2);
+
+            if (archive.IsTransient)
+            {
+                success &= Serializer.Transfer(archive, ref _team1);
+                success &= Serializer.Transfer(archive, ref _team2);
+            }
+
             return success;
         }
 
@@ -148,8 +149,6 @@ namespace MHServerEmu.Games.MetaGames
 
             foreach (var state in MetaStates)
                 state.OnAddPlayer(player);
-
-            // player.RevealDiscoveryMap();
 
             player.Properties[PropertyEnum.PvPMode] = mode.PrototypeDataRef;
 
