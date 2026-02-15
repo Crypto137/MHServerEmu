@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -287,11 +288,9 @@ namespace MHServerEmu.Games.Navi
         {
             if (_pathNodes.Count > 0)
             {
-                // TODO: Simplify this when/if we turn NaviPathNode into a struct?
-                int index = _pathNodes.Count - 1;
-                NaviPathNode node = new(_pathNodes[index]);
-                node.Vertex = position;
-                _pathNodes[index] = node;
+                // Access the last node via a span to modify it without copying data.
+                Span<NaviPathNode> nodes = _pathNodes.AsSpan();
+                nodes[^1].Vertex = position;
             }
         }
 

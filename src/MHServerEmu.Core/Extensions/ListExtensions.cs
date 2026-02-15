@@ -28,5 +28,10 @@ namespace MHServerEmu.Core.Extensions
             items = items.Slice(start, count);
             list.AddRange(items);
         }
+
+        public static Span<T> AsSpan<T>(this List<T> list)
+        {
+            return CollectionsMarshal.AsSpan(list);
+        }
     }
 }

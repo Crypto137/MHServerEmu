@@ -87,8 +87,6 @@ namespace MHServerEmu.Games.Entities.Locomotion
             FollowEntityRangeEnd = other.FollowEntityRangeEnd;
             PathGoalNodeIndex = other.PathGoalNodeIndex;
 
-            // NOTE: Is it okay to add path nodes here by reference? Do we need a copy?
-            // Review this if/when we change NaviPathNode to struct.
             PathNodes.Set(other.PathNodes);
         }
 
@@ -120,7 +118,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         /// <summary>
         /// Serializes a <see cref="NaviPathNode"/> to the provided <see cref="Archive"/>.
         /// </summary>
-        public static bool SerializeTo(Archive archive, NaviPathNode pathNode, Vector3 previousVertex)
+        public static bool SerializeTo(Archive archive, ref NaviPathNode pathNode, Vector3 previousVertex)
         {
             bool success = true;
 
@@ -139,7 +137,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         /// <summary>
         /// Deserializes a <see cref="NaviPathNode"/> from the provided <see cref="Archive"/>.
         /// </summary>
-        public static bool SerializeFrom(Archive archive, NaviPathNode pathNode, Vector3 previousVertex)
+        public static bool SerializeFrom(Archive archive, ref NaviPathNode pathNode, Vector3 previousVertex)
         {
             bool success = true;
 
@@ -229,9 +227,9 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 if (pathNodeCount > 0)
                 {
                     Vector3 previousVertex = Vector3.Zero;
-                    foreach (NaviPathNode pathNode in state.PathNodes)
+                    foreach (ref NaviPathNode pathNode in state.PathNodes.AsSpan())
                     {
-                        success &= SerializeTo(archive, pathNode, previousVertex);
+                        success &= SerializeTo(archive, ref pathNode, previousVertex);
                         previousVertex = pathNode.Vertex;
                     }
                 }
@@ -328,7 +326,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     for (uint i = 0; i < pathNodeCount; i++)
                     {
                         NaviPathNode pathNode = new();
-                        success &= SerializeFrom(archive, pathNode, previousVertex);
+                        success &= SerializeFrom(archive, ref pathNode, previousVertex);
                         previousVertex = pathNode.Vertex;
                         state.PathNodes.Add(pathNode);
                     }
@@ -458,13 +456,15 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 int nodesRemaining = newState.PathNodes.Count - newState.PathGoalNodeIndex;
                 int newNodeIndex = newState.PathGoalNodeIndex;
                 int oldNodeIndex = oldState.PathNodes.Count - nodesRemaining;
-                if (skipGoalNode) --nodesRemaining;
+                if (skipGoalNode)
+                    --nodesRemaining;
 
                 for (int i = 0; i < nodesRemaining; ++i)
                 {
-                    if (newState.PathNodes[newNodeIndex + i].VertexSide != oldState.PathNodes[oldNodeIndex + i].VertexSide
-                    || newState.PathNodes[newNodeIndex + i].Radius != oldState.PathNodes[oldNodeIndex + i].Radius
-                    || newState.PathNodes[newNodeIndex + i].Vertex != oldState.PathNodes[oldNodeIndex + i].Vertex)
+                    ref NaviPathNode newNode = ref newState.PathNodes.AsSpan()[newNodeIndex + i];
+                    ref NaviPathNode oldNode = ref oldState.PathNodes.AsSpan()[oldNodeIndex + i];
+
+                    if (newNode.VertexSide != oldNode.VertexSide || newNode.Radius != oldNode.Radius || newNode.Vertex != oldNode.Vertex)
                         return true;
                 }
             }
