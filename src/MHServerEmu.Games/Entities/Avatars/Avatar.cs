@@ -7191,10 +7191,12 @@ namespace MHServerEmu.Games.Entities.Avatars
                 summon.RemoveSummonerCondition(Id);
         }
 
-        public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
+        /* TODO: flying handling to mirror the client.
+        public override void OnLocomotionStateChanged(ref LocomotionState oldState, ref LocomotionState newState)
         {
-            base.OnLocomotionStateChanged(oldState, newState);
+            base.OnLocomotionStateChanged(ref oldState, ref newState);
         }
+        */
 
         #endregion
 

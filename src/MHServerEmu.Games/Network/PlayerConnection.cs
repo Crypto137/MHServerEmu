@@ -27,6 +27,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.MTXStore;
+using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -794,14 +795,14 @@ namespace MHServerEmu.Games.Network
 
             if (fieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false && avatar.Locomotor != null)
             {
-                // Make a copy of the last sync state and update it with new data
-                using LocomotionState newSyncState = ObjectPoolManager.Instance.Get<LocomotionState>();
-                newSyncState.Set(avatar.Locomotor.LastSyncState);
+                using var pathNodesHandle = ListPool<NaviPathNode>.Instance.Get(out List<NaviPathNode> pathNodes);
+                LocomotionState newSyncState = new(pathNodes);
+                newSyncState.Set(ref avatar.Locomotor.LastSyncState);
 
                 // NOTE: Deserialize in a try block because we don't trust this
                 try
                 {
-                    if (LocomotionState.SerializeFrom(archive, newSyncState, fieldFlags) == false)
+                    if (LocomotionState.SerializeFrom(archive, ref newSyncState, fieldFlags) == false)
                         return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer newSyncState");
                 }
                 catch (Exception e)
@@ -809,7 +810,7 @@ namespace MHServerEmu.Games.Network
                     return Logger.WarnReturn(false, $"OnUpdateAvatarState(): Failed to transfer newSyncState ({e.Message})");
                 }
 
-                avatar.Locomotor.SetSyncState(newSyncState, position, orientation);
+                avatar.Locomotor.SetSyncState(ref newSyncState, position, orientation);
             }
 
             const float PositionDesyncDistanceSqThreshold = 512f * 512f;

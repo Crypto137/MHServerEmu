@@ -3777,15 +3777,17 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.MapRegionId] = newRegion != null ? newRegion.Id : 0;
         }
 
-        public virtual void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newLocomotionState)
+        public virtual void OnLocomotionStateChanged(ref LocomotionState oldLocomotionState, ref LocomotionState newLocomotionState)
         {
-            if (IsInWorld == false) return;
+            if (IsInWorld == false)
+                return;
 
             // Check if locomotion state requires updating
-            LocomotionState.CompareLocomotionStatesForSync(oldLocomotionState, newLocomotionState,
+            LocomotionState.CompareLocomotionStatesForSync(ref oldLocomotionState, ref newLocomotionState,
                 out bool syncRequired, out bool pathNodeSyncRequired, newLocomotionState.FollowEntityId != InvalidId);
 
-            if (syncRequired == false && pathNodeSyncRequired == false) return;
+            if (syncRequired == false && pathNodeSyncRequired == false)
+                return;
 
             // Send locomotion update to interested clients
             // NOTE: Avatars are locomoted on their local client independently, so they are excluded from locomotion updates.
@@ -3794,7 +3796,7 @@ namespace MHServerEmu.Games.Entities
             if (networkManager.GetInterestedClients(interestedClientList, this, AOINetworkPolicyValues.AOIChannelProximity, IsMovementAuthoritative == false))
             {
                 NetMessageLocomotionStateUpdate locomotionStateUpdateMessage = ArchiveMessageBuilder.BuildLocomotionStateUpdateMessage(
-                    this, oldLocomotionState, newLocomotionState, pathNodeSyncRequired);
+                    this, ref oldLocomotionState, ref newLocomotionState, pathNodeSyncRequired);
 
                 networkManager.SendMessageToMultiple(interestedClientList, locomotionStateUpdateMessage);
             }

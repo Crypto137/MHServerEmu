@@ -2376,9 +2376,9 @@ namespace MHServerEmu.Games.Entities
             base.OnDeallocate();
         }
 
-        public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
+        public override void OnLocomotionStateChanged(ref LocomotionState oldState, ref LocomotionState newState)
         {
-            base.OnLocomotionStateChanged(oldState, newState);
+            base.OnLocomotionStateChanged(ref oldState, ref newState);
 
             if (IsInWorld == false || TestStatus(EntityStatus.ExitingWorld))
                 return;
