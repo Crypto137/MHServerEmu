@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
             Bounds bounds = new(entityProto.Bounds, position);
             PathFlags pathFlags = Region.GetPathFlagsForEntity(entityProto);
-            Vector3 spawnPosition = ChooseSpawnPosition(region, position, bounds, pathFlags, spawnRadius);
+            Vector3 spawnPosition = ChooseSpawnPosition(region, position, ref bounds, pathFlags, spawnRadius);
             var cell = region.GetCellAtPosition(spawnPosition);
             if (cell == null) return;
             spawnPosition = RegionLocation.ProjectToFloor(region, spawnPosition);
@@ -70,14 +70,14 @@ namespace MHServerEmu.Games.Missions.Actions
             if (entity == null) manager.RemoveSpawnGroup(group.Id);
         }
 
-        private static Vector3 ChooseSpawnPosition(Region region, Vector3 position, Bounds bounds, PathFlags pathFlags, float radius)
+        private static Vector3 ChooseSpawnPosition(Region region, Vector3 position, ref Bounds bounds, PathFlags pathFlags, float radius)
         {
             Vector3 spawnPosition = position;
             var posFlags = PositionCheckFlags.CanBeBlockedEntity;
             var blockFlags = BlockingCheckFlags.None;
             bool spawnFound = false;
 
-            if (region.IsLocationClear(bounds, pathFlags, posFlags, blockFlags))
+            if (region.IsLocationClear(ref bounds, pathFlags, posFlags, blockFlags))
                 return bounds.Center;
 
             float minDistance;
@@ -88,7 +88,7 @@ namespace MHServerEmu.Games.Missions.Actions
                 minDistance = maxDistance;
                 maxDistance += radius;
                 if (maxDistance > 600.0f) return position;
-                spawnFound = region.ChooseRandomPositionNearPoint(bounds, pathFlags, posFlags, blockFlags, minDistance, maxDistance, out spawnPosition);
+                spawnFound = region.ChooseRandomPositionNearPoint(ref bounds, pathFlags, posFlags, blockFlags, minDistance, maxDistance, out spawnPosition);
             }
             return spawnPosition;
         }

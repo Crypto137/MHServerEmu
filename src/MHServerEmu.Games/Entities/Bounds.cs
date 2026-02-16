@@ -86,7 +86,7 @@ namespace MHServerEmu.Games.Entities
         public BoundData() { }
     }
 
-    public class Bounds
+    public struct Bounds
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -510,7 +510,7 @@ namespace MHServerEmu.Games.Entities
             }            
         }
 
-        public bool CanBeBlockedBy(Bounds entityBounds, bool selfBlocking = false, bool otherBlocking = false)
+        public bool CanBeBlockedBy(ref Bounds entityBounds, bool selfBlocking = false, bool otherBlocking = false)
         {
             return (CollisionType == BoundsCollisionType.Blocking || selfBlocking)
                 && (entityBounds.CollisionType == BoundsCollisionType.Blocking || otherBlocking);
@@ -540,7 +540,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public bool Intersects(Bounds other)
+        public bool Intersects(ref Bounds other)
         {
             switch (other.Geometry)
             {
@@ -742,7 +742,7 @@ namespace MHServerEmu.Games.Entities
             return sb.ToString();
         }
 
-        public bool Sweep(Bounds other, Vector3 otherVelocity, Vector3 velocity, ref float resultTime, ref Vector3? resultNormal)
+        public bool Sweep(ref Bounds other, Vector3 otherVelocity, Vector3 velocity, ref float resultTime, ref Vector3? resultNormal)
         {
             if (Geometry == GeometryType.Sphere && other.Geometry == GeometryType.Sphere)
             {
@@ -758,22 +758,22 @@ namespace MHServerEmu.Games.Entities
                 return result;
             }
             else if (Geometry == GeometryType.OBB && Vector3.IsNearZero(velocity))
-                return SweepVsStationaryOBB(other, otherVelocity, ToObb(), ref resultTime, resultNormal);
+                return SweepVsStationaryOBB(ref other, otherVelocity, ToObb(), ref resultTime, resultNormal);
             else if (other.Geometry == GeometryType.OBB && Vector3.IsNearZero(otherVelocity))
-                return SweepVsStationaryOBB(this, velocity, other.ToObb(), ref resultTime, resultNormal);
+                return SweepVsStationaryOBB(ref this, velocity, other.ToObb(), ref resultTime, resultNormal);
             else if (Geometry == GeometryType.AABB && Vector3.IsNearZero(velocity))
-                return SweepVsStationaryAABB(other, otherVelocity, ToAabb(), ref resultTime, resultNormal);
+                return SweepVsStationaryAABB(ref other, otherVelocity, ToAabb(), ref resultTime, resultNormal);
             else if (other.Geometry == GeometryType.AABB && Vector3.IsNearZero(otherVelocity))
-                return SweepVsStationaryAABB(this, velocity, other.ToAabb(), ref resultTime, resultNormal);
+                return SweepVsStationaryAABB(ref this, velocity, other.ToAabb(), ref resultTime, resultNormal);
             else if (Geometry == GeometryType.Triangle || other.Geometry == GeometryType.Triangle ||
                      Geometry == GeometryType.Wedge || other.Geometry == GeometryType.Wedge)
             {
-                Bounds bounds = new(this);
+                Bounds bounds = this;       // copy
                 bounds.Center += velocity;
-                Bounds otherBounds = new(other);
+                Bounds otherBounds = other; // copy
                 otherBounds.Center += otherVelocity;
 
-                if (bounds.Intersects(otherBounds))
+                if (bounds.Intersects(ref otherBounds))
                 {
                     resultTime = 1.0f;
                     if (resultNormal != null) resultNormal = Vector3.ZAxis;
@@ -784,7 +784,7 @@ namespace MHServerEmu.Games.Entities
             }
             else
             {
-                bool result = SweepAsCylinders(this, other, velocity, otherVelocity, ref resultTime);
+                bool result = SweepAsCylinders(ref this, ref other, velocity, otherVelocity, ref resultTime);
                 if (result && resultNormal != null)
                 {
                     Vector3 position = Center + velocity * resultTime;
@@ -795,7 +795,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private static bool SweepAsCylinders(Bounds bounds, Bounds other, Vector3 velocity, Vector3 otherVelocity, ref float resultTime)
+        private static bool SweepAsCylinders(ref Bounds bounds, ref Bounds other, Vector3 velocity, Vector3 otherVelocity, ref float resultTime)
         {
             Sphere sphere = new (bounds.Center, bounds.Radius);
             Sphere otherSphere = new (other.Center, other.Radius);
@@ -816,7 +816,7 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        private static bool SweepVsStationaryAABB(Bounds bounds, Vector3 velocity, in Aabb aabb, ref float resultTime, Vector3? resultNormal)
+        private static bool SweepVsStationaryAABB(ref Bounds bounds, Vector3 velocity, in Aabb aabb, ref float resultTime, Vector3? resultNormal)
         {
             switch (bounds.Geometry)
             {
@@ -844,7 +844,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private static bool SweepVsStationaryOBB(Bounds bounds, Vector3 velocity, in Obb obb, ref float resultTime, Vector3? resultNormal)
+        private static bool SweepVsStationaryOBB(ref Bounds bounds, Vector3 velocity, in Obb obb, ref float resultTime, Vector3? resultNormal)
         {
             Aabb aabb = new (obb.Center - obb.Extents, obb.Center + obb.Extents);
 

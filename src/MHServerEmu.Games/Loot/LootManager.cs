@@ -186,12 +186,11 @@ namespace MHServerEmu.Games.Loot
                 properties[PropertyEnum.MissionPrototype] = inputSettings.MissionProtoRef;
 
             // Determine drop source bounds
-            Bounds bounds = sourceEntity != null ? sourceEntity.Bounds : recipient.Bounds;
+            Bounds bounds = sourceEntity != null ? sourceEntity.Bounds : recipient.Bounds;  // copy
 
             // Override source bounds if needed
             if (inputSettings.PositionOverride != null)
             {
-                bounds = new(bounds);
                 bounds.Center = inputSettings.PositionOverride.Value;
                 sourceEntity = null;
             }
@@ -202,7 +201,7 @@ namespace MHServerEmu.Games.Loot
             _lootSpawnGrid.SetContext(region, sourcePosition, sourceEntity);
 
             Span<Vector3> dropPositions = stackalloc Vector3[lootResultSummary.NumDrops];
-            FindDropPositions(lootResultSummary, recipient, bounds, ref dropPositions, recipientId);
+            FindDropPositions(lootResultSummary, recipient, ref bounds, ref dropPositions, recipientId);
             int i = 0;
 
             // Spawn items
@@ -612,7 +611,7 @@ namespace MHServerEmu.Games.Loot
             if (region == null) return Logger.WarnReturn(false, "SpawnAgentForPlayer(): region == null");
 
             _lootSpawnGrid.SetContext(region, avatar.RegionLocation.Position, null);
-            Vector3 dropPosition = FindDropPosition(agentProto, avatar, avatar.Bounds, 1);
+            Vector3 dropPosition = FindDropPosition(agentProto, avatar, ref avatar.Bounds, 1);
 
             return SpawnAgentInternal(agentSpec, player, region.Id, dropPosition, avatar.Id, avatar.RegionLocation.Position, agentProperties);
         }
@@ -670,35 +669,35 @@ namespace MHServerEmu.Games.Loot
 
         #region Drop Positioning
 
-        private void FindDropPositions(LootResultSummary lootResultSummary, WorldEntity recipient, Bounds bounds, ref Span<Vector3> dropPositions, int recipientId)
+        private void FindDropPositions(LootResultSummary lootResultSummary, WorldEntity recipient, ref Bounds bounds, ref Span<Vector3> dropPositions, int recipientId)
         {
             // Find drop positions for each item
             int i = 0;
 
             // NOTE: The order here has to be the same as SpawnLootFromSummary()
             foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
-                dropPositions[i++] = FindDropPosition(itemSpec, recipient, bounds, recipientId);
+                dropPositions[i++] = FindDropPosition(itemSpec, recipient, ref bounds, recipientId);
 
             foreach (AgentSpec agentSpec in lootResultSummary.AgentSpecs)
-                dropPositions[i++] = FindDropPosition(agentSpec, recipient, bounds, recipientId);
+                dropPositions[i++] = FindDropPosition(agentSpec, recipient, ref bounds, recipientId);
 
             foreach (int credits in lootResultSummary.Credits)
-                dropPositions[i++] = FindDropPosition(_creditsItemProto, recipient, bounds, recipientId);
+                dropPositions[i++] = FindDropPosition(_creditsItemProto, recipient, ref bounds, recipientId);
 
             foreach (CurrencySpec currencySpec in lootResultSummary.Currencies)
-                dropPositions[i++] = FindDropPosition(currencySpec, recipient, bounds, recipientId);
+                dropPositions[i++] = FindDropPosition(currencySpec, recipient, ref bounds, recipientId);
         }
 
-        private Vector3 FindDropPosition(ItemSpec itemSpec, WorldEntity recipient, Bounds bounds, int recipientId)
+        private Vector3 FindDropPosition(ItemSpec itemSpec, WorldEntity recipient, ref Bounds bounds, int recipientId)
         {
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
             if (itemProto == null)
                 return Logger.WarnReturn(bounds.Center, "FindDropPosition(): itemProto == null");
 
-            return FindDropPosition(itemProto, recipient, bounds, recipientId);
+            return FindDropPosition(itemProto, recipient, ref bounds, recipientId);
         }
 
-        private Vector3 FindDropPosition(in AgentSpec agentSpec, WorldEntity recipient, Bounds bounds, int recipientId)
+        private Vector3 FindDropPosition(in AgentSpec agentSpec, WorldEntity recipient, ref Bounds bounds, int recipientId)
         {
             // NOTE: Some loot tables (e.g. InanimateObjectsCh03GarbageBags) spawn destructible props. They are not agents,
             // but they still go through here, which means we have to use WorldEntityPrototype instead of AgentPrototype.
@@ -706,19 +705,19 @@ namespace MHServerEmu.Games.Loot
             if (agentProto == null)
                 return Logger.WarnReturn(bounds.Center, $"FindDropPosition(): Failed to retrieve prototype for AgentSpec [{agentSpec}]");
 
-            return FindDropPosition(agentProto, recipient, bounds, recipientId);
+            return FindDropPosition(agentProto, recipient, ref bounds, recipientId);
         }
 
-        private Vector3 FindDropPosition(in CurrencySpec currencySpec, WorldEntity recipient, Bounds bounds, int recipientId)
+        private Vector3 FindDropPosition(in CurrencySpec currencySpec, WorldEntity recipient, ref Bounds bounds, int recipientId)
         {
             WorldEntityPrototype worldEntityProto = currencySpec.AgentOrItemProtoRef.As<WorldEntityPrototype>();
             if (worldEntityProto == null)
                 return Logger.WarnReturn(bounds.Center, "FindDropPosition(): worldEntityProto == null");
 
-            return FindDropPosition(worldEntityProto, recipient, bounds, recipientId);
+            return FindDropPosition(worldEntityProto, recipient, ref bounds, recipientId);
         }
 
-        private Vector3 FindDropPosition(WorldEntityPrototype dropEntityProto, WorldEntity recipient, Bounds bounds, int recipientId)
+        private Vector3 FindDropPosition(WorldEntityPrototype dropEntityProto, WorldEntity recipient, ref Bounds bounds, int recipientId)
         {
             // Fall back to the center of provided bounds if something goes wrong
             Vector3 sourcePosition = bounds.Center;

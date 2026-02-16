@@ -1081,7 +1081,7 @@ namespace MHServerEmu.Games.Regions
                 return globalsProto.ReturnToHubPower;
         }
 
-        public static bool IsBoundsBlockedByEntity(Bounds bounds, WorldEntity entity, BlockingCheckFlags blockFlags)
+        public static bool IsBoundsBlockedByEntity(ref Bounds bounds, WorldEntity entity, BlockingCheckFlags blockFlags)
         {
             if (entity != null)
             {
@@ -1107,8 +1107,8 @@ namespace MHServerEmu.Games.Regions
                     if (otherBlocking == false) return false;
                 }
 
-                Bounds entityBounds = entity.Bounds;
-                if (bounds.CanBeBlockedBy(entityBounds, selfBlocking, otherBlocking) && bounds.Intersects(entityBounds)) return true;
+                ref Bounds entityBounds = ref entity.Bounds;
+                if (bounds.CanBeBlockedBy(ref entityBounds, selfBlocking, otherBlocking) && bounds.Intersects(ref entityBounds)) return true;
             }
 
             return false;
@@ -1192,10 +1192,10 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public WorldEntity SweepToFirstHitEntity<T>(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, T canBlock) where T : ICanBlock
+        public WorldEntity SweepToFirstHitEntity<T>(ref Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, T canBlock) where T : ICanBlock
         {
             bool CanBlockFunc(WorldEntity otherEntity) => canBlock.CanBlock(otherEntity);
-            return SweepToFirstHitEntity(sweepBounds, sweepVelocity, ref resultHitPosition, CanBlockFunc);
+            return SweepToFirstHitEntity(ref sweepBounds, sweepVelocity, ref resultHitPosition, CanBlockFunc);
         }
 
         public WorldEntity SweepToFirstHitEntity(Vector3 startPosition, Vector3 targetPosition, WorldEntity owner,
@@ -1204,7 +1204,7 @@ namespace MHServerEmu.Games.Regions
             Bounds sweepBounds = new();
 
             if (owner != null)
-                sweepBounds = new(owner.Bounds);
+                sweepBounds = owner.Bounds; // copy
 
             if (blocksLOS || owner == null)
                 sweepBounds.InitializeSphere(1.0f, sweepBounds.CollisionType);
@@ -1216,10 +1216,10 @@ namespace MHServerEmu.Games.Regions
             Vector3 sweepVector = targetPosition - startPosition;
 
             bool CanBlockFunc(WorldEntity otherEntity) => CanBlockEntitySweep(otherEntity, owner, targetEntityId, blocksLOS);
-            return SweepToFirstHitEntity(sweepBounds, sweepVector, ref resultHitPosition, CanBlockFunc);
+            return SweepToFirstHitEntity(ref sweepBounds, sweepVector, ref resultHitPosition, CanBlockFunc);
         }
 
-        private WorldEntity SweepToFirstHitEntity(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, Func<WorldEntity, bool> canBlockFunc)
+        private WorldEntity SweepToFirstHitEntity(ref Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, Func<WorldEntity, bool> canBlockFunc)
         {
             Vector3 sweepStart = sweepBounds.Center;
             Vector3 sweepEnd = sweepStart + sweepVelocity;
@@ -1240,7 +1240,7 @@ namespace MHServerEmu.Games.Regions
                 {
                     float resultTime = 1.0f;
                     Vector3? resultNormal = null;
-                    if (sweepBounds.Sweep(otherEntity.Bounds, Vector3.Zero, sweepVelocity, ref resultTime, ref resultNormal))
+                    if (sweepBounds.Sweep(ref otherEntity.Bounds, Vector3.Zero, sweepVelocity, ref resultTime, ref resultNormal))
                     {
                         if (hitEntity != null)
                         {
@@ -1301,11 +1301,11 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public bool ChoosePositionAtOrNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags,
+        public bool ChoosePositionAtOrNearPoint(ref Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags,
             float maxDistance, out Vector3 resultPosition, IRandomPositionPredicate positionPredicate = null,
             IEntityCheckPredicate checkPredicate = null, int maxPositionTests = 400)
         {
-            if (IsLocationClear(bounds, pathFlags, posFlags, blockFlags)
+            if (IsLocationClear(ref bounds, pathFlags, posFlags, blockFlags)
                 && (positionPredicate == null || positionPredicate.Test(bounds.Center)))
             {
                 resultPosition = bounds.Center;
@@ -1313,12 +1313,12 @@ namespace MHServerEmu.Games.Regions
             }
             else
             {
-                return ChooseRandomPositionNearPoint(bounds, pathFlags, posFlags, blockFlags, 0, maxDistance, out resultPosition,
+                return ChooseRandomPositionNearPoint(ref bounds, pathFlags, posFlags, blockFlags, 0, maxDistance, out resultPosition,
                     positionPredicate, checkPredicate, maxPositionTests);
             }
         }
 
-        public bool ChooseRandomPositionNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags,
+        public bool ChooseRandomPositionNearPoint(ref Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags,
             float minDistanceFromPoint, float maxDistanceFromPoint, out Vector3 resultPosition, IRandomPositionPredicate positionPredicate = null,
             IEntityCheckPredicate checkPredicate = null, int maxPositionTests = 400, HeightSweepType heightSweep = HeightSweepType.None,
             int maxSweepHeight = 0)
@@ -1361,7 +1361,7 @@ namespace MHServerEmu.Games.Regions
                 }
             }
 
-            Bounds checkBounds = new(bounds);
+            Bounds checkBounds = bounds;    // copy
             if (blockFlags.HasFlag(BlockingCheckFlags.CheckSpawns))
                 checkBounds.CollisionType = BoundsCollisionType.Blocking;
 
@@ -1445,7 +1445,7 @@ namespace MHServerEmu.Games.Regions
 
                     if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity))
                     {
-                        if (IsLocationClearOfEntities(checkBounds, entitiesInRadius, blockFlags) == false)
+                        if (IsLocationClearOfEntities(ref checkBounds, entitiesInRadius, blockFlags) == false)
                         {
                             if (posFlags.HasFlag(PositionCheckFlags.PreferNoEntity) && foundBlockedEntity == false)
                             {
@@ -1474,18 +1474,18 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        private static bool IsLocationClearOfEntities(Bounds bounds, List<WorldEntity> entities, BlockingCheckFlags blockFlags = BlockingCheckFlags.None)
+        private static bool IsLocationClearOfEntities(ref Bounds bounds, List<WorldEntity> entities, BlockingCheckFlags blockFlags = BlockingCheckFlags.None)
         {
             foreach (WorldEntity entity in entities)
             {
-                if (IsBoundsBlockedByEntity(bounds, entity, blockFlags))
+                if (IsBoundsBlockedByEntity(ref bounds, entity, blockFlags))
                     return false;
             }
 
             return true;
         }
 
-        public bool IsLocationClear(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags = BlockingCheckFlags.None)
+        public bool IsLocationClear(ref Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags = BlockingCheckFlags.None)
         {
             if (NaviMesh.Contains(bounds.Center, bounds.Radius, new DefaultContainsPathFlagsCheck(pathFlags)) == false)
                 return false;
@@ -1496,7 +1496,7 @@ namespace MHServerEmu.Games.Regions
                 foreach (WorldEntity entity in IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
                 {
                     if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedAvatar) && entity is not Avatar) continue;
-                    if (IsBoundsBlockedByEntity(bounds, entity, blockFlags))
+                    if (IsBoundsBlockedByEntity(ref bounds, entity, blockFlags))
                         return false;
                 }
             }

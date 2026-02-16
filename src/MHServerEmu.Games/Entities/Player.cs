@@ -1290,7 +1290,7 @@ namespace MHServerEmu.Games.Entities
             Region region = avatar.Region;
 
             // Find a position to drop
-            if (region.ChooseRandomPositionNearPoint(avatar.Bounds, PathFlags.Walk, PositionCheckFlags.CanBeBlockedEntity,
+            if (region.ChooseRandomPositionNearPoint(ref avatar.Bounds, PathFlags.Walk, PositionCheckFlags.CanBeBlockedEntity,
                 BlockingCheckFlags.CheckSpawns, 50f, 100f, out Vector3 dropPosition) == false)
             {
                 // Fall back to avatar position if didn't find a free spot

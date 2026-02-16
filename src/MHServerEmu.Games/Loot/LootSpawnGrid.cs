@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.Loot
 
             foreach (WorldEntity entity in entityList)
             {
-                Bounds bounds = entity.Bounds;
+                ref Bounds bounds = ref entity.Bounds;
                 BoundsPrototype boundsProto = entity.WorldEntityPrototype?.Bounds;
 
                 // Skip entities that can't block loot

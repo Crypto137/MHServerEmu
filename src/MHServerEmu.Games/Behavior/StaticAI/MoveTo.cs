@@ -384,7 +384,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             var checkFlags = PathFlags.Walk;
             var center = regionBounds.Center;
-            Bounds checkBounds = new(agent.Bounds);
+            Bounds checkBounds = agent.Bounds;     // copy
 
             using var sideListHandle = ListPool<Vector3>.Instance.Get(out List<Vector3> sideList);
             Vector3 position;
@@ -392,7 +392,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (cellType.HasFlag(Cell.Type.N) || !wallsType.HasFlag(Cell.Walls.N) || wallsType == Cell.Walls.All)
             {
                 checkBounds.Center = new Vector3(regionBounds.Max.X + 256.0f, center.Y, center.Z);
-                if (region.ChoosePositionAtOrNearPoint(checkBounds, checkFlags, PositionCheckFlags.None, BlockingCheckFlags.None, 512.0f, out position)
+                if (region.ChoosePositionAtOrNearPoint(ref checkBounds, checkFlags, PositionCheckFlags.None, BlockingCheckFlags.None, 512.0f, out position)
                     && agent.CheckCanPathTo(position, checkFlags) == NaviPathResult.Success)
                     sideList.Add(position);
             }
@@ -400,7 +400,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (cellType.HasFlag(Cell.Type.S) || !wallsType.HasFlag(Cell.Walls.S) || wallsType == Cell.Walls.All)
             {
                 checkBounds.Center = new Vector3(regionBounds.Min.X - 256.0f, center.Y, center.Z);
-                if (region.ChoosePositionAtOrNearPoint(checkBounds, checkFlags, PositionCheckFlags.None, BlockingCheckFlags.None, 512.0f, out position)
+                if (region.ChoosePositionAtOrNearPoint(ref checkBounds, checkFlags, PositionCheckFlags.None, BlockingCheckFlags.None, 512.0f, out position)
                     && agent.CheckCanPathTo(position, checkFlags) == NaviPathResult.Success)
                     sideList.Add(position);
             }
@@ -408,7 +408,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (cellType.HasFlag(Cell.Type.E) || !wallsType.HasFlag(Cell.Walls.E) || wallsType == Cell.Walls.All)
             {
                 checkBounds.Center = new Vector3(center.X, regionBounds.Max.Y + 256.0f, center.Z);
-                if (region.ChoosePositionAtOrNearPoint(checkBounds, checkFlags, PositionCheckFlags.None, BlockingCheckFlags.None, 512.0f, out position)
+                if (region.ChoosePositionAtOrNearPoint(ref checkBounds, checkFlags, PositionCheckFlags.None, BlockingCheckFlags.None, 512.0f, out position)
                     && agent.CheckCanPathTo(position, checkFlags) == NaviPathResult.Success)
                     sideList.Add(position);
             }
@@ -416,7 +416,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (cellType.HasFlag(Cell.Type.W) || !wallsType.HasFlag(Cell.Walls.W) || wallsType == Cell.Walls.All)
             {
                 checkBounds.Center = new Vector3(center.X, regionBounds.Min.Y - 256.0f, center.Z);
-                if (region.ChoosePositionAtOrNearPoint(checkBounds, checkFlags, PositionCheckFlags.None, BlockingCheckFlags.None, 512.0f, out position)
+                if (region.ChoosePositionAtOrNearPoint(ref checkBounds, checkFlags, PositionCheckFlags.None, BlockingCheckFlags.None, 512.0f, out position)
                     && agent.CheckCanPathTo(position, checkFlags) == NaviPathResult.Success)
                     sideList.Add(position);
             }

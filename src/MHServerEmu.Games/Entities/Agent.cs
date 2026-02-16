@@ -345,12 +345,12 @@ namespace MHServerEmu.Games.Entities
                 if (region == null) return IsInPositionForPowerResult.Error;
                 if (summonContext.IgnoreBlockingOnSpawn == false && summonedProto.Bounds.CollisionType == BoundsCollisionType.Blocking)
                 {
-                    if (region.IsLocationClear(bounds, pathFlags, PositionCheckFlags.CanBeBlockedEntity) == false)
+                    if (region.IsLocationClear(ref bounds, pathFlags, PositionCheckFlags.CanBeBlockedEntity) == false)
                         return IsInPositionForPowerResult.BadTargetPosition;
                 }
                 else if (pathFlags != 0)
                 {
-                    if (region.IsLocationClear(bounds, pathFlags, PositionCheckFlags.None) == false)
+                    if (region.IsLocationClear(ref bounds, pathFlags, PositionCheckFlags.None) == false)
                         return IsInPositionForPowerResult.BadTargetPosition;
                 }
             }

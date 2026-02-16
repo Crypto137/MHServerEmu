@@ -167,8 +167,8 @@ namespace MHServerEmu.Commands.Implementations
             var entity2 = manager.GetEntity<WorldEntity>(entityId2);
             if (entity2 == null) return $"No entity found for {entityId2}";
 
-            Bounds bounds = entity1.Bounds;
-            bool isBlocked = Region.IsBoundsBlockedByEntity(bounds, entity2, BlockingCheckFlags.CheckSpawns);
+            ref Bounds bounds = ref entity1.Bounds;
+            bool isBlocked = Region.IsBoundsBlockedByEntity(ref bounds, entity2, BlockingCheckFlags.CheckSpawns);
             return $"Entities\n [{entity1.PrototypeName}]\n [{entity2.PrototypeName}]\nIsBlocked: {isBlocked}";
         }
 

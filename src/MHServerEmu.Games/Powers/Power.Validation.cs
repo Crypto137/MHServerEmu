@@ -127,7 +127,7 @@ namespace MHServerEmu.Games.Powers
 
                     Vector3 findPoint = resultPosition.Value;
                     PointOnLineResult result = region.NaviMesh.FindPointOnLineToOccupy(ref findPoint, regionLocation.Position, targetPosition, range,
-                        Owner.Bounds, locomotor.PathFlags, movementPowerProto.BlockingCheckFlags, doNotMoveToExactTargetLocation);
+                        ref Owner.Bounds, locomotor.PathFlags, movementPowerProto.BlockingCheckFlags, doNotMoveToExactTargetLocation);
                     resultPosition = findPoint;
 
                     return result switch
@@ -882,7 +882,7 @@ namespace MHServerEmu.Games.Powers
                 bool doNotMoveToExactTargetLocation = movementPowerProto.MoveToExactTargetLocation == false;
 
                 PointOnLineResult pointOnLineResult = naviMesh.FindPointOnLineToOccupy(ref toPosition, fromPosition, toPosition, GetRange(),
-                    Owner.Bounds, locomotor.PathFlags, movementPowerProto.BlockingCheckFlags, doNotMoveToExactTargetLocation);
+                    ref Owner.Bounds, locomotor.PathFlags, movementPowerProto.BlockingCheckFlags, doNotMoveToExactTargetLocation);
 
                 if (pointOnLineResult == PointOnLineResult.Failed)
                     return PowerPositionSweepResult.TargetPositionInvalid;
@@ -987,7 +987,7 @@ namespace MHServerEmu.Games.Powers
                     if (movementPowerProto.IsHighFlyingPower == false && movementPowerProto.MovementHeightBonus == 0)
                         blockFlags |= 1 << (int)BoundsMovementPowerBlockType.Ground;
 
-                    WorldEntity firstHitEntity = region.SweepToFirstHitEntity(Owner.Bounds, resultPosition.Value - fromPosition,
+                    WorldEntity firstHitEntity = region.SweepToFirstHitEntity(ref Owner.Bounds, resultPosition.Value - fromPosition,
                         ref resultPosition, new MovementPowerEntityCollideFunc(blockFlags));
 
                     if (firstHitEntity != null)

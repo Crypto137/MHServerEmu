@@ -1456,7 +1456,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (entityMan.CreateEntity(taserHotspotSettings) is not WorldEntity taserHotspot) return;
 
             float dist = Math.Max(1.0f, Vector3.Length(distance));
-            Bounds bounds = new(taserHotspot.Bounds);
+            Bounds bounds = taserHotspot.Bounds;    // copy
             bounds.InitializeBox(taserHotspotBoxBounds.Width, dist, taserHotspotBoxBounds.Height, false, taserHotspotBoxBounds.CollisionType);
             taserHotspot.Bounds = bounds;
 

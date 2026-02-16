@@ -9,7 +9,9 @@ namespace MHServerEmu.Games.Loot
     {
         private const float DefaultBoundsRadius = 10f;
 
-        public Bounds Bounds { get; } = new();
+        private Bounds _bounds = new();
+
+        public ref Bounds Bounds { get => ref _bounds; }
         public Game Game { get; private set; }
         public Vector3 Position { get; private set; }
         public WorldEntity Recipient { get; set; }
@@ -26,8 +28,8 @@ namespace MHServerEmu.Games.Loot
             Position = position;
             Recipient = recipient;
 
-            Bounds.InitializeSphere(DefaultBoundsRadius, BoundsCollisionType.Overlapping);
-            Bounds.Center = Position;
+            _bounds.InitializeSphere(DefaultBoundsRadius, BoundsCollisionType.Overlapping);
+            _bounds.Center = Position;
         }
 
         public void ResetForPool()

@@ -111,7 +111,7 @@ namespace MHServerEmu.Games.Powers
                 var collider = manager.GetEntity<WorldEntity>(colliderId);
                 if (collider == null) return false;
 
-                canTrigger = collider.Bounds.Intersects(target.Bounds);
+                canTrigger = collider.Bounds.Intersects(ref target.Bounds);
             }
 
             if (canTrigger && _proto.EntityFilter != null)

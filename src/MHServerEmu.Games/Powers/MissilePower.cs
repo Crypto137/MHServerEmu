@@ -282,12 +282,12 @@ namespace MHServerEmu.Games.Powers
 
             creationSettings.Position += CreationOffset(direction, missileContext);
 
-            Bounds bounds = new ();
+            Bounds bounds = new();
             bounds.InitializeSphere(missileContext.Radius, BoundsCollisionType.Overlapping);
             bounds.Center = creationSettings.Position;
 
             if (missileContext.Ghost == false 
-                && region.IsLocationClear(bounds, Region.GetPathFlagsForEntity(missileProto), PositionCheckFlags.None) == false)
+                && region.IsLocationClear(ref bounds, Region.GetPathFlagsForEntity(missileProto), PositionCheckFlags.None) == false)
                 return false;
 
             if (region.GetCellAtPosition(creationSettings.Position) == null && region.ProjectBoundsIntoRegion(ref bounds, direction))

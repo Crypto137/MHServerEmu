@@ -342,7 +342,7 @@ namespace MHServerEmu.Games.Entities.Physics
 
         private static void SweepEntityCollideToDestinationHelper(WorldEntity entity, in Aabb volume, Vector3 position, Vector3 destination, WorldEntity blockedEntity, out EntityCollision outCollision, List<EntityCollision> entityCollisionList)
         {
-            Bounds bounds = entity.EntityCollideBounds;
+            ref Bounds bounds = ref entity.EntityCollideBounds;
             ref RegionLocation location = ref entity.RegionLocation;
             Vector3 velocity = destination - position;
             Vector3 velocity2D = velocity.To2D();
@@ -353,11 +353,11 @@ namespace MHServerEmu.Games.Entities.Physics
                 {
                     if (entity.CanCollideWith(otherEntity) || otherEntity.CanCollideWith(entity))
                     {
-                        Bounds otherBounds = otherEntity.EntityCollideBounds;
+                        ref Bounds otherBounds = ref otherEntity.EntityCollideBounds;
 
                         float time = 1.0f;
                         Vector3? resultNormal = Vector3.ZAxis;
-                        if (bounds.Sweep(otherBounds, Vector3.Zero, velocity, ref time, ref resultNormal) == false) continue;
+                        if (bounds.Sweep(ref otherBounds, Vector3.Zero, velocity, ref time, ref resultNormal) == false) continue;
                         Vector3 normal = resultNormal.Value;
                         Vector3 collisionPosition = location.Position + velocity * time;
                         EntityCollision entityCollision = new (otherEntity, time, collisionPosition, normal);
@@ -468,9 +468,9 @@ namespace MHServerEmu.Games.Entities.Physics
             {
                 if (boundsCheck)
                 {
-                    Bounds bounds = entity.EntityCollideBounds;
-                    Bounds otherBounds = otherEntity.EntityCollideBounds;
-                    if (bounds.Intersects(otherBounds) == false) return;
+                    ref Bounds bounds = ref entity.EntityCollideBounds;
+                    ref Bounds otherBounds = ref otherEntity.EntityCollideBounds;
+                    if (bounds.Intersects(ref otherBounds) == false) return;
                 }
 
                 if (applyRepulsionForces)
@@ -485,9 +485,9 @@ namespace MHServerEmu.Games.Entities.Physics
             {
                 if (boundsCheck)
                 {
-                    Bounds bounds = entity.EntityCollideBounds;
-                    Bounds otherBounds = otherEntity.EntityCollideBounds;
-                    if (bounds.Intersects(otherBounds) == false) return;
+                    ref Bounds bounds = ref entity.EntityCollideBounds;
+                    ref Bounds otherBounds = ref otherEntity.EntityCollideBounds;
+                    if (bounds.Intersects(ref otherBounds) == false) return;
                 }
 
                 if (entityPhysics.IsTrackingOverlap() || otherPhysics.IsTrackingOverlap())
