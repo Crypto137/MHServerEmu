@@ -496,7 +496,15 @@ namespace MHServerEmu.Games.Loot
             LootResult lootResult = new(itemSpec);
             lootResultSummary.Add(lootResult);
 
-            return GiveLootFromSummary(lootResultSummary, player, PrototypeId.Invalid);
+            if (GiveLootFromSummary(lootResultSummary, player, PrototypeId.Invalid) == false)
+                return false;
+
+            Prototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
+            Prototype rarityProto = itemSpec.RarityProtoRef.As<RarityPrototype>();
+            if (itemProto != null && rarityProto != null)
+                player.OnScoringEvent(new(Events.ScoringEventType.ItemCollected, itemProto, rarityProto, 1));
+
+            return true;
         }
 
         /// <summary>
