@@ -52466,7 +52466,7 @@
       "RewardPrototype": 0,
       "EventData": [
         {
-          "Prototype": -6181661104440856225,
+          "Prototype": -1165868733913155695,
           "IncludeChildren": false
         }
       ],
@@ -122282,7 +122282,7 @@
     "SubCategoryStr": 4342261976713137882,
     "DisplayOrder": 6,
     "VisibleState": 1,
-    "EvaluationType": 3,
+    "EvaluationType": 1,
     "EventType": 13,
     "Threshold": 365,
     "DependentAchievementId": 0,
