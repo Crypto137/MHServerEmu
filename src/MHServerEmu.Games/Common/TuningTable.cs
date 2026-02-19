@@ -157,9 +157,15 @@ namespace MHServerEmu.Games.Common
         public float GetDamageMultiplier(bool isPlayerDamage, Rank targetRank, Vector3 targetPosition)
         {
             float damageMult = 1f;
-            damageMult *= GetRegionDifficultyDamageMultiplier(isPlayerDamage, targetRank);
-            damageMult *= GetDifficultyIndexDamageMultiplier(isPlayerDamage, targetRank);
-            damageMult *= GetNumNearbyPlayersDamageMultiplier(isPlayerDamage, targetRank, targetPosition);
+
+            // Some older regions (e.g. Regions/EndGame/Terminals/Red/ShockerSubway) don't have tuning tables assigned.
+            if (_tuningProto != null)
+            {
+                damageMult *= GetRegionDifficultyDamageMultiplier(isPlayerDamage, targetRank);
+                damageMult *= GetDifficultyIndexDamageMultiplier(isPlayerDamage, targetRank);
+                damageMult *= GetNumNearbyPlayersDamageMultiplier(isPlayerDamage, targetRank, targetPosition);
+            }
+
             return damageMult;
         }
 
