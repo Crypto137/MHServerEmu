@@ -69,6 +69,8 @@ namespace MHServerEmu.Games.Achievements
                     AchievementInfo[] infos = FileHelper.DeserializeJson<AchievementInfo[]>(filePath, options);
                     if (infos == null) continue;
 
+                    Logger.Trace($"Parsed achievement data from {Path.GetFileName(filePath)}");
+
                     foreach (AchievementInfo info in infos)
                     {
                         info.SetContext();
@@ -236,7 +238,17 @@ namespace MHServerEmu.Games.Achievements
             Dictionary<string, LocaleSerializer> localeSerializers = new();
 
             // Load and combine JSON data
-            foreach (string filePath in FileHelper.GetFilesWithPrefix(AchievementsDirectory, "AchievementStringMap", "json"))
+            string achievementStringMapPath = Path.Combine(AchievementsDirectory, "AchievementStringMap.json");
+
+            // Get all AchievementStringMap*.json files
+            var achievementStringMapFiles = Directory.GetFiles(AchievementsDirectory, "AchievementStringMap*.json")
+                .OrderBy(file => file).ToList();
+
+            // Ensure main file is loaded first
+            achievementStringMapFiles.Remove(achievementStringMapPath);
+            achievementStringMapFiles.Insert(0, achievementStringMapPath);
+
+            foreach (string filePath in achievementStringMapFiles)
             {
                 StringMap stringMap = FileHelper.DeserializeJson<StringMap>(filePath);
                 if (stringMap == null)

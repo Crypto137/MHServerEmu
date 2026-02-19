@@ -31,7 +31,22 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Data\Game\Achievements\AchievementInfoMap_00_MainPatch.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\Game\Achievements\AchievementStringMap.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Achievements\AchievementStringMap_00_MainPatch.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Achievements\Off\AchievementInfoMap_01_Disable.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Achievements\Off\AchievementInfoMap_02_Party.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Achievements\Off\AchievementStringMap_02_Party.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\LiveTuning\LiveTuningDataPvP.json">
