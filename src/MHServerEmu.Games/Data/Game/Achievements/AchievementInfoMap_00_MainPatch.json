@@ -2431,6 +2431,38 @@
     }
   },
   {
+    "Id": 2612,
+    "Enabled": true,
+    "ParentId": 0,
+    "Name": 10461926074045429512,
+    "InProgressStr": 17474397056727364541,
+    "CompletedStr": 0,
+    "RewardStr": 1428437947272360050,
+    "IconPathAssetId": 18152519771593118781,
+    "Score": 50,
+    "CategoryStr": 12312442669540021644,
+    "SubCategoryStr": 14713227633794568769,
+    "DisplayOrder": 0,
+    "VisibleState": 1,
+    "EvaluationType": 1,
+    "EventType": 9,
+    "Threshold": 100,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 14097466800000000,
+    "PartyVisible": true,
+    "Context": {
+      "RewardPrototype": -497962396321893886,
+      "EventData": [
+        {
+          "Prototype": 2949625424232649331,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
+    }
+  },
+  {
     "Id": 2725,
     "Enabled": true,
     "ParentId": 1613,
