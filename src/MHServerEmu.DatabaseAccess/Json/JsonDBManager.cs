@@ -67,6 +67,7 @@ namespace MHServerEmu.DatabaseAccess.Json
         public bool TryQueryAccountByEmail(string email, out DBAccount account)
         {
             account = _account;
+            account.MigrationData.Reset();
             return true;
         }
 
