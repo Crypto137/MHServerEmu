@@ -126,10 +126,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (targetSummoned < SpecialPowerNumSummons)
                     for (int j = targetSummoned; j < SpecialPowerNumSummons; ++j)
                     {
-                        Bounds bounds = new(agent.Bounds)
-                        { Center = agent.RegionLocation.ProjectToFloor() };
+                        Bounds bounds = agent.Bounds;   // copy
+                        bounds.Center = agent.RegionLocation.ProjectToFloor();
+
                         region.ChooseRandomPositionNearPoint(
-                            bounds,
+                            ref bounds,
                             Region.GetPathFlagsForEntity(agent.WorldEntityPrototype),
                             PositionCheckFlags.CanBeBlockedEntity | PositionCheckFlags.CanSweepTo | PositionCheckFlags.PreferNoEntity,
                             BlockingCheckFlags.None,
@@ -2613,10 +2614,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (targetSummoned < SpecialPowerNumSummons)
                     for (int j = targetSummoned; j < SpecialPowerNumSummons; ++j)
                     {
-                        Bounds bounds = new(agent.Bounds)
-                        { Center = agent.RegionLocation.ProjectToFloor() };
+                        Bounds bounds = agent.Bounds;  // copy
+                        bounds.Center = agent.RegionLocation.ProjectToFloor();
+
                         region.ChooseRandomPositionNearPoint(
-                            bounds,
+                            ref bounds,
                             Region.GetPathFlagsForEntity(agent.WorldEntityPrototype),
                             PositionCheckFlags.CanBeBlockedEntity | PositionCheckFlags.CanSweepTo | PositionCheckFlags.PreferNoEntity,
                             BlockingCheckFlags.None,

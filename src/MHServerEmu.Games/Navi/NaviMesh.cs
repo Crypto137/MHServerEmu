@@ -611,7 +611,7 @@ namespace MHServerEmu.Games.Navi
         }
 
         public PointOnLineResult FindPointOnLineToOccupy(ref Vector3 resultPosition, Vector3 startPosition, Vector3 desiredPosition, float maxRange,
-            Bounds bounds, PathFlags pathFlags, BlockingCheckFlags blockFlags, bool skipTarget)
+            ref Bounds bounds, PathFlags pathFlags, BlockingCheckFlags blockFlags, bool skipTarget)
         {
             resultPosition = startPosition;
 
@@ -631,7 +631,7 @@ namespace MHServerEmu.Games.Navi
             float targetDistance = Math.Min(targetLength, maxRange);
             Vector3 targetPosition = startPosition + targetDirection * targetDistance;
 
-            Bounds checkBounds = new (bounds);
+            Bounds checkBounds = bounds;    // copy
             float stepSize = radius / 2.0f;
             for (int step = 0; step < 250; step++)
             {
@@ -643,7 +643,7 @@ namespace MHServerEmu.Games.Navi
                 {
                     float stepBackDistance = Math.Min(stepDistance, targetDistance);
                     checkBounds.Center = targetPosition - targetDirection * stepBackDistance;
-                    if (_region.IsLocationClear(checkBounds, pathFlags, PositionCheckFlags.CanBeBlockedEntity, blockFlags))
+                    if (_region.IsLocationClear(ref checkBounds, pathFlags, PositionCheckFlags.CanBeBlockedEntity, blockFlags))
                     {
                         resultPosition = checkBounds.Center;
                         return step == 0 ? PointOnLineResult.Success : PointOnLineResult.Clipped;
@@ -654,7 +654,7 @@ namespace MHServerEmu.Games.Navi
                 {
                     float stepForwardDistance = Math.Min(stepDistance, maxRange);
                     checkBounds.Center = targetPosition + targetDirection * stepForwardDistance;
-                    if (_region.IsLocationClear(checkBounds, pathFlags, PositionCheckFlags.CanBeBlockedEntity, blockFlags))
+                    if (_region.IsLocationClear(ref checkBounds, pathFlags, PositionCheckFlags.CanBeBlockedEntity, blockFlags))
                     {
                         resultPosition = checkBounds.Center;
                         return step == 0 ? PointOnLineResult.Success : PointOnLineResult.Clipped;

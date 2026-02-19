@@ -25,7 +25,8 @@ namespace MHServerEmu.Games.Entities
         private bool _returnWeapon = true;
 
         private Bounds _entityCollideBounds;
-        public override Bounds EntityCollideBounds { get => _entityCollideBounds; set => _entityCollideBounds = value; }
+
+        public override ref Bounds EntityCollideBounds { get => ref _entityCollideBounds; }
         public override bool CanRepulseOthers => false;
         public PrototypeId MissilePowerPrototypeRef { get => Properties[PropertyEnum.CreatorPowerPrototype]; }
         public MissilePowerPrototype MissilePowerPrototype { get => GameDatabase.GetPrototype<MissilePowerPrototype>(MissilePowerPrototypeRef); }
@@ -132,6 +133,11 @@ namespace MHServerEmu.Games.Entities
             ChangePositionResult result = base.ChangeRegionPosition(position, orientation, flags);
             EntityCollideBounds.Center = Bounds.Center;
             return result;
+        }
+
+        public override void SetEntityCollideBounds(ref Bounds bounds)
+        {
+            _entityCollideBounds = bounds;
         }
 
         public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)

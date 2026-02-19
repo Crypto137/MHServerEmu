@@ -2710,7 +2710,7 @@ namespace MHServerEmu.Games.Powers
                     var teleportPositon = targetPositon;
 
                     var result = region.NaviMesh.FindPointOnLineToOccupy(ref teleportPositon, startPosition, targetPositon,
-                        distance, target.Bounds, target.Locomotor.PathFlags, BlockingCheckFlags.CheckGroundMovementPowers, false);
+                        distance, ref target.Bounds, target.Locomotor.PathFlags, BlockingCheckFlags.CheckGroundMovementPowers, false);
 
                     if (result != Navi.PointOnLineResult.Failed)
                     {

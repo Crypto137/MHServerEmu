@@ -729,11 +729,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             BlockingCheckFlags blockFlags = BlockingCheckFlags.CheckGroundMovementPowers | BlockingCheckFlags.CheckLanding | BlockingCheckFlags.CheckSpawns;
 
             // Do not modify the position if it's valid as is.
-            if (region.IsLocationClear(bounds, Navi.PathFlags.Walk, posFlags, blockFlags))
+            if (region.IsLocationClear(ref bounds, Navi.PathFlags.Walk, posFlags, blockFlags))
                 return true;
 
             // Try to pick a replacement position.
-            if (region.ChooseRandomPositionNearPoint(bounds, Navi.PathFlags.Walk, posFlags, blockFlags & ~BlockingCheckFlags.CheckSpawns, 0f, 64f, out Vector3 newPosition, null, null, 50) == false)
+            if (region.ChooseRandomPositionNearPoint(ref bounds, Navi.PathFlags.Walk, posFlags, blockFlags & ~BlockingCheckFlags.CheckSpawns, 0f, 64f, out Vector3 newPosition, null, null, 50) == false)
                 return false;
 
             position = newPosition;
@@ -4344,7 +4344,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 velocity *= gamepadGlobals.GamepadInteractRange + Bounds.Radius;
                 float timeOfIntersection = 1.0f;
                 Vector3? resultNormal = null;
-                return capsuleBound.Sweep(interactee.Bounds, Vector3.Zero, velocity, ref timeOfIntersection, ref resultNormal);
+                return capsuleBound.Sweep(ref interactee.Bounds, Vector3.Zero, velocity, ref timeOfIntersection, ref resultNormal);
             }
 
             return false;

@@ -4213,7 +4213,7 @@ namespace MHServerEmu.Games.Powers
 
                     Vector3? collisionPosition = Vector3.Zero;
                     Vector3 sweepVelocity = Vector3.Normalize(actualTargetPosition - ownerPosition) * GetRange();
-                    var firstHitEntity = region.SweepToFirstHitEntity(Owner.Bounds, sweepVelocity, ref collisionPosition,
+                    var firstHitEntity = region.SweepToFirstHitEntity(ref Owner.Bounds, sweepVelocity, ref collisionPosition,
                         new MovementPowerEntityCollideFunc(1 << (int)BoundsMovementPowerBlockType.All));
                     if (firstHitEntity != null)
                     {
@@ -4868,7 +4868,7 @@ namespace MHServerEmu.Games.Powers
 
             if (Segment.IsNearZero(floorOffsetLength) == false)
             {
-                Bounds teleportPositionBounds = new(Owner.Bounds);
+                Bounds teleportPositionBounds = Owner.Bounds;   // copy
                 teleportPositionBounds.Center = teleportPosition;
 
                 Aabb aabb = Owner.RegionBounds;
@@ -4881,9 +4881,9 @@ namespace MHServerEmu.Games.Powers
                     if (worldEntity.Properties.HasProperty(PropertyEnum.BlocksTeleports) == false)
                         continue;
 
-                    Bounds blockingEntityBounds = worldEntity.Bounds;
+                    ref Bounds blockingEntityBounds = ref worldEntity.Bounds;
 
-                    if (blockingEntityBounds.Intersects(teleportPositionBounds) == false)
+                    if (blockingEntityBounds.Intersects(ref teleportPositionBounds) == false)
                         continue;
 
                     float intersection = 0f;

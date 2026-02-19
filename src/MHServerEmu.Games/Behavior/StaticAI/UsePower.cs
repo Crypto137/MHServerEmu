@@ -270,11 +270,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             if (powerContext.ForceCheckTargetRegionLocation)
             {
-                Bounds targetPositionBounds = new(agent.Bounds);
+                Bounds targetPositionBounds = agent.Bounds;    // copy
                 targetPositionBounds.Center = targetPositionForPower;
 
                 PositionCheckFlags positionCheckFlags = PositionCheckFlags.CanBeBlockedEntity | PositionCheckFlags.CanSweepTo;
-                if (region.IsLocationClear(targetPositionBounds, agent.GetPathFlags(), positionCheckFlags) == false
+                if (region.IsLocationClear(ref targetPositionBounds, agent.GetPathFlags(), positionCheckFlags) == false
                     || agent.CheckCanPathTo(targetPositionForPower) != NaviPathResult.Success)
                     return PowerUseResult.OutOfPosition;
             }
@@ -419,7 +419,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             Region region = agent.Region;
             if (region == null) return false;
 
-            Bounds bounds = new(agent.Bounds);
+            Bounds bounds = agent.Bounds;   // copy
             bounds.Center = worldEntity.RegionLocation.Position;
 
             float minTargetDistance = powerContext.TargetOffset;
@@ -427,7 +427,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             float minDistance = powerContext.MinDistanceFromOwner;
 
             DistanceRangePredicate distanceRangePredicat = new(agent.RegionLocation.Position, minDistance, DistanceRangePredicate.Unbound);
-            return region.ChooseRandomPositionNearPoint(bounds, Region.GetPathFlagsForEntity(worldEntity.WorldEntityPrototype),
+            return region.ChooseRandomPositionNearPoint(ref bounds, Region.GetPathFlagsForEntity(worldEntity.WorldEntityPrototype),
                 (PositionCheckFlags.CanBeBlockedEntity | PositionCheckFlags.CanSweepTo), BlockingCheckFlags.None,
                 minTargetDistance, maxTargetDistance, out targetPosition, distanceRangePredicat);
         }

@@ -86,7 +86,7 @@ namespace MHServerEmu.Games.Entities
             Bounds entityBounds = new();
             entityBounds.InitializeFromPrototype(entityBoundsPrototype);
             entityBounds.Center = avatar.RegionLocation.Position + avatar.Forward * 120;
-            return region.ChoosePositionAtOrNearPoint(entityBounds, avatar.Locomotor.PathFlags, PositionCheckFlags.CanBeBlockedEntity, BlockingCheckFlags.None, maxDistance, out spawnPositionResult, maxPositionTests: 32);
+            return region.ChoosePositionAtOrNearPoint(ref entityBounds, avatar.Locomotor.PathFlags, PositionCheckFlags.CanBeBlockedEntity, BlockingCheckFlags.None, maxDistance, out spawnPositionResult, maxPositionTests: 32);
         }
     }
 }

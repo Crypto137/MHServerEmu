@@ -877,12 +877,14 @@ namespace MHServerEmu.Games.Populations
 
     public class ClusterEntity : ClusterObject
     {
+        private Bounds _bounds;
+
         public EntitySelectorPrototype EntitySelectorProto { get; private set; }
         public PrototypeId EntityRef { get; private set; }
         public WorldEntityPrototype EntityProto { get; private set; }
         public bool? SnapToFloor { get; set; }
         public int EncounterSpawnPhase { get; set; }
-        public Bounds Bounds { get; set; }
+        public ref Bounds Bounds { get => ref _bounds; }
         public RankPrototype RankProto { get; set; }
         public HashSet<PrototypeId> Modifiers { get; set; }
         public SpawnFlags SpawnFlags => Parent != null ? Parent.SpawnFlags : SpawnFlags.None;
@@ -969,16 +971,14 @@ namespace MHServerEmu.Games.Populations
                 && Region.PopulationManager.InBlackOutZone(regionPos, Radius, Parent.MissionRef))
                 return false;
 
-            Bounds bounds = new(Bounds)
-            {
-                Center = regionPos + new Vector3(0.0f, 0.0f, Bounds.HalfHeight)
-            };
+            Bounds bounds = Bounds; // copy
+            bounds.Center = regionPos + new Vector3(0.0f, 0.0f, Bounds.HalfHeight);
 
             if (SpawnFlags.HasFlag(SpawnFlags.IgnoreSpawned) == false)
             {
                 Sphere sphere = new(bounds.Center, bounds.Radius);
                 foreach (var entity in Region.IterateEntitiesInVolume(sphere, new(EntityRegionSPContextFlags.UnrestrictedPartitions)))
-                    if (Region.IsBoundsBlockedByEntity(bounds, entity, BlockingCheckFlags.CheckSpawns))
+                    if (Region.IsBoundsBlockedByEntity(ref bounds, entity, BlockingCheckFlags.CheckSpawns))
                         return false;
             }
             return true;
