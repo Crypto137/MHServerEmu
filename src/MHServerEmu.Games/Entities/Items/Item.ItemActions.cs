@@ -415,7 +415,7 @@ namespace MHServerEmu.Games.Entities.Items
                 else
                 {
                     // The replacement got stacked
-                    replacementItemList.Add((replacementItem.Id, itemSpec.StackCount));
+                    replacementItemList.Add((stackEntityId.Value, itemSpec.StackCount));
 
                     reportBuilder.AddItemSpecs(NetMessageLootEntity.CreateBuilder()
                         .SetItemSpec(itemSpec.ToProtobuf())
