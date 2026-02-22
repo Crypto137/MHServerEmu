@@ -46,6 +46,9 @@
     <None Update="Data\Game\Achievements\Off\AchievementInfoMap_02_Party.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Data\Game\Achievements\Off\AchievementInfoMap_03_Restore.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\Game\Achievements\Off\AchievementStringMap_02_Party.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
