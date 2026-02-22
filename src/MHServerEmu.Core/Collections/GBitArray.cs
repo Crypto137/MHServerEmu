@@ -34,7 +34,7 @@ namespace MHServerEmu.Core.Collections
                 uint size = (uint)Size;
                 success &= archive.Transfer(ref size);
 
-                Span<byte> buffer = MemoryMarshal.Cast<ulong, byte>(_bits);
+                ReadOnlySpan<byte> buffer = MemoryMarshal.Cast<ulong, byte>(_bits);
                 success &= archive.WriteBytes(buffer);
             }
             else
