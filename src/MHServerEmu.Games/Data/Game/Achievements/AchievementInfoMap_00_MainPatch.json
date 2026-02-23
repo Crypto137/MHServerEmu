@@ -71,6 +71,28 @@
     }
   },
   {
+    "Id": 128,
+    "Enabled": true,
+    "ParentId": 2902,
+    "Name": 13484694456419078544,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 3658722362930364874,
+    "SubCategoryStr": 13071978309866847028,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 24,
+    "Threshold": 1,
+    "DependentAchievementId": 384,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 14292935910000000,
+    "PartyVisible": false
+  },
+  {
     "Id": 204,
     "Enabled": true,
     "ParentId": 0,
@@ -110,6 +132,38 @@
           "IncludeChildren": false
         }
       ]
+    }
+  },
+  {
+    "Id": 217,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 13540704050134634300,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": 6182127988935892659,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
     }
   },
   {
@@ -257,6 +311,33 @@
     }
   },
   {
+    "Id": 384,
+    "Enabled": true,
+    "ParentId": 0,
+    "Name": 1034833365424415010,
+    "InProgressStr": 8047304348106350039,
+    "CompletedStr": 0,
+    "RewardStr": 10448089312360897164,
+    "IconPathAssetId": 14263203456515249155,
+    "Score": 100,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 2,
+    "VisibleState": 1,
+    "EvaluationType": 2,
+    "EventType": 19,
+    "Threshold": 0,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 1,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": -5100314561183672059,
+      "EventData": [],
+      "EventContext": []
+    }
+  },
+  {
     "Id": 422,
     "Enabled": true,
     "ParentId": 2034,
@@ -324,6 +405,38 @@
           "IncludeChildren": false
         }
       ]
+    }
+  },
+  {
+    "Id": 428,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 9308785851870659088,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": -8500373607417305780,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
     }
   },
   {
@@ -450,6 +563,38 @@
     }
   },
   {
+    "Id": 593,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 5441864366179776639,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": 5161474249433094306,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
+    }
+  },
+  {
     "Id": 626,
     "Enabled": true,
     "ParentId": 1203,
@@ -552,6 +697,70 @@
     }
   },
   {
+    "Id": 785,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 9688553672034071780,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": 2734772809312973197,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
+    }
+  },
+  {
+    "Id": 795,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 16321256834552594117,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": -742277465502310667,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
+    }
+  },
+  {
     "Id": 822,
     "Enabled": true,
     "ParentId": 0,
@@ -627,6 +836,38 @@
     }
   },
   {
+    "Id": 873,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 6908000887616111963,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": 6059241991483039466,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
+    }
+  },
+  {
     "Id": 893,
     "Enabled": true,
     "ParentId": 1771,
@@ -653,6 +894,38 @@
         {
           "Prototype": -4699164563904946847,
           "IncludeChildren": true
+        }
+      ],
+      "EventContext": []
+    }
+  },
+  {
+    "Id": 914,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 16701024654716006809,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": -2862121707912218704,
+          "IncludeChildren": false
         }
       ],
       "EventContext": []
@@ -736,6 +1009,38 @@
           "IncludeChildren": true
         }
       ]
+    }
+  },
+  {
+    "Id": 970,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 15941489014389181425,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": -197708174253546231,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
     }
   },
   {
@@ -1490,6 +1795,38 @@
           "IncludeChildren": false
         }
       ]
+    }
+  },
+  {
+    "Id": 1721,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 7287768707779524655,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": -2405476931789444286,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
     }
   },
   {
@@ -2613,6 +2950,38 @@
     }
   },
   {
+    "Id": 2712,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 275297725097589626,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": -2405476931789444286,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
+    }
+  },
+  {
     "Id": 2725,
     "Enabled": true,
     "ParentId": 1613,
@@ -2780,6 +3149,38 @@
     }
   },
   {
+    "Id": 2789,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 655065545261002318,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": -519469456138681337,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
+    }
+  },
+  {
     "Id": 2810,
     "Enabled": true,
     "ParentId": 0,
@@ -2819,6 +3220,38 @@
           "IncludeChildren": false
         }
       ]
+    }
+  },
+  {
+    "Id": 2884,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 4507215923361564838,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": 1647662432898853734,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
     }
   },
   {
@@ -2917,6 +3350,38 @@
           "IncludeChildren": false
         }
       ]
+    }
+  },
+  {
+    "Id": 2974,
+    "Enabled": true,
+    "ParentId": 384,
+    "Name": 6528233067452699271,
+    "InProgressStr": 0,
+    "CompletedStr": 0,
+    "RewardStr": 0,
+    "IconPathAssetId": 0,
+    "Score": 0,
+    "CategoryStr": 10793371388886370876,
+    "SubCategoryStr": 1759883262113301414,
+    "DisplayOrder": 0,
+    "VisibleState": 6,
+    "EvaluationType": 1,
+    "EventType": 13,
+    "Threshold": 1,
+    "DependentAchievementId": 0,
+    "UIProgressDisplayOption": 0,
+    "PublishedDateUS": 15118056000000000,
+    "PartyVisible": false,
+    "Context": {
+      "RewardPrototype": 0,
+      "EventData": [
+        {
+          "Prototype": 5570019514363025552,
+          "IncludeChildren": false
+        }
+      ],
+      "EventContext": []
     }
   },
   {
