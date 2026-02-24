@@ -110,23 +110,26 @@ namespace MHServerEmu.PlayerManagement.Players
             if (State != PlayerHandleState.InGame && State != PlayerHandleState.Idle)
                 return Logger.WarnReturn(false, $"MigrateSession(): Unable to migrate handle [{this}] while in state {State}");
 
-            Logger.Info($"Migrating handle [{this}] to session [{newClient.Session}]");
+            DBAccount account = (DBAccount)Client.Session.Account;
+            if (account.MigrationData.IsInErrorState)
+                return false;
+
+            ClientSession newSession = (ClientSession)newClient.Session;
+
+            Logger.Info($"Migrating handle [{this}] to session [{newSession}]");
 
             RemoveFromCurrentGame();
             Client.Disconnect();
             SetActualRegion(null);  // this fixes the edge case where duplicate login happens while in a hub region
 
-            ClientSession oldSession = (ClientSession)Client.Session;
-            ClientSession newSession = (ClientSession)newClient.Session;
-            newSession.Account = oldSession.Account;
+            newSession.Account = account;
 
             _transferParams = null;
 
             // Reset migration data to prevent abuse.
             // At this stage the player is still in a game and will try to update MigrationDate on exit. We set the SkipNextUpdate flag here to avoid this.
-            MigrationData migrationData = ((DBAccount)newSession.Account).MigrationData;
-            migrationData.Reset();
-            migrationData.SkipNextUpdate = true;
+            account.MigrationData.Reset();
+            account.MigrationData.SkipNextUpdate = true;
 
             Client = newClient;
 
@@ -192,6 +195,10 @@ namespace MHServerEmu.PlayerManagement.Players
                 return true;
 
             DBAccount account = Account;
+
+            // Do not save accounts in error state to avoid data corruption
+            if (account.MigrationData.IsInErrorState)
+                return true;
 
             using var lockScope = account.Lock();
             if (lockScope.LockTaken == false)

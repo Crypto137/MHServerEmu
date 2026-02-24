@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.Entities
             if (base.ApplyInitialReplicationState(ref settings) == false)
                 return false;
 
-            if (IsTeamUpAgent && settings.ArchiveData != null && settings.InventoryLocation.IsValid)
+            if (IsTeamUpAgent && settings.ArchiveData != null)
             {
                 Player player = Game.EntityManager.GetEntity<Player>(settings.InventoryLocation.ContainerId);
                 if (player != null)
