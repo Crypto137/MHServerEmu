@@ -64,6 +64,9 @@
     <None Update="Data\Game\Achievements\Off\AchievementStringMap_04_Seasonal.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Data\Game\Achievements\Off\AchievementStringMap_05_Collection.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\Game\LiveTuning\LiveTuningDataPvP.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
