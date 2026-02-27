@@ -75,8 +75,8 @@
     "Enabled": true,
     "Prototype": "Loot/Tables/Achievements/StarkTechPowerCube.prototype",
     "Path": "Choices[0].Item",
-    "Description": "Set Bounty of the Bifrost in LootTable",
+    "Description": "Set Bifrost Visual in LootTable",
     "ValueType": "PrototypeId",
-    "Value": 16310576971135195786
+    "Value": 12620726227893559387
   }
 ]
