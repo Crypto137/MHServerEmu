@@ -70,5 +70,13 @@
     "Description": "Revert the 99.9% artifact drop rate reduction added with SHIELD Supply Drops.",
     "ValueType": "Float",
     "Value": 0.0
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Achievements/StarkTechPowerCube.prototype",
+    "Path": "Choices[0].Item",
+    "Description": "Set Bounty of the Bifrost in LootTable",
+    "ValueType": "PrototypeId",
+    "Value": 16310576971135195786
   }
 ]
