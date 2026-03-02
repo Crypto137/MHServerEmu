@@ -2099,7 +2099,7 @@ namespace MHServerEmu.Games.Missions
                         int index = 0;
                         foreach (Player player in sortedContributors)
                         {
-                            float contribution = index / sortedContributors.Count;
+                            float contribution = index / _contributors.Count;
                             GiveRewardToPlayer(player, index++, contribution);
                         }
                     }
