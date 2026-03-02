@@ -347,7 +347,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (player != null)
             {
                 Mission mission = MissionManager.FindMissionForPlayer(player, context.MissionRef);
-                // TODO write Contributor
+                if (mission != null)
+                    return mission.GetContribution(player) > 0f;
             }
 
             return false;

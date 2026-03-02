@@ -542,7 +542,6 @@ namespace MHServerEmu.Games.Missions
 
             if (mission.IsOpenMission)
             {
-                // TODO: check MinimumContributionForCredit
                 using var sortedContributorsHandle = ListPool<Player>.Instance.Get(out List<Player> sortedContributors);
                 if (mission.GetSortedContributors(sortedContributors))
                 {

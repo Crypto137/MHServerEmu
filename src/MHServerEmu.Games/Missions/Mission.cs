@@ -1856,19 +1856,22 @@ namespace MHServerEmu.Games.Missions
             return Game.EntityManager.GetEntity<Player>(enumerator.Current);
         }
 
-        public bool GetSortedContributors(List<Player> sortedContributors)
+        public bool GetSortedContributors(List<Player> sortedContributors, float minimumContribution = 0f)
         {
-            // TODO: Optimize and include contribution value in the output
             var manager = Game.EntityManager;
-            var sortedContributorKvp = _contributors.OrderByDescending(kvp => kvp.Value);
-            foreach (var kvp in sortedContributorKvp)
+            foreach (var kvp in _contributors)
             {
                 var player = manager.GetEntityByDbGuid<Player>(kvp.Key);
-                if (player != null)
+                if (player != null && kvp.Value >= minimumContribution)
                     sortedContributors.Add(player);
             }
 
-            return sortedContributors.Count > 0;
+            if (sortedContributors.Count == 0) return false;
+
+            sortedContributors.Sort((a, b) =>
+                _contributors[b.DatabaseUniqueId].CompareTo(_contributors[a.DatabaseUniqueId]));
+
+            return true;
         }
 
         public bool GetContributors(List<Player> contributors)
@@ -2090,21 +2093,16 @@ namespace MHServerEmu.Games.Missions
             {
                 if (Prototype is OpenMissionPrototype openProto)
                 {
-                    int index = 0;
-                    var sortedContributors = _contributors.OrderByDescending(kvp => kvp.Value);
-
-                    var entityManager = Game.EntityManager;
-
-                    foreach (var kvp in sortedContributors)
+                    using var sortedContributorsHandle = ListPool<Player>.Instance.Get(out List<Player> sortedContributors);
+                    if (GetSortedContributors(sortedContributors, (float)openProto.MinimumContributionForCredit))
                     {
-                        if (kvp.Value >= openProto.MinimumContributionForCredit)
+                        int index = 0;
+                        foreach (Player player in sortedContributors)
                         {
-                            Player player = entityManager.GetEntityByDbGuid<Player>(kvp.Key);
-                            if (player == null) continue;
-                            float contribution = index / _contributors.Count;
+                            float contribution = index / sortedContributors.Count;
                             GiveRewardToPlayer(player, index++, contribution);
                         }
-                    }           
+                    }
                 }
                 else
                 {
