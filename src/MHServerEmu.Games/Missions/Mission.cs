@@ -1856,13 +1856,13 @@ namespace MHServerEmu.Games.Missions
             return Game.EntityManager.GetEntity<Player>(enumerator.Current);
         }
 
-        public bool GetSortedContributors(List<Player> sortedContributors, float minimumContribution = 0f)
+        public bool GetSortedContributors(List<Player> sortedContributors)
         {
             var manager = Game.EntityManager;
             foreach (var kvp in _contributors)
             {
                 var player = manager.GetEntityByDbGuid<Player>(kvp.Key);
-                if (player != null && kvp.Value >= minimumContribution)
+                if (player != null)
                     sortedContributors.Add(player);
             }
 
@@ -2094,13 +2094,15 @@ namespace MHServerEmu.Games.Missions
                 if (Prototype is OpenMissionPrototype openProto)
                 {
                     using var sortedContributorsHandle = ListPool<Player>.Instance.Get(out List<Player> sortedContributors);
-                    if (GetSortedContributors(sortedContributors, (float)openProto.MinimumContributionForCredit))
+                    if (GetSortedContributors(sortedContributors))
                     {
                         int index = 0;
+                        float minimum = (float)openProto.MinimumContributionForCredit;
                         foreach (Player player in sortedContributors)
                         {
-                            float contribution = index / _contributors.Count;
-                            GiveRewardToPlayer(player, index++, contribution);
+                            if (_contributors[player.DatabaseUniqueId] < minimum) continue;
+                            float contribution = (float)index++ / sortedContributors.Count;
+                            GiveRewardToPlayer(player, index, contribution);
                         }
                     }
                 }
