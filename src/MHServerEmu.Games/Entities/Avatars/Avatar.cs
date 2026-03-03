@@ -4712,6 +4712,29 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         // Experience
 
+        public float GetMissionXPMultiplier(TuningTable tuningTable, int level)
+        {
+            if (IsInWorld == false)
+                return 0f;
+
+            TuningPrototype tuningProto = tuningTable.Prototype;
+            if (tuningProto == null) return Logger.WarnReturn(0f, "GetMissionXPMultiplier(): tuningProto == null");
+
+            Curve pctXPFromLevelDeltaCurve = GameDatabase.AdvancementGlobalsPrototype.PctXPFromLevelDeltaCurve.AsCurve();
+            if (pctXPFromLevelDeltaCurve == null) return Logger.WarnReturn(0f, "GetMissionXPMultiplier(): pctXPFromLevelDeltaCurve == null");
+
+            Curve playerXPByDifficultyIndex = tuningProto.PlayerXPByDifficultyIndexCurve.AsCurve();
+            if (playerXPByDifficultyIndex == null) return Logger.WarnReturn(0f, "GetMissionXPMultiplier(): playerXPByDifficultyIndex == null");
+
+            float multiplier = pctXPFromLevelDeltaCurve.GetAt(level - CharacterLevel);
+            multiplier *= tuningProto.PctXPMultiplier;
+            multiplier *= playerXPByDifficultyIndex.GetAt(tuningTable.DifficultyIndex);
+            multiplier *= GetAvatarXPMultiplier();
+            multiplier *= GetPartyXPMultiplier(tuningProto);
+            multiplier *= GetLiveTuningXPMultiplier();
+            return multiplier;
+        }
+
         public float GetAvatarXPMultiplier()
         {
             float multiplier = 1f;

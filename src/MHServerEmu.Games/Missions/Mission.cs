@@ -2324,7 +2324,7 @@ namespace MHServerEmu.Games.Missions
             return lootSummary.HasAnyResult;
         }
 
-        private int GetLootLevel(Avatar avatar)
+        public int GetLootLevel(Avatar avatar)
         {
             if (avatar != null)
                 return avatar.CharacterLevel;

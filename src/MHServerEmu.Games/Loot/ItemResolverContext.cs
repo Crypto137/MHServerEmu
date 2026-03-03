@@ -190,11 +190,11 @@ namespace MHServerEmu.Games.Loot
             Player = player;
 
             _allowedCooldownDrops.Clear();
-            InitializeLootBonusData(sourceEntity);
+            InitializeLootBonusData(sourceEntity, mission);
             InitializeCooldownData(sourceEntity, mission);
         }
 
-        private bool InitializeLootBonusData(WorldEntity sourceEntity)
+        private bool InitializeLootBonusData(WorldEntity sourceEntity, Mission mission)
         {
             _lootBonusData.Reset();
 
@@ -246,10 +246,35 @@ namespace MHServerEmu.Games.Loot
             }
             else if (LootContext == LootContext.MissionReward)
             {
-                // TODO: Mission contribution scaling
+                if (Player == null) return Logger.WarnReturn(false, "InitializeLootBonusData(): Player == null");
+
+                // TODO: reduce by contribution multiplier for open missions
+
+                _lootBonusData.XPMult = CalculateMissionXPMult(mission);
             }
 
             return true;
+        }
+
+        private float CalculateMissionXPMult(Mission mission)
+        {
+            if (Player == null) return Logger.WarnReturn(0f, "CalculateMissionXPMult(): Player == null");
+
+            if (mission == null)
+                return 1f;
+
+            Avatar avatar = Player.CurrentAvatar;
+            if (avatar == null)
+                return 1f;
+
+            Region region = avatar.Region;
+            if (region == null)
+                return 1f;
+
+            TuningTable tuningTable = region.TuningTable;
+            if (tuningTable == null) return Logger.WarnReturn(1f, "CalculateMissionXPMult(): tuningTable == null");
+
+            return avatar.GetMissionXPMultiplier(tuningTable, mission.GetLootLevel(avatar));
         }
 
         private bool InitializeCooldownData(WorldEntity sourceEntity, Mission mission = null)
