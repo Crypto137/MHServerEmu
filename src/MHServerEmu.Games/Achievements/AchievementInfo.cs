@@ -46,6 +46,8 @@ namespace MHServerEmu.Games.Achievements
     public class AchievementInfo
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        [JsonRequired]
         public uint Id { get; set; }
         public bool Enabled { get; set; }
         public uint ParentId { get; set; }
@@ -65,13 +67,15 @@ namespace MHServerEmu.Games.Achievements
         public uint DependentAchievementId { get; set; }
         public AchievementUIProgressDisplayOption UIProgressDisplayOption { get; set; }
         public TimeSpan PublishedDateUS { get; set; }
-        public AssetId IconPathHiResAssetId { get; set; }
+        public AssetId IconPathHiResAssetId { get; set; } = AssetId.Invalid;
         public bool OrbisTrophy { get; set; } = false;
         public int OrbisTrophyId { get; set; } = -1;
         public bool OrbisTrophyShared { get; set; } = false;
 
-        [JsonIgnore]
+        [JsonRequired]
         public bool PartyVisible { get; set; }
+        public AchievementContext Context { get; set; }
+
         [JsonIgnore]
         public Prototype RewardPrototype { get; set; }
         [JsonIgnore]
@@ -116,13 +120,12 @@ namespace MHServerEmu.Games.Achievements
             OrbisTrophyShared = info.OrbisTrophyShared;
         }
 
-        public bool SetContext(in AchievementContext context)
+        public void SetContext()
         {
-            if (EventType != context.EventType) return Logger.WarnReturn(false, $"SetContext [{context.Id}] {EventType} != {context.EventType}");
-            RewardPrototype = AchievementContext.GetPrototype(context.RewardPrototype);
-            EventData = context.GetScoringEventData();
-            EventContext = context.GetScoringEventContext();
-            return true;
+            if (Context == null) return;
+            RewardPrototype = AchievementContext.GetPrototype(Context.RewardPrototype);
+            EventData = Context.GetScoringEventData();
+            EventContext = Context.GetScoringEventContext();
         }
 
         public static AchievementVisibleState GetAchievementVisibleStateFromInt(uint state)

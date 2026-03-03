@@ -59,58 +59,28 @@ namespace MHServerEmu.Games.Achievements
             achievementInfoMapFiles.Remove(achievementInfoMapPath); 
             achievementInfoMapFiles.Insert(0, achievementInfoMapPath); // Main file first       
 
-            try
-            {
-                JsonSerializerOptions options = new();
-                options.Converters.Add(new TimeSpanJsonConverter());
+            JsonSerializerOptions options = new();
+            options.Converters.Add(new TimeSpanJsonConverter());
 
-                foreach (string filePath in achievementInfoMapFiles)
+            foreach (string filePath in achievementInfoMapFiles)
+            {            
+                try
                 {
                     AchievementInfo[] infos = FileHelper.DeserializeJson<AchievementInfo[]>(filePath, options);
+                    if (infos == null) continue;
+
+                    Logger.Trace($"Parsed achievement data from {Path.GetFileName(filePath)}");
 
                     foreach (AchievementInfo info in infos)
+                    {
+                        info.SetContext();
                         _achievementInfoMap[info.Id] = info;
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                return Logger.WarnReturn(false, $"Initialize(): Achievement info map deserialization failed - {e.Message}");
-            }
-
-            // Load achievement contexts map
-            string achievementContextMapPath = Path.Combine(AchievementsDirectory, "AchievementContextMap.json");
-            if (File.Exists(achievementContextMapPath) == false)
-                return Logger.WarnReturn(false, $"Initialize(): Achievement context map not found at {achievementContextMapPath}");
-
-            try
-            {
-                AchievementContext[] contexts = FileHelper.DeserializeJson<AchievementContext[]>(achievementContextMapPath);
-
-                foreach (AchievementContext context in contexts)
-                    if (_achievementInfoMap.TryGetValue(context.Id, out var info))
-                        info.SetContext(context);
-            }
-            catch (Exception e)
-            {
-                return Logger.WarnReturn(false, $"Initialize(): Achievement context map deserialization failed - {e.Message}");
-            }
-
-            // Load party visible achievement 
-            string achievementPartyVisiblePath = Path.Combine(AchievementsDirectory, "AchievementPartyVisible.json");
-            if (File.Exists(achievementPartyVisiblePath) == false)
-                return Logger.WarnReturn(false, $"Initialize(): Achievement party visible not found at {achievementPartyVisiblePath}");
-
-            try
-            {
-                uint[] ids = FileHelper.DeserializeJson<uint[]>(achievementPartyVisiblePath);
-
-                foreach (uint id in ids)
-                    if (_achievementInfoMap.TryGetValue(id, out var info))
-                        info.PartyVisible = true;
-            }
-            catch (Exception e)
-            {
-                return Logger.WarnReturn(false, $"Initialize(): Achievement party visible deserialization failed - {e.Message}");
+                catch (Exception e)
+                {
+                    Logger.Warn($"Initialize(): Achievement info map deserialization failed - {e.Message}");
+                }
             }
 
             // Build string buffer
@@ -268,7 +238,18 @@ namespace MHServerEmu.Games.Achievements
             Dictionary<string, LocaleSerializer> localeSerializers = new();
 
             // Load and combine JSON data
-            foreach (string filePath in FileHelper.GetFilesWithPrefix(AchievementsDirectory, "AchievementStringMap", "json"))
+            List<string> achievementStringMapFiles = [.. FileHelper.GetFilesWithPrefix(AchievementsDirectory, "AchievementStringMap", "json")];
+
+            // Make sure the default achievement string map file is loaded first (if it exists).
+            string defaultFilePath = Path.Combine(AchievementsDirectory, "AchievementStringMap.json");
+            int defaultFileIndex = achievementStringMapFiles.IndexOf(defaultFilePath);
+            if (defaultFileIndex > 0)
+            {
+                achievementStringMapFiles.RemoveAt(defaultFileIndex);
+                achievementStringMapFiles.Insert(0, defaultFilePath);
+            }
+
+            foreach (string filePath in achievementStringMapFiles)
             {
                 StringMap stringMap = FileHelper.DeserializeJson<StringMap>(filePath);
                 if (stringMap == null)
