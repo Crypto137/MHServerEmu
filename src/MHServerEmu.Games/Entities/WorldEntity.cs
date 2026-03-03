@@ -946,7 +946,8 @@ namespace MHServerEmu.Games.Entities
             Vector3 resultPosition = position;
             if (_bounds.Geometry != GeometryType.None)
                 resultPosition.Z += _bounds.HalfHeight;
-            // TODO Locomotor.GetCurrentFlyingHeight
+            if (Locomotor != null)
+                resultPosition.Z += Locomotor.GetCurrentFlyingHeight();
             return resultPosition;
         }
 

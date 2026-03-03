@@ -69,7 +69,6 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
             // ulong InvalidPrototype = 0;  This variable has no logic!!!
             bool found = false;
 
-            // they check ALL prototypes... TODO: Rewrite!!!
             foreach (var protoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<RegionConnectionNodePrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 RegionConnectionNodePrototype proto = protoRef.As<RegionConnectionNodePrototype>();
