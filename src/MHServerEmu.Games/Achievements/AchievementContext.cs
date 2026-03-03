@@ -18,12 +18,11 @@ namespace MHServerEmu.Games.Achievements
         PublicEventTeam
     }
 
-    public struct AchievementContext
+    public class AchievementContext
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         public uint Id { get; set; }
         public long RewardPrototype { get; set; }
-        public ScoringEventType EventType { get; set; }
         public List<AchievementEventData> EventData { get; set; }
         public List<AchievementEventContext> EventContext { get; set; }
 
@@ -37,7 +36,7 @@ namespace MHServerEmu.Games.Achievements
             return proto;
         }
 
-        public readonly ScoringEventData GetScoringEventData()
+        public ScoringEventData GetScoringEventData()
         {
             ScoringEventData eventData = new();
             int count = EventData.Count;
@@ -57,7 +56,7 @@ namespace MHServerEmu.Games.Achievements
             return eventData;
         }
 
-        public readonly ScoringEventContext GetScoringEventContext()
+        public ScoringEventContext GetScoringEventContext()
         {
             ScoringEventContext eventContext = new();
             foreach (var context in EventContext)
