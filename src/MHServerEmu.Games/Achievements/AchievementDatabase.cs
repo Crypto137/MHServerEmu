@@ -238,15 +238,16 @@ namespace MHServerEmu.Games.Achievements
             Dictionary<string, LocaleSerializer> localeSerializers = new();
 
             // Load and combine JSON data
-            string achievementStringMapPath = Path.Combine(AchievementsDirectory, "AchievementStringMap.json");
+            List<string> achievementStringMapFiles = [.. FileHelper.GetFilesWithPrefix(AchievementsDirectory, "AchievementStringMap", "json")];
 
-            // Get all AchievementStringMap*.json files
-            var achievementStringMapFiles = Directory.GetFiles(AchievementsDirectory, "AchievementStringMap*.json")
-                .OrderBy(file => file).ToList();
-
-            // Ensure main file is loaded first
-            achievementStringMapFiles.Remove(achievementStringMapPath);
-            achievementStringMapFiles.Insert(0, achievementStringMapPath);
+            // Make sure the default achievement string map file is loaded first (if it exists).
+            string defaultFilePath = Path.Combine(AchievementsDirectory, "AchievementStringMap.json");
+            int defaultFileIndex = achievementStringMapFiles.IndexOf(defaultFilePath);
+            if (defaultFileIndex > 0)
+            {
+                achievementStringMapFiles.RemoveAt(defaultFileIndex);
+                achievementStringMapFiles.Insert(0, defaultFilePath);
+            }
 
             foreach (string filePath in achievementStringMapFiles)
             {
