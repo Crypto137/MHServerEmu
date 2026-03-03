@@ -1856,20 +1856,19 @@ namespace MHServerEmu.Games.Missions
             return Game.EntityManager.GetEntity<Player>(enumerator.Current);
         }
 
-        public bool GetSortedContributors(List<Player> sortedContributors)
+        public bool GetSortedContributors(List<(Player, float)> sortedContributors)
         {
             var manager = Game.EntityManager;
             foreach (var kvp in _contributors)
             {
                 var player = manager.GetEntityByDbGuid<Player>(kvp.Key);
                 if (player != null)
-                    sortedContributors.Add(player);
+                    sortedContributors.Add((player, kvp.Value));
             }
 
             if (sortedContributors.Count == 0) return false;
 
-            sortedContributors.Sort((a, b) =>
-                _contributors[b.DatabaseUniqueId].CompareTo(_contributors[a.DatabaseUniqueId]));
+            sortedContributors.Sort((a, b) => b.Item2.CompareTo(a.Item2));
 
             return true;
         }
@@ -2093,16 +2092,16 @@ namespace MHServerEmu.Games.Missions
             {
                 if (Prototype is OpenMissionPrototype openProto)
                 {
-                    using var sortedContributorsHandle = ListPool<Player>.Instance.Get(out List<Player> sortedContributors);
+                    using var sortedContributorsHandle = ListPool<(Player, float)>.Instance.Get(out List<(Player, float)> sortedContributors);
                     if (GetSortedContributors(sortedContributors))
                     {
                         int index = 0;
                         float minimum = (float)openProto.MinimumContributionForCredit;
-                        foreach (Player player in sortedContributors)
+                        foreach ((Player player, float contribution) in sortedContributors)
                         {
-                            if (_contributors[player.DatabaseUniqueId] < minimum) continue;
-                            float contribution = (float)index++ / sortedContributors.Count;
-                            GiveRewardToPlayer(player, index, contribution);
+                            if (contribution < minimum) continue;
+                            float contributionPercentage = (float)index++ / sortedContributors.Count;
+                            GiveRewardToPlayer(player, index, contributionPercentage);
                         }
                     }
                 }
@@ -2131,7 +2130,7 @@ namespace MHServerEmu.Games.Missions
                 AwardLootToPlayerFromSummary(lootSummary, player);
         }
 
-        private void GiveRewardToPlayer(Player player, int seedOffset, float contribution = 0.0f)
+        private void GiveRewardToPlayer(Player player, int seedOffset, float contributionPercentage = 0.0f)
         {
             Avatar avatar = player.CurrentAvatar;
 
@@ -2143,7 +2142,7 @@ namespace MHServerEmu.Games.Missions
             {
                 foreach (OpenMissionRewardEntryPrototype rewardProto in openProto.RewardsByContribution)
                 {
-                    if (contribution <= rewardProto.ContributionPercentage)
+                    if (contributionPercentage <= rewardProto.ContributionPercentage)
                     {
                         AwardContributionLootToPlayer(player, rewardProto.ChestEntity, rewardProto.Rewards);
                         break;
