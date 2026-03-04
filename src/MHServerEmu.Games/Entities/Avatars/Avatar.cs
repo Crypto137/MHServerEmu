@@ -4967,6 +4967,58 @@ namespace MHServerEmu.Games.Entities.Avatars
             return multiplier;
         }
 
+        // Currency
+
+        public static float GetStackingCurrencyBonusPct(PropertyCollection properties, CurrencyPrototype currencyProto)
+        {
+            float stackingCurrencyBonusPct = 0f;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusCurrencyStackCount, currencyProto.DataRef))
+                stackingCurrencyBonusPct += GetStackingCurrencyBonusPct(currencyProto, kvp.Value);
+
+            return stackingCurrencyBonusPct;
+        }
+
+        private static float GetStackingCurrencyBonusPct(CurrencyPrototype currencyProto, int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0f;
+
+            CurveId curveRef = currencyProto.LootBonusPctCurve;
+            if (curveRef == CurveId.Invalid)
+                return 0;
+
+            Curve curve = curveRef.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0, "GetStackingCurrencyBonusPct(): curve == null");
+
+            return curve.GetAt(stackCount);
+        }
+
+        public static int GetStackingFlatCurrencyBonus(PropertyCollection properties, CurrencyPrototype currencyProto)
+        {
+            int stackingFlatCurrencyBonus = 0;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusCurrencyStackCount, currencyProto.DataRef))
+                stackingFlatCurrencyBonus += GetStackingFlatCurrencyBonus(currencyProto, kvp.Value);
+
+            return stackingFlatCurrencyBonus;
+        }
+
+        private static int GetStackingFlatCurrencyBonus(CurrencyPrototype currencyProto, int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0;
+
+            CurveId curveRef = currencyProto.LootBonusFlatCurve;
+            if (curveRef == CurveId.Invalid)
+                return 0;
+
+            Curve curve = curveRef.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0, "GetStackingFlatCurrencyBonus(): curve == null");
+
+            return curve.GetIntAt(stackCount);
+        }
+
         // Orb Aggro Range
 
         public static float GetOrbAggroRangeBonusPct(PropertyCollection properties)

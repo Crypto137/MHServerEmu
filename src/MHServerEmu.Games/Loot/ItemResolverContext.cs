@@ -248,10 +248,17 @@ namespace MHServerEmu.Games.Loot
             {
                 if (Player == null) return Logger.WarnReturn(false, "InitializeLootBonusData(): Player == null");
 
-                float contributionRewardMultiplier = mission != null ? mission.GetContributionRewardMultiplier(Player) : 1f;
+                // This a risky addition so close to 1.0, comment this block out if it causes unintended issues.
+                Avatar avatar = Player.CurrentAvatar;
+                if (avatar != null)
+                {
+                    float contributionRewardMultiplier = mission != null ? mission.GetContributionRewardMultiplier(Player) : 1f;
 
-                _lootBonusData.XPMult = CalculateMissionXPMult(mission) * contributionRewardMultiplier;
-                _lootBonusData.CreditsMult = contributionRewardMultiplier;
+                    _lootBonusData.XPMult = CalculateMissionXPMult(mission) * contributionRewardMultiplier;
+                    _lootBonusData.CreditsMult = contributionRewardMultiplier;
+
+                    _lootBonusData.ApplyCurrencyProperties(avatar.Properties);
+                }
             }
 
             return true;
@@ -465,6 +472,24 @@ namespace MHServerEmu.Games.Loot
 
                 CreditsMult += properties[PropertyEnum.LootBonusCreditsPct];
                 CreditsFlat += Avatar.GetFlatCreditsBonus(properties);
+
+                ApplyCurrencyProperties(properties);
+            }
+
+            public void ApplyCurrencyProperties(PropertyCollection properties)
+            {
+                foreach (PrototypeId currencyProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CurrencyPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    CurrencyPrototype currencyProto = currencyProtoRef.As<CurrencyPrototype>();
+                    if (currencyProto == null)
+                    {
+                        Logger.Warn("ApplyCurrencyProperties(): currencyProto == null");
+                        continue;
+                    }
+
+                    CurrencyMultDict[currencyProtoRef] += Avatar.GetStackingCurrencyBonusPct(properties, currencyProto);
+                    CurrencyFlatDict[currencyProtoRef] += Avatar.GetStackingFlatCurrencyBonus(properties, currencyProto);
+                }
             }
 
             public readonly float GetCurrencyMult(PrototypeId currencyProtoRef)
