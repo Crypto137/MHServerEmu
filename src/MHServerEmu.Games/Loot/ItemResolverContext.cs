@@ -190,11 +190,11 @@ namespace MHServerEmu.Games.Loot
             Player = player;
 
             _allowedCooldownDrops.Clear();
-            InitializeLootBonusData(sourceEntity);
+            InitializeLootBonusData(sourceEntity, mission);
             InitializeCooldownData(sourceEntity, mission);
         }
 
-        private bool InitializeLootBonusData(WorldEntity sourceEntity)
+        private bool InitializeLootBonusData(WorldEntity sourceEntity, Mission mission)
         {
             _lootBonusData.Reset();
 
@@ -246,10 +246,43 @@ namespace MHServerEmu.Games.Loot
             }
             else if (LootContext == LootContext.MissionReward)
             {
-                // TODO: Mission contribution scaling
+                if (Player == null) return Logger.WarnReturn(false, "InitializeLootBonusData(): Player == null");
+
+                // This a risky addition so close to 1.0, comment this block out if it causes unintended issues.
+                Avatar avatar = Player.CurrentAvatar;
+                if (avatar != null)
+                {
+                    float contributionRewardMultiplier = mission != null ? mission.GetContributionRewardMultiplier(Player) : 1f;
+
+                    _lootBonusData.XPMult = CalculateMissionXPMult(mission) * contributionRewardMultiplier;
+                    _lootBonusData.CreditsMult = contributionRewardMultiplier;
+
+                    _lootBonusData.ApplyCurrencyProperties(avatar.Properties);
+                }
             }
 
             return true;
+        }
+
+        private float CalculateMissionXPMult(Mission mission)
+        {
+            if (Player == null) return Logger.WarnReturn(0f, "CalculateMissionXPMult(): Player == null");
+
+            if (mission == null)
+                return 1f;
+
+            Avatar avatar = Player.CurrentAvatar;
+            if (avatar == null)
+                return 1f;
+
+            Region region = avatar.Region;
+            if (region == null)
+                return 1f;
+
+            TuningTable tuningTable = region.TuningTable;
+            if (tuningTable == null) return Logger.WarnReturn(1f, "CalculateMissionXPMult(): tuningTable == null");
+
+            return avatar.GetMissionXPMultiplier(tuningTable, mission.GetLootLevel(avatar));
         }
 
         private bool InitializeCooldownData(WorldEntity sourceEntity, Mission mission = null)
@@ -439,6 +472,24 @@ namespace MHServerEmu.Games.Loot
 
                 CreditsMult += properties[PropertyEnum.LootBonusCreditsPct];
                 CreditsFlat += Avatar.GetFlatCreditsBonus(properties);
+
+                ApplyCurrencyProperties(properties);
+            }
+
+            public void ApplyCurrencyProperties(PropertyCollection properties)
+            {
+                foreach (PrototypeId currencyProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CurrencyPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    CurrencyPrototype currencyProto = currencyProtoRef.As<CurrencyPrototype>();
+                    if (currencyProto == null)
+                    {
+                        Logger.Warn("ApplyCurrencyProperties(): currencyProto == null");
+                        continue;
+                    }
+
+                    CurrencyMultDict[currencyProtoRef] += Avatar.GetStackingCurrencyBonusPct(properties, currencyProto);
+                    CurrencyFlatDict[currencyProtoRef] += Avatar.GetStackingFlatCurrencyBonus(properties, currencyProto);
+                }
             }
 
             public readonly float GetCurrencyMult(PrototypeId currencyProtoRef)

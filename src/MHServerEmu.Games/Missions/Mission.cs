@@ -12,6 +12,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
@@ -1726,6 +1727,30 @@ namespace MHServerEmu.Games.Missions
             return 0.0f;
         }
 
+        public float GetContributionRewardMultiplier(Player player)
+        {
+            if (IsOpenMission)
+            {
+                float contributionTotal = 0f;
+                foreach (var kvp in _contributors)
+                    contributionTotal += kvp.Value;
+
+                if (player == null || _contributors.TryGetValue(player.DatabaseUniqueId, out float playerContribution) == false)
+                    playerContribution = 0f;
+
+                float contributionPercentage = contributionTotal > 0f ? playerContribution / contributionTotal : 1f;
+
+                Curve openMissionContributionReward = GameDatabase.MissionGlobalsPrototype.OpenMissionContributionReward.AsCurve();
+                if (openMissionContributionReward == null) return Logger.WarnReturn(0f, "GetContributionRewardMultiplier(): openMissionContributionReward == null");
+
+                float contributionRewardMultiplier = openMissionContributionReward.GetAt((int)(contributionPercentage * 100f));
+                return Math.Max(contributionRewardMultiplier, 0f);
+            }
+
+            // Contribution affects only open mission rewards.
+            return 1f;
+        }
+
         public bool GetMissionHotspots(List<Hotspot> outHotspots)
         {
             outHotspots.Clear();
@@ -2324,7 +2349,7 @@ namespace MHServerEmu.Games.Missions
             return lootSummary.HasAnyResult;
         }
 
-        private int GetLootLevel(Avatar avatar)
+        public int GetLootLevel(Avatar avatar)
         {
             if (avatar != null)
                 return avatar.CharacterLevel;

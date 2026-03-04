@@ -4712,6 +4712,29 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         // Experience
 
+        public float GetMissionXPMultiplier(TuningTable tuningTable, int level)
+        {
+            if (IsInWorld == false)
+                return 0f;
+
+            TuningPrototype tuningProto = tuningTable.Prototype;
+            if (tuningProto == null) return Logger.WarnReturn(0f, "GetMissionXPMultiplier(): tuningProto == null");
+
+            Curve pctXPFromLevelDeltaCurve = GameDatabase.AdvancementGlobalsPrototype.PctXPFromLevelDeltaCurve.AsCurve();
+            if (pctXPFromLevelDeltaCurve == null) return Logger.WarnReturn(0f, "GetMissionXPMultiplier(): pctXPFromLevelDeltaCurve == null");
+
+            Curve playerXPByDifficultyIndex = tuningProto.PlayerXPByDifficultyIndexCurve.AsCurve();
+            if (playerXPByDifficultyIndex == null) return Logger.WarnReturn(0f, "GetMissionXPMultiplier(): playerXPByDifficultyIndex == null");
+
+            float multiplier = pctXPFromLevelDeltaCurve.GetAt(level - CharacterLevel);
+            multiplier *= tuningProto.PctXPMultiplier;
+            multiplier *= playerXPByDifficultyIndex.GetAt(tuningTable.DifficultyIndex);
+            multiplier *= GetAvatarXPMultiplier();
+            multiplier *= GetPartyXPMultiplier(tuningProto);
+            multiplier *= GetLiveTuningXPMultiplier();
+            return multiplier;
+        }
+
         public float GetAvatarXPMultiplier()
         {
             float multiplier = 1f;
@@ -4942,6 +4965,58 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return multiplier;
+        }
+
+        // Currency
+
+        public static float GetStackingCurrencyBonusPct(PropertyCollection properties, CurrencyPrototype currencyProto)
+        {
+            float stackingCurrencyBonusPct = 0f;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusCurrencyStackCount, currencyProto.DataRef))
+                stackingCurrencyBonusPct += GetStackingCurrencyBonusPct(currencyProto, kvp.Value);
+
+            return stackingCurrencyBonusPct;
+        }
+
+        private static float GetStackingCurrencyBonusPct(CurrencyPrototype currencyProto, int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0f;
+
+            CurveId curveRef = currencyProto.LootBonusPctCurve;
+            if (curveRef == CurveId.Invalid)
+                return 0;
+
+            Curve curve = curveRef.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0, "GetStackingCurrencyBonusPct(): curve == null");
+
+            return curve.GetAt(stackCount);
+        }
+
+        public static int GetStackingFlatCurrencyBonus(PropertyCollection properties, CurrencyPrototype currencyProto)
+        {
+            int stackingFlatCurrencyBonus = 0;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusCurrencyStackCount, currencyProto.DataRef))
+                stackingFlatCurrencyBonus += GetStackingFlatCurrencyBonus(currencyProto, kvp.Value);
+
+            return stackingFlatCurrencyBonus;
+        }
+
+        private static int GetStackingFlatCurrencyBonus(CurrencyPrototype currencyProto, int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0;
+
+            CurveId curveRef = currencyProto.LootBonusFlatCurve;
+            if (curveRef == CurveId.Invalid)
+                return 0;
+
+            Curve curve = curveRef.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0, "GetStackingFlatCurrencyBonus(): curve == null");
+
+            return curve.GetIntAt(stackCount);
         }
 
         // Orb Aggro Range
