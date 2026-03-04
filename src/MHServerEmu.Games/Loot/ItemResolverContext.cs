@@ -248,9 +248,10 @@ namespace MHServerEmu.Games.Loot
             {
                 if (Player == null) return Logger.WarnReturn(false, "InitializeLootBonusData(): Player == null");
 
-                // TODO: reduce by contribution multiplier for open missions
+                float contributionRewardMultiplier = mission != null ? mission.GetContributionRewardMultiplier(Player) : 1f;
 
-                _lootBonusData.XPMult = CalculateMissionXPMult(mission);
+                _lootBonusData.XPMult = CalculateMissionXPMult(mission) * contributionRewardMultiplier;
+                _lootBonusData.CreditsMult = contributionRewardMultiplier;
             }
 
             return true;
