@@ -55,7 +55,12 @@ namespace MHServerEmu.Games.Regions
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
 
         public bool IsDynamicArea { get => PrototypeDataRef == GameDatabase.GlobalsPrototype.DynamicArea; }
-        public IEnumerable<Entity> Entities { get => Game.EntityManager.IterateEntities(this); }
+        private readonly HashSet<WorldEntity> _worldEntities = new();
+
+        public IEnumerable<Entity> Entities { get => _worldEntities; }
+
+        internal void AddWorldEntity(WorldEntity entity) => _worldEntities.Add(entity);
+        internal void RemoveWorldEntity(WorldEntity entity) => _worldEntities.Remove(entity);
         public PrototypeId PopulationRef { get; private set; }
         public PopulationArea PopulationArea { get; private set; }
         public int AreaLevel { get; private set; }

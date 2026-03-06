@@ -423,23 +423,17 @@ namespace MHServerEmu.Games.Entities
 
         public IEnumerable<Entity> IterateEntities(Area area)
         {
-            foreach (var entity in _entityDict.Values)
-                if (entity is WorldEntity worldEntity && worldEntity.Area == area)
-                    yield return entity;
+            return area.Entities;
         }
 
         public IEnumerable<Entity> IterateEntities(Cell cell)
         {
-            foreach (var entity in _entityDict.Values)
-                if (entity is WorldEntity worldEntity && worldEntity.Cell == cell)
-                    yield return entity;
+            return cell.Entities;
         }
 
         public IEnumerable<Entity> IterateEntities(Region region)
         {
-            foreach (var entity in _entityDict.Values)
-                if (entity is WorldEntity worldEntity && worldEntity.Region == region)
-                    yield return entity;
+            return region.Entities;
         }
 
         public void PhysicsResolveEntities()

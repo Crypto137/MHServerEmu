@@ -115,7 +115,12 @@ namespace MHServerEmu.Games.Regions
 
         public Dictionary<uint, Area> Areas { get; } = new();
         public CellSpatialPartition.ElementIterator<Aabb> Cells { get => IterateCellsInVolume(Aabb); }
-        public IEnumerable<Entity> Entities { get => Game.EntityManager.IterateEntities(this); }
+        private readonly HashSet<WorldEntity> _worldEntities = new();
+
+        public IEnumerable<Entity> Entities { get => _worldEntities; }
+
+        internal void AddWorldEntity(WorldEntity entity) => _worldEntities.Add(entity);
+        internal void RemoveWorldEntity(WorldEntity entity) => _worldEntities.Remove(entity);
 
         // ArchiveData
         public ReplicatedPropertyCollection Properties { get; } = new();

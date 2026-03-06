@@ -53,7 +53,12 @@ namespace MHServerEmu.Games.Regions
         public Region Region { get => Area?.Region; }
         public Area Area { get; private set; }
         public Game Game { get => Area?.Game; }
-        public IEnumerable<Entity> Entities { get => Game.EntityManager.IterateEntities(this); } // TODO: Optimize
+        private readonly HashSet<WorldEntity> _worldEntities = new();
+
+        public IEnumerable<Entity> Entities { get => _worldEntities; }
+
+        internal void AddWorldEntity(WorldEntity entity) => _worldEntities.Add(entity);
+        internal void RemoveWorldEntity(WorldEntity entity) => _worldEntities.Remove(entity);
 
         public List<uint> CellConnections = new();
         public List<ReservedSpawn> Encounters { get; } = new();

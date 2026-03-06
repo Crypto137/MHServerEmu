@@ -3741,6 +3741,9 @@ namespace MHServerEmu.Games.Entities
             Cell oldCell = oldLocation.Cell;
             Cell newCell = newLocation.Cell;
 
+            oldCell?.RemoveWorldEntity(this);
+            newCell?.AddWorldEntity(this);
+
             if (newCell != null)
                 Properties[PropertyEnum.MapCellId] = newCell.Id;
 
@@ -3756,6 +3759,9 @@ namespace MHServerEmu.Games.Entities
             Area oldArea = oldLocation.Area;
             Area newArea = newLocation.Area;
             if (oldArea == newArea) return;
+
+            oldArea?.RemoveWorldEntity(this);
+            newArea?.AddWorldEntity(this);
 
             oldArea?.Region.EntityLeftAreaEvent.Invoke(new(this, oldArea));
 
@@ -3778,6 +3784,9 @@ namespace MHServerEmu.Games.Entities
         {
             if (oldRegion == newRegion)
                 return;
+
+            oldRegion?.RemoveWorldEntity(this);
+            newRegion?.AddWorldEntity(this);
 
             if (newRegion != null)
                 ApplyLootTableSourceOverrides(newRegion);
