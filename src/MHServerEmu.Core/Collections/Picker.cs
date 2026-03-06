@@ -16,7 +16,9 @@ namespace MHServerEmu.Core.Collections
 
         private GRandom _random;
         private WeightMode _weightMode;
-        private int _weights;        
+        private int _weights;
+        private int[] _prefixSums = Array.Empty<int>();
+        private bool _prefixSumsDirty = false;
 
         public Picker()
         {
@@ -49,6 +51,7 @@ namespace MHServerEmu.Core.Collections
             _random = random;
             _weightMode = WeightMode.Invalid;
             _weights = 0;
+            _prefixSumsDirty = false;
         }
 
         public void Add(T element)
@@ -60,6 +63,7 @@ namespace MHServerEmu.Core.Collections
             {
                 _elements.Add(new WeightedElement(element, 1));
                 _weights += 1;
+                _prefixSumsDirty = true;
             }
         }
 
@@ -72,6 +76,7 @@ namespace MHServerEmu.Core.Collections
             {
                 _elements.Add(new WeightedElement(element, weight));
                 _weights += weight;
+                _prefixSumsDirty = true;
             }
         }
 
@@ -86,18 +91,38 @@ namespace MHServerEmu.Core.Collections
 
         public int GetRandomIndexWeighted()
         {
-            int r = _random.Next(1, _weights + 1);
-            int sum = 0;
-            int index = 0;
+            if (_prefixSumsDirty || _prefixSums.Length != _elements.Count)
+                RebuildPrefixSums();
 
-            foreach (var element in _elements)
+            int r = _random.Next(1, _weights + 1);
+
+            // Binary search for the leftmost index where prefixSum >= r
+            int lo = 0, hi = _elements.Count - 1;
+            while (lo < hi)
             {
-                sum += element.Weight;
-                if (sum >= r) break;
-                index++;
+                int mid = lo + ((hi - lo) >> 1);
+                if (_prefixSums[mid] < r)
+                    lo = mid + 1;
+                else
+                    hi = mid;
             }
 
-            return index;
+            return lo;
+        }
+
+        private void RebuildPrefixSums()
+        {
+            if (_prefixSums.Length != _elements.Count)
+                Array.Resize(ref _prefixSums, _elements.Count);
+
+            int running = 0;
+            for (int i = 0; i < _elements.Count; i++)
+            {
+                running += _elements[i].Weight;
+                _prefixSums[i] = running;
+            }
+
+            _prefixSumsDirty = false;
         }
 
         public bool GetElementAt(int index, out T element)
@@ -158,6 +183,7 @@ namespace MHServerEmu.Core.Collections
 
             element = _elements[index].Element;
             _weights -= _elements[index].Weight;
+            _prefixSumsDirty = true;
 
             _elements[index] = _elements[_elements.Count - 1];
             _elements.RemoveAt(_elements.Count - 1);
@@ -172,8 +198,9 @@ namespace MHServerEmu.Core.Collections
             if (index >= 0 && index < _elements.Count)
             {
                 _weights -= _elements[index].Weight;
+                _prefixSumsDirty = true;
                 _elements.RemoveAt(index);
-                
+
                 return true;
             }
 
@@ -184,6 +211,7 @@ namespace MHServerEmu.Core.Collections
         {
             _elements.Clear();
             _weights = 0;
+            _prefixSumsDirty = false;
         }
 
         private readonly struct WeightedElement(T element, int weight)
