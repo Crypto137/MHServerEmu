@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Memory;
+﻿#nullable enable
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 
 namespace MHServerEmu.Core.Collections
@@ -12,22 +13,18 @@ namespace MHServerEmu.Core.Collections
             UnWeighted
         }
 
-        private readonly List<WeightedElement> _elements;
+        private readonly List<WeightedElement> _elements = new();
 
-        private GRandom _random;
+        private GRandom? _random;
         private WeightMode _weightMode;
         private int _weights;
 
         public bool IsInPool { get; set; }
 
-        public Picker()
-        {
-            _elements = new();
-        }
+        public Picker() { }   // For use by ObjectPoolManager; use Create(GRandom) for normal instantiation
 
         public Picker(GRandom random)
         {
-            _elements = new();
             _random = random;
             _weightMode = WeightMode.Invalid;
             _weights = 0;
@@ -52,15 +49,19 @@ namespace MHServerEmu.Core.Collections
         {
             var picker = ObjectPoolManager.Instance.Get<Picker<T>>();
             picker._random = random;
+            picker._weightMode = WeightMode.Invalid;
+            picker._weights = 0;
+            // _elements.Clear() was already called by ResetForPool(), but call it defensively
+            picker._elements.Clear();
             return picker;
         }
 
         public void ResetForPool()
         {
             _elements.Clear();
-            _weights = 0;
+            _weights = default;
             _weightMode = WeightMode.Invalid;
-            _random = null;
+            _random = default;
         }
 
         public void Dispose()
@@ -209,6 +210,7 @@ namespace MHServerEmu.Core.Collections
         {
             _elements.Clear();
             _weights = 0;
+            _weightMode = WeightMode.Invalid;
         }
 
         private readonly struct WeightedElement(T element, int weight)
