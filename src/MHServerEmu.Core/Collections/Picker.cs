@@ -54,7 +54,7 @@ namespace MHServerEmu.Core.Collections
             _random = random;
             _weightMode = WeightMode.Invalid;
             _weights = 0;
-            _prefixSumsDirty = false;
+            _prefixSumsDirty = true;
         }
 
         public void Add(T element)
@@ -94,7 +94,7 @@ namespace MHServerEmu.Core.Collections
 
         public int GetRandomIndexWeighted()
         {
-            if (_prefixSumsDirty || _prefixSums.Length != _elements.Count)
+            if (_prefixSumsDirty)
                 RebuildPrefixSums();
 
             int r = _random.Next(1, _weights + 1);
@@ -214,7 +214,7 @@ namespace MHServerEmu.Core.Collections
         {
             _elements.Clear();
             _weights = 0;
-            _prefixSumsDirty = false;
+            _prefixSumsDirty = true;
         }
 
         private readonly struct WeightedElement(T element, int weight)

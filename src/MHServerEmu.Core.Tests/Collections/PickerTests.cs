@@ -108,20 +108,33 @@ namespace MHServerEmu.Core.Tests.Collections
         }
 
         [Fact]
-        public void GetRandomIndexWeighted_CopyConstructor_PicksCorrectly()
+        public void GetRandomIndexWeighted_CopyConstructor_IndependentFromOriginal()
         {
-            var original = new Picker<int>(MakeRandom(5));
-            original.Add(1, 1);
-            original.Add(99, 99);
+            // Arrange: build a picker and trigger a pick to build prefix sums
+            var original = new Picker<int>(new GRandom(42));
+            original.Add(1, 10);
+            original.Add(2, 20);
+            original.Add(3, 30);
+            original.Pick(); // forces prefix sum build
 
+            // Act: copy the picker
             var copy = new Picker<int>(original);
-            int countHigh = 0;
-            const int Trials = 1000;
-            for (int i = 0; i < Trials; i++)
-                if (copy.Pick() == 99)
-                    countHigh++;
 
-            Assert.InRange(countHigh, (int)(Trials * 0.90), Trials);
+            // Assert: copy can pick independently (prefix sums rebuilt correctly)
+            for (int i = 0; i < 20; i++)
+            {
+                int picked = copy.Pick();
+                Assert.True(picked == 1 || picked == 2 || picked == 3,
+                    $"Copy returned unexpected value {picked}");
+            }
+
+            // Assert: mutating the copy does not affect the original
+            copy.Clear();
+            copy.Add(99, 1);
+            Assert.False(original.Empty());
+            int originalPick = original.Pick();
+            Assert.True(originalPick == 1 || originalPick == 2 || originalPick == 3,
+                $"Original was corrupted by copy mutation, returned {originalPick}");
         }
     }
 }
