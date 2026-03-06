@@ -15,6 +15,8 @@ namespace MHServerEmu.Grouping
         public GroupingManagerConfig Config { get; }
 
         public GameServiceState State { get; private set; } = GameServiceState.Created;
+        public ManualResetEventSlim StartedSignal { get; } = new(false);
+        public ManualResetEventSlim StoppedSignal { get; } = new(false);
 
         public GroupingManagerService()
         {
@@ -36,6 +38,7 @@ namespace MHServerEmu.Grouping
             ChatTipManager.Initialize();
 
             State = GameServiceState.Running;
+            StartedSignal.Set();
             while (State == GameServiceState.Running)
             {
                 _serviceMailbox.ProcessMessages();
@@ -49,6 +52,7 @@ namespace MHServerEmu.Grouping
         public void Shutdown()
         {
             State = GameServiceState.Shutdown;
+            StoppedSignal.Set();
         }
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage

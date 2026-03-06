@@ -23,6 +23,8 @@ namespace MHServerEmu.WebFrontend
         private List<string> _dashboardEndpoints;
 
         public GameServiceState State { get; private set; } = GameServiceState.Created;
+        public ManualResetEventSlim StartedSignal { get; } = new(false);
+        public ManualResetEventSlim StoppedSignal { get; } = new(false);
 
         /// <summary>
         /// Constructs a new <see cref="WebFrontendService"/> instance.
@@ -69,6 +71,7 @@ namespace MHServerEmu.WebFrontend
         {
             _webService.Start();
             State = GameServiceState.Running;
+            StartedSignal.Set();
 
             while (_webService.IsRunning)
             {
@@ -77,6 +80,7 @@ namespace MHServerEmu.WebFrontend
             }
 
             State = GameServiceState.Shutdown;
+            StoppedSignal.Set();
         }
 
         /// <summary>

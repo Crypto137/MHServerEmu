@@ -175,8 +175,7 @@ namespace MHServerEmu.Core.Network
                 _serviceThreads[i] = new(_services[i].Run) { Name = $"Service [{serviceType}]", IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
                 _serviceThreads[i].Start();
 
-                while (service.State != GameServiceState.Running)
-                    Thread.Sleep(1);
+                service.StartedSignal.Wait();
 
                 Logger.Info($"Service for type [{serviceType}] started");                
             }
@@ -220,8 +219,7 @@ namespace MHServerEmu.Core.Network
 
                 _services[i].Shutdown();
 
-                while (service.State != GameServiceState.Shutdown)
-                    Thread.Sleep(1);
+                service.StoppedSignal.Wait();
 
                 _serviceThreads[i] = null;
 

@@ -22,6 +22,8 @@ namespace MHServerEmu.Leaderboards
         private bool _isEnabled;
 
         public GameServiceState State { get; private set; } = GameServiceState.Created;
+        public ManualResetEventSlim StartedSignal { get; } = new(false);
+        public ManualResetEventSlim StoppedSignal { get; } = new(false);
 
         #region IGameService Implementation
 
@@ -35,12 +37,14 @@ namespace MHServerEmu.Leaderboards
             if (_isEnabled == false)
             {
                 State = GameServiceState.Running;
+                StartedSignal.Set();
                 return;
             }
 
             _database.Initialize(SQLiteLeaderboardDBManager.Instance);
 
             State = GameServiceState.Running;
+            StartedSignal.Set();
 
             while (State == GameServiceState.Running)
             {
@@ -57,9 +61,10 @@ namespace MHServerEmu.Leaderboards
             }
 
             State = GameServiceState.Shutdown;
+            StoppedSignal.Set();
         }
 
-        public void Shutdown() 
+        public void Shutdown()
         {
             if (_isEnabled)
             {
@@ -69,6 +74,7 @@ namespace MHServerEmu.Leaderboards
             else
             {
                 State = GameServiceState.Shutdown;
+                StoppedSignal.Set();
             }
         }
 

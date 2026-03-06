@@ -7,6 +7,12 @@
     {
         public GameServiceState State { get; }
 
+        /// <summary>Set when this service reaches <see cref="GameServiceState.Running"/>.</summary>
+        public ManualResetEventSlim StartedSignal { get; }
+
+        /// <summary>Set when this service reaches <see cref="GameServiceState.Shutdown"/>.</summary>
+        public ManualResetEventSlim StoppedSignal { get; }
+
         /// <summary>
         /// Starts this <see cref="IGameService"/> instance.
         /// </summary>

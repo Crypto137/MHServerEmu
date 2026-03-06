@@ -15,6 +15,8 @@ namespace MHServerEmu.Frontend
         private readonly HashSet<FrontendClient> _clients = new();
 
         public GameServiceState State { get; private set; } = GameServiceState.Created;
+        public ManualResetEventSlim StartedSignal { get; } = new(false);
+        public ManualResetEventSlim StoppedSignal { get; } = new(false);
 
         #region IGameService Implementation
 
@@ -34,12 +36,14 @@ namespace MHServerEmu.Frontend
             
             Logger.Info($"FrontendServer is listening on {config.BindIP}:{config.Port}...");
             State = GameServiceState.Running;
+            StartedSignal.Set();
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
             State = GameServiceState.Shutdown;
+            StoppedSignal.Set();
         }
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage

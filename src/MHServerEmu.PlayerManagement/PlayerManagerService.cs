@@ -43,6 +43,8 @@ namespace MHServerEmu.PlayerManagement
         public PlayerManagerConfig Config { get; }
 
         public GameServiceState State { get; private set; } = GameServiceState.Created;
+        public ManualResetEventSlim StartedSignal { get; } = new(false);
+        public ManualResetEventSlim StoppedSignal { get; } = new(false);
 
         /// <summary>
         /// Constructs a new <see cref="PlayerManagerService"/> instance.
@@ -78,6 +80,7 @@ namespace MHServerEmu.PlayerManagement
             RegionRequestQueueManager.Initialize();
 
             State = GameServiceState.Running;
+            StartedSignal.Set();
             while (State == GameServiceState.Running)
             {
                 TimeSpan referenceTime = _stopwatch.Elapsed;
@@ -116,6 +119,7 @@ namespace MHServerEmu.PlayerManagement
             }
 
             State = GameServiceState.Shutdown;
+            StoppedSignal.Set();
         }
 
         public void Shutdown()
