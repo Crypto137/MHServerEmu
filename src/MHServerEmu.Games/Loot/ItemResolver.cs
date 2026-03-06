@@ -292,7 +292,7 @@ namespace MHServerEmu.Games.Loot
             if (worldEntityProto.GetCurrency(out PrototypeId currencyRef, out int amount) == false)
                 return LootRollResult.Failure;
 
-            amount = _context.ScaleCurrency(currencyRef, amount * stackCount);
+            amount = _context.ScaleCurrency(currencyRef, amount * stackCount, dropChanceModifiers);
             CurrencySpec currencySpec = new(worldEntityProto.DataRef, currencyRef, amount);
             LootResult lootResult = new(currencySpec);
             _pendingItemList.Add(new(lootResult));

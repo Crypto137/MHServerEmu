@@ -145,8 +145,11 @@ namespace MHServerEmu.Games.Loot
             return (int)scaledAmount;
         }
 
-        public int ScaleCurrency(PrototypeId currencyProtoRef, int amount)
+        public int ScaleCurrency(PrototypeId currencyProtoRef, int amount, LootDropChanceModifiers dropChanceModifiers)
         {
+            if (dropChanceModifiers.HasFlag(LootDropChanceModifiers.IncludeCurrencyBonus) == false)
+                return amount;
+
             float scaledAmount = amount;
             scaledAmount *= _lootBonusData.GetCurrencyMult(currencyProtoRef);
             scaledAmount += _lootBonusData.GetCurrencyFlat(currencyProtoRef);
