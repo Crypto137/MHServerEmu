@@ -1,9 +1,9 @@
-﻿using MHServerEmu.Core.System.Random;
+﻿using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.System.Random;
 
 namespace MHServerEmu.Core.Collections
 {
-    // TODO: IPoolable
-    public class Picker<T>
+    public class Picker<T> : IPoolable, IDisposable
     {
         enum WeightMode
         {
@@ -16,7 +16,9 @@ namespace MHServerEmu.Core.Collections
 
         private GRandom _random;
         private WeightMode _weightMode;
-        private int _weights;        
+        private int _weights;
+
+        public bool IsInPool { get; set; }
 
         public Picker()
         {
@@ -41,6 +43,29 @@ namespace MHServerEmu.Core.Collections
 
             _weightMode = other._weightMode;
             _weights = other._weights;
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Picker{T}"/> from the pool and initializes it with the provided <see cref="GRandom"/> instance.
+        /// </summary>
+        public static Picker<T> Create(GRandom random)
+        {
+            var picker = ObjectPoolManager.Instance.Get<Picker<T>>();
+            picker._random = random;
+            return picker;
+        }
+
+        public void ResetForPool()
+        {
+            _elements.Clear();
+            _weights = 0;
+            _weightMode = WeightMode.Invalid;
+            _random = null;
+        }
+
+        public void Dispose()
+        {
+            ObjectPoolManager.Instance.Return(this);
         }
 
         public void Initialize(GRandom random)
