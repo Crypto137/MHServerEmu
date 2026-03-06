@@ -53,6 +53,7 @@ namespace MHServerEmu.Games.Entities
         private readonly HashSet<ulong> _entitiesPendingCondemnedPowerDeletion = new();
 
         private readonly LinkedList<ulong> _entitiesPendingDestruction = new();
+        private readonly Dictionary<ulong, LinkedListNode<ulong>> _pendingDestructionNodeDict = new();
 
         public Event<DestroyEntityEvent> DestroyEntityEvent = new();
 
@@ -313,7 +314,9 @@ namespace MHServerEmu.Games.Entities
             entity.SetStatus(EntityStatus.Destroyed, true);
 
             // Enqueue entity for deletion at the end of the frame
-            _entitiesPendingDestruction.AddLast(GetDestroyListNode(entity.Id));    
+            LinkedListNode<ulong> destroyNode = GetDestroyListNode(entity.Id);
+            _entitiesPendingDestruction.AddLast(destroyNode);
+            _pendingDestructionNodeDict[entity.Id] = destroyNode;
 
             // Remove entity from the game
             entity.ExitGame();
@@ -543,6 +546,7 @@ namespace MHServerEmu.Games.Entities
             {
                 LinkedListNode<ulong> deleteNode = _entitiesPendingDestruction.First;
                 ulong entityId = deleteNode.Value;
+                _pendingDestructionNodeDict.Remove(entityId);
 
                 if (_entityDict.TryGetValue(entityId, out Entity entity))
                     DeleteEntity(entity);
@@ -560,11 +564,10 @@ namespace MHServerEmu.Games.Entities
         {
             if (destroyedEntity == null) return Logger.WarnReturn(false, "ProcessPendingDestroyImmediate(): destroyedEntity == null");
 
-            LinkedListNode<ulong> destroyNode = _entitiesPendingDestruction.Find(destroyedEntity.Id);
-            if (destroyNode == null)
+            if (_pendingDestructionNodeDict.TryGetValue(destroyedEntity.Id, out LinkedListNode<ulong> destroyNode) == false)
                 return Logger.WarnReturn(false, $"ProcessPendingDestroyImmediate(): Entity {destroyedEntity} is not found in the pending destruction list");
 
-            // Delete the entity manually and remove it from the list
+            _pendingDestructionNodeDict.Remove(destroyedEntity.Id);
             DeleteEntity(destroyedEntity);
             _entitiesPendingDestruction.Remove(destroyNode);
             ReturnDestroyListNode(destroyNode);
