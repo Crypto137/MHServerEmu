@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
@@ -479,29 +480,25 @@ namespace MHServerEmu.Games.Regions
              do
              {
                  found = false;*/
-            foreach (var entity in Entities)
+            foreach (var entity in _worldEntities.ToArray())
             {
-                if (entity is WorldEntity worldEntity)
+                if (entity.IsDestroyed == false || entity.IsInWorld)
                 {
-                    if (worldEntity.GetRootOwner() is not Player)
+                    if (entity.GetRootOwner() is not Player)
                     {
-                        if (worldEntity.IsDestroyed == false)
-                        {
-                            worldEntity.Destroy();
-                            //found = true;
-                        }
+                        if (entity.IsDestroyed == false)
+                            entity.Destroy();
                     }
                     else
                     {
-                        if (worldEntity.IsInWorld)
-                        {
-                            worldEntity.ExitWorld();
-                            // found = true;
-                        }
+                        if (entity.IsInWorld)
+                            entity.ExitWorld();
                     }
                 }
             }
             // } while (found && (tries-- > 0)); // TODO: For what 100 tries?
+
+            _worldEntities.Clear();
 
             if (Game != null)
                 MissionManager?.Shutdown(this);
