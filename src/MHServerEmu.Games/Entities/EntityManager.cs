@@ -567,10 +567,10 @@ namespace MHServerEmu.Games.Entities
             if (_pendingDestructionNodeDict.TryGetValue(destroyedEntity.Id, out LinkedListNode<ulong> destroyNode) == false)
                 return Logger.WarnReturn(false, $"ProcessPendingDestroyImmediate(): Entity {destroyedEntity} is not found in the pending destruction list");
 
-            _pendingDestructionNodeDict.Remove(destroyedEntity.Id);
-            DeleteEntity(destroyedEntity);
             _entitiesPendingDestruction.Remove(destroyNode);
+            _pendingDestructionNodeDict.Remove(destroyedEntity.Id);
             ReturnDestroyListNode(destroyNode);
+            DeleteEntity(destroyedEntity);
 
             return true;
         }
