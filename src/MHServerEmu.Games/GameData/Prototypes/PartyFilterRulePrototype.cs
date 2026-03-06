@@ -91,8 +91,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if ((++numMatches) == NumberRequired && AllowOutsiders && AllUniqueAvatars == false)
                         return true;
                 }
-                else if (i == playerIndex || AllowOutsiders == false)
+                else if (/*i == playerIndex ||*/ AllowOutsiders == false)
                 {
+                    // NOTE: the player index check that is here client-side makes no sense, and
+                    // it can break party achievements when the player goes before other party members.
                     return false;
                 }
                 else if ((--matches) < NumberRequired)
