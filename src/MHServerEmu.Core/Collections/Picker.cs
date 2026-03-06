@@ -43,6 +43,9 @@ namespace MHServerEmu.Core.Collections
 
             _weightMode = other._weightMode;
             _weights = other._weights;
+
+            // _prefixSums is NOT copied — mark dirty so the first pick rebuilds it.
+            _prefixSumsDirty = true;
         }
 
         public void Initialize(GRandom random)

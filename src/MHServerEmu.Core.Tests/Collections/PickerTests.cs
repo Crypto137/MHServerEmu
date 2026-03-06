@@ -82,5 +82,46 @@ namespace MHServerEmu.Core.Tests.Collections
             for (int i = 0; i < 100; i++)
                 Assert.Equal(1, picker.Pick());
         }
+
+        [Fact]
+        public void GetRandomIndexWeighted_AfterClearAndReAdd_PicksCorrectly()
+        {
+            var picker = new Picker<int>(MakeRandom(3));
+            picker.Add(1, 50);
+            picker.Add(2, 50);
+            picker.Clear();
+            Assert.True(picker.Empty());
+
+            picker.Add(7, 100);
+            for (int i = 0; i < 50; i++)
+                Assert.Equal(7, picker.Pick());
+        }
+
+        [Fact]
+        public void GetRandomIndexWeighted_AfterInitialize_PicksCorrectly()
+        {
+            var picker = new Picker<int>();
+            picker.Initialize(MakeRandom(4));
+            picker.Add(42, 100);
+            for (int i = 0; i < 50; i++)
+                Assert.Equal(42, picker.Pick());
+        }
+
+        [Fact]
+        public void GetRandomIndexWeighted_CopyConstructor_PicksCorrectly()
+        {
+            var original = new Picker<int>(MakeRandom(5));
+            original.Add(1, 1);
+            original.Add(99, 99);
+
+            var copy = new Picker<int>(original);
+            int countHigh = 0;
+            const int Trials = 1000;
+            for (int i = 0; i < Trials; i++)
+                if (copy.Pick() == 99)
+                    countHigh++;
+
+            Assert.InRange(countHigh, (int)(Trials * 0.90), Trials);
+        }
     }
 }
