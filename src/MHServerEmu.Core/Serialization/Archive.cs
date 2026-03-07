@@ -19,23 +19,14 @@ namespace MHServerEmu.Core.Serialization
         Disk = 4            // Server <-> File
     }
 
-    // We are most likely not going to have as much versioning as the original game,
-    // so we will use ArchiveVersion for all archive versioning. At some point when
-    // things get more stable we may want to clear this and force a wipe of everything.
     public enum ArchiveVersion : uint
     {
         Invalid = 0,
-        Initial = 1,
-        AddedMissions = 2,
-        AddedVendorPurchaseData = 3,
-        ImplementedConditionPersistence = 4,
-        ImplementedLoginRewards = 5,
-        ImplementedMapDiscoveryDataPersistence = 6,
-        AddedRegionProtoRefToMapDiscoveryData = 7,
-        AddedUltimatePrestigeLevel = 8,
+        // Versions 1-8 were used in the 0.x branch, so we start at 9 here.
+        Initial = 9,
 
         // Update the current version if you add any    <---------
-        Current = AddedUltimatePrestigeLevel
+        Current = Initial
     }
 
     /// <summary>
@@ -702,7 +693,7 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         private bool StartSizeChecking(ref long startPosition, ref uint size)
         {
-            if (IsPersistent == false || Version < ArchiveVersion.AddedMissions)
+            if (IsPersistent == false)
                 return true;
 
             // NOTE: COS/CIS are buffered, so we need to use their position, and not the one from the underlying stream.
@@ -728,7 +719,7 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         private bool EndSizeChecking(ref long startPosition, ref uint size, bool skip)
         {
-            if (IsPersistent == false || Version < ArchiveVersion.AddedMissions)
+            if (IsPersistent == false)
                 return true;
 
             if (IsPacking)

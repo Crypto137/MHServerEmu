@@ -219,8 +219,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Custom data
             if (archive.IsPersistent)
             {
-                if (archive.Version >= ArchiveVersion.AddedUltimatePrestigeLevel)
-                    success &= Serializer.Transfer(archive, ref _ultimatePrestigeLevel);
+                success &= Serializer.Transfer(archive, ref _ultimatePrestigeLevel);
             }
 
             return success;

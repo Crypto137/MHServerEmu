@@ -41,9 +41,7 @@ namespace MHServerEmu.Games.Regions.Maps
             bool success = true;
 
             success &= Serializer.Transfer(archive, ref _regionId);
-
-            if (archive.Version >= ArchiveVersion.AddedRegionProtoRefToMapDiscoveryData)
-                success &= Serializer.Transfer(archive, ref _regionProtoRef);
+            success &= Serializer.Transfer(archive, ref _regionProtoRef);
 
             success &= Serializer.Transfer(archive, ref _accessTimestamp);
             success &= Serializer.Transfer(archive, ref _discoveredEntities);
