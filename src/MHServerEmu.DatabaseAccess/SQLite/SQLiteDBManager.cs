@@ -13,7 +13,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
     /// </summary>
     public class SQLiteDBManager : IDBManager
     {
-        private const int CurrentSchemaVersion = 5;         // Increment this when making changes to the database schema
+        private const int CurrentSchemaVersion = 6;         // Increment this when making changes to the database schema
+        private const int MinimumSchemaVersion = 6;         // Used to ignore legacy 0.x database files.
         private const int NumTestAccounts = 5;              // Number of test accounts to create for new database files
         private const int NumPlayerDataWriteAttempts = 3;   // Number of write attempts to do when saving player data
 
@@ -396,6 +397,18 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             int schemaVersion = GetSchemaVersion(connection);
             if (schemaVersion > CurrentSchemaVersion)
                 return Logger.ErrorReturn(false, $"Initialize(): Existing database file uses unsupported schema version {schemaVersion} (current = {CurrentSchemaVersion})");
+
+            if (schemaVersion < MinimumSchemaVersion)
+            {
+                Logger.Warn($"Found existing database file with legacy schema version {schemaVersion}, which is not supported by this version of MHServerEmu");
+                
+                // Need to dispose the connection before moving the database file so that the file is not in use.
+                connection.Dispose();
+                File.Move(_dbFilePath, $"{_dbFilePath}.old");
+                
+                InitializeDatabaseFile();
+                return true;
+            }
 
             Logger.Info($"Found existing database file with schema version {schemaVersion} (current = {CurrentSchemaVersion})");
 

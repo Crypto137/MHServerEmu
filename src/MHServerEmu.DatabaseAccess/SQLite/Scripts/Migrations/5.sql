@@ -1,0 +1,1 @@
+﻿-- Empty version, this is used only to prevent 0.x database files from being loaded in 1.x+.
