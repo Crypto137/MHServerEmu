@@ -771,9 +771,9 @@ namespace MHServerEmu.Games.Properties
 
             if (archive.IsPacking)
             {
-                // NOTE: PropertyCollection::serializeWithDefault() does a weird thing where it manipulates the archive buffer directly.
-                // First it allocates 4 bytes for the number of properties, than it writes all the properties, and then it goes back
-                // and updates the number.
+                // NOTE: PropertyCollection::serializeWithDefault() manipulates the archive buffer directly.
+                // It allocates 4 bytes for the number of properties, writes all the properties, and then
+                // it goes back and updates the number.
 
                 // Remember current offset and reserve 4 bytes
                 long numPropertiesOffset = archive.CurrentOffset;
@@ -785,7 +785,7 @@ namespace MHServerEmu.Games.Properties
                     success &= SerializePropertyForPacking(kvp, ref numProperties, archive, defaultCollection);
 
                 // Write the number of serialized properties to the reserved bytes
-                archive.WriteUnencodedStream(numProperties, numPropertiesOffset);                    
+                archive.WriteUnencodedStream(numProperties, numPropertiesOffset);
             }
             else
             {

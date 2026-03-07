@@ -29,6 +29,22 @@ namespace MHServerEmu.Core.Serialization
         Current = Initial
     }
 
+    public enum GameBuildNumber : uint
+    {
+        Invalid = 0,
+
+        // Changelist is the most consistent single number we have to identify different builds of the game, so use it for persistent archives.
+        // Add more changelist numbers here for any other versions of the game we are going to support.
+        _1_10_0_69   = 324,
+        _1_10_0_643  = 16688,
+        _1_48_0_1618 = 380454,
+        _1_48_0_1712 = 391562,
+        _1_52_0_1700 = 479899,
+        _1_53_0_203  = 493640,
+
+        Current = _1_52_0_1700
+    }
+
     /// <summary>
     /// An implementation of the custom Gazillion serialization archive format.
     /// </summary>
@@ -201,8 +217,14 @@ namespace MHServerEmu.Core.Serialization
 
             if (IsPersistent)
             {
+                // Write archive size placeholder that will be updated via UpdateSizeInArchive() when other data is written.
+                WriteUnencodedStream(0u);
+
                 uint version = (uint)Version;
                 success &= Transfer(ref version);
+
+                uint gameBuildNumber = (uint)GameBuildNumber.Current;
+                success &= Transfer(ref gameBuildNumber);
             }
             else if (IsReplication)
             {
@@ -222,9 +244,24 @@ namespace MHServerEmu.Core.Serialization
 
             if (IsPersistent)
             {
+                uint sizeUsed = 0;
+                success &= ReadUnencodedStream(ref sizeUsed);
+
+                if (sizeUsed != _buffer.Length)
+                {
+                    SetError("Buffer size mismatch!");
+                    return false;
+                }
+
                 uint version = 0;
                 success &= Transfer(ref version);
                 Version = (ArchiveVersion)version;
+
+                // For now just log a warning if there is a game build mismatch, in the future we can use this for migration between versions.
+                uint gameBuildNumber = 0;
+                success &= Transfer(ref gameBuildNumber);
+                if (gameBuildNumber != (uint)GameBuildNumber.Current)
+                    Logger.Warn($"Game build number mismatch: expected {(uint)GameBuildNumber.Current}, got {gameBuildNumber}");
             }
             else if (IsReplication)
             {
@@ -624,7 +661,8 @@ namespace MHServerEmu.Core.Serialization
 
             if (IsPacking)
             {
-                return WriteVarint(ioData);
+                WriteVarint(ioData);
+                UpdateSizeInArchive();
             }
             else
             {
@@ -651,7 +689,8 @@ namespace MHServerEmu.Core.Serialization
 
             if (IsPacking)
             {
-                return WriteVarint(ioData);
+                WriteVarint(ioData);
+                UpdateSizeInArchive();
             }
             else
             {
@@ -747,6 +786,40 @@ namespace MHServerEmu.Core.Serialization
             return true;
         }
 
+        private bool UpdateSizeInArchive()
+        {
+            if (IsPersistent == false)
+                return false;
+
+            if (IsPacking == false)
+            {
+                SetError("Cant use on unpack!");
+                return false;
+            }
+
+            Span<uint> sizeToken = GetSizeTokenAtOffset(0);
+            if (sizeToken.Length == 0)
+            {
+                SetError("Error accessing size in the buffer!");
+                return false;
+            }
+
+            sizeToken[0] = (uint)CurrentOffset;
+            return true;
+        }
+
+        private Span<uint> GetSizeTokenAtOffset(uint offset)
+        {
+            if (CurrentOffset < offset + sizeof(uint))
+            {
+                SetError("Failed writing size in use!");
+                return default;
+            }
+
+            Span<byte> sizeToken = new(_buffer.GetBuffer(), (int)offset, sizeof(uint));
+            return MemoryMarshal.Cast<byte, uint>(sizeToken);
+        }
+
         #endregion
 
         #region Stream IO
@@ -758,6 +831,9 @@ namespace MHServerEmu.Core.Serialization
         {
             _cos.WriteRawByte(value);
             _cos.Flush();
+
+            UpdateSizeInArchive();
+
             return true;
         }
 
@@ -788,6 +864,9 @@ namespace MHServerEmu.Core.Serialization
                 _cos.WriteRawByte(@byte);
 
             _cos.Flush();
+
+            UpdateSizeInArchive();
+            
             return true;
         }
 
