@@ -44,7 +44,7 @@ namespace MHServerEmu.Core.Serialization
         [ThreadStatic]
         private static MemoryStream SharedAutoBuffer;
 
-        private readonly MemoryStream _bufferStream;  // MemoryStream replaces AutoBuffer from the original implementation
+        private readonly MemoryStream _buffer;  // MemoryStream replaces StreamAutoBuffer from the original implementation
 
         // C# coded stream implementation is buffered, so we have to use the same stream for the whole archive
         private readonly CodedOutputStream _cos;
@@ -105,12 +105,12 @@ namespace MHServerEmu.Core.Serialization
             InitializeBuffers();
 
             // Reuse the same stream for all packing archives
-            _bufferStream = SharedAutoBuffer;
-            if (_bufferStream.Length > 0)
-                _bufferStream.SetLength(0);
+            _buffer = SharedAutoBuffer;
+            if (_buffer.Length > 0)
+                _buffer.SetLength(0);
 
             // Use reflection hackery to reuse the same buffer for all coded output streams, see ProtobufHelper for details.
-            _cos = ProtobufHelper.CodedOutputStreamEx.CreateInstance(_bufferStream, WriteBuffer);
+            _cos = ProtobufHelper.CodedOutputStreamEx.CreateInstance(_buffer, WriteBuffer);
 
             SerializeType = serializeType;
             ReplicationPolicy = replicationPolicy;
@@ -130,8 +130,8 @@ namespace MHServerEmu.Core.Serialization
 
             InitializeBuffers();
 
-            _bufferStream = new(buffer);
-            _cis = CodedInputStream.CreateInstance(_bufferStream, ReadBuffer);
+            _buffer = new(buffer);
+            _cis = CodedInputStream.CreateInstance(_buffer, ReadBuffer);
 
             SerializeType = serializeType;
             IsPacking = false;
@@ -163,7 +163,7 @@ namespace MHServerEmu.Core.Serialization
 
         public void Dispose()
         {
-            _bufferStream.SetLength(0);
+            _buffer.SetLength(0);
         }
 
         /// <summary>
@@ -174,7 +174,7 @@ namespace MHServerEmu.Core.Serialization
         /// </remarks>
         public MemoryStream AccessAutoBuffer()
         {
-            return _bufferStream;
+            return _buffer;
         }
 
         /// <summary>
@@ -183,12 +183,12 @@ namespace MHServerEmu.Core.Serialization
         public ByteString ToByteString()
         {
             // We use ByteString.Unsafe here to avoid copying data one extra time (Stream -> ByteString instead of Stream -> Buffer -> ByteString).
-            return ByteString.Unsafe.FromBytes(_bufferStream.ToArray());
+            return ByteString.Unsafe.FromBytes(_buffer.ToArray());
         }
 
         public Span<byte> AsSpan()
         {
-            byte[] buffer = _bufferStream.GetBuffer();
+            byte[] buffer = _buffer.GetBuffer();
             return buffer.AsSpan(0, (int)CurrentOffset);
         }
 
@@ -271,7 +271,7 @@ namespace MHServerEmu.Core.Serialization
                 }
                 else
                 {
-                    _bufferStream.WriteByteAt(_lastBitEncodedOffset, bitBuffer);
+                    _buffer.WriteByteAt(_lastBitEncodedOffset, bitBuffer);
                     if (numEncodedBits >= 5)
                         _lastBitEncodedOffset = 0;
                 }
@@ -824,7 +824,7 @@ namespace MHServerEmu.Core.Serialization
             // NOTE: PropertyCollection::serializeWithDefault() manipulates the archive buffer directly. First it allocates 4 bytes
             // for the number of properties, than it writes all the properties, and then it goes back and updates the number.
             // NOTE2: Persistent archives also do this for all ISerialize objects, except it writes the number of bytes written.
-            return _bufferStream.WriteUInt32At(position, value);
+            return _buffer.WriteUInt32At(position, value);
         }
 
         /// <summary>
@@ -939,7 +939,7 @@ namespace MHServerEmu.Core.Serialization
         {
             if (_lastBitEncodedOffset == 0) return null;
 
-            if (_bufferStream.ReadByteAt(_lastBitEncodedOffset, out byte lastBitEncoded) == false)
+            if (_buffer.ReadByteAt(_lastBitEncodedOffset, out byte lastBitEncoded) == false)
             {
                 SetError("Failed getting last bit encoded!");
                 return null;
