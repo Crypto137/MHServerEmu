@@ -1,0 +1,132 @@
+[
+  {
+    "Prototype": "",
+    "Setting": "eGTV_VendorBuyPrice",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_VendorSellPrice",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_VendorXPGain",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_PVPEnabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_XPGain",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_LootDropRate",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_LootSpecialDropRate",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_LootRarity",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_PartyXPBonusPct",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_PlayerTradeEnabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_CosmicPrestigeXPPct",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_LootVaporizationEnabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_XPBuffDisplay",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_SIFBuffDisplay",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RIFBuffDisplay",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_OmegaXPPct",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForGlobalXP",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForGlobalRIF",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForGlobalSIF",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForOmegaXP",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForAvatarXP",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForRegionXP",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_ServerBonusUnlockLevelOverride",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_BoostTimersRunning",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_InfinityXPPct",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForInfinityXP",
+    "Value": 1.0
+  }
+]
