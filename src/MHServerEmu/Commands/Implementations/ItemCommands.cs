@@ -149,6 +149,7 @@ namespace MHServerEmu.Commands.Implementations
         [Command("creditchest")]
         [CommandDescription("Converts 500k credits to a sellable chest item.")]
         [CommandUsage("item creditchest")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string CreditChest(string[] @params, NetClient client)
         {
