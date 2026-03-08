@@ -102,6 +102,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (IsFull() == false && IsBypass == false && Queue.Prototype.QueueDoNotWaitToFull == false)
                 return false;
 
+            if (IsEmpty())
+                return false;
+
             foreach (MatchTeam team in _teams)
             {
                 foreach ((RegionRequestGroup group, _) in team.Groups)
