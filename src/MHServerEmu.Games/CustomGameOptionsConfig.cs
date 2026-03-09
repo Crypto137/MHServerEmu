@@ -11,6 +11,8 @@ namespace MHServerEmu.Games
         public bool AutoUnlockTeamUps { get; private set; } = true;
         public bool DisableMovementPowerChargeCost { get; private set; } = false;
         public bool AllowSameGroupTalents { get; private set; } = false;
+        public bool EnableCreditChestConversion { get; private set; } = false;
+        public float CreditChestConversionMultiplier { get; private set; } = 2f;
         public bool DisableInstancedLoot { get; private set; } = false;
         public float LootSpawnGridCellRadius { get; private set; } = 20f;
         public float TrashedItemExpirationTimeMultiplier { get; private set; } = 1f;

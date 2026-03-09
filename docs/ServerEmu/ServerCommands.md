@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2026.03.08 13:37:05 UTC` using server version `1.0.0`.
+This list was automatically generated on `2026.03.09 15:06:03 UTC` using server version `1.0.0`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -108,7 +108,7 @@ Commands for managing items.
 | Command                      | Description                                                                | User Level | Invoker Type  |
 | ---------------------------- | -------------------------------------------------------------------------- | ---------- | ------------  |
 | !item cleardeliverybox       | Destroys all items contained in the delivery box inventory.                | Any        | Client        |
-| !item creditchest            | Converts 500k credits to a sellable chest item.                            | Admin      | Client        |
+| !item creditchest            | Converts credits to a sellable chest item.                                 | Any        | Client        |
 | !item destroyindestructible  | Destroys indestructible items contained in the player's general inventory. | Any        | Client        |
 | !item drop [pattern] [count] | Creates and drops the specified item from the current avatar.              | Admin      | Client        |
 | !item give [pattern] [count] | Creates and gives the specified item to the current player.                | Admin      | Client        |

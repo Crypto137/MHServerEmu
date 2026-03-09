@@ -147,30 +147,37 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("creditchest")]
-        [CommandDescription("Converts 500k credits to a sellable chest item.")]
+        [CommandDescription("Converts credits to a sellable chest item.")]
         [CommandUsage("item creditchest")]
-        [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string CreditChest(string[] @params, NetClient client)
         {
-            const PrototypeId CreditItemProtoRef = (PrototypeId)13983056721138685632;
+            const PrototypeId CreditItemProtoRef = (PrototypeId)13983056721138685632; // Entity/Items/Crafting/Ingredients/CreditItem500k.prototype
             const int CreditItemPrice = 500000;
 
             PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
+            var options = player.Game.CustomGameOptions;
+
+            if (options.EnableCreditChestConversion == false)
+                return "Credit chest conversion is disabled by server settings";
+
             PropertyId creditsProperty = new(PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits);
+            int price = (int)(CreditItemPrice * options.CreditChestConversionMultiplier);
 
-            if (player.Properties[creditsProperty] < CreditItemPrice)
-                return "You need at least 500 000 credits to use this command.";
+            if (price <= 0)
+                return "Failed to calculate credit chest price.";
 
-            // Entity/Items/Crafting/Ingredients/CreditItem500k.prototype
-            player.Properties.AdjustProperty(-CreditItemPrice, creditsProperty);
+            if (player.Properties[creditsProperty] < price)
+                return $"You need at least {price} credits to use this command.";
+
+            player.Properties.AdjustProperty(-price, creditsProperty);
             player.Game.LootManager.GiveItem(CreditItemProtoRef, LootContext.CashShop, player);
 
             Logger.Trace($"CreditChest(): {player}");
 
-            return $"Converted 500 000 credits to a Credit Chest.";
+            return $"Converted {price} credits to a Credit Chest.";
         }
 
         [Command("cleardeliverybox")]
