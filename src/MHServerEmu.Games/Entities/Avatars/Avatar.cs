@@ -4716,6 +4716,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (IsInWorld == false)
                 return 0f;
 
+            if (Game.CustomGameOptions.DisableMissionXPBonuses)
+                return 1f;
+
             TuningPrototype tuningProto = tuningTable.Prototype;
             if (tuningProto == null) return Logger.WarnReturn(0f, "GetMissionXPMultiplier(): tuningProto == null");
 
