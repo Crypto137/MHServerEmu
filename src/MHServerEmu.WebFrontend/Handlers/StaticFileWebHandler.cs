@@ -62,6 +62,8 @@ namespace MHServerEmu.WebFrontend.Handlers
                 ".jpeg" => "image/jpeg",
                 ".gif"  => "image/gif",
                 ".ico"  => "image/x-icon",
+                ".xml"  => "application/xml",
+                ".json" => "application/json",
                 _       => "application/octet-stream",
             };
         }
