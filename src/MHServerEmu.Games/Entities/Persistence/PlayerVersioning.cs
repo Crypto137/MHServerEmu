@@ -1,7 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
-using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities.Persistence
 {
@@ -19,8 +17,8 @@ namespace MHServerEmu.Games.Entities.Persistence
 
                 switch (loadedVersion)
                 {
+                    // add versioning code here as needed
                     case ArchiveVersion.Initial:
-                        success |= V2_ClearProperties(player);
                         break;
                 }
 
@@ -33,25 +31,5 @@ namespace MHServerEmu.Games.Entities.Persistence
 
             return true;
         }
-
-        #region V2
-
-        private static bool V2_ClearProperties(Player player)
-        {
-            player.Properties.RemovePropertyRange(PropertyEnum.Waypoint);
-            player.Properties.RemovePropertyRange(PropertyEnum.UISystemLock);
-
-            // Team-ups seem to be invisible if they are summoned before the tutorial starts, so just unsummon them for all avatars
-            foreach (Avatar avatar in new AvatarIterator(player))
-            {
-                avatar.Properties.RemoveProperty(PropertyEnum.AvatarTeamUpIsSummoned);
-                avatar.Properties.RemoveProperty(PropertyEnum.AvatarTeamUpStartTime);
-                avatar.Properties.RemoveProperty(PropertyEnum.AvatarTeamUpDuration);
-            }
-
-            return true;
-        }
-
-        #endregion
     }
 }

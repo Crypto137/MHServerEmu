@@ -1,6 +1,6 @@
 -- Initialize a new database file using the current schema version
 
-PRAGMA user_version=5;
+PRAGMA user_version=6;
 PRAGMA journal_mode=WAL;
 
 CREATE TABLE "Account" (

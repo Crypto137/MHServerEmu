@@ -22,7 +22,7 @@ Some of these parameters can be set automatically by using [Bifrost](https://git
 
 These require further checking for compatibility with various versions of the client.
 
-### ClientApp::Initialize
+### ClientApp::Initialize()
 
 | Parameter               | Description                                                                                                           | Values                                                                            |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
@@ -42,7 +42,7 @@ These require further checking for compatibility with various versions of the cl
 | -novalidate             |                                                                                                                       |                                                                                   |
 | -nohardwareinfo         |                                                                                                                       |                                                                                   |
 
-### ClientAppSettingsPostCoreInit::Initialize
+### ClientAppSettingsPostCoreInit::Initialize()
 
 | Parameter              | Description                                                                                  | Values       |
 | ---------------------- | -------------------------------------------------------------------------------------------- | ------------ |
@@ -86,7 +86,7 @@ These require further checking for compatibility with various versions of the cl
 | -streaming             |                                                                                              |              |
 | -platform=             |                                                                                              | orbis, dingo |
 
-### SiteConfig::ParseCommandLine
+### SiteConfig::ParseCommandLine()
 
 | Parameter    | Description | Values |
 | ------------ | ----------- | ------ |
@@ -94,43 +94,49 @@ These require further checking for compatibility with various versions of the cl
 | -authserver= |             |        |
 | -authurl=    |             |        |
 
-### ClientGame::Initialize
+### ClientGame::Initialize()
 
 | Parameter   | Description | Values |
 | ----------- | ----------- | ------ |
 | -nooverwolf |             |        |
 
-### Atlas::Initialize
+### Atlas::Initialize()
 
 | Parameter     | Description | Values |
 | ------------- | ----------- | ------ |
 | -nomapmarkers |             |        |
 
-### AudioManager::Initialize
+### AudioManager::Initialize()
 
 | Parameter      | Description | Values |
 | -------------- | ----------- | ------ |
 | -nomusic       |             |        |
 | -foleyineditor |             |        |
 
-### UnrealAudioManager::Initialize
+### UnrealAudioManager::Initialize()
 
 | Parameter          | Description | Values |
 | ------------------ | ----------- | ------ |
 | -audioglobalfocus  |             |        |
 | -audiofilepackages |             |        |
 
-### UnrealGameAdapter::Initialize
+### UnrealGameAdapter::Initialize()
 
 | Parameter        | Description | Values |
 | ---------------- | ----------- | ------ |
 | -dependencygraph |             |        |
 
-### UnrealGameAdapter::SendSteamUserInfo
+### UnrealGameAdapter::SendSteamUserInfo()
 
 | Parameter               | Description | Values |
 | ----------------------- | ----------- | ------ |
 | -steamachievementupdate |             |        |
+
+### InitGazillionSystems()
+
+| Parameter | Description              | Values                                                                         |
+| --------- | ------------------------ | ------------------------------------------------------------------------------ |
+| -locale=  | Overrides client locale. | Name of locale file under `Data\Game\Loco` without extension (e.g. `eng.all`). |
 
 ## Logging Channels
 

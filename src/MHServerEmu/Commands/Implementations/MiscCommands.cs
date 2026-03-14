@@ -118,11 +118,17 @@ namespace MHServerEmu.Commands.Implementations
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Dance(string[] @params, NetClient client)
         {
-            PlayerConnection playerConnection = (PlayerConnection)client;
+            const PrototypeId DancePowerRef = (PrototypeId)773103106671775187;  // Powers/Emotes/EmoteDance.prototype
 
-            Avatar avatar = playerConnection.Player.CurrentAvatar;
-            var avatarPrototypeId = (AvatarPrototypeId)avatar.PrototypeDataRef;
-            switch (avatarPrototypeId)
+            Player player = ((PlayerConnection)client).Player;
+            Avatar avatar = player.CurrentAvatar;
+
+            if (avatar == null)
+                return string.Empty;
+
+            PrototypeId avatarProtoRef = avatar.PrototypeDataRef;
+
+            switch ((AvatarPrototypeId)avatarProtoRef)
             {
                 case AvatarPrototypeId.BlackPanther:
                 case AvatarPrototypeId.BlackWidow:
@@ -137,18 +143,20 @@ namespace MHServerEmu.Commands.Implementations
                 case AvatarPrototypeId.Storm:
                 case AvatarPrototypeId.Thing:
                 case AvatarPrototypeId.Thor:
-                    const PrototypeId dancePowerRef = (PrototypeId)773103106671775187;  // Powers/Emotes/EmoteDance.prototype
-
-                    Power dancePower = avatar.GetPower(dancePowerRef);
-                    if (dancePower == null) return "Dance power is not assigned to the current avatar.";
+                    if (player.HasAvatarEmoteUnlocked(avatarProtoRef, DancePowerRef) == false)
+                        player.UnlockAvatarEmote(avatarProtoRef, DancePowerRef);
 
                     PowerActivationSettings settings = new(avatar.Id, avatar.RegionLocation.Position, avatar.RegionLocation.Position);
                     settings.Flags = PowerActivationSettingsFlags.NotifyOwner;
-                    avatar.ActivatePower(dancePowerRef, ref settings);
+                    PowerUseResult result = avatar.ActivatePower(DancePowerRef, ref settings);
 
-                    return $"{avatarPrototypeId} begins to dance";
+                    if (result != PowerUseResult.Success)
+                        return $"Failed to activate dance power ({result}).";
+
+                    return $"{avatarProtoRef.GetNameFormatted()} begins to dance.";
+
                 default:
-                    return $"{avatarPrototypeId} doesn't want to dance";
+                    return $"{avatarProtoRef.GetNameFormatted()} doesn't want to dance.";
             }
 
         }

@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.Entities
                     }
                 }
             }
-            else if (archive.IsPersistent && archive.Version >= ArchiveVersion.ImplementedConditionPersistence)
+            else if (archive.IsPersistent)
             {
                 uint numConditions = (uint)GetPersistentConditionCount();
                 success &= Serializer.Transfer(archive, ref numConditions);
