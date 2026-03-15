@@ -298,7 +298,7 @@ namespace MHServerEmu.Games.Populations
             float dencity;
 
             int playerCount = Area.PopulationArea.PlayerCount;
-            int playerLimit = Area.Region.Prototype.PlayerLimit;
+            int playerLimit = Area.Region.Prototype.GetPlayerLimit();
 
             if (DensityMin == DensityMax)
             {
