@@ -207,8 +207,10 @@ namespace MHServerEmu.Games.MTXStore
 
         private BuyItemResultErrorCodes BuyItem(Player buyer, Player recipient, long skuId, long clientPrice)
         {
-            // Make sure the player has already finished the tutorial, which could unlock characters depending on server settings.
-            if (buyer.HasFinishedTutorial() == false)
+            var config = buyer.Game.CustomGameOptions;
+
+            // Do not allow purchases during the tutorial if we are going to unlock avatars or team-ups after the player finishes it.
+            if ((config.AutoUnlockAvatars || config.AutoUnlockTeamUps) && buyer.HasFinishedTutorial() == false)
                 return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
 
             // Validate the order
