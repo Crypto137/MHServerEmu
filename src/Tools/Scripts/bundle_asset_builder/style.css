@@ -93,39 +93,18 @@ span.price {
     display: inline-block;
     padding-top: 5px;
 }
-.price::before {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 42px;
-    height: 100%;
-    background: #00090e;
-    z-index: 1;
-}
-
-.price::after {
-    content: 'G';
+.g {
     color: #00090e;
     font: bold 18px / 1 Arial;
     text-shadow: 1px 2px 1px #00B2FE;
-    position: absolute;
-    right: 6px;
-    top: 6px;
-    display: flex;
+    display: inline-flex;
+    vertical-align: middle;
     align-items: center;
     justify-content: center;
     width: 24px;
     height: 24px;
-    background: linear-gradient(
-        -35deg,  
-        #007FFF 45%,
-        #03C2F7 54%,
-        #00B2FE 70%, 
-        #007FFF 100%
-    );
+    background: linear-gradient(-35deg, #007FFF 45%, #03C2F7 54%, #00B2FE 70%, #007FFF 100%);
     border: 1px solid #00B2FE;
     border-radius: 50%;
-    
-    z-index: 2;
+    margin-left: 6px;
 }
