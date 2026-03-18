@@ -526,6 +526,9 @@ namespace MHServerEmu.Games.Entities
 
         public override void ExitGame()
         {
+            if (_autosaveEvent.IsValid)
+                Game.GameEventScheduler.CancelEvent(_autosaveEvent);
+
             CancelPlayerTrade();
 
             SendMessage(NetMessageBeginExitGame.DefaultInstance);
@@ -4874,6 +4877,9 @@ namespace MHServerEmu.Games.Entities
         private void Autosave()
         {
             if (PlayerConnection == null)
+                return;
+
+            if (IsInGame == false)
                 return;
 
             Logger.Info($"Autosaving {this}...");
