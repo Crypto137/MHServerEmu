@@ -73,8 +73,8 @@ namespace MHServerEmu.PlayerManagement.Regions
         public RegionPlayerAccessVar PlayerAccess { get; private set; } = RegionPlayerAccessVar.eRPA_Invalid;
 
         public int PlayerCount { get => _players.Count; }
-        public int PlayerLimit { get => Prototype.PlayerLimit; }
-        public bool IsFull { get => IsTown == false && PlayerCount >= PlayerLimit; }
+        public int PlayerLimit { get => Prototype.GetPlayerLimit(); }
+        public bool IsFull { get => PlayerCount >= PlayerLimit && (IsTown == false || PlayerManagerService.Instance.Config.EnableTownPlayerLimit); }
 
         public RegionHandle(GameHandle game, ulong id, PrototypeId regionProtoRef, NetStructCreateRegionParams createParams, RegionFlags flags)
         {

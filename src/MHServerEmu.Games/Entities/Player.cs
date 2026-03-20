@@ -403,8 +403,7 @@ namespace MHServerEmu.Games.Entities
 
             bool success = base.Serialize(archive);
 
-            if (archive.Version >= ArchiveVersion.AddedMissions)
-                success &= Serializer.Transfer(archive, MissionManager);
+            success &= Serializer.Transfer(archive, MissionManager);
 
             success &= Serializer.Transfer(archive, ref _avatarProperties);
 
@@ -455,39 +454,34 @@ namespace MHServerEmu.Games.Entities
 
             if (archive.InvolvesClient == false)
             {
-                if (archive.Version >= ArchiveVersion.ImplementedMapDiscoveryDataPersistence)
-                    success &= Serializer.Transfer(archive, ref _mapDiscoveryDict);
+                success &= Serializer.Transfer(archive, ref _mapDiscoveryDict);
 
-                if (archive.Version >= ArchiveVersion.AddedVendorPurchaseData)
+                // Vendor purchase data
+                uint numVendorPurchaseData = (uint)_vendorPurchaseDataDict.Count;
+                success &= Serializer.Transfer(archive, ref numVendorPurchaseData);
+
+                if (archive.IsPacking)
                 {
-                    uint numVendorPurchaseData = (uint)_vendorPurchaseDataDict.Count;
-                    success &= Serializer.Transfer(archive, ref numVendorPurchaseData);
+                    foreach (VendorPurchaseData purchaseData in _vendorPurchaseDataDict.Values)
+                        success &= Serializer.Transfer(archive, purchaseData);
+                }
+                else
+                {
+                    _vendorPurchaseDataDict.Clear();
 
-                    if (archive.IsPacking)
+                    for (uint i = 0; i < numVendorPurchaseData; i++)
                     {
-                        foreach (VendorPurchaseData purchaseData in _vendorPurchaseDataDict.Values)
-                            success &= Serializer.Transfer(archive, purchaseData);
-                    }
-                    else
-                    {
-                        _vendorPurchaseDataDict.Clear();
+                        VendorPurchaseData purchaseData = new(PrototypeId.Invalid);
+                        success &= Serializer.Transfer(archive, ref purchaseData);
 
-                        for (uint i = 0; i < numVendorPurchaseData; i++)
-                        {
-                            VendorPurchaseData purchaseData = new(PrototypeId.Invalid);
-                            success &= Serializer.Transfer(archive, ref purchaseData);
-
-                            if (_vendorPurchaseDataDict.TryAdd(purchaseData.InventoryProtoRef, purchaseData) == false)
-                                Logger.Warn($"Serialize(): Failed to add deserialized vendor purchase data {purchaseData}");
-                        }
+                        if (_vendorPurchaseDataDict.TryAdd(purchaseData.InventoryProtoRef, purchaseData) == false)
+                            Logger.Warn($"Serialize(): Failed to add deserialized vendor purchase data {purchaseData}");
                     }
                 }
 
-                if (archive.Version >= ArchiveVersion.ImplementedLoginRewards)
-                {
-                    success &= Serializer.Transfer(archive, ref _loginCount);
-                    success &= Serializer.Transfer(archive, ref _loginRewardCooldownTimeStart);
-                }
+                // Login count
+                success &= Serializer.Transfer(archive, ref _loginCount);
+                success &= Serializer.Transfer(archive, ref _loginRewardCooldownTimeStart);
             }
 
             return success;
@@ -532,6 +526,9 @@ namespace MHServerEmu.Games.Entities
 
         public override void ExitGame()
         {
+            if (_autosaveEvent.IsValid)
+                Game.GameEventScheduler.CancelEvent(_autosaveEvent);
+
             CancelPlayerTrade();
 
             SendMessage(NetMessageBeginExitGame.DefaultInstance);
@@ -4880,6 +4877,9 @@ namespace MHServerEmu.Games.Entities
         private void Autosave()
         {
             if (PlayerConnection == null)
+                return;
+
+            if (IsInGame == false)
                 return;
 
             Logger.Info($"Autosaving {this}...");

@@ -16,12 +16,12 @@ namespace MHServerEmu.DatabaseAccess.Models
     [Flags]
     public enum AccountFlags
     {
-        None                    = 0,
-        IsBanned                = 1 << 0,
-        IsArchived              = 1 << 1,
-        IsPasswordExpired       = 1 << 2,
-        DEPRECATEDLinuxCompatibilityMode    = 1 << 3,   // This flag used to disable session token verification, but it is no longer needed for Linux users
-        IsWhitelisted           = 1 << 4,
+        None                = 0,
+        IsBanned            = 1 << 0,
+        IsArchived          = 1 << 1,
+        IsPasswordExpired   = 1 << 2,
+        // 1 << 3 was previously used in 0.x for the Linux compatibility mode, it should not be set in any 1.x+ databases.
+        IsWhitelisted       = 1 << 4,
     }
 
     /// <summary>

@@ -120,6 +120,9 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public bool SaveWithNotification()
         {
+            if (HasPendingRegionTransfer)
+                return false;
+
             if (SaveToDBAccount(false) == false)
             {
                 Logger.Error($"SaveWithNotification(): Save failed for {this}");

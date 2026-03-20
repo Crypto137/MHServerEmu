@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.Events
 {
     public class Event
     {
-        public const int InfiniteLoopCheckLimit = 5000; // in client 100000
+        public const int InfiniteLoopCheckLimit = 100000;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 

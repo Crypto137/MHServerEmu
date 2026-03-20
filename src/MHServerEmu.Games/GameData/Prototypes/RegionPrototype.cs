@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
@@ -460,6 +461,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     return false;
             }
             return false;
+        }
+
+        public int GetPlayerLimit()
+        {
+            return (int)(PlayerLimit * LiveTuningManager.GetLiveRegionTuningVar(this, RegionTuningVar.eRTV_PlayerLimit));
         }
 
         private int GetLargestTeamSize()
