@@ -15,7 +15,10 @@ namespace MHServerEmu.Games.Events
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+#if DEBUG
         private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
+#endif
+
         private readonly ScheduledEventPool _eventPool = new();
 
         private readonly TimeSpan _quantumSize;
@@ -195,12 +198,16 @@ namespace MHServerEmu.Games.Events
                         @event.EventGroupNode.Remove();
                         @event.InvalidatePointers();
 
+#if DEBUG
                         TimeSpan referenceTime = _stopwatch.Elapsed;
                         @event.OnTriggered();
                         TimeSpan triggerTime = _stopwatch.Elapsed - referenceTime;
 
                         if (triggerTime >= _quantumSize)
                             Logger.Warn($"{@event.GetType().Name} took {(_stopwatch.Elapsed - referenceTime).TotalMilliseconds} ms");
+#else
+                        @event.OnTriggered();
+#endif
 
                         if (++numEvents > MaxEventsPerUpdate)
                             throw new Exception($"Infinite loop detected in EventScheduler.");
