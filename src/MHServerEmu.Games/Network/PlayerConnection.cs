@@ -259,9 +259,20 @@ namespace MHServerEmu.Games.Network
 
             using (Archive archive = new(ArchiveSerializeType.Database))
             {
+                DBPlayer dbPlayer = _dbAccount.Player;
+                Span<byte> oldArchiveData = dbPlayer.ArchiveData ?? Span<byte>.Empty;
+
                 // NOTE: Use Transfer() and NOT Player.Serialize() to make sure we pack the size of the player
                 Serializer.Transfer(archive, Player);
-                _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
+                Span<byte> newArchiveData = archive.AsSpan();
+
+                if (newArchiveData.SequenceEqual(oldArchiveData) == false)
+                {
+                    if (newArchiveData.Length == oldArchiveData.Length)
+                        newArchiveData.CopyTo(oldArchiveData);
+                    else
+                        dbPlayer.ArchiveData = newArchiveData.ToArray();
+                }
             }
 
             // Save last town as a separate database field to be able to access it without deserializing the player entity
