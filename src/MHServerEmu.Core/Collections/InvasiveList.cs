@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Runtime.CompilerServices;
 
 namespace MHServerEmu.Core.Collections
 {
@@ -51,8 +52,8 @@ namespace MHServerEmu.Core.Collections
         {
             if (element == null || Contains(element) == false) return;
 
-            var node = GetInvasiveListNode(element, Id);
-            if (node == null) return;
+            ref var node = ref GetInvasiveListNode(element, Id);
+            if (Unsafe.IsNullRef(ref node)) return;
 
             for (int i = 0; i < _numIterators; i++)
             {
@@ -68,16 +69,16 @@ namespace MHServerEmu.Core.Collections
             if (node.Next != null)
             {
                 T nextElement = node.Next;
-                var nextNode = GetInvasiveListNode(nextElement, Id);
-                if (nextNode != null)
+                ref var nextNode = ref GetInvasiveListNode(nextElement, Id);
+                if (Unsafe.IsNullRef(ref nextNode) == false)
                     nextNode.Prev = node.Prev;
             }
 
             if (node.Prev != null)
             {
                 T prevElement = node.Prev;
-                var prevNode = GetInvasiveListNode(prevElement, Id);
-                if (prevNode != null)
+                ref var prevNode = ref GetInvasiveListNode(prevElement, Id);
+                if (Unsafe.IsNullRef(ref prevNode) == false)
                     prevNode.Next = node.Next;
             }
 
@@ -93,11 +94,11 @@ namespace MHServerEmu.Core.Collections
             if (oldElement == null || Contains(oldElement) == false) return;
             if (element == null || Contains(element)) return;
 
-            var node = GetInvasiveListNode(element, Id);
-            if (node == null) return;
+            ref var node = ref GetInvasiveListNode(element, Id);
+            if (Unsafe.IsNullRef(ref node)) return;
 
-            var oldNode = GetInvasiveListNode(oldElement, Id);
-            if (oldNode == null) return;
+            ref var oldNode = ref GetInvasiveListNode(oldElement, Id);
+            if (Unsafe.IsNullRef(ref oldNode)) return;
 
             var oldPrev = oldNode.Prev;
             oldNode.Prev = element;
@@ -106,8 +107,8 @@ namespace MHServerEmu.Core.Collections
 
             if (oldPrev != null)
             {
-                var oldPrevNode = GetInvasiveListNode(oldPrev, Id);
-                if (oldPrevNode == null) return;
+                ref var oldPrevNode = ref GetInvasiveListNode(oldPrev, Id);
+                if (Unsafe.IsNullRef(ref oldPrevNode)) return;
                 oldPrevNode.Next = element;
             }
             else
@@ -120,14 +121,14 @@ namespace MHServerEmu.Core.Collections
         {
             if (element == null || Contains(element)) return;
 
-            var node = GetInvasiveListNode(element, Id);
-            if (node == null) return;
+            ref var node = ref GetInvasiveListNode(element, Id);
+            if (Unsafe.IsNullRef(ref node)) return;
 
             node.Prev = Tail;
             if (Tail != null)
             {
-                var tailNode = GetInvasiveListNode(Tail, Id);
-                if (tailNode == null) return;
+                ref var tailNode = ref GetInvasiveListNode(Tail, Id);
+                if (Unsafe.IsNullRef(ref tailNode)) return;
                 tailNode.Next = element;
             }
             else
@@ -137,13 +138,13 @@ namespace MHServerEmu.Core.Collections
             Count++;
         }
 
-        public virtual InvasiveListNode<T> GetInvasiveListNode(T element, int listId) => null;
+        public virtual ref InvasiveListNode<T> GetInvasiveListNode(T element, int listId) => ref Unsafe.NullRef<InvasiveListNode<T>>();
 
         public bool Contains(T element)
         {
             if (element == null) return false;
-            var node = GetInvasiveListNode(element, Id);
-            if (node == null) return false;
+            ref var node = ref GetInvasiveListNode(element, Id);
+            if (Unsafe.IsNullRef(ref node)) return false;
             return node.Next != null || node.Prev != null || element.Equals(Head);
         }
 
@@ -203,33 +204,11 @@ namespace MHServerEmu.Core.Collections
 
     }
 
-    public class InvasiveListNode<T>
+    public struct InvasiveListNode<T>
     {
-        public T Next { get; set; }
-        public T Prev { get; set; }
+        public T Next;
+        public T Prev;
 
         public void Clear() => Next = Prev = default;
-    }
-
-    public class InvasiveListNodeCollection<T>
-    {
-        private readonly InvasiveListNode<T>[] _nodes;
-        private int _numLists;
-
-        public InvasiveListNodeCollection(int numLists)
-        {
-            _numLists = numLists;
-            _nodes = new InvasiveListNode<T>[_numLists];
-            for (int i = 0; i < _numLists; i++)
-                _nodes[i] = new();
-        }
-
-        public InvasiveListNode<T> GetInvasiveListNode(int listIndex)
-        {
-            if (listIndex >= 0 && listIndex < _numLists)
-                return _nodes[listIndex];
-            else
-                return null;
-        }
     }
 }

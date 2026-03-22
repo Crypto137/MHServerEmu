@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Entities
     public class EntityInvasiveCollection : InvasiveList<Entity>
     {
         public EntityInvasiveCollection(EntityCollection collectionType, int maxIterators = 8) : base(maxIterators, (int)collectionType) { }
-        public override InvasiveListNode<Entity> GetInvasiveListNode(Entity element, int listId) => element.GetInvasiveListNode(listId);
+        public override ref InvasiveListNode<Entity> GetInvasiveListNode(Entity element, int listId) => ref element.GetInvasiveListNode(listId);
     }
 
     public readonly struct DestroyEntityEvent(Entity entity) : IGameEventData
