@@ -176,8 +176,14 @@ namespace MHServerEmu.PlayerManagement.Players
 
         private static bool IsClientHighPriority(IFrontendClient client)
         {
-            // Users with elevated privileges (moderators / admins) have high priority
-            if (((IDBAccountOwner)client).Account.UserLevel > AccountUserLevel.User)
+            DBAccount account = ((IDBAccountOwner)client).Account;
+
+            // Users with elevated privileges (moderators / admins) have high priority by default.
+            if (account.UserLevel > AccountUserLevel.User)
+                return true;
+
+            // Accounts can be manually flagged to have high priority.
+            if (account.Flags.HasFlag(AccountFlags.BypassLoginQueue))
                 return true;
 
             // Add more cases as needed

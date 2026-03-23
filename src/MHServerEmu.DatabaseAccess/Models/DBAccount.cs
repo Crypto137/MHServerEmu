@@ -22,6 +22,7 @@ namespace MHServerEmu.DatabaseAccess.Models
         IsPasswordExpired   = 1 << 2,
         // 1 << 3 was previously used in 0.x for the Linux compatibility mode, it should not be set in any 1.x+ databases.
         IsWhitelisted       = 1 << 4,
+        BypassLoginQueue    = 1 << 5,
     }
 
     /// <summary>
