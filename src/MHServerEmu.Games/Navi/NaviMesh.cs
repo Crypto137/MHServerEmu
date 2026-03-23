@@ -345,7 +345,7 @@ namespace MHServerEmu.Games.Navi
 
         private void ReverseMarkupMesh()
         {
-            foreach (var triangle in TriangleList.Iterate())
+            foreach (var triangle in TriangleList)
                 for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
                 {
                     NaviEdge edge = triangle.Edges[edgeIndex];
@@ -367,7 +367,7 @@ namespace MHServerEmu.Games.Navi
 
         private void ClearMarkup()
         {
-            foreach (var triangle in TriangleList.Iterate())
+            foreach (var triangle in TriangleList)
             {
                 triangle.ClearFlag(NaviTriangleFlags.Markup);
                 triangle.PathingFlags = PathFlags.None;

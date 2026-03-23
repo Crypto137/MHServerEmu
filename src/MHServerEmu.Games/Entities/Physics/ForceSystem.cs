@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Entities.Physics
         }
     }
 
-    public class ForceSystemMemberList : InvasiveList<ForceSystemMember>
+    public sealed class ForceSystemMemberList : InvasiveList<ForceSystemMember>
     {
         public ForceSystemMemberList(int maxIterators = 1) : base(maxIterators) { }
         public override ref InvasiveListNode<ForceSystemMember> GetInvasiveListNode(ForceSystemMember element, int listId) => ref element.InvasiveListNode;

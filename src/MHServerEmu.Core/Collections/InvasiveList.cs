@@ -5,48 +5,27 @@ namespace MHServerEmu.Core.Collections
 {
     public class InvasiveList<T>
     {
+        private readonly Iterator[] _iterators;
+
+        private int _numIterators;
+
         public int Id { get; private set; }
-        public T Head { get; set; }
+        public T Head { get; private set; }
         public T Tail { get; private set; }
         public int Count { get; private set; }
 
-        private Iterator[] _iterators;
-        private int _numIterators;
-        private int _maxIterators;
+        public bool IsEmpty { get => Head == null; }
 
-        public InvasiveList(int maxIterators)
+        public InvasiveList(int maxIterators, int id = 0)
         {
-            _maxIterators = maxIterators;
-            _iterators = new Iterator[_maxIterators];
-        }
-
-        public InvasiveList(int maxIterators, int id)
-        {
-            _maxIterators = maxIterators;
-            _iterators = new Iterator[_maxIterators];
+            _iterators = new Iterator[maxIterators];
             Id = id;
         }
 
-        public IEnumerable<T> Iterate()
+        public IEnumerator<T> GetEnumerator()
         {
-            var iterator = new Iterator(this);
-
-            try
-            {
-                while (iterator.End() == false)
-                {
-                    var element = iterator.Current;
-                    iterator.MoveNext();
-                    yield return element;
-                }
-            }
-            finally
-            {
-                UnregisterIterator(iterator);
-            }
+            return new Iterator(this);
         }
-
-        public bool IsEmpty() => Head == null;
 
         public void Remove(T element)
         {
@@ -138,7 +117,10 @@ namespace MHServerEmu.Core.Collections
             Count++;
         }
 
-        public virtual ref InvasiveListNode<T> GetInvasiveListNode(T element, int listId) => ref Unsafe.NullRef<InvasiveListNode<T>>();
+        public virtual ref InvasiveListNode<T> GetInvasiveListNode(T element, int listId)
+        {
+            return ref Unsafe.NullRef<InvasiveListNode<T>>();
+        }
 
         public bool Contains(T element)
         {
@@ -150,8 +132,8 @@ namespace MHServerEmu.Core.Collections
 
         private void RegisterIterator(Iterator iterator)
         {
-            if (_numIterators >= _maxIterators)
-                throw new InvalidOperationException($"Too many iterators '{_maxIterators}' for invasive list");
+            if (_numIterators >= _iterators.Length)
+                throw new InvalidOperationException($"Too many iterators '{_iterators.Length}' for invasive list");
 
             _iterators[_numIterators++] = iterator;
         }
@@ -172,36 +154,53 @@ namespace MHServerEmu.Core.Collections
             throw new InvalidOperationException("Iterator not found in iterator collection of invasive list!");
         }
 
-        public class Iterator : IEnumerator<T>
+        public sealed class Iterator : IEnumerator<T>
         {
-            private InvasiveList<T> _list;            
-            public bool SkipNext { get; set; }
+            private readonly InvasiveList<T> _list;
+
+            private bool _start = true;
+
+            public T Current { get; private set; }
+            object IEnumerator.Current { get => Current; }
+
+            public bool SkipNext { get; set; } = false;
 
             public Iterator(InvasiveList<T> invasiveList)
             {
                 _list = invasiveList;
-                Current = _list.Head;
-                SkipNext = false;
                 _list.RegisterIterator(this);
             }
 
-            public T Current { get; private set; }
-            object IEnumerator.Current => Current;
-            public void Dispose() { }
-            public void Reset() { }
+            public void Dispose()
+            {
+                _list.UnregisterIterator(this);
+            }
+
+            public void Reset()
+            {
+                _start = true;
+                Current = default;
+                SkipNext = false;
+            }
 
             public bool MoveNext()
             {
-                if (SkipNext) SkipNext = false; 
-                else if (Current != null)
-                    Current = _list.GetInvasiveListNode(Current, _list.Id).Next;
+                if (_start)
+                {
+                    Current = _list.Head;
+                    _start = false;
+                }
+                else
+                {
+                    if (SkipNext)
+                        SkipNext = false;
+                    else if (Current != null)
+                        Current = _list.GetInvasiveListNode(Current, _list.Id).Next;
+                }
 
-                return true;
+                return Current != null;
             }
-
-            public bool End() => Current == null;
         }
-
     }
 
     public struct InvasiveListNode<T>

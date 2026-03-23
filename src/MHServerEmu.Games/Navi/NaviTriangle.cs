@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.Navi
         Markup = 1 << 1,
     }
 
-    public class TriangleList : InvasiveList<NaviTriangle>
+    public sealed class TriangleList : InvasiveList<NaviTriangle>
     {
         public TriangleList(int maxIterators = 1) : base(maxIterators) { }
         public override ref InvasiveListNode<NaviTriangle> GetInvasiveListNode(NaviTriangle element, int listId) => ref element.InvasiveListNode;

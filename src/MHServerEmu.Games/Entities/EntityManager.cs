@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.Entities
         All = 3,
     }
 
-    public class EntityInvasiveCollection : InvasiveList<Entity>
+    public sealed class EntityInvasiveCollection : InvasiveList<Entity>
     {
         public EntityInvasiveCollection(EntityCollection collectionType, int maxIterators = 8) : base(maxIterators, (int)collectionType) { }
         public override ref InvasiveListNode<Entity> GetInvasiveListNode(Entity element, int listId) => ref element.GetInvasiveListNode(listId);
@@ -449,7 +449,7 @@ namespace MHServerEmu.Games.Entities
 
         public void LocomoteEntities()
         {
-            foreach (var entity in LocomotionEntities.Iterate())
+            foreach (var entity in LocomotionEntities)
                 if (entity is WorldEntity worldEntity)
                     worldEntity?.Locomotor.Locomote();
         }
@@ -586,7 +586,7 @@ namespace MHServerEmu.Games.Entities
             IsAIEnabled = enable;
 
             if (enable)
-                foreach (var entity in SimulatedEntities.Iterate())
+                foreach (var entity in SimulatedEntities)
                     if (entity is Agent agent) agent.AIController?.SetIsEnabled(true);
 
             foreach (var entity in _entityDict.Values)
