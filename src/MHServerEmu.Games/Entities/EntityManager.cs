@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Entities
     {
         Simulated = 0,
         Locomotion = 1,
-        All = 3,
+        All = 2,    // unused?
     }
 
     public sealed class EntityInvasiveCollection : InvasiveList<Entity>
