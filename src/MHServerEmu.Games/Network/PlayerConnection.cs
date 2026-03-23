@@ -266,13 +266,11 @@ namespace MHServerEmu.Games.Network
                 Serializer.Transfer(archive, Player);
                 Span<byte> newArchiveData = archive.AsSpan();
 
-                if (newArchiveData.SequenceEqual(oldArchiveData) == false)
-                {
-                    if (newArchiveData.Length == oldArchiveData.Length)
-                        newArchiveData.CopyTo(oldArchiveData);
-                    else
-                        dbPlayer.ArchiveData = newArchiveData.ToArray();
-                }
+                // No point in doing a SequenceEqual check here, it's always different in practice.
+                if (newArchiveData.Length == oldArchiveData.Length)
+                    newArchiveData.CopyTo(oldArchiveData);
+                else
+                    dbPlayer.ArchiveData = newArchiveData.ToArray();
             }
 
             // Save last town as a separate database field to be able to access it without deserializing the player entity
