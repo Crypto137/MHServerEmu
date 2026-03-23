@@ -20,6 +20,11 @@ namespace MHServerEmu.PlayerManagement.Players
         private static readonly TimeSpan StatusUpdateInterval = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan ReconnectPermissionDuration = TimeSpan.FromMinutes(10);
 
+        private static readonly SessionEncryptionChanged SessionEncryptionChangedMessage = SessionEncryptionChanged.CreateBuilder()
+            .SetRandomNumberIndex(0)
+            .SetEncryptedRandomNumber(ByteString.Empty)
+            .Build();
+
         private readonly DoubleBufferQueue<IFrontendClient> _newClientQueue = new();
 
         private readonly LinkedList<IFrontendClient> _defaultQueue = new();
@@ -246,10 +251,8 @@ namespace MHServerEmu.PlayerManagement.Players
             // However, if a malicious user modifies their client, it may try to skip ahead, so we need to verify this.
             _pendingClients.Add(client, Clock.UnixTime);
 
-            client.SendMessage(MuxChannel, SessionEncryptionChanged.CreateBuilder()
-                .SetRandomNumberIndex(0)
-                .SetEncryptedRandomNumber(ByteString.Empty)
-                .Build());
+            // Gazillion never finished implementing encryption, so the SessionEncryptionChanged message is just a dummy we can cache and reuse.
+            client.SendMessage(MuxChannel, SessionEncryptionChangedMessage);
 
             Logger.Info($"Client [{client}] passed the login queue");
 
