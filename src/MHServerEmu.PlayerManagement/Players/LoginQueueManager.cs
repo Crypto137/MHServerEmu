@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
@@ -15,19 +16,40 @@ namespace MHServerEmu.PlayerManagement.Players
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly TimeSpan PendingClientTimeout = TimeSpan.FromSeconds(15);
+        private static readonly TimeSpan StatusUpdateInterval = TimeSpan.FromSeconds(10);
 
         private readonly DoubleBufferQueue<IFrontendClient> _newClientQueue = new();
-        private readonly Queue<IFrontendClient> _loginQueue = new();
-        private readonly Queue<IFrontendClient> _highPriorityLoginQueue = new();
+
+        private readonly LinkedList<IFrontendClient> _defaultQueue = new();
+        private readonly LinkedList<IFrontendClient> _reconnectQueue = new();
+        private readonly Queue<IFrontendClient> _highPriorityQueue = new();
+
+        private readonly Stack<LinkedListNode<IFrontendClient>> _queueNodes;
 
         // Pending clients are clients that have successfully passed the login queue
         private readonly Dictionary<IFrontendClient, TimeSpan> _pendingClients = new();
 
         private readonly PlayerManagerService _playerManager;
 
+        private readonly LoginQueueStatus.Builder _statusBuilder = LoginQueueStatus.CreateBuilder();
+        private readonly Dictionary<IFrontendClient, TimeSpan> _statusUpdateTimes;
+
+        public int PlayersInLine { get => _defaultQueue.Count + _reconnectQueue.Count; }
+
         public LoginQueueManager(PlayerManagerService playerManager)
         {
             _playerManager = playerManager;
+
+            int maxQueueClients = playerManager.Config.MaxLoginQueueClients;
+
+            _queueNodes = new(maxQueueClients);
+            for (int i = 0; i < maxQueueClients; i++)
+            {
+                LinkedListNode<IFrontendClient> node = new(null);
+                _queueNodes.Push(node);
+            }
+
+            _statusUpdateTimes = new(maxQueueClients);
         }
 
         public void Update()
@@ -77,8 +99,6 @@ namespace MHServerEmu.PlayerManagement.Players
         /// </summary>
         private void AcceptNewClients()
         {
-            int maxLoginQueueClients = _playerManager.Config.MaxLoginQueueClients;
-
             _newClientQueue.Swap();
 
             while (_newClientQueue.CurrentCount > 0)
@@ -98,21 +118,24 @@ namespace MHServerEmu.PlayerManagement.Players
                 // High priority queue always ignores server capacity
                 if (IsClientHighPriority(client))
                 {
-                    _highPriorityLoginQueue.Enqueue(client);
+                    _highPriorityQueue.Enqueue(client);
                 }
                 else
                 {
-                    if (_loginQueue.Count >= maxLoginQueueClients)
+                    // TODO: check reconnect
+                    LinkedList<IFrontendClient> queueToUse = _defaultQueue;
+
+                    if (_queueNodes.TryPop(out LinkedListNode<IFrontendClient> queueNode) == false)
                     {
-                        Logger.Warn($"AcceptNewClients(): Unable to accept client [{client}], the queue already has {maxLoginQueueClients} clients, which is the maximum number allowed by the current server configuration");
+                        Logger.Warn($"AcceptNewClients(): Unable to accept client [{client}], the queue already has {PlayersInLine} clients, which is the maximum number allowed by the current server configuration");
                         client.Disconnect();
                         RemoveClientSession(client);
                         continue;
                     }
 
-                    _loginQueue.Enqueue(client);
+                    queueNode.Value = client;
+                    queueToUse.AddLast(queueNode);
                 }
-
 
                 Logger.Info($"Accepted client [{client}] into the login queue");
             }
@@ -127,31 +150,28 @@ namespace MHServerEmu.PlayerManagement.Players
             int availableCapacity = totalCapacity - _playerManager.ClientManager.PlayerCount - _pendingClients.Count;
 
             // Let clients from the high priority queue in first ignoring capacity
-            while (_highPriorityLoginQueue.Count > 0)
+            while (_highPriorityQueue.Count > 0)
             {
-                IFrontendClient client = _highPriorityLoginQueue.Dequeue();
+                IFrontendClient client = _highPriorityQueue.Dequeue();
                 ProcessQueuedClient(client, ref availableCapacity);
             }
 
-            // Let clients from the normal login queue, check available capacity if enabled
-            while (_loginQueue.Count > 0 && (totalCapacity <= 0 || availableCapacity > 0))
+            // Let clients from the reconnect and default queues, check available capacity if enabled
+            ProcessQueue(_reconnectQueue, totalCapacity, ref availableCapacity);
+            ProcessQueue(_defaultQueue, totalCapacity, ref availableCapacity);
+
+            // Update status of remaining players
+            int playersInLine = PlayersInLine;
+            if (playersInLine > 0)
             {
-                IFrontendClient client = _loginQueue.Dequeue();
-                ProcessQueuedClient(client, ref availableCapacity);
+                _statusBuilder.SetNumberOfPlayersInLine((ulong)playersInLine);
+
+                TimeSpan now = Clock.UnixTime;
+                ulong nextPlaceInLine = 1;
+
+                UpdateQueueStatus(_reconnectQueue, ref nextPlaceInLine, now);
+                UpdateQueueStatus(_defaultQueue, ref nextPlaceInLine, now);
             }
-
-            // Send status updates to remaining players
-            int playersInLine = _loginQueue.Count;
-            if (playersInLine == 0)
-                return;
-
-            LoginQueueStatus.Builder statusBuilder = LoginQueueStatus.CreateBuilder()
-                .SetNumberOfPlayersInLine((ulong)playersInLine);
-
-            ulong placeInLine = 1;
-
-            foreach (IFrontendClient client in _loginQueue)
-                client.SendMessage(MuxChannel, statusBuilder.SetPlaceInLine(placeInLine++).Build());
         }
 
         private static bool IsClientHighPriority(IFrontendClient client)
@@ -163,6 +183,18 @@ namespace MHServerEmu.PlayerManagement.Players
             // Add more cases as needed
 
             return false;
+        }
+
+        private void ProcessQueue(LinkedList<IFrontendClient> queue, int totalCapacity, ref int availableCapacity)
+        {
+            while (queue.Count > 0 && (totalCapacity <= 0 || availableCapacity > 0))
+            {
+                LinkedListNode<IFrontendClient> queueNode = queue.First;
+                IFrontendClient client = queueNode.Value;
+
+                RemoveQueueNode(queueNode);
+                ProcessQueuedClient(client, ref availableCapacity);
+            }
         }
 
         private bool ProcessQueuedClient(IFrontendClient client, ref int availableCapacity)
@@ -194,6 +226,47 @@ namespace MHServerEmu.PlayerManagement.Players
         {
             ulong sessionId = client.Session.Id;
             _playerManager.SessionManager.RemoveActiveSession(sessionId);
+        }
+
+        private void UpdateQueueStatus(LinkedList<IFrontendClient> queue, ref ulong nextPlaceInLine, TimeSpan now)
+        {
+            LinkedListNode<IFrontendClient> current = queue.First;
+            while (current != null)
+            {
+                IFrontendClient client = current.Value;
+
+                if (client.IsConnected == false)
+                {
+                    Logger.Warn($"UpdateQueueStatus(): Client [{client}] disconnected while waiting in the login queue");
+
+                    LinkedListNode<IFrontendClient> prev = current;
+                    current = current.Next;
+                    RemoveQueueNode(prev);
+
+                    RemoveClientSession(client);
+
+                    continue;
+                }
+
+                ulong placeInLine = nextPlaceInLine++;
+
+                ref TimeSpan lastUpdateTime = ref _statusUpdateTimes.GetValueRefOrAddDefault(client);
+                if ((now - lastUpdateTime) >= StatusUpdateInterval)
+                {
+                    lastUpdateTime = now;
+                    LoginQueueStatus status = _statusBuilder.SetPlaceInLine(placeInLine).Build();
+                    client.SendMessage(MuxChannel, status);
+                }
+
+                current = current.Next;
+            }
+        }
+
+        private void RemoveQueueNode(LinkedListNode<IFrontendClient> node)
+        {
+            _statusUpdateTimes.Remove(node.Value);
+            node.Remove();
+            _queueNodes.Push(node);
         }
     }
 }

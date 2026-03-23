@@ -14,7 +14,7 @@ namespace MHServerEmu.PlayerManagement
         public bool ShowNewsOnLogin { get; private set; } = false;
         public string NewsUrl { get; private set; } = "http://localhost/";
         public int ServerCapacity { get; private set; } = 0;
-        public int MaxLoginQueueClients { get; private set; } = 10000;
+        public int MaxLoginQueueClients { get; private set; } = 8192;
         public bool EnableTownPlayerLimit { get; private set; } = false;
     }
 }
