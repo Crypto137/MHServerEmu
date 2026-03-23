@@ -7,6 +7,9 @@ namespace MHServerEmu.Core.Collections
     {
         private readonly Iterator[] _iterators;
 
+        private readonly Stack<Iterator> _iteratorPool;
+        private Iterator _reusableIterator;
+
         private int _numIterators;
 
         public int Id { get; private set; }
@@ -19,12 +22,30 @@ namespace MHServerEmu.Core.Collections
         public InvasiveList(int maxIterators, int id = 0)
         {
             _iterators = new Iterator[maxIterators];
+
+            if (maxIterators > 1)
+                _iteratorPool = new();
+
             Id = id;
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            return new Iterator(this);
+            Iterator iterator;
+
+            if (_iteratorPool != null)
+            {
+                if (_iteratorPool.TryPop(out iterator) == false)
+                    iterator = new(this);
+            }
+            else
+            {
+                _reusableIterator ??= new(this);
+                iterator = _reusableIterator;
+            }
+
+            iterator.Initialize();
+            return iterator;
         }
 
         public void Remove(T element)
@@ -148,6 +169,11 @@ namespace MHServerEmu.Core.Collections
 
                     _iterators[_numIterators - 1] = null;
                     _numIterators--;
+
+                    // pool iterator instance for reuse
+                    iterator.Reset();
+                    _iteratorPool?.Push(iterator);
+
                     return;
                 }
 
@@ -168,6 +194,10 @@ namespace MHServerEmu.Core.Collections
             public Iterator(InvasiveList<T> invasiveList)
             {
                 _list = invasiveList;
+            }
+
+            public void Initialize()
+            {
                 _list.RegisterIterator(this);
             }
 
