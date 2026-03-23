@@ -13,10 +13,12 @@ namespace MHServerEmu.PlayerManagement.Players
     public class LoginQueueManager
     {
         private const ushort MuxChannel = 1;
+        private const float ReconnectPermissionPercentile = 0.1f;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly TimeSpan PendingClientTimeout = TimeSpan.FromSeconds(15);
         private static readonly TimeSpan StatusUpdateInterval = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan ReconnectPermissionDuration = TimeSpan.FromMinutes(10);
 
         private readonly DoubleBufferQueue<IFrontendClient> _newClientQueue = new();
 
@@ -33,6 +35,9 @@ namespace MHServerEmu.PlayerManagement.Players
 
         private readonly LoginQueueStatus.Builder _statusBuilder = LoginQueueStatus.CreateBuilder();
         private readonly Dictionary<IFrontendClient, TimeSpan> _statusUpdateTimes;
+
+        private readonly Dictionary<ulong, TimeSpan> _reconnectPermissions = new();
+        private CooldownTimer _reconnectPermissionPurgeTimer = new(TimeSpan.FromMinutes(1));
 
         public int PlayersInLine { get => _defaultQueue.Count + _reconnectQueue.Count; }
 
@@ -55,6 +60,7 @@ namespace MHServerEmu.PlayerManagement.Players
         public void Update()
         {
             TimeOutPendingClients();
+            PurgeReconnectPermissions();
             AcceptNewClients();
             ProcessLoginQueue();
         }
@@ -94,6 +100,24 @@ namespace MHServerEmu.PlayerManagement.Players
             }
         }
 
+        private void PurgeReconnectPermissions()
+        {
+            if (_reconnectPermissionPurgeTimer.Check() == false)
+                return;
+
+            TimeSpan now = Clock.UnixTime;
+
+            foreach (var kvp in _reconnectPermissions)
+            {
+                TimeSpan duration = now - kvp.Value;
+                if (duration >= ReconnectPermissionDuration)
+                {
+                    Logger.Info($"Purged reconnect permission for account 0x{kvp.Key:X}");
+                    _reconnectPermissions.Remove(kvp.Key);
+                }
+            }
+        }
+
         /// <summary>
         /// Accepts asynchronously added clients to the login queue.
         /// </summary>
@@ -122,15 +146,20 @@ namespace MHServerEmu.PlayerManagement.Players
                 }
                 else
                 {
-                    // TODO: check reconnect
-                    LinkedList<IFrontendClient> queueToUse = _defaultQueue;
-
                     if (_queueNodes.TryPop(out LinkedListNode<IFrontendClient> queueNode) == false)
                     {
                         Logger.Warn($"AcceptNewClients(): Unable to accept client [{client}], the queue already has {PlayersInLine} clients, which is the maximum number allowed by the current server configuration");
                         client.Disconnect();
                         RemoveClientSession(client);
                         continue;
+                    }
+
+                    LinkedList<IFrontendClient> queueToUse = _defaultQueue;
+
+                    if (_reconnectPermissions.Remove(client.DbId))
+                    {
+                        queueToUse = _reconnectQueue;
+                        Logger.Info($"Consumed reconnect permission for client [{client}]");
                     }
 
                     queueNode.Value = client;
@@ -208,6 +237,7 @@ namespace MHServerEmu.PlayerManagement.Players
             if (client.IsConnected == false)
             {
                 Logger.Warn($"ProcessQueuedClient(): Client [{client}] disconnected while waiting in the login queue");
+                TryAddReconnectPermission(client, 1, Clock.UnixTime);
                 RemoveClientSession(client);
                 return false;
             }
@@ -228,12 +258,6 @@ namespace MHServerEmu.PlayerManagement.Players
             return true;
         }
 
-        private void RemoveClientSession(IFrontendClient client)
-        {
-            ulong sessionId = client.Session.Id;
-            _playerManager.SessionManager.RemoveActiveSession(sessionId);
-        }
-
         private void UpdateQueueStatus(LinkedList<IFrontendClient> queue, ref ulong nextPlaceInLine, TimeSpan now)
         {
             LinkedListNode<IFrontendClient> current = queue.First;
@@ -249,6 +273,7 @@ namespace MHServerEmu.PlayerManagement.Players
                     current = current.Next;
                     RemoveQueueNode(prev);
 
+                    TryAddReconnectPermission(client, nextPlaceInLine, now);
                     RemoveClientSession(client);
 
                     continue;
@@ -273,6 +298,25 @@ namespace MHServerEmu.PlayerManagement.Players
             _statusUpdateTimes.Remove(node.Value);
             node.Remove();
             _queueNodes.Push(node);
+        }
+
+        private void RemoveClientSession(IFrontendClient client)
+        {
+            ulong sessionId = client.Session.Id;
+            _playerManager.SessionManager.RemoveActiveSession(sessionId);
+        }
+
+        private void TryAddReconnectPermission(IFrontendClient client, ulong placeInLine, TimeSpan now)
+        {
+            if (PlayersInLine == 0)
+                return;
+
+            float percentile = (float)placeInLine / PlayersInLine;
+            if (placeInLine == 1 || percentile <= ReconnectPermissionPercentile)
+            {
+                _reconnectPermissions[client.DbId] = now;
+                Logger.Info($"Added reconnect permission for client [{client}] (placeInLine={placeInLine})");
+            }
         }
     }
 }
