@@ -135,7 +135,7 @@ namespace MHServerEmu.Core.Network
             if (_outboundMessageList.Count == 0)
                 return Logger.WarnReturn(false, "SerializeData(): Data packet contains no messages");
 
-            using FastCodedOutputStream cos = FastCodedOutputStream.CreateInstance(stream);
+            using RecyclableCodedOutputStream cos = RecyclableCodedOutputStream.CreateInstance(stream);
 
             foreach (MessagePackageOut messagePackage in _outboundMessageList)
                 messagePackage.WriteTo(cos);

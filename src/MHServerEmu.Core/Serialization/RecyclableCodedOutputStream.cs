@@ -1,5 +1,4 @@
-﻿using System.Buffers;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -12,33 +11,28 @@ namespace MHServerEmu.Core.Serialization
     /// <summary>
     /// A more memory efficient version of <see cref="CodedOutputStream"/>.
     /// </summary>
-    public sealed class FastCodedOutputStream : ICodedOutputStreamEx, IDisposable
+    public sealed class RecyclableCodedOutputStream : ICodedOutputStreamEx, IDisposable
     {
-        private const int DefaultBufferSize = 4096;
+        private static readonly ConcurrentBag<RecyclableCodedOutputStream> Instances = new();
 
-        private static readonly ConcurrentBag<FastCodedOutputStream> InstancePool = new();
-        private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Create();
-
+        private readonly byte[] _primaryBuffer = new byte[CodedOutputStream.DefaultBufferSize];
         private readonly byte[] _floatBuffer = new byte[sizeof(float)];
 
-        private byte[] _buffer;
         private CodedOutputStream _cos;
 
-        private FastCodedOutputStream() { }
+        private RecyclableCodedOutputStream() { }
 
-        private void Initialize(Stream stream, int bufferSize)
+        private void Initialize(Stream stream)
         {
-            // Use pooled buffers for coded output streams with reflection hackery, see ProtobufHelper for more info.
-            _buffer = BufferPool.Rent(bufferSize);
-            _cos = ProtobufHelper.CodedOutputStreamEx.CreateInstance(stream, _buffer);
+            _cos = ProtobufHelper.CodedOutputStreamEx.CreateInstance(stream, _primaryBuffer);
         }
 
-        public static FastCodedOutputStream CreateInstance(Stream stream, int bufferSize = DefaultBufferSize)
+        public static RecyclableCodedOutputStream CreateInstance(Stream stream)
         {
-            if (InstancePool.TryTake(out FastCodedOutputStream cos) == false)
+            if (Instances.TryTake(out RecyclableCodedOutputStream cos) == false)
                 cos = new();
 
-            cos.Initialize(stream, bufferSize);
+            cos.Initialize(stream);
             return cos;
         }
 
@@ -52,13 +46,7 @@ namespace MHServerEmu.Core.Serialization
                 _cos = null;
             }
 
-            if (_buffer != null)
-            {
-                BufferPool.Return(_buffer);
-                _buffer = null;
-            }
-
-            InstancePool.Add(this);
+            Instances.Add(this);
         }
 
         #endregion
