@@ -15,31 +15,24 @@ namespace MHServerEmu.Games.Entities.Physics
         }
     }
 
-    public class ForceSystemMemberList : InvasiveList<ForceSystemMember>
+    public sealed class ForceSystemMemberList : InvasiveList<ForceSystemMember>
     {
         public ForceSystemMemberList(int maxIterators = 1) : base(maxIterators) { }
-        public override InvasiveListNode<ForceSystemMember> GetInvasiveListNode(ForceSystemMember element, int listId) => element.InvasiveListNode;
+        public override ref InvasiveListNode<ForceSystemMember> GetInvasiveListNode(ForceSystemMember element, int listId) => ref element.InvasiveListNode;
     }
 
     public class ForceSystemMember
     {
+        private InvasiveListNode<ForceSystemMember> _invasiveListNode;
+
         public ulong EntityId { get; set; }
         public Vector3 Position { get; set; }
         public Vector3 Direction { get; set; }
         public float Time { get; set; }
         public float Speed { get; set; }
         public float Acceleration { get; set; }
-        public InvasiveListNode<ForceSystemMember> InvasiveListNode { get; private set; }
+        public ref InvasiveListNode<ForceSystemMember> InvasiveListNode { get => ref _invasiveListNode; }
 
-        public ForceSystemMember()
-        {
-            EntityId = 0;
-            Position = Vector3.Zero; 
-            Direction = Vector3.Zero;
-            Time = 0.0f;
-            Speed = 0.0f;
-            Acceleration = 0.0f;
-            InvasiveListNode = new();
-        }
+        public ForceSystemMember() { }
     }
 }

@@ -106,7 +106,7 @@ namespace MHServerEmu.Games.Entities
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly InvasiveListNodeCollection<Entity> _entityListNodes = new(3);
+        private InlineArray3<InvasiveListNode<Entity>> _entityListNodes;
 
         private readonly EventGroup _pendingEvents = new();
 
@@ -1307,9 +1307,15 @@ namespace MHServerEmu.Games.Entities
             };
         }
 
-        public InvasiveListNode<Entity> GetInvasiveListNode(int listId)
+        public ref InvasiveListNode<Entity> GetInvasiveListNode(int listId)
         {
-            return _entityListNodes.GetInvasiveListNode(listId);
+            // InvasiveListNodeCollection is inlined into this function because of CS8170.
+            const int NumLists = 3;
+
+            if (listId >= 0 && listId < NumLists)
+                return ref _entityListNodes[listId];
+            else
+                return ref Unsafe.NullRef<InvasiveListNode<Entity>>();
         }
 
         #endregion

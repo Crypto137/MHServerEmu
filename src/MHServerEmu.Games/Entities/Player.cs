@@ -3029,11 +3029,12 @@ namespace MHServerEmu.Games.Entities
 
         public bool DiscoverMapPosition(Vector3 position, bool syncWithParty = true)
         {
-            var region = CurrentAvatar?.Region;
-            if (region == null) return Logger.WarnReturn(false, "UpdateMapDiscovery(): region == null");
+            Region region = CurrentAvatar?.Region;
+            if (region == null)
+                return false;
 
             MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(CurrentAvatar);
-            if (mapDiscoveryData == null) return Logger.WarnReturn(false, "UpdateDiscoveryMap(): mapDiscoveryData == null");
+            if (mapDiscoveryData == null) return Logger.WarnReturn(false, "DiscoverMapPosition(): mapDiscoveryData == null");
 
             bool reveal = mapDiscoveryData.RevealPosition(this, position);
 

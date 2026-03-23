@@ -1,10 +1,9 @@
-﻿using System.Buffers;
-using System.Collections;
+﻿using System.Collections;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network.Tcp;
+using MHServerEmu.Core.Serialization;
 
 namespace MHServerEmu.Core.Network
 {
@@ -17,7 +16,6 @@ namespace MHServerEmu.Core.Network
 
         // Packets apparently go as high as 2800+ messages based on logs, so we presize pooled lists to 4096 to fit that and extra.
         private static readonly ConcurrentPool<List<MessagePackageOut>> MessageListPool = new(4096, static () => new(4096));
-        private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Create();
 
         private readonly List<MessagePackageOut> _outboundMessageList = null;
 
@@ -137,15 +135,10 @@ namespace MHServerEmu.Core.Network
             if (_outboundMessageList.Count == 0)
                 return Logger.WarnReturn(false, "SerializeData(): Data packet contains no messages");
 
-            // Use pooled buffers for coded output streams with reflection hackery, see ProtobufHelper for more info.
-            byte[] buffer = BufferPool.Rent(4096);
+            using RecyclableCodedOutputStream cos = RecyclableCodedOutputStream.CreateInstance(stream);
 
-            CodedOutputStream cos = ProtobufHelper.CodedOutputStreamEx.CreateInstance(stream, buffer);
             foreach (MessagePackageOut messagePackage in _outboundMessageList)
                 messagePackage.WriteTo(cos);
-            cos.Flush();
-
-            BufferPool.Return(buffer);
 
             return true;
         }

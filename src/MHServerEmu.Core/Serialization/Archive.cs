@@ -173,7 +173,7 @@ namespace MHServerEmu.Core.Serialization
             {
                 ReadBuffer = new byte[4096];
                 WriteBuffer = new byte[32];     // We flush after every value, so we can use very small buffer sizes for output (default is 4096).
-                SharedAutoBuffer = new(1024);
+                SharedAutoBuffer = new(65536);
             }
         }
 

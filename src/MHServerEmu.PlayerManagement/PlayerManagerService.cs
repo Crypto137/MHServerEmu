@@ -49,6 +49,8 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public PlayerManagerService()
         {
+            Config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
+
             _serviceMailbox = new(this);
 
             SessionManager = new(this);
@@ -62,8 +64,6 @@ namespace MHServerEmu.PlayerManagement
             RegionRequestQueueManager = new(this);
 
             EventScheduler = new();
-
-            Config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
         }
 
         #region IGameService Implementation

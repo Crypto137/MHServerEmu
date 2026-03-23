@@ -71,7 +71,7 @@ namespace MHServerEmu.Commands.Implementations
             LootManager lootGenerator = playerConnection.Game.LootManager;
 
             for (int i = 0; i < count; i++)
-                lootGenerator.GiveItem(itemProtoRef, LootContext.Drop, player);
+                lootGenerator.GiveItem(itemProtoRef, LootContext.CashShop, player);
             Logger.Debug($"GiveItem(): {itemProtoRef.GetName()}[{count}] to {player}");
 
             return string.Empty;

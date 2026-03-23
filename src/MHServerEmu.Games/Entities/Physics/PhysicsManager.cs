@@ -196,7 +196,7 @@ namespace MHServerEmu.Games.Entities.Physics
 
             EntityManager entityManager = _game.EntityManager; 
 
-            foreach (var member in forceSystem.Members.Iterate())
+            foreach (var member in forceSystem.Members)
             {
                 if (member == null) continue;
                 bool active = false;
@@ -684,7 +684,7 @@ namespace MHServerEmu.Games.Entities.Physics
             float distanceSq = Vector3.DistanceSquared(epicenter, member.Position);
             var pendingMembers = pendingForce.Members;
 
-            foreach (var pendingMember in pendingMembers.Iterate())
+            foreach (var pendingMember in pendingMembers)
                 if (distanceSq > Vector3.DistanceSquared(epicenter, pendingMember.Position))
                 {
                     pendingForce.Members.InsertBefore(member, pendingMember);

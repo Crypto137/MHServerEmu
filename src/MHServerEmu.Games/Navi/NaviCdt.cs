@@ -55,7 +55,7 @@ namespace MHServerEmu.Games.Navi
 
         public void Release()
         {
-            foreach (var triangle in TriangleList.Iterate())
+            foreach (var triangle in TriangleList)
                 RemoveTriangle(triangle);
 
             _lastTriangle = null;
@@ -126,7 +126,7 @@ namespace MHServerEmu.Games.Navi
             using var collinearEdgesHandle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> collinearEdges);
             using NaviSerialCheck naviSerialCheck = new(this);
 
-            foreach (var triangle in TriangleList.Iterate())
+            foreach (var triangle in TriangleList)
                 foreach (var edge in triangle.Edges)
                 {
                     if (edge.Triangles[0] == null || edge.Triangles[1] == null) continue;
@@ -925,7 +925,7 @@ namespace MHServerEmu.Games.Navi
         {
             StringBuilder hashes = new();
             int id = 0;
-            foreach (var triangle in TriangleList.Iterate())
+            foreach (var triangle in TriangleList)
                 hashes.AppendLine($"[{id++}] {triangle.ToHashString()}");
             FileHelper.SaveTextFileToRoot(fileName, hashes.ToString());
         }
@@ -934,7 +934,7 @@ namespace MHServerEmu.Games.Navi
         {
             StringBuilder hashes = new();
             int id = 0;
-            foreach (var triangle in TriangleList.Iterate())
+            foreach (var triangle in TriangleList)
                 hashes.AppendLine($"[{id++}] {triangle.ToHashString2()}");
             FileHelper.SaveTextFileToRoot(fileName, hashes.ToString());
         }
@@ -943,12 +943,12 @@ namespace MHServerEmu.Games.Navi
         {
             NaviSvgHelper svg = new(this);
             Stack<NaviPoint> influences = new();
-            foreach (var triangle in TriangleList.Iterate())
+            foreach (var triangle in TriangleList)
                 foreach (var edge in triangle.Edges)
                     foreach (var point in edge.Points)
                         if (point.InfluenceRadius > 0 && influences.Contains(point) == false)
                             influences.Push(point);
-            foreach (var triangle in TriangleList.Iterate())
+            foreach (var triangle in TriangleList)
                 svg.AddTriangle(triangle);
             foreach (var point in influences)
                 svg.AddCircle(point.Pos, point.InfluenceRadius);
@@ -962,7 +962,7 @@ namespace MHServerEmu.Games.Navi
             
             // Vertices
             int newId = 1;
-            foreach (var triangle in TriangleList.Iterate())
+            foreach (var triangle in TriangleList)
                 if (triangle.PathingFlags.HasFlag(filterFlags))
                     foreach (var edge in triangle.Edges)
                         foreach (var point in edge.Points)
@@ -975,7 +975,7 @@ namespace MHServerEmu.Games.Navi
                             }
 
             // Faces
-            foreach (var triangle in TriangleList.Iterate())
+            foreach (var triangle in TriangleList)
                 if (triangle.PathingFlags.HasFlag(filterFlags))
                 {
                     var p0 = triangle.PointCW(0);

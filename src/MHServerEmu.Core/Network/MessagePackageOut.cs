@@ -1,4 +1,5 @@
 ﻿using Google.ProtocolBuffers;
+using MHServerEmu.Core.Serialization;
 
 namespace MHServerEmu.Core.Network
 {
@@ -38,6 +39,16 @@ namespace MHServerEmu.Core.Network
         /// Writes this <see cref="MessagePackageOut"/> to the provided <see cref="CodedOutputStream"/>.
         /// </summary>
         public void WriteTo(CodedOutputStream stream)
+        {
+            stream.WriteRawVarint32(Id);
+            stream.WriteRawVarint32((uint)Message.SerializedSize);
+            Message.WriteTo(stream);
+        }
+
+        /// <summary>
+        /// Writes this <see cref="MessagePackageOut"/> to the provided <see cref="ICodedOutputStreamEx"/>.
+        /// </summary>
+        public void WriteTo(ICodedOutputStreamEx stream)
         {
             stream.WriteRawVarint32(Id);
             stream.WriteRawVarint32((uint)Message.SerializedSize);
