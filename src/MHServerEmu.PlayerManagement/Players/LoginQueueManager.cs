@@ -191,8 +191,8 @@ namespace MHServerEmu.PlayerManagement.Players
             }
 
             // Let clients from the reconnect and default queues, check available capacity if enabled
-            ProcessQueue(_reconnectQueue, totalCapacity, ref availableCapacity);
-            ProcessQueue(_defaultQueue, totalCapacity, ref availableCapacity);
+            ProcessQueue(_reconnectQueue, totalCapacity, ref availableCapacity, false);
+            ProcessQueue(_defaultQueue, totalCapacity, ref availableCapacity, true);
 
             // Update status of remaining players
             int playersInLine = PlayersInLine;
@@ -225,7 +225,7 @@ namespace MHServerEmu.PlayerManagement.Players
             return false;
         }
 
-        private void ProcessQueue(LinkedList<IFrontendClient> queue, int totalCapacity, ref int availableCapacity)
+        private void ProcessQueue(LinkedList<IFrontendClient> queue, int totalCapacity, ref int availableCapacity, bool allowReconnect)
         {
             while (queue.Count > 0 && (totalCapacity <= 0 || availableCapacity > 0))
             {
@@ -233,13 +233,13 @@ namespace MHServerEmu.PlayerManagement.Players
                 IFrontendClient client = queueNode.Value;
 
                 RemoveQueueNode(queueNode);
-                ProcessQueuedClient(client, ref availableCapacity, true);
+                ProcessQueuedClient(client, ref availableCapacity, allowReconnect);
             }
         }
 
         private bool ProcessQueuedClient(IFrontendClient client, ref int availableCapacity, bool allowReconnect)
         {
-            // Allow all clients that pass the queue without bypass to reconnect because of the client-side afk timer bug.
+            // Allow all clients that pass the default queue to reconnect because of the client-side afk timer bug.
             if (allowReconnect)
                 TryAddReconnectPermission(client, 1, Clock.UnixTime);
 
