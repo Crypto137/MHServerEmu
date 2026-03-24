@@ -49,6 +49,8 @@ namespace MHServerEmu.Games.Entities
         private int _activePowerTargetCount;
         private bool _killSelf;
 
+        private Picker<ulong> _targetPicker;    // Reusable picker for AppliesIntervalPowers hotspots, remove this if we implement picker pooling.
+
         public Hotspot(Game game) : base(game) 
         { 
             SetFlag(EntityFlags.IsHotspot, true); 
@@ -66,6 +68,9 @@ namespace MHServerEmu.Games.Entities
 
             if (hotspotProto.DirectApplyToMissilesData?.EvalPropertiesToApply != null || hotspotProto.Negatable)
                 SetFlag(EntityFlags.IsCollidableHotspot, true);
+
+            if (hotspotProto.IntervalPowersRandomTarget)
+                _targetPicker = new(Game.Random);
 
             return true;
         }
@@ -796,7 +801,7 @@ namespace MHServerEmu.Games.Entities
 
             if (hotspotProto.IntervalPowersRandomTarget)
             {
-                Picker<ulong> picker = new(Game.Random);
+                Picker<ulong> picker = _targetPicker;
                 var hasLOS = TriBool.Undefined;
                 ulong prevTargetId = InvalidId;
 
