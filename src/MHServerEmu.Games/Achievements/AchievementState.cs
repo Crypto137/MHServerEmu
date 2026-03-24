@@ -68,6 +68,8 @@ namespace MHServerEmu.Games.Achievements
                 AchievementProgressMap.Clear();
                 _scoreCached = false;
 
+                AchievementProgressMap.EnsureCapacity((int)achievementCount);
+
                 for (uint i = 0; i < achievementCount; i++)
                 {
                     uint achievementId = 0;
