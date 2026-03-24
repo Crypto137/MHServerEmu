@@ -187,7 +187,7 @@ namespace MHServerEmu.PlayerManagement.Players
             while (_highPriorityQueue.Count > 0)
             {
                 IFrontendClient client = _highPriorityQueue.Dequeue();
-                ProcessQueuedClient(client, ref availableCapacity);
+                ProcessQueuedClient(client, ref availableCapacity, false);
             }
 
             // Let clients from the reconnect and default queues, check available capacity if enabled
@@ -233,16 +233,19 @@ namespace MHServerEmu.PlayerManagement.Players
                 IFrontendClient client = queueNode.Value;
 
                 RemoveQueueNode(queueNode);
-                ProcessQueuedClient(client, ref availableCapacity);
+                ProcessQueuedClient(client, ref availableCapacity, true);
             }
         }
 
-        private bool ProcessQueuedClient(IFrontendClient client, ref int availableCapacity)
+        private bool ProcessQueuedClient(IFrontendClient client, ref int availableCapacity, bool allowReconnect)
         {
+            // Allow all clients that pass the queue without bypass to reconnect because of the client-side afk timer bug.
+            if (allowReconnect)
+                TryAddReconnectPermission(client, 1, Clock.UnixTime);
+
             if (client.IsConnected == false)
             {
                 Logger.Warn($"ProcessQueuedClient(): Client [{client}] disconnected while waiting in the login queue");
-                TryAddReconnectPermission(client, 1, Clock.UnixTime);
                 RemoveClientSession(client);
                 return false;
             }
