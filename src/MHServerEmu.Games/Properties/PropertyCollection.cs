@@ -844,7 +844,7 @@ namespace MHServerEmu.Games.Properties
             return success;
         }
 
-        public void GetPropertiesForMigration(List<(ulong, ulong)> propertyList)
+        public void GetPropertiesForMigration(List<(ulong, ulong)> propertyList, PropertyEnum propertyToIgnore = PropertyEnum.Invalid)
         {
             PropertyEnum prevProperty = PropertyEnum.Invalid;
             PropertyInfoPrototype propInfoProto = null;
@@ -860,9 +860,9 @@ namespace MHServerEmu.Games.Properties
                     prevProperty = propertyEnum;
                 }
 
-                // HACK: Do not migrate mana because we don't migrate conditions, which can cause some heroes to get stuck in bad state (e.g. Human Torch).
+                // HACK: Do not migrate some properties because we don't migrate conditions, which can cause some heroes to get stuck in bad state (e.g. Human Torch, Ant-Man).
                 // This can be removed if we ever start migrating runtime-only conditions.
-                if (propertyEnum == PropertyEnum.Endurance)
+                if (propertyEnum == propertyToIgnore)
                     continue;
 
                 // Migrate properties that are not saved to the database, but are supposed to be replicated for transfer

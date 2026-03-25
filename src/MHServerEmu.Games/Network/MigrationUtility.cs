@@ -1,7 +1,9 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -54,7 +56,25 @@ namespace MHServerEmu.Games.Network
         {
             List<(ulong, ulong)> propertyList = migrationData.GetOrCreatePropertyList(entity.DatabaseUniqueId);
             propertyList.Clear();
-            entity.Properties.GetPropertiesForMigration(propertyList);
+
+            // HACK: Ugly property hack, remove this when we figure out an efficient way to migrate runtime-only conditions.
+            PropertyEnum propertyToIgnore = PropertyEnum.Invalid;
+
+            if (entity is Avatar)
+            {
+                switch ((AvatarPrototypeId)entity.PrototypeDataRef)
+                {
+                    case AvatarPrototypeId.AntMan:
+                        propertyToIgnore = PropertyEnum.SecondaryResource
+                        break;
+
+                    case AvatarPrototypeId.HumanTorch:
+                        propertyToIgnore = PropertyEnum.Endurance;
+                        break;
+                }
+            }
+
+            entity.Properties.GetPropertiesForMigration(propertyList, propertyToIgnore);
         }
 
         private static void RestoreProperties(MigrationData migrationData, Entity entity)
