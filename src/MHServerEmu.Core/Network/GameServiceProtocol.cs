@@ -830,6 +830,12 @@ namespace MHServerEmu.Core.Network
             public readonly int ResultCode = resultCode;
         }
 
+        public readonly struct SetWhitelistEnabled(bool enable)
+            : IGameServiceMessage
+        {
+            public readonly bool Enable = enable;
+        }
+
         #endregion
     }
 }

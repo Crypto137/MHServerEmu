@@ -105,6 +105,29 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
+        [Command("whitelist")]
+        [CommandDescription("Enables or disables account whitelist for logins.")]
+        [CommandParamCount(1)]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.ServerConsole)]
+        public string Whitelist(string[] @params, NetClient client)
+        {
+            bool enable;
+
+            if (bool.TryParse(@params[0], out enable) == false)
+            {
+                if (int.TryParse(@params[0], out int value) == false)
+                    return "Invalid parameter. Please use boolean or integer values.";
+
+                enable = value != 0;
+            }
+
+            ServiceMessage.SetWhitelistEnabled message = new(enable);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+
+            return $"Sent a request to {(enable ? "enable" : "disable")} whitelist.";
+        }
+
         [Command("shutdown")]
         [CommandDescription("Shuts the server down.")]
         [CommandUsage("server shutdown")]

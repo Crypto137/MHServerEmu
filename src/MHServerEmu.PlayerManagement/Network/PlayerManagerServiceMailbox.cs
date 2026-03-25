@@ -137,6 +137,10 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnAccountOperationRequest(accountOperationRequest);
                     break;
 
+                case ServiceMessage.SetWhitelistEnabled setWhitelistEnabled:
+                    OnSetWhitelistEnabled(setWhitelistEnabled);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                     break;
@@ -623,6 +627,13 @@ namespace MHServerEmu.PlayerManagement.Network
 
             ServiceMessage.AccountOperationResponse response = new(requestId, resultCode);
             ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
+
+            return true;
+        }
+
+        private bool OnSetWhitelistEnabled(in ServiceMessage.SetWhitelistEnabled setWhitelistEnabled)
+        {
+            _playerManager.SessionManager.SetWhitelistEnabled(setWhitelistEnabled.Enable);
 
             return true;
         }

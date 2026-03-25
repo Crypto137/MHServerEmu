@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2026.03.09 15:06:03 UTC` using server version `1.0.0`.
+This list was automatically generated on `2026.03.25 14:52:06 UTC` using server version `1.0.0`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -211,16 +211,17 @@ Region management commands.
 ## Server
 Server management commands.
 
-| Command                           | Description                               | User Level | Invoker Type   |
-| --------------------------------- | ----------------------------------------- | ---------- | -------------  |
-| !server broadcast                 | Broadcasts a notification to all players. | Admin      | Any            |
-| !server reloadaddg                | Reloads the Add G page.                   | Admin      | ServerConsole  |
-| !server reloadcatalog             | Reloads MTX store catalog.                | Admin      | ServerConsole  |
-| !server reloaddashboard           | Reloads the web dashboard.                | Admin      | ServerConsole  |
-| !server reloadlivetuning          | Reloads live tuning settings.             | Admin      | ServerConsole  |
-| !server reloadplayernameblacklist | Reloads the player name blacklist.        | Admin      | ServerConsole  |
-| !server shutdown                  | Shuts the server down.                    | Admin      | Any            |
-| !server status                    | Prints server status.                     | Any        | Any            |
+| Command                           | Description                                       | User Level | Invoker Type   |
+| --------------------------------- | ------------------------------------------------- | ---------- | -------------  |
+| !server broadcast                 | Broadcasts a notification to all players.         | Admin      | Any            |
+| !server reloadaddg                | Reloads the Add G page.                           | Admin      | ServerConsole  |
+| !server reloadcatalog             | Reloads MTX store catalog.                        | Admin      | ServerConsole  |
+| !server reloaddashboard           | Reloads the web dashboard.                        | Admin      | ServerConsole  |
+| !server reloadlivetuning          | Reloads live tuning settings.                     | Admin      | ServerConsole  |
+| !server reloadplayernameblacklist | Reloads the player name blacklist.                | Admin      | ServerConsole  |
+| !server shutdown                  | Shuts the server down.                            | Admin      | Any            |
+| !server status                    | Prints server status.                             | Any        | Any            |
+| !server whitelist                 | Enables or disables account whitelist for logins. | Admin      | ServerConsole  |
 
 ## Store
 Commands for interacting with the in-game store.
