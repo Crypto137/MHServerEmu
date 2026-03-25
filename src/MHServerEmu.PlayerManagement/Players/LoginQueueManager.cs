@@ -13,7 +13,6 @@ namespace MHServerEmu.PlayerManagement.Players
     public class LoginQueueManager
     {
         private const ushort MuxChannel = 1;
-        private const float ReconnectPermissionPercentile = 0.1f;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly TimeSpan PendingClientTimeout = TimeSpan.FromSeconds(15);
@@ -117,8 +116,8 @@ namespace MHServerEmu.PlayerManagement.Players
                 TimeSpan duration = now - kvp.Value;
                 if (duration >= ReconnectPermissionDuration)
                 {
-                    Logger.Info($"Purged reconnect permission for account 0x{kvp.Key:X}");
                     _reconnectPermissions.Remove(kvp.Key);
+                    Logger.Info($"Reconnect permission expired for account 0x{kvp.Key:X}");
                 }
             }
         }
@@ -241,7 +240,10 @@ namespace MHServerEmu.PlayerManagement.Players
         {
             // Allow all clients that pass the default queue to reconnect because of the client-side afk timer bug.
             if (allowReconnect)
-                TryAddReconnectPermission(client, 1, Clock.UnixTime);
+            {
+                _reconnectPermissions[client.DbId] = Clock.UnixTime;
+                Logger.Info($"Added reconnect permission for client [{client}]");
+            }
 
             if (client.IsConnected == false)
             {
@@ -279,7 +281,6 @@ namespace MHServerEmu.PlayerManagement.Players
                     current = current.Next;
                     RemoveQueueNode(prev);
 
-                    TryAddReconnectPermission(client, nextPlaceInLine, now);
                     RemoveClientSession(client);
 
                     continue;
@@ -310,19 +311,6 @@ namespace MHServerEmu.PlayerManagement.Players
         {
             ulong sessionId = client.Session.Id;
             _playerManager.SessionManager.RemoveActiveSession(sessionId);
-        }
-
-        private void TryAddReconnectPermission(IFrontendClient client, ulong placeInLine, TimeSpan now)
-        {
-            if (PlayersInLine == 0)
-                return;
-
-            float percentile = (float)placeInLine / PlayersInLine;
-            if (placeInLine == 1 || percentile <= ReconnectPermissionPercentile)
-            {
-                _reconnectPermissions[client.DbId] = now;
-                Logger.Info($"Added reconnect permission for client [{client}] (placeInLine={placeInLine})");
-            }
         }
     }
 }
