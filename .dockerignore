@@ -1,0 +1,13 @@
+.git
+.github
+.vs
+.vscode
+build/
+**/bin/
+**/obj/
+*.md
+*.bat
+Dockerfile
+.dockerignore
+docker/
+docker-compose.yml

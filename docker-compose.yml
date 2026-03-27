@@ -1,0 +1,48 @@
+services:
+  mhserveremu:
+    build: .
+    container_name: mhserveremu
+    # stdin_open + tty required: the server uses Console.ReadLine() for its
+    # command loop. Without a TTY, ReadLine returns null and the process exits.
+    stdin_open: true
+    tty: true
+    ports:
+      - "4306:4306"   # Game server (TCP)
+      - "8080:8080"   # Web dashboard (HTTP)
+    volumes:
+      - mhserveremu-data:/app/Data
+      # REQUIRED: mount game pak files (mu_cdata.sip + Calligraphy.sip)
+      # Mount individual files so they don't shadow the built-in JSON game data
+      - ./Data/Game/mu_cdata.sip:/app/Data/Game/mu_cdata.sip:ro
+      - ./Data/Game/Calligraphy.sip:/app/Data/Game/Calligraphy.sip:ro
+      - ./docker/Config.ini:/app/Config.ini:ro
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: mhserveremu-nginx
+    ports:
+      - "80:80"       # HTTP (ACME challenge + redirect)
+      - "443:443"     # HTTPS (auth + SiteConfig)
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx-entrypoint.sh:/docker-entrypoint.sh:ro
+      - ./docker/certbot/conf/live:/etc/nginx/ssl/live
+      - ./docker/certbot/www:/var/www/certbot:ro
+      - ./assets/SiteConfig.xml:/usr/share/nginx/html/SiteConfig.xml:ro
+    depends_on:
+      - mhserveremu
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/docker-entrypoint.sh"]
+
+  certbot:
+    image: certbot/certbot
+    container_name: mhserveremu-certbot
+    volumes:
+      - ./docker/certbot/conf:/etc/letsencrypt
+      - ./docker/certbot/www:/var/www/certbot
+    # Auto-renew every 12 hours
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
+
+volumes:
+  mhserveremu-data:
