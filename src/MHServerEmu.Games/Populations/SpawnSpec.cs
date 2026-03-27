@@ -110,6 +110,7 @@ namespace MHServerEmu.Games.Populations
             int level = area.GetCharacterLevel(entityProto);
             settingsProperties[PropertyEnum.CharacterLevel] = level;
             settingsProperties[PropertyEnum.CombatLevel] = level;
+            settingsProperties[PropertyEnum.DifficultyTier] = region.DifficultyTierRef;
             if (Group != null)
             {
                 settingsProperties[PropertyEnum.SpawnGroupId] = Group.Id;

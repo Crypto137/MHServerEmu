@@ -216,6 +216,10 @@ namespace MHServerEmu.Games.Powers
             if (PowerPrototype is not MovementPowerPrototype movementPowerProto || movementPowerProto.ConstantMoveTime == false)
                 Properties.CopyProperty(power.Properties, PropertyEnum.MovementSpeedOverride);
 
+            // Difficulty tier for summons (e.g. Axis raid sentinels)
+            if (PowerPrototype is SummonPowerPrototype)
+                Properties.CopyProperty(powerOwner.Properties, PropertyEnum.DifficultyTier);
+
             // Snapshot properties from triggering power results
             // TODO: Do we need full power results here? We should be able to get away with just the properties
             
