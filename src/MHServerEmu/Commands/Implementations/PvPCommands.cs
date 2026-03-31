@@ -4,8 +4,6 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
-using MHServerEmu.PlayerManagement;
-using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -32,13 +30,7 @@ namespace MHServerEmu.Commands.Implementations
                 : RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo;
 
             int limit = (size == 5) ? -1 : size;
-
-            var playerManager = ServerManager.Instance.GetGameService(GameServiceType.PlayerManager) as PlayerManagerService;
-            if (playerManager == null) return "Failed to connect to the player manager.";
-
-            PlayerHandle destPlayer = playerManager.GetPlayer(playerConnection.PlayerDbId);
-            destPlayer.ReceiveRegionRequestQueueCommand(RegionRef, DifficultyRef, PrototypeId.Invalid, command, 0, 0, limit);
-
+            player.MatchQueueStatus.TryRegionRequestCommand(RegionRef, DifficultyRef, 0, command, limit);
             return $"Queued for {size}v{size} PvP! ({(isInParty ? "Party" : "Solo")})";
         }
 

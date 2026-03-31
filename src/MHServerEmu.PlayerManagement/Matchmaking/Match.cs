@@ -28,16 +28,12 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             int[] teamLimits = Queue.Prototype.TeamLimits;
 
-            if (queueParams.TeamSizeOverride > 0)
-            {
-                _teams.Add(new MatchTeam(0, queueParams.TeamSizeOverride));
-                _teams.Add(new MatchTeam(1, queueParams.TeamSizeOverride));
-            }
-            else if (teamLimits.HasValue())
+            if (teamLimits.HasValue())
             {
                 for (int i = 0; i < teamLimits.Length; i++)
                 {
-                    MatchTeam team = new(i, teamLimits[i]);
+                    int teamLimit = (queueParams.TeamSizeOverride > 0) ? queueParams.TeamSizeOverride : teamLimits[i];
+                    MatchTeam team = new(i, teamLimit);
                     _teams.Add(team);
                 }
             }
@@ -101,11 +97,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 return false;
 
             return true;
-        }
-
-        public bool IsCompatibleWith(in RegionRequestQueueParams queueParams)
-        {
-            return QueueParams.TeamSizeOverride == queueParams.TeamSizeOverride;
         }
 
         public bool IsReady()

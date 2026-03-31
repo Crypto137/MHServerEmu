@@ -214,7 +214,7 @@ namespace MHServerEmu.Games.Regions.MatchQueues
         /// Handles a <see cref="RegionRequestQueueCommandVar"/> request from a client.
         /// </summary>
         public bool TryRegionRequestCommand(PrototypeId regionRef, PrototypeId difficultyTierRef,
-            ulong groupId, RegionRequestQueueCommandVar command)
+            ulong groupId, RegionRequestQueueCommandVar command, int teamSizeOverride = -1)
         {
             if (regionRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "TryRegionRequestCommand(): regionRef == PrototypeId.Invalid");
 
@@ -272,7 +272,7 @@ namespace MHServerEmu.Games.Regions.MatchQueues
             if (command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass && regionProto.AllowsQueueBypass == false)
                 return false;
 
-            _owner.SendRegionRequestQueueCommandToPlayerManager(regionRef, difficultyTierRef, command, groupId);
+            _owner.SendRegionRequestQueueCommandToPlayerManager(regionRef, difficultyTierRef, command, groupId, 0, teamSizeOverride);
             return true;
         }
 

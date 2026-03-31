@@ -429,9 +429,10 @@ namespace MHServerEmu.PlayerManagement.Network
             RegionRequestQueueCommandVar command = matchRegionRequestQueueCommand.Command;
             ulong regionRequestGroupId = matchRegionRequestQueueCommand.RegionRequestGroupId;
             ulong targetPlayerDbId = matchRegionRequestQueueCommand.TargetPlayerDbId;
+            int teamSizeOverride = matchRegionRequestQueueCommand.TeamSizeOverride;
 
             PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
-            player?.ReceiveRegionRequestQueueCommand(regionRef, difficultyTierRef, metaStateRef, command, regionRequestGroupId, targetPlayerDbId);
+            player?.ReceiveRegionRequestQueueCommand(regionRef, difficultyTierRef, metaStateRef, command, regionRequestGroupId, targetPlayerDbId, teamSizeOverride);
             return true;
         }
 

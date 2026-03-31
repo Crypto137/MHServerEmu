@@ -45,7 +45,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             foreach (Match match in _matches)
             {
-                if (match.IsLookingForMore() && match.IsCompatibleWith(queueParams))
+                if (match.IsLookingForMore())
                     lfmMatches.Add(match);
             }
 
