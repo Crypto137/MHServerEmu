@@ -27,7 +27,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(DifficultyTierRef, MetaStateRef, IsBypass);
+            return HashCode.Combine(DifficultyTierRef, MetaStateRef, IsBypass, TeamSizeOverride);
         }
 
         public override bool Equals(object obj)
