@@ -31,11 +31,13 @@ namespace MHServerEmu.Commands.Implementations
                 ? RegionRequestQueueCommandVar.eRRQC_AddToQueueParty
                 : RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo;
 
+            int limit = (size == 5) ? -1 : size;
+
             var playerManager = ServerManager.Instance.GetGameService(GameServiceType.PlayerManager) as PlayerManagerService;
             if (playerManager == null) return "Failed to connect to the player manager.";
 
             PlayerHandle destPlayer = playerManager.GetPlayer(playerConnection.PlayerDbId);
-            destPlayer.ReceiveRegionRequestQueueCommand(RegionRef, DifficultyRef, PrototypeId.Invalid, command, 0, 0, size);
+            destPlayer.ReceiveRegionRequestQueueCommand(RegionRef, DifficultyRef, PrototypeId.Invalid, command, 0, 0, limit);
 
             return $"Queued for {size}v{size} PvP! ({(isInParty ? "Party" : "Solo")})";
         }
@@ -68,6 +70,6 @@ namespace MHServerEmu.Commands.Implementations
         [CommandDescription("Join 5v5 PvP queue.")]
         [CommandUsage("pvp 5v5")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Queue5v5(string[] @params, NetClient client) => JoinQueue(-1, client);
+        public string Queue5v5(string[] @params, NetClient client) => JoinQueue(5, client);
     }
 }
