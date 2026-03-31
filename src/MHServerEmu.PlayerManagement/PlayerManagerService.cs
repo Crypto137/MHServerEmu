@@ -147,6 +147,11 @@ namespace MHServerEmu.PlayerManagement
             statusDict["PlayerManagerPendingSessions"] = SessionManager.PendingSessionCount;
         }
 
+        public PlayerHandle GetPlayer(ulong playerDbId)
+        {
+            return ClientManager.GetPlayer(playerDbId);
+        }
+
         private void OnRouteMessageBuffer(in ServiceMessage.RouteMessageBuffer routeMessageBuffer)
         {
             IFrontendClient client = routeMessageBuffer.Client;

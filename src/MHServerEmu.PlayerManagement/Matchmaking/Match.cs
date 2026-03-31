@@ -27,7 +27,13 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             QueueParams = queueParams;
 
             int[] teamLimits = Queue.Prototype.TeamLimits;
-            if (teamLimits.HasValue())
+
+            if (queueParams.TeamSizeOverride > 0)
+            {
+                _teams.Add(new MatchTeam(0, queueParams.TeamSizeOverride));
+                _teams.Add(new MatchTeam(1, queueParams.TeamSizeOverride));
+            }
+            else if (teamLimits.HasValue())
             {
                 for (int i = 0; i < teamLimits.Length; i++)
                 {
@@ -95,6 +101,11 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 return false;
 
             return true;
+        }
+
+        public bool IsCompatibleWith(in RegionRequestQueueParams queueParams)
+        {
+            return QueueParams.TeamSizeOverride == queueParams.TeamSizeOverride;
         }
 
         public bool IsReady()
