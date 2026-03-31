@@ -27,11 +27,13 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             QueueParams = queueParams;
 
             int[] teamLimits = Queue.Prototype.TeamLimits;
+
             if (teamLimits.HasValue())
             {
                 for (int i = 0; i < teamLimits.Length; i++)
                 {
-                    MatchTeam team = new(i, teamLimits[i]);
+                    int teamLimit = (queueParams.TeamSizeOverride > 0) ? queueParams.TeamSizeOverride : teamLimits[i];
+                    MatchTeam team = new(i, teamLimit);
                     _teams.Add(team);
                 }
             }

@@ -461,7 +461,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [Game -> PlayerManager] Relays a match region request command from a client.
         /// </summary>
-        public readonly struct MatchRegionRequestQueueCommand(ulong playerDbId, ulong regionProtoId, ulong difficultyTierProtoId, ulong metaStateProtoId, RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId)
+        public readonly struct MatchRegionRequestQueueCommand(ulong playerDbId, ulong regionProtoId, ulong difficultyTierProtoId, ulong metaStateProtoId, RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId, int teamSizeOverride)
             : IGameServiceMessage
         {
             public readonly ulong PlayerDbId = playerDbId;
@@ -471,6 +471,7 @@ namespace MHServerEmu.Core.Network
             public readonly RegionRequestQueueCommandVar Command = command;
             public readonly ulong RegionRequestGroupId = regionRequestGroupId;
             public readonly ulong TargetPlayerDbId = targetPlayerDbId;
+            public readonly int TeamSizeOverride = teamSizeOverride;
         }
 
         // MatchQueueUpdate is based on PlayerMgrToGameServer.proto from 1.53

@@ -814,9 +814,9 @@ namespace MHServerEmu.PlayerManagement.Players
         }
 
         public void ReceiveRegionRequestQueueCommand(PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId metaStateRef,
-            RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId)
+            RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId, int teamSizeOverride)
         {
-            _regionRequestQueueCommandHandler.HandleCommand(regionRef, difficultyTierRef, metaStateRef, command, regionRequestGroupId, targetPlayerDbId);
+            _regionRequestQueueCommandHandler.HandleCommand(regionRef, difficultyTierRef, metaStateRef, command, regionRequestGroupId, targetPlayerDbId, teamSizeOverride);
         }
 
         public void AddToChatRoom(ChatRoomTypes roomType, ulong roomId)

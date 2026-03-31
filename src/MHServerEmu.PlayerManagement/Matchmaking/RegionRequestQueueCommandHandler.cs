@@ -22,7 +22,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         }
 
         public void HandleCommand(PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId metaStateRef,
-            RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId)
+            RegionRequestQueueCommandVar command, ulong regionRequestGroupId, ulong targetPlayerDbId, int teamSizeOverride = -1)
         {
             Logger.Trace($"HandleCommand(): command=[{command}], region=[{regionRef.GetNameFormatted()}], player=[{_player}]");
 
@@ -31,7 +31,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo:
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueParty:
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass:
-                    OnAddToQueue(regionRef, difficultyTierRef, metaStateRef, command);
+                    OnAddToQueue(regionRef, difficultyTierRef, metaStateRef, command, teamSizeOverride);
                     break;
 
                 case RegionRequestQueueCommandVar.eRRQC_RemoveFromQueue:
@@ -53,7 +53,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        private bool OnAddToQueue(PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId metaStateRef, RegionRequestQueueCommandVar command)
+        private bool OnAddToQueue(PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId metaStateRef,
+            RegionRequestQueueCommandVar command, int teamSizeOverride = -1)
         {
             RegionRequestQueue queue = PlayerManagerService.Instance.RegionRequestQueueManager.GetRegionRequestQueue(regionRef);
             if (queue == null)
@@ -74,7 +75,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             // Create region request group
             MasterParty party = command == RegionRequestQueueCommandVar.eRRQC_AddToQueueParty ? _player.CurrentParty : null;
-            RegionRequestQueueParams queueParams = new(difficultyTierRef, metaStateRef, command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass);
+            RegionRequestQueueParams queueParams = new(difficultyTierRef, metaStateRef, command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass, teamSizeOverride);
             RegionRequestGroup group = RegionRequestGroup.Create(queue, queueParams, _player, party);
 
             if (group == null)

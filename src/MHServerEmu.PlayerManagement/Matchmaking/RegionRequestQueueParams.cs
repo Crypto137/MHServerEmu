@@ -10,22 +10,24 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public readonly PrototypeId DifficultyTierRef;
         public readonly PrototypeId MetaStateRef;
         public readonly bool IsBypass;
+        public readonly int TeamSizeOverride;
 
-        public RegionRequestQueueParams(PrototypeId difficultyTierRef, PrototypeId metaStateRef, bool isBypass)
+        public RegionRequestQueueParams(PrototypeId difficultyTierRef, PrototypeId metaStateRef, bool isBypass, int teamSizeOverride)
         {
             DifficultyTierRef = difficultyTierRef;
             MetaStateRef = metaStateRef;
             IsBypass = isBypass;
+            TeamSizeOverride = teamSizeOverride;
         }
 
         public override string ToString()
         {
-            return $"difficulty={DifficultyTierRef.GetNameFormatted()}, metaState={MetaStateRef.GetNameFormatted()}, isBypass={IsBypass}";
+            return $"difficulty={DifficultyTierRef.GetNameFormatted()}, metaState={MetaStateRef.GetNameFormatted()}, isBypass={IsBypass}, teamSizeOverride={TeamSizeOverride}";
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(DifficultyTierRef, MetaStateRef, IsBypass);
+            return HashCode.Combine(DifficultyTierRef, MetaStateRef, IsBypass, TeamSizeOverride);
         }
 
         public override bool Equals(object obj)
@@ -40,7 +42,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         {
             return DifficultyTierRef == other.DifficultyTierRef &&
                    MetaStateRef == other.MetaStateRef &&
-                   IsBypass == other.IsBypass;
+                   IsBypass == other.IsBypass &&
+                   TeamSizeOverride == other.TeamSizeOverride;
         }
 
         public static bool operator ==(RegionRequestQueueParams left, RegionRequestQueueParams right)
