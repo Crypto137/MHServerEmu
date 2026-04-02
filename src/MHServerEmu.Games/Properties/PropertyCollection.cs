@@ -1484,5 +1484,36 @@ namespace MHServerEmu.Games.Properties
                 CurveId = curveId;
             }
         }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PropertyCollection"/> contains any properties
+        /// with a <see cref="PropertyEnum"/> matching any value in the provided <see cref="ReadOnlySpan{T}"/>.
+        /// </summary>
+        public bool HasPropertyInRange(ReadOnlySpan<PropertyEnum> propertyEnums)
+        {
+            foreach (PropertyEnum propertyEnum in propertyEnums)
+            {
+                if (HasPropertyInRange(propertyEnum))
+                    return true;
+            }
+        
+            return false;
+        }
+        
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PropertyCollection"/> contains any properties
+        /// with the specified <see cref="PropertyEnum"/>.
+        /// </summary>
+        public bool HasPropertyInRange(PropertyEnum propertyEnum)
+        {
+            // If IteratePropertyRange for this enum would yield any results, return true.
+            // This is equivalent to checking if the iterator is non-empty, but allows
+            // implementations to use a more efficient check if available (e.g. checking
+            // a bucket or index rather than iterating).
+            foreach (var kvp in IteratePropertyRange(propertyEnum))
+                return true;
+        
+            return false;
+        }
     }
 }

@@ -1696,6 +1696,9 @@ namespace MHServerEmu.Games.Entities
             EntityManager entityManager = Game.EntityManager;
 
             using PropertyCollection procProperties = GetProcProperties(properties);
+            if (procProperties == null)
+                return false;
+
             foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesAll))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId procPowerProtoRef);
