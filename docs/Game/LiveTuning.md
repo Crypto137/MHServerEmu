@@ -122,10 +122,10 @@ World Entity tuning variables can be applied to mobs, NPCs, and items.
 
 ### Mission
 
-| Tuning Variable    | Description                          |
-| ------------------ | ------------------------------------ |
-| eMTV_Enabled       | Disables this mission when set to 0. |
-| eMTV_EventInstance |                                      |
+| Tuning Variable    | Description                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| eMTV_Enabled       | Disables this mission when set to 0.                                                  |
+| eMTV_EventInstance | Increment this value to reset limited time event missions (e.g. A.R.M.O.R. Defender). |
 
 ### Condition
 

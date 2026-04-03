@@ -128,6 +128,10 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     RouteMessageToGame(matchQueueFlush.GameId, matchQueueFlush);
                     break;
 
+                case ServiceMessage.SetLiveTuningValues setLiveTuningValues:
+                    GameManager.BroadcastServiceMessageToGames(setLiveTuningValues);
+                    break;
+
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;

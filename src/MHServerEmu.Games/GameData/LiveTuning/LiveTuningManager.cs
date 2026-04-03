@@ -1,6 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
@@ -12,17 +14,19 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         private readonly LiveTuningData _liveTuningData = new();
         private int _lastUpdateChangeNum = 0;
 
+        private readonly Dictionary<(ulong, int), float> _lastKnownSettings = new();
+
         public static LiveTuningManager Instance { get; } = new();
 
         private LiveTuningManager() { }
 
         public bool Initialize()
         {
-            LoadLiveTuningDataFromDisk();
+            LoadLiveTuningDataFromDisk(false);
             return true;
         }
 
-        public bool LoadLiveTuningDataFromDisk()
+        public bool LoadLiveTuningDataFromDisk(bool sendToGameInstances)
         {
             string liveTuningDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "LiveTuning");
             if (Directory.Exists(liveTuningDirectory) == false)
@@ -54,10 +58,80 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             }
 
             UpdateLiveTuningData(protobufList, true);
-            return Logger.InfoReturn(true, $"Loaded {protobufList.Count} live tuning settings");
+            Logger.Info($"Loaded {protobufList.Count} live tuning settings");
+
+            CacheLoadedSettings(protobufList, sendToGameInstances);
+
+            return true;
         }
 
-        public void UpdateLiveTuningData(IEnumerable<NetStructLiveTuningSettingProtoEnumValue> protoEnumValues, bool resetToDefaults)
+        private void CacheLoadedSettings(List<NetStructLiveTuningSettingProtoEnumValue> loadedSettings, bool sendToGameInstances)
+        {
+            // Filter out tuning settings we know game instances don't need to react to in advance to reduce workload on individual game instances.
+            List<NetStructLiveTuningSettingProtoEnumValue> settingsToSend = null;
+
+            // Iterate in reverse and skip already encountered proto refs to send only the latest data if a setting is set multiple times.
+            using var protoRefsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> protoRefs);
+
+            for (int i = loadedSettings.Count - 1; i >= 0; i--)
+            {
+                NetStructLiveTuningSettingProtoEnumValue setting = loadedSettings[i];
+
+                PrototypeId tuningProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)setting.TuningVarProtoId);
+                if (tuningProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                if (protoRefs.Add(tuningProtoRef) == false)
+                    continue;
+
+                Prototype tuningProto = GameDatabase.GetPrototype<Prototype>(tuningProtoRef);
+                if (tuningProto == null)
+                {
+                    Logger.Warn("SendChangedSettingsToGames(): tuningProto == null");
+                    continue;
+                }
+
+                bool shouldSend = tuningProto switch
+                {
+                    WorldEntityPrototype => setting.TuningVarEnum == (int)WorldEntityTuningVar.eWETV_Visible && tuningProto is not AvatarPrototype,
+                    MissionPrototype     => setting.TuningVarEnum == (int)MissionTuningVar.eMTV_EventInstance,
+                    PublicEventPrototype => setting.TuningVarEnum == (int)PublicEventTuningVar.ePETV_EventInstance,
+                    _                    => false,
+                };
+
+                // Check against our internal cache if this value is different from what was sent last time.
+                if (shouldSend)
+                {
+                    var key = (setting.TuningVarProtoId, setting.TuningVarEnum);
+
+                    // I don't think CacheLoadedSettings() is going to be called from multiple threads in practice, but better safe than sorry!
+                    lock (_lastKnownSettings)
+                    {
+                        if (_lastKnownSettings.TryGetValue(key, out float lastKnownValue) && lastKnownValue == setting.TuningVarValue)
+                            shouldSend = false;
+                        else
+                            _lastKnownSettings[key] = setting.TuningVarValue;
+                    }
+                }
+
+                if (shouldSend)
+                {
+                    settingsToSend ??= new();
+                    settingsToSend.Add(setting);
+                }
+            }
+
+            // Skip sending if there is nothing new or we are initializing for the first time.
+            if (settingsToSend != null && sendToGameInstances)
+            {
+                Logger.Debug($"SetLiveTuningValues(): {settingsToSend.Count}");
+
+                ServiceMessage.SetLiveTuningValues message = new(settingsToSend);
+                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            }
+        }
+
+        public void UpdateLiveTuningData(List<NetStructLiveTuningSettingProtoEnumValue> protoEnumValues, bool resetToDefaults)
         {
             lock (_liveTuningData)
             {

@@ -4,6 +4,8 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.MTXStore;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -91,6 +93,10 @@ namespace MHServerEmu.Games.Network
 
                 case ServiceMessage.MatchQueueFlush matchQueueFlush:
                     OnMatchQueueFlush(matchQueueFlush);
+                    break;
+
+                case ServiceMessage.SetLiveTuningValues setLiveTuningValues:
+                    OnSetLiveTuningValues(setLiveTuningValues);
                     break;
 
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
@@ -307,6 +313,65 @@ namespace MHServerEmu.Games.Network
                 return;
 
             player.MatchQueueStatus.Flush();
+        }
+
+        private void OnSetLiveTuningValues(in ServiceMessage.SetLiveTuningValues setLiveTuningValues)
+        {
+            List<NetStructLiveTuningSettingProtoEnumValue> settings = setLiveTuningValues.Settings;
+            if (settings == null || settings.Count == 0)
+            {
+                Logger.Warn("OnSetLiveTuningValues(): settings == null || settings.Count == 0");
+                return;
+            }
+
+            foreach (NetStructLiveTuningSettingProtoEnumValue setting in setLiveTuningValues.Settings)
+            {
+                PrototypeId tuningProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)setting.TuningVarProtoId);
+                if (tuningProtoRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn("OnSetLiveTuningValues(): tuningProtoRef == PrototypeId.Invalid");
+                    continue;
+                }
+
+                Prototype tuningProto = GameDatabase.GetPrototype<Prototype>(tuningProtoRef);
+                if (tuningProto == null)
+                {
+                    Logger.Warn("OnSetLiveTuningValues(): tuningProto == null");
+                    continue;
+                }
+
+                switch (tuningProto)
+                {
+                    case WorldEntityPrototype worldEntityProto:
+                        // TODO: eWETV_Visible
+                        break;
+
+                    case MissionPrototype missionProto:
+                        if (setting.TuningVarEnum == (int)MissionTuningVar.eMTV_EventInstance)
+                        {
+                            foreach (Player player in new PlayerIterator(Game))
+                            {
+                                Region region = player.GetRegion();
+                                if (region == null)
+                                    continue;
+
+                                Mission mission = player.MissionManager?.MissionByDataRef(tuningProtoRef);
+                                if (mission == null)
+                                {
+                                    Logger.Warn("OnSetLiveTuningValues(): mission == null");
+                                    continue;
+                                }
+
+                                mission.RestartMission();
+                            }
+                        }
+                        break;
+
+                    case PublicEventPrototype publicEventProto:
+                        // V48_TODO: ePETV_EventInstance
+                        break;
+                }
+            }
         }
 
         private void OnLeaderboardStateChange(in ServiceMessage.LeaderboardStateChange leaderboardStateChange)
