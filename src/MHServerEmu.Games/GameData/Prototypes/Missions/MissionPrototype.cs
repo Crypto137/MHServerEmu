@@ -5,7 +5,6 @@ using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Loot.Visitors;
 using MHServerEmu.Games.Regions;
-using static MHServerEmu.Games.Missions.MissionManager;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -372,6 +371,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MissionPrototypeEnumValue { get; private set; }
         [DoNotCopy]
         public List<PrototypeId> MissionActionReferencedPowers { get; private set; }
+
+        [DoNotCopy]
+        public int EventInstance { get => (int)LiveTuningManager.GetLiveMissionTuningVar(this, MissionTuningVar.eMTV_EventInstance); }
 
         private readonly HashSet<PrototypeId> PopulationRegions = new();
         private readonly HashSet<PrototypeId> PopulationAreas = new();

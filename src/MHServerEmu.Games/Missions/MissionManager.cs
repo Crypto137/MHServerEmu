@@ -1087,6 +1087,12 @@ namespace MHServerEmu.Games.Missions
                         // be used to transfer mission progress when the mission's prototype changes.
                         // Because our mission data is going to remain unchanged for the foreseeable
                         // future, we are not going to implement this right now.
+
+                        if (archive.Version >= ArchiveVersion.AddedMissionEventInstance)
+                        {
+                            int eventInstance = missionProto != null ? missionProto.EventInstance : 1;
+                            success &= Serializer.Transfer(archive, ref eventInstance);
+                        }
                     }
 
                     success &= Serializer.Transfer(archive, ref mission);
@@ -1126,6 +1132,23 @@ namespace MHServerEmu.Games.Missions
                         versionMismatch = success && shouldCreateMission && version != missionProto.Version;
 
                         success &= Serializer.Transfer(archive, ref missionState);
+
+                        int prevEventInstance = 1;
+                        if (archive.Version >= ArchiveVersion.AddedMissionEventInstance)
+                            success &= Serializer.Transfer(archive, ref prevEventInstance);
+
+                        if (success && shouldCreateMission)
+                        {
+                            int eventInstance = missionProto != null ? missionProto.EventInstance : 1;
+
+                            // Reset the saved mission if it's from a different event instance
+                            // (e.g. ARMORUltimateUpgradeMission aka A.R.M.O.R. Defender).
+                            if (eventInstance != prevEventInstance)
+                            {
+                                missionState = (uint)MissionState.Inactive;
+                                versionMismatch = true;
+                            }
+                        }
                     }
 
                     // Missions never change in transfer, so they are skipped only in persistent archives
