@@ -32,8 +32,7 @@
         /// </summary>
         public void Clear()
         {
-            for (int i = 0; i < _data.Length; i++)
-                _data[i] = LiveTuningData.DefaultTuningVarValue;
+            _data.AsSpan().Fill(LiveTuningData.DefaultTuningVarValue);
         }
 
         /// <summary>
@@ -41,12 +40,13 @@
         /// </summary>
         public void Copy(TuningVarArray other)
         {
-            if (_data.Length != other._data.Length)
+            int length = _data.Length;
+            float[] source = other._data;
+
+            if (source.Length != length)
                 throw new InvalidOperationException("TuningVarArray size mismatch.");
 
-            for (int i = 0; i < _data.Length; i++)
-                _data[i] = other._data[i];
+            Buffer.BlockCopy(source, 0, _data, 0, length * sizeof(float));
         }
-
     }
 }
