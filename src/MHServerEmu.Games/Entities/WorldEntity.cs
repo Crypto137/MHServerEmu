@@ -173,6 +173,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsDiscoverable { get => CompatibleReplicationChannels.HasFlag(AOINetworkPolicyValues.AOIChannelDiscovery); }
         public bool IsTrackable { get => WorldEntityPrototype?.TrackingDisabled == false; }
         public bool IsLiveTuningEnabled { get => WorldEntityPrototype?.IsLiveTuningEnabled() == true; }
+        public bool IsLiveTuningVisible { get => WorldEntityPrototype?.IsLiveTuningVisible() == true; }
         public bool IsVacuumable { get => WorldEntityPrototype?.IsVacuumable == true; }
         public bool IsCrafter { get => ((PrototypeId)Properties[PropertyEnum.VendorType]).As<VendorTypePrototype>()?.IsCrafter == true; }
         public bool IsStash { get => Properties[PropertyEnum.OpenPlayerStash]; }

@@ -343,7 +343,26 @@ namespace MHServerEmu.Games.Network
                 switch (tuningProto)
                 {
                     case WorldEntityPrototype worldEntityProto:
-                        // TODO: eWETV_Visible
+                        if (setting.TuningVarEnum == (int)WorldEntityTuningVar.eWETV_Visible)
+                        {
+                            if (worldEntityProto is AvatarPrototype)
+                                break;
+
+                            bool updateAll = setting.TuningVarValue != 0f;
+
+                            foreach (Entity entity in Game.EntityManager)
+                            {
+                                if (entity is not WorldEntity worldEntity)
+                                    continue;
+
+                                if (worldEntity.IsInWorld == false)
+                                    continue;
+
+                                worldEntity.UpdateInterestPolicies(updateAll);
+                                worldEntity.UpdateSimulationState();
+                            }
+                        }
+
                         break;
 
                     case MissionPrototype missionProto:

@@ -377,6 +377,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return tuningVar != 0;
         }
 
+        public bool IsLiveTuningVisible()
+        {
+            if (this is AvatarPrototype)
+                return true;
+
+            int tuningVar = (int)Math.Floor(LiveTuningManager.GetLiveWorldEntityTuningVar(this, WorldEntityTuningVar.eWETV_Visible));
+            return tuningVar != 0;
+        }
+
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);

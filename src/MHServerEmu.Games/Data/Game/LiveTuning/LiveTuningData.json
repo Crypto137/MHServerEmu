@@ -1,5 +1,15 @@
 [
   {
+    "Prototype": "Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/BIFBuxGiver.prototype",
+    "Setting": "eWETV_Visible",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/BIFBuxTaker.prototype",
+    "Setting": "eWETV_Visible",
+    "Value": 0.0
+  },
+  {
     "Prototype": "Powers/EnemyPowers/Boss/MindlessOneBoss/GroundStomp.prototype",
     "Setting": "ePTV_PowerDamagePVE",
     "Value": 0.3
