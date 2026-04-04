@@ -115,77 +115,32 @@
     "Value": 0.0
   },
   {
+    "Prototype": "Loot/Tables/Events/WealthOfKingsCounty.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/OrdersFromTheHandTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Terminals/DailyBugle/NewspapersTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
     "Prototype": "Loot/Tables/MissionRewards/SharedQuest/SharedQuestOmegaFiles.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
   },
-    {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraCrossbones.prototype",
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/AoSEventHydraPowerUpTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
   },
   {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraHood.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraJuggernaut.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraKlrt.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraMandarin.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraTaskmaster.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraUltron.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDBatroc.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDGorgon.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDKingpin.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDKlrt.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDMandarin.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDNickFury.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDShocker.prototype",
+    "Prototype": "Loot/Tables/Mob/Bosses/AoSEventSHIELDPowerUpTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
   },
@@ -226,6 +181,11 @@
   },
   {
     "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay7.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/PVEEndgame/Limbo/LimboStrikeOnLimbo.prototype",
     "Setting": "eMTV_Enabled",
     "Value": 0.0
   },
@@ -315,13 +275,18 @@
     "Value": 0.0
   },
   {
-    "Prototype": "Events/PublicEvents/Events/CivilWar.prototype",
-    "Setting": "ePETV_Enabled",
+    "Prototype": "Missions/Prototypes/BonusMissions/CosmoMission.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/PVEEndgame/StaticScenarios/XMasGiftXChange.prototype",
+    "Setting": "eMTV_Enabled",
     "Value": 0.0
   },
   {
     "Prototype": "Events/PublicEvents/Events/CivilWar.prototype",
-    "Setting": "ePETV_EventInstance",
-    "Value": 14.0
+    "Setting": "ePETV_Enabled",
+    "Value": 0.0
   }
 ]

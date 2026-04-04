@@ -1,0 +1,77 @@
+﻿[
+  {
+    "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Airport/CivilWarAirportCaptainAmericaRegionBand.prototype",
+    "Setting": "eRTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Regions/HUBS/CivilWarHUBs/CivilWarHubCaptainAmericaWarehouseRegion.prototype",
+    "Setting": "eRTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Bazaar/AltRegions/CivilWarBazaarRegion60Cosmic.prototype",
+    "Setting": "eRTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Airport/AltRegions/AirportCap/CivilWarAirportCaptainAmericaRegion60Cosmic.prototype",
+    "Setting": "eRTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Bazaar/CivilWarBazaarRegionBand.prototype",
+    "Setting": "eRTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Regions/HUBS/CivilWarHUBs/CivilWarHubIronManAvengersRoofRegion.prototype",
+    "Setting": "eRTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Airport/CivilWarAirportIronManRegionBand.prototype",
+    "Setting": "eRTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Airport/AltRegions/AirportIronMan/CivilWarAirportIronManRegion60Cosmic.prototype",
+    "Setting": "eRTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/TeamCapTokenDropTableLT.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/TeamIronManTokenDropTableLT.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/CivilWarCurrencyTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/CivilWarEventPowerUpTableTeamCap.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/CivilWarEventPowerUpTableTeamIM.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Events/PublicEvents/Events/CivilWar.prototype",
+    "Setting": "ePETV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Events/PublicEvents/Events/CivilWar.prototype",
+    "Setting": "ePETV_EventInstance",
+    "Value": 14.0
+  }
+]

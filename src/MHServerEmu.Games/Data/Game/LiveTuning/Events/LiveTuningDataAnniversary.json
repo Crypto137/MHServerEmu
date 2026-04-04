@@ -1,0 +1,12 @@
+﻿[
+  {
+    "Prototype": "Loot/Tables/Events/Anniversary2017Loot.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/CosmoMission.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  }
+]

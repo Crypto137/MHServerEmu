@@ -65,14 +65,6 @@
     },
     {
         "Enabled": true,
-        "Prototype": "Missions/Prototypes/PVEEndgame/StaticScenarios/XMasGiftXChange.prototype",
-        "Path": "DesignState",
-        "Description": "Disable XMasGiftXChange",
-        "ValueType": "Enum",
-        "Value": "NotInGame"
-    },
-    {
-        "Enabled": true,
         "Prototype": "Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell",
         "Path": "MarkerSet.Markers[27].EntityGuid",
         "Description": "Add Dagger",
@@ -94,5 +86,45 @@
         "Description": "Add Cloak",
         "ValueType": "PrototypeGuid",
         "Value": 13282508175937904349
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+        "Path": "Inventories[0].LootTable",
+        "Description": "Set LootTable to SpecialEventSummer for VendorAvengersTowerEventTerminal",
+        "ValueType": "PrototypeId",
+        "Value": 16485753690354620499
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+        "Path": "Inventories[0].LootTable",
+        "Description": "Set LootTable to SpecialEventHeroesForHire for VendorAvengersTowerEventTerminal",
+        "ValueType": "PrototypeId",
+        "Value": 13437915080456018735
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+        "Path": "Inventories[0].LootTable",
+        "Description": "Set LootTable to Anniversary2016VendorLootTable for VendorAvengersTowerEventTerminal",
+        "ValueType": "PrototypeId",
+        "Value": 6619300753712815238
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+        "Path": "Inventories[0].LootTable",
+        "Description": "Set LootTable to Anniversary2017VendorLootTable for VendorAvengersTowerEventTerminal (June 2 - August 22 2017)",
+        "ValueType": "PrototypeId",
+        "Value": 13601394654621801607
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+        "Path": "Inventories[0].LootTable",
+        "Description": "Set LootTable to SpecialEventBundlesofCash for VendorAvengersTowerEventTerminal",
+        "ValueType": "PrototypeId",
+        "Value": 2760518776469920539
     }
 ]

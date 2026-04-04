@@ -67,19 +67,40 @@
     <None Update="Data\Game\Achievements\Off\AchievementStringMap_05_Collection.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataArmorIncursion.json">
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataAnniversary.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataCosmicChaos.json">
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataDailyBugle.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataMysticMayhem.json">
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataOrdersFromTheHand.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataOdinsBounty.json">
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataWealthOfKingsCounty.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataOperationOmega.json">
+    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataArmorIncursion.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\Experimental\LiveTuningDataCivilWar.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataCosmicChaos.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataCowpocalypse.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataMidtownMadness.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataMysticMayhem.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataOdinsBounty.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataOperationOmega.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\LiveTuning\LiveTuningData.json">

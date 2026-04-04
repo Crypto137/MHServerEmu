@@ -5,72 +5,12 @@
     "Value": 2.0
   },
   {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraCrossbones.prototype",
+    "Prototype": "Loot/Tables/Mob/Bosses/AoSEventHydraPowerUpTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 2.0
   },
   {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraHood.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 2.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraJuggernaut.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 2.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraKlrt.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 2.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraMandarin.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 2.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraTaskmaster.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 2.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraUltron.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 2.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDBatroc.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 2.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDGorgon.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 2.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDKingpin.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 2.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDKlrt.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 2.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDMandarin.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 2.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDNickFury.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 2.0
-  },
-  {
-    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDShocker.prototype",
+    "Prototype": "Loot/Tables/Mob/Bosses/AoSEventSHIELDPowerUpTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 2.0
   },
