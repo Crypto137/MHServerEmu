@@ -1,0 +1,132 @@
+﻿[
+  {
+    "Prototype": "Loot/Tables/MissionRewards/SharedQuest/SharedQuestOmegaFiles.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraCrossbones.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraHood.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraJuggernaut.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraKlrt.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraMandarin.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraTaskmaster.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraUltron.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDBatroc.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDGorgon.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDKingpin.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDKlrt.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDMandarin.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDNickFury.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDShocker.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay1.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay2.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay3.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay4.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+    {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay5.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+    {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay6.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay7.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/VendorVisibility/ATowerVendorVisibilityHydraRepBuffer.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/VendorVisibility/ATowerVendorVisibilitySHIELDRepBuffer.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/PVEEndgame/StaticScenarios/AgentsOfSHIELDEvent.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Events/GlobalEvents/EventPowerConditions/OmegaEventPowerCondition.prototype",
+    "Setting": "eCTV_Enabled",
+    "Value": 2.0
+  }
+]

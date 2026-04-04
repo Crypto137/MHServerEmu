@@ -1,0 +1,57 @@
+﻿[
+  {
+    "Prototype": "Regions/EndGame/TierX/Limbo/LimboRegionBand.prototype",
+    "Setting": "eRTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Regions/EndGame/TierX/Limbo/AltRegions/LimboRegionL60.prototype",
+    "Setting": "eRT_BonusItemFindMultiplier",
+    "Value": 10.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/MayhemCofferSpecialEventsTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/UnsortedBossesLootTables/Limbo63EternitySplinterDrop.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/MysticMayhemChild1New.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/MysticMayhemChild2New.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/MysticMayhemChild3New.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/MysticMayhemChild4New.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/MysticMayhemChild6New.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/MysticMayhemSelectorParentNew.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Events/GlobalEvents/EventPowerConditions/MysticMayhemEventPowerCondition.prototype",
+    "Setting": "eCTV_Enabled",
+    "Value": 2.0
+  }
+]

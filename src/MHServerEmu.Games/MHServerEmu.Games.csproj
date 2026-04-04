@@ -67,6 +67,21 @@
     <None Update="Data\Game\Achievements\Off\AchievementStringMap_05_Collection.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataArmorIncursion.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataCosmicChaos.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataMysticMayhem.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataOdinsBounty.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataOperationOmega.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\Game\LiveTuning\LiveTuningData.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -107,9 +122,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\LiveTuning\LiveTuningDataGlobal.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\LiveTuningDataBugFixes.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\Patches\PatchDataRestoredContent.json">

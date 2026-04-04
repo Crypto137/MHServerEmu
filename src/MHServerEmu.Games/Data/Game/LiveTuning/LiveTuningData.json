@@ -60,9 +60,9 @@
     "Value": 0.0
   },
   {
-    "Prototype": "Regions/EndGame/TierX/Limbo/AltRegions/LimboRegionL60.prototype",
-    "Setting": "eRT_BonusItemFindMultiplier",
-    "Value": 10.0
+    "Prototype": "Regions/EndGame/TierX/Limbo/LimboRegionBand.prototype",
+    "Setting": "eRTV_Enabled",
+    "Value": 0.0
   },
   {
     "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Airport/AltRegions/AirportCap/CivilWarAirportCaptainAmericaRegion60Cosmic.prototype",
@@ -112,6 +112,206 @@
   {
     "Prototype": "Loot/Tables/Events/Anniversary2017Loot.prototype",
     "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/MissionRewards/SharedQuest/SharedQuestOmegaFiles.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+    {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraCrossbones.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraHood.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraJuggernaut.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraKlrt.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraMandarin.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraTaskmaster.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootHydraUltron.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDBatroc.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDGorgon.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDKingpin.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDKlrt.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDMandarin.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDNickFury.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/AoSPowerUpBuffLootSHIELDShocker.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ARMORUltimateUpgradeMission.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay1.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay2.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay3.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay4.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay5.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay6.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay7.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/MysticMayhemChild1New.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/MysticMayhemChild2New.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/MysticMayhemChild3New.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/MysticMayhemChild4New.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/MysticMayhemChild6New.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/MysticMayhemSelectorParentNew.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay1.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay2.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay3.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay4.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay5.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay6.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay7.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/VendorVisibility/ATowerVendorVisibilityHydraRepBuffer.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/VendorVisibility/ATowerVendorVisibilitySHIELDRepBuffer.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/PVEEndgame/StaticScenarios/AgentsOfSHIELDEvent.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/PVEEndgame/Controllers/DoomFightDailyKismetControl.prototype",
+    "Setting": "eMTV_Enabled",
     "Value": 0.0
   },
   {
