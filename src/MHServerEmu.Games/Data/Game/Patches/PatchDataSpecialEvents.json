@@ -126,5 +126,13 @@
         "Description": "Set LootTable to SpecialEventBundlesofCash for VendorAvengersTowerEventTerminal",
         "ValueType": "PrototypeId",
         "Value": 2760518776469920539
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Metagame/PatrolBrooklyn/PatrolBrooklynMode.prototype",
+        "Path": "States[]",
+        "Description": "Add Cowpocalypse wave to Industry City Patrol",
+        "ValueType": "PrototypeId",
+        "Value": 4346653277293517379
     }
 ]

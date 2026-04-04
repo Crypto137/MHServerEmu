@@ -1,0 +1,37 @@
+﻿[
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay1.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay2.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay3.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay4.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay5.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay6.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ICPPhaseMissionDay7.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 1.0
+  }
+]
