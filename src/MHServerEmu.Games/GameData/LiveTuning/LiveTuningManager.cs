@@ -91,7 +91,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                     continue;
                 }
 
-                bool shouldSend = tuningProto switch
+                bool passesFilter = tuningProto switch
                 {
                     WorldEntityPrototype => setting.TuningVarEnum == (int)WorldEntityTuningVar.eWETV_Visible && tuningProto is not AvatarPrototype,
                     MissionPrototype     => setting.TuningVarEnum == (int)MissionTuningVar.eMTV_EventInstance,
@@ -100,7 +100,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                 };
 
                 // Check against our internal cache if this value is different from what was sent last time.
-                if (shouldSend)
+                if (passesFilter)
                 {
                     var key = (setting.TuningVarProtoId, setting.TuningVarEnum);
 
@@ -108,13 +108,13 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                     lock (_lastKnownSettings)
                     {
                         if (_lastKnownSettings.TryGetValue(key, out float lastKnownValue) && lastKnownValue == setting.TuningVarValue)
-                            shouldSend = false;
+                            passesFilter = false;
                         else
                             _lastKnownSettings[key] = setting.TuningVarValue;
                     }
                 }
 
-                if (shouldSend)
+                if (passesFilter && sendToGameInstances)
                 {
                     settingsToSend ??= new();
                     settingsToSend.Add(setting);
@@ -124,8 +124,6 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             // Skip sending if there is nothing new or we are initializing for the first time.
             if (settingsToSend != null && sendToGameInstances)
             {
-                Logger.Debug($"SetLiveTuningValues(): {settingsToSend.Count}");
-
                 ServiceMessage.SetLiveTuningValues message = new(settingsToSend);
                 ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
             }
