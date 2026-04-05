@@ -22,46 +22,51 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public bool Initialize()
         {
-            LoadLiveTuningDataFromDisk(false);
+            LoadLiveTuningData(false);
             return true;
         }
 
-        public bool LoadLiveTuningDataFromDisk(bool sendToGameInstances)
+        public bool LoadLiveTuningData(bool sendToGameInstances)
         {
             string liveTuningDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "LiveTuning");
             if (Directory.Exists(liveTuningDirectory) == false)
                 return Logger.WarnReturn(false, "LoadLiveTuningDataFromDisk(): Game data directory not found");
 
-            List<NetStructLiveTuningSettingProtoEnumValue> protobufList = new();
+            List<NetStructLiveTuningSettingProtoEnumValue> settings = new();
 
             // Read all .json files that start with LiveTuningData
             foreach (string filePath in FileHelper.GetFilesWithPrefix(liveTuningDirectory, "LiveTuningData", "json"))
+                LoadLiveTuningDataFromFile(filePath, settings);
+
+            // Get additional event Live Tuning based on the current day
+            LiveTuningEventScheduler.Instance.GetLiveTuningSettings(settings);
+
+            UpdateLiveTuningData(settings, true);
+            Logger.Info($"Loaded {settings.Count} Live Tuning settings");
+
+            CacheLoadedSettings(settings, sendToGameInstances);
+
+            return true;
+        }
+
+        public static bool LoadLiveTuningDataFromFile(string filePath, List<NetStructLiveTuningSettingProtoEnumValue> settings)
+        {
+            ReadOnlySpan<char> fileName = Path.GetFileName(filePath.AsSpan());
+
+            LiveTuningUpdateValue[] updateValues = FileHelper.DeserializeJson<LiveTuningUpdateValue[]>(filePath);
+            if (updateValues == null)
+                return Logger.WarnReturn(false, $"LoadLiveTuningDataFromDisk(): Failed to parse {fileName}, skipping");
+
+            foreach (LiveTuningUpdateValue value in updateValues)
             {
-                string fileName = Path.GetFileName(filePath);
-
-                LiveTuningUpdateValue[] updateValues = FileHelper.DeserializeJson<LiveTuningUpdateValue[]>(filePath);
-                if (updateValues == null)
-                {
-                    Logger.Warn($"LoadLiveTuningDataFromDisk(): Failed to parse {fileName}, skipping");
+                NetStructLiveTuningSettingProtoEnumValue protobuf = value.ToProtobuf();
+                if (protobuf == null)
                     continue;
-                }
 
-                foreach (LiveTuningUpdateValue value in updateValues)
-                {
-                    NetStructLiveTuningSettingProtoEnumValue protobuf = value.ToProtobuf();
-                    if (protobuf == null)
-                        continue;
-                    protobufList.Add(protobuf);
-                }
-
-                Logger.Trace($"Parsed live tuning data from {fileName}");
+                settings.Add(protobuf);
             }
 
-            UpdateLiveTuningData(protobufList, true);
-            Logger.Info($"Loaded {protobufList.Count} live tuning settings");
-
-            CacheLoadedSettings(protobufList, sendToGameInstances);
-
+            Logger.Trace($"Parsed Live Tuning data from {fileName}");
             return true;
         }
 

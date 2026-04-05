@@ -244,9 +244,12 @@ namespace MHServerEmu
             var config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
             IDBManager.Instance = config.UseJsonDBManager ? JsonDBManager.Instance : SQLiteDBManager.Instance;
 
+            // LiveTuningManager uses data from LiveTuningEventScheduler initialization,
+            // and LiveTuningEventScheduler needs GameDatabase to be initialized to get TimeZone from GlobalsPrototype.
             return PakFileSystem.Instance.Initialize()
                 && ProtocolDispatchTable.Instance.Initialize()
                 && GameDatabase.IsInitialized
+                && LiveTuningEventScheduler.Instance.Initialize()
                 && LiveTuningManager.Instance.Initialize()
                 && CatalogManager.Instance.Initialize()
                 && IDBManager.Instance.Initialize();

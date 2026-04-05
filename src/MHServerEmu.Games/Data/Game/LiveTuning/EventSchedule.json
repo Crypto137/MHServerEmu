@@ -1,0 +1,54 @@
+[
+  {
+    "Name": "Permanent Events",
+    "IsEnabled": true,
+    "Type": "AlwaysOn",
+    "Events": [
+      "DailyBugle",
+      "ICPPhase"
+    ]
+  },
+  {
+    "Name": "Midtown Madness",
+    "IsEnabled": true,
+    "Type": "DayOfWeek",
+    "StartDayOfWeek": "Monday",
+    "Events": [
+      "MidtownMadness"
+    ]
+  },
+  {
+    "Name": "Core Weekly Rotation",
+    "IsEnabled": true,
+    "Type": "WeeklyRotation",
+    "StartDayOfWeek": "Friday",
+    "Events": [
+      "CosmicChaos",
+      "OdinsBounty",
+      "OperationOmega",
+      "MysticMayhem",
+      "ArmorIncursion"
+    ]
+  },
+  {
+    "Name": "Secondary Weekly Rotation",
+    "IsEnabled": true,
+    "Type": "WeeklyRotation",
+    "StartDayOfWeek": "Friday",
+    "Events": [
+      "OrdersFromTheHand",
+      "WealthOfKingsCounty"
+    ]
+  },
+  {
+    "Name": "Anniversary",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 6,
+    "StartDay": 4,
+    "DurationDays": 14,
+    "Events": [
+      "Anniversary"
+    ]
+  }
+]

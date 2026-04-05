@@ -1,7 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using Gazillion;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
 {

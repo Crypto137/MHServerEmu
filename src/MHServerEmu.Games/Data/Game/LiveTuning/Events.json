@@ -1,0 +1,53 @@
+{
+  "ArmorIncursion": {
+    "DisplayName": "A.R.M.O.R. Incursion",
+    "FilePath": "Events/Weekly/LiveTuningDataArmorIncursion.json",
+    "InstancedMissions": [
+      "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ARMORUltimateUpgradeMission.prototype"
+    ]
+  },
+  "CosmicChaos": {
+    "DisplayName": "Cosmic Chaos",
+    "FilePath": "Events/Weekly/LiveTuningDataCosmicChaos.json"
+  },
+  "MysticMayhem": {
+    "DisplayName": "Mystic Mayhem",
+    "FilePath": "Events/Weekly/LiveTuningDataMysticMayhem.json"
+  },
+  "OdinsBounty": {
+    "DisplayName": "Odin's Bounty",
+    "FilePath": "Events/Weekly/LiveTuningDataOdinsBounty.json"
+  },
+  "OperationOmega": {
+    "DisplayName": "Operation Omega",
+    "FilePath": "Events/Weekly/LiveTuningDataOperationOmega.json"
+  },
+  "Anniversary": {
+    "DisplayName": "Anniversary",
+    "FilePath": "Events/LiveTuningDataAnniversary.json"
+  },
+  "Cowpocalypse": {
+    "DisplayName": "Cowpocalypse",
+    "FilePath": "Events/LiveTuningDataCowpocalypse.json"
+  },
+  "DailyBugle": {
+    "DisplayName": "Daily Bugle",
+    "FilePath": "Events/LiveTuningDataDailyBugle.json"
+  },
+  "ICPPhase": {
+    "DisplayName": "Industry City Patrol",
+    "FilePath": "Events/LiveTuningDataICPPhase.json"
+  },
+  "MidtownMadness": {
+    "DisplayName": "Midtown Madness",
+    "FilePath": "Events/LiveTuningDataMidtownMadness.json"
+  },
+  "OrdersFromTheHand": {
+    "DisplayName": "Orders From The Hand",
+    "FilePath": "Events/LiveTuningDataOrdersFromTheHand.json"
+  },
+  "WealthOfKingsCounty": {
+    "DisplayName": "The Wealth of Kings County",
+    "FilePath": "Events/LiveTuningDataWealthOfKingsCounty.json"
+  }
+}
