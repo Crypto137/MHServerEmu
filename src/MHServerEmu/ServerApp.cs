@@ -90,6 +90,9 @@ namespace MHServerEmu
 
             Logger.Info("MHServerEmu starting...");
 
+            // Make sure the MetricsManager is instantiated before we do anything else.
+            MetricsManager.Instance.Initialize();
+
             // Our encoding is not going to work unless we are running on a little-endian system
             if (BitConverter.IsLittleEndian == false)
             {
