@@ -11,14 +11,18 @@ namespace MHServerEmu.Games.GameData.LiveTuning
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly string LiveTuningDataDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "LiveTuning");
-        private static readonly string EventListFilePath = Path.Combine(LiveTuningDataDirectory, "Events.json");
-        private static readonly string EventListOverrideFilePath = Path.Combine(LiveTuningDataDirectory, "EventsOverride.json");
-        private static readonly string EventScheduleFilePath = Path.Combine(LiveTuningDataDirectory, "EventSchedule.json");
-        private static readonly string EventScheduleOverrideFilePath = Path.Combine(LiveTuningDataDirectory, "EventScheduleOverride.json");
+        private int RefreshTimerIntervalMS = 5000;
+
+        private static readonly string EventListFilePath = Path.Combine(LiveTuningManager.LiveTuningDataDirectory, "Events.json");
+        private static readonly string EventListOverrideFilePath = Path.Combine(LiveTuningManager.LiveTuningDataDirectory, "EventsOverride.json");
+        private static readonly string EventScheduleFilePath = Path.Combine(LiveTuningManager.LiveTuningDataDirectory, "EventSchedule.json");
+        private static readonly string EventScheduleOverrideFilePath = Path.Combine(LiveTuningManager.LiveTuningDataDirectory, "EventScheduleOverride.json");
 
         private readonly Dictionary<string, LiveTuningEvent> _events = new();
         private readonly List<LiveTuningEventRule> _rules = new();
+
+        private Timer _refreshTimer;
+        private int _lastCalendarDay;
 
         public static LiveTuningEventScheduler Instance { get; } = new();
 
@@ -27,51 +31,14 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         public bool Initialize()
         {
             GameDataConfig config = ConfigManager.Instance.GetConfig<GameDataConfig>();
-            if (config.EnableLiveTuningEvents == false)
-                return true;
-
-            _events.Clear();
-            _rules.Clear();
-
-            // Live Tuning events are not critical, so allow server initialization to proceed if any of the configuration files are missing or borked.
-            string eventListFilePath = GetEventListFilePath();
-            if (eventListFilePath == null)
-                return Logger.WarnReturn(true, "Initialize(): Live Tuning event list file not found");
-
-            string eventScheduleFilePath = GetEventScheduleFilePath();
-            if (eventScheduleFilePath == null)
-                return Logger.WarnReturn(true, "Initialize(): Live Tuning event schedule file not found");
-
-            Dictionary<string, LiveTuningEvent> events = FileHelper.DeserializeJson<Dictionary<string, LiveTuningEvent>>(eventListFilePath, LiveTuningEvent.JsonOptions.Default);
-            if (events == null)
-                return Logger.WarnReturn(true, "Initialize(): Failed to load Live Tuning event list");
-
-            LiveTuningEventRule[] eventSchedule = FileHelper.DeserializeJson<LiveTuningEventRule[]>(eventScheduleFilePath, LiveTuningEvent.JsonOptions.Default);
-            if (eventSchedule == null)
-                return Logger.WarnReturn(true, "Initialize(): Failed to load Live Tuning event schedule");
-
-            foreach (var kvp in events)
+            if (config.EnableLiveTuningEvents)
             {
-                Logger.Trace($"Initialize(): Registered Live Tuning event {kvp.Value}");
-                _events.Add(kvp.Key, kvp.Value);
+                InitializeEvents();
+
+                if (config.AutoRefreshLiveTuning)
+                    InitializeRefreshTimer();
             }
 
-            foreach (LiveTuningEventRule rule in eventSchedule)
-            {
-                if (rule.IsEnabled == false)
-                    continue;
-
-                if (rule.IsValid() == false)
-                {
-                    Logger.Warn($"Initialize(): Live Tuning event rule {rule} failed validation, skipping...");
-                    continue;
-                }
-
-                Logger.Trace($"Initialize(): Registered Live Tuning event rule {rule}");
-                _rules.Add(rule);
-            }
-
-            Logger.Info("Finished initializing Live Tuning events");
             return true;
         }
 
@@ -108,12 +75,94 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             Logger.Info($"Finished loading {loadedCount} Live Tuning events");
         }
 
+        private bool InitializeEvents()
+        {
+            _events.Clear();
+            _rules.Clear();
+
+            // Live Tuning events are not critical, so allow server initialization to proceed if any of the configuration files are missing or borked.
+            string eventListFilePath = GetEventListFilePath();
+            if (eventListFilePath == null)
+                return Logger.WarnReturn(true, "InitializeEvents(): Live Tuning event list file not found");
+
+            string eventScheduleFilePath = GetEventScheduleFilePath();
+            if (eventScheduleFilePath == null)
+                return Logger.WarnReturn(true, "InitializeEvents(): Live Tuning event schedule file not found");
+
+            Dictionary<string, LiveTuningEvent> events = FileHelper.DeserializeJson<Dictionary<string, LiveTuningEvent>>(eventListFilePath, LiveTuningEvent.JsonOptions.Default);
+            if (events == null)
+                return Logger.WarnReturn(true, "InitializeEvents(): Failed to load Live Tuning event list");
+
+            LiveTuningEventRule[] eventSchedule = FileHelper.DeserializeJson<LiveTuningEventRule[]>(eventScheduleFilePath, LiveTuningEvent.JsonOptions.Default);
+            if (eventSchedule == null)
+                return Logger.WarnReturn(true, "InitializeEvents(): Failed to load Live Tuning event schedule");
+
+            foreach (var kvp in events)
+            {
+                Logger.Trace($"InitializeEvents(): Registered Live Tuning event {kvp.Value}");
+                _events.Add(kvp.Key, kvp.Value);
+            }
+
+            foreach (LiveTuningEventRule rule in eventSchedule)
+            {
+                if (rule.IsEnabled == false)
+                    continue;
+
+                if (rule.IsValid() == false)
+                {
+                    Logger.Warn($"InitializeEvents(): Live Tuning event rule {rule} failed validation, skipping...");
+                    continue;
+                }
+
+                Logger.Trace($"InitializeEvents(): Registered Live Tuning event rule {rule}");
+                _rules.Add(rule);
+            }
+
+            Logger.Info("Finished initializing Live Tuning events");
+            return true;
+        }
+
+        private void InitializeRefreshTimer()
+        {
+            if (_refreshTimer != null)
+            {
+                _refreshTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                _refreshTimer.Dispose();
+                _refreshTimer = null;
+            }
+
+            _lastCalendarDay = GetCurrentCalendarDay();
+            _refreshTimer = new(OnRefreshTimerTick, this, 0, RefreshTimerIntervalMS);
+        }
+
+        private static void OnRefreshTimerTick(object state)
+        {
+            if (state is not LiveTuningEventScheduler scheduler)
+                return;
+
+            int calendarDay = GetCurrentCalendarDay();
+
+            lock (scheduler)
+            {
+                if (calendarDay <= scheduler._lastCalendarDay)
+                    return;
+
+                scheduler._lastCalendarDay = calendarDay;
+            }
+
+            Logger.Info("Date changed, refreshing Live Tuning...");
+
+            LiveTuningManager.Instance.LoadLiveTuningData(true);
+
+            Logger.Info("Finished refreshing Live Tuning");
+        }
+
         private int AddActiveEvent(string activeEventName, int eventInstance, List<NetStructLiveTuningSettingProtoEnumValue> settings)
         {
             LiveTuningEvent activeEvent = GetEvent(activeEventName);
             if (activeEvent == null) return Logger.WarnReturn(0, "AddActiveEvent(): activeEvent == null");
 
-            string filePath = Path.Combine(LiveTuningDataDirectory, activeEvent.FilePath);
+            string filePath = Path.Combine(LiveTuningManager.LiveTuningDataDirectory, activeEvent.FilePath);
             if (File.Exists(filePath) == false)
                 return Logger.WarnReturn(0, $"AddActiveEvent(): Live Tuning data file not found for event {activeEvent} at {filePath}");
 
@@ -164,10 +213,16 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             return null;
         }
 
+        // Follow the same login as MissionManager.GetAdjustedDateTime() for time calculations to match daily mission resets when we rotate events.
+
         private static DateTime GetCurrentDateTime()
         {
-            // Follow the same login as MissionManager.GetAdjustedDateTime() to match daily mission resets when we rotate events.
             return Clock.UtcNowPrecise.AddHours(GameDatabase.GlobalsPrototype.TimeZone);
+        }
+
+        private static int GetCurrentCalendarDay()
+        {
+            return Clock.DateTimeToUnixTime(GetCurrentDateTime()).Days;
         }
     }
 }

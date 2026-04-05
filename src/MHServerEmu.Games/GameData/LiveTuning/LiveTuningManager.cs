@@ -11,6 +11,8 @@ namespace MHServerEmu.Games.GameData.LiveTuning
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public static readonly string LiveTuningDataDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "LiveTuning");
+
         private readonly LiveTuningData _liveTuningData = new();
         private int _lastUpdateChangeNum = 0;
 
@@ -28,14 +30,13 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public bool LoadLiveTuningData(bool sendToGameInstances)
         {
-            string liveTuningDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "LiveTuning");
-            if (Directory.Exists(liveTuningDirectory) == false)
-                return Logger.WarnReturn(false, "LoadLiveTuningDataFromDisk(): Game data directory not found");
+            if (Directory.Exists(LiveTuningDataDirectory) == false)
+                return Logger.WarnReturn(false, "LoadLiveTuningDataFromDisk(): Live Tuning data directory not found");
 
             List<NetStructLiveTuningSettingProtoEnumValue> settings = new();
 
             // Read all .json files that start with LiveTuningData
-            foreach (string filePath in FileHelper.GetFilesWithPrefix(liveTuningDirectory, "LiveTuningData", "json"))
+            foreach (string filePath in FileHelper.GetFilesWithPrefix(LiveTuningDataDirectory, "LiveTuningData", "json"))
                 LoadLiveTuningDataFromFile(filePath, settings);
 
             // Get additional event Live Tuning based on the current day
