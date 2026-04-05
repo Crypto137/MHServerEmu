@@ -61,7 +61,10 @@ namespace MHServerEmu.Grouping
             _playerNameDict.Remove(playerName);
 
             if (_pendingMessages.Remove(client, out List<IMessage> messageBucket) && _freeMessageBuckets.Count < MaxMessageBuckets)
+            {
+                messageBucket.Clear();
                 _freeMessageBuckets.Push(messageBucket);
+            }
 
             Logger.Info($"Removed client [{client}]");
             return true;
