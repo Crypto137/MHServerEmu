@@ -9,6 +9,7 @@ namespace MHServerEmu.Grouping
     public class GroupingClientManager
     {
         private const ushort MuxChannel = 2;
+        private const int MaxMessageBuckets = 4096;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -17,6 +18,11 @@ namespace MHServerEmu.Grouping
 
         private readonly Dictionary<ulong, IFrontendClient> _playerDbIdDict = new();
         private readonly Dictionary<string, IFrontendClient> _playerNameDict = new(StringComparer.OrdinalIgnoreCase);   // case insensitive
+
+        private readonly Stack<List<IMessage>> _freeMessageBuckets = new();
+        private readonly Dictionary<IFrontendClient, List<IMessage>> _pendingMessages = new();
+
+        private bool _hasPendingMessages;
 
         public int Count { get => _playerDbIdDict.Count; }
 
@@ -34,7 +40,10 @@ namespace MHServerEmu.Grouping
                 return Logger.WarnReturn(false, $"AddClient(): Account {account} is already added");
 
             _playerDbIdDict.Add(playerDbId, client);
-            _playerNameDict.Add(playerName, client); 
+            _playerNameDict.Add(playerName, client);
+
+            List<IMessage> messageBucket = _freeMessageBuckets.Count > 0 ? _freeMessageBuckets.Pop() : new();
+            _pendingMessages.Add(client, messageBucket);
 
             Logger.Info($"Added client [{client}]");
             return true;
@@ -47,12 +56,35 @@ namespace MHServerEmu.Grouping
             string playerName = account.PlayerName;
 
             if (_playerDbIdDict.Remove(playerDbId) == false)
-                return Logger.WarnReturn(false, $"RemoveClient(): Account {account} not found");
+                Logger.Warn($"RemoveClient(): Account {account} not found");
 
             _playerNameDict.Remove(playerName);
 
+            if (_pendingMessages.Remove(client, out List<IMessage> messageBucket) && _freeMessageBuckets.Count < MaxMessageBuckets)
+                _freeMessageBuckets.Push(messageBucket);
+
             Logger.Info($"Removed client [{client}]");
             return true;
+        }
+
+        public void Flush()
+        {
+            if (_hasPendingMessages == false)
+                return;
+
+            foreach (var kvp in _pendingMessages)
+            {
+                IFrontendClient client = kvp.Key;
+                List<IMessage> messages = kvp.Value;
+
+                if (messages.Count == 0)
+                    continue;
+
+                client.SendMessageList(MuxChannel, messages);
+                messages.Clear();
+            }
+
+            _hasPendingMessages = false;
         }
 
         public void OnPlayerNameChanged(ulong playerDbId, string oldPlayerName, string newPlayerName)
@@ -82,7 +114,14 @@ namespace MHServerEmu.Grouping
         public void SendMessage(IMessage message, IFrontendClient client)
         {
             // We have this method to keep all message sending in one place.
-            client.SendMessage(MuxChannel, message);
+
+            // This will be flushed at the end of the Grouping Manager tick to keep the order consistent.
+            if (_pendingMessages.TryGetValue(client, out List<IMessage> messages) == false)
+                return;
+
+            messages.Add(message);
+
+            _hasPendingMessages = true;
         }
 
         public void SendMessageFiltered(IMessage message, List<ulong> playerDbIdFilter)
@@ -92,14 +131,14 @@ namespace MHServerEmu.Grouping
                 if (_playerDbIdDict.TryGetValue(playerDbId, out IFrontendClient client) == false)
                     continue;
 
-                client.SendMessage(MuxChannel, message);
+                SendMessage(message, client);
             }
         }
 
         public void SendMessageToAll(IMessage message)
         {
             foreach (IFrontendClient client in _playerDbIdDict.Values)
-                client.SendMessage(MuxChannel, message);
+                SendMessage(message, client);
         }
     }
 }
