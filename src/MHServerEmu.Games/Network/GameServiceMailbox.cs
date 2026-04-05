@@ -352,6 +352,9 @@ namespace MHServerEmu.Games.Network
 
                             foreach (Entity entity in Game.EntityManager)
                             {
+                                if (entity.PrototypeDataRef != tuningProtoRef)
+                                    continue;
+
                                 if (entity is not WorldEntity worldEntity)
                                     continue;
 
