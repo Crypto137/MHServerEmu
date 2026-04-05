@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             return true;
         }
 
-        public bool LoadLiveTuningData(bool sendToGameInstances)
+        public bool LoadLiveTuningData(bool sendToServices)
         {
             if (Directory.Exists(LiveTuningDataDirectory) == false)
                 return Logger.WarnReturn(false, "LoadLiveTuningDataFromDisk(): Live Tuning data directory not found");
@@ -45,7 +45,10 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             UpdateLiveTuningData(settings, true);
             Logger.Info($"Loaded {settings.Count} Live Tuning settings");
 
-            CacheLoadedSettings(settings, sendToGameInstances);
+            CacheLoadedSettings(settings, sendToServices);
+
+            if (sendToServices)
+                LiveTuningEventScheduler.Instance.SendEventMessageTextToGroupingManager();
 
             return true;
         }

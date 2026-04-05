@@ -32,10 +32,12 @@
   },
   "DailyBugle": {
     "DisplayName": "Daily Bugle",
+    "IsHidden": true,
     "FilePath": "Events/LiveTuningDataDailyBugle.json"
   },
   "ICPPhase": {
     "DisplayName": "Industry City Patrol",
+    "IsHidden": true,
     "FilePath": "Events/LiveTuningDataICPPhase.json"
   },
   "MidtownMadness": {

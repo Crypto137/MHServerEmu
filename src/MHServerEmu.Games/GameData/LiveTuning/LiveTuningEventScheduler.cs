@@ -3,6 +3,7 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
@@ -23,6 +24,8 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         private Timer _refreshTimer;
         private int _lastCalendarDay;
+
+        private string _eventMessageText;
 
         public static LiveTuningEventScheduler Instance { get; } = new();
 
@@ -57,6 +60,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
             DateTime now = GetCurrentDateTime();
             SortedDictionary<string, int> activeEvents = new();
+            List<string> activeDisplayNames = new();
 
             Logger.Info($"Checking Live Tuning events (now=[{now}])...");
 
@@ -70,9 +74,21 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             int loadedCount = 0;
 
             foreach (var kvp in activeEvents)
-                loadedCount += AddActiveEvent(kvp.Key, kvp.Value, settings);
+                loadedCount += AddActiveEvent(kvp.Key, kvp.Value, activeDisplayNames, settings);
 
             Logger.Info($"Finished loading {loadedCount} Live Tuning events");
+
+            // Generate a user-friendly event list message to set when the server finishes initialization.
+            // If we store this as a list instead we can potentially output it in a different way (web API?).
+            _eventMessageText = activeDisplayNames.Count > 0
+                ? $"Today's Events: {string.Join(", ", activeDisplayNames)}."
+                : null;
+        }
+
+        public void SendEventMessageTextToGroupingManager()
+        {
+            ServiceMessage.SetLiveTuningEventMessage message = new(_eventMessageText);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, message);
         }
 
         private bool InitializeEvents()
@@ -157,7 +173,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             Logger.Info("Finished refreshing Live Tuning");
         }
 
-        private int AddActiveEvent(string activeEventName, int eventInstance, List<NetStructLiveTuningSettingProtoEnumValue> settings)
+        private int AddActiveEvent(string activeEventName, int eventInstance, List<string> activeNames, List<NetStructLiveTuningSettingProtoEnumValue> settings)
         {
             LiveTuningEvent activeEvent = GetEvent(activeEventName);
             if (activeEvent == null) return Logger.WarnReturn(0, "AddActiveEvent(): activeEvent == null");
@@ -186,6 +202,10 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                     settings.Add(eventInstanceSetting);
                 }
             }
+
+            // Add display name that will be output to players to let them know what events are active.
+            if (activeEvent.IsHidden == false)
+                activeNames.Add(activeEvent.DisplayName);
 
             Logger.Info($"Loaded Live Tuning event {activeEvent}");
             return 1;

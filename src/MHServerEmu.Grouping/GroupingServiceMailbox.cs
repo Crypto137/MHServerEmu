@@ -53,6 +53,10 @@ namespace MHServerEmu.Grouping
                     OnGroupingManagerChatRoomOperation(groupingManagerChatRoomOperation);
                     break;
 
+                case ServiceMessage.SetLiveTuningEventMessage setLiveTuningEventMessage:
+                    OnSetLiveTuningEventMessage(setLiveTuningEventMessage);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                     break;
@@ -162,6 +166,13 @@ namespace MHServerEmu.Grouping
                     Logger.Warn("OnGroupingManagerChatRoomOperation(): Unhandled operation");
                     break;
             }
+        }
+
+        private void OnSetLiveTuningEventMessage(in ServiceMessage.SetLiveTuningEventMessage setLiveTuningEventMessage)
+        {
+            string messageText = setLiveTuningEventMessage.MessageText;
+
+            _groupingManager.ChatManager.SetLiveTuningEventMessage(messageText);
         }
 
         #endregion

@@ -122,6 +122,9 @@ namespace MHServerEmu
 
             serverManager.RunServices();
 
+            // We can't set Live Tuning event message on the Grouping Manager until after we initialize it, so do it here I guess.
+            LiveTuningEventScheduler.Instance.SendEventMessageTextToGroupingManager();
+
             // Begin processing console input
             Logger.Info("Type '!commands' for a list of available commands");
             while (_state == State.Running)

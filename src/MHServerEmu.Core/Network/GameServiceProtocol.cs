@@ -520,6 +520,15 @@ namespace MHServerEmu.Core.Network
             public readonly List<NetStructLiveTuningSettingProtoEnumValue> Settings = settings;
         }
 
+        /// <summary>
+        /// [LiveTuningManager -> GroupingManager] Updates the notification message informing players of the currently active events.
+        /// </summary>
+        public readonly struct SetLiveTuningEventMessage(string messageText)
+            : IGameServiceMessage
+        {
+            public readonly string MessageText = messageText;
+        }
+
         #endregion
 
         #region Grouping Manager
