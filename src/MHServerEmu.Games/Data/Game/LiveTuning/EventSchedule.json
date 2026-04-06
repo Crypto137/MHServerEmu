@@ -43,6 +43,17 @@
     ]
   },
   {
+    "Name": "Australia Day",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 1,
+    "StartDay": 25,
+    "DurationDays": 2,
+    "Events": [
+      "AustraliaDay"
+    ]
+  },
+  {
     "Name": "St. Patrick's Day",
     "IsEnabled": true,
     "Type": "SpecialDate",

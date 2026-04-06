@@ -190,6 +190,11 @@
     "Value": 0.0
   },
   {
+    "Prototype": "Loot/Tables/Mob/Bosses/AustraliaDayTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
     "Prototype": "Loot/Tables/Events/Anniversary2017Loot.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
@@ -350,17 +355,17 @@
     "Value": 0.0
   },
   {
-    "Prototype": "Missions/Prototypes/PVEEndgame/Controllers/DoomFightDailyKismetControl.prototype",
-    "Setting": "eMTV_Enabled",
-    "Value": 0.0
-  },
-  {
     "Prototype": "Missions/Prototypes/BonusMissions/CosmoMission.prototype",
     "Setting": "eMTV_Enabled",
     "Value": 0.0
   },
   {
     "Prototype": "Missions/Prototypes/PVEEndgame/StaticScenarios/XMasGiftXChange.prototype",
+    "Setting": "eMTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Missions/Prototypes/PVEEndgame/Controllers/DoomFightDailyKismetControl.prototype",
     "Setting": "eMTV_Enabled",
     "Value": 0.0
   },

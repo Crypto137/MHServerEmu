@@ -26,6 +26,10 @@
     "DisplayName": "Anniversary",
     "FilePath": "Events/LiveTuningDataAnniversary.json"
   },
+  "AustraliaDay": {
+    "DisplayName": "Australia Day",
+    "FilePath": "Events/LiveTuningDataAustraliaDay.json"
+  },
   "Cowpocalypse": {
     "DisplayName": "Cowpocalypse",
     "FilePath": "Events/LiveTuningDataCowpocalypse.json"

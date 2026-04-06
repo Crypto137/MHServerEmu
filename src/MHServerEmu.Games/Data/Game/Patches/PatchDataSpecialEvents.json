@@ -259,7 +259,7 @@
     }
   },
   {
-    "Enabled": false,
+    "Enabled": true,
     "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
     "Path": "Choices[]",
     "Description": "[Australia Day (January 26)] Add AustraliaDayTable to SpecialEventsTable",
