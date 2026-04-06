@@ -45,6 +45,11 @@
     "Value": 2.0
   },
   {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/XDEFChestBuffed.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
     "Prototype": "Events/GlobalEvents/EventPowerConditions/OdinsBountyEventPowerCondition.prototype",
     "Setting": "eCTV_Enabled",
     "Value": 2.0
