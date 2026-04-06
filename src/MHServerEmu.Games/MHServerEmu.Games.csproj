@@ -79,6 +79,9 @@
     <None Update="Data\Game\LiveTuning\Events\LiveTuningDataDailyBugle.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataEndOfSummer.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\Game\LiveTuning\Events\LiveTuningDataHeroesForHire.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
