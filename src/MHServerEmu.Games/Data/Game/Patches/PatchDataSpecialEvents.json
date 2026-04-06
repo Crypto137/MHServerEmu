@@ -8,6 +8,14 @@
     "Value": 4346653277293517379
   },
   {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Events/PowerupBuffLootMrHyde.prototype",
+    "Path": "Choices[1].Power",
+    "Description": "[A.R.M.O.R. Incursion (Weekly)] Fix condition removal power for the PowerupBuffLootMrHyde loot table",
+    "ValueType": "PrototypeId",
+    "Value": 13424308211504454457
+  },
+  {
     "Enabled": false,
     "Prototype": "Metagame/PatrolMidtown/PatrolMidtownMode.prototype",
     "Path": "ApplyStates[0]",
