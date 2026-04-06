@@ -1,5 +1,10 @@
 ﻿[
   {
+    "Prototype": "Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/OMEGAEventVendor.prototype",
+    "Setting": "eWETV_Visible",
+    "Value": 1.0
+  },
+  {
     "Prototype": "Loot/Tables/MissionRewards/SharedQuest/SharedQuestOmegaFiles.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 2.0
@@ -34,12 +39,12 @@
     "Setting": "eMTV_Enabled",
     "Value": 1.0
   },
-    {
+  {
     "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay5.prototype",
     "Setting": "eMTV_Enabled",
     "Value": 1.0
   },
-    {
+  {
     "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/OmegaWeekMissionDay6.prototype",
     "Setting": "eMTV_Enabled",
     "Value": 1.0

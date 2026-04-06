@@ -1,5 +1,20 @@
 [
   {
+    "Prototype": "Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/ARMOREventVendor.prototype",
+    "Setting": "eWETV_Visible",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/CosmicEventVendor.prototype",
+    "Setting": "eWETV_Visible",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/OMEGAEventVendor.prototype",
+    "Setting": "eWETV_Visible",
+    "Value": 0.0
+  },
+  {
     "Prototype": "Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/BIFBuxGiver.prototype",
     "Setting": "eWETV_Visible",
     "Value": 0.0

@@ -1,5 +1,10 @@
 ﻿[
   {
+    "Prototype": "Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/ARMOREventVendor.prototype",
+    "Setting": "eWETV_Visible",
+    "Value": 1.0
+  },
+  {
     "Prototype": "Loot/Tables/Events/ARMORDriveEvent/ARMORBrooklynShared.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 2.0

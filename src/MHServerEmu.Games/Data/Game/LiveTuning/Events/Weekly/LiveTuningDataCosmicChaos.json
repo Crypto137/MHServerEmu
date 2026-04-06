@@ -5,6 +5,11 @@
     "Value": 0.08
   },
   {
+    "Prototype": "Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/CosmicEventVendor.prototype",
+    "Setting": "eWETV_Visible",
+    "Value": 1.0
+  },
+  {
     "Prototype": "Loot/Tables/Events/CosmicChaosEvent/BrooklynChaos.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 2.0
