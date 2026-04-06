@@ -135,17 +135,37 @@
     "Value": 0.0
   },
   {
-    "Prototype": "Loot/Tables/Events/Anniversary2017Loot.prototype",
-    "Setting": "eLTTV_Enabled",
-    "Value": 0.0
-  },
-  {
     "Prototype": "Loot/Tables/Events/WealthOfKingsCounty.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
   },
   {
+    "Prototype": "Loot/Tables/Vendor/SpecialEvent/SpecialEventBundlesofCash.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
     "Prototype": "Loot/Tables/Mob/Bosses/OrdersFromTheHandTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Vendor/SpecialEvent/SpecialEventOrdersFromTheHand.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/Anniversary2017Loot.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Vendor/SpecialEvent/Anniversary2016VendorLootTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Vendor/SpecialEvent/Anniversary2017VendorLootTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
   },
