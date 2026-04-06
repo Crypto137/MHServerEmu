@@ -193,6 +193,8 @@ namespace MHServerEmu.Games.Entities
         public bool PlayerTradePartnerConfirmFlag { get; private set; }
         public uint PlayerTradeSequenceNumber { get; private set; }
 
+        public bool ProfileServerFrame { get; set; }
+
         public Player(Game game) : base(game)
         {
             MissionManager = new(Game, this);

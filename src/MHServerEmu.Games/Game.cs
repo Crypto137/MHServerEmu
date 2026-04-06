@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Random;
@@ -96,6 +97,10 @@ namespace MHServerEmu.Games
         public TimeSpan CurrentTime { get => GameEventScheduler != null ? GameEventScheduler.CurrentTime : _currentGameTime; }
         public TimeSpan NextUpdateTime { get; private set; } = Clock.GameTime;
         public ulong NumQuantumFixedTimeUpdates { get => (ulong)CurrentTime.CalcNumTimeQuantums(FixedTimeBetweenUpdates); }
+
+        public TimeSpan LastProcessingTime { get; set; }
+        public TimeSpan LastFrameTime { get; set; }
+        public TimeSpan LastUpdateEndTime { get; set; }
 
         public ulong CurrentRepId { get => ++_currentRepId; }
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
@@ -192,6 +197,8 @@ namespace MHServerEmu.Games
             UpdateLiveTuning();                                 // Check if live tuning data is out of date
 
             UpdateFixedTime();                                  // Update simulation state
+
+            SendServerFrameProfile();
 
             // Schedule the next update
             TimeSpan endTime = Clock.GameTime;
@@ -373,6 +380,27 @@ namespace MHServerEmu.Games
             {
                 NetworkManager.BroadcastMessage(liveTuningData.GetLiveTuningUpdate());
                 _liveTuningChangeNum = liveTuningData.ChangeNum;
+            }
+        }
+
+        private void SendServerFrameProfile()
+        {
+            using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
+
+            foreach (Player player in new PlayerIterator(this))
+            {
+                if (player.ProfileServerFrame)
+                    interestedClients.Add(player.PlayerConnection);
+            }
+
+            if (interestedClients.Count > 0)
+            {
+                NetMessageServerFrameProfile serverFrameProfile = NetMessageServerFrameProfile.CreateBuilder()
+                    .SetProcessingTime((uint)LastProcessingTime.TotalMilliseconds)
+                    .SetFrameTime((uint)LastFrameTime.TotalMilliseconds)
+                    .Build();
+
+                NetworkManager.SendMessageToMultiple(interestedClients, serverFrameProfile);
             }
         }
     }
