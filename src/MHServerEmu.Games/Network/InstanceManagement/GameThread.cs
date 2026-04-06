@@ -155,7 +155,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             {
                 if (game != null)
                 {
-                    TimeSpan beforeUpdate = Clock.UnixTime;
+                    TimeSpan beforeUpdate = Clock.GameTime;
 
                     Game.Current = game;
 
@@ -163,7 +163,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
                     Game.Current = null;
 
-                    TimeSpan afterUpdate = Clock.UnixTime;
+                    TimeSpan afterUpdate = Clock.GameTime;
 
                     game.LastProcessingTime = afterUpdate - beforeUpdate;
                     game.LastFrameTime = afterUpdate - game.LastUpdateEndTime;

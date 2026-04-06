@@ -9,7 +9,7 @@
     public enum GamePerformanceMetricEnum
     {
         Invalid = -1,
-        UpdateTime,
+        ProcessingTime,
         FrameTime,
         ScheduledEventsPerUpdate,
         EntityCount,

@@ -98,9 +98,9 @@ namespace MHServerEmu.Games
         public TimeSpan NextUpdateTime { get; private set; } = Clock.GameTime;
         public ulong NumQuantumFixedTimeUpdates { get => (ulong)CurrentTime.CalcNumTimeQuantums(FixedTimeBetweenUpdates); }
 
-        public TimeSpan LastProcessingTime { get; set; }
-        public TimeSpan LastFrameTime { get; set; }
-        public TimeSpan LastUpdateEndTime { get; set; }
+        public TimeSpan LastProcessingTime { get; set; } = TimeSpan.Zero;
+        public TimeSpan LastFrameTime { get; set; } = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
+        public TimeSpan LastUpdateEndTime { get; set; } = Clock.GameTime;
 
         public ulong CurrentRepId { get => ++_currentRepId; }
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
@@ -185,8 +185,6 @@ namespace MHServerEmu.Games
                 return;
             }
 
-            using GameProfileTimer timer = new(Id, GamePerformanceMetricEnum.UpdateTime);
-
             TimeSpan startTime = Clock.GameTime;
 
             // NOTE: We process input in NetworkManager.ReceiveAllPendingMessages() outside of UpdateFixedTime(), same as the client.
@@ -199,6 +197,7 @@ namespace MHServerEmu.Games
             UpdateFixedTime();                                  // Update simulation state
 
             SendServerFrameProfile();
+            RecordPerformanceMetrics();
 
             // Schedule the next update
             TimeSpan endTime = Clock.GameTime;
@@ -207,6 +206,15 @@ namespace MHServerEmu.Games
                 NextUpdateTime = endTime + FixedTimeBetweenUpdates;
             else
                 NextUpdateTime = startTime + FixedTimeBetweenUpdates;
+        }
+
+        public void RecordPerformanceMetrics()
+        {
+            MetricsManager metrics = MetricsManager.Instance;
+            metrics.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.ProcessingTime, LastProcessingTime);
+            metrics.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.FrameTime, LastFrameTime);
+            metrics.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.EntityCount, EntityManager.EntityCount);
+            metrics.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.PlayerCount, EntityManager.PlayerCount);
         }
 
         public void AddClient(IFrontendClient client)
@@ -311,10 +319,6 @@ namespace MHServerEmu.Games
                 if (_lastFixedTimeUpdateProcessTime > _fixedTimeUpdateProcessTimeLogThreshold)
                     Logger.Trace($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than _fixedTimeUpdateWarningThreshold ({_fixedTimeUpdateProcessTimeLogThreshold.TotalMilliseconds:0.00} ms)");
 
-                // Record additional metrics
-                MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.EntityCount, EntityManager.EntityCount);
-                MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.PlayerCount, EntityManager.PlayerCount);
-
                 // Bail out if we have fallen behind more exceeded frame budget
                 if (_gameTimer.Elapsed - updateStartTime > FixedTimeBetweenUpdates)
                     break;
@@ -325,8 +329,6 @@ namespace MHServerEmu.Games
 
         private void DoFixedTimeUpdate()
         {
-            using GameProfileTimer timer = new(Id, GamePerformanceMetricEnum.FrameTime);
-
             ServiceMailbox.ProcessMessages();
 
             GameEventScheduler.TriggerEvents(_currentGameTime);

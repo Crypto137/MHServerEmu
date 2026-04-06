@@ -49,7 +49,7 @@ namespace MHServerEmu.Core.Metrics.Categories
 
             switch (metric)
             {
-                case GamePerformanceMetricEnum.UpdateTime:
+                case GamePerformanceMetricEnum.ProcessingTime:
                 case GamePerformanceMetricEnum.FrameTime:
                     _trackers[(int)metric].Track(gameMetricValue.Value.TimeValue);
                     break;
@@ -80,7 +80,7 @@ namespace MHServerEmu.Core.Metrics.Categories
 
         public readonly struct Report
         {
-            public MetricTracker.ReportEntry UpdateTime { get; }
+            public MetricTracker.ReportEntry ProcessingTime { get; }
             public MetricTracker.ReportEntry FrameTime { get; }
             public MetricTracker.ReportEntry ScheduledEventsPerUpdate { get; }
             public MetricTracker.ReportEntry EntityCount { get; }
@@ -88,7 +88,7 @@ namespace MHServerEmu.Core.Metrics.Categories
 
             public Report(GamePerformanceMetrics metrics)
             {
-                UpdateTime                      = metrics.GetReportEntryForMetric(GamePerformanceMetricEnum.UpdateTime);
+                ProcessingTime                  = metrics.GetReportEntryForMetric(GamePerformanceMetricEnum.ProcessingTime);
                 FrameTime                       = metrics.GetReportEntryForMetric(GamePerformanceMetricEnum.FrameTime);
                 ScheduledEventsPerUpdate        = metrics.GetReportEntryForMetric(GamePerformanceMetricEnum.ScheduledEventsPerUpdate);
                 EntityCount                     = metrics.GetReportEntryForMetric(GamePerformanceMetricEnum.EntityCount);
@@ -98,7 +98,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             public override string ToString()
             {
                 StringBuilder sb = new();
-                sb.AppendLine($"{nameof(UpdateTime)}: {UpdateTime}");
+                sb.AppendLine($"{nameof(ProcessingTime)}: {ProcessingTime}");
                 sb.AppendLine($"{nameof(FrameTime)}: {FrameTime}");
                 sb.AppendLine($"{nameof(ScheduledEventsPerUpdate)}: {ScheduledEventsPerUpdate}");
                 sb.AppendLine($"{nameof(EntityCount)}: {EntityCount}");
