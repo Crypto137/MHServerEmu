@@ -56,6 +56,10 @@
     "DisplayName": "Orders From The Hand",
     "FilePath": "Events/LiveTuningDataOrdersFromTheHand.json"
   },
+  "StPatricksDay": {
+    "DisplayName": "St. Patrick's Day",
+    "FilePath": "Events/LiveTuningDataStPatricksDay.json"
+  },
   "WealthOfKingsCounty": {
     "DisplayName": "The Wealth of Kings County",
     "FilePath": "Events/LiveTuningDataWealthOfKingsCounty.json"

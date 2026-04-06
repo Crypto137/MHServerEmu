@@ -91,6 +91,9 @@
     <None Update="Data\Game\LiveTuning\Events\LiveTuningDataOrdersFromTheHand.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataStPatricksDay.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\Game\LiveTuning\Events\LiveTuningDataWealthOfKingsCounty.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

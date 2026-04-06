@@ -1,0 +1,17 @@
+﻿[
+  {
+    "Prototype": "Entity/Items/Crafting/Recipes/Tab4Misc/LimitedEditionLegendary012Recipe.prototype",
+    "Setting": "eWETV_LootGroupNum",
+    "Value": 1703.0
+  },
+  {
+    "Prototype": "Loot/Tables/Vendor/Hardcore/HardcoreCubeShardClea.prototype",
+    "Setting": "eLTTV_GroupNum",
+    "Value": 1703.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/StPatricksEventPowerUpTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  }
+]
