@@ -1,73 +1,25 @@
 [
   {
     "Enabled": false,
-    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-    "Path": "Choices[]",
-    "Description": "Add AustraliaDayTable drop Koala at 26 January",
-    "ValueType": "PrototypeDataRef",
-    "Value": 5244862316186571775
+    "Prototype": "Metagame/PatrolBrooklyn/PatrolBrooklynMode.prototype",
+    "Path": "States[]",
+    "Description": "[Cowpocalypse (Special)] Add Cowpocalypse wave to Industry City Patrol",
+    "ValueType": "PrototypeId",
+    "Value": 4346653277293517379
   },
   {
     "Enabled": false,
-    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-    "Path": "Choices[]",
-    "Description": "Add [ValentinesEventPowerupTable, VDayTable] at 14 February",
-    "ValueType": "PrototypeDataRef[]",
-    "Value": [ 1089767944042846312, 7378732117961543855 ]
+    "Prototype": "Metagame/PatrolMidtown/PatrolMidtownMode.prototype",
+    "Path": "ApplyStates[0]",
+    "Description": "[Mystic Mayhem (Weekly)] Enable Mystic Mayhem bosses in Midtown Patrol",
+    "ValueType": "PrototypeId",
+    "Value": 714436682102808322
   },
   {
     "Enabled": false,
-    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-    "Path": "Choices[]",
-    "Description": "Add LunarNewYearTable at 17 Febrary",
-    "ValueType": "PrototypeDataRef",
-    "Value": 577300379588563992
-  },
-  {
-    "Enabled": false,
-    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-    "Path": "Choices[]",
-    "Description": "Add StPatricksEventPowerUpTable at 17 March",
-    "ValueType": "PrototypeDataRef",
-    "Value": 7592276506700879991
-  },
-  {
-    "Enabled": false,
-    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Terminals/OdinsPalace/KurseTerminalLoot.prototype",
-    "Path": "Choices[]",
-    "Description": "Add AprilFoolsTable drop GemOfTheWurst at 1 April",
-    "ValueType": "PrototypeDataRef",
-    "Value": 13919124432858911542
-  },
-  {
-    "Enabled": false,
-    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-    "Path": "Choices[]",
-    "Description": "Add AnniversaryCakeDropTable drop BirthdayCakeSlice at 4 June",
-    "ValueType": "PrototypeDataRef",
-    "Value": 10570310015585883894
-  },
-  {
-    "Enabled": false,
-    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-    "Path": "Choices[]",
-    "Description": "Add HalloweenPowerupTable at 31 October",
-    "ValueType": "PrototypeDataRef",
-    "Value": 7708957262339380684
-  },
-  {
-    "Enabled": false,
-    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-    "Path": "Choices[]",
-    "Description": "[Heroes for Hire] Add DogTagsCurrencyTable drop Gang Member Dog Tags",
-    "ValueType": "PrototypeDataRef",
-    "Value": 16587225871960839503
-  },
-  {
-    "Enabled": true,
     "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
     "Path": "Inventories[]",
-    "Description": "Add VendorInventoryEntry for SpecialEventSummer to VendorAvengersTowerEventTerminal",
+    "Description": "[End of Summer (Weekly)] Add VendorInventoryEntry for SpecialEventSummer to VendorAvengersTowerEventTerminal",
     "ValueType": "Prototype",
     "Value": {
       "ParentDataRef": 6775684286112470794,
@@ -77,10 +29,18 @@
     }
   },
   {
-    "Enabled": true,
+    "Enabled": false,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Heroes for Hire (Weekly)] Add DogTagsCurrencyTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 16587225871960839503
+  },
+  {
+    "Enabled": false,
     "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
     "Path": "Inventories[]",
-    "Description": "Add VendorInventoryEntry for SpecialEventHeroesForHire to VendorAvengersTowerEventTerminal",
+    "Description": "[Heroes for Hire (Weekly)] Add VendorInventoryEntry for SpecialEventHeroesForHire to VendorAvengersTowerEventTerminal",
     "ValueType": "Prototype",
     "Value": {
       "ParentDataRef": 6775684286112470794,
@@ -93,7 +53,7 @@
     "Enabled": true,
     "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
     "Path": "Inventories[]",
-    "Description": "Add VendorInventoryEntry for SpecialEventBundlesofCash to VendorAvengersTowerEventTerminal",
+    "Description": "[The Wealth of Kings County (Weekly)] Add VendorInventoryEntry for SpecialEventBundlesofCash to VendorAvengersTowerEventTerminal",
     "ValueType": "Prototype",
     "Value": {
       "ParentDataRef": 6775684286112470794,
@@ -103,10 +63,58 @@
     }
   },
   {
+    "Enabled": false,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Australia Day (January 26)] Add AustraliaDayTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 5244862316186571775
+  },
+  {
+    "Enabled": false,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Valentine's Day (February 14)] Add [ValentinesEventPowerupTable, VDayTable] to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef[]",
+    "Value": [ 1089767944042846312, 7378732117961543855 ]
+  },
+  {
+    "Enabled": false,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Lunar New Year (February 17)] Add LunarNewYearTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 577300379588563992
+  },
+  {
     "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[St Patrick's Day (March 17)] Add StPatricksEventPowerUpTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 7592276506700879991
+  },
+  {
+    "Enabled": false,
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Terminals/OdinsPalace/KurseTerminalLoot.prototype",
+    "Path": "Choices[]",
+    "Description": "[April Fools Day (April 1)] Add AprilFoolsTable to KurseTerminalLoot",
+    "ValueType": "PrototypeDataRef",
+    "Value": 13919124432858911542
+  },
+  {
+    "Enabled": false,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Anniversary (June 4)] Add AnniversaryCakeDropTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 10570310015585883894
+  },
+  {
+    "Enabled": false,
     "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
     "Path": "Inventories[]",
-    "Description": "Add VendorInventoryEntry for Anniversary2016VendorLootTable to VendorAvengersTowerEventTerminal",
+    "Description": "[Anniversary (June 4)] Add VendorInventoryEntry for Anniversary2016VendorLootTable to VendorAvengersTowerEventTerminal",
     "ValueType": "Prototype",
     "Value": {
       "ParentDataRef": 6775684286112470794,
@@ -119,7 +127,7 @@
     "Enabled": true,
     "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
     "Path": "Inventories[]",
-    "Description": "Add VendorInventoryEntry for Anniversary2017VendorLootTable to VendorAvengersTowerEventTerminal (keep this last to allow Anniversary2017 to override other events)",
+    "Description": "[Anniversary (June 4)] Add VendorInventoryEntry for Anniversary2017VendorLootTable to VendorAvengersTowerEventTerminal (keep this last to allow Anniversary2017 to override other events)",
     "ValueType": "Prototype",
     "Value": {
       "ParentDataRef": 6775684286112470794,
@@ -130,10 +138,10 @@
   },
   {
     "Enabled": false,
-    "Prototype": "Metagame/PatrolBrooklyn/PatrolBrooklynMode.prototype",
-    "Path": "States[]",
-    "Description": "Add Cowpocalypse wave to Industry City Patrol",
-    "ValueType": "PrototypeId",
-    "Value": 4346653277293517379
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Halloween (October 31)] Add HalloweenPowerupTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 7708957262339380684
   }
 ]
