@@ -35,6 +35,10 @@
     "IsHidden": true,
     "FilePath": "Events/LiveTuningDataDailyBugle.json"
   },
+  "HeroesForHire": {
+    "DisplayName": "Heroes for Hire",
+    "FilePath": "Events/LiveTuningDataHeroesForHire.json"
+  },
   "ICPPhase": {
     "DisplayName": "Industry City Patrol",
     "IsHidden": true,

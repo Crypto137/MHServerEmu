@@ -36,8 +36,9 @@
     "Type": "WeeklyRotation",
     "StartDayOfWeek": "Friday",
     "Events": [
-      "OrdersFromTheHand",
-      "WealthOfKingsCounty"
+      "HeroesForHire",
+      "WealthOfKingsCounty",
+      "OrdersFromTheHand"
     ]
   },
   {

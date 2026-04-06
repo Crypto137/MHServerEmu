@@ -29,7 +29,99 @@
     }
   },
   {
-    "Enabled": false,
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "NoDropPercent",
+    "Description": "[Heroes for Hire (Weekly)] Set NoDropPercent for DogTagsCurrencyTable",
+    "ValueType": "Float",
+    "Value": 0.7
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].PickMethod",
+    "Description": "[Heroes for Hire (Weekly)] Set PickMethod to PickAll for DogTagsCurrencyTable",
+    "ValueType": "Enum",
+    "Value": "PickAll"
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[0].Modifiers[]",
+    "Description": "[Heroes for Hire (Weekly)] Add new LootRollRequireDropperKeywordPrototype for the first choice in DogTagsCurrencyTable",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 17689313808028144366
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[0].Modifiers[0].Choices[]",
+    "Description": "[Heroes for Hire (Weekly)] Restrict the first choice in DogTagsCurrencyTable to Mercenary",
+    "ValueType": "PrototypeId",
+    "Value": 12814754870629241647
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[]",
+    "Description": "[Heroes for Hire (Weekly)] Add the second LootDropItemPrototype to DogTagsCurrencyTable",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 1071992662862269383,
+      "Item": 4883437826439912008
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[1].Modifiers[]",
+    "Description": "[Heroes for Hire (Weekly)] Add new LootRollRequireDropperKeywordPrototype for the second choice in DogTagsCurrencyTable",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 17689313808028144366
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[1].Modifiers[0].Choices[]",
+    "Description": "[Heroes for Hire (Weekly)] Restrict the second choice in DogTagsCurrencyTable to GangMember",
+    "ValueType": "PrototypeId",
+    "Value": 2198160877082579838
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[]",
+    "Description": "[Heroes for Hire (Weekly)] Add the third LootDropItemPrototype to DogTagsCurrencyTable",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 1071992662862269383,
+      "Item": 4883437826439912008
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[2].Modifiers[]",
+    "Description": "[Heroes for Hire (Weekly)] Add new LootRollRequireDropperKeywordPrototype for the third choice in DogTagsCurrencyTable",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 17689313808028144366
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[2].Modifiers[0].Choices[]",
+    "Description": "[Heroes for Hire (Weekly)] Restrict the third choice in DogTagsCurrencyTable to Maggia",
+    "ValueType": "PrototypeId",
+    "Value": 11166669287029412303
+  },
+  {
+    "Enabled": true,
     "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
     "Path": "Choices[]",
     "Description": "[Heroes for Hire (Weekly)] Add DogTagsCurrencyTable to SpecialEventsTable",
@@ -37,7 +129,7 @@
     "Value": 16587225871960839503
   },
   {
-    "Enabled": false,
+    "Enabled": true,
     "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
     "Path": "Inventories[]",
     "Description": "[Heroes for Hire (Weekly)] Add VendorInventoryEntry for SpecialEventHeroesForHire to VendorAvengersTowerEventTerminal",

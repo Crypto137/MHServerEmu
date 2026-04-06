@@ -135,6 +135,16 @@
     "Value": 0.0
   },
   {
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Vendor/SpecialEvent/SpecialEventHeroesForHire.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
     "Prototype": "Loot/Tables/Events/WealthOfKingsCounty.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
