@@ -245,6 +245,11 @@
     "Value": 0.0
   },
   {
+    "Prototype": "Loot/Tables/MissionRewards/SharedQuest/SharedQuestARMORDrives.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
     "Prototype": "Loot/Tables/MissionRewards/SharedQuest/SharedQuestOmegaFiles.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
