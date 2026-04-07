@@ -138,115 +138,6 @@
   },
   {
     "Enabled": true,
-    "Prototype": "Loot/Tables/Mob/NeverMeltingCoreTable.prototype",
-    "Path": "Modifiers[]",
-    "Description": "[End of Summer (Weekly)] Apply MarkSpecial modifier to NeverMeltingCoreTable",
-    "ValueType": "PrototypeDataRef",
-    "Value": 6222183752544751228
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/Mob/SummerEventPowerUpTable.prototype",
-    "Path": "Modifiers[]",
-    "Description": "[End of Summer (Weekly)] Apply MarkSpecial modifier to SummerEventPowerUpTable",
-    "ValueType": "PrototypeDataRef",
-    "Value": 6222183752544751228
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/Mob/IceCreamBarTable.prototype",
-    "Path": "Modifiers[]",
-    "Description": "[End of Summer (Weekly)] Apply MarkSpecial modifier to IceCreamBarTable",
-    "ValueType": "PrototypeDataRef",
-    "Value": 6222183752544751228
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-    "Path": "Choices[]",
-    "Description": "[End of Summer (Weekly)] Add NeverMeltingCoreTable to SpecialEventsTable",
-    "ValueType": "PrototypeDataRef",
-    "Value": 15190678659132494583
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-    "Path": "Choices[]",
-    "Description": "[End of Summer (Weekly)] Add IceCreamBarTable to SpecialEventsTable",
-    "ValueType": "PrototypeDataRef",
-    "Value": 939198362985173164
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-    "Path": "Choices[]",
-    "Description": "[End of Summer (Weekly)] Add SummerEventPowerUpTable to SpecialEventsTable",
-    "ValueType": "PrototypeDataRef",
-    "Value": 15744602249904722955
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/Mob/Bosses/PatrolBrooklyn/Subtable/SharedPatrolBrooklynBosses.prototype",
-    "Path": "Choices[]",
-    "Description": "[End of Summer (Weekly)] Add CupcakeTable to SharedPatrolBrooklynBosses",
-    "ValueType": "PrototypeDataRef",
-    "Value": 4766908907310157594
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/Mob/Bosses/PatrolBrooklyn/Subtable/SharedPatrolBrooklynBossesCosmic.prototype",
-    "Path": "Choices[]",
-    "Description": "[End of Summer (Weekly)] Add CupcakeTable to SharedPatrolBrooklynBossesCosmic",
-    "ValueType": "PrototypeDataRef",
-    "Value": 4766908907310157594
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/Mob/Bosses/PatrolHightown/Subtable/SharedPatrolHightownBosses.prototype",
-    "Path": "Choices[]",
-    "Description": "[End of Summer (Weekly)] Add CupcakeTable to SharedPatrolHightownBosses",
-    "ValueType": "PrototypeDataRef",
-    "Value": 4766908907310157594
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/Mob/Bosses/PatrolHightown/Subtable/SharedPatrolHightownBossesCosmic.prototype",
-    "Path": "Choices[]",
-    "Description": "[End of Summer (Weekly)] Add CupcakeTable to SharedPatrolHightownBossesCosmic",
-    "ValueType": "PrototypeDataRef",
-    "Value": 4766908907310157594
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/Mob/Bosses/PatrolMidtown/Subtable/SharedPatrolMidtownBosses.prototype",
-    "Path": "Choices[]",
-    "Description": "[End of Summer (Weekly)] Add CupcakeTable to SharedPatrolMidtownBosses",
-    "ValueType": "PrototypeDataRef",
-    "Value": 4766908907310157594
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/Mob/Bosses/PatrolMidtown/Subtable/SharedPatrolMidtownBossesCosmic.prototype",
-    "Path": "Choices[]",
-    "Description": "[End of Summer (Weekly)] Add CupcakeTable to SharedPatrolMidtownBossesCosmic",
-    "ValueType": "PrototypeDataRef",
-    "Value": 4766908907310157594
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
-    "Path": "Inventories[]",
-    "Description": "[End of Summer (Weekly)] Add VendorInventoryEntry for SpecialEventSummer to VendorAvengersTowerEventTerminal",
-    "ValueType": "Prototype",
-    "Value": {
-      "ParentDataRef": 6775684286112470794,
-      "LootTable": 16485753690354620499,
-      "PlayerInventory": 15746332603173774372,
-      "UseStartingAtVendorLevel": 1
-    }
-  },
-  {
-    "Enabled": true,
     "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
     "Path": "Inventories[]",
     "Description": "[The Wealth of Kings County (Weekly)] Add VendorInventoryEntry for SpecialEventBundlesofCash to VendorAvengersTowerEventTerminal",
@@ -328,6 +219,115 @@
     "Value": {
       "ParentDataRef": 6775684286112470794,
       "LootTable": 13601394654621801607,
+      "PlayerInventory": 15746332603173774372,
+      "UseStartingAtVendorLevel": 1
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/NeverMeltingCoreTable.prototype",
+    "Path": "Modifiers[]",
+    "Description": "[End of Summer (August 25)] Apply MarkSpecial modifier to NeverMeltingCoreTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 6222183752544751228
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/SummerEventPowerUpTable.prototype",
+    "Path": "Modifiers[]",
+    "Description": "[End of Summer (August 25)] Apply MarkSpecial modifier to SummerEventPowerUpTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 6222183752544751228
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/IceCreamBarTable.prototype",
+    "Path": "Modifiers[]",
+    "Description": "[End of Summer (August 25)] Apply MarkSpecial modifier to IceCreamBarTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 6222183752544751228
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add NeverMeltingCoreTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 15190678659132494583
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add IceCreamBarTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 939198362985173164
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add SummerEventPowerUpTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 15744602249904722955
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/PatrolBrooklyn/Subtable/SharedPatrolBrooklynBosses.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add CupcakeTable to SharedPatrolBrooklynBosses",
+    "ValueType": "PrototypeDataRef",
+    "Value": 4766908907310157594
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/PatrolBrooklyn/Subtable/SharedPatrolBrooklynBossesCosmic.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add CupcakeTable to SharedPatrolBrooklynBossesCosmic",
+    "ValueType": "PrototypeDataRef",
+    "Value": 4766908907310157594
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/PatrolHightown/Subtable/SharedPatrolHightownBosses.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add CupcakeTable to SharedPatrolHightownBosses",
+    "ValueType": "PrototypeDataRef",
+    "Value": 4766908907310157594
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/PatrolHightown/Subtable/SharedPatrolHightownBossesCosmic.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add CupcakeTable to SharedPatrolHightownBossesCosmic",
+    "ValueType": "PrototypeDataRef",
+    "Value": 4766908907310157594
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/PatrolMidtown/Subtable/SharedPatrolMidtownBosses.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add CupcakeTable to SharedPatrolMidtownBosses",
+    "ValueType": "PrototypeDataRef",
+    "Value": 4766908907310157594
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/PatrolMidtown/Subtable/SharedPatrolMidtownBossesCosmic.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add CupcakeTable to SharedPatrolMidtownBossesCosmic",
+    "ValueType": "PrototypeDataRef",
+    "Value": 4766908907310157594
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+    "Path": "Inventories[]",
+    "Description": "[End of Summer (August 25)] Add VendorInventoryEntry for SpecialEventSummer to VendorAvengersTowerEventTerminal",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 6775684286112470794,
+      "LootTable": 16485753690354620499,
       "PlayerInventory": 15746332603173774372,
       "UseStartingAtVendorLevel": 1
     }

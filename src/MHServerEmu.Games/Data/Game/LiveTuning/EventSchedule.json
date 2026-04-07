@@ -37,7 +37,6 @@
     "StartDayOfWeek": "Friday",
     "Events": [
       "HeroesForHire",
-      "EndOfSummer",
       "WealthOfKingsCounty",
       "OrdersFromTheHand"
     ]
@@ -58,7 +57,7 @@
     "IsEnabled": true,
     "Type": "SpecialDate",
     "StartMonth": 2,
-    "StartDay": 14,
+    "StartDay": 13,
     "DurationDays": 7,
     "Events": [
       "ValentinesDay"
@@ -69,7 +68,7 @@
     "IsEnabled": true,
     "Type": "SpecialDate",
     "StartMonth": 3,
-    "StartDay": 17,
+    "StartDay": 16,
     "DurationDays": 7,
     "Events": [
       "StPatricksDay"
@@ -91,10 +90,21 @@
     "IsEnabled": true,
     "Type": "SpecialDate",
     "StartMonth": 6,
-    "StartDay": 4,
-    "DurationDays": 14,
+    "StartDay": 1,
+    "DurationDays": 30,
     "Events": [
       "Anniversary"
+    ]
+  },
+  {
+    "Name": "End of Summer",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 8,
+    "StartDay": 25,
+    "DurationDays": 7,
+    "Events": [
+      "EndOfSummer"
     ]
   }
 ]
