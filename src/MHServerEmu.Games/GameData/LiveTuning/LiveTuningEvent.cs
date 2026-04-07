@@ -8,6 +8,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         public string DisplayName { get; init; }
         public bool IsHidden { get; init; }
         public string FilePath { get; init; }
+        public string DailyGift { get; init; }
         public string[] InstancedMissions { get; init; }
 
         public LiveTuningEvent() { }

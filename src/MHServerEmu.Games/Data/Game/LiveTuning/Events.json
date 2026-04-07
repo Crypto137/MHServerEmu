@@ -54,7 +54,8 @@
   },
   "Halloween": {
     "DisplayName": "Halloween",
-    "FilePath": "Events/LiveTuningDataHalloween.json"
+    "FilePath": "Events/LiveTuningDataHalloween.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/DailyGiftHalloween.prototype"
   },
   "HeroesForHire": {
     "DisplayName": "Heroes for Hire",
@@ -67,7 +68,8 @@
   },
   "LunarNewYear": {
     "DisplayName": "Lunar New Year",
-    "FilePath": "Events/LiveTuningDataLunarNewYear.json"
+    "FilePath": "Events/LiveTuningDataLunarNewYear.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/SeasonalDailyGiftLunarNewYear.prototype"
   },
   "MidtownMadness": {
     "DisplayName": "Midtown Madness",
@@ -79,7 +81,8 @@
   },
   "StPatricksDay": {
     "DisplayName": "St. Patrick's Day",
-    "FilePath": "Events/LiveTuningDataStPatricksDay.json"
+    "FilePath": "Events/LiveTuningDataStPatricksDay.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/DailyGiftStPatricksDay.prototype"
   },
   "ValentinesDay": {
     "DisplayName": "Valentine's Day",

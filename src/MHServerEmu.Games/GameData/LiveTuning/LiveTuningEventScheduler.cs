@@ -5,6 +5,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
 {
@@ -21,6 +22,8 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         private readonly Dictionary<string, LiveTuningEvent> _events = new();
         private readonly List<LiveTuningEventRule> _rules = new();
+
+        private readonly List<PrototypeId> _currentDailyGifts = new();
 
         private Timer _refreshTimer;
         private int _lastCalendarDay;
@@ -61,6 +64,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             DateTime now = GetCurrentDateTime();
             SortedDictionary<string, int> activeEvents = new();
             List<string> activeDisplayNames = new();
+            HashSet<PrototypeId> dailyGifts = new();
 
             Logger.Info($"Checking Live Tuning events (now=[{now}])...");
 
@@ -74,15 +78,28 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             int loadedCount = 0;
 
             foreach (var kvp in activeEvents)
-                loadedCount += AddActiveEvent(kvp.Key, kvp.Value, activeDisplayNames, settings);
+                loadedCount += AddActiveEvent(kvp.Key, kvp.Value, activeDisplayNames, dailyGifts, settings);
 
-            Logger.Info($"Finished loading {loadedCount} Live Tuning events");
+            lock (_currentDailyGifts)
+            {
+                _currentDailyGifts.Clear();
+                _currentDailyGifts.AddRange(dailyGifts);
+                _currentDailyGifts.Sort();
+            }
+
+            Logger.Info($"Finished loading {loadedCount} Live Tuning events with {_currentDailyGifts.Count} daily gifts");
 
             // Generate a user-friendly event list message to set when the server finishes initialization.
             // If we store this as a list instead we can potentially output it in a different way (web API?).
             _eventMessageText = activeDisplayNames.Count > 0
                 ? $"Today's Events: {string.Join(", ", activeDisplayNames)}."
                 : null;
+        }
+
+        public void GetDailyGifts(List<PrototypeId> dailyGifts)
+        {
+            lock (_currentDailyGifts)
+                dailyGifts.AddRange(_currentDailyGifts);
         }
 
         public void SendEventMessageTextToGroupingManager()
@@ -173,7 +190,8 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             Logger.Info("Finished refreshing Live Tuning");
         }
 
-        private int AddActiveEvent(string activeEventName, int eventInstance, List<string> activeNames, List<NetStructLiveTuningSettingProtoEnumValue> settings)
+        private int AddActiveEvent(string activeEventName, int eventInstance, List<string> activeNames, HashSet<PrototypeId> dailyGifts,
+            List<NetStructLiveTuningSettingProtoEnumValue> settings)
         {
             LiveTuningEvent activeEvent = GetEvent(activeEventName);
             if (activeEvent == null) return Logger.WarnReturn(0, "AddActiveEvent(): activeEvent == null");
@@ -185,6 +203,10 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             // Load static data 
             if (LiveTuningManager.LoadLiveTuningDataFromFile(filePath, settings) == false)
                 return Logger.WarnReturn(0, $"AddActiveEvent(): Failed to load Live Tuning data for event {activeEvent} from {filePath}");
+
+            PrototypeId dailyGiftProtoRef = GetDailyGiftProtoRef(activeEvent.DailyGift);
+            if (dailyGiftProtoRef != PrototypeId.Invalid)
+                dailyGifts.Add(dailyGiftProtoRef);
 
             // Generate dynamic data
             if (activeEvent.InstancedMissions.HasValue())
@@ -209,6 +231,22 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
             Logger.Info($"Loaded Live Tuning event {activeEvent}");
             return 1;
+        }
+
+        private static PrototypeId GetDailyGiftProtoRef(string dailyGiftName)
+        {
+            if (string.IsNullOrWhiteSpace(dailyGiftName))
+                return PrototypeId.Invalid;
+
+            PrototypeId dailyGiftProtoRef = GameDatabase.GetPrototypeRefByName(dailyGiftName);
+            if (dailyGiftProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(PrototypeId.Invalid, $"GetDailyGiftProtoRef(): Invalid daily gift '{dailyGiftName}'");
+
+            ItemPrototype itemProto = dailyGiftProtoRef.As<ItemPrototype>();
+            if (itemProto == null)
+                return Logger.WarnReturn(PrototypeId.Invalid, $"GetDailyGiftProtoRef(): {dailyGiftProtoRef.GetName()} is not an ItemPrototype, which is not supported");
+
+            return dailyGiftProtoRef;
         }
 
         private static string GetEventListFilePath()

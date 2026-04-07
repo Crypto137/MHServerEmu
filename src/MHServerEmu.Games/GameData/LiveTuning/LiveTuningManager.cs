@@ -189,8 +189,10 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                     Logger.Warn("CopyLiveTuningData(): _liveTuningData.ChangeNum != _lastUpdateChangeNum");
 
                 output.Copy(_liveTuningData);
-                return true;
             }
+
+            output.UpdateCustomTuningData();
+            return true;
         }
 
         public static float GetLiveGlobalTuningVar(GlobalTuningVar tuningVarEnum)

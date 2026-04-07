@@ -144,7 +144,7 @@
   {
     "Enabled": true,
     "Prototype": "Entity/Items/Consumables/Prototypes/GShop/Misc/FireworksNYE.prototype",
-    "Path": "ActionsTriggeredOnItemEvent[0].Choices[]",
+    "Path": "ActionsTriggeredOnItemEvent.Choices[]",
     "Description": "[Lunar New Year (Moveable)] Add ItemActionDestroySelf to FireworksNYE.",
     "ValueType": "PrototypeDataRef",
     "Value": 15651688269673866161
@@ -152,13 +152,10 @@
   {
     "Enabled": true,
     "Prototype": "Loot/Tables/Mob/Bosses/LunarNewYearTable.prototype",
-    "Path": "Choices[0].Choices[]",
-    "Description": "[Lunar New Year (Moveable)] Add SeasonalDailyGiftLunarNewYear to LunarNewYearTable.",
-    "ValueType": "Prototype",
-    "Value": {
-      "ParentDataRef": 1071992662862269383,
-      "Item": 2529732901728887500
-    }
+    "Path": "Choices[0].PickMethod",
+    "Description": "[Lunar New Year (Moveable)] Set PickMethod to PickWeightTryAll for LunarNewYearTable",
+    "ValueType": "Enum",
+    "Value": "PickWeightTryAll"
   },
   {
     "Enabled": true,
@@ -323,7 +320,7 @@
     "Enabled": true,
     "Prototype": "Loot/Tables/Mob/Bosses/HalloweenPowerupTable.prototype",
     "Path": "Choices[]",
-    "Description": "[Halloween (October 31)] Add HalloweenCandy, HalloweenPumpkin, DailyGiftHalloween to HalloweenPowerupTable.",
+    "Description": "[Halloween (October 31)] Add HalloweenCandy, HalloweenPumpkin to HalloweenPowerupTable.",
     "ValueType": "Prototype[]",
     "Value": [
       {
@@ -333,10 +330,6 @@
       {
         "ParentDataRef": 1071992662862269383,
         "Item": 8742989480698715559
-      },
-      {
-        "ParentDataRef": 1071992662862269383,
-        "Item": 5158094349292477976
       }
     ]
   },

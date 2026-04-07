@@ -89,6 +89,7 @@ namespace MHServerEmu.Games
         public PartyManager PartyManager { get; }
         public GuildManager GuildManager { get; }
         public LiveTuningData LiveTuningData { get => LiveTuningData.Current; }
+        public List<PrototypeId> EventDailyGifts { get => LiveTuningData.EventDailyGifts; }
 
         public ConditionPool ConditionPool { get; } = new();
 
