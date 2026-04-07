@@ -159,19 +159,38 @@
   },
   {
     "Enabled": true,
+    "Prototype": "Entity/Items/Consumables/Prototypes/GShop/Misc/FireworksNYE.prototype",
+    "Path": "ActionsTriggeredOnItemEvent[0].Choices[]",
+    "Description": "[Lunar New Year (Moveable)] Add ItemActionDestroySelf to FireworksNYE.",
+    "ValueType": "PrototypeDataRef",
+    "Value": 15651688269673866161
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/LunarNewYearTable.prototype",
+    "Path": "Choices[0].Choices[]",
+    "Description": "[Lunar New Year (Moveable)] Add SeasonalDailyGiftLunarNewYear to LunarNewYearTable.",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 1071992662862269383,
+      "Item": 2529732901728887500
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Lunar New Year (Moveable)] Add LunarNewYearTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 577300379588563992
+  },
+  {
+    "Enabled": true,
     "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
     "Path": "Choices[]",
     "Description": "[Valentine's Day (February 14)] Add [VDayTable, ValentinesEventPowerupTable] to SpecialEventsTable",
     "ValueType": "PrototypeDataRef[]",
     "Value": [ 7378732117961543855, 1089767944042846312 ]
-  },
-  {
-    "Enabled": false,
-    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-    "Path": "Choices[]",
-    "Description": "[Lunar New Year (February 17)] Add LunarNewYearTable to SpecialEventsTable",
-    "ValueType": "PrototypeDataRef",
-    "Value": 577300379588563992
   },
   {
     "Enabled": true,

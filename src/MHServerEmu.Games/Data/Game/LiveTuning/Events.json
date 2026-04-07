@@ -57,6 +57,10 @@
     "IsHidden": true,
     "FilePath": "Events/LiveTuningDataICPPhase.json"
   },
+  "LunarNewYear": {
+    "DisplayName": "Lunar New Year",
+    "FilePath": "Events/LiveTuningDataLunarNewYear.json"
+  },
   "MidtownMadness": {
     "DisplayName": "Midtown Madness",
     "FilePath": "Events/LiveTuningDataMidtownMadness.json"

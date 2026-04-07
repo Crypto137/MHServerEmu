@@ -53,7 +53,18 @@
     ]
   },
   {
-    "Name": "Valentine's Day'",
+    "Name": "Lunar New Year",
+    "IsEnabled": true,
+    "Type": "SpecialDateLunar",
+    "StartMonth": 1,
+    "StartDay": 1,
+    "DurationDays": 14,
+    "Events": [
+      "LunarNewYear"
+    ]
+  },
+  {
+    "Name": "Valentine's Day",
     "IsEnabled": true,
     "Type": "SpecialDate",
     "StartMonth": 2,

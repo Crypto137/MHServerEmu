@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using System.Globalization;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
@@ -10,6 +11,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         WeeklyRotation,
         DayOfWeek,
         SpecialDate,
+        SpecialDateLunar,
     }
 
     public class LiveTuningEventRule
@@ -71,6 +73,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                     break;
 
                 case LiveTuningEventRuleType.SpecialDate:
+                case LiveTuningEventRuleType.SpecialDateLunar:
                     if (StartMonth == null)
                         return Logger.WarnReturn(false, $"Validate(): Rule {Name} is of type SpecialDate, but it specifies no StartMonth");
 
@@ -115,6 +118,22 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                     if (now < start || now >= end)
                         return 0;
                     
+                    eventInstance = now.Year;
+
+                    break;
+
+                case LiveTuningEventRuleType.SpecialDateLunar:
+                    if (ConvertLunarToGregorian(now.Year, StartMonth.Value, StartDay.Value, out DateTime lunarStart) == false)
+                        return 0;
+
+                    // Subtract a day to account for time zone differences.
+                    lunarStart = lunarStart.AddDays(-1);
+
+                    DateTime lunarEnd = lunarStart.AddDays(DurationDays.Value);
+
+                    if (now < lunarStart || now >= lunarEnd)
+                        return 0;
+
                     eventInstance = now.Year;
 
                     break;
@@ -163,6 +182,23 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
             activeEvents.Add(eventName, eventInstance);
             return 1;
+        }
+
+        private static bool ConvertLunarToGregorian(int year, int lunarMonth, int lunarDay, out DateTime gregorianDateTime)
+        {
+            // Wrap this in a try block because this will throw with any date outside of the acceptable range (1900-2100 as of 2026).
+            try
+            {
+                ChineseLunisolarCalendar calendar = new();
+                gregorianDateTime = calendar.ToDateTime(year, lunarMonth, lunarDay, 0, 0, 0, 0);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.WarnException(e, $"Failed to convert lunar date [year={year}, month={lunarMonth}, day={lunarDay}] to Gregorian DateTime.");
+                gregorianDateTime = default;
+                return false;
+            }
         }
     }
 }

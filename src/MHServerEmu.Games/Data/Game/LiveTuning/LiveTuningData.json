@@ -200,6 +200,11 @@
     "Value": 0.0
   },
   {
+    "Prototype": "Loot/Tables/Mob/Bosses/LunarNewYearTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
     "Prototype": "Loot/Tables/Mob/Bosses/VDayTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0

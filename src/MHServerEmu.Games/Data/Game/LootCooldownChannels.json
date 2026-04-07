@@ -1,5 +1,6 @@
 ﻿{
   "Entity/Items/Orbs/PowerUps/Items/Event/ARMOR/EventLootPowerupRedSkull.prototype": "Loot/Cooldowns/Channels/LootCooldownARMORPowerup.prototype",
   "Entity/Items/CurrencyItems/SeasonalLE/Seasonal/International/Koala.prototype": "Loot/Cooldowns/Channels/LootCooldown30Minutes.prototype",
-  "Entity/Items/CurrencyItems/SeasonalLE/Seasonal/VDay/ValentinesDayHeart.prototype": "Loot/Cooldowns/Channels/LootCooldown30Minutes.prototype"
+  "Entity/Items/Consumables/Prototypes/DailyGift/SeasonalDailyGiftLunarNewYear.prototype": "Loot/Cooldowns/Channels/LootCooldown24hr.prototype",
+  "Entity/Items/CurrencyItems/SeasonalLE/Seasonal/VDay/ValentinesDayHeart.prototype": "Loot/Cooldowns/Mappings/SpecialEvent/LootCooldownSpecialXmas1.prototype"
 }
