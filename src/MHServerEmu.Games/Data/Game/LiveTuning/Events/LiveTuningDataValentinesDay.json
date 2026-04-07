@@ -1,0 +1,12 @@
+﻿[
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/VDayTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/ValentinesEventPowerupTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  }
+]

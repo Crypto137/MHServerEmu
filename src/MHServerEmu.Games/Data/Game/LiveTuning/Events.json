@@ -64,6 +64,10 @@
     "DisplayName": "St. Patrick's Day",
     "FilePath": "Events/LiveTuningDataStPatricksDay.json"
   },
+  "ValentinesDay": {
+    "DisplayName": "Valentine's Day",
+    "FilePath": "Events/LiveTuningDataValentinesDay.json"
+  },
   "WealthOfKingsCounty": {
     "DisplayName": "The Wealth of Kings County",
     "FilePath": "Events/LiveTuningDataWealthOfKingsCounty.json"

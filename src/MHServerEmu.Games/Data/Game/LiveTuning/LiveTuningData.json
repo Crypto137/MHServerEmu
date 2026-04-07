@@ -200,6 +200,16 @@
     "Value": 0.0
   },
   {
+    "Prototype": "Loot/Tables/Mob/Bosses/VDayTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/ValentinesEventPowerupTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
     "Prototype": "Loot/Tables/Events/Anniversary2017Loot.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0

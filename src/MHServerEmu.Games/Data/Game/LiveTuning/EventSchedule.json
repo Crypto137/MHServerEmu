@@ -54,6 +54,17 @@
     ]
   },
   {
+    "Name": "Valentine's Day'",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 2,
+    "StartDay": 14,
+    "DurationDays": 7,
+    "Events": [
+      "ValentinesDay"
+    ]
+  },
+  {
     "Name": "St. Patrick's Day",
     "IsEnabled": true,
     "Type": "SpecialDate",

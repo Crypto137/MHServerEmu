@@ -267,12 +267,12 @@
     "Value": 5244862316186571775
   },
   {
-    "Enabled": false,
+    "Enabled": true,
     "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
     "Path": "Choices[]",
-    "Description": "[Valentine's Day (February 14)] Add [ValentinesEventPowerupTable, VDayTable] to SpecialEventsTable",
+    "Description": "[Valentine's Day (February 14)] Add [VDayTable, ValentinesEventPowerupTable] to SpecialEventsTable",
     "ValueType": "PrototypeDataRef[]",
-    "Value": [ 1089767944042846312, 7378732117961543855 ]
+    "Value": [ 7378732117961543855, 1089767944042846312 ]
   },
   {
     "Enabled": false,

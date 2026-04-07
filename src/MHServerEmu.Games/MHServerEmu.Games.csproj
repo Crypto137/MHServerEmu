@@ -124,6 +124,9 @@
     <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataOperationOmega.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataValentinesDay.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\Game\LiveTuning\LiveTuningData.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
