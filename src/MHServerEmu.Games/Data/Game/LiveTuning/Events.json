@@ -22,6 +22,11 @@
     "DisplayName": "Operation Omega",
     "FilePath": "Events/Weekly/LiveTuningDataOperationOmega.json"
   },
+  "AprilFoolsDay": {
+    "DisplayName": "April Fools' Day",
+    "IsHidden": true,
+    "FilePath": "Events/LiveTuningDataAprilFoolsDay.json"
+  },
   "Anniversary": {
     "DisplayName": "Anniversary",
     "FilePath": "Events/LiveTuningDataAnniversary.json"

@@ -291,7 +291,7 @@
     "Value": 7592276506700879991
   },
   {
-    "Enabled": false,
+    "Enabled": true,
     "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Terminals/OdinsPalace/KurseTerminalLoot.prototype",
     "Path": "Choices[]",
     "Description": "[April Fools Day (April 1)] Add AprilFoolsTable to KurseTerminalLoot",

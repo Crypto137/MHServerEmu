@@ -76,6 +76,17 @@
     ]
   },
   {
+    "Name": "April Fools' Day",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 3,
+    "StartDay": 31,
+    "DurationDays": 2,
+    "Events": [
+      "AprilFoolsDay"
+    ]
+  },
+  {
     "Name": "Anniversary",
     "IsEnabled": true,
     "Type": "SpecialDate",
