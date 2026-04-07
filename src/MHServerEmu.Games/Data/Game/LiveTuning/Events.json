@@ -52,6 +52,10 @@
     "DisplayName": "Guardians of the Galaxy",
     "FilePath": "Events/LiveTuningDataGuardiansOfTheGalaxy.json"
   },
+  "Halloween": {
+    "DisplayName": "Halloween",
+    "FilePath": "Events/LiveTuningDataHalloween.json"
+  },
   "HeroesForHire": {
     "DisplayName": "Heroes for Hire",
     "FilePath": "Events/LiveTuningDataHeroesForHire.json"

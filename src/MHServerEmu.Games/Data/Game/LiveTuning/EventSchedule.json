@@ -117,5 +117,16 @@
     "Events": [
       "EndOfSummer"
     ]
+  },
+  {
+    "Name": "Halloween",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 10,
+    "StartDay": 25,
+    "DurationDays": 7,
+    "Events": [
+      "Halloween"
+    ]
   }
 ]

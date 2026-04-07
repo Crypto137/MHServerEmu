@@ -320,7 +320,36 @@
     }
   },
   {
-    "Enabled": false,
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/HalloweenPowerupTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Halloween (October 31)] Add HalloweenCandy, HalloweenPumpkin, DailyGiftHalloween to HalloweenPowerupTable.",
+    "ValueType": "Prototype[]",
+    "Value": [
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 8873954813631798450
+      },
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 8742989480698715559
+      },
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 5158094349292477976
+      }
+    ]
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/HalloweenPowerupTable.prototype",
+    "Path": "PickMethod",
+    "Description": "[Halloween (October 31)] Set PickMethod to PickWeightTryAll for HalloweenPowerupTable",
+    "ValueType": "Enum",
+    "Value": "PickWeightTryAll"
+  },
+  {
+    "Enabled": true,
     "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
     "Path": "Choices[]",
     "Description": "[Halloween (October 31)] Add HalloweenPowerupTable to SpecialEventsTable",
