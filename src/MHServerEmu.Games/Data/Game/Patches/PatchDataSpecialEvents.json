@@ -358,5 +358,26 @@
     "Description": "[Halloween (October 31)] Add HalloweenPowerupTable to SpecialEventsTable",
     "ValueType": "PrototypeDataRef",
     "Value": 7708957262339380684
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Vendor/SpecialEvent/SpecialEventBeast.prototype",
+    "Path": "Choices[1].Item",
+    "Description": "[Guardians of the Galaxy] replace BountyHunterBoxGroot with LeviathanCraftingBox in SpecialEventBeast.",
+    "ValueType": "PrototypeDataRef",
+    "Value": 16090292140337929967
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+    "Path": "Inventories[]",
+    "Description": "[Guardians of the Galaxy] Add VendorInventoryEntry for SpecialEventBeast to VendorAvengersTowerEventTerminal",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 6775684286112470794,
+      "LootTable": 2373906110761080777,
+      "PlayerInventory": 15746332603173774372,
+      "UseStartingAtVendorLevel": 1
+    }
   }
 ]
