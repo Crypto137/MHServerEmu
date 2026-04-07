@@ -1,5 +1,10 @@
 [
   {
+    "Prototype": "Entity/Items/Orbs/PowerUps/Items/Event/ARMOR/CWEventLootPowerUpTeamCapMoleMan.prototype",
+    "Setting": "eWETV_Enabled",
+    "Value": 0.0
+  },
+  {
     "Prototype": "Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/ARMOREventVendor.prototype",
     "Setting": "eWETV_Visible",
     "Value": 0.0
