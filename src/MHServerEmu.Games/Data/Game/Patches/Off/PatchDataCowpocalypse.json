@@ -1,0 +1,10 @@
+﻿[
+  {
+    "Enabled": true,
+    "Prototype": "Metagame/PatrolBrooklyn/PatrolBrooklynMode.prototype",
+    "Path": "States[]",
+    "Description": "[Cowpocalypse (Special)] Add Cowpocalypse wave to Industry City Patrol",
+    "ValueType": "PrototypeId",
+    "Value": 4346653277293517379
+  }
+]

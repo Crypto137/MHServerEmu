@@ -35,61 +35,35 @@
     "Enabled": true,
     "Prototype": "Loot/Tables/ItemType/SpecialsCostumesCardsTokens.prototype",
     "Path": "Choices[0].Choices[]",
-    "Description": "Add Fortune Card Mk 2 to SpecialsCostumesCardsTokens.",
-    "ValueType": "Prototype",
-    "Value": {
-      "ParentDataRef": 1071992662862269383,
-      "Item": 5460518059085536758,
-      "Weight": 50
-    }
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/ItemType/SpecialsCostumesCardsTokens.prototype",
-    "Path": "Choices[0].Choices[]",
-    "Description": "Add Fortune Card Mk 3 to SpecialsCostumesCardsTokens.",
-    "ValueType": "Prototype",
-    "Value": {
-      "ParentDataRef": 1071992662862269383,
-      "Item": 9964627584974134775,
-      "Weight": 50
-    }
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/ItemType/SpecialsCostumesCardsTokens.prototype",
-    "Path": "Choices[0].Choices[]",
-    "Description": "Add Fortune Card Mk 4 to SpecialsCostumesCardsTokens.",
-    "ValueType": "Prototype",
-    "Value": {
-      "ParentDataRef": 1071992662862269383,
-      "Item": 16513128686675238775,
-      "Weight": 50
-    }
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/ItemType/SpecialsCostumesCardsTokens.prototype",
-    "Path": "Choices[0].Choices[]",
-    "Description": "Add Fortune Card Mk 5 to SpecialsCostumesCardsTokens.",
-    "ValueType": "Prototype",
-    "Value": {
-      "ParentDataRef": 1071992662862269383,
-      "Item": 7132784530930736633,
-      "Weight": 50
-    }
-  },
-  {
-    "Enabled": true,
-    "Prototype": "Loot/Tables/ItemType/SpecialsCostumesCardsTokens.prototype",
-    "Path": "Choices[0].Choices[]",
-    "Description": "Add Fortune Card Mk 6 to SpecialsCostumesCardsTokens.",
-    "ValueType": "Prototype",
-    "Value": {
-      "ParentDataRef": 1071992662862269383,
-      "Item": 18095141954958532090,
-      "Weight": 50
-    }
+    "Description": "Add Fortune Card Mk 2-6 to SpecialsCostumesCardsTokens.",
+    "ValueType": "Prototype[]",
+    "Value": [
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 5460518059085536758,
+        "Weight": 50
+      },
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 9964627584974134775,
+        "Weight": 50
+      },
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 16513128686675238775,
+        "Weight": 50
+      },
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 7132784530930736633,
+        "Weight": 50
+      },
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 18095141954958532090,
+        "Weight": 50
+      }
+    ]
   },
   {
     "Enabled": true,
