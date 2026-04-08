@@ -20,7 +20,8 @@
   },
   "OperationOmega": {
     "DisplayName": "Operation Omega",
-    "FilePath": "Events/Weekly/LiveTuningDataOperationOmega.json"
+    "FilePath": "Events/Weekly/LiveTuningDataOperationOmega.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/RandomGiftboxes/OmegaFileBox.prototype"
   },
   "AprilFoolsDay": {
     "DisplayName": "April Fools' Day",
@@ -29,7 +30,8 @@
   },
   "Anniversary": {
     "DisplayName": "Anniversary",
-    "FilePath": "Events/LiveTuningDataAnniversary.json"
+    "FilePath": "Events/LiveTuningDataAnniversary.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/ThirdAnniversaryDailyGift.prototype"
   },
   "AustraliaDay": {
     "DisplayName": "Australia Day",
@@ -37,7 +39,8 @@
   },
   "Cowpocalypse": {
     "DisplayName": "Cowpocalypse",
-    "FilePath": "Events/LiveTuningDataCowpocalypse.json"
+    "FilePath": "Events/LiveTuningDataCowpocalypse.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/DailyGiftCow2.prototype"
   },
   "DailyBugle": {
     "DisplayName": "Daily Bugle",
@@ -46,7 +49,8 @@
   },
   "EndOfSummer": {
     "DisplayName": "End of Summer",
-    "FilePath": "Events/LiveTuningDataEndOfSummer.json"
+    "FilePath": "Events/LiveTuningDataEndOfSummer.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/SummerEventDailyGift.prototype"
   },
   "GuardiansOfTheGalaxy": {
     "DisplayName": "Guardians of the Galaxy",
@@ -59,7 +63,8 @@
   },
   "HeroesForHire": {
     "DisplayName": "Heroes for Hire",
-    "FilePath": "Events/LiveTuningDataHeroesForHire.json"
+    "FilePath": "Events/LiveTuningDataHeroesForHire.json",
+    "DailyGift": "Loot/Tables/Mob/NormalMobs/LukeCageDailyGiftTable.prototype"
   },
   "LunarNewYear": {
     "DisplayName": "Lunar New Year",
@@ -68,11 +73,13 @@
   },
   "MidtownMadness": {
     "DisplayName": "Midtown Madness",
-    "FilePath": "Events/LiveTuningDataMidtownMadness.json"
+    "FilePath": "Events/LiveTuningDataMidtownMadness.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/DailyGiftMidtownMadness.prototype"
   },
   "OrdersFromTheHand": {
     "DisplayName": "Orders From The Hand",
-    "FilePath": "Events/LiveTuningDataOrdersFromTheHand.json"
+    "FilePath": "Events/LiveTuningDataOrdersFromTheHand.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/OrdersfromtheHandDailyGift.prototype"
   },
   "StPatricksDay": {
     "DisplayName": "St. Patrick's Day",
@@ -81,7 +88,8 @@
   },
   "ValentinesDay": {
     "DisplayName": "Valentine's Day",
-    "FilePath": "Events/LiveTuningDataValentinesDay.json"
+    "FilePath": "Events/LiveTuningDataValentinesDay.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/SeasonalDailyGiftValentinesDay.prototype"
   },
   "WealthOfKingsCounty": {
     "DisplayName": "The Wealth of Kings County",
