@@ -4,8 +4,7 @@
     "IsEnabled": true,
     "Type": "AlwaysOn",
     "Events": [
-      "DailyBugle",
-      "ICPPhase"
+      "DailyBugle"
     ]
   },
   {

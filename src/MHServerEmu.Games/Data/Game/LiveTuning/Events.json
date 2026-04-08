@@ -61,11 +61,6 @@
     "DisplayName": "Heroes for Hire",
     "FilePath": "Events/LiveTuningDataHeroesForHire.json"
   },
-  "ICPPhase": {
-    "DisplayName": "Industry City Patrol",
-    "IsHidden": true,
-    "FilePath": "Events/LiveTuningDataICPPhase.json"
-  },
   "LunarNewYear": {
     "DisplayName": "Lunar New Year",
     "FilePath": "Events/LiveTuningDataLunarNewYear.json",
