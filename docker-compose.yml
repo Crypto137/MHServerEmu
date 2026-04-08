@@ -1,0 +1,15 @@
+services:
+  mhservereemu:
+    image: ghcr.io/crypto137/mhservereemu:nightly
+    container_name: mhservereemu
+    restart: unless-stopped
+    ports:
+      - "4306:4306" # Game client frontend
+      - "8080:8080" # Web frontend / dashboard
+    volumes:
+      # Persists the SQLite database, backups, and any other runtime data.
+      # Place your game asset files (CalligraphyData.sip, etc.) here before first run.
+      - mhservereemu-data:/server
+
+volumes:
+  mhservereemu-data:

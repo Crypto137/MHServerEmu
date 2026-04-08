@@ -1,0 +1,23 @@
+.git
+.github
+docs
+proto
+build
+*.md
+CREDITS
+LICENSE
+
+# Build outputs
+src/**/bin/
+src/**/obj/
+
+# Test projects — not needed for the server image
+src/MHServerEmu.Core.Tests/
+src/MHServerEmu.Games.Tests/
+
+# Tools — separate solution, not part of the server
+src/Tools/
+
+# Debug symbols and XML docs
+**/*.pdb
+**/*.xml
