@@ -94,5 +94,10 @@
   "WealthOfKingsCounty": {
     "DisplayName": "The Wealth of Kings County",
     "FilePath": "Events/LiveTuningDataWealthOfKingsCounty.json"
+  },
+  "WinterHoliday": {
+    "DisplayName": "Winter Holiday",
+    "FilePath": "Events/LiveTuningDataWinterHoliday.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/XMasDailyGift.prototype"
   }
 }

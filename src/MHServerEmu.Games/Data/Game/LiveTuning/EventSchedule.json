@@ -88,9 +88,9 @@
     "Name": "April Fools' Day",
     "IsEnabled": true,
     "Type": "SpecialDate",
-    "StartMonth": 3,
-    "StartDay": 31,
-    "DurationDays": 2,
+    "StartMonth": 4,
+    "StartDay": 1,
+    "DurationDays": 1,
     "Events": [
       "AprilFoolsDay"
     ]
@@ -122,10 +122,21 @@
     "IsEnabled": true,
     "Type": "SpecialDate",
     "StartMonth": 10,
-    "StartDay": 25,
+    "StartDay": 26,
     "DurationDays": 7,
     "Events": [
       "Halloween"
+    ]
+  },
+  {
+    "Name": "Winter Holiday",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 12,
+    "StartDay": 20,
+    "DurationDays": 14,
+    "Events": [
+      "WinterHoliday"
     ]
   }
 ]

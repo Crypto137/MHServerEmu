@@ -188,7 +188,7 @@
     "Prototype": "Loot/Tables/Events/LunarEnvelopeTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
-  }
+  },
   {
     "Prototype": "Loot/Tables/Mob/Bosses/VDayTable.prototype",
     "Setting": "eLTTV_Enabled",
@@ -246,6 +246,16 @@
   },
   {
     "Prototype": "Loot/Tables/Mob/Bosses/HalloweenPowerupTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/XMasGiftSpecialEventTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/WinterEventPowerupTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
   },

@@ -388,6 +388,37 @@
   },
   {
     "Enabled": true,
+    "Prototype": "Loot/Tables/CSGrant/XmasDailyGift.prototype",
+    "Path": "Choices[]",
+    "Description": "[Winter Holiday (December)] Add Eternity Splinters back to XmasDailyGift",
+    "ValueType": "Prototype[]",
+    "Value": [
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 11087194553833821680,
+        "NumMin": 10,
+        "NumMax": 10
+      }
+    ]
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/XMasGiftSpecialEventTable.prototype",
+    "Path": "NoDropPercent",
+    "Description": "[Winter Holiday (December)] Set NoDropPercent for XMasGiftSpecialEventTable",
+    "ValueType": "Float",
+    "Value": 0.8
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Winter Holiday (December)] Add XMasGiftSpecialEventTable, WinterEventPowerupTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef[]",
+    "Value": [ 15664594167700264801, 2194872760141354696 ]
+  },
+  {
+    "Enabled": true,
     "Prototype": "Loot/Tables/Vendor/SpecialEvent/SpecialEventBeast.prototype",
     "Path": "Choices[1].Item",
     "Description": "[Guardians of the Galaxy] replace BountyHunterBoxGroot with LeviathanCraftingBox in SpecialEventBeast.",
