@@ -185,6 +185,11 @@
     "Value": 0.0
   },
   {
+    "Prototype": "Loot/Tables/Events/LunarEnvelopeTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  }
+  {
     "Prototype": "Loot/Tables/Mob/Bosses/VDayTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0

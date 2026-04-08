@@ -3,5 +3,10 @@
     "Prototype": "Loot/Tables/Mob/Bosses/LunarNewYearTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/LunarEnvelopeTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
   }
 ]
