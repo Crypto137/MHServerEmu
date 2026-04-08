@@ -214,6 +214,27 @@
     "Value": 10570310015585883894
   },
   {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Vendor/SpecialEvent/Anniversary2017VendorLootTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Anniversary (June 4)] Add 2016 exclusive rewards to Anniversary2017VendorLootTable.",
+    "ValueType": "Prototype[]",
+    "Value": [
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 16710304057499393635
+      },
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 17715182860284600121
+      },
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 16352741993302990650
+      }
+    ]
+  },
+  {
     "Enabled": false,
     "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
     "Path": "Inventories[]",
