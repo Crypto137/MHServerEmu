@@ -140,12 +140,12 @@
     "Value": 0.0
   },
   {
-    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Prototype": "Loot/Tables/Vendor/SpecialEvent/SpecialEventBeast.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
   },
   {
-    "Prototype": "Loot/Tables/Vendor/SpecialEvent/SpecialEventBeast.prototype",
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
   },
@@ -261,6 +261,11 @@
   },
   {
     "Prototype": "Loot/Tables/MissionRewards/SharedQuest/SharedQuestOmegaFiles.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/OmegaDriveTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 0.0
   },

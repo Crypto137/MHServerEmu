@@ -10,6 +10,11 @@
     "Value": 2.0
   },
   {
+    "Prototype": "Loot/Tables/Mob/Bosses/OmegaDriveTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
     "Prototype": "Loot/Tables/Mob/Bosses/AoSEventHydraPowerUpTable.prototype",
     "Setting": "eLTTV_Enabled",
     "Value": 2.0

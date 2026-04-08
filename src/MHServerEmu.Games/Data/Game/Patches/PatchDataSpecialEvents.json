@@ -1,6 +1,22 @@
 [
   {
     "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/OmegaDriveTable.prototype",
+    "Path": "NoDropPercent",
+    "Description": "[Operation Omega (Weekly)] Enable OmegaDriveTable",
+    "ValueType": "Float",
+    "Value": 0.997
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Operation Omega (Weekly)] Add OmegaDriveTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 12035714241979421470
+  },
+  {
+    "Enabled": true,
     "Prototype": "Loot/Tables/Events/PowerupBuffLootMrHyde.prototype",
     "Path": "Choices[1].Power",
     "Description": "[A.R.M.O.R. Incursion (Weekly)] Fix condition removal power for the PowerupBuffLootMrHyde loot table",
