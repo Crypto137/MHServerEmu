@@ -20,6 +20,11 @@
     "Value": 2.0
   },
   {
+    "Prototype": "Loot/Tables/Mob/Bosses/LimboScrollTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
     "Prototype": "Missions/Prototypes/PVEEndgame/Limbo/LimboStrikeOnLimbo.prototype",
     "Setting": "eMTV_Enabled",
     "Value": 1.0

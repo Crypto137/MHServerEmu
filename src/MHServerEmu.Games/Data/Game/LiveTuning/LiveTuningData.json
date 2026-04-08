@@ -275,6 +275,11 @@
     "Value": 0.0
   },
   {
+    "Prototype": "Loot/Tables/Mob/Bosses/LimboScrollTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 0.0
+  },
+  {
     "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ARMORUltimateUpgradeMission.prototype",
     "Setting": "eMTV_Enabled",
     "Value": 0.0
