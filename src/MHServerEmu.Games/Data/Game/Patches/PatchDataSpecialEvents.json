@@ -161,9 +161,9 @@
     "Enabled": true,
     "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
     "Path": "Choices[]",
-    "Description": "[Lunar New Year (Moveable)] Add LunarNewYearTable to SpecialEventsTable",
-    "ValueType": "PrototypeDataRef",
-    "Value": 577300379588563992
+    "Description": "[Lunar New Year (Moveable)] Add LunarNewYearTable, LunarEnvelopeTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef[]",
+    "Value": [ 577300379588563992, 3900900961775457045 ]
   },
   {
     "Enabled": true,

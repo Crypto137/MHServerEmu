@@ -57,7 +57,7 @@
     "Type": "SpecialDateLunar",
     "StartMonth": 1,
     "StartDay": 1,
-    "DurationDays": 14,
+    "DurationDays": 7,
     "Events": [
       "LunarNewYear"
     ]
