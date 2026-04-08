@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private int RefreshTimerIntervalMS = 5000;
+        private const int RefreshTimerIntervalMS = 5000;
 
         private static readonly string EventListFilePath = Path.Combine(LiveTuningManager.LiveTuningDataDirectory, "Events.json");
         private static readonly string EventListOverrideFilePath = Path.Combine(LiveTuningManager.LiveTuningDataDirectory, "EventsOverride.json");
@@ -114,11 +114,11 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             _rules.Clear();
 
             // Live Tuning events are not critical, so allow server initialization to proceed if any of the configuration files are missing or borked.
-            string eventListFilePath = GetEventListFilePath();
+            string eventListFilePath = GetBaseFileOrOverride(EventListFilePath, EventListOverrideFilePath);
             if (eventListFilePath == null)
                 return Logger.WarnReturn(true, "InitializeEvents(): Live Tuning event list file not found");
 
-            string eventScheduleFilePath = GetEventScheduleFilePath();
+            string eventScheduleFilePath = GetBaseFileOrOverride(EventScheduleFilePath, EventScheduleOverrideFilePath);
             if (eventScheduleFilePath == null)
                 return Logger.WarnReturn(true, "InitializeEvents(): Live Tuning event schedule file not found");
 
@@ -249,24 +249,13 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             return dailyGiftProtoRef;
         }
 
-        private static string GetEventListFilePath()
+        private static string GetBaseFileOrOverride(string baseFilePath, string overrideFilePath)
         {
-            if (File.Exists(EventListOverrideFilePath))
-                return EventListOverrideFilePath;
+            if (File.Exists(overrideFilePath))
+                return overrideFilePath;
 
-            if (File.Exists(EventListFilePath))
-                return EventListFilePath;
-
-            return null;
-        }
-
-        private static string GetEventScheduleFilePath()
-        {
-            if (File.Exists(EventScheduleOverrideFilePath))
-                return EventScheduleOverrideFilePath;
-
-            if (File.Exists(EventScheduleFilePath))
-                return EventScheduleFilePath;
+            if (File.Exists(baseFilePath))
+                return baseFilePath;
 
             return null;
         }
