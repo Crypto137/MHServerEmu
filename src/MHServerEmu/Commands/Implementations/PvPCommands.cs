@@ -3,6 +3,7 @@ using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Commands.Implementations
@@ -24,13 +25,22 @@ namespace MHServerEmu.Commands.Implementations
             var player = playerConnection.Player;
             if (player == null) return "Player not found.";
 
+            if (LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_PVPEnabled) == 0f)
+            {
+                player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePvPDisabledPortalFail);
+                return string.Empty;
+            }
+
             bool isInParty = player.Party != null && player.Party.NumMembers > 1;
             var command = isInParty
                 ? RegionRequestQueueCommandVar.eRRQC_AddToQueueParty
                 : RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo;
 
             int limit = (size == 5) ? -1 : size;
-            player.MatchQueueStatus.TryRegionRequestCommand(RegionRef, DifficultyRef, 0, command, limit);
+
+            if (player.MatchQueueStatus.TryRegionRequestCommand(RegionRef, DifficultyRef, 0, command, limit) == false)
+                return "Matchmaking is currently not available.";
+            
             return $"Queued for {size}v{size} PvP! ({(isInParty ? "Party" : "Solo")})";
         }
 
