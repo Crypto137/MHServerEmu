@@ -35,6 +35,9 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public int ChangeNum { get; set; } = 0;
 
+        // Custom data not in Gazillion's implementation of Live Tuning. We use this for any hot swappable data we want in game thread's local storage.
+        public List<PrototypeId> EventDailyGifts { get; } = new();
+
         public LiveTuningData()
         {
             // InitClientWhitelistBits()
@@ -123,6 +126,12 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
             ChangeNum = other.ChangeNum;
             _updateProtobufOutOfDate = true;
+        }
+
+        public void UpdateCustomTuningData()
+        {
+            EventDailyGifts.Clear();
+            LiveTuningEventScheduler.Instance.GetDailyGifts(EventDailyGifts);
         }
 
         public bool UpdateLiveGlobalTuningVar(GlobalTuningVar tuningVarEnum, float tuningVarValue)

@@ -28,6 +28,8 @@ namespace MHServerEmu.Grouping.Chat
         private readonly ChatBroadcastMessage _motd;
         private readonly bool _logPrivateChatRooms;
 
+        private ChatBroadcastMessage _liveTuningEventMotd;
+
         public GroupingChatManager(GroupingManagerService groupingManager)
         {
             _groupingManager = groupingManager;
@@ -36,12 +38,7 @@ namespace MHServerEmu.Grouping.Chat
             _serverName = config.ServerName;
             _serverPrestigeLevel = config.ServerPrestigeLevel;
 
-            _motd = ChatBroadcastMessage.CreateBuilder()
-                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
-                .SetFromPlayerName(_serverName)
-                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(config.MotdText))
-                .SetPrestigeLevel(_serverPrestigeLevel)
-                .Build();
+            _motd = BuildMotd(config.MotdText);
 
             _logPrivateChatRooms = config.LogPrivateChatRooms;
 
@@ -71,6 +68,9 @@ namespace MHServerEmu.Grouping.Chat
         public void OnClientAdded(IFrontendClient client)
         {
             SendMessage(_motd, client);
+
+            if (_liveTuningEventMotd != null)
+                SendMessage(_liveTuningEventMotd, client);
         }
 
         public void OnChat(IFrontendClient client, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter)
@@ -160,6 +160,21 @@ namespace MHServerEmu.Grouping.Chat
             SendMessageToAll(message);
         }
 
+        public void SetLiveTuningEventMessage(string messageText)
+        {
+            if (messageText != null)
+            {
+                _liveTuningEventMotd = BuildMotd(messageText);
+                SendMessageToAll(_liveTuningEventMotd);
+            }
+            else
+            {
+                _liveTuningEventMotd = null;
+            }
+
+            Logger.Info($"Updated Live Tuning MotD to '{messageText}'");
+        }
+
         private ChatRoomManager GetChatRoomManager(ChatRoomTypes roomType)
         {
             if (roomType < 0 || roomType >= ChatRoomTypes.CHAT_ROOM_TYPE_NUM_TYPES)
@@ -202,6 +217,16 @@ namespace MHServerEmu.Grouping.Chat
         private void SendMessageToAll(IMessage message)
         {
             _groupingManager.ClientManager.SendMessageToAll(message);
+        }
+
+        private ChatBroadcastMessage BuildMotd(string messageText)
+        {
+            return ChatBroadcastMessage.CreateBuilder()
+                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
+                .SetFromPlayerName(_serverName)
+                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(messageText))
+                .SetPrestigeLevel(_serverPrestigeLevel)
+                .Build();
         }
     }
 }

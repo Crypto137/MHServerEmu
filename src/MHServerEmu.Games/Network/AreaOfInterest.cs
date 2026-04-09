@@ -997,6 +997,10 @@ namespace MHServerEmu.Games.Network
                 if (isInRegion && player.IsEntityDiscovered(worldEntity))
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
 
+                // Cancel visibility if overriden by live tuning
+                if (worldEntity.IsLiveTuningVisible == false)
+                    newInterestPolicies &= ~(AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery);
+
                 // Add party / trade policies from the inventory.
                 if (Region != null)
                 {

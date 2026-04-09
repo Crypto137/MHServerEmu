@@ -112,26 +112,26 @@ World Entity tuning variables can be applied to mobs, NPCs, and items.
 
 ### Loot Table
 
-| Tuning Variable     | Description                                                                                                      |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| eLTTV_Enabled       | Disables this loot table when set to 0.                                                                          |
-| eLTTV_Weight        | Multiplier for the weight value of this loot table.                                                              |
-| eLTTV_Rolls         | Override for the number of rolls for this loot table.                                                            |
-| eLTTV_NoDropPercent | Override for the no drop chance for this loot table.                                                             |
-| eLTTV_GroupNum      | When this loot table is rolled, world entities that have the same loot group number specified are also included. |
+| Tuning Variable     | Description                                                                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| eLTTV_Enabled       | Disables this loot table when set to 0. Also enables loot tables without the `LiveTuningDefaultEnabled` flag when set to a value higher than 1. |
+| eLTTV_Weight        | Multiplier for the weight value of this loot table.                                                                                             |
+| eLTTV_Rolls         | Override for the number of rolls for this loot table.                                                                                           |
+| eLTTV_NoDropPercent | Override for the no drop chance for this loot table.                                                                                            |
+| eLTTV_GroupNum      | When this loot table is rolled, world entities that have the same loot group number specified are also included.                                |
 
 ### Mission
 
-| Tuning Variable    | Description                          |
-| ------------------ | ------------------------------------ |
-| eMTV_Enabled       | Disables this mission when set to 0. |
-| eMTV_EventInstance |                                      |
+| Tuning Variable    | Description                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| eMTV_Enabled       | Disables this mission when set to 0.                                                  |
+| eMTV_EventInstance | Increment this value to reset limited time event missions (e.g. A.R.M.O.R. Defender). |
 
 ### Condition
 
-| Tuning Variable | Description                            |
-| --------------- | -------------------------------------- |
-| eCTV_Enabled    | Disables this condition when set to 0. |
+| Tuning Variable | Description                                                                                                                                              |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| eCTV_Enabled    | Disables this condition when set to 0. Also enables conditions defined in `GlobalsPrototype.LiveTuneServerConditions` when set to a value higher than 1. |
 
 ### Public Event
 

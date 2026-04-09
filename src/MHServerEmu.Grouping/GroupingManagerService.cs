@@ -42,6 +42,8 @@ namespace MHServerEmu.Grouping
 
                 ChatTipManager.Update();
 
+                ClientManager.Flush();
+
                 Thread.Sleep(1);
             }
         }

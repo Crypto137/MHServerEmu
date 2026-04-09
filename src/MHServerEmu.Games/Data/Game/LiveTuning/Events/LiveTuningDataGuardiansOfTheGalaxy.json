@@ -1,0 +1,37 @@
+﻿[
+  {
+    "Prototype": "Entity/Items/Consumables/Prototypes/SharedQuestLootBox/DailyBonusRewardLarge.prototype",
+    "Setting": "eWETV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Entity/Items/Consumables/Prototypes/SharedQuestLootBox/DailyBonusRewardLargeGroot.prototype",
+    "Setting": "eWETV_LootGroupNum",
+    "Value": 2014.0
+  },
+  {
+    "Prototype": "Loot/Tables/MissionRewards/SharedQuest/SharedQuest1.prototype",
+    "Setting": "eLTTV_GroupNum",
+    "Value": 2014.0
+  },
+  {
+    "Prototype": "Loot/Tables/MissionRewards/SharedQuest/SharedQuest2.prototype",
+    "Setting": "eLTTV_GroupNum",
+    "Value": 2014.0
+  },
+  {
+    "Prototype": "Loot/Tables/MissionRewards/SharedQuest/SharedQuest2HoloSim.prototype",
+    "Setting": "eLTTV_GroupNum",
+    "Value": 2014.0
+  },
+  {
+    "Prototype": "Loot/Tables/MissionRewards/SharedQuest/SharedQuest3.prototype",
+    "Setting": "eLTTV_GroupNum",
+    "Value": 2014.0
+  },
+  {
+    "Prototype": "Loot/Tables/Vendor/SpecialEvent/SpecialEventBeast.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  }
+]

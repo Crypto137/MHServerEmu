@@ -1,0 +1,187 @@
+﻿[
+  {
+    "Prototype": "",
+    "Setting": "eGTV_CosmicPrestigeXPPct",
+    "Value": 0.08
+  },
+  {
+    "Prototype": "Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/CosmicEventVendor.prototype",
+    "Setting": "eWETV_Visible",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/BrooklynChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/CosmicChestChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/CosmicDoopChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/CosmicTerminalChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/DoopOverlordChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/GreenTerminalChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/HightownChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/HoloSimChaos9.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/HoloSimChaos10.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/HoloSimChaos13.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/HoloSimChaos16.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/HoloSimChaos19.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/HoloSimChaos22.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/HoloSimChaos25.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/HoloSimChaos28.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/HoloSimEndWaveChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/MidtownChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/OneShotBossChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/OneShotSubBossChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/RaidBossChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/RedTerminalChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/SubBossChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/SurturChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/XDefChaos9.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/XDefChaos10.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/XDefChaos13.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/XDefChaos16.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/XDefChaos19.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/XDefChaos22.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/XDefChaos25.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/XDefChaos28.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/CosmicChaosEvent/XDefEndWaveChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/CosmicWorldstonesTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/DangerRoomCosmicChaos.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Events/GlobalEvents/EventPowerConditions/CosmicChaosEventPowerCondition.prototype",
+    "Setting": "eCTV_Enabled",
+    "Value": 2.0
+  }
+]

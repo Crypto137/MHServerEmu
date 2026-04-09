@@ -1,6 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
@@ -9,8 +11,12 @@ namespace MHServerEmu.Games.GameData.LiveTuning
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public static readonly string LiveTuningDataDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "LiveTuning");
+
         private readonly LiveTuningData _liveTuningData = new();
         private int _lastUpdateChangeNum = 0;
+
+        private readonly Dictionary<(ulong, int), float> _lastKnownSettings = new();
 
         public static LiveTuningManager Instance { get; } = new();
 
@@ -18,46 +24,121 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public bool Initialize()
         {
-            LoadLiveTuningDataFromDisk();
+            LoadLiveTuningData(false);
             return true;
         }
 
-        public bool LoadLiveTuningDataFromDisk()
+        public bool LoadLiveTuningData(bool sendToServices)
         {
-            string liveTuningDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "LiveTuning");
-            if (Directory.Exists(liveTuningDirectory) == false)
-                return Logger.WarnReturn(false, "LoadLiveTuningDataFromDisk(): Game data directory not found");
+            if (Directory.Exists(LiveTuningDataDirectory) == false)
+                return Logger.WarnReturn(false, "LoadLiveTuningDataFromDisk(): Live Tuning data directory not found");
 
-            List<NetStructLiveTuningSettingProtoEnumValue> protobufList = new();
+            List<NetStructLiveTuningSettingProtoEnumValue> settings = new();
 
             // Read all .json files that start with LiveTuningData
-            foreach (string filePath in FileHelper.GetFilesWithPrefix(liveTuningDirectory, "LiveTuningData", "json"))
-            {
-                string fileName = Path.GetFileName(filePath);
+            foreach (string filePath in FileHelper.GetFilesWithPrefix(LiveTuningDataDirectory, "LiveTuningData", "json"))
+                LoadLiveTuningDataFromFile(filePath, settings);
 
-                LiveTuningUpdateValue[] updateValues = FileHelper.DeserializeJson<LiveTuningUpdateValue[]>(filePath);
-                if (updateValues == null)
+            // Get additional event Live Tuning based on the current day
+            LiveTuningEventScheduler.Instance.GetLiveTuningSettings(settings);
+
+            UpdateLiveTuningData(settings, true);
+            Logger.Info($"Loaded {settings.Count} Live Tuning settings");
+
+            CacheLoadedSettings(settings, sendToServices);
+
+            if (sendToServices)
+                LiveTuningEventScheduler.Instance.SendEventMessageTextToGroupingManager();
+
+            return true;
+        }
+
+        public static bool LoadLiveTuningDataFromFile(string filePath, List<NetStructLiveTuningSettingProtoEnumValue> settings)
+        {
+            ReadOnlySpan<char> fileName = Path.GetFileName(filePath.AsSpan());
+
+            LiveTuningUpdateValue[] updateValues = FileHelper.DeserializeJson<LiveTuningUpdateValue[]>(filePath);
+            if (updateValues == null)
+                return Logger.WarnReturn(false, $"LoadLiveTuningDataFromDisk(): Failed to parse {fileName}, skipping");
+
+            foreach (LiveTuningUpdateValue value in updateValues)
+            {
+                NetStructLiveTuningSettingProtoEnumValue protobuf = value.ToProtobuf();
+                if (protobuf == null)
+                    continue;
+
+                settings.Add(protobuf);
+            }
+
+            Logger.Trace($"Parsed Live Tuning data from {fileName}");
+            return true;
+        }
+
+        private void CacheLoadedSettings(List<NetStructLiveTuningSettingProtoEnumValue> loadedSettings, bool sendToGameInstances)
+        {
+            // Filter out tuning settings we know game instances don't need to react to in advance to reduce workload on individual game instances.
+            List<NetStructLiveTuningSettingProtoEnumValue> settingsToSend = null;
+
+            // Iterate in reverse and skip already encountered proto refs to send only the latest data if a setting is set multiple times.
+            using var protoRefsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> protoRefs);
+
+            for (int i = loadedSettings.Count - 1; i >= 0; i--)
+            {
+                NetStructLiveTuningSettingProtoEnumValue setting = loadedSettings[i];
+
+                PrototypeId tuningProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)setting.TuningVarProtoId);
+                if (tuningProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                if (protoRefs.Add(tuningProtoRef) == false)
+                    continue;
+
+                Prototype tuningProto = GameDatabase.GetPrototype<Prototype>(tuningProtoRef);
+                if (tuningProto == null)
                 {
-                    Logger.Warn($"LoadLiveTuningDataFromDisk(): Failed to parse {fileName}, skipping");
+                    Logger.Warn("SendChangedSettingsToGames(): tuningProto == null");
                     continue;
                 }
 
-                foreach (LiveTuningUpdateValue value in updateValues)
+                bool passesFilter = tuningProto switch
                 {
-                    NetStructLiveTuningSettingProtoEnumValue protobuf = value.ToProtobuf();
-                    if (protobuf == null)
-                        continue;
-                    protobufList.Add(protobuf);
+                    WorldEntityPrototype => setting.TuningVarEnum == (int)WorldEntityTuningVar.eWETV_Visible && tuningProto is not AvatarPrototype,
+                    MissionPrototype     => setting.TuningVarEnum == (int)MissionTuningVar.eMTV_EventInstance,
+                    PublicEventPrototype => setting.TuningVarEnum == (int)PublicEventTuningVar.ePETV_EventInstance,
+                    _                    => false,
+                };
+
+                // Check against our internal cache if this value is different from what was sent last time.
+                if (passesFilter)
+                {
+                    var key = (setting.TuningVarProtoId, setting.TuningVarEnum);
+
+                    // I don't think CacheLoadedSettings() is going to be called from multiple threads in practice, but better safe than sorry!
+                    lock (_lastKnownSettings)
+                    {
+                        if (_lastKnownSettings.TryGetValue(key, out float lastKnownValue) && lastKnownValue == setting.TuningVarValue)
+                            passesFilter = false;
+                        else
+                            _lastKnownSettings[key] = setting.TuningVarValue;
+                    }
                 }
 
-                Logger.Trace($"Parsed live tuning data from {fileName}");
+                if (passesFilter && sendToGameInstances)
+                {
+                    settingsToSend ??= new();
+                    settingsToSend.Add(setting);
+                }
             }
 
-            UpdateLiveTuningData(protobufList, true);
-            return Logger.InfoReturn(true, $"Loaded {protobufList.Count} live tuning settings");
+            // Skip sending if there is nothing new or we are initializing for the first time.
+            if (settingsToSend != null && sendToGameInstances)
+            {
+                ServiceMessage.SetLiveTuningValues message = new(settingsToSend);
+                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            }
         }
 
-        public void UpdateLiveTuningData(IEnumerable<NetStructLiveTuningSettingProtoEnumValue> protoEnumValues, bool resetToDefaults)
+        public void UpdateLiveTuningData(List<NetStructLiveTuningSettingProtoEnumValue> protoEnumValues, bool resetToDefaults)
         {
             lock (_liveTuningData)
             {
@@ -108,8 +189,10 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                     Logger.Warn("CopyLiveTuningData(): _liveTuningData.ChangeNum != _lastUpdateChangeNum");
 
                 output.Copy(_liveTuningData);
-                return true;
             }
+
+            output.UpdateCustomTuningData();
+            return true;
         }
 
         public static float GetLiveGlobalTuningVar(GlobalTuningVar tuningVarEnum)

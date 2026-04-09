@@ -1,0 +1,27 @@
+﻿[
+  {
+    "Prototype": "Loot/Tables/Mob/NeverMeltingCoreTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/IceCreamBarTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/SummerEventPowerUpTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/CupcakeTable.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Vendor/SpecialEvent/SpecialEventSummer.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  }
+]

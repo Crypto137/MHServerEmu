@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Regions;
@@ -154,11 +155,19 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             {
                 if (game != null)
                 {
+                    TimeSpan beforeUpdate = Clock.GameTime;
+
                     Game.Current = game;
 
                     game.Update();
 
                     Game.Current = null;
+
+                    TimeSpan afterUpdate = Clock.GameTime;
+
+                    game.LastProcessingTime = afterUpdate - beforeUpdate;
+                    game.LastFrameTime = afterUpdate - game.LastUpdateEndTime;
+                    game.LastUpdateEndTime = afterUpdate;
                 }
                 else
                 {

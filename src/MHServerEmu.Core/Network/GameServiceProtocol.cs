@@ -507,6 +507,28 @@ namespace MHServerEmu.Core.Network
             public readonly ulong PlayerDbId = playerDbId;
         }
 
+        /// <summary>
+        /// [LiveTuningManager -> Game] Notifies game instances of changed live tuning settings.
+        /// </summary>
+        /// <remarks>
+        /// In the original Gazillion implementation this was sent from the Player Manager, but in our case it is sent from LiveTuningManager
+        /// when live tuning is reloaded from disk.
+        /// </remarks>
+        public readonly struct SetLiveTuningValues(List<NetStructLiveTuningSettingProtoEnumValue> settings)
+            : IGameServiceMessage
+        {
+            public readonly List<NetStructLiveTuningSettingProtoEnumValue> Settings = settings;
+        }
+
+        /// <summary>
+        /// [LiveTuningManager -> GroupingManager] Updates the notification message informing players of the currently active events.
+        /// </summary>
+        public readonly struct SetLiveTuningEventMessage(string messageText)
+            : IGameServiceMessage
+        {
+            public readonly string MessageText = messageText;
+        }
+
         #endregion
 
         #region Grouping Manager

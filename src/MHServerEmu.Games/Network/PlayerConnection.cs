@@ -849,20 +849,11 @@ namespace MHServerEmu.Games.Network
 
         private bool OnAdminCommand(in MailboxMessage message)
         {
-            if (_dbAccount.UserLevel < AccountUserLevel.Admin)
-            {
-                // Naughty hacker here, TODO: handle this properly
-                Logger.Warn($"OnAdminCommand(): Unauthorized admin command received from {_dbAccount}");
-                AdminCommandManager.SendAdminCommandResponse(this,
-                    $"{_dbAccount.PlayerName} is not in the sudoers file. This incident will be reported.");
-                return true;
-            }
+            var adminCommand = message.As<NetMessageAdminCommand>();
+            if (adminCommand == null) return Logger.WarnReturn(false, $"OnAdminCommand(): Failed to retrieve message");
 
-            // Basic handling
-            var command = message.As<NetMessageAdminCommand>();
-            string output = $"Unhandled admin command: {command.Command.Split(' ')[0]}";
-            Logger.Warn(output);
-            AdminCommandManager.SendAdminCommandResponse(this, output);
+            Game.AdminCommandManager.OnAdminCommand(Player, adminCommand);
+
             return true;
         }
 

@@ -20,6 +20,8 @@ namespace MHServerEmu.Core.Metrics
         private readonly ConcurrentQueue<ulong> _gameInstancesToRemove = new();
         private readonly Dictionary<ulong, GamePerformanceMetrics> _gamePerformanceMetricsDict = new();
 
+        private readonly Timer _tickTimer;
+
         private long _tick;
 
         public static MetricsManager Instance { get; } = new();
@@ -27,7 +29,12 @@ namespace MHServerEmu.Core.Metrics
         private MetricsManager()
         {
             Logger.Info("Started processing metrics");
-            Task.Run(UpdateAsync);
+            _tickTimer = new(static (state) => ((MetricsManager)state).Update(), this, 0, UpdateTickIntervalMS);
+        }
+
+        public void Initialize()
+        {
+            // dummy to force instantiation
         }
 
         public void Update()
@@ -89,15 +96,6 @@ namespace MHServerEmu.Core.Metrics
             GetPerformanceReportData(report);
 
             return report.ToString(format);
-        }
-
-        private async void UpdateAsync()
-        {
-            while (true)
-            {
-                Update();
-                await Task.Delay(UpdateTickIntervalMS);
-            }
         }
     }
 }

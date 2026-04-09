@@ -1,0 +1,10 @@
+﻿[
+  {
+    "Enabled": true,
+    "Prototype": "Metagame/PatrolMidtown/PatrolMidtownMode.prototype",
+    "Path": "ApplyStates[0]",
+    "Description": "[Mystic Mayhem (Weekly)] Enable Mystic Mayhem bosses in Midtown Patrol",
+    "ValueType": "PrototypeId",
+    "Value": 714436682102808322
+  }
+]

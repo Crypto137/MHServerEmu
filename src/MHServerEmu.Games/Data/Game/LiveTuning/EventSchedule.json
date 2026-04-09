@@ -1,0 +1,142 @@
+[
+  {
+    "Name": "Permanent Events",
+    "IsEnabled": true,
+    "Type": "AlwaysOn",
+    "Events": [
+      "DailyBugle"
+    ]
+  },
+  {
+    "Name": "Midtown Madness",
+    "IsEnabled": true,
+    "Type": "DayOfWeek",
+    "StartDayOfWeek": "Monday",
+    "Events": [
+      "MidtownMadness"
+    ]
+  },
+  {
+    "Name": "Core Weekly Rotation",
+    "IsEnabled": true,
+    "Type": "WeeklyRotation",
+    "StartDayOfWeek": "Friday",
+    "Events": [
+      "CosmicChaos",
+      "OdinsBounty",
+      "OperationOmega",
+      "MysticMayhem",
+      "ArmorIncursion"
+    ]
+  },
+  {
+    "Name": "Secondary Weekly Rotation",
+    "IsEnabled": true,
+    "Type": "WeeklyRotation",
+    "StartDayOfWeek": "Friday",
+    "Events": [
+      "HeroesForHire",
+      "WealthOfKingsCounty",
+      "OrdersFromTheHand"
+    ]
+  },
+  {
+    "Name": "Australia Day",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 1,
+    "StartDay": 25,
+    "DurationDays": 2,
+    "Events": [
+      "AustraliaDay"
+    ]
+  },
+  {
+    "Name": "Lunar New Year",
+    "IsEnabled": true,
+    "Type": "SpecialDateLunar",
+    "StartMonth": 1,
+    "StartDay": 1,
+    "DurationDays": 7,
+    "Events": [
+      "LunarNewYear"
+    ]
+  },
+  {
+    "Name": "Valentine's Day",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 2,
+    "StartDay": 13,
+    "DurationDays": 7,
+    "Events": [
+      "ValentinesDay"
+    ]
+  },
+  {
+    "Name": "St. Patrick's Day",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 3,
+    "StartDay": 16,
+    "DurationDays": 7,
+    "Events": [
+      "StPatricksDay"
+    ]
+  },
+  {
+    "Name": "April Fools' Day",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 4,
+    "StartDay": 1,
+    "DurationDays": 1,
+    "Events": [
+      "AprilFoolsDay"
+    ]
+  },
+  {
+    "Name": "Anniversary",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 6,
+    "StartDay": 1,
+    "DurationDays": 30,
+    "Events": [
+      "Anniversary"
+    ]
+  },
+  {
+    "Name": "End of Summer",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 8,
+    "StartDay": 25,
+    "DurationDays": 7,
+    "Events": [
+      "EndOfSummer"
+    ]
+  },
+  {
+    "Name": "Halloween",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 10,
+    "StartDay": 26,
+    "DurationDays": 7,
+    "Events": [
+      "Halloween"
+    ]
+  },
+  {
+    "Name": "Winter Holiday",
+    "IsEnabled": true,
+    "Type": "SpecialDate",
+    "StartMonth": 12,
+    "StartDay": 20,
+    "DurationDays": 14,
+    "Events": [
+      "WinterHoliday"
+    ]
+  }
+]

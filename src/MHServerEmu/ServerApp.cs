@@ -90,6 +90,9 @@ namespace MHServerEmu
 
             Logger.Info("MHServerEmu starting...");
 
+            // Make sure the MetricsManager is instantiated before we do anything else.
+            MetricsManager.Instance.Initialize();
+
             // Our encoding is not going to work unless we are running on a little-endian system
             if (BitConverter.IsLittleEndian == false)
             {
@@ -121,6 +124,9 @@ namespace MHServerEmu
             serverManager.RegisterGameService(new WebFrontendService(), GameServiceType.WebFrontend);
 
             serverManager.RunServices();
+
+            // We can't set Live Tuning event message on the Grouping Manager until after we initialize it, so do it here I guess.
+            LiveTuningEventScheduler.Instance.SendEventMessageTextToGroupingManager();
 
             // Begin processing console input
             Logger.Info("Type '!commands' for a list of available commands");
@@ -244,9 +250,12 @@ namespace MHServerEmu
             var config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
             IDBManager.Instance = config.UseJsonDBManager ? JsonDBManager.Instance : SQLiteDBManager.Instance;
 
+            // LiveTuningManager uses data from LiveTuningEventScheduler initialization,
+            // and LiveTuningEventScheduler needs GameDatabase to be initialized to get TimeZone from GlobalsPrototype.
             return PakFileSystem.Instance.Initialize()
                 && ProtocolDispatchTable.Instance.Initialize()
                 && GameDatabase.IsInitialized
+                && LiveTuningEventScheduler.Instance.Initialize()
                 && LiveTuningManager.Instance.Initialize()
                 && CatalogManager.Instance.Initialize()
                 && IDBManager.Instance.Initialize();

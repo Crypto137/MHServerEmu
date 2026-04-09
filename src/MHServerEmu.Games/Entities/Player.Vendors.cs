@@ -743,30 +743,46 @@ namespace MHServerEmu.Games.Entities
 
                 // Find a loot table to roll replacement contents
                 int highestUsableLevel = -1;
-                PrototypeId lootTableProtoRef = PrototypeId.Invalid;
+                LootTablePrototype lootTableProto = null;
 
                 if (vendorTypeProto.Inventories != null)
                 {
                     foreach (VendorInventoryEntryPrototype inventoryEntry in vendorTypeProto.Inventories)
                     {
-                        if (rollTableLevel >= inventoryEntry.UseStartingAtVendorLevel && inventoryEntry.UseStartingAtVendorLevel > highestUsableLevel)
+                        if (rollTableLevel < inventoryEntry.UseStartingAtVendorLevel)
+                            continue;
+
+                        // Changed <= check to < to allow hot swapping for the same level (see below).
+                        if (inventoryEntry.UseStartingAtVendorLevel < highestUsableLevel)
+                            continue;
+
+                        // If we have multiple tables for the same vendor level, allow later tables
+                        // to override previous ones as long they are not Live Tuning disabled.
+                        // We use this to hot swap vendor tables without a patch / server restart.
+                        PrototypeId lootTableProtoRef = inventoryEntry.LootTable;
+                        LootTablePrototype itLootTableProto = null;
+
+                        if (lootTableProtoRef != PrototypeId.Invalid)
                         {
-                            highestUsableLevel = inventoryEntry.UseStartingAtVendorLevel;
-                            lootTableProtoRef = inventoryEntry.LootTable;
+                            itLootTableProto = lootTableProtoRef.As<LootTablePrototype>();
+                            if (itLootTableProto == null)
+                            {
+                                Logger.Warn("RollVendorInventory(): itLootTableProto == null");
+                                continue;
+                            }
+
+                            if (itLootTableProto.IsLiveTuningEnabled() == false)
+                                continue;
                         }
+
+                        highestUsableLevel = inventoryEntry.UseStartingAtVendorLevel;
+                        lootTableProto = itLootTableProto;
                     }
                 }
 
                 // Roll new contents
-                if (lootTableProtoRef != PrototypeId.Invalid)
+                if (lootTableProto != null)
                 {
-                    LootTablePrototype lootTableProto = lootTableProtoRef.As<LootTablePrototype>();
-                    if (lootTableProto == null)
-                    {
-                        Logger.Warn("RollVendorInventory(): lootTableProto == null");
-                        continue;
-                    }
-
                     // Initialize settings
                     using LootRollSettings rollSettings = ObjectPoolManager.Instance.Get<LootRollSettings>();
                     rollSettings.Player = this;

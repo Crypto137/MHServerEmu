@@ -1,0 +1,57 @@
+﻿[
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/EGDCBuffed.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/EGDCosmicChestBuffed.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/EGDGBuffed.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/EGDRBuffed.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/OdinBrooklynBuffed.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/OdinDangerRoomBuffed.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/OdinHightownBuffed.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/OdinMidtownBuffed.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/OdinUltronBuffed.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Subtables/XDEFChestBuffed.prototype",
+    "Setting": "eLTTV_Enabled",
+    "Value": 2.0
+  },
+  {
+    "Prototype": "Events/GlobalEvents/EventPowerConditions/OdinsBountyEventPowerCondition.prototype",
+    "Setting": "eCTV_Enabled",
+    "Value": 2.0
+  }
+]

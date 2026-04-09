@@ -58,7 +58,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandInvokerType(CommandInvokerType.ServerConsole)]
         public string ReloadLiveTuning(string[] @params, NetClient client)
         {
-            LiveTuningManager.Instance.LoadLiveTuningDataFromDisk();
+            LiveTuningManager.Instance.LoadLiveTuningData(true);
             return string.Empty;
         }
 

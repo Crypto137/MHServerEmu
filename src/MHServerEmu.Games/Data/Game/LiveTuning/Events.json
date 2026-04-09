@@ -1,0 +1,103 @@
+{
+  "ArmorIncursion": {
+    "DisplayName": "A.R.M.O.R. Incursion",
+    "FilePath": "Events/Weekly/LiveTuningDataArmorIncursion.json",
+    "InstancedMissions": [
+      "Missions/Prototypes/BonusMissions/WeeklyEventMissions/ARMORUltimateUpgradeMission.prototype"
+    ]
+  },
+  "CosmicChaos": {
+    "DisplayName": "Cosmic Chaos",
+    "FilePath": "Events/Weekly/LiveTuningDataCosmicChaos.json"
+  },
+  "MysticMayhem": {
+    "DisplayName": "Mystic Mayhem",
+    "FilePath": "Events/Weekly/LiveTuningDataMysticMayhem.json"
+  },
+  "OdinsBounty": {
+    "DisplayName": "Odin's Bounty",
+    "FilePath": "Events/Weekly/LiveTuningDataOdinsBounty.json"
+  },
+  "OperationOmega": {
+    "DisplayName": "Operation Omega",
+    "FilePath": "Events/Weekly/LiveTuningDataOperationOmega.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/RandomGiftboxes/OmegaFileBox.prototype"
+  },
+  "AprilFoolsDay": {
+    "DisplayName": "April Fools' Day",
+    "IsHidden": true,
+    "FilePath": "Events/LiveTuningDataAprilFoolsDay.json"
+  },
+  "Anniversary": {
+    "DisplayName": "Anniversary",
+    "FilePath": "Events/LiveTuningDataAnniversary.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/ThirdAnniversaryDailyGift.prototype"
+  },
+  "AustraliaDay": {
+    "DisplayName": "Australia Day",
+    "FilePath": "Events/LiveTuningDataAustraliaDay.json"
+  },
+  "Cowpocalypse": {
+    "DisplayName": "Cowpocalypse",
+    "FilePath": "Events/LiveTuningDataCowpocalypse.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/DailyGiftCow2.prototype"
+  },
+  "DailyBugle": {
+    "DisplayName": "Daily Bugle",
+    "IsHidden": true,
+    "FilePath": "Events/LiveTuningDataDailyBugle.json"
+  },
+  "EndOfSummer": {
+    "DisplayName": "End of Summer",
+    "FilePath": "Events/LiveTuningDataEndOfSummer.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/SummerEventDailyGift.prototype"
+  },
+  "GuardiansOfTheGalaxy": {
+    "DisplayName": "Guardians of the Galaxy",
+    "FilePath": "Events/LiveTuningDataGuardiansOfTheGalaxy.json"
+  },
+  "Halloween": {
+    "DisplayName": "Halloween",
+    "FilePath": "Events/LiveTuningDataHalloween.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/DailyGiftHalloween.prototype"
+  },
+  "HeroesForHire": {
+    "DisplayName": "Heroes for Hire",
+    "FilePath": "Events/LiveTuningDataHeroesForHire.json",
+    "DailyGift": "Loot/Tables/Mob/NormalMobs/LukeCageDailyGiftTable.prototype"
+  },
+  "LunarNewYear": {
+    "DisplayName": "Lunar New Year",
+    "FilePath": "Events/LiveTuningDataLunarNewYear.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/SeasonalDailyGiftLunarNewYear.prototype"
+  },
+  "MidtownMadness": {
+    "DisplayName": "Midtown Madness",
+    "FilePath": "Events/LiveTuningDataMidtownMadness.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/DailyGiftMidtownMadness.prototype"
+  },
+  "OrdersFromTheHand": {
+    "DisplayName": "Orders From The Hand",
+    "FilePath": "Events/LiveTuningDataOrdersFromTheHand.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/OrdersfromtheHandDailyGift.prototype"
+  },
+  "StPatricksDay": {
+    "DisplayName": "St. Patrick's Day",
+    "FilePath": "Events/LiveTuningDataStPatricksDay.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/DailyGiftStPatricksDay.prototype"
+  },
+  "ValentinesDay": {
+    "DisplayName": "Valentine's Day",
+    "FilePath": "Events/LiveTuningDataValentinesDay.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/SeasonalDailyGiftValentinesDay.prototype"
+  },
+  "WealthOfKingsCounty": {
+    "DisplayName": "The Wealth of Kings County",
+    "FilePath": "Events/LiveTuningDataWealthOfKingsCounty.json"
+  },
+  "WinterHoliday": {
+    "DisplayName": "Winter Holiday",
+    "FilePath": "Events/LiveTuningDataWinterHoliday.json",
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/XMasDailyGift.prototype"
+  }
+}

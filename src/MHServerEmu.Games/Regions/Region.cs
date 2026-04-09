@@ -519,7 +519,7 @@ namespace MHServerEmu.Games.Regions
 
             ClearDividedStartLocations();
 
-            foreach (var entity in Game.EntityManager.IterateEntities())
+            foreach (var entity in Game.EntityManager)
                 if (entity is WorldEntity worldEntity)
                     worldEntity.EmergencyRegionCleanup(this);
 

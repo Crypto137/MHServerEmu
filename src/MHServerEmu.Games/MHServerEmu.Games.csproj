@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <InformationalVersion>1.0.0</InformationalVersion>
+    <InformationalVersion>1.0.1</InformationalVersion>
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
     <AssemblyVersion>$(InformationalVersion).0</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
@@ -67,10 +67,85 @@
     <None Update="Data\Game\Achievements\Off\AchievementStringMap_05_Collection.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Data\Game\LiveTuning\Events.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\EventSchedule.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataAnniversary.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataAprilFoolsDay.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataAustraliaDay.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataDailyBugle.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataEndOfSummer.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataGuardiansOfTheGalaxy.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataHalloween.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataHeroesForHire.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataLunarNewYear.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataOrdersFromTheHand.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataStPatricksDay.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataWealthOfKingsCounty.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataWinterHoliday.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataArmorIncursion.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\Experimental\LiveTuningDataCivilWar.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataCosmicChaos.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataCowpocalypse.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataMidtownMadness.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataMysticMayhem.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataOdinsBounty.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataOperationOmega.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataValentinesDay.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\Game\LiveTuning\LiveTuningData.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\LiveTuning\LiveTuningDataPvP.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LootCooldownChannels.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\MTXStore\Catalog.json">
@@ -94,7 +169,13 @@
     <None Update="Data\Game\Patches\Off\PatchDataCarnival.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Data\Game\Patches\Off\PatchDataCowpocalypse.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\Game\Patches\Off\PatchDataGameBalance.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Patches\Off\PatchDataMysticMayhem.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\Patches\Off\PatchDataTestOverrideLoot.json">
@@ -109,7 +190,7 @@
     <None Update="Data\Game\LiveTuning\LiveTuningDataGlobal.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\LiveTuning\LiveTuningDataBugFixes.json">
+    <None Update="Data\Game\Patches\PatchDataCustom.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\Patches\PatchDataRestoredContent.json">

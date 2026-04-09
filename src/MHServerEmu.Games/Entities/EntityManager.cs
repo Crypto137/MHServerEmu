@@ -84,6 +84,11 @@ namespace MHServerEmu.Games.Entities
             LocomotionEntities = new(EntityCollection.Locomotion);
         }
 
+        public Dictionary<ulong, Entity>.ValueCollection.Enumerator GetEnumerator()
+        {
+            return _entityDict.Values.GetEnumerator();
+        }
+
         public bool Initialize()
         {
             return PhysicsManager.Initialize(_game);

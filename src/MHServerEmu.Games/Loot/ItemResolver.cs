@@ -435,6 +435,14 @@ namespace MHServerEmu.Games.Loot
             if (agentProtoRef == PrototypeId.Invalid)
                 return false;
 
+            // Live tuning is also checked later when we spawn, but if we also check here
+            // we can allow PickWeightTryAll loot tables pick something else.
+            WorldEntityPrototype agentProto = agentProtoRef.As<WorldEntityPrototype>();
+            if (agentProto == null) return Logger.WarnReturn(false, "CheckAgent(): agentProto == null");
+
+            if (agentProto.IsLiveTuningEnabled() == false)
+                return false;
+
             if (restrictionFlags.HasFlag(RestrictionTestFlags.Cooldown) && CheckDropCooldown(agentProtoRef, 1))
                 return false;
 

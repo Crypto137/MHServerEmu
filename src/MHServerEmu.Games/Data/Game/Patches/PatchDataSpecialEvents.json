@@ -1,106 +1,441 @@
 [
-    {
-        "Enabled": false,
-        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-        "Path": "Choices[]",
-        "Description": "Add AustraliaDayTable drop Koala at 26 January",
-        "ValueType": "PrototypeDataRef",
-        "Value": 5244862316186571775
-    },
-    {
-        "Enabled": false,
-        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-        "Path": "Choices[]",
-        "Description": "Add [ValentinesEventPowerupTable, VDayTable] at 14 February",
-        "ValueType": "PrototypeDataRef[]",
-        "Value": [ 1089767944042846312, 7378732117961543855 ]
-    },
-    {
-        "Enabled": false,
-        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-        "Path": "Choices[]",
-        "Description": "Add LunarNewYearTable at 17 Febrary",
-        "ValueType": "PrototypeDataRef",
-        "Value": 577300379588563992
-    },
-    {
-        "Enabled": false,
-        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-        "Path": "Choices[]",
-        "Description": "Add StPatricksEventPowerUpTable at 17 March",
-        "ValueType": "PrototypeDataRef",
-        "Value": 7592276506700879991
-    },
-    {
-        "Enabled": false,
-        "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Terminals/OdinsPalace/KurseTerminalLoot.prototype",
-        "Path": "Choices[]",
-        "Description": "Add AprilFoolsTable drop GemOfTheWurst at 1 April",
-        "ValueType": "PrototypeDataRef",
-        "Value": 13919124432858911542
-    },
-    {
-        "Enabled": false,
-        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-        "Path": "Choices[]",
-        "Description": "Add AnniversaryCakeDropTable drop BirthdayCakeSlice at 4 June",
-        "ValueType": "PrototypeDataRef",
-        "Value": 10570310015585883894
-    },
-    {
-        "Enabled": false,
-        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-        "Path": "Choices[]",
-        "Description": "Add HalloweenPowerupTable at 31 October",
-        "ValueType": "PrototypeDataRef",
-        "Value": 7708957262339380684
-    },
-    {
-        "Enabled": false,
-        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
-        "Path": "Choices[]",
-        "Description": "[Heroes for Hire] Add DogTagsCurrencyTable drop Gang Member Dog Tags",
-        "ValueType": "PrototypeDataRef",
-        "Value": 16587225871960839503
-    },
-    {
-        "Enabled": true,
-        "Prototype": "Missions/Prototypes/PVEEndgame/StaticScenarios/AgentsOfSHIELDEvent.prototype",
-        "Path": "DesignState",
-        "Description": "Disable AgentsOfSHIELDEvent until Leaderboards",
-        "ValueType": "Enum",
-        "Value": "NotInGame"
-    },
-    {
-        "Enabled": true,
-        "Prototype": "Missions/Prototypes/PVEEndgame/StaticScenarios/XMasGiftXChange.prototype",
-        "Path": "DesignState",
-        "Description": "Disable XMasGiftXChange",
-        "ValueType": "Enum",
-        "Value": "NotInGame"
-    },
-    {
-        "Enabled": true,
-        "Prototype": "Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell",
-        "Path": "MarkerSet.Markers[27].EntityGuid",
-        "Description": "Add Dagger",
-        "ValueType": "PrototypeGuid",
-        "Value": 6158563480682235387
-    },
-    {
-        "Enabled": true,
-        "Prototype": "Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell",
-        "Path": "MarkerSet.Markers[27].Position",
-        "Description": "Change Dagger position",
-        "ValueType": "Vector3",
-        "Value": [ -694.76, 2003.63, 160.97 ]
-    },
-    {
-        "Enabled": true,
-        "Prototype": "Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell",
-        "Path": "MarkerSet.Markers[28].EntityGuid",
-        "Description": "Add Cloak",
-        "ValueType": "PrototypeGuid",
-        "Value": 13282508175937904349
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/OmegaDriveTable.prototype",
+    "Path": "NoDropPercent",
+    "Description": "[Operation Omega (Weekly)] Enable OmegaDriveTable",
+    "ValueType": "Float",
+    "Value": 0.997
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Operation Omega (Weekly)] Add OmegaDriveTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 12035714241979421470
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Events/PowerupBuffLootMrHyde.prototype",
+    "Path": "Choices[1].Power",
+    "Description": "[A.R.M.O.R. Incursion (Weekly)] Fix condition removal power for the PowerupBuffLootMrHyde loot table",
+    "ValueType": "PrototypeId",
+    "Value": 13424308211504454457
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "NoDropPercent",
+    "Description": "[Heroes for Hire (Weekly)] Set NoDropPercent for DogTagsCurrencyTable",
+    "ValueType": "Float",
+    "Value": 0.7
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].PickMethod",
+    "Description": "[Heroes for Hire (Weekly)] Set PickMethod to PickAll for DogTagsCurrencyTable",
+    "ValueType": "Enum",
+    "Value": "PickAll"
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[0].Modifiers[]",
+    "Description": "[Heroes for Hire (Weekly)] Add new LootRollRequireDropperKeywordPrototype for the first choice in DogTagsCurrencyTable",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 17689313808028144366
     }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[0].Modifiers[0].Choices[]",
+    "Description": "[Heroes for Hire (Weekly)] Restrict the first choice in DogTagsCurrencyTable to Mercenary",
+    "ValueType": "PrototypeId",
+    "Value": 12814754870629241647
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[]",
+    "Description": "[Heroes for Hire (Weekly)] Add the second LootDropItemPrototype to DogTagsCurrencyTable",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 1071992662862269383,
+      "Item": 4883437826439912008
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[1].Modifiers[]",
+    "Description": "[Heroes for Hire (Weekly)] Add new LootRollRequireDropperKeywordPrototype for the second choice in DogTagsCurrencyTable",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 17689313808028144366
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[1].Modifiers[0].Choices[]",
+    "Description": "[Heroes for Hire (Weekly)] Restrict the second choice in DogTagsCurrencyTable to GangMember",
+    "ValueType": "PrototypeId",
+    "Value": 2198160877082579838
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[]",
+    "Description": "[Heroes for Hire (Weekly)] Add the third LootDropItemPrototype to DogTagsCurrencyTable",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 1071992662862269383,
+      "Item": 4883437826439912008
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[2].Modifiers[]",
+    "Description": "[Heroes for Hire (Weekly)] Add new LootRollRequireDropperKeywordPrototype for the third choice in DogTagsCurrencyTable",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 17689313808028144366
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/DogTagsCurrencyTable.prototype",
+    "Path": "Choices[0].Choices[2].Modifiers[0].Choices[]",
+    "Description": "[Heroes for Hire (Weekly)] Restrict the third choice in DogTagsCurrencyTable to Maggia",
+    "ValueType": "PrototypeId",
+    "Value": 11166669287029412303
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Heroes for Hire (Weekly)] Add DogTagsCurrencyTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 16587225871960839503
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+    "Path": "Inventories[]",
+    "Description": "[Heroes for Hire (Weekly)] Add VendorInventoryEntry for SpecialEventHeroesForHire to VendorAvengersTowerEventTerminal",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 6775684286112470794,
+      "LootTable": 13437915080456018735,
+      "PlayerInventory": 15746332603173774372,
+      "UseStartingAtVendorLevel": 1
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+    "Path": "Inventories[]",
+    "Description": "[The Wealth of Kings County (Weekly)] Add VendorInventoryEntry for SpecialEventBundlesofCash to VendorAvengersTowerEventTerminal",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 6775684286112470794,
+      "LootTable": 2760518776469920539,
+      "PlayerInventory": 15746332603173774372,
+      "UseStartingAtVendorLevel": 1
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Australia Day (January 26)] Add AustraliaDayTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 5244862316186571775
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Items/Consumables/Prototypes/GShop/Misc/FireworksNYE.prototype",
+    "Path": "ActionsTriggeredOnItemEvent.Choices[]",
+    "Description": "[Lunar New Year (Moveable)] Add ItemActionDestroySelf to FireworksNYE.",
+    "ValueType": "PrototypeDataRef",
+    "Value": 15651688269673866161
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/LunarNewYearTable.prototype",
+    "Path": "Choices[0].PickMethod",
+    "Description": "[Lunar New Year (Moveable)] Set PickMethod to PickWeightTryAll for LunarNewYearTable",
+    "ValueType": "Enum",
+    "Value": "PickWeightTryAll"
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Lunar New Year (Moveable)] Add LunarNewYearTable, LunarEnvelopeTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef[]",
+    "Value": [ 577300379588563992, 3900900961775457045 ]
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Valentine's Day (February 14)] Add [VDayTable, ValentinesEventPowerupTable] to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef[]",
+    "Value": [ 7378732117961543855, 1089767944042846312 ]
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[St Patrick's Day (March 17)] Add StPatricksEventPowerUpTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 7592276506700879991
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Terminals/OdinsPalace/KurseTerminalLoot.prototype",
+    "Path": "Choices[]",
+    "Description": "[April Fools Day (April 1)] Add AprilFoolsTable to KurseTerminalLoot",
+    "ValueType": "PrototypeDataRef",
+    "Value": 13919124432858911542
+  },
+  {
+    "Enabled": false,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Anniversary (June 4)] Add AnniversaryCakeDropTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 10570310015585883894
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Vendor/SpecialEvent/Anniversary2017VendorLootTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Anniversary (June 4)] Add 2016 exclusive rewards to Anniversary2017VendorLootTable.",
+    "ValueType": "Prototype[]",
+    "Value": [
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 16710304057499393635
+      },
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 17715182860284600121
+      },
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 16352741993302990650
+      }
+    ]
+  },
+  {
+    "Enabled": false,
+    "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+    "Path": "Inventories[]",
+    "Description": "[Anniversary (June 4)] Add VendorInventoryEntry for Anniversary2016VendorLootTable to VendorAvengersTowerEventTerminal",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 6775684286112470794,
+      "LootTable": 6619300753712815238,
+      "PlayerInventory": 15746332603173774372,
+      "UseStartingAtVendorLevel": 1
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+    "Path": "Inventories[]",
+    "Description": "[Anniversary (June 4)] Add VendorInventoryEntry for Anniversary2017VendorLootTable to VendorAvengersTowerEventTerminal (keep this last to allow Anniversary2017 to override other events)",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 6775684286112470794,
+      "LootTable": 13601394654621801607,
+      "PlayerInventory": 15746332603173774372,
+      "UseStartingAtVendorLevel": 1
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/NeverMeltingCoreTable.prototype",
+    "Path": "Modifiers[]",
+    "Description": "[End of Summer (August 25)] Apply MarkSpecial modifier to NeverMeltingCoreTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 6222183752544751228
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/SummerEventPowerUpTable.prototype",
+    "Path": "Modifiers[]",
+    "Description": "[End of Summer (August 25)] Apply MarkSpecial modifier to SummerEventPowerUpTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 6222183752544751228
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/IceCreamBarTable.prototype",
+    "Path": "Modifiers[]",
+    "Description": "[End of Summer (August 25)] Apply MarkSpecial modifier to IceCreamBarTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 6222183752544751228
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add NeverMeltingCoreTable, IceCreamBarTable, SummerEventPowerUpTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef[]",
+    "Value": [ 15190678659132494583, 939198362985173164, 15744602249904722955 ]
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/PatrolBrooklyn/Subtable/SharedPatrolBrooklynBosses.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add CupcakeTable to SharedPatrolBrooklynBosses",
+    "ValueType": "PrototypeDataRef",
+    "Value": 4766908907310157594
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/PatrolBrooklyn/Subtable/SharedPatrolBrooklynBossesCosmic.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add CupcakeTable to SharedPatrolBrooklynBossesCosmic",
+    "ValueType": "PrototypeDataRef",
+    "Value": 4766908907310157594
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/PatrolHightown/Subtable/SharedPatrolHightownBosses.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add CupcakeTable to SharedPatrolHightownBosses",
+    "ValueType": "PrototypeDataRef",
+    "Value": 4766908907310157594
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/PatrolHightown/Subtable/SharedPatrolHightownBossesCosmic.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add CupcakeTable to SharedPatrolHightownBossesCosmic",
+    "ValueType": "PrototypeDataRef",
+    "Value": 4766908907310157594
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/PatrolMidtown/Subtable/SharedPatrolMidtownBosses.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add CupcakeTable to SharedPatrolMidtownBosses",
+    "ValueType": "PrototypeDataRef",
+    "Value": 4766908907310157594
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/PatrolMidtown/Subtable/SharedPatrolMidtownBossesCosmic.prototype",
+    "Path": "Choices[]",
+    "Description": "[End of Summer (August 25)] Add CupcakeTable to SharedPatrolMidtownBossesCosmic",
+    "ValueType": "PrototypeDataRef",
+    "Value": 4766908907310157594
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+    "Path": "Inventories[]",
+    "Description": "[End of Summer (August 25)] Add VendorInventoryEntry for SpecialEventSummer to VendorAvengersTowerEventTerminal",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 6775684286112470794,
+      "LootTable": 16485753690354620499,
+      "PlayerInventory": 15746332603173774372,
+      "UseStartingAtVendorLevel": 1
+    }
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/HalloweenPowerupTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Halloween (October 31)] Add HalloweenCandy, HalloweenPumpkin to HalloweenPowerupTable.",
+    "ValueType": "Prototype[]",
+    "Value": [
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 8873954813631798450
+      },
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 8742989480698715559
+      }
+    ]
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/HalloweenPowerupTable.prototype",
+    "Path": "PickMethod",
+    "Description": "[Halloween (October 31)] Set PickMethod to PickWeightTryAll for HalloweenPowerupTable",
+    "ValueType": "Enum",
+    "Value": "PickWeightTryAll"
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Halloween (October 31)] Add HalloweenPowerupTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef",
+    "Value": 7708957262339380684
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/CSGrant/XmasDailyGift.prototype",
+    "Path": "Choices[]",
+    "Description": "[Winter Holiday (December)] Add Eternity Splinters back to XmasDailyGift",
+    "ValueType": "Prototype[]",
+    "Value": [
+      {
+        "ParentDataRef": 1071992662862269383,
+        "Item": 11087194553833821680,
+        "NumMin": 10,
+        "NumMax": 10
+      }
+    ]
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/XMasGiftSpecialEventTable.prototype",
+    "Path": "NoDropPercent",
+    "Description": "[Winter Holiday (December)] Set NoDropPercent for XMasGiftSpecialEventTable",
+    "ValueType": "Float",
+    "Value": 0.8
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+    "Path": "Choices[]",
+    "Description": "[Winter Holiday (December)] Add XMasGiftSpecialEventTable, WinterEventPowerupTable to SpecialEventsTable",
+    "ValueType": "PrototypeDataRef[]",
+    "Value": [ 15664594167700264801, 2194872760141354696 ]
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/Vendor/SpecialEvent/SpecialEventBeast.prototype",
+    "Path": "Choices[1].Item",
+    "Description": "[Guardians of the Galaxy] replace BountyHunterBoxGroot with LeviathanCraftingBox in SpecialEventBeast.",
+    "ValueType": "PrototypeDataRef",
+    "Value": 16090292140337929967
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Characters/Vendors/VendorTypes/VendorAvengersTowerEventTerminal.prototype",
+    "Path": "Inventories[]",
+    "Description": "[Guardians of the Galaxy] Add VendorInventoryEntry for SpecialEventBeast to VendorAvengersTowerEventTerminal",
+    "ValueType": "Prototype",
+    "Value": {
+      "ParentDataRef": 6775684286112470794,
+      "LootTable": 2373906110761080777,
+      "PlayerInventory": 15746332603173774372,
+      "UseStartingAtVendorLevel": 1
+    }
+  }
 ]
