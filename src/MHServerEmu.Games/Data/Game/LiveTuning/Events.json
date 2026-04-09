@@ -64,7 +64,7 @@
   "HeroesForHire": {
     "DisplayName": "Heroes for Hire",
     "FilePath": "Events/LiveTuningDataHeroesForHire.json",
-    "DailyGift": "Loot/Tables/Mob/NormalMobs/LukeCageDailyGiftTable.prototype"
+    "DailyGift": "Entity/Items/Consumables/Prototypes/DailyGift/LukeCageDailyGift.prototype"
   },
   "LunarNewYear": {
     "DisplayName": "Lunar New Year",
