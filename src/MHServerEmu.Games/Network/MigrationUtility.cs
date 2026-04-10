@@ -65,10 +65,12 @@ namespace MHServerEmu.Games.Network
                 switch ((AvatarPrototypeId)entity.PrototypeDataRef)
                 {
                     case AvatarPrototypeId.AntMan:
+                    case AvatarPrototypeId.Blade:
                         propertyToIgnore = PropertyEnum.SecondaryResource;
                         break;
 
                     case AvatarPrototypeId.HumanTorch:
+                    case AvatarPrototypeId.ScarletWitch:
                         propertyToIgnore = PropertyEnum.Endurance;
                         break;
                 }
