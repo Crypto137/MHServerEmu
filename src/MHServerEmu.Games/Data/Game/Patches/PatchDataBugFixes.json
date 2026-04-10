@@ -154,33 +154,49 @@
     {
         "Enabled": true,
         "Prototype": "Entity/Items/Consumables/Prototypes/GShop/SHIELDSupplyBoost/ComboBar1HComboEnablerPower.prototype",
-        "Path": "CooldownTimeMS.Value",
+        "Path": "CooldownTimeMS",
         "Description": "Add cooldown to Combination Boost",
-        "ValueType": "Float",
-        "Value": 1500
+        "ValueType": "Prototype",
+        "Value": {
+            "ParentDataRef": 5074715296837012907,
+            "Value": 1500,
+			"Op": "LoadFloat"
+        }
     },
 	{
         "Enabled": true,
         "Prototype": "Entity/Items/Consumables/Prototypes/GShop/SHIELDSupplyBoost/CurrencyBoostComboEnablerPower.prototype",
-        "Path": "CooldownTimeMS.Value",
+        "Path": "CooldownTimeMS",
         "Description": "Add cooldown to Currency Boost",
-        "ValueType": "Float",
-        "Value": 1500
+        "ValueType": "Prototype",
+        "Value": {
+            "ParentDataRef": 5074715296837012907,
+            "Value": 1500,
+			"Op": "LoadFloat"
+        }
     },
 	{
         "Enabled": true,
         "Prototype": "Entity/Items/Consumables/Prototypes/GShop/ZZZDeprecated/DeprecatedConsumables/SpecialItemFind/Powers/XPBoostComboEnablerPower.prototype",
-        "Path": "CooldownTimeMS.Value",
+        "Path": "CooldownTimeMS",
         "Description": "Add cooldown to Experience Boost",
-        "ValueType": "Float",
-        "Value": 1500
+        "ValueType": "Prototype",
+        "Value": {
+            "ParentDataRef": 5074715296837012907,
+            "Value": 1500,
+			"Op": "LoadFloat"
+        }
     },
 	{
         "Enabled": true,
         "Prototype": "Entity/Items/Consumables/Prototypes/GShop/SHIELDSupplyBoost/SHIELDSupplyBoostComboEnablerPower.prototype",
-        "Path": "CooldownTimeMS.Value",
+        "Path": "CooldownTimeMS",
         "Description": "Add cooldown to S.H.I.E.L.D. Supply Boost",
-        "ValueType": "Float",
-        "Value": 1500
+        "ValueType": "Prototype",
+        "Value": {
+            "ParentDataRef": 5074715296837012907,
+            "Value": 1500,
+			"Op": "LoadFloat"
+        }
     }
 ]
