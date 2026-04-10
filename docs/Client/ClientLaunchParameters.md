@@ -8,12 +8,15 @@ Some of these parameters can be set automatically by using [Bifrost](https://git
 
 ## Generic Unreal Engine parameters
 
+You can find a list of more complete list of generic parameters in the [Unreal Engine 3 documentation](https://docs.unrealengine.com/udk/Three/CommandLineArguments.html).
+
 | Parameter        | Description                              |
 | ---------------- | ---------------------------------------- |
 | -nostartupmovies | Disables logo movies on startup.         |
 | -nomovies        | Disables all movies.                     |
 | -nosplash        | Disables splash image on initialization. |
 | -nosound         | Disables sound.                          |
+| -nohomedir       | Keeps user data in install directory.    |
 | -ResX=           | Forces horizontal resolution.            |
 | -ResY=           | Forces vertical resolution.              |
 | -opengl          | Forces OpenGL API (buggy).               |

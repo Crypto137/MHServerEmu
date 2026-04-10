@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2026.03.25 14:52:06 UTC` using server version `1.0.0`.
+This list was automatically generated on `2026.04.10 07:46:00 UTC` using server version `1.0.1`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -196,6 +196,17 @@ Commands related to the power system.
 | !power print              | Prints the power collection for the current avatar to the console. | Admin      | Client        |
 | !power stealavatarpowers  | Unlocks avatar stolen powers.                                      | Admin      | Client        |
 | !power stealpowers        | Unlocks all stolen powers.                                         | Admin      | Client        |
+
+## PvP
+Commands related to PvP matchmaking.
+
+| Command  | Description         | User Level | Invoker Type  |
+| -------- | ------------------- | ---------- | ------------  |
+| !pvp 1v1 | Join 1v1 PvP queue. | Any        | Client        |
+| !pvp 2v2 | Join 2v2 PvP queue. | Any        | Client        |
+| !pvp 3v3 | Join 3v3 PvP queue. | Any        | Client        |
+| !pvp 4v4 | Join 4v4 PvP queue. | Any        | Client        |
+| !pvp 5v5 | Join 5v5 PvP queue. | Any        | Client        |
 
 ## Region
 Region management commands.

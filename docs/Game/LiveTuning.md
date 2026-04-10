@@ -30,9 +30,9 @@ The default value for all tuning variables is `1.0`. All tuning variables types 
 | eGTV_PlayerTradeEnabled             | Disables player trade window when set to 0.                                                                                                                                                                            |
 | eGTV_CosmicPrestigeXPPct            | Override for the cosmic prestige experience multiplier. Uses the game data multiplier when set to 1 (0.04 by default).                                                                                                 |
 | eGTV_LootVaporizationEnabled        | Disables loot vaporization when set to 0.                                                                                                                                                                              |
-| eGTV_XPBuffDisplay                  |                                                                                                                                                                                                                        |
-| eGTV_SIFBuffDisplay                 |                                                                                                                                                                                                                        |
-| eGTV_RIFBuffDisplay                 |                                                                                                                                                                                                                        |
+| eGTV_XPBuffDisplay                  | Adds a visual-only buff that displays an experience bonus.                                                                                                                                                             |
+| eGTV_SIFBuffDisplay                 | Adds a visual-only buff that displays a special item find bonus.                                                                                                                                                       |
+| eGTV_RIFBuffDisplay                 | Adds a visual-only buff that displays a rare item find bonus.                                                                                                                                                          |
 | eGTV_OmegaXPPct                     | Multiplier for Omega experience.                                                                                                                                                                                       |
 | eGTV_RespectLevelForGlobalXP        | Disables minimum level requirement for global experience multipliers when set to 0.                                                                                                                                    |
 | eGTV_RespectLevelForGlobalRIF       | Disables minimum level requirement for global rare item find multipliers when set to 0.                                                                                                                                |
@@ -81,7 +81,7 @@ World Entity tuning variables can be applied to mobs, NPCs, and items.
 | Tuning Variable             | Description                                                                                                                                                                |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | eAETV_BonusXPPct            | Avatar-specific experience multiplier.                                                                                                                                     |
-| eAETV_XPBuffDisplay         |                                                                                                                                                                            |
+| eAETV_XPBuffDisplay         | Adds a visual-only buff that display an avatar-specific experience bonus.                                                                                                  |
 | eAETV_EternitySplinterPrice | Override for the Eternity Splinter price when buying this avatar from a vendor. NOTE: This tuning variable is broken client-side when buying heroes from the roster panel. |
 | eAETV_Enabled               | Disables this avatar when set to 0.                                                                                                                                        |
 
@@ -102,13 +102,13 @@ World Entity tuning variables can be applied to mobs, NPCs, and items.
 
 ### Region
 
-| Tuning Variable             | Description                                          |
-| --------------------------- | ---------------------------------------------------- |
-| eRTV_PlayerLimit            |                                                      |
-| eRTV_Enabled                | Disables this region when set to 0.                  |
-| eRT_BonusXPPct              | Region-specific experience multiplier.               |
-| eRT_XPBuffDisplay           |                                                      |
-| eRT_BonusItemFindMultiplier | Multiplier for bonus item find (BIF) in this region. |
+| Tuning Variable             | Description                                                               |
+| --------------------------- | ------------------------------------------------------------------------- |
+| eRTV_PlayerLimit            | Multiplier for the PlayerLimit field of RegionPrototype.                  |
+| eRTV_Enabled                | Disables this region when set to 0.                                       |
+| eRT_BonusXPPct              | Region-specific experience multiplier.                                    |
+| eRT_XPBuffDisplay           | Adds a visual-only buff that displays a region-specific experience bonus. |
+| eRT_BonusItemFindMultiplier | Multiplier for bonus item find (BIF) in this region.                      |
 
 ### Loot Table
 
@@ -135,10 +135,10 @@ World Entity tuning variables can be applied to mobs, NPCs, and items.
 
 ### Public Event
 
-| Tuning Variable     | Description |
-| ------------------- | ----------- |
-| ePETV_Enabled       |             |
-| ePETV_EventInstance |             |
+| Tuning Variable     | Description                               |
+| ------------------- | ----------------------------------------- |
+| ePETV_Enabled       | Disables this public event when set to 0. |
+| ePETV_EventInstance |                                           |
 
 ### Metrics Frequency
 

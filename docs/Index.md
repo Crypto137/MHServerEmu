@@ -27,13 +27,13 @@ Topics concerning the game in general.
 - [Live Tuning](./Game/LiveTuning.md) - an overview of the live tuning system.
 - [Properties](./Game/Properties.md) - information about game properties (entity stats).
 
-## Networking
+## Network
 
 Information about client <-> server communication.
 
-- [Packet Structure](./Networking/PacketStructure.md) - an overview of the packet structure.
+- [Packet Structure](./Network/PacketStructure.md) - an overview of the packet structure.
 
-- [Authentication](./Networking/Authentication.md) - an overview of the authentication flow.
+- [Authentication](./Network/Authentication.md) - an overview of the authentication flow.
 
 ## Game Data
 
