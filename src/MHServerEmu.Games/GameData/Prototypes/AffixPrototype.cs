@@ -424,15 +424,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     switch (propertyInfo.DataType)
                     {
                         case PropertyDataType.Boolean:
-                            Properties[propEntryProto.Prop] = Eval.RunBool(propEntryProto.Value, evalContext);
+                            modProperties[propEntryProto.Prop] = Eval.RunBool(propEntryProto.Value, evalContext);
                             break;
 
                         case PropertyDataType.Real:
-                            Properties[propEntryProto.Prop] = Eval.RunFloat(propEntryProto.Value, evalContext);
+                            modProperties[propEntryProto.Prop] = Eval.RunFloat(propEntryProto.Value, evalContext);
                             break;
 
                         case PropertyDataType.Integer:
-                            Properties[propEntryProto.Prop] = Eval.RunInt(propEntryProto.Value, evalContext);
+                            modProperties[propEntryProto.Prop] = Eval.RunInt(propEntryProto.Value, evalContext);
                             break;
 
                         default:
