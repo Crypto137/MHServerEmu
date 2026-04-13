@@ -8,41 +8,6 @@ This guide covers running MHServerEmu on Linux (tested on Ubuntu 24.04).
 - Game client files (version 1.52.0.1700)
 - Apache2
 
-## Automatic Setup (Optional)
-
-A helper script is available to install dependencies, build the server, copy game assets, and configure Apache.
-
-```bash
-./scripts/setup-linux.sh --all
-```
-
-For a remote server, set `SERVER_IP` first:
-
-```bash
-export SERVER_IP=192.168.1.100
-./scripts/setup-linux.sh --all
-```
-
-### Ansible Setup
-
-Ansible can also automate the same Linux setup.
-
-Install Ansible on the host and run the playbook from the repository root:
-
-```bash
-ansible-playbook -c local ansible/setup-linux.yml -i ansible/local_inventory -e "server_ip=localhost"
-```
-
-If you have Marvel Heroes game files available, pass the path with `marvel_heroes_path`:
-
-```bash
-ansible-playbook -c local ansible/setup-linux.yml \
-  -i ansible/local_inventory \
-  -e "server_ip=localhost marvel_heroes_path=/path/to/Marvel Heroes"
-```
-
-The playbook uses the repository root for `project_dir` by default. If your checkout is elsewhere, override it with `project_dir=/path/to/MHServerEmu`.
-
 ## Install Dependencies
 
 ```bash
