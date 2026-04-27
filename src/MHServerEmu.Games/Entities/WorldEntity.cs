@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
@@ -2716,24 +2715,6 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public string PowerCollectionToString()
-        {
-            StringBuilder sb = new();
-            sb.AppendLine($"Powers:");
-            foreach (var kvp in _powerCollection)
-                sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(kvp.Value.PowerPrototypeRef)}");
-            return sb.ToString();
-        }
-
-        public string ConditionCollectionToString()
-        {
-            StringBuilder sb = new();
-            sb.AppendLine($"Conditions:");
-            foreach (var condition in _conditionCollection)
-                sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(condition.CreatorPowerPrototypeRef)}");
-            return sb.ToString();
-        }
-
         protected virtual PowerUseResult ActivatePower(Power power, ref PowerActivationSettings settings)
         {
             return power.Activate(ref settings);
@@ -4577,7 +4558,7 @@ namespace MHServerEmu.Games.Entities
             foreach (Condition condition in _conditionCollection)
                 sb.AppendLine($"{nameof(_conditionCollection)}[{condition.Id}]: {condition}");
 
-            if (_powerCollection.PowerCount > 0)
+            if (_powerCollection != null && _powerCollection.PowerCount > 0)
             {
                 sb.AppendLine($"{nameof(_powerCollection)}:");
                 foreach (var kvp in _powerCollection)
