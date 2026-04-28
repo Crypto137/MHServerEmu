@@ -18,7 +18,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         private readonly Dictionary<ulong, RegionHandle> _allRegions = new();
         private readonly Dictionary<PrototypeId, RegionLoadBalancer> _publicRegions = new();
-        private readonly HashSet<ulong> _boundAccessPortals = new();
+        private readonly HashSet<(ulong, uint)> _boundAccessPortals = new();
 
         private readonly PlayerManagerService _playerManager;
 
@@ -57,7 +57,7 @@ namespace MHServerEmu.PlayerManagement.Regions
             GameHandle privateGame = owner.PrivateGame;
 
             // Allow only a single region instance active per bound access portal.
-            if (createRegionParams.HasAccessPortal && _boundAccessPortals.Contains(createRegionParams.AccessPortal.EntityDbId))
+            if (createRegionParams.HasAccessPortal && _boundAccessPortals.Contains((createRegionParams.AccessPortal.EntityDbId, createRegionParams.EndlessLevel)))
                 return null;
 
             // The owner may not have a private game yet OR it may have crashed, in which case we need to create a new one.
@@ -99,8 +99,9 @@ namespace MHServerEmu.PlayerManagement.Regions
             if (region.IsPublic)
                 RegisterPublicRegion(region);
 
-            if (region.CreateParams.HasAccessPortal && region.CreateParams.AccessPortal.BoundToOwner)
-                _boundAccessPortals.Add(region.CreateParams.AccessPortal.EntityDbId);
+            NetStructCreateRegionParams createParams = region.CreateParams;
+            if (createParams.HasAccessPortal && createParams.AccessPortal.BoundToOwner)
+                _boundAccessPortals.Add((createParams.AccessPortal.EntityDbId, createParams.EndlessLevel));
 
             return true;
         }
@@ -116,8 +117,9 @@ namespace MHServerEmu.PlayerManagement.Regions
             if (region.IsPublic)
                 UnregisterPublicRegion(region);
 
-            if (region.CreateParams.HasAccessPortal && region.CreateParams.AccessPortal.BoundToOwner)
-                _boundAccessPortals.Remove(region.CreateParams.AccessPortal.EntityDbId);
+            NetStructCreateRegionParams createParams = region.CreateParams;
+            if (createParams.HasAccessPortal && createParams.AccessPortal.BoundToOwner)
+                _boundAccessPortals.Remove((createParams.AccessPortal.EntityDbId, createParams.EndlessLevel));
 
             return true;
         }
