@@ -2541,6 +2541,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             UnassignPower(mappedPowerRef);
             Properties.RemoveProperty(new(PropertyEnum.AvatarMappedPower, originalPowerRef));
 
+            // This fixes broken interaction between mapped powers and PowerChargesMaxBonusForKwd.
+            Properties.RemoveProperty(new(PropertyEnum.PowerChargesMaxBonus, mappedPowerRef));
+
             // Refresh the original power
             GetPowerProgressionInfo(originalPowerRef, out PowerProgressionInfo originalPowerInfo);
             UpdatePowerRank(ref originalPowerInfo, false);
