@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using System.Runtime.CompilerServices;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;

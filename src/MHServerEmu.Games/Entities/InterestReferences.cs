@@ -1,5 +1,5 @@
-﻿using System.Text;
-using MHServerEmu.Core.Collections;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Network;

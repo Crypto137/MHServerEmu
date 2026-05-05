@@ -1,5 +1,5 @@
-﻿using System.Runtime.InteropServices;
-using MHServerEmu.Core.Collections;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace MHServerEmu.Games.Navi
 {

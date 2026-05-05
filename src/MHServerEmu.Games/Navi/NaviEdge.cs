@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using System.Runtime.CompilerServices;
 using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Navi
