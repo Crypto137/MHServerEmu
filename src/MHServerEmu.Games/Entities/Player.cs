@@ -1766,7 +1766,7 @@ namespace MHServerEmu.Games.Entities
             avatarSettings.InventoryLocation = new(Id, avatarLibrary.PrototypeDataRef);
 
             Avatar avatar = Game.EntityManager.CreateEntity(avatarSettings) as Avatar;
-            if (!Verify.IsNotNull(avatar)) return null;
+            if (!Verify.IsNotNull(avatar, LoggingLevel.Error)) return null;
 
             avatar.InitializeLevel(1);
             avatar.ResetResources(false);
