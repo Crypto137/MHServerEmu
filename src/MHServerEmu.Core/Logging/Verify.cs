@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace MHServerEmu.Core.Logging
 {
@@ -14,6 +15,7 @@ namespace MHServerEmu.Core.Logging
         /// <summary>
         /// Logs a message if the specified condition is not <see langword="true"/>.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsTrue(bool condition,
             LoggingLevel loggingLevel = LoggingLevel.Warn,
             [CallerArgumentExpression(nameof(condition))] string expression = null,
@@ -28,8 +30,43 @@ namespace MHServerEmu.Core.Logging
         }
 
         /// <summary>
+        /// Logs a message if the specified condition is not <see langword="true"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsTrue(bool condition,
+            string message,
+            LoggingLevel loggingLevel = LoggingLevel.Warn,
+            [CallerMemberName] string member = null,
+            [CallerFilePath] string file = null,
+            [CallerLineNumber] int line = 0)
+        {
+            if (condition == false)
+                VerifyFail(message, member, file, line, loggingLevel);
+
+            return condition;
+        }
+
+        /// <summary>
+        /// Logs a message if the specified condition is not <see langword="true"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsTrue(bool condition,
+            [InterpolatedStringHandlerArgument(nameof(condition))] ref InterpolatedStringHandler message,
+            LoggingLevel loggingLevel = LoggingLevel.Warn,
+            [CallerMemberName] string member = null,
+            [CallerFilePath] string file = null,
+            [CallerLineNumber] int line = 0)
+        {
+            if (condition == false)
+                VerifyFail(message.ToString(), member, file, line, loggingLevel);
+
+            return condition;
+        }
+
+        /// <summary>
         /// Logs a message if the specified condition if the provided instance of <typeparamref name="T"/> is <see langword="null"/>.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNotNull<T>(T instance,
             LoggingLevel loggingLevel = LoggingLevel.Warn,
             [CallerArgumentExpression(nameof(instance))] string expression = null,
@@ -47,13 +84,94 @@ namespace MHServerEmu.Core.Logging
         }
 
         /// <summary>
+        /// Logs a message if the specified condition if the provided instance of <typeparamref name="T"/> is <see langword="null"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNotNull<T>(T instance,
+            string message,
+            LoggingLevel loggingLevel = LoggingLevel.Warn,
+            [CallerMemberName] string member = null,
+            [CallerFilePath] string file = null,
+            [CallerLineNumber] int line = 0) where T : class
+        {
+            if (instance == null)
+            {
+                VerifyFail(message, member, file, line, loggingLevel);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Logs a message if the specified condition if the provided instance of <typeparamref name="T"/> is <see langword="null"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNotNull<T>(T instance,
+            [InterpolatedStringHandlerArgument(nameof(instance))] ref InterpolatedStringHandler message,
+            LoggingLevel loggingLevel = LoggingLevel.Warn,
+            [CallerMemberName] string member = null,
+            [CallerFilePath] string file = null,
+            [CallerLineNumber] int line = 0) where T : class
+        {
+            if (instance == null)
+            {
+                VerifyFail(message.ToString(), member, file, line, loggingLevel);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Logs a message with the specified <see cref="LoggingLevel"/> when a verify check fails.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void VerifyFail(string expression, string member, string file, int line, LoggingLevel level)
+        private static void VerifyFail(string message, string member, string file, int line, LoggingLevel level)
         {
             // This imitates Gazillion::Verify::VerifyFail(). We can potentially do other things with these here like Gazillion.
-            Logger.Log(level, $"Verify failed: {expression}\n\tFile:{file} Line:{line} Member:{member}()");
+            Logger.Log(level, $"Verify failed: {message}\n\tFile:{file} Line:{line} Member:{member}()");
+        }
+
+        [InterpolatedStringHandler]
+        public readonly ref struct InterpolatedStringHandler
+        {
+            private readonly StringBuilder _sb;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InterpolatedStringHandler(int literalLength, int formattedCount, bool condition)
+            {
+                if (condition == false)
+                    _sb = new();
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InterpolatedStringHandler(int literalLength, int formattedCount, object instance)
+            {
+                if (instance == null)
+                    _sb = new();
+            }
+
+            public override string ToString()
+            {
+                return _sb?.ToString();
+            }
+
+            // NOTE: AppendLiteral() and AppendFormatted() are called for each parameter in an interpolated string
+            // even when verify is successful. There are no allocations, but it can do multiple null checks for StringBuilder.
+            // If this causes performance issues, consider using conditional compilation in Release configuration builds.
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void AppendLiteral(string s)
+            {
+                _sb?.Append(s);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void AppendFormatted<T>(T t)
+            {
+                _sb?.Append(t?.ToString());
+            }
         }
     }
 }
