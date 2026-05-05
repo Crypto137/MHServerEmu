@@ -12,6 +12,8 @@ namespace MHServerEmu.Core.Logging
 
         // This mimics the Assert API used in things like xunit.
 
+        #region IsTrue
+
         /// <summary>
         /// Logs a message if the specified condition is not <see langword="true"/>.
         /// </summary>
@@ -30,20 +32,16 @@ namespace MHServerEmu.Core.Logging
         }
 
         /// <summary>
-        /// Logs a message if the specified condition is not <see langword="true"/>.
+        /// Logs a <see cref="LoggingLevel.Warn"/> message if the specified condition is not <see langword="true"/>.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsTrue(bool condition,
             string message,
-            LoggingLevel loggingLevel = LoggingLevel.Warn,
             [CallerMemberName] string member = null,
             [CallerFilePath] string file = null,
             [CallerLineNumber] int line = 0)
         {
-            if (condition == false)
-                VerifyFail(message, member, file, line, loggingLevel);
-
-            return condition;
+            return IsTrue(condition, LoggingLevel.Warn, message, member, file, line);
         }
 
         /// <summary>
@@ -51,8 +49,8 @@ namespace MHServerEmu.Core.Logging
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsTrue(bool condition,
+            LoggingLevel loggingLevel,
             [InterpolatedStringHandlerArgument(nameof(condition))] ref InterpolatedStringHandler message,
-            LoggingLevel loggingLevel = LoggingLevel.Warn,
             [CallerMemberName] string member = null,
             [CallerFilePath] string file = null,
             [CallerLineNumber] int line = 0)
@@ -62,6 +60,23 @@ namespace MHServerEmu.Core.Logging
 
             return condition;
         }
+
+        /// <summary>
+        /// Logs a <see cref="LoggingLevel.Warn"/> message if the specified condition is not <see langword="true"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsTrue(bool condition,
+            [InterpolatedStringHandlerArgument(nameof(condition))] ref InterpolatedStringHandler message,
+            [CallerMemberName] string member = null,
+            [CallerFilePath] string file = null,
+            [CallerLineNumber] int line = 0)
+        {
+            return IsTrue(condition, LoggingLevel.Warn, message.ToString(), member, file, line);
+        }
+
+        #endregion
+
+        #region IsNotNull
 
         /// <summary>
         /// Logs a message if the specified condition if the provided instance of <typeparamref name="T"/> is <see langword="null"/>.
@@ -84,23 +99,16 @@ namespace MHServerEmu.Core.Logging
         }
 
         /// <summary>
-        /// Logs a message if the specified condition if the provided instance of <typeparamref name="T"/> is <see langword="null"/>.
+        /// Logs a <see cref="LoggingLevel.Warn"/> message if the specified condition if the provided instance of <typeparamref name="T"/> is <see langword="null"/>.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNotNull<T>(T instance,
             string message,
-            LoggingLevel loggingLevel = LoggingLevel.Warn,
             [CallerMemberName] string member = null,
             [CallerFilePath] string file = null,
             [CallerLineNumber] int line = 0) where T : class
         {
-            if (instance == null)
-            {
-                VerifyFail(message, member, file, line, loggingLevel);
-                return false;
-            }
-
-            return true;
+            return IsNotNull(instance, LoggingLevel.Warn, message, member, file, line);
         }
 
         /// <summary>
@@ -108,8 +116,8 @@ namespace MHServerEmu.Core.Logging
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNotNull<T>(T instance,
+            LoggingLevel loggingLevel,
             [InterpolatedStringHandlerArgument(nameof(instance))] ref InterpolatedStringHandler message,
-            LoggingLevel loggingLevel = LoggingLevel.Warn,
             [CallerMemberName] string member = null,
             [CallerFilePath] string file = null,
             [CallerLineNumber] int line = 0) where T : class
@@ -122,6 +130,21 @@ namespace MHServerEmu.Core.Logging
 
             return true;
         }
+
+        /// <summary>
+        /// Logs a <see cref="LoggingLevel.Warn"/> message if the specified condition if the provided instance of <typeparamref name="T"/> is <see langword="null"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNotNull<T>(T instance,
+            [InterpolatedStringHandlerArgument(nameof(instance))] ref InterpolatedStringHandler message,
+            [CallerMemberName] string member = null,
+            [CallerFilePath] string file = null,
+            [CallerLineNumber] int line = 0) where T : class
+        {
+            return IsNotNull(instance, LoggingLevel.Warn, ref message, member, file, line);
+        }
+
+        #endregion
 
         /// <summary>
         /// Logs a message with the specified <see cref="LoggingLevel"/> when a verify check fails.
