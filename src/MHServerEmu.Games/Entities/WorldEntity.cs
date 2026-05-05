@@ -3930,8 +3930,10 @@ namespace MHServerEmu.Games.Entities
 
                 AwardLootForDropEvent(lootDropEventType, playerList);
 
-                // Bonus Item Find (aka Shield Supply Boost) points
-                AwardBonusLoot(playerList);
+                // Bonus Item Find (aka Shield Supply Boost) points.
+                // Check hostility to filter out props and other things that aren't supposed to grant BIF points despite their Popcorn+ rank.
+                if (IsHostileToPlayers())
+                    AwardBonusLoot(playerList);
             }
 
             // XP
