@@ -3918,9 +3918,17 @@ namespace MHServerEmu.Games.Entities
             {
                 Power.ComputeNearbyPlayers(Region, _regionLocation.Position, 0, requireCombatActive, playerList);
 
-                // Add faraway mission participants if needed
                 if (this is Agent agent)
+                {
+                    // Add faraway mission participants if needed
                     Mission.AddContributorsForLootSpawn(agent, playerList);
+
+                    // Bonus Item Find (aka Shield Supply Boost) points. This is limited to agents to exclude all props.
+                    // Also check hostility to filter out non-prop entities that may be abused.
+                    // We can't rely on hostility alone because some legacy props are actually hostile to players.
+                    if (IsHostileToPlayers())
+                        AwardBonusLoot(playerList);
+                }
 
                 // OnKilled loot table is different based on the rank of this entity
                 RankPrototype rankProto = GetRankPrototype();
@@ -3929,11 +3937,6 @@ namespace MHServerEmu.Games.Entities
                     : LootDropEventType.OnKilled;
 
                 AwardLootForDropEvent(lootDropEventType, playerList);
-
-                // Bonus Item Find (aka Shield Supply Boost) points.
-                // Check hostility to filter out props and other things that aren't supposed to grant BIF points despite their Popcorn+ rank.
-                if (IsHostileToPlayers())
-                    AwardBonusLoot(playerList);
             }
 
             // XP
