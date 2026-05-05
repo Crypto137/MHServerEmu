@@ -152,7 +152,7 @@ namespace MHServerEmu.Core.Serialization
 
             _cos.WriteTag(fieldNumber, WireFormat.WireType.Fixed32);
 
-            MemoryMarshal.Cast<byte, float>(_floatBuffer)[0] = value;
+            MemoryMarshal.Cast<byte, float>(_floatBuffer.AsSpan())[0] = value;
             _cos.WriteRawBytes(_floatBuffer, 0, 4);
         }
 
