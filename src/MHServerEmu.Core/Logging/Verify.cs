@@ -139,17 +139,21 @@ namespace MHServerEmu.Core.Logging
             private readonly StringBuilder _sb;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public InterpolatedStringHandler(int literalLength, int formattedCount, bool condition)
+            public InterpolatedStringHandler(int literalLength, int formattedCount, bool condition, out bool isEnabled)
             {
                 if (condition == false)
                     _sb = new();
+
+                isEnabled = _sb != null;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public InterpolatedStringHandler(int literalLength, int formattedCount, object instance)
+            public InterpolatedStringHandler(int literalLength, int formattedCount, object instance, out bool isEnabled)
             {
                 if (instance == null)
                     _sb = new();
+
+                isEnabled = _sb != null;
             }
 
             public override string ToString()
@@ -157,20 +161,16 @@ namespace MHServerEmu.Core.Logging
                 return _sb?.ToString();
             }
 
-            // NOTE: AppendLiteral() and AppendFormatted() are called for each parameter in an interpolated string
-            // even when verify is successful. There are no allocations, but it can do multiple null checks for StringBuilder.
-            // If this causes performance issues, consider using conditional compilation in Release configuration builds.
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void AppendLiteral(string s)
             {
-                _sb?.Append(s);
+                _sb.Append(s);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void AppendFormatted<T>(T t)
             {
-                _sb?.Append(t?.ToString());
+                _sb.Append(t?.ToString());
             }
         }
     }
