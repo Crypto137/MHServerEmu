@@ -13,7 +13,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
     /// </summary>
     public class SQLiteDBManager : IDBManager
     {
-        private const int CurrentSchemaVersion = 6;         // Increment this when making changes to the database schema
+        private const int CurrentSchemaVersion = 7;         // Increment this when making changes to the database schema
         private const int MinimumSchemaVersion = 6;         // Used to ignore legacy 0.x database files.
         private const int NumTestAccounts = 5;              // Number of test accounts to create for new database files
         private const int NumPlayerDataWriteAttempts = 3;   // Number of write attempts to do when saving player data
@@ -473,7 +473,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     {
                         connection.Execute(@"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
                         connection.Execute(@"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget, AOIVolume=@AOIVolume,
-                                            GazillioniteBalance=@GazillioniteBalance, LastLogoutTime=@LastLogoutTime WHERE DbGuid = @DbGuid",
+                                            GazillioniteBalance=@GazillioniteBalance, LastLogoutTime=@LastLogoutTime, Flags=@Flags WHERE DbGuid = @DbGuid",
                                             account.Player, transaction);
                     }
                     else
