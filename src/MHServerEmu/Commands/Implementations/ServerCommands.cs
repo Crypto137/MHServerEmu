@@ -157,7 +157,12 @@ namespace MHServerEmu.Commands.Implementations
                 string emailSuffix = @params[1];
 
                 SQLiteImporter importer = new(fileName, emailSuffix);
-                importer.Import();
+                SQLiteImportResult result = importer.Import();
+
+                // force shutdown to make sure guilds are reloaded
+                if (result == SQLiteImportResult.Success)
+                    Shutdown(@params, null);
+                
                 return string.Empty;
             }
             catch (Exception e)
