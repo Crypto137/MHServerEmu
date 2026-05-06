@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.PowerCollections;
@@ -252,11 +253,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnCollideProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -287,11 +285,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckKeywordProc(kvp, out Power procPower, condition) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnConditionEndProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -315,11 +310,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower, param) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnConditionStackCountProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -347,11 +339,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnDeathProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 if (procPower.NeedsTarget() && procPower.IsValidTarget(killer) == false)
                     continue;
@@ -431,11 +420,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower, param) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnEnduranceProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -460,11 +446,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnGotAttackedProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -528,11 +511,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower, param, procChanceMultiplier) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnGotDamagedProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 TryActivateOnGotDamagedProcHelper(procPower, powerResults);
             }
@@ -549,11 +529,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckKeywordProc(kvp, out Power procPower, keywordsMask, procChanceMultiplier) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnGotDamagedProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 TryActivateOnGotDamagedProcHelper(procPower, powerResults);
             }
@@ -596,8 +573,7 @@ namespace MHServerEmu.Games.Entities
                 return false;
 
             long healthMax = Properties[PropertyEnum.HealthMax];
-            if (healthMax <= 0)
-                return Logger.WarnReturn(false, "TryActivateOnHealthProcs(): healthMax <= 0");
+            if (!Verify.IsTrue(healthMax > 0)) return false;
 
             int param = (int)(MathHelper.Ratio(Properties[PropertyEnum.Health], healthMax) * 100f);
 
@@ -619,11 +595,8 @@ namespace MHServerEmu.Games.Entities
                         if (CheckProc(kvp, out Power procPower, param) == false)
                             continue;
 
-                        if (procPower == null)
-                        {
-                            Logger.Warn("TryActivateOnHealthProcs(): procPower == null");
+                        if (!Verify.IsNotNull(procPower))
                             continue;
-                        }
 
                         WorldEntity procPowerOwner = procPower.Owner;
 
@@ -651,11 +624,8 @@ namespace MHServerEmu.Games.Entities
                                 continue;
                         }
 
-                        if (procPower.IsToggled() == false)
-                        {
-                            Logger.Warn($"TryActivateOnHealthProcs(): Proc power [{procPower}] is not a toggled power");
+                        if (!Verify.IsTrue(procPower.IsToggled(), $"Proc power [{procPower}] is not a toggled power"))
                             continue;
-                        }
 
                         procPowerOwner = procPower.Owner;
 
@@ -699,11 +669,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnInteractedWithProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -749,11 +716,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnKillProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -811,11 +775,8 @@ namespace MHServerEmu.Games.Entities
                         continue;
                 }
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnKillProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -875,11 +836,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnMovementStartedProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -899,11 +857,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnMovementStoppedProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -937,11 +892,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckKeywordProc(kvp, out Power procPower, orb) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnOrbPickupProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -1029,11 +981,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckKeywordProc(kvp, out Power procPower, pet) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnPetDeathProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -1126,11 +1075,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnPowerUseProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -1156,11 +1102,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckKeywordProc(kvp, out Power procPower, onPowerUsePower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnPowerUseProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -1238,11 +1181,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckKeywordProc(kvp, out Power procPower, pet) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnSummonPetProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -1270,11 +1210,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckKeywordProc(kvp, out Power procPower, power, procChanceMultiplier) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnMissileHitProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -1298,11 +1235,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnHotspotNegatedProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -1330,11 +1264,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnControlledEntityReleasedProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
                 procPower.Properties.CopyProperty(procProperties, PropertyEnum.CharacterLevel);
@@ -1353,11 +1284,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckKeywordProc(kvp, out Power procPower, this) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnControlledEntityReleasedProcs(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -1381,11 +1309,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateProcsCommon(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
                 procPower.Properties.CopyProperty(properties, PropertyEnum.CharacterLevel);
@@ -1417,11 +1342,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnBlockOrDodgeProcHelper(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -1458,11 +1380,8 @@ namespace MHServerEmu.Games.Entities
                 if (CheckKeywordProc(kvp, out Power procPower, keywordsMask) == false)
                     continue;
 
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnBlockOrDodgeProcHelper(): procPower == null");
+                if (!Verify.IsNotNull(procPower))
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -1496,7 +1415,7 @@ namespace MHServerEmu.Games.Entities
         public bool TryForwardOnHitProcsToOwner(ProcTriggerType triggerType, PowerResults powerResults)
         {
             WorldEntityPrototype worldEntityProto = WorldEntityPrototype;
-            if (worldEntityProto == null) return Logger.WarnReturn(false, "ForwardOnHitProcsToOwner(): worldEntityProto == null");
+            if (!Verify.IsNotNull(worldEntityProto)) return false;
 
             if (worldEntityProto.ForwardOnHitProcsToOwner == false)
                 return false;
@@ -1512,7 +1431,7 @@ namespace MHServerEmu.Games.Entities
         public bool TryForwardOnKillProcsToOwner(ProcTriggerType triggerType, PowerResults powerResults)
         {
             WorldEntityPrototype worldEntityProto = WorldEntityPrototype;
-            if (worldEntityProto == null) return Logger.WarnReturn(false, "TryForwardOnKillProcsToOwner(): worldEntityProto == null");
+            if (!Verify.IsNotNull(worldEntityProto)) return false;
 
             if (worldEntityProto.ForwardOnHitProcsToOwner == false)
                 return false;
@@ -1581,14 +1500,14 @@ namespace MHServerEmu.Games.Entities
             procPower = null;
 
             PropertyEnum propertyEnum = procProperty.Key.Enum;
-            if (propertyEnum != PropertyEnum.ProcKeyword && propertyEnum != PropertyEnum.ProcNotKeyword)
-                return Logger.WarnReturn(false, $"CheckKeywordProc(): Attempted to check non-keyword proc property {procProperty.Key} for [{this}]");
+            if (!Verify.IsTrue(propertyEnum == PropertyEnum.ProcKeyword || propertyEnum == PropertyEnum.ProcNotKeyword))
+                return false;
 
             bool requiredKeywordState = propertyEnum == PropertyEnum.ProcKeyword;  // true for ProcKeyword, false for ProcNotKeyword
 
             Property.FromParam(procProperty.Key, 2, out PrototypeId keywordProtoRef);
             KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
-            if (keywordProto == null) return Logger.WarnReturn(false, "CheckKeywordProc(): keywordProto == null");
+            if (!Verify.IsNotNull(keywordProto)) return false;
 
             if (keywordedObject.HasKeyword(keywordProto) != requiredKeywordState)
                 return false;
@@ -1618,7 +1537,7 @@ namespace MHServerEmu.Games.Entities
                 if (Segment.EpsilonTest(procChanceMultiplier, 1f) == false)
                 {
                     PowerPrototype powerProto = procPowerProtoRef.As<PowerPrototype>();
-                    if (powerProto == null) return Logger.WarnReturn(false, "CheckProcChance(): powerProto == null");
+                    if (!Verify.IsNotNull(powerProto)) return false;
 
                     switch (powerProto.ProcChanceMultiplierBehavior)
                     {
@@ -1663,17 +1582,17 @@ namespace MHServerEmu.Games.Entities
 
         private bool CheckOnHitRecursion(Power procPower, PowerPrototype triggeringPowerProto)
         {
-            if (triggeringPowerProto == null) return Logger.WarnReturn(false, "CheckOnHitRecursion(): triggeringPowerProto == null");
+            if (!Verify.IsNotNull(triggeringPowerProto)) return false;
 
             PowerPrototype procPowerProto = procPower?.Prototype;
-            if (procPowerProto == null) return Logger.WarnReturn(false, "CheckOnHitRecursion(): procPowerProto == null");
+            if (!Verify.IsNotNull(procPowerProto)) return false;
 
             // Do not allow self-trigger
             if (triggeringPowerProto == procPowerProto)
                 return false;
 
             PowerCollection powerCollection = procPower.Owner?.PowerCollection;
-            if (powerCollection == null) return Logger.WarnReturn(false, "CheckOnHitRecursion(): powerCollection == null");
+            if (!Verify.IsNotNull(powerCollection)) return false;
 
             // Triggering power may not necessarily be on the owner of the proc (e.g. missile activated procs)
             Power triggeringPower = powerCollection.GetPower(triggeringPowerProto.DataRef);
@@ -1713,7 +1632,7 @@ namespace MHServerEmu.Games.Entities
 
         private Power GetProcPower(in KeyValuePair<PropertyId, PropertyValue> procProperty)
         {
-            if (IsInWorld == false) return Logger.WarnReturn<Power>(null, "GetProcPower(): IsInWorld == false");
+            if (!Verify.IsTrue(IsInWorld)) return null;
 
             Property.FromParam(procProperty.Key, 1, out PrototypeId procPowerProtoRef);
 
