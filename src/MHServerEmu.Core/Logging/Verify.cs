@@ -202,15 +202,21 @@ namespace MHServerEmu.Core.Logging
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void AppendLiteral(string s)
+            public void AppendLiteral(string value)
             {
-                _defaultHandler.AppendLiteral(s);
+                _defaultHandler.AppendLiteral(value);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void AppendFormatted<T>(T t)
+            public void AppendFormatted<T>(T value)
             {
-                _defaultHandler.AppendFormatted(t);
+                _defaultHandler.AppendFormatted(value);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void AppendFormatted<T>(T value, string format)
+            {
+                _defaultHandler.AppendFormatted(value, format);
             }
         }
     }
