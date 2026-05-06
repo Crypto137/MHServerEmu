@@ -430,9 +430,13 @@ namespace MHServerEmu.Games.Entities
             if (!Verify.IsNotNull(itemCostProto)) return PurchaseUnlockResult.UnknownFailure;
 
             if (agentProto is AvatarPrototype)
+            {
                 if (!Verify.IsTrue(UnlockAvatar(agentProtoRef, true))) return PurchaseUnlockResult.UnknownFailure;
+            }
             else
+            {
                 if (!Verify.IsTrue(UnlockTeamUpAgent(agentProtoRef, true))) return PurchaseUnlockResult.UnknownFailure;
+            }
 
             itemCostProto.PayItemCost(this, DummyItem);
             return PurchaseUnlockResult.Success;
