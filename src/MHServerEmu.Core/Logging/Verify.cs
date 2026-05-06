@@ -157,43 +157,60 @@ namespace MHServerEmu.Core.Logging
         }
 
         [InterpolatedStringHandler]
-        public readonly ref struct InterpolatedStringHandler
+        public ref struct InterpolatedStringHandler
         {
-            private readonly StringBuilder _sb;
+            private DefaultInterpolatedStringHandler _defaultHandler;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public InterpolatedStringHandler(int literalLength, int formattedCount, bool condition, out bool isEnabled)
             {
                 if (condition == false)
-                    _sb = new();
-
-                isEnabled = _sb != null;
+                {
+                    _defaultHandler = new(literalLength, formattedCount);
+                    isEnabled = true;
+                }
+                else
+                {
+                    _defaultHandler = default;
+                    isEnabled = false;
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public InterpolatedStringHandler(int literalLength, int formattedCount, object instance, out bool isEnabled)
             {
                 if (instance == null)
-                    _sb = new();
-
-                isEnabled = _sb != null;
+                {
+                    _defaultHandler = new(literalLength, formattedCount);
+                    isEnabled = true;
+                }
+                else
+                {
+                    _defaultHandler = default;
+                    isEnabled = false;
+                }
             }
 
             public override string ToString()
             {
-                return _sb?.ToString();
+                return _defaultHandler.ToString();
+            }
+
+            public string ToStringAndClear()
+            {
+                return _defaultHandler.ToStringAndClear();
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void AppendLiteral(string s)
             {
-                _sb.Append(s);
+                _defaultHandler.AppendLiteral(s);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void AppendFormatted<T>(T t)
             {
-                _sb.Append(t?.ToString());
+                _defaultHandler.AppendFormatted(t);
             }
         }
     }

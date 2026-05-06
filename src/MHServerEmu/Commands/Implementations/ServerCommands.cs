@@ -3,6 +3,7 @@ using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.MTXStore;
 using MHServerEmu.PlayerManagement.Players;
@@ -141,6 +142,34 @@ namespace MHServerEmu.Commands.Implementations
             // Otherwise, the game thread is going to break, and we are not going to be able to clean up.
             Task.Run(() => ServerApp.Instance.Shutdown());
             return string.Empty;
+        }
+
+        [Command("importdb")]
+        [CommandDescription("Imports data from the specified SQLite database file.")]
+        [CommandParamCount(2)]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.ServerConsole)]
+        public string ImportDB(string[] @params, NetClient client)
+        {
+            try
+            {
+                string fileName = @params[0];
+                string emailSuffix = @params[1];
+
+                SQLiteImporter importer = new(fileName, emailSuffix);
+                SQLiteImportResult result = importer.Import();
+
+                // force shutdown to make sure guilds are reloaded
+                if (result == SQLiteImportResult.Success)
+                    Shutdown(@params, null);
+                
+                return string.Empty;
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e.ToString());
+                return e.Message;
+            }
         }
     }
 }

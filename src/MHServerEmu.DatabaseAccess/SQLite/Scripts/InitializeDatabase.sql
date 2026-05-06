@@ -21,6 +21,7 @@ CREATE TABLE "Player" (
 	"AOIVolume"	INTEGER,
 	"GazillioniteBalance"	INTEGER,
 	"LastLogoutTime"	INTEGER,
+	"Flags"	INTEGER NOT NULL DEFAULT 0,
 	FOREIGN KEY("DbGuid") REFERENCES "Account"("Id") ON DELETE CASCADE,
 	PRIMARY KEY("DbGuid")
 );
