@@ -136,6 +136,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 }
             }
 
+            Logger.Info("Finished importing accounts");
             return true;
         }
 
@@ -175,6 +176,47 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             collection.AddRange(entities);
         }
 
+        private bool ImportGuilds()
+        {
+            SQLiteDBManager targetDB = SQLiteDBManager.Instance;
+
+            List<DBGuild> guilds = new();
+            List<DBGuildMember> guildMembers = new();
+            LoadGuilds(guilds, guildMembers);
+
+            Logger.Info($"Found {guilds.Count} guild entries with {guildMembers.Count} members");
+
+            long currentGuildId = GetCurrentGuildId();
+            Dictionary<long, long> guildIdLookup = new();
+
+            // Guild data is tiny compared to accounts, so need to worry about memory being freed.
+            foreach (DBGuild guild in guilds)
+            {
+                long oldGuildId = guild.Id;
+                long newGuildId = ++currentGuildId;
+                guildIdLookup[oldGuildId] = newGuildId;
+
+                guild.Id = newGuildId;
+                guild.Name += _nameSuffix;
+                guild.CreatorDbGuid = UpdateGuidForImport(guild.CreatorDbGuid);
+
+                if (targetDB.SaveGuild(guild) == false)
+                    return false;
+            }
+
+            foreach (DBGuildMember guildMember in guildMembers)
+            {
+                guildMember.PlayerDbGuid = UpdateGuidForImport(guildMember.PlayerDbGuid);
+                guildMember.GuildId = guildIdLookup[guildMember.GuildId];
+
+                if (targetDB.SaveGuildMember(guildMember) == false)
+                    return false;
+            }
+
+            Logger.Info("Finished importing guilds");
+            return true;
+        }
+
         private long UpdateGuidForImport(long guid)
         {
             if (guid == 0)
@@ -184,12 +226,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             bits &= ~MachineIdMask;
             bits |= _machineIdBits;
             return (long)bits;
-        }
-
-        private bool ImportGuilds()
-        {
-            // TODO
-            return true;
         }
 
         private void GetAccounts(List<DBAccount> accounts)
@@ -230,6 +266,30 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             {
                 itemTable.LoadEntities(connection, teamUp.DbGuid, account.Items);
             }
+        }
+
+        private void LoadGuilds(List<DBGuild> guilds, List<DBGuildMember> guildMembers)
+        {
+            using SQLiteConnection connection = GetConnection();
+
+            IEnumerable<DBGuild> guildQueryResult = connection.Query<DBGuild>("SELECT * FROM Guild");
+            guilds.AddRange(guildQueryResult);
+
+            IEnumerable<DBGuildMember> memberQueryResult = connection.Query<DBGuildMember>("SELECT * FROM GuildMember");
+            guildMembers.AddRange(memberQueryResult);
+        }
+
+        private long GetCurrentGuildId()
+        {
+            // this is kinda dumb and inefficient, but it's the easiest way to do it without making a bunch of changes
+            List<DBGuild> guilds = new();
+            IDBManager.Instance.LoadGuilds(guilds);
+
+            long currentGuildId = 0;
+            foreach (DBGuild guild in guilds)
+                currentGuildId = Math.Max(currentGuildId, guild.Id);
+
+            return currentGuildId;
         }
 
         /// <summary>
