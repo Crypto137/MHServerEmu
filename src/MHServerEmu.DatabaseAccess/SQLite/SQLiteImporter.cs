@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess.Models;
@@ -62,8 +63,14 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            // TODO: Back up original DB file
+            // Back up original DB file
+            Logger.Info("Backing up database...");
+            var config = ConfigManager.Instance.GetConfig<SQLiteDBManagerConfig>();
+            string currentDBFilePath = Path.Combine(FileHelper.DataDirectory, config.FileName);
+            string backupDBFilePath = $"{currentDBFilePath}.preimport";
+            File.Copy(currentDBFilePath, backupDBFilePath);
 
+            // Do the import
             Logger.Info($"Beginning import from {_fileName}...");
 
             SQLiteImportResult result;
@@ -79,10 +86,26 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 result = SQLiteImportResult.GenericError;
             }
 
-            if (result != SQLiteImportResult.Success)
+            if (result == SQLiteImportResult.Success)
+            {
+                File.Delete(backupDBFilePath);
+            }
+            else
             {
                 Logger.Error($"Error importing from: {_fileName}: result=[{result}], errorMessage=[{errorMessage}]");
-                // TODO: Restore DB backup
+
+                File.Delete(currentDBFilePath);
+
+                string shmFilePath = $"{currentDBFilePath}-shm";
+                if (File.Exists(shmFilePath))
+                    File.Delete(shmFilePath);
+
+                string walFilePath = $"{currentDBFilePath}-wal";
+                if (File.Exists(walFilePath))
+                    File.Delete(walFilePath);
+
+                File.Move(backupDBFilePath, currentDBFilePath);
+                Logger.Info("Pre-import backup restored");
             }
 
             stopwatch.Stop();
@@ -95,11 +118,20 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             if (File.Exists(_filePath) == false)
                 return SQLiteImportResult.FileNotFound;
 
-            if (ImportAccounts() == false)
-                return SQLiteImportResult.AccountError;
+            try
+            {
+                SQLiteDBManager.Instance.SkipBackup = true;
 
-            if (ImportGuilds() == false)
-                return SQLiteImportResult.GuildError;
+                if (ImportAccounts() == false)
+                    return SQLiteImportResult.AccountError;
+
+                if (ImportGuilds() == false)
+                    return SQLiteImportResult.GuildError;
+            }
+            finally
+            {
+                SQLiteDBManager.Instance.SkipBackup = false;
+            }
 
             return SQLiteImportResult.Success;
         }

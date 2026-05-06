@@ -29,6 +29,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         private CooldownTimer _backupTimer;
         private volatile bool _backupInProgress;
 
+        public bool SkipBackup { get; set; }
+
         public static SQLiteDBManager Instance { get; } = new();
 
         private SQLiteDBManager() { }
@@ -513,7 +515,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
                 Logger.Info($"Successfully written player data for account [{account}]");
 
-                if (_backupInProgress == false && _backupTimer.Check())
+                if (_backupInProgress == false && _backupTimer.Check() && SkipBackup == false)
                 {
                     _backupInProgress = true;
                     Task.Run(CreateBackup);
