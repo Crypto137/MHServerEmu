@@ -38,8 +38,6 @@ namespace MHServerEmu.Games.Entities.Avatars
     {
         private const int NumActionKeySlots = 6;   // non-mouse slots
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private int _powerSpecIndex;
         private bool _shouldPersist;
         private PrototypeId _associatedTransformMode;
@@ -87,8 +85,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// </summary>
         public PrototypeId GetAbilityInAbilitySlot(AbilitySlot abilitySlot)
         {
-            if (Avatar.IsActiveAbilitySlot(abilitySlot) == false)
-                return Logger.WarnReturn(PrototypeId.Invalid, $"GetAbilityInAbilitySlot(): Invalid ability slot {abilitySlot}");
+            if (!Verify.IsTrue(Avatar.IsActiveAbilitySlot(abilitySlot))) return PrototypeId.Invalid;
 
             switch (abilitySlot)
             {
@@ -101,8 +98,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 case AbilitySlot.DedicatedUltimateSlot: return PrototypeId.Invalid;     // TODO (if we need this)
             }
 
-            if (Avatar.IsActionKeyAbilitySlot(abilitySlot) == false)
-                return Logger.WarnReturn(PrototypeId.Invalid, $"GetAbilityInAbilitySlot(): Unhandled ability slot {abilitySlot}");
+            if (!Verify.IsTrue(Avatar.IsActionKeyAbilitySlot(abilitySlot))) return PrototypeId.Invalid;
 
             // Action keys
             int index = ConvertSlotToArrayIndex(abilitySlot);
@@ -146,8 +142,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// </summary>
         public bool SetAbilityInAbilitySlot(PrototypeId abilityProtoRef, AbilitySlot abilitySlot)
         {
-            if (Avatar.IsActiveAbilitySlot(abilitySlot) == false)
-                return Logger.WarnReturn(false, $"SetAbilityInAbilitySlot(): Invalid ability slot {abilitySlot}");
+            if (!Verify.IsTrue(Avatar.IsActiveAbilitySlot(abilitySlot))) return false;
 
             switch (abilitySlot)
             {
@@ -169,8 +164,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     break;
 
                 default:    // action key slots
-                    if (Avatar.IsActionKeyAbilitySlot(abilitySlot) == false)
-                        return Logger.WarnReturn(false, $"SetAbilityInAbilitySlot(): Unhandled ability slot {abilitySlot}");
+                    if (!Verify.IsTrue(Avatar.IsActionKeyAbilitySlot(abilitySlot))) return false;
 
                     int index = ConvertSlotToArrayIndex(abilitySlot);
                     _actionKeys[index] = abilityProtoRef;
@@ -188,7 +182,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool CleanUpAfterRespec(Avatar avatar)
         {
             AvatarPrototype avatarProto = avatar.AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(false, "CleanUpAfterRespec(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return false;
 
             for (AbilitySlot slot = AbilitySlot.PrimaryAction; slot < AbilitySlot.NumActions; slot++)
             {
@@ -246,18 +240,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 // Validate slot
                 AbilitySlot abilitySlot = itSlot < AbilitySlot.NumActions ? itSlot : AbilitySlot.Invalid;
-                if (abilitySlot == AbilitySlot.Invalid)
-                {
-                    Logger.Warn($"SlotDefaultAbilitiesForTransformMode(): Failed an ability assignment because there are too many default abilities for TransformMode: [{transformModeProto}]");
+                if (!Verify.IsTrue(abilitySlot != AbilitySlot.Invalid, $"Failed an ability assignment because there are too many default abilities for TransformMode: [{transformModeProto}]"))
                     continue;
-                }
 
                 AbilitySlotOpValidateResult slotResult = Avatar.CheckAbilitySlotRestrictions(abilityProtoRef, abilitySlot);
-                if (slotResult != AbilitySlotOpValidateResult.Valid)
-                {
-                    Logger.Warn($"SlotDefaultAbilitiesForTransformMode(): Failed to slot ability because of slot restriction. SlotResult: [{slotResult}]\nTransformMode: [{transformModeProto}]\nAbility: [{abilityProtoRef.GetName()}]");
+                if (!Verify.IsTrue(slotResult == AbilitySlotOpValidateResult.Valid, $"Failed to slot ability because of slot restriction. SlotResult: [{slotResult}]\nTransformMode: [{transformModeProto}]\nAbility: [{abilityProtoRef.GetName()}]"))
                     continue;
-                }
 
                 // Do the slotting
                 SetAbilityInAbilitySlot(abilityProtoRef, abilitySlot);
@@ -267,7 +255,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool GetDefaultAbilities(List<HotkeyData> hotkeyDataList, Avatar avatar, int startingLevel = -1)
         {
             AvatarPrototype avatarProto = avatar.AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(false, "GetDefaultAbilities(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return false;
 
             using var powerProgEntryListHandle = ListPool<PowerProgressionEntryPrototype>.Instance.Get(out List<PowerProgressionEntryPrototype> powerProgEntryList);
             if (avatarProto.GetPowersUnlockedAtLevel(powerProgEntryList, avatar.CharacterLevel, true, startingLevel))
@@ -287,11 +275,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                     // Get ability slot 
                     GamepadSlotBindingPrototype gamepadSlotProto = GameDatabase.GetPrototype<GamepadSlotBindingPrototype>(powerAssignmentProto.Slot);
-                    if (gamepadSlotProto == null)
-                    {
-                        Logger.Warn($"GetDefaultAbilities(): Failed to get the gamepad slot using data ref in the Ability Auto Assignment Slot:\nAvatar: [{avatar}]");
+                    if (!Verify.IsNotNull(gamepadSlotProto, $"Failed to get the gamepad slot using data ref in the Ability Auto Assignment Slot:\nAvatar: [{avatar}]"))
                         continue;
-                    }
 
                     // Avatar::ChooseGamePadSlot() - we don't need this on PC
                     AbilitySlot slot = (AbilitySlot)gamepadSlotProto.PCSlotNumber;
@@ -307,11 +292,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                     // Check slot restrictions
                     AbilitySlotOpValidateResult slotResult = Avatar.CheckAbilitySlotRestrictions(abilityToBeSlotted, slot);
-                    if (slotResult != AbilitySlotOpValidateResult.Valid)
-                    {
-                        Logger.Warn($"GetDefaultAbilities(): Failed to slot ability because of slot restriction. SlotResult: [{slotResult}]\nAvatar: [{avatar}]\nAbility: [{abilityToBeSlotted.GetName()}]");
+                    if (!Verify.IsTrue(slotResult == AbilitySlotOpValidateResult.Valid, $"Failed to slot ability because of slot restriction. SlotResult: [{slotResult}]\nAvatar: [{avatar}]\nAbility: [{abilityToBeSlotted.GetName()}]"))
                         continue;
-                    }
 
                     hotkeyDataList.Add(new HotkeyData(abilityToBeSlotted, slot));
                 }
@@ -325,9 +307,14 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// </summary>
         private static int ConvertSlotToArrayIndex(AbilitySlot slot)
         {
-            if (slot < AbilitySlot.ActionKey0) return (int)slot;
-            if (slot < AbilitySlot.NumActions) return (int)slot - 2;
-            return Logger.WarnReturn((int)slot, $"ConvertSlotToArrayIndex(): Enum argument is not within an array-stored ability slot range");
+            if (slot < AbilitySlot.ActionKey0)
+                return (int)slot;
+
+            if (slot < AbilitySlot.NumActions)
+                return (int)slot - 2;
+
+            Verify.IsTrue(false, "Code is calling ConvertSlotToArrayIndex() with a slot enum argument that is not within an array-stored ability slot range!");
+            return (int)slot;
         }
     }
 }

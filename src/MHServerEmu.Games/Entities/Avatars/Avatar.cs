@@ -148,15 +148,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return false;
 
             Player player = Game.EntityManager.GetEntity<Player>(settings.InventoryLocation.ContainerId);
-
-            if (player != null)
+            if (Verify.IsNotNull(player))
             {
                 SetPlayer(player);
                 SetGuildMembership(player.GuildId, player.GuildName, player.GuildMembership);
-            }
-            else
-            {
-                Logger.Warn("ApplyInitialReplicationState(): player == null");
             }
 
             if (settings.ArchiveData != null)
@@ -207,8 +202,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // There is an unused string here that is always empty
                 string emptyString = string.Empty;
                 success &= Serializer.Transfer(archive, ref emptyString);
-                if (emptyString != string.Empty)
-                    Logger.Warn($"Serialize(): emptyString is not empty!");
+                Verify.IsTrue(emptyString == string.Empty);
 
                 if (archive.IsReplication)
                     success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
@@ -238,11 +232,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 {
                     Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
                     PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-                    if (powerProto == null)
-                    {
-                        Logger.Warn("OnUnpackComplete(): powerProto == null");
+                    if (!Verify.IsNotNull(powerProto))
                         continue;
-                    }
 
                     // Discard if no longer flagged as persistent
                     if (Power.IsCooldownPersistent(powerProto) == false)
@@ -255,11 +246,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 {
                     Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
                     PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-                    if (powerProto == null)
-                    {
-                        Logger.Warn("OnUnpackComplete(): powerProto == null");
+                    if (!Verify.IsNotNull(powerProto))
                         continue;
-                    }
 
                     // Discard if no longer flagged as persistent
                     if (Power.IsCooldownPersistent(powerProto) == false)
@@ -299,7 +287,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool SelectVanityTitle(PrototypeId vanityTitleProtoRef)
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "SelectVanityTitle(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             if (player.IsVanityTitleUnlocked(vanityTitleProtoRef) == false)
                 return false;
@@ -351,21 +339,15 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override ChangePositionResult ChangeRegionPosition(Vector3? position, Orientation? orientation, ChangePositionFlags flags = ChangePositionFlags.None)
         {
-            if (RegionLocation.IsValid == false)
-                return Logger.WarnReturn(ChangePositionResult.NotChanged, "ChangeRegionPosition(): Cannot change region position without entering the world first");
+            if (!Verify.IsTrue(position != null || orientation != null)) return ChangePositionResult.NotChanged;
 
-            // We only need to do AOI processing if the avatar is changing its position
+            // Orientation only changes skip AOI processing
             if (position == null)
-            {
-                if (orientation != null)
-                    return base.ChangeRegionPosition(position, orientation, flags);
-                else
-                    return Logger.WarnReturn(ChangePositionResult.NotChanged, "ChangeRegionPosition(): No position or orientation provided");
-            }
+                return base.ChangeRegionPosition(position, orientation, flags);
 
             // Get player for AOI update
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(ChangePositionResult.NotChanged, "ChangeRegionPosition(): player == null");
+            if (!Verify.IsNotNull(player)) return ChangePositionResult.NotChanged;
 
             ChangePositionResult result;
 
@@ -392,8 +374,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 // If we are moving outside of our AOI, start a teleport and exit world.
                 // The avatar will be put back into the world when all cells at the destination are loaded.
-                if (RegionLocation.Region.GetCellAtPosition(position.Value) == null)
-                    return Logger.WarnReturn(ChangePositionResult.InvalidPosition, $"ChangeRegionPosition(): Invalid position {position.Value}");
+                if (!Verify.IsTrue(IsInWorld)) return ChangePositionResult.NotChanged;
+
+                Region region = Region;
+                if (!Verify.IsNotNull(region)) return ChangePositionResult.NotChanged;
+
+                Cell cellAtPosition = region.GetCellAtPosition(position.Value);
+                if (!Verify.IsNotNull(cellAtPosition)) return ChangePositionResult.NotChanged;
 
                 player.BeginTeleport(RegionLocation.RegionId, position.Value, orientation != null ? orientation.Value : Orientation.Zero);
                 ConditionCollection.RemoveCancelOnIntraRegionTeleportConditions();
@@ -444,10 +431,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             Game.GameEventScheduler.CancelEvent(_deathDialogEvent);
 
             AvatarOnKilledInfoPrototype onKilledInfoProto = Region?.GetAvatarOnKilledInfo();
-            if (onKilledInfoProto != null)
+            if (Verify.IsNotNull(onKilledInfoProto))
                 ScheduleEntityEvent(_deathDialogEvent, TimeSpan.FromMilliseconds(onKilledInfoProto.DeathReleaseTimeoutMS));
-            else
-                Logger.Warn("OnKilled(): onKilledInfoProto == null");
         }
 
         public override bool Resurrect()
@@ -480,11 +465,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return;
 
             PrototypeId resurrectOtherEntityPower = AvatarPrototype.ResurrectOtherEntityPower;
-            if (resurrectOtherEntityPower == PrototypeId.Invalid)
-            {
-                Logger.Warn("ResurrectOtherAvatar(): resurrectOtherEntityPower == PrototypeId.Invalid");
-                return;
-            }
+            if (!Verify.IsTrue(resurrectOtherEntityPower != PrototypeId.Invalid)) return;
 
             PowerActivationSettings settings = new(targetAvatar.Id, targetAvatar.RegionLocation.Position, RegionLocation.Position);
             settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
@@ -495,16 +476,14 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool DoDeathRelease(DeathReleaseRequestType requestType)
         {
-            // Resurrect
-            if (Resurrect() == false)
-                return Logger.WarnReturn(false, $"DoDeathRelease(): Failed to resurrect avatar {this}");
+            if (!Verify.IsTrue(Resurrect(), $"Failed to resurrect avatar {this}")) return false;
 
             // Move to waypoint or some other place depending on the request and the region prototype
             Region region = Region;
-            if (region == null) return Logger.WarnReturn(false, "DoDeathRelease(): region == null");
+            if (!Verify.IsNotNull(region)) return false;
 
             Player owner = GetOwnerOfType<Player>();
-            if (owner == null) return Logger.WarnReturn(false, "DoDeathRelease(): owner == null");
+            if (!Verify.IsNotNull(owner)) return false;
 
             if (region.MetaGames.Count > 0) 
             {
@@ -522,17 +501,16 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 case DeathReleaseRequestType.Checkpoint:
                     AvatarOnKilledInfoPrototype onKilledInfoProto = region.GetAvatarOnKilledInfo();
-                    if (onKilledInfoProto == null) return Logger.WarnReturn(false, "DoDeathRelease(): onKilledInfoProto == null");
+                    if (!Verify.IsNotNull(onKilledInfoProto)) return false;
 
                     if (onKilledInfoProto.DeathReleaseBehavior == DeathReleaseBehavior.ReturnToWaypoint)
                     {
                         // Find the target for our respawn teleport
                         PrototypeId deathReleaseTarget = FindDeathReleaseTarget(out PrototypeId regionProtoRefOverride);
-                        if (deathReleaseTarget == PrototypeId.Invalid)
-                            return Logger.WarnReturn(false, "DoDeathRelease(): Failed to find a target to move to");
+                        if (!Verify.IsTrue(deathReleaseTarget != PrototypeId.Invalid)) return false;
 
                         RegionConnectionTargetPrototype targetProto = deathReleaseTarget.As<RegionConnectionTargetPrototype>();
-                        if (targetProto == null) return Logger.WarnReturn(false, "DoDeathRelease(): targetProto == null");
+                        if (!Verify.IsNotNull(targetProto)) return false;
 
                         PrototypeId regionProtoRef = regionProtoRefOverride != PrototypeId.Invalid ? regionProtoRefOverride : targetProto.Region;
                         PrototypeId areaProtoRef = targetProto.Area;
@@ -547,7 +525,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     }
                     else 
                     {
-                        return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented behavior {onKilledInfoProto.DeathReleaseBehavior}");
+                        Logger.Warn($"DoDeathRelease(): Unimplemented behavior {onKilledInfoProto.DeathReleaseBehavior}");
+                        return false;
                     }
 
                 case DeathReleaseRequestType.Corpse:
@@ -555,7 +534,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     return true;
 
                 default:
-                    return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented request type {requestType}");
+                    Logger.Warn($"DoDeathRelease(): Unimplemented request type {requestType}");
+                    return false;
             }
         }
 
@@ -564,10 +544,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (Properties[PropertyEnum.HasResurrectPending])
                 return true;
 
-            if (resurrectorId == InvalidId) return Logger.WarnReturn(false, "ResurrectRequest(): resurrectorId == InvalidId");
+            if (!Verify.IsTrue(resurrectorId != InvalidId)) return false;
 
             AvatarOnKilledInfoPrototype onKilledInfoProto = Region?.GetAvatarOnKilledInfo();
-            if (onKilledInfoProto == null) return Logger.WarnReturn(false, "ResurrectRequest(): onKilledInfoProto == null");
+            if (!Verify.IsNotNull(onKilledInfoProto)) return false;
 
             Game.GameEventScheduler.CancelEvent(_deathDialogEvent);
             ScheduleEntityEvent(_deathDialogEvent, TimeSpan.FromMilliseconds(onKilledInfoProto.ResurrectionTimeoutMS));
@@ -597,11 +577,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         protected override void ResurrectFromOther(WorldEntity ultimateOwner)
         {
-            if (ultimateOwner == null)
-            {
-                Logger.Warn("ResurrectFromOther(): ultimateOwner == null");
-                return;
-            }
+            if (!Verify.IsNotNull(ultimateOwner)) return;
 
             if (ultimateOwner is Avatar && ultimateOwner.Properties[PropertyEnum.PendingResurrectEntityId] == Id)
             {
@@ -621,13 +597,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             regionProtoRefOverride = PrototypeId.Invalid;
 
             Region region = Region;
-            if (region == null) return Logger.WarnReturn(PrototypeId.Invalid, "FindDeathReleaseTarget(): region == null");
+            if (!Verify.IsNotNull(region)) return PrototypeId.Invalid;
 
             Area area = Area;
-            if (area == null) return Logger.WarnReturn(PrototypeId.Invalid, "FindDeathReleaseTarget(): area == null");
+            if (!Verify.IsNotNull(area)) return PrototypeId.Invalid;
 
             Cell cell = Cell;
-            if (cell == null) return Logger.WarnReturn(PrototypeId.Invalid, "FindDeathReleaseTarget(): cell == null");
+            if (!Verify.IsNotNull(cell)) return PrototypeId.Invalid;
 
             Player player = GetOwnerOfType<Player>();
 
@@ -750,16 +726,16 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool ScheduleBodyslideTeleport()
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "ScheduleBodyslideTeleport(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             Region region = Region;
-            if (region == null) return Logger.WarnReturn(false, "ScheduleBodyslideTeleport(): region == null");
+            if (!Verify.IsNotNull(region)) return false;
 
             Area area = Area;
-            if (area == null) return Logger.WarnReturn(false, "ScheduleBodyslideTeleport(): area == null");
+            if (!Verify.IsNotNull(area)) return false;
 
             RegionPrototype regionProto = region.Prototype;
-            if (regionProto == null) return Logger.WarnReturn(false, "ScheduleBodyslideTeleport(): regionProto == null");
+            if (!Verify.IsNotNull(regionProto)) return false;
 
             if (regionProto.Behavior != RegionBehavior.Town)    // -> To Town
             {
@@ -804,10 +780,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         private bool DoBodyslideTeleportToTown()
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "DoBodyslideTeleportToTown(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             PrototypeId bodyslideTargetRef = Bodyslider.GetBodyslideTargetRef(player);
-            if (bodyslideTargetRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoBodyslideTeleportToTown(): bodyslideTargetRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(bodyslideTargetRef != PrototypeId.Invalid)) return false;
 
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Bodyslide);
@@ -817,7 +793,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private bool DoBodyslideTeleportFromTown()
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "DoBodyslideTeleportFromTown(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             ulong regionId = player.Properties[PropertyEnum.BodySliderRegionId];
             Vector3 position = player.Properties[PropertyEnum.BodySliderRegionPos];
@@ -831,7 +807,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private bool DoPowerTeleport(PrototypeId targetProtoRef)
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "DoRegionTeleport(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Power);
@@ -909,14 +885,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (Properties.HasProperty(new PropertyId(PropertyEnum.PowerChargesMax, power.PrototypeDataRef)) == false)
             {
                 GlobalsPrototype globalsPrototype = GameDatabase.GlobalsPrototype;
-                if (globalsPrototype == null) return Logger.WarnReturn(false, "OnPowerAssigned(): globalsPrototype == null");
+                if (!Verify.IsNotNull(globalsPrototype)) return false;
 
                 int powerChargesMax = power.Properties[PropertyEnum.PowerChargesMax, globalsPrototype.PowerPrototype];
                 if (powerChargesMax > 0)
                 {
                     PowerPrototype powerProto = power.Prototype;
-                    if (powerProto?.CooldownOnPlayer == true)
-                        Logger.Warn($"OnPowerAssigned(): CooldownOnPlayer not supported on power with charges.\n{power}");
+                    Verify.IsTrue(powerProto != null && powerProto.CooldownOnPlayer == false, $"CooldownOnPlayer not supported on power with charges.\n{power}");
 
                     Properties[PropertyEnum.PowerChargesAvailable, power.PrototypeDataRef] = powerChargesMax;
                     Properties[PropertyEnum.PowerChargesMax, power.PrototypeDataRef] = powerChargesMax;
@@ -1103,7 +1078,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             else
             {
                 // Activation failed despite the validation, something went wrong
-                Logger.Warn($"ActivatePower(): Activation failed for power [{power}] on [{this}] despite passing preliminary validation!");
+                Verify.IsTrue(false, $"Activation failed for power [{power}] on [{this}] despite passing preliminary validation!");
                 SendActivatePowerFailedMessage(powerRef, result);
             }
 
@@ -1122,7 +1097,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (throwablePower != null && throwablePower.Prototype != powerProto)
                 {
                     Power throwCancelPower = GetThrowableCancelPower();
-                    if (throwCancelPower == null) return Logger.WarnReturn(PowerUseResult.GenericError, "CanTriggerPower(): throwCancelPower == null");
+                    if (!Verify.IsNotNull(throwCancelPower)) return PowerUseResult.GenericError;
                     
                     if (throwCancelPower.Prototype != powerProto)
                         return PowerUseResult.PowerInProgress;
@@ -1148,11 +1123,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (pendingPowerProtoRef != PrototypeId.Invalid && IsInPendingActionState(PendingActionState.WaitingForPrevPower))
                 {
                     Power nextPower = GetPower(pendingPowerProtoRef);
-                    if (nextPower == null)
-                    {
-                        Logger.Warn("ActivatePostPowerAction(): nextPower == null");
-                        return;
-                    }
+                    if (!Verify.IsNotNull(nextPower)) return;
 
                     PowerActivationSettings settings = new();
                     FixupPendingActivateSettings(nextPower, ref settings);
@@ -1206,7 +1177,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (base.ShouldContinueRecurringPower(power, ref flags) == false)
                 return false;
 
-            if (power == null) return Logger.WarnReturn(false, "ShouldContinueRecurringPower(): power == null");
+            if (!Verify.IsNotNull(power)) return false;
 
             // Check endurance (mana) costs
             foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in GetPrimaryResourceManaBehaviors())
@@ -1298,14 +1269,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 Vector3 targetPosition = _continuousPowerData.TargetPosition;
 
                 Power continuousPower = GetPower(_continuousPowerData.PowerProtoRef);
-                if (continuousPower == null)
-                {
-                    Logger.Warn(string.Format(
-                        "CheckContinuousPower(): Could not find continuous power to activate after previous power end.\nAvatar: {0}\nPower proto:{1}",
-                        this,
-                        GameDatabase.GetPrototypeName(_continuousPowerData.PowerProtoRef)));
+                if (!Verify.IsNotNull(continuousPower, $"Could not find continuous power to activate after previous power end.\nAvatar: {this}\nPower proto:{_continuousPowerData.PowerProtoRef.GetName()}"))
                     return;
-                }
 
                 // We should either have no active power or the continuous powers needs to be recurring
                 if (IsExecutingPower == false || (ActivePowerRef == _continuousPowerData.PowerProtoRef && continuousPower.IsRecurring()))
@@ -1408,7 +1373,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return false;
 
             TuningPrototype difficultyProto = region.TuningTable?.Prototype;
-            if (difficultyProto == null) return Logger.WarnReturn(false, "IsCombatActive(): difficultyProto == null");
+            if (!Verify.IsNotNull(difficultyProto)) return false;
 
             TimeSpan timeSinceInflictedDamage = Game.CurrentTime - Properties[PropertyEnum.LastInflictedDamageTime];
             TimeSpan inflictedDamageTimer = TimeSpan.FromSeconds(difficultyProto.PlayerInflictedDamageTimerSec);
@@ -1425,7 +1390,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override bool HasPowerWithKeyword(PowerPrototype powerProto, PrototypeId keywordProtoRef)
         {
             KeywordPrototype keywordPrototype = GameDatabase.GetPrototype<KeywordPrototype>(keywordProtoRef);
-            if (keywordPrototype == null) return Logger.WarnReturn(false, "HasPowerWithKeyword(): keywordPrototype == null");
+            if (!Verify.IsNotNull(keywordPrototype)) return false;
 
             // Check if the assigned power has the specified keyword
             Power power = GetPower(powerProto.DataRef);
@@ -1452,10 +1417,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool InitPowerFromCreationItem(Item item)
         {
-            if (item.GetOwnerOfType<Player>() != GetOwnerOfType<Player>()) return Logger.WarnReturn(false, "InitPowerFromCreationItem(): item.GetOwnerOfType<Player>() != GetOwnerOfType<Player>()");
+            if (!Verify.IsTrue(item.GetOwnerOfType<Player>() == GetOwnerOfType<Player>())) return false;
 
-            if (item.GetPowerGranted(out PrototypeId powerProtoRef) == false) return Logger.WarnReturn(false, "InitPowerFromCreationItem(): item.GetPowerGranted(out PrototypeId powerProtoRef) == false");
-            if (powerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "InitPowerFromCreationItem(): powerProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(item.GetPowerGranted(out PrototypeId powerProtoRef))) return false;
+            if (!Verify.IsTrue(powerProtoRef != PrototypeId.Invalid)) return false;
 
             Power power = GetPower(powerProtoRef);
             if (power == null)
@@ -1477,7 +1442,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (itemProto.AbilitySettings == null || itemProto.AbilitySettings.OnlySlottableWhileEquipped == false)
             {
                 Player playerOwner = GetOwnerOfType<Player>();
-                if (playerOwner == null) return Logger.WarnReturn(InvalidId, "FindAbilityItem(): playerOwner == null");
+                if (!Verify.IsNotNull(playerOwner)) return InvalidId;
 
                 foreach (Inventory inventory in new InventoryIterator(playerOwner, InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra))
                     inventoryList.Add(inventory);
@@ -1493,11 +1458,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     ulong itemId = entry.Id;
 
                     Item item = entityManager.GetEntity<Item>(itemId);
-                    if (item == null)
-                    {
-                        Logger.Warn("FindAbilityItem(): item == null");
+                    if (!Verify.IsNotNull(item))
                         continue;
-                    }
 
                     if (item.PrototypeDataRef != itemProto.DataRef)
                         continue;
@@ -1526,7 +1488,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Search the player's general inventories
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(InvalidId, "FindOwnedItemThatGrantsPower(): player == null");
+            if (!Verify.IsNotNull(player)) return InvalidId;
 
             foreach (Inventory inventory in new InventoryIterator(player, InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra))
             {
@@ -1545,11 +1507,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             foreach (var entry in inventory)
             {
                 Item item = entityManager.GetEntity<Item>(entry.Id);
-                if (item == null)
-                {
-                    Logger.Warn("FindOwnedItemThatGrantsPowerHelper(): item == null");
+                if (!Verify.IsNotNull(item))
                     continue;
-                }
 
                 if (item.GetPowerGranted(out PrototypeId powerGrantedProtoRef) && powerGrantedProtoRef == powerProtoRef)
                     return item.Id;
@@ -1606,7 +1565,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             // This has similar structure to FindAbilityItem()
             Player playerOwner = GetOwnerOfType<Player>();
-            if (playerOwner == null) return Logger.WarnReturn(false, "AssignItemPowers(): playerOwner == null");
+            if (!Verify.IsNotNull(playerOwner)) return false;
 
             using var inventoryListHandle = ListPool<Inventory>.Instance.Get(out List<Inventory> inventoryList);
 
@@ -1629,18 +1588,12 @@ namespace MHServerEmu.Games.Entities.Avatars
                     ulong itemId = entry.Id;
 
                     Item item = entityManager.GetEntity<Item>(itemId);
-                    if (item == null)
-                    {
-                        Logger.Warn("AssignItemPowers(): item == null");
+                    if (!Verify.IsNotNull(item))
                         continue;
-                    }
 
                     ItemPrototype itemProto = item.ItemPrototype;
-                    if (itemProto == null)
-                    {
-                        Logger.Warn("AssignItemPowers(): itemProto == null");
+                    if (!Verify.IsNotNull(itemProto))
                         continue;
-                    }
 
                     PrototypeId itemPowerProtoRef = PrototypeId.Invalid;
 
@@ -1668,8 +1621,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                         float itemVariation = item.Properties[PropertyEnum.ItemVariation];
                         PowerIndexProperties indexProps = new(0, characterLevel, combatLevel, itemLevel, itemVariation);
 
-                        if (AssignPower(itemPowerProtoRef, indexProps) == null)
-                            Logger.Warn($"AssignItemPowers(): Failed to assign item power {itemPowerProtoRef.GetName()} to avatar {this}");
+                        Power itemPower = AssignPower(itemPowerProtoRef, indexProps);
+                        Verify.IsNotNull(itemPower, $"Failed to assign item power {itemPowerProtoRef.GetName()} to avatar {this}");
                     }
                 }
             }
@@ -1680,7 +1633,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private bool AssignEmotePowers(in PowerIndexProperties indexProps)
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "AssignEmotePowers(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             PlayerPrototype playerPrototype = player.Prototype as PlayerPrototype;
 
@@ -1691,8 +1644,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (GetPower(emoteProtoRef) != null)
                     continue;
 
-                if (AssignPower(emoteProtoRef, indexProps) == null)
-                    Logger.Warn($"AssignEmotePowers(): Failed to assign starting emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+                Power emotePower = AssignPower(emoteProtoRef, indexProps);
+                Verify.IsNotNull(emotePower, $"Failed to assign starting emote {emoteProtoRef.GetName()} to {this}");
             }
 
             // Unlockable emotes
@@ -1702,8 +1655,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (GetPower(emoteProtoRef) != null)
                     continue;
 
-                if (AssignPower(emoteProtoRef, indexProps) == null)
-                    Logger.Warn($"AssignEmotePowers(): Failed to assign unlockable emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+                Power emotePower = AssignPower(emoteProtoRef, indexProps);
+                Verify.IsNotNull(emotePower, $"Failed to assign unlockable emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
             }
 
             return true;
@@ -1747,8 +1700,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 PowerActivationSettings settings = new(Id, Vector3.Zero, RegionLocation.Position);
                 settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
 
-                if (ActivatePower(powerProtoRef, ref settings) != PowerUseResult.Success)
-                    Logger.Warn($"AssignRegionPowers(): Failed to activate power {powerProtoRef.GetName()} in region [{region}]");
+                PowerUseResult result = ActivatePower(powerProtoRef, ref settings);
+                Verify.IsTrue(result == PowerUseResult.Success, $"Failed to activate power {powerProtoRef.GetName()} in region [{region}]");
             }
 
             // Assign metagame bodyslide overrides (e.g. for PvP)
@@ -1773,7 +1726,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             // We need to reconnect existing conditions to the newly reassigned powers.
 
             ConditionCollection conditionCollection = ConditionCollection;
-            if (conditionCollection == null) return Logger.WarnReturn(false, "RestoreSelfAppliedPowerConditions(): conditionCollection == null");
+            if (!Verify.IsNotNull(conditionCollection)) return false;
 
             using var conditionCleanupListHandle = ListPool<ulong>.Instance.Get(out List<ulong> conditionCleanupList);
 
@@ -1800,11 +1753,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         protected override bool CanThrow(WorldEntity throwableEntity)
         {
-            if (throwableEntity == null) return Logger.WarnReturn(false, "CanThrow(): throwableEntity == null");
+            if (!Verify.IsNotNull(throwableEntity)) return false;
 
             PrototypeId throwablePowerProtoRef = throwableEntity.Properties[PropertyEnum.ThrowablePower];
             PowerPrototype throwablePowerProto = throwablePowerProtoRef.As<PowerPrototype>();
-            if (throwablePowerProto == null) return Logger.WarnReturn(false, "CanThrow(): throwableEntity == null");
+            if (!Verify.IsNotNull(throwablePowerProto)) return false;
 
             bool success = true;
 
@@ -1850,7 +1803,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (power.IsInRange(settings.TargetPosition, RangeCheckType.Activation) == false)
             {
                 PowerPrototype powerProto = power.Prototype;
-                if (powerProto == null) return Logger.WarnReturn(false, "FixupPendingActivateSettings(): powerProto == null");
+                if (!Verify.IsNotNull(powerProto)) return false;
 
                 if (powerProto.WhenOutOfRange == WhenOutOfRangeType.ActivateInDirection ||
                     (powerProto.WhenOutOfRange == WhenOutOfRangeType.MoveIfTargetingMOB && settings.TargetEntityId == InvalidId))
@@ -1908,7 +1861,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private bool SendActivatePowerFailedMessage(PrototypeId powerProtoRef, PowerUseResult result)
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "SendActivatePowerFailedMessage(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
             {
@@ -1937,7 +1890,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return false;
 
             Power statsPower = GetPower(AvatarPrototype.StatsPower);
-            if (statsPower == null) return Logger.WarnReturn(false, "RefreshStatsPower(): statsPower == null");
+            if (!Verify.IsNotNull(statsPower)) return false;
 
             // Reactivate the stats power to force it to recalculate the condition it applies
             statsPower.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Force);
@@ -1956,8 +1909,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         public InteractionValidateResult CanUpgradeUltimate()
         {
             PrototypeId ultimateRef = UltimatePowerRef;
-            if (ultimateRef == PrototypeId.Invalid) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "CanUpgradeUltimate(): ultimateRef == ultimateRef == PrototypeId.Invalid");
-
+            if (!Verify.IsTrue(ultimateRef != PrototypeId.Invalid)) return InteractionValidateResult.UnknownFailure;
+            
             GetPowerProgressionInfo(ultimateRef, out PowerProgressionInfo powerInfo);
             int powerSpec = GetPowerSpecIndexActive();
 
@@ -1995,7 +1948,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 // Transform powers
                 AvatarPrototype avatarProto = AvatarPrototype;
-                if (avatarProto == null) return Logger.WarnReturn(0, "ComputePowerRankBase(): avatarProto == null");
+                if (!Verify.IsNotNull(avatarProto)) return 0;
 
                 TransformModePrototype transformModeProto = avatarProto.FindTransformModeThatAssignsPower(powerInfo.PowerRef);
                 if (transformModeProto != null && transformModeProto.UseRankOfPower != PrototypeId.Invalid)
@@ -2009,7 +1962,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         protected override bool UpdatePowerRank(ref PowerProgressionInfo powerInfo, bool forceUnassign)
         {
             PowerPrototype powerProto = powerInfo.PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
 
             if (powerProto.Activation == PowerActivationType.Passive && IsPowerAllowedInCurrentTransformMode(powerInfo.PowerRef) == false)
                 return false;
@@ -2021,9 +1974,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             PrototypeId mappedPowerRef = powerInfo.MappedPowerRef;
             if (mappedPowerRef != PrototypeId.Invalid)
             {
-                // Check for recursion
-                if (mappedPowerRef == powerInfo.PowerRef)
-                    return Logger.WarnReturn(false, $"UpdatePowerRank(): Recursion detected for mapped power {mappedPowerRef.GetName()}");
+                if (!Verify.IsTrue(mappedPowerRef != powerInfo.PowerRef, $"Recursion detected for mapped power {mappedPowerRef.GetName()}"))
+                    return false;
 
                 PowerProgressionInfo mappedPowerInfo = new();
                 mappedPowerInfo.InitNonProgressionPower(mappedPowerRef);
@@ -2032,7 +1984,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Fire scoring events
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "UpdatePowerRank(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             int powerRank = GetPowerRank(powerProto.DataRef);
 
@@ -2070,12 +2022,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             powerInfo = new();
 
-            if (powerProtoRef == PrototypeId.Invalid)
-                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(powerProtoRef != PrototypeId.Invalid)) return false;
 
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null)
-                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return false;
 
             PrototypeId progressionInfoPower = powerProtoRef;
             PrototypeId mappedPowerRef;
@@ -2100,7 +2050,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (powerProgressionEntry != null)
             {
                 PrototypeId powerTabRef = powerOwnerTable.GetPowerProgressionTab(avatarProto.DataRef, progressionInfoPower);
-                if (powerTabRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerTabRef == PrototypeId.Invalid");
+                if (!Verify.IsTrue(powerTabRef != PrototypeId.Invalid)) return false;
 
                 powerInfo.InitForAvatar(powerProgressionEntry, mappedPowerRef, powerTabRef);
                 return powerInfo.IsValid;
@@ -2123,7 +2073,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override bool GetPowerProgressionInfos(List<PowerProgressionInfo> powerInfoList)
         {
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(false, "GetPowerProgressionInfos(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return false;
 
             if (avatarProto.PowerProgressionTables.HasValue())
             {
@@ -2135,11 +2085,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgTableProto.PowerProgressionEntries)
                     {
                         AbilityAssignmentPrototype abilityAssignmentProto = powerProgEntry.PowerAssignment;
-                        if (abilityAssignmentProto == null)
-                        {
-                            Logger.Warn("GetPowerProgressionInfos(): abilityAssignmentProto == null");
+                        if (!Verify.IsNotNull(abilityAssignmentProto))
                             continue;
-                        }
 
                         PrototypeId mappedPowerRef = GetMappedPowerFromOriginalPower(abilityAssignmentProto.Ability);
 
@@ -2168,7 +2115,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool SetActivePowerSpec(int newSpecIndex)
         {
-            if (newSpecIndex < 0) return Logger.WarnReturn(false, "SetActivePowerSpec(): specIndex < 0");
+            if (!Verify.IsTrue(newSpecIndex >= 0)) return false;
 
             int currentSpecIndex = GetPowerSpecIndexActive();
             if (newSpecIndex == currentSpecIndex)
@@ -2263,10 +2210,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool EnableTalentPower(PrototypeId talentPowerRef, int specIndex, bool enable)
         {
-            if (talentPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "EnableTalentPower(): talentPowerRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(talentPowerRef != PrototypeId.Invalid)) return false;
 
             SpecializationPowerPrototype talentProto = talentPowerRef.As<SpecializationPowerPrototype>();
-            if (talentProto == null) return Logger.WarnReturn(false, "EnableTalentPower(): talentProto == null");
+            if (!Verify.IsNotNull(talentProto)) return false;
 
             if (enable)
             {
@@ -2276,7 +2223,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     PowerOwnerTable powerOwnerTable = GameDataTables.Instance.PowerOwnerTable;
 
                     uint talentGroupIndex = powerOwnerTable.GetTalentGroupIndex(PrototypeDataRef, talentPowerRef);
-                    if (talentGroupIndex == TalentGroupIndexInvalid) return Logger.WarnReturn(false, "EnableTalentPower(): talentGroupIndex == TalentGroupIndexInvalid");
+                    if (!Verify.IsTrue(talentGroupIndex != TalentGroupIndexInvalid)) return false;
 
                     using var talentPowerListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> talentPowerList);
                     GetTalentPowersForSpec(specIndex, talentPowerList);
@@ -2312,7 +2259,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return CanToggleTalentResult.InCombat;
 
             int specIndexUnlocked = GetPowerSpecIndexUnlocked();
-            if (specIndex > specIndexUnlocked) return Logger.WarnReturn(CanToggleTalentResult.GenericError, "CanToggleTalentPower(): specIndex < specIndexUnlocked");
+            if (!Verify.IsTrue(specIndexUnlocked >= specIndex)) return CanToggleTalentResult.GenericError;
 
             GetPowerProgressionInfo(talentPowerRef, out PowerProgressionInfo talentPowerInfo);
 
@@ -2320,10 +2267,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return CanToggleTalentResult.LevelRequirement;
 
             uint talentGroupIndex = GameDataTables.Instance.PowerOwnerTable.GetTalentGroupIndex(PrototypeDataRef, talentPowerRef);
-            if (talentGroupIndex == TalentGroupIndexInvalid)
-                return Logger.WarnReturn(CanToggleTalentResult.GenericError, $"CanToggleTalentPower(): Talent missing its talent group index for some reason!\nTalent: {talentPowerProto}\nOwner: [{this}]\nenteringWorld: {enteringWorld}");
+            if (!Verify.IsTrue(talentGroupIndex != TalentGroupIndexInvalid, $"Talent missing its talent group index for some reason!\nTalent: {talentPowerProto}\nOwner: [{this}]\nenteringWorld: {enteringWorld}"))
+                return CanToggleTalentResult.GenericError;
 
-            // Skip evla check if this avatar is entering the world
+            // Skip eval check if this avatar is entering the world
             if (enable && enteringWorld == false && talentPowerProto.EvalCanEnable.HasValue())
             {
                 foreach (EvalPrototype evalProto in talentPowerProto.EvalCanEnable)
@@ -2343,10 +2290,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private bool AssignTalentPower(PrototypeId talentPowerRef, int specIndex)
         {
-            if (talentPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "AssignTalentPower(): talentPowerRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(talentPowerRef != PrototypeId.Invalid)) return false;
 
             SpecializationPowerPrototype talentPowerProto = talentPowerRef.As<SpecializationPowerPrototype>();
-            if (talentPowerProto == null) return Logger.WarnReturn(false, "AssignTalentPower(): talentPowerProto == null");
+            if (!Verify.IsNotNull(talentPowerProto)) return false;
 
             if (IsInWorld && specIndex == GetPowerSpecIndexActive())
             {
@@ -2354,7 +2301,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // Talent powers always have a rank of 1
                 PowerIndexProperties indexProps = new(1, CharacterLevel, CombatLevel);
                 Power talentPower = AssignPower(talentPowerRef, indexProps);
-                if (talentPower == null) return Logger.WarnReturn(false, "AssignTalentPower(): talentPower == null");
+                if (!Verify.IsNotNull(talentPower)) return false;
 
                 talentPower.HandleTriggerPowerEventOnSpecializationPowerAssigned();
                 RefreshDependentPassivePowers(talentPowerProto, 1);
@@ -2366,17 +2313,17 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private bool UnassignTalentPower(PrototypeId talentPowerRef, int specIndex, bool isSwitchingSpec = false)
         {
-            if (talentPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "UnassignTalentPower(): talentPowerRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(talentPowerRef != PrototypeId.Invalid)) return false;
 
             Power talentPower = GetPower(talentPowerRef);
             if (talentPower != null && IsInWorld && specIndex == GetPowerSpecIndexActive())
             {
                 // Unassign the talent power if the spec is currently active
                 PowerPrototype talentPowerProto = talentPower.Prototype;
-                if (talentPowerProto == null) return Logger.WarnReturn(false, "UnassignTalentPower(): talentPowerProto == null");
+                if (!Verify.IsNotNull(talentPowerProto)) return false;
 
-                if (UnassignPower(talentPowerRef) == false)
-                    return Logger.WarnReturn(false, $"UnassignTalentPower(): Failed to unassign talent power {talentPowerProto} for owner [{this}]");
+                if (!Verify.IsTrue(UnassignPower(talentPowerRef), $"Failed to unassign talent power {talentPowerProto} for owner [{this}]"))
+                    return false;
 
                 talentPower.HandleTriggerPowerEventOnSpecializationPowerUnassigned();
                 RefreshDependentPassivePowers(talentPowerProto, 0);                
@@ -2443,10 +2390,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower, originalPowerRef))
             {
                 PrototypeId mappedPowerRef = kvp.Value;
-
-                if (mappedPowerRef == PrototypeId.Invalid)
-                    Logger.Warn("GetMappedPowerFromOriginalPower(): mappedPowerRefTemp == PrototypeId.Invalid");
-
+                Verify.IsTrue(mappedPowerRef != PrototypeId.Invalid);
                 return mappedPowerRef;
             }
 
@@ -2455,11 +2399,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool MapPower(PrototypeId originalPowerRef, PrototypeId mappedPowerRef)
         {
-            if (originalPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "MapPower(): originalPowerRef == PrototypeId.Invalid");
-            if (mappedPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "MapPower(): mappedPowerRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(originalPowerRef != PrototypeId.Invalid)) return false;
+            if (!Verify.IsTrue(mappedPowerRef != PrototypeId.Invalid)) return false;
 
             PowerPrototype mappedPowerProto = mappedPowerRef.As<PowerPrototype>();
-            if (mappedPowerProto == null) return Logger.WarnReturn(false, "MapPower(): mappedPowerProto == null");
+            if (!Verify.IsNotNull(mappedPowerProto)) return false;
 
             // Map
             Properties[PropertyEnum.AvatarMappedPower, originalPowerRef] = mappedPowerRef;
@@ -2492,8 +2436,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                     foreach (AbilitySlot slot in slotList)
                     {
-                        if (SlotAbility(mappedPowerRef, slot, true, true) == false)
-                            Logger.Warn($"MapPower(): Failed to slot mapped power {mappedPowerProto} in slot {slot} for avatar [{this}]");
+                        bool slotted = SlotAbility(mappedPowerRef, slot, true, true);
+                        Verify.IsTrue(slotted, $"Failed to slot mapped power {mappedPowerProto} in slot {slot} for avatar [{this}]");
                     }
 
                     slotList.Clear();
@@ -2505,7 +2449,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool UnassignMappedPower(PrototypeId mappedPowerRef)
         {
-            if (mappedPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "UnassignMappedPower(): mappedPowerRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(mappedPowerRef != PrototypeId.Invalid)) return false;
 
             // Early return if this power is not mapped (valid result)
             PrototypeId originalPowerRef = GetOriginalPowerFromMappedPower(mappedPowerRef);
@@ -2513,7 +2457,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return true;
 
             PowerPrototype originalPowerProto = originalPowerRef.As<PowerPrototype>();
-            if (originalPowerProto == null) return Logger.WarnReturn(false, "UnassignMappedPower(): originalPowerProto == null");
+            if (!Verify.IsNotNull(originalPowerProto)) return false;
 
             // Restore the original power in key mappings
             using var slotListHandle = ListPool<AbilitySlot>.Instance.Get(out List<AbilitySlot> slotList);
@@ -2530,8 +2474,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 foreach (AbilitySlot slot in slotList)
                 {
-                    if (SlotAbility(originalPowerRef, slot, true, true) == false)
-                        Logger.Warn($"UnassignMappedPower(): Failed to slot original power {originalPowerProto} in slot {slot} for avatar [{this}]");
+                    bool slotted = SlotAbility(originalPowerRef, slot, true, true);
+                    Verify.IsTrue(slotted, $"Failed to slot original power {originalPowerProto} in slot {slot} for avatar [{this}]");
                 }
 
                 slotList.Clear();
@@ -2565,16 +2509,16 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool IsStolenPowerAvailable(PrototypeId stolenPowerRef)
         {
-            if (stolenPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "IsStolenPowerAvailable(): stolenPowerRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(stolenPowerRef != PrototypeId.Invalid)) return false;
             return Properties[PropertyEnum.StolenPowerAvailable, stolenPowerRef];
         }
 
         public bool CanAssignStolenPower(PrototypeId stolenPowerRefToAssign, PrototypeId currentStolenPowerRef)
         {
-            if (stolenPowerRefToAssign == PrototypeId.Invalid) return Logger.WarnReturn(false, "CanAssignStolenPower(): stolenPowerRefToAssign == PrototypeId.Invalid");
+            if (!Verify.IsTrue(stolenPowerRefToAssign != PrototypeId.Invalid)) return false;
 
             PowerPrototype stolenPowerProto = stolenPowerRefToAssign.As<PowerPrototype>();
-            if (stolenPowerProto == null) return Logger.WarnReturn(false, "CanAssignStolenPower(): stolenPowerProto == null");
+            if (!Verify.IsNotNull(stolenPowerProto)) return false;
 
             GlobalsPrototype globals = GameDatabase.GlobalsPrototype;
             if (globals.StolenPowerRestrictions.IsNullOrEmpty())
@@ -2583,11 +2527,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             foreach (PrototypeId restrictionProtoRef in globals.StolenPowerRestrictions)
             {
                 StolenPowerRestrictionPrototype restrictionProto = restrictionProtoRef.As<StolenPowerRestrictionPrototype>();
-                if (restrictionProto == null)
-                {
-                    Logger.Warn("CanAssignStolenPower(): restrictionProto == null");
+                if (!Verify.IsNotNull(restrictionProto))
                     continue;
-                }
 
                 KeywordPrototype keywordProto = restrictionProto.RestrictionKeywordPrototype;
 
@@ -2602,11 +2543,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
                 {
                     PowerPrototype mappedPowerProto = GameDatabase.GetPrototype<PowerPrototype>(kvp.Value);
-                    if (mappedPowerProto == null)
-                    {
-                        Logger.Warn("CanAssignStolenPower(): mappedPowerProto == null");
+                    if (!Verify.IsNotNull(mappedPowerProto))
                         continue;
-                    }
 
                     if (mappedPowerProto.DataRef == currentStolenPowerRef)
                         continue;
@@ -2629,10 +2567,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 // Notify the player about this
                 Player player = GetOwnerOfType<Player>();
-                if (player == null) return Logger.WarnReturn(false, "CanAssignStolenPower(): player == null");
+                if (!Verify.IsNotNull(player)) return false;
 
                 BannerMessagePrototype bannerMessageProto = restrictionProto.RestrictionBannerMessage.As<BannerMessagePrototype>();
-                if (bannerMessageProto == null) return Logger.WarnReturn(false, "CanAssignStolenPower(): bannerMessageProto == null");
+                if (!Verify.IsNotNull(bannerMessageProto)) return false;
 
                 player.SendBannerMessage(bannerMessageProto);
 
@@ -2645,7 +2583,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool CanStealPowers()
         {
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(false, "CanStealPowers(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return false;
 
             return avatarProto.StealablePowersAllowed.HasValue();
         }
@@ -2674,7 +2612,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public PrototypeId GetTravelPowerRef()
         {
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "GetTravelPowerRef(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return PrototypeId.Invalid;
 
             if (_travelPowerOverrideProtoRef != PrototypeId.Invalid)
                 return _travelPowerOverrideProtoRef;
@@ -2727,7 +2665,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 // Schedule transform mode exit
                 PowerPrototype exitPowerProto = oldTransformModeProto.ExitTransformModePower.As<PowerPrototype>();
-                if (exitPowerProto == null) return Logger.WarnReturn(false, "ScheduleTransformModeChange(): exitPowerProto == null");
+                if (!Verify.IsNotNull(exitPowerProto)) return false;
 
                 if (_transformModeExitPowerEvent.IsValid)
                 {
@@ -2762,7 +2700,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool IsPowerAllowedInCurrentTransformMode(PrototypeId powerProtoRef)
         {
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(false, "IsPowerAllowedInCurrentTransformMode(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return false;
 
             return IsPowerAllowedInTransformMode(avatarProto, CurrentTransformMode, powerProtoRef);
         }
@@ -2770,7 +2708,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public static bool IsPowerAllowedInTransformMode(AvatarPrototype avatarProto, PrototypeId transformModeRef, PrototypeId powerProtoRef)
         {
             PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-            if (powerProto == null) return Logger.WarnReturn(false, "IsPowerAllowedInTransformMode(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
 
             if (Power.IsComboEffect(powerProto))
                 return true;
@@ -2799,11 +2737,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private bool OnTransformModeChange(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef, bool enterWorld, TimeSpan remainingDuration = default)
         {
-            if (oldTransformModeRef == PrototypeId.Invalid && newTransformModeRef == PrototypeId.Invalid)
-                return Logger.WarnReturn(false, "OnTransformModeChange(): No transform mode specified!");
+            if (!Verify.IsTrue(oldTransformModeRef != PrototypeId.Invalid || newTransformModeRef != PrototypeId.Invalid, "No transform mode specified!"))
+                return false;
 
-            if (oldTransformModeRef != PrototypeId.Invalid && newTransformModeRef != PrototypeId.Invalid)
-                return Logger.WarnReturn(false, $"OnTransformModeChange(): Cannot go directly from one transform mode to another! oldTransformMode=[{oldTransformModeRef.GetName()}] newTransformMode=[{newTransformModeRef.GetName()}]");
+            if (!Verify.IsTrue(oldTransformModeRef == PrototypeId.Invalid || newTransformModeRef == PrototypeId.Invalid,
+                $"Cannot go directly from one transform mode to another! oldTransformMode=[{oldTransformModeRef.GetName()}] newTransformMode=[{newTransformModeRef.GetName()}]"))
+                return false;
 
             if (newTransformModeRef == PrototypeId.Invalid)
             {
@@ -2814,7 +2753,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             else
             {
                 TransformModePrototype newTransformModeProto = newTransformModeRef.As<TransformModePrototype>();
-                if (newTransformModeProto == null) return Logger.WarnReturn(false, "OnTransformModeChange(): newTransformModeProto == null");
+                if (!Verify.IsNotNull(newTransformModeProto)) return false;
 
                 TimeSpan duration = remainingDuration > TimeSpan.Zero
                     ? remainingDuration
@@ -2854,7 +2793,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return true;
 
             TransformModePrototype currentTransformModeProto = CurrentTransformMode.As<TransformModePrototype>();
-            if (currentTransformModeProto == null) return Logger.WarnReturn(false, "OnEnteredWorldSetTransformMode(): currentTransformModeProto == null");
+            if (!Verify.IsNotNull(currentTransformModeProto)) return false;
 
             TimeSpan transformModeDuration = currentTransformModeProto.GetDuration(this);
 
@@ -2888,12 +2827,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private bool DoTransformModeExitPowerCallback(PrototypeId fromTransformModeProtoRef)
         {
-            if (fromTransformModeProtoRef != CurrentTransformMode) return Logger.WarnReturn(false, "DoTransformModeExitPowerCallback(): fromTransformModeProtoRef != CurrentTransformMode");
-            if (IsInWorld == false) return Logger.WarnReturn(false, "DoTransformModeExitPowerCallback(): IsInWorld == false");
+            if (!Verify.IsTrue(fromTransformModeProtoRef == CurrentTransformMode)) return false;
+            if (!Verify.IsTrue(IsInWorld)) return false;
 
             TransformModePrototype currentTransformModeProto = CurrentTransformMode.As<TransformModePrototype>();
-            if (currentTransformModeProto == null) return Logger.WarnReturn(false, "DoTransformModeExitPowerCallback(): currentTransformModeProto == null");
-            if (currentTransformModeProto.ExitTransformModePower == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoTransformModeExitPowerCallback(): currentTransformModeProto.ExitTransformModePower == PrototypeId.Invalid");
+            if (!Verify.IsNotNull(currentTransformModeProto)) return false;
+            if (!Verify.IsTrue(currentTransformModeProto.ExitTransformModePower != PrototypeId.Invalid)) return false;
 
             // Abort active powers
             ClearContinuousPower();
@@ -2907,7 +2846,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             settings.FXRandomSeed = Game.Random.Next(1, 10000);
 
             Power exitTransformModePower = GetPower(currentTransformModeProto.ExitTransformModePower);
-            if (exitTransformModePower != null)
+            if (Verify.IsNotNull(exitTransformModePower))
             {
                 TimeSpan delay = exitTransformModePower.GetFullExecutionTime() + TimeSpan.FromMilliseconds(1);
                 if (_transformModeChangeEvent.IsValid)
@@ -2920,15 +2859,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                     ScheduleEntityEvent(_transformModeChangeEvent, delay, PrototypeId.Invalid, fromTransformModeProtoRef);
                 }
             }
-            else
-            {
-                Logger.Warn("DoTransformModeExitPowerCallback(): exitTransformModePower == null");
-            }
 
             // Activate exit power
             PowerUseResult result = ActivatePower(currentTransformModeProto.ExitTransformModePower, ref settings);
-            if (result != PowerUseResult.Success)
-                return Logger.WarnReturn(false, $"DoTransformModeExitPowerCallback(): Failed to activate transform mode exit power for Avatar: [{this}]\nTransform mode: {currentTransformModeProto}");
+            Verify.IsTrue(result == PowerUseResult.Success, $"Failed to activate transform mode exit power for Avatar: [{this}]\nTransform mode: {currentTransformModeProto}");
 
             return true;
         }
@@ -2938,7 +2872,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             TransformModePrototype newTransformModeProto = newTransformModeRef.As<TransformModePrototype>();
             TransformModePrototype oldTransformModeProto = oldTransformModeRef.As<TransformModePrototype>();
 
-            if (oldTransformModeProto == null && newTransformModeProto == null) return Logger.WarnReturn(false, "UpdateTransformModeAbilityKeyMapping(): oldTransformModeProto == null && newTransformModeProto == null");
+            if (!Verify.IsTrue(oldTransformModeProto != null || newTransformModeProto != null)) return false;
 
             if (oldTransformModeProto?.PowersAreSlottable == false || newTransformModeProto?.PowersAreSlottable == false)
                 RefreshAbilityKeyMapping(false);    // Swap to and from non-slottable transform mapping
@@ -2953,7 +2887,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private bool UpdateTransformModeDefaultEquippedAbilities(PrototypeId transformModeRef, bool isEntering)
         {
             TransformModePrototype transformModeProto = transformModeRef.As<TransformModePrototype>();
-            if (transformModeProto == null) return Logger.WarnReturn(false, "UpdateTransformModeDefaultEquippedAbilities(): transformModeProto == null");
+            if (!Verify.IsNotNull(transformModeProto)) return false;
 
             // Nothing to update
             if (transformModeProto.DefaultEquippedAbilities.IsNullOrEmpty())
@@ -2999,7 +2933,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private bool UpdateTransformModeAllowedPowers(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef)
         {
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(false, "UpdateTransformModeAllowedPowers(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return false;
 
             // Look for powers that are not allowed in the new transform mode
             using var powerRemoveListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> powerRemoveList);
@@ -3008,11 +2942,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             foreach (var kvp in PowerCollection)
             {
                 Power power = kvp.Value.Power;
-                if (power == null)
-                {
-                    Logger.Warn("UpdateTransformModeAllowedPowers(): power == null");
+                if (!Verify.IsNotNull(power))
                     continue;
-                }
 
                 PrototypeId powerProtoRef = power.PrototypeDataRef;
 
@@ -3057,7 +2988,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Assign newly allowed powers
             PrototypeId[] allowedPowers = avatarProto.GetAllowedPowersForTransformMode(newTransformModeRef);
-            if (allowedPowers.IsNullOrEmpty()) return Logger.WarnReturn(false, "UpdateTransformModeAllowedPowers(): allowedPowers.IsNullOrEmpty()");
+            if (!Verify.IsTrue(allowedPowers.HasValue())) return false;
 
             int characterLevel = CharacterLevel;
             int combatLevel = CombatLevel;
@@ -3065,11 +2996,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             foreach (PrototypeId allowedPowerRef in allowedPowers)
             {
                 PowerPrototype powerProto = allowedPowerRef.As<PowerPrototype>();
-                if (powerProto == null)
-                {
-                    Logger.Warn("UpdateTransformModeAllowedPowers(): powerProto == null");
+                if (!Verify.IsNotNull(powerProto))
                     continue;
-                }
 
                 if (powerProto.PowerCategory != PowerCategoryType.NormalPower)
                     continue;
@@ -3115,8 +3043,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         public AbilitySlot GetPowerSlot(PrototypeId powerProtoRef)
         {
             AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
-            if (keyMapping == null)
-                return Logger.WarnReturn(AbilitySlot.Invalid, $"GetPowerSlot(): No current keyMapping when calling GetPowerSlot [{powerProtoRef.GetName()}]");
+            if (!Verify.IsNotNull(keyMapping, $"No current keyMapping when calling GetPowerSlot [{powerProtoRef.GetName()}]"))
+                return AbilitySlot.Invalid;
 
             using var abilitySlotListHandle = ListPool<AbilitySlot>.Instance.Get(out List<AbilitySlot> abilitySlotList);
             keyMapping.GetActiveAbilitySlotsContainingProtoRef(powerProtoRef, abilitySlotList);
@@ -3149,8 +3077,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool HasPowerEquipped(PrototypeId powerProtoRef)
         {
             AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
-            if (keyMapping == null)
-                return Logger.WarnReturn(false, "HasPowerEquipped():");
+            if (!Verify.IsNotNull(keyMapping, $"No current keyMapping when checking HasPowerEquipped [{powerProtoRef.GetName()}]"))
+                return false;
 
             return keyMapping.ContainsAbilityInActiveSlot(powerProtoRef);
         }
@@ -3176,7 +3104,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return false;
 
             AbilityKeyMapping keyMapping = GetAbilityKeyMappingIgnoreTransient(GetPowerSpecIndexActive());
-            if (keyMapping == null) return Logger.WarnReturn(false, "SlotAbility(): keyMapping == null");
+            if (!Verify.IsNotNull(keyMapping)) return false;
 
             bool wasEquipped = HasPowerEquipped(abilityProtoRef);
 
@@ -3184,8 +3112,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             PrototypeId slottedAbilityProtoRef = keyMapping.GetAbilityInAbilitySlot(slot);
             if (slottedAbilityProtoRef != PrototypeId.Invalid && slottedAbilityProtoRef != abilityProtoRef)
             {
-                if (UnslotAbility(slot, false) == false)
-                    Logger.Warn($"SlotAbility(): Failed to unslot ability {abilityProtoRef.GetName()} in slot {slot}");
+                if (!Verify.IsTrue(UnslotAbility(slot, false), $"Failed to unslot ability {abilityProtoRef.GetName()} in slot {slot}"))
+                    return false;
             }
 
             // Set
@@ -3202,7 +3130,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (sendToClient)
             {
                 Player player = GetOwnerOfType<Player>();
-                if (player == null) return Logger.WarnReturn(false, "SlotAbility(): player == null");
+                if (!Verify.IsNotNull(player)) return false;
 
                 if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
                 {
@@ -3219,13 +3147,13 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool UnslotAbility(AbilitySlot slot, bool sendToClient)
         {
-            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(false, "UnslotAbility(): AbilityKeyMapping.IsActiveAbilitySlot(slot) == false");
+            if (!Verify.IsTrue(IsActiveAbilitySlot(slot))) return false;
 
             AbilityKeyMapping keyMapping = GetAbilityKeyMappingIgnoreTransient(GetPowerSpecIndexActive());
-            if (keyMapping == null) return Logger.WarnReturn(false, "UnslotAbility(): keyMapping == null");
+            if (!Verify.IsNotNull(keyMapping)) return false;
 
             PrototypeId abilityProtoRef = keyMapping.GetAbilityInAbilitySlot(slot);
-            if (abilityProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "UnslotAbility(): abilityProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(abilityProtoRef != PrototypeId.Invalid)) return false;
 
             // Remove by assigning invalid id
             keyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slot);
@@ -3241,7 +3169,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (sendToClient)
             {
                 Player player = GetOwnerOfType<Player>();
-                if (player == null) return Logger.WarnReturn(false, "UnslotAbility(): player == null");
+                if (!Verify.IsNotNull(player)) return false;
 
                 if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
                 {
@@ -3262,7 +3190,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return false;
 
             AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
-            if (keyMapping == null) return Logger.WarnReturn(false, "SwapAbilities(): keyMapping == null");
+            if (!Verify.IsNotNull(keyMapping)) return false;
 
             // Check B to A - this is allowed to be invalid, in which case we just discard B
             if (ValidateAbilitySwap(slotB, slotA) != AbilitySlotOpValidateResult.Valid)
@@ -3278,7 +3206,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (sendToClient)
             {
                 Player player = GetOwnerOfType<Player>();
-                if (player == null) return Logger.WarnReturn(false, "SwapAbilities(): player == null");
+                if (!Verify.IsNotNull(player)) return false;
 
                 if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
                 {
@@ -3298,7 +3226,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             // NOTE: The server has nothing to send to client here, but we are keeping the bool arg for now to keep the API the same as the client
 
             _currentAbilityKeyMapping = GetOrCreateAbilityKeyMapping(GetPowerSpecIndexActive(), CurrentTransformMode);
-            if (_currentAbilityKeyMapping == null) return Logger.WarnReturn(false, "RefreshAbilityKeyMapping(): _currentAbilityKeyMapping == null");
+            if (!Verify.IsNotNull(_currentAbilityKeyMapping)) return false;
 
             _currentAbilityKeyMapping.InitDedicatedAbilitySlots(this);
 
@@ -3335,7 +3263,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private bool CleanUpAbilityKeyMappingsAfterRespec()
         {
-            if (IsInWorld == false) return Logger.WarnReturn(false, "CleanUpAbilityKeyMappingsAfterRespec(): IsInWorld == false");
+            if (!Verify.IsTrue(IsInWorld)) return false;
 
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowersRespecResult))
             {
@@ -3386,7 +3314,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             AbilityKeyMapping keyMapping = null;
 
-            if (powerSpecIndex < 0 || powerSpecIndex > GetPowerSpecIndexUnlocked()) return Logger.WarnReturn(keyMapping, "GetOrCreateAbilityKeyMapping(): powerSpecIndex < 0 || powerSpecIndex > GetPowerSpecIndexUnlocked()");
+            if (!Verify.IsTrue(powerSpecIndex >= 0 && powerSpecIndex <= GetPowerSpecIndexUnlocked())) return null;
 
             TransformModePrototype transformModeProto = transformModeProtoRef.As<TransformModePrototype>();
             if (transformModeProto != null && transformModeProto.PowersAreSlottable == false)
@@ -3410,8 +3338,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 if (keyMapping == null)
                 {
-                    if (_transientAbilityKeyMappings.Count >= MaxNumTransientAbilityKeyMappings)
-                        return Logger.WarnReturn(keyMapping, "GetOrCreateAbilityKeyMapping(): _transientAbilityKeyMappings.Count >= MaxNumTransientAbilityKeyMappings");
+                    if (!Verify.IsTrue(_transientAbilityKeyMappings.Count < MaxNumTransientAbilityKeyMappings)) return null;
 
                     keyMapping = new();
                     _transientAbilityKeyMappings.Add(keyMapping);
@@ -3462,11 +3389,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private AbilitySlotOpValidateResult IsAbilityEquippableInSlot(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation)
         {
-            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsAbilityEquippableInSlot(): IsActiveAbilitySlot(slot) == false");
+            if (!Verify.IsTrue(IsActiveAbilitySlot(slot))) return AbilitySlotOpValidateResult.GenericError;
 
             if (Properties.HasProperty(PropertyEnum.IsInCombat))
             {
-                // Only mapped powers are allowed to be equipp;ed in combat
+                // Only mapped powers are allowed to be equipped in combat
                 if (HasMappedPower(abilityProtoRef) || GetMappedPowerFromOriginalPower(abilityProtoRef) != PrototypeId.Invalid)
                     return AbilitySlotOpValidateResult.Valid;
 
@@ -3477,8 +3404,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             PowerPrototype powerProto = abilityProto as PowerPrototype;
             ItemPrototype itemProto = abilityProto as ItemPrototype;
 
-            if (powerProto == null && itemProto?.AbilitySettings == null)
-                return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsAbilityEquippableInSlot(): powerProto == null && itemProto?.AbilitySettings == null");
+            if (!Verify.IsTrue(powerProto != null || itemProto?.AbilitySettings != null)) return AbilitySlotOpValidateResult.GenericError;
 
             if (powerProto != null)
             {
@@ -3510,10 +3436,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return staticResult;
 
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return AbilitySlotOpValidateResult.GenericError;
 
             PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-            if (powerProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return AbilitySlotOpValidateResult.GenericError;
 
             if (powerProto.PowerCategory == PowerCategoryType.NormalPower)
             {
@@ -3528,14 +3454,14 @@ namespace MHServerEmu.Games.Entities.Avatars
         private static AbilitySlotOpValidateResult IsPowerEquippable(PrototypeId avatarProtoRef, PrototypeId powerProtoRef)
         {
             PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-            if (powerProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return AbilitySlotOpValidateResult.GenericError;
 
             if (powerProto.UsableByAll)
                 return AbilitySlotOpValidateResult.Valid;
 
             // Check avatar-specific restrictions
             AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
-            if (avatarProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return AbilitySlotOpValidateResult.GenericError;
 
             if (avatarProto.HasPowerProgressionTables == false || avatarProto.HasPowerInPowerProgression(powerProtoRef) == false)
                 return AbilitySlotOpValidateResult.PowerNotUsableByAvatar;
@@ -3549,11 +3475,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (slotA == slotB)
                 return AbilitySlotOpValidateResult.SwapSameSlot;
 
-            if (IsActiveAbilitySlot(slotA) == false || IsActiveAbilitySlot(slotB) == false)
-                return Logger.WarnReturn(AbilitySlotOpValidateResult.PowerSlotMismatch, "ValidateAbilitySwap(): IsActiveAbilitySlot(slotA) == false || IsActiveAbilitySlot(slotB) == false");
+            if (!Verify.IsTrue(IsActiveAbilitySlot(slotA) && IsActiveAbilitySlot(slotB))) return AbilitySlotOpValidateResult.PowerSlotMismatch;
 
             AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
-            if (keyMapping == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "ValidateAbilitySwap(): keyMapping == null");
+            if (!Verify.IsNotNull(keyMapping)) return AbilitySlotOpValidateResult.GenericError;
 
             PrototypeId abilityA = keyMapping.GetAbilityInAbilitySlot(slotA);
             if (abilityA != PrototypeId.Invalid && IsAbilityEquippableInSlot(abilityA, slotB, true) != AbilitySlotOpValidateResult.Valid)
@@ -3588,14 +3513,13 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public static AbilitySlotOpValidateResult CheckAbilitySlotRestrictions(PrototypeId abilityProtoRef, AbilitySlot slot)
         {
-            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "CheckAbilitySlotRestrictions(): IsActiveAbilitySlot(slot) == false");
-
+            if (!Verify.IsTrue(IsActiveAbilitySlot(slot))) return AbilitySlotOpValidateResult.GenericError;
+            
             Prototype abilityProto = abilityProtoRef.As<Prototype>();
             PowerPrototype powerProto = abilityProto as PowerPrototype;
             ItemPrototype itemProto = abilityProto as ItemPrototype;
 
-            if (powerProto == null && itemProto?.AbilitySettings == null)
-                return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "CheckAbilitySlotRestrictions(): powerProto == null && itemProto?.AbilitySettings == null");
+            if (!Verify.IsTrue(powerProto != null || itemProto?.AbilitySettings != null)) return AbilitySlotOpValidateResult.GenericError;
 
             if (powerProto != null)
             {
@@ -3615,8 +3539,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public static bool CanActionSlotContainPowerOrItem(PrototypeId abilityProtoRef, AbilitySlot slot)
         {
-            if (abilityProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "CanActionSlotContainPowerOrItem(): abilityProtoRef == PrototypeId.Invalid");
-            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(false, "CanActionSlotContainPowerOrItem(): IsActiveAbilitySlot(slot) == false");
+            if (!Verify.IsTrue(abilityProtoRef != PrototypeId.Invalid)) return false;
+            if (!Verify.IsTrue(IsActiveAbilitySlot(slot))) return false;
 
             // Dedicated slots (medkit, ultimate, etc.) cannot hold arbitrary abilities
             if (IsDedicatedAbilitySlot(slot))
@@ -3712,11 +3636,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 // Set base value
                 Curve manaCurve = GameDatabase.GetCurve(primaryManaBehaviorProto.BaseEndurancePerLevel);
-                if (manaCurve == null)
-                {
-                    Logger.Warn("InitializePrimaryResources(): manaCurve == null");
+                if (!Verify.IsNotNull(manaCurve))
                     continue;
-                }
 
                 Properties[PropertyEnum.EnduranceBase, manaType] = manaCurve.GetAt(CharacterLevel);
 
@@ -3756,8 +3677,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 if (GetPower(powerProtoRef) == null)
                 {
-                    if (AssignPower(powerProtoRef, indexProps) == null)
-                        Logger.Warn($"AssignManaBehaviorPowers(): Failed to assign mana behavior power {powerProtoRef.GetName()} to [{this}]");
+                    Power power = AssignPower(powerProtoRef, indexProps);
+                    Verify.IsNotNull(power, $"Failed to assign mana behavior power {powerProtoRef.GetName()} to [{this}]");
                 }
             }
 
@@ -3773,8 +3694,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 if (GetPower(powerProtoRef) != null)
                 {
-                    if (UnassignPower(powerProtoRef) == false)
-                        Logger.Warn($"UnassignManaBehaviorPowers(): Failed to unassign mana behavior power {powerProtoRef.GetName()} from [{this}]");
+                    bool unassigned = UnassignPower(powerProtoRef);
+                    Verify.IsTrue(unassigned, $"Failed to unassign mana behavior power {powerProtoRef.GetName()} from [{this}]");
                 }
             }
         }
@@ -3782,19 +3703,14 @@ namespace MHServerEmu.Games.Entities.Avatars
         public PrimaryResourceManaBehaviorPrototype[] GetPrimaryResourceManaBehaviors()
         {
             PrimaryResourceManaBehaviorPrototype[] behaviors = AvatarPrototype?.PrimaryResourceBehaviorsCache;
-
-            // Check if there are any primary resource behaviors (there should be!)
-            if (behaviors.IsNullOrEmpty())
-                return Logger.WarnReturn(Array.Empty<PrimaryResourceManaBehaviorPrototype>(), $"GetPrimaryResourceManaBehaviors(): behaviors.IsNullOrEmpty()");
-
+            if (!Verify.IsTrue(behaviors.HasValue())) return Array.Empty<PrimaryResourceManaBehaviorPrototype>();
             return behaviors;
         }
 
         private PrimaryResourceManaBehaviorPrototype GetPrimaryResourceManaBehavior(ManaType manaType)
         {
             PrimaryResourceManaBehaviorPrototype[] behaviors = AvatarPrototype?.PrimaryResourceBehaviorsCache;
-            if (behaviors.IsNullOrEmpty())
-                return Logger.WarnReturn<PrimaryResourceManaBehaviorPrototype>(null, $"GetPrimaryResourceManaBehaviors(): behaviors.IsNullOrEmpty()");
+            if (!Verify.IsTrue(behaviors.HasValue())) return null;
 
             foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in behaviors)
             {
@@ -3827,7 +3743,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             // NOTE: Validation in GetPrimaryResourceManaBehavior() will ensure that we won't get an invalid mana type index here
             PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto = GetPrimaryResourceManaBehavior(manaType);
-            if (primaryManaBehaviorProto == null) return Logger.WarnReturn(false, "EnableEnduranceRegen(): primaryManaBehaviorProto == null");
+            if (!Verify.IsNotNull(primaryManaBehaviorProto)) return false;
 
             // Remove the flag that prevents endurance regen
             Properties.RemoveProperty(new(PropertyEnum.DisableEnduranceRegen, manaType));
@@ -3868,7 +3784,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             // NOTE: Validation in GetPrimaryResourceManaBehavior() will ensure that we won't get an invalid mana type index here
             PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto = GetPrimaryResourceManaBehavior(manaType);
-            if (primaryManaBehaviorProto == null) return Logger.WarnReturn(false, "UpdateEndurance(): primaryManaBehaviorProto == null");
+            if (!Verify.IsNotNull(primaryManaBehaviorProto)) return false;
 
             // Run the regen eval if regen is enabled
             EvalPrototype evalProto = primaryManaBehaviorProto.EvalOnEnduranceUpdate;
@@ -3878,8 +3794,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
 
-                if (Eval.RunBool(evalProto, evalContext) == false)
-                    Logger.Warn($"UpdateEndurance(): The following EvalOnEnduranceUpdate failed:\nEval: [{evalProto.ExpressionString()}]");
+                bool evalSuccess = Eval.RunBool(evalProto, evalContext);
+                Verify.IsTrue(evalSuccess, $"The following EvalOnEnduranceUpdate failed:\nEval: [{evalProto.ExpressionString()}]");
             }
 
             // Initialize or reset the update event pointer for this mana type
@@ -3947,7 +3863,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override long AwardXP(long amount, long minAmount, bool showXPAwardedText)
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(0L, "AwardXP(): player == null");
+            if (!Verify.IsNotNull(player)) return 0;
 
             // No more XP for capped starters
             if (player.HasAvatarAsCappedStarter(this))
@@ -3982,10 +3898,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (legendaryItemId != InvalidId)
                 {
                     Item legendaryItem = Game.EntityManager.GetEntity<Item>(legendaryItemId);
-                    if (legendaryItem != null)
+                    if (Verify.IsNotNull(legendaryItem))
                         legendaryItem.AwardAffixXP(amount);
-                    else
-                        Logger.Warn("AwardXP(): legendaryItem == null");
                 }
             }
 
@@ -4010,7 +3924,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override long GetLevelUpXPRequirement(int level)
         {
             AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
-            if (advancementProto == null) return Logger.WarnReturn(0, "GetLevelUpXPRequirement(): advancementProto == null");
+            if (!Verify.IsNotNull(advancementProto)) return 0;
 
             return advancementProto.GetAvatarLevelUpXPRequirement(level);
         }
@@ -4024,7 +3938,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
 
             Curve pctXPFromPrestigeLevelCurve = advancementProto.PctXPFromPrestigeLevelCurve.AsCurve();
-            if (pctXPFromPrestigeLevelCurve == null) return Logger.WarnReturn(1f, "GetPrestigeXPFactor(): pctXPFromPrestigeLevelCurve == null");
+            if (!Verify.IsNotNull(pctXPFromPrestigeLevelCurve)) return 1f;
 
             if (prestigeLevel == advancementProto.MaxPrestigeLevel)
             {
@@ -4084,11 +3998,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (tuningTable != null)
             {
                 TuningPrototype tuningProto = tuningTable.Prototype;
-                if (tuningProto == null) return Logger.WarnReturn(0L, "ApplyXPModifiers(): tuningProto == null");
+                if (!Verify.IsNotNull(tuningProto)) return 0;
 
                 // Apply difficulty index modifier
                 Curve difficultyIndexCurve = tuningProto.PlayerXPByDifficultyIndexCurve.AsCurve();
-                if (difficultyIndexCurve == null) return Logger.WarnReturn(0L, "ApplyXPModifiers(): difficultyIndexCurve == null");
+                if (!Verify.IsNotNull(difficultyIndexCurve)) return 0;
                 xpMult *= difficultyIndexCurve.GetAt(tuningTable.DifficultyIndex);
 
                 // Apply unconditional tuning table multiplier
@@ -4107,7 +4021,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         protected override bool OnLevelUp(int oldLevel, int newLevel, bool restoreHealthAndEndurance = true)
         {
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(false, "OnLevelUp(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return false;
 
             // Check stat changes (this code also runs to initialize stats in ApplyInitialReplicationState())
             bool statsChanged = false;
@@ -4116,11 +4030,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 foreach (PrototypeId statProgressionEntryProtoRef in avatarProto.StatProgressionTable)
                 {
                     StatProgressionEntryPrototype statProgressionEntryProto = statProgressionEntryProtoRef.As<StatProgressionEntryPrototype>();
-                    if (statProgressionEntryProto == null)
-                    {
-                        Logger.Warn("OnLevelUp(): statProgressionEntryProto == null");
+                    if (!Verify.IsNotNull(statProgressionEntryProto))
                         continue;
-                    }
 
                     if (newLevel < statProgressionEntryProto.Level)
                         continue;
@@ -4162,11 +4073,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 // Update the base value
                 Curve manaCurve = GameDatabase.GetCurve(primaryManaBehaviorProto.BaseEndurancePerLevel);
-                if (manaCurve == null)
-                {
-                    Logger.Warn("OnLevelUp(): manaCurve == null");
+                if (!Verify.IsNotNull(manaCurve))
                     continue;
-                }
 
                 Properties[PropertyEnum.EnduranceBase, manaType] = manaCurve.GetAt(newLevel);
 
@@ -4235,9 +4143,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override bool UseInteractableObject(ulong entityId, PrototypeId missionRef)
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "UseInteractableObject(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
-            var region = Region;
+            Region region = Region;
             if (region == null)
             {
                 // We need to send NetMessageMissionInteractRelease here, or the client UI will get locked
@@ -4251,7 +4159,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return true;
             }
 
-            var interactableObject = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+            WorldEntity interactableObject = Game.EntityManager.GetEntity<WorldEntity>(entityId);
             if (interactableObject == null || CanInteract(player, interactableObject) == false)
             {
                 player.MissionInteractRelease(this, missionRef);
@@ -4260,12 +4168,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             //Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
 
-            var objectProto = interactableObject.WorldEntityPrototype;
+            WorldEntityPrototype objectProto = interactableObject.WorldEntityPrototype;
             if (objectProto.PreInteractPower != PrototypeId.Invalid)
             {
                 ulong targetId = player.Properties[PropertyEnum.InteractReadyForTargetId];
                 player.Properties.RemoveProperty(PropertyEnum.InteractReadyForTargetId);
-                if (targetId != entityId) return Logger.WarnReturn(false, "UseInteractableObject(): targetId != entityId");
+                if (!Verify.IsTrue(targetId == entityId)) return false;
             }
 
             if (interactableObject.IsInWorld == false && interactableObject is Item item)
@@ -4354,15 +4262,12 @@ namespace MHServerEmu.Games.Entities.Avatars
         public InventoryResult GetEquipmentInventoryAvailableStatus(PrototypeId invProtoRef)
         {
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(InventoryResult.UnknownFailure, "GetEquipmentInventoryAvailableStatus(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return InventoryResult.UnknownFailure;
 
             foreach (AvatarEquipInventoryAssignmentPrototype equipInvEntryProto in avatarProto.EquipmentInventories)
             {
-                if (equipInvEntryProto == null)
-                {
-                    Logger.Warn("GetEquipmentInventoryAvailableStatus(): equipInvEntryProto == null");
+                if (!Verify.IsNotNull(equipInvEntryProto))
                     continue;
-                }
 
                 if (equipInvEntryProto.Inventory == invProtoRef)
                 {
@@ -4386,8 +4291,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             resultItem = null;
 
-            if (itemToBeMoved.InventoryLocation != fromInvLoc)
-                return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): itemToBeMoved.InventoryLocation != fromInvLoc");
+            if (!Verify.IsTrue(itemToBeMoved.InventoryLocation == fromInvLoc)) return InventoryResult.Invalid;
             
             // Validate only items that are being moved to avatar inventories (i.e. being equipped)
             Avatar containerAvatar = game.EntityManager.GetEntity<Avatar>(toInvLoc.ContainerId);
@@ -4427,8 +4331,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     break;
             }
 
-            if (otherArtifactInvs[0] == null || otherArtifactInvs[1] == null || otherArtifactInvs[2] == null)
-                return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): otherArtifactInvs[0] == null || otherArtifactInvs[1] == null || otherArtifactInvs[2] == null");
+            if (!Verify.IsTrue(otherArtifactInvs[0] != null && otherArtifactInvs[1] != null && otherArtifactInvs[2] != null)) return InventoryResult.Invalid;
 
             EntityManager entityManager = game.EntityManager;
             for (int i = 0; i < otherArtifactInvs.Count; i++)
@@ -4438,7 +4341,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 ulong otherArtifactId = otherArtifactInvs[i].GetEntityInSlot(0);
                 Item otherArtifact = entityManager.GetEntity<Item>(otherArtifactId);
-                if (otherArtifact == null) return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): otherArtifact == null");
+                if (!Verify.IsNotNull(otherArtifact)) return InventoryResult.Invalid;
 
                 if (itemToBeMoved.PrototypeDataRef == otherArtifact.PrototypeDataRef)
                     return InventoryResult.InvalidTwoOfSameArtifact;
@@ -4484,11 +4387,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 float itemVariation = item.Properties[PropertyEnum.ItemVariation];
                 PowerIndexProperties indexProps = new(0, characterLevel, combatLevel, itemLevel, itemVariation);
 
-                if (AssignPower(powerProtoRef, indexProps) == null)
-                {
-                    Logger.Warn($"OnOtherEntityAddedToMyInventory(): Failed to assign item power {powerProtoRef.GetName()} to avatar {this}");
-                    return;
-                }                
+                Power itemPower = AssignPower(powerProtoRef, indexProps);
+                Verify.IsNotNull(itemPower, $"Failed to assign item power {powerProtoRef.GetName()} to avatar {this}");            
             }
             
             OnChangeInventory(item);
@@ -4536,18 +4436,17 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
         }
 
-        protected override bool InitInventories(bool populateInventories)
+        protected override bool InitInventories(bool populate)
         {
-            bool success = base.InitInventories(populateInventories);
+            bool success = base.InitInventories(populate);
 
             AvatarPrototype avatarProto = AvatarPrototype;
-            foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in avatarProto.EquipmentInventories)
+            if (!Verify.IsNotNull(avatarProto)) return false;
+
+            if (Verify.IsTrue(avatarProto.EquipmentInventories.HasValue()))
             {
-                if (AddInventory(equipInvAssignment.Inventory, populateInventories ? equipInvAssignment.LootTable : PrototypeId.Invalid) == false)
-                {
-                    success = false;
-                    Logger.Warn($"InitInventories(): Failed to add inventory {GameDatabase.GetPrototypeName(equipInvAssignment.Inventory)} to {this}");
-                }
+                foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in avatarProto.EquipmentInventories)
+                    success &= Verify.IsTrue(AddInventory(equipInvAssignment.Inventory, populate ? equipInvAssignment.LootTable : PrototypeId.Invalid));
             }
 
             return success;
@@ -4570,11 +4469,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                     foreach (TransformModeUnrealOverridePrototype overrideProto in transformModeProto.UnrealClassOverrides)
                     {
-                        if (overrideProto.IncomingUnrealClass == AssetId.Invalid)
-                        {
-                            Logger.Warn("GetEntityWorldAsset(): overrideProto.IncomingUnrealClass == AssetId.Invalid");
+                        if (!Verify.IsTrue(overrideProto.IncomingUnrealClass != AssetId.Invalid))
                             continue;
-                        }
 
                         if (overrideProto.IncomingUnrealClass == currentCostumeAssetRef)
                         {
@@ -4592,9 +4488,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 result = GetCurrentCostumeAssetRef();
             }
 
-            if (result == AssetId.Invalid)
-                Logger.Warn($"GetEntityWorldAsset(): Unable to get a valid unreal class asset for avatar [{this}]");
-
+            Verify.IsTrue(result != AssetId.Invalid, $"Unable to get a valid unreal class asset for avatar [{this}]");
             return result;
         }
 
@@ -4620,28 +4514,24 @@ namespace MHServerEmu.Games.Entities.Avatars
         public AssetId GetStartingCostumeAssetRef()
         {
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(AssetId.Invalid, "GetStartingCostumeAssetRef(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return AssetId.Invalid;
             return avatarProto.GetStartingCostumeAssetRef(Platforms.PC);
         }
 
         public bool ChangeCostume(PrototypeId costumeProtoRef)
         {
-            CostumePrototype costumeProto = null;
-
             if (costumeProtoRef != PrototypeId.Invalid)
             {
-                // Make sure we have a valid costume prototype
-                costumeProto = GameDatabase.GetPrototype<CostumePrototype>(costumeProtoRef);
-                if (costumeProto == null)
-                    return Logger.WarnReturn(false, $"ChangeCostume(): {costumeProtoRef} is not a valid costume prototype ref");
+                CostumePrototype costumeProto = GameDatabase.GetPrototype<CostumePrototype>(costumeProtoRef);
+                if (!Verify.IsNotNull(costumeProto)) return false;
             }
+
+            Player owner = GetOwnerOfType<Player>();
+            if (!Verify.IsNotNull(owner)) return false;
 
             Properties[PropertyEnum.CostumeCurrent] = costumeProtoRef;
 
             // Update avatar library
-            Player owner = GetOwnerOfType<Player>();
-            if (owner == null) return Logger.WarnReturn(false, "ChangeCostume(): owner == null");
-
             // NOTE: Avatar mode is hardcoded to 0 since hardcore and ladder avatars never got implemented
             owner.Properties[PropertyEnum.AvatarLibraryCostume, 0, PrototypeDataRef] = costumeProtoRef;
 
@@ -4651,22 +4541,22 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool GiveStartingCostume()
         {
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(false, "GiveStartingCostume(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return false;
 
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "GiveStartingCostume(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             Inventory costumeInventory = GetInventory(InventoryConvenienceLabel.Costume);
-            if (costumeInventory == null) return Logger.WarnReturn(false, "GiveStartingCostume(): costumeInventory == null");
+            if (!Verify.IsNotNull(costumeInventory)) return false;
 
             Inventory generalInventory = player.GetInventory(InventoryConvenienceLabel.General);
-            if (generalInventory == null) return Logger.WarnReturn(false, "GiveStartingCostume(): generalInventory == null");
+            if (!Verify.IsNotNull(generalInventory)) return false;
 
             Inventory deliveryBox = player.GetInventory(InventoryConvenienceLabel.DeliveryBox);
-            if (deliveryBox == null) return Logger.WarnReturn(false, "GiveStartingCostume(): deliveryBox == null");
+            if (!Verify.IsNotNull(deliveryBox)) return false;
 
             Inventory errorRecovery = player.GetInventory(InventoryConvenienceLabel.ErrorRecovery);
-            if (errorRecovery == null) return Logger.WarnReturn(false, "GiveStartingCostume(): errorRecovery == null");
+            if (!Verify.IsNotNull(errorRecovery)) return false;
 
             PrototypeId startingCostumeProtoRef = avatarProto.GetStartingCostumeForPlatform(Platforms.PC);
             if (startingCostumeProtoRef == PrototypeId.Invalid)
@@ -4679,8 +4569,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             entitySettings.ItemSpec = itemSpec;
 
             Item costume = Game.EntityManager.CreateEntity(entitySettings) as Item;
-            if (costume == null)
-                return Logger.WarnReturn(false, $"GiveStartingCostume(): Failed to create starting costume for avatar [{this}]");
+            if (!Verify.IsNotNull(costume, $"Failed to create starting costume for avatar [{this}]"))
+                return false;
 
             InventoryResult result = costume.ChangeInventoryLocation(costumeInventory);
 
@@ -4690,17 +4580,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (result != InventoryResult.Success)
                 result = costume.ChangeInventoryLocation(deliveryBox);
 
-            if (result != InventoryResult.Success)
+            if (!Verify.IsTrue(result == InventoryResult.Success, LoggingLevel.Error, $"Failed to put costume [{costume}] into delivery box for avatar [{this}]"))
             {
-                Logger.Error($"GiveStartingCostume(): Failed to put costume [{costume}] into delivery box for avatar [{this}]");
                 result = costume.ChangeInventoryLocation(errorRecovery);
-            }
 
-            if (result != InventoryResult.Success)
-            {
-                Logger.Error($"GiveStartingCostume(): Failed to put costume [{costume}] into error recovery for avatar [{this}]");
-                costume.Destroy();
-                return false;
+                if (!Verify.IsTrue(result == InventoryResult.Success, LoggingLevel.Error, $"Failed to put costume [{costume}] into error recovery for avatar [{this}]"))
+                {
+                    costume.Destroy();
+                    return false;
+                }
             }
 
             return true;
@@ -4720,13 +4608,13 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return 0f;
 
             TuningPrototype tuningProto = tuningTable.Prototype;
-            if (tuningProto == null) return Logger.WarnReturn(0f, "GetMissionXPMultiplier(): tuningProto == null");
+            if (!Verify.IsNotNull(tuningProto)) return 0f;
 
             Curve pctXPFromLevelDeltaCurve = GameDatabase.AdvancementGlobalsPrototype.PctXPFromLevelDeltaCurve.AsCurve();
-            if (pctXPFromLevelDeltaCurve == null) return Logger.WarnReturn(0f, "GetMissionXPMultiplier(): pctXPFromLevelDeltaCurve == null");
+            if (!Verify.IsNotNull(pctXPFromLevelDeltaCurve)) return 0f;
 
             Curve playerXPByDifficultyIndex = tuningProto.PlayerXPByDifficultyIndexCurve.AsCurve();
-            if (playerXPByDifficultyIndex == null) return Logger.WarnReturn(0f, "GetMissionXPMultiplier(): playerXPByDifficultyIndex == null");
+            if (!Verify.IsNotNull(playerXPByDifficultyIndex)) return 0f;
 
             float multiplier = pctXPFromLevelDeltaCurve.GetAt(level - CharacterLevel);
             multiplier *= tuningProto.PctXPMultiplier;
@@ -4759,7 +4647,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             CurveId curveRef = party.Type == GroupType.GroupType_Raid ? tuningProto.PctXPFromRaid : tuningProto.PctXPFromParty;
             Curve curve = curveRef.AsCurve();
-            if (curve == null) return Logger.WarnReturn(1f, "GetPartyXPMultiplier(): curve == null");
+            if (!Verify.IsNotNull(curve)) return 1f;
 
             float multiplier = 1f + curve.GetAt(CharacterLevel);
             multiplier += Math.Max(LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_PartyXPBonusPct) - 1f, 0f);
@@ -4769,10 +4657,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         public float GetLiveTuningXPMultiplier()
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(0f, "GetLiveTuningXPMultiplier(): player == null");
+            if (!Verify.IsNotNull(player)) return 0f;
 
             RegionPrototype regionProto = Region?.Prototype;
-            if (regionProto == null) return Logger.WarnReturn(0f, "GetLiveTuningXPMultiplier(): regionProto == null");
+            if (!Verify.IsNotNull(regionProto)) return 0f;
 
             bool canUseLiveTuneBonuses = player.CanUseLiveTuneBonuses();
 
@@ -4809,7 +4697,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return 0f;
 
             Curve curve = GameDatabase.GlobalsPrototype.ExperienceBonusCurve.AsCurve();
-            if (curve == null) return Logger.WarnReturn(0f, "GetStackingExperienceBonusPct(): curve == null");
+            if (!Verify.IsNotNull(curve)) return 0f;
 
             return curve.GetAt(stackCount);
         }
@@ -4854,7 +4742,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return 0f;
 
             Curve curve = GameDatabase.LootGlobalsPrototype.LootBonusRarityCurve.AsCurve();
-            if (curve == null) return Logger.WarnReturn(0f, "GetStackingLootBonusRarityPct(): curve == null");
+            if (!Verify.IsNotNull(curve)) return 0f;
 
             return curve.GetAt(stackCount);
         }
@@ -4899,7 +4787,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return 0f;
 
             Curve curve = GameDatabase.LootGlobalsPrototype.LootBonusSpecialCurve.AsCurve();
-            if (curve == null) return Logger.WarnReturn(0f, "GetStackingLootBonusSpecialPct(): curve == null");
+            if (!Verify.IsNotNull(curve)) return 0f;
 
             return curve.GetAt(stackCount);
         }
@@ -4951,7 +4839,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return 0f;
 
             Curve curve = GameDatabase.LootGlobalsPrototype.LootBonusFlatCreditsCurve.AsCurve();
-            if (curve == null) return Logger.WarnReturn(0f, "GetStackingFlatCreditsBonus(): curve == null");
+            if (!Verify.IsNotNull(curve)) return 0f;
 
             return curve.GetAt(stackCount);
         }
@@ -4991,10 +4879,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             CurveId curveRef = currencyProto.LootBonusPctCurve;
             if (curveRef == CurveId.Invalid)
-                return 0;
+                return 0f;
 
             Curve curve = curveRef.AsCurve();
-            if (curve == null) return Logger.WarnReturn(0, "GetStackingCurrencyBonusPct(): curve == null");
+            if (!Verify.IsNotNull(curve)) return 0f;
 
             return curve.GetAt(stackCount);
         }
@@ -5019,7 +4907,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return 0;
 
             Curve curve = curveRef.AsCurve();
-            if (curve == null) return Logger.WarnReturn(0, "GetStackingFlatCurrencyBonus(): curve == null");
+            if (!Verify.IsNotNull(curve)) return 0;
 
             return curve.GetIntAt(stackCount);
         }
@@ -5055,7 +4943,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return 0f;
 
             Curve curve = GameDatabase.AIGlobalsPrototype.OrbAggroRangeBonusCurve.AsCurve();
-            if (curve == null) return Logger.WarnReturn(0f, "GetStackingFlatCreditsBonus(): curve == null");
+            if (!Verify.IsNotNull(curve)) return 0f;
 
             return curve.GetAt(stackCount);
         }
@@ -5082,7 +4970,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool AdjustMissionRewardProperty(PropertyId propertyId, int delta, PrototypeId missionProtoRef)
         {
-            if (delta <= 0) return Logger.WarnReturn(false, "AdjustMissionRewardProperty(): delta <= 0");
+            if (!Verify.IsTrue(delta > 0)) return false;
 
             if (ValidatePropertyRewardingMission(missionProtoRef) == false)
                 return false;
@@ -5093,7 +4981,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool AdjustMissionRewardProperty(PropertyId propertyId, float delta, PrototypeId missionProtoRef)
         {
-            if (delta <= 0f) return Logger.WarnReturn(false, "AdjustMissionRewardProperty(): delta <= 0f");
+            if (!Verify.IsTrue(delta > 0f)) return false;
 
             if (ValidatePropertyRewardingMission(missionProtoRef) == false)
                 return false;
@@ -5119,10 +5007,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private bool RestoreMissionRewardProperties(Player player, PrototypeId missionProtoRef)
         {
-            if (missionProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "RestoreMissionRewardProperties(): missionProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(missionProtoRef != PrototypeId.Invalid)) return false;
 
             MissionPrototype missionProto = missionProtoRef.As<MissionPrototype>();
-            if (missionProto == null) return Logger.WarnReturn(false, "RestoreMissionRewardProperties(): missionProto == null");
+            if (!Verify.IsNotNull(missionProto)) return false;
 
             if (missionProto.HasPropertyRewards == false)
                 return false;
@@ -5137,8 +5025,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 if (lootTypes.HasFlag(LootType.HealthBonus))
                 {
-                    if (AdjustMissionRewardProperty(PropertyEnum.HealthAddBonus, lootSummary.HealthBonus, missionProtoRef) == false)
-                        Logger.Warn($"GiveLootFromSummary(): Failed to restore HealthBonus reward for avatar [{this}]");
+                    bool restored = AdjustMissionRewardProperty(PropertyEnum.HealthAddBonus, lootSummary.HealthBonus, missionProtoRef);
+                    Verify.IsTrue(restored, $"Failed to restore HealthBonus reward for avatar [{this}]");
                 }
 
                 if (lootTypes.HasFlag(LootType.EnduranceBonus))
@@ -5146,15 +5034,15 @@ namespace MHServerEmu.Games.Entities.Avatars
                     foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in GetPrimaryResourceManaBehaviors())
                     {
                         ManaType manaType = primaryManaBehaviorProto.ManaType;
-                        if (AdjustMissionRewardProperty(new(PropertyEnum.EnduranceAddBonus, manaType), (float)lootSummary.EnduranceBonus, missionProtoRef) == false)
-                            Logger.Warn($"GiveLootFromSummary(): Failed to restore EnduranceBonus reward for mana type {manaType} for avatar [{this}]");
+                        bool restored = AdjustMissionRewardProperty(new(PropertyEnum.EnduranceAddBonus, manaType), (float)lootSummary.EnduranceBonus, missionProtoRef);
+                        Verify.IsTrue(restored, $"Failed to restore EnduranceBonus reward for mana type {manaType} for avatar [{this}]");
                     }
                 }
 
                 if (lootTypes.HasFlag(LootType.PowerPoints))
                 {
-                    if (AdjustMissionRewardProperty(PropertyEnum.AvatarPowerPointsBonus, lootSummary.PowerPoints, missionProtoRef) == false)
-                        Logger.Warn($"GiveLootFromSummary(): Failed to restore PowerPoints reward for avatar [{this}]");
+                    bool restored = AdjustMissionRewardProperty(PropertyEnum.AvatarPowerPointsBonus, lootSummary.PowerPoints, missionProtoRef);
+                    Verify.IsTrue(restored, $"Failed to restore PowerPoints reward for avatar [{this}]");
                 }
             }
 
@@ -5163,15 +5051,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private static bool ValidatePropertyRewardingMission(PrototypeId missionProtoRef)
         {
-            if (missionProtoRef == PrototypeId.Invalid)
-                return Logger.WarnReturn(false, "ValidatePropertyRewardingMission(): missionProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(missionProtoRef != PrototypeId.Invalid)) return false;
 
             MissionPrototype missionProto = missionProtoRef.As<MissionPrototype>();
-            if (missionProto == null)
-                return Logger.WarnReturn(false, "ValidatePropertyRewardingMission(): missionProto == null");
-
-            if (missionProto is OpenMissionPrototype)
-                return Logger.WarnReturn(false, "ValidatePropertyRewardingMission(): missionProto is OpenMissionPrototype");
+            if (!Verify.IsNotNull(missionProto)) return false;
+            if (!Verify.IsTrue(missionProto is not OpenMissionPrototype)) return false;
 
             return true;
         }
@@ -5421,12 +5305,14 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private Agent GetCurrentVanityPet()
         {
-            var keywordGlobals = GameDatabase.KeywordGlobalsPrototype;
-            if (keywordGlobals == null) return Logger.WarnReturn((Agent)null, "GetCurrentVanityPet(): keywordGlobals == null");
+            KeywordGlobalsPrototype keywordGlobals = GameDatabase.KeywordGlobalsPrototype;
+            if (!Verify.IsNotNull(keywordGlobals)) return null;
 
-            foreach (var summoned in new SummonedEntityIterator(this))
+            foreach (WorldEntity summoned in new SummonedEntityIterator(this))
+            {
                 if (summoned is Agent pet && pet.HasKeyword(keywordGlobals.VanityPetKeywordPrototype))
                     return pet;
+            }
 
             return null;
         }
@@ -5604,20 +5490,20 @@ namespace MHServerEmu.Games.Entities.Avatars
         public Agent GetControlledAgent()
         {
             Agent controlledAgent = null;
-            var controlledInventory = ControlledInventory;
+
+            Inventory controlledInventory = ControlledInventory;
             if (controlledInventory != null)
             {
-                if (controlledInventory.Count > 1)
-                    Logger.Warn($"Avatar has multiple controlled entities! Avatar: {ToString()}");
+                Verify.IsTrue(controlledInventory.Count <= 1, $"Avatar has multiple controlled entities! Avatar: {this}");
 
-                var controlledId = controlledInventory.GetAnyEntity();
+                ulong controlledId = controlledInventory.GetAnyEntity();
                 if (controlledId != InvalidId)
                 {
                     controlledAgent = Game.EntityManager.GetEntity<Agent>(controlledId);
-                    if (controlledAgent == null)
-                        Logger.Warn("Controlled agent is null!");
+                    Verify.IsNotNull(controlledAgent);
                 }
             }
+
             return controlledAgent;
         }
 
@@ -5727,10 +5613,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return true;
 
             ConditionPrototype avatarSynergyConditionProto = avatarSynergyConditionRef.As<ConditionPrototype>();
-            if (avatarSynergyConditionProto == null) return Logger.WarnReturn(false, "UpdateAvatarSynergyCondition(): avatarSynergyConditionProto == null");
+            if (!Verify.IsNotNull(avatarSynergyConditionProto)) return false;
 
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "UpdateAvatarSynergyCondition(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             using PropertyCollection avatarSynergyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
 
@@ -5744,20 +5630,15 @@ namespace MHServerEmu.Games.Entities.Avatars
                     continue;
 
                 AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
-                if (avatarProto == null)
-                {
-                    Logger.Warn("UpdateAvatarSynergyCondition(): avatarProto == null");
+                if (!Verify.IsNotNull(avatarProto))
                     continue;
-                }
 
                 bool canUseSynergy = false;
                 foreach (AvatarSynergyEntryPrototype synergyProto in avatarProto.SynergyTable)
                 {
-                    if (synergyProto is not AvatarSynergyEvalEntryPrototype evalSynergyProto)
-                    {
-                        Logger.Warn("UpdateAvatarSynergyCondition(): synergyProto is not AvatarSynergyEvalEntryPrototype evalSynergyProto");
+                    AvatarSynergyEvalEntryPrototype evalSynergyProto = synergyProto as AvatarSynergyEvalEntryPrototype;
+                    if (!Verify.IsNotNull(evalSynergyProto))
                         continue;
-                    }
 
                     if (level < evalSynergyProto.Level)
                         continue;
@@ -5808,7 +5689,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool UpdateAvatarSynergyExperienceBonus()
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "UpdateAvatarSynergyExperienceBonus(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             if (player.GameplayOptions.GetOptionSetting(Options.GameplayOptionSetting.DisableHeroSynergyBonusXP) == 1)
             {
@@ -5829,11 +5710,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel, (int)AvatarMode.Normal))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId avatarProtoRef);
-                if (avatarProtoRef == PrototypeId.Invalid)
-                {
-                    Logger.Warn("UpdateAvatarSynergyExperienceBonus(): avatarProtoRef == PrototypeId.Invalid");
+                if (!Verify.IsTrue(avatarProtoRef != PrototypeId.Invalid))
                     continue;
-                }
 
                 // Level cap bonus is applied below based on the total number of capped avatars
                 int level = player.GetMaxCharacterLevelAttainedForAvatar(avatarProtoRef);
@@ -5854,10 +5732,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         private bool UpdateAvatarSynergyUnlocks(int oldLevel, int newLevel)
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "UpdateAvatarSynergyUnlocks(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(false, "UpdateAvatarSynergyUnlocks(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return false;
 
             // No synergies to unlock
             if (avatarProto.SynergyTable.IsNullOrEmpty())
@@ -5884,13 +5762,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             Logger.Trace($"ResetMissions(): [{this}]");
 
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "ResetMissions(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             MissionManager missionManager = player.MissionManager;
-            if (missionManager == null) return Logger.WarnReturn(false, "ResetMissions(): missionManager == null");
+            if (!Verify.IsNotNull(missionManager)) return false;
 
             RegionConnectionTargetPrototype targetProto = GameDatabase.GlobalsPrototype.DefaultStartTargetPrestigeRegion.As<RegionConnectionTargetPrototype>();
-            if (targetProto == null) return Logger.WarnReturn(false, "ResetMissions(): targetProto == null");
+            if (!Verify.IsNotNull(targetProto)) return false;
 
             PrototypeId chapterProtoRef = GameDatabase.MissionGlobalsPrototype.InitialChapter;
             
@@ -5904,8 +5782,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             player.RemoveBodysliderProperties();
 
-            if (missionManager.ResetAvatarMissionsForStoryWarp(chapterProtoRef, true) == false)
-                Logger.Warn($"ResetMissions(): Failed to reset missions for avatar [{this}]");
+            Verify.IsTrue(missionManager.ResetAvatarMissionsForStoryWarp(chapterProtoRef, true), $"Failed to reset missions for avatar [{this}]");
 
             player.ResetMapDiscoveryForStoryWarp();
 
@@ -5920,12 +5797,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             Logger.Trace($"ActivatePrestigeMode(): [{this}]");
 
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "ActivatePrestigeMode(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             RegionConnectionTargetPrototype targetProto = GameDatabase.GlobalsPrototype.DefaultStartTargetPrestigeRegion.As<RegionConnectionTargetPrototype>();
-            if (targetProto == null) return Logger.WarnReturn(false, "ActivatePrestigeMode(): targetProto == null");
+            if (!Verify.IsNotNull(targetProto)) return false;
 
-            if (CanActivatePrestigeMode() == false) return Logger.WarnReturn(false, "ActivatePrestigeMode(): CanActivatePrestigeMode() == false");
+            if (!Verify.IsTrue(CanActivatePrestigeMode())) return false;
 
             player.QueueLoadingScreen(targetProto.Region);
 
@@ -5966,7 +5843,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Invoke achievement events
             PrestigeLevelPrototype prestigeLevelProto = GameDatabase.AdvancementGlobalsPrototype.GetPrestigeLevelPrototype(prestigeLevel);
-            if (prestigeLevelProto == null) return Logger.WarnReturn(false, "ActivatePrestigeMode(): prestigeLevelProto == null");
+            if (!Verify.IsNotNull(prestigeLevelProto)) return false;
 
             player.OnScoringEvent(new(ScoringEventType.AvatarPrestigeLevel, prestigeLevel));
 
@@ -6005,10 +5882,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return true;
 
             Inventory deliveryBox = player.GetInventory(InventoryConvenienceLabel.DeliveryBox);
-            if (deliveryBox == null) return Logger.WarnReturn(false, "CheckEquipmentRestrictions(): deliveryBox == null");
+            if (!Verify.IsNotNull(deliveryBox)) return false;
 
             Inventory errorRecovery = player.GetInventory(InventoryConvenienceLabel.ErrorRecovery);
-            if (errorRecovery == null) return Logger.WarnReturn(false, "CheckEquipmentRestrictions(): errorRecovery == null");
+            if (!Verify.IsNotNull(errorRecovery)) return false;
 
             EntityManager entityManager = Game.EntityManager;
 
@@ -6020,11 +5897,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 while (enumerator.MoveNext())
                 {
                     Item item = entityManager.GetEntity<Item>(enumerator.Current.Id);
-                    if (item == null)
-                    {
-                        Logger.Warn("CheckEquipmentRestrictions(): item == null");
+                    if (!Verify.IsNotNull(item))
                         continue;
-                    }
 
                     if (inventory.PassesEquipmentRestrictions(item, out _) == InventoryResult.Success)
                         continue;
@@ -6045,11 +5919,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     if (result != InventoryResult.Success)
                         result = item.ChangeInventoryLocation(errorRecovery);
 
-                    if (result != InventoryResult.Success)
-                    {
-                        Logger.Warn($"CheckEquipmentRestrictions(): Failed to remove equipped item [{item}] from avatar [{this}]");
+                    if (!Verify.IsTrue(result == InventoryResult.Success, $"Failed to remove equipped item [{item}] from avatar [{this}]"))
                         continue;
-                    }
 
                     // Restart iteration on successful removal
                     enumerator = inventory.GetEnumerator();
@@ -6062,10 +5933,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         private bool AwardPrestigeLoot(int prestigeLevel)
         {
             PrestigeLevelPrototype prestigeLevelProto = GameDatabase.AdvancementGlobalsPrototype.GetPrestigeLevelPrototype(prestigeLevel);
-            if (prestigeLevelProto == null) return Logger.WarnReturn(false, "AwardPrestigeLoot(): prestigeLevelProto == null");
+            if (!Verify.IsNotNull(prestigeLevelProto)) return false;
 
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "AwardPrestigeLoot(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             if (Game.CustomGameOptions.UsePrestigeLootTable)
             {
@@ -6125,7 +5996,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             // Omega is unlocked per-avatar at level 30
             AdvancementGlobalsPrototype advGlobals = GameDatabase.AdvancementGlobalsPrototype;
-            if (advGlobals == null) return Logger.WarnReturn(false, "IsOmegaSystemUnlocked(): advGlobals == null");
+            if (!Verify.IsNotNull(advGlobals)) return false;
 
             return CharacterLevel >= advGlobals.OmegaSystemLevelUnlock;
         }
@@ -6147,15 +6018,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             remainder = 0;
 
             OmegaBonusPrototype omegaBonusProto = omegaBonusProtoRef.As<OmegaBonusPrototype>();
-            if (omegaBonusProto == null) return Logger.WarnReturn(0, "GetOmegaRankForPointCost(): omegaBonusProto == null");
+            if (!Verify.IsNotNull(omegaBonusProto)) return 0;
 
             return ModRankFromPoints(omegaBonusProtoRef, points, out remainder);
         }
 
         public CanSetOmegaRankResult CanSetOmegaRank(PrototypeId omegaBonusProtoRef, int rank, bool checkTempPoints)
         {
-            if (omegaBonusProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(CanSetOmegaRankResult.ErrorGeneric, "CanSetOmegaRank(): omegaBonusProtoRef == PrototypeId.Invalid");
-            if (rank < 0) return Logger.WarnReturn(CanSetOmegaRankResult.ErrorGeneric, "CanSetOmegaRank(): rank < 0");
+            if (!Verify.IsTrue(omegaBonusProtoRef != PrototypeId.Invalid)) return CanSetOmegaRankResult.ErrorGeneric;
+            if (!Verify.IsTrue(rank >= 0)) return CanSetOmegaRankResult.ErrorGeneric;
 
             if (IsOmegaSystemUnlocked() == false)
                 return CanSetOmegaRankResult.ErrorLevelRequirement;
@@ -6176,10 +6047,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool IsOmegaBonusPrerequisiteRequirementMet(PrototypeId omegaBonusProtoRef, bool checkTempPoints)
         {
-            if (omegaBonusProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "IsOmegaBonusPrerequisiteRequirementMet(): omegaBonusProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(omegaBonusProtoRef != PrototypeId.Invalid)) return false;
 
             OmegaBonusPrototype omegaBonusProto = omegaBonusProtoRef.As<OmegaBonusPrototype>();
-            if (omegaBonusProto == null) return Logger.WarnReturn(false, "IsOmegaBonusPrerequisiteRequirementMet(): omegaBonusProto == null");
+            if (!Verify.IsNotNull(omegaBonusProto)) return false;
 
             if (omegaBonusProto.Prerequisites.IsNullOrEmpty())
                 return true;
@@ -6197,14 +6068,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         public void OmegaPointAllocationCommit(NetMessageOmegaBonusAllocationCommit commitMessage)
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null)
-            {
-                Logger.Warn("OmegaPointAllocationCommit(): player == null");
-                return;
-            }
+            if (!Verify.IsNotNull(player)) return;
 
-            if (OmegaPointAllocationClearTemporary())
-                Logger.Warn($"OmegaPointAllocationCommit(): [{this}] already had a pending allocation");
+            Verify.IsTrue(OmegaPointAllocationClearTemporary() == false, $"[{this}] already had a pending allocation");
 
             using var setDictHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> setDict);
 
@@ -6219,11 +6085,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 // Get the prototype for validation
                 OmegaBonusPrototype omegaBonusProto = omegaBonusProtoRef.As<OmegaBonusPrototype>();
-                if (omegaBonusProto == null)
-                {
-                    Logger.Warn("OmegaPointAllocationCommit(): omegaBonusProto == null");
+                if (!Verify.IsNotNull(omegaBonusProto))
                     goto end;
-                }
 
                 Properties[PropertyEnum.OmegaSpecTemp, 0, omegaBonusProtoRef] = allocation.Points;
                 pointsSpent += GetOmegaPointsSpentOnBonus(omegaBonusProtoRef, true);
@@ -6231,11 +6094,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Validate the spent number of points
             long omegaPoints = player.GetOmegaPoints();
-            if (pointsSpent > omegaPoints)
-            {
-                Logger.Warn($"OmegaPointAllocationCommit(): Number of points spent [{pointsSpent}] exceeds the total available number [{omegaPoints}] for [{this}]");
+            if (!Verify.IsTrue(pointsSpent <= omegaPoints, $"Number of points spent [{pointsSpent}] exceeds the total available number [{omegaPoints}] for [{this}]"))
                 goto end;
-            }
 
             // Calculate rank for each bonus
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.OmegaSpecTemp))
@@ -6244,18 +6104,13 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 // The number of points received from the client should not have a remainder
                 int rank = GetOmegaRankForPointCost(omegaBonusProtoRef, kvp.Value, out long remainder);
-                if (remainder != 0)
-                {
-                    Logger.Warn("OmegaPointAllocationCommit(): remainder != 0");
+                if (!Verify.IsTrue(remainder == 0))
                     goto end;
-                }
 
                 // Validate the rank
-                if (CanSetOmegaRank(omegaBonusProtoRef, rank, true) != CanSetOmegaRankResult.Success)
-                {
-                    Logger.Warn($"OmegaPointAllocationCommit(): Rank validation failed for Omega bonus [{omegaBonusProtoRef.GetName()} on [{this}]");
+                CanSetOmegaRankResult result = CanSetOmegaRank(omegaBonusProtoRef, rank, true);
+                if (!Verify.IsTrue(result == CanSetOmegaRankResult.Success, $"Rank validation failed for Omega bonus [{omegaBonusProtoRef.GetName()} on [{this}]"))
                     goto end;
-                }
 
                 setDict[new(PropertyEnum.OmegaRankTemp, omegaBonusProtoRef)] = rank;
             }
@@ -6352,10 +6207,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             // Infinity is unlocked account-wide at level 60
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "IsInfinitySystemUnlocked(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             AdvancementGlobalsPrototype advGlobals = GameDatabase.AdvancementGlobalsPrototype;
-            if (advGlobals == null) return Logger.WarnReturn(false, "IsInfinitySystemUnlocked(): advGlobals == null");
+            if (!Verify.IsNotNull(advGlobals)) return false;
 
             return player.Properties[PropertyEnum.PlayerMaxAvatarLevel] >= advGlobals.InfinitySystemUnlockLevel;
         }
@@ -6377,15 +6232,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             remainder = 0;
 
             InfinityGemBonusPrototype infinityBonusProto = infinityBonusProtoRef.As<InfinityGemBonusPrototype>();
-            if (infinityBonusProto == null) return Logger.WarnReturn(0, "GetInfinityRankForPointCost(): infinityBonusProto == null");
+            if (!Verify.IsNotNull(infinityBonusProto)) return 0;
 
             return ModRankFromPoints(infinityBonusProtoRef, points, out remainder);
         }
 
         public CanSetInfinityRankResult CanSetInfinityRank(PrototypeId infinityBonusProtoRef, int rank, bool checkTempPoints)
         {
-            if (infinityBonusProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(CanSetInfinityRankResult.ErrorGeneric, "CanSetInfinityRank(): infinityBonusProtoRef == PrototypeId.Invalid");
-            if (rank < 0) return Logger.WarnReturn(CanSetInfinityRankResult.ErrorGeneric, "CanSetInfinityRank(): rank < 0");
+            if (!Verify.IsTrue(infinityBonusProtoRef != PrototypeId.Invalid)) return CanSetInfinityRankResult.ErrorGeneric;
+            if (!Verify.IsTrue(rank >= 0)) return CanSetInfinityRankResult.ErrorGeneric;
 
             if (IsInfinitySystemUnlocked() == false)
                 return CanSetInfinityRankResult.ErrorLevelRequirement;
@@ -6406,10 +6261,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool IsInfinityGemBonusPrerequisiteRequirementMet(PrototypeId infinityBonusProtoRef, bool checkTempPoints)
         {
-            if (infinityBonusProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "IsInfinityGemBonusPrerequisiteRequirementMet(): infinityBonusProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(infinityBonusProtoRef != PrototypeId.Invalid)) return false;
 
             InfinityGemBonusPrototype infinityBonusProto = infinityBonusProtoRef.As<InfinityGemBonusPrototype>();
-            if (infinityBonusProto == null) return Logger.WarnReturn(false, "IsInfinityGemBonusPrerequisiteRequirementMet(): infinityBonusProto == null");
+            if (!Verify.IsNotNull(infinityBonusProto)) return false;
 
             if (infinityBonusProto.Prerequisites.IsNullOrEmpty())
                 return true;
@@ -6427,14 +6282,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         public void InfinityPointAllocationCommit(NetMessageInfinityPointAllocationCommit commitMessage)
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null)
-            {
-                Logger.Warn("InfinityPointAllocationCommit(): player == null");
-                return;
-            }
+            if (!Verify.IsNotNull(player)) return;
 
-            if (InfinityPointAllocationClearTemporary())
-                Logger.Warn($"InfinityPointAllocationCommit(): [{this}] already had a pending allocation");
+            Verify.IsTrue(InfinityPointAllocationClearTemporary() == false, $"[{this}] already had a pending allocation");
 
             using var setDictHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> setDict);
 
@@ -6449,11 +6299,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 // Get the prototype for validation
                 InfinityGemBonusPrototype infinityBonusProto = infinityBonusProtoRef.As<InfinityGemBonusPrototype>();
-                if (infinityBonusProto == null)
-                {
-                    Logger.Warn("InfinityPointAllocationCommit(): infinityBonusProto == null");
+                if (!Verify.IsNotNull(infinityBonusProto))
                     goto end;
-                }
 
                 Properties[PropertyEnum.InfinityPointsSpentTemp, infinityBonusProtoRef] = allocation.Points;
                 pointsSpent += GetInfinityPointsSpentOnBonus(infinityBonusProtoRef, true);
@@ -6461,11 +6308,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Validate the spent number of points
             long totalInfinityPoints = player.GetTotalInfinityPoints();
-            if (pointsSpent > totalInfinityPoints)
-            {
-                Logger.Warn($"InfinityPointAllocationCommit(): Number of points spent [{pointsSpent}] exceeds the total available number [{totalInfinityPoints}] for [{this}]");
+            if (!Verify.IsTrue(pointsSpent <= totalInfinityPoints, $"Number of points spent [{pointsSpent}] exceeds the total available number [{totalInfinityPoints}] for [{this}]"))
                 goto end;
-            }
 
             // Calculate rank for each bonus
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.InfinityPointsSpentTemp))
@@ -6474,18 +6318,13 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 // The number of points received from the client should not have a remainder
                 int rank = GetInfinityRankForPointCost(infinityBonusProtoRef, kvp.Value, out long remainder);
-                if (remainder != 0)
-                {
-                    Logger.Warn("InfinityPointAllocationCommit(): remainder != 0");
+                if (!Verify.IsTrue(remainder == 0))
                     goto end;
-                }
 
                 // Validate the rank
-                if (CanSetInfinityRank(infinityBonusProtoRef, rank, true) != CanSetInfinityRankResult.Success)
-                {
-                    Logger.Warn($"InfinityPointAllocationCommit(): Rank validation failed for infinity bonus [{infinityBonusProtoRef.GetName()} on [{this}]");
+                CanSetInfinityRankResult result = CanSetInfinityRank(infinityBonusProtoRef, rank, true);
+                if (!Verify.IsTrue(result == CanSetInfinityRankResult.Success, $"Rank validation failed for infinity bonus [{infinityBonusProtoRef.GetName()} on [{this}]"))
                     goto end;
-                }
 
                 setDict[new(PropertyEnum.InfinityGemBonusRankTemp, infinityBonusProtoRef)] = rank;
             }
@@ -6529,11 +6368,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.InfinityPointsSpent))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId infinityBonusProtoRef);
-                if (infinityBonusProtoRef == PrototypeId.Invalid)
-                {
-                    Logger.Warn("RespecInfinity(): infinityBonusProtoRef == PrototypeId.Invalid");
+                if (!Verify.IsTrue(infinityBonusProtoRef != PrototypeId.Invalid))
                     continue;
-                }
 
                 InfinityGem bonusGem = bonusTable.GetGemForPrototype(infinityBonusProtoRef);
                 if (bonusGem == gemToRespec)
@@ -6599,10 +6435,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             remainder = 0;
 
             ModPrototype modProto = modProtoRef.As<ModPrototype>();
-            if (modProto == null) return Logger.WarnReturn(0, "ModRankFromPoints(): modProto == null");
+            if (!Verify.IsNotNull(modProto)) return 0;
 
             Curve curve = modProto.RankCostCurve.AsCurve();
-            if (curve == null) return Logger.WarnReturn(0, "ModRankFromPoints(): curve == null");
+            if (!Verify.IsNotNull(curve)) return 0;
 
             int rank = 0;
             int ranksMax = modProto.GetRanksMax();
@@ -6638,11 +6474,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 case PropertyEnum.AvatarPowerUltimatePoints:
                     if (IsInWorld)
                     {
-                        if (GetPowerProgressionInfo(UltimatePowerRef, out PowerProgressionInfo powerInfo) == false)
-                        {
-                            Logger.Warn($"OnPropertyChange(): Failed to get ultimate power progression info for [{this}]");
+                        if (!Verify.IsTrue(GetPowerProgressionInfo(UltimatePowerRef, out PowerProgressionInfo powerInfo)))
                             return;
-                        }
 
                         UpdatePowerRank(ref powerInfo, false);
                     }
@@ -6651,11 +6484,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 case PropertyEnum.AvatarMappedPower:
                     Property.FromParam(id, 0, out PrototypeId originalPowerRef);
                     PowerPrototype originalPowerProto = originalPowerRef.As<PowerPrototype>();
-                    if (originalPowerProto == null)
-                    {
-                        Logger.Warn("OnPropertyChange(): originalPowerProto == null");
-                        return;
-                    }
+                    if (!Verify.IsNotNull(originalPowerProto)) return;
 
                     if (originalPowerProto.IsTravelPower)
                     {
@@ -6673,11 +6502,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     if (IsSimulated)
                     {
                         Property.FromParam(id, 0, out PrototypeId modProtoRef);
-                        if (modProtoRef == PrototypeId.Invalid)
-                        {
-                            Logger.Warn("OnPropertyChange(): modProtoRef == PrototypeId.Invalid");
+                        if (!Verify.IsTrue(modProtoRef != PrototypeId.Invalid))
                             return;
-                        }
 
                         ModChangeModEffects(modProtoRef, newValue);
                     }
@@ -6796,11 +6622,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     {
                         // Clear old override behavior
                         SecondaryResourceManaBehaviorPrototype manaBehaviorOverrideProto = GameDatabase.GetPrototype<SecondaryResourceManaBehaviorPrototype>(oldValue);
-                        if (manaBehaviorOverrideProto == null)
-                        {
-                            Logger.Warn("OnPropertyChange(): manaBehaviorOverrideProto == null");
+                        if (!Verify.IsNotNull(manaBehaviorOverrideProto))
                             break;
-                        }
 
                         UnassignManaBehaviorPowers(manaBehaviorOverrideProto);
                     }
@@ -6842,11 +6665,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 case PropertyEnum.PowerChargesMax:
                 {
                     Property.FromParam(id, 0, out PrototypeId powerProtoRef);
-                    if (powerProtoRef == PrototypeId.Invalid)
-                    {
-                        Logger.Warn("OnPropertyChange(): powerProtoRef == PrototypeId.Invalid");
+                    if (!Verify.IsTrue(powerProtoRef != PrototypeId.Invalid))
                         break;
-                    }
 
                     int chargesAvailable = Properties[PropertyEnum.PowerChargesAvailable, powerProtoRef];
                     if (newValue.RawLong < oldValue.RawLong)
@@ -6920,11 +6740,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     foreach (PowerProgressionInfo powerInfo in powerInfoList)
                     {
                         PowerPrototype powerProto = powerInfo.PowerPrototype;
-                        if (powerProto == null)
-                        {
-                            Logger.Warn("OnPropertyChange(): powerProto == null");
+                        if (!Verify.IsNotNull(powerProto))
                             continue;
-                        }
 
                         if (HasPowerWithKeyword(powerProto, keywordProtoRef) == false)
                             continue;
@@ -6941,11 +6758,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     foreach (var kvp in mappedPowerDict)
                     {
                         PowerPrototype mappedPowerProto = GameDatabase.GetPrototype<PowerPrototype>(kvp.Value);
-                        if (mappedPowerProto == null)
-                        {
-                            Logger.Warn("OnPropertyChange(): mappedPowerProto == null");
+                        if (!Verify.IsNotNull(mappedPowerProto))
                             continue;
-                        }
 
                         if (HasPowerWithKeyword(mappedPowerProto, keywordProtoRef) == false)
                             continue;
@@ -6961,11 +6775,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     {
                         Property.FromParam(id, 0, out PrototypeId powerProtoRef);
                         PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-                        if (powerProto == null)
-                        {
-                            Logger.Warn("OnPropertyChange(): powerProto == null");
+                        if (!Verify.IsNotNull(powerProto))
                             break;
-                        }
 
                         if (Power.IsCooldownPersistent(powerProto))
                             Properties[PropertyEnum.PowerCooldownDurationPersistent, powerProtoRef] = newValue;
@@ -6978,11 +6789,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     {
                         Property.FromParam(id, 0, out PrototypeId powerProtoRef);
                         PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-                        if (powerProto == null)
-                        {
-                            Logger.Warn("OnPropertyChange(): powerProto == null");
+                        if (!Verify.IsNotNull(powerProto))
                             break;
-                        }
 
                         if (Power.IsCooldownPersistent(powerProto))
                             Properties[PropertyEnum.PowerCooldownStartTimePersistent, powerProtoRef] = newValue;
@@ -7061,18 +6869,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override void OnEnteredWorld(EntitySettings settings)
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null)
-            {
-                Logger.Warn("OnEnteredWorld(): player == null");
-                return;
-            }
+            if (!Verify.IsNotNull(player)) return;
 
             Region region = Region;
-            if (region == null)
-            {
-                Logger.Warn("OnEnteredWorld(): region == null");
-                return;
-            }
+            if (!Verify.IsNotNull(region)) return;
 
             player.UpdateScoringEventContext();
 
@@ -7405,7 +7205,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool SyncPartyBoostConditions()
         {
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "SyncPartyBoostConditions(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             List<ulong> boosts = null;  // allocate on demand
 
@@ -7414,11 +7214,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (condition.IsPartyBoost() == false)
                     continue;
 
-                if (condition.ConditionPrototypeRef == PrototypeId.Invalid)
-                {
-                    Logger.Warn($"SyncPartyBoostConditions(): Non-standalone [{condition}] is flagged as a party boost, which is not supported");
+                if (!Verify.IsTrue(condition.ConditionPrototypeRef != PrototypeId.Invalid))
                     continue;
-                }
 
                 boosts ??= new();
                 PrototypeGuid conditionGuid = GameDatabase.GetPrototypeGuid(condition.ConditionPrototypeRef);
