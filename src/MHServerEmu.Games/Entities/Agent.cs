@@ -1819,7 +1819,7 @@ namespace MHServerEmu.Games.Entities
         public override void OnOtherEntityAddedToMyInventory(Entity entity, ref InventoryLocation invLoc, bool unpackedArchivedEntity)
         {
             InventoryPrototype inventoryPrototype = invLoc.InventoryPrototype;
-            if (inventoryPrototype == null) { Logger.Warn("OnOtherEntityAddedToMyInventory(): inventoryPrototype == null"); return; }
+            if (!Verify.IsNotNull(inventoryPrototype)) return;
 
             if (inventoryPrototype.IsEquipmentInventory)
             {
@@ -2952,12 +2952,12 @@ namespace MHServerEmu.Games.Entities
                         }
                         else
                         {
-                            var result = ActivatePerformPower(powerRef);
-                            if (result == PowerUseResult.Success)
+                            PowerUseResult result = ActivatePerformPower(powerRef);
+                            if (Verify.IsTrue(result == PowerUseResult.Success, $"ProcessEntityAction ActivatePerformPower [{powerRef.GetName()}] = {result}"))
                                 EntityActionComponent.PerformPowers.Add(powerRef);
-                            else
-                                Logger.Warn($"ProcessEntityAction ActivatePerformPower [{powerRef}] = {result}");
-                            if (result == PowerUseResult.OwnerNotSimulated) return false;
+
+                            if (result == PowerUseResult.OwnerNotSimulated)
+                                return false;
                         }
                     }
                     if (aiOverride.BrainRemove)

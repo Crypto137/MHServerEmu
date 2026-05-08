@@ -647,8 +647,9 @@ namespace MHServerEmu.Games.Entities
         {
             ExitWorld();
 
-            if (Locomotor?.IsEnabled == true)
-                Logger.Warn($"ExitGame(): Entity is exiting game but locomotor is still enabled {this}");
+            Locomotor locomotor = Locomotor;
+            if (locomotor != null)
+                Verify.IsTrue(locomotor.IsEnabled == false, $"Entity is exiting game but locomotor is still enabled {this}");
 
             base.ExitGame();
         }
@@ -1010,7 +1011,9 @@ namespace MHServerEmu.Games.Entities
 
         private bool OrientToward(Vector3 point, Vector3 origin, bool ignorePitch = false, ChangePositionFlags changeFlags = ChangePositionFlags.None)
         {
-            if (IsInWorld == false) Logger.Debug($"Trying to orient entity that is not in the world {this}.  point={point}, ignorePitch={ignorePitch}, cpFlags={changeFlags}");
+            if (!Verify.IsTrue(IsInWorld, $"Trying to orient entity that is not in the world {this}.  point={point}, ignorePitch={ignorePitch}, cpFlags={changeFlags}"))
+                return false;
+
             Vector3 delta = point - origin;
             if (ignorePitch) delta.Z = 0.0f;
             if (Vector3.LengthSqr(delta) >= MathHelper.PositionSqTolerance)
@@ -1192,10 +1195,10 @@ namespace MHServerEmu.Games.Entities
 
             if (HasNavigationInfluence == false)
             {
-                var region = Region;
-                if (region == null) return;
-                if (region.NaviMesh.AddInfluence(_regionLocation.Position, Bounds.Radius, NaviInfluence) == false)
-                    Logger.Warn($"Failed to add navi influence for ENTITY={this} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");
+                Region region = Region;
+                if (!Verify.IsNotNull(region)) return;
+
+                Verify.IsTrue(region.NaviMesh.AddInfluence(_regionLocation.Position, Bounds.Radius, NaviInfluence), $"Failed to add navi influence for ENTITY={this} MISSION={MissionPrototype.GetNameFormatted()}");
                 HasNavigationInfluence = true;
             }
         }
@@ -1205,9 +1208,9 @@ namespace MHServerEmu.Games.Entities
             if (HasNavigationInfluence)
             {
                 Region region = Region;
-                if (region == null) return;
-                if (region.NaviMesh.RemoveInfluence(NaviInfluence) == false)
-                    Logger.Warn($"Failed to remove navi influence for ENTITY={this} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");
+                if (!Verify.IsNotNull(region)) return;
+
+                Verify.IsTrue(region.NaviMesh.RemoveInfluence(NaviInfluence), $"Failed to remove navi influence for ENTITY={this} MISSION={MissionPrototype.GetNameFormatted()}");
                 HasNavigationInfluence = false;
             }
         }
@@ -1229,18 +1232,18 @@ namespace MHServerEmu.Games.Entities
             if (HasNavigationInfluence == false) return;
 
             Region region = Region;
-            if (region == null) return;
-            var regionPosition = _regionLocation.Position;
+            if (!Verify.IsNotNull(region)) return;
+            
+            Vector3 regionPosition = _regionLocation.Position;
             if (NaviInfluence.Point != null)
             {
-                if (NaviInfluence.Point.Pos.X != regionPosition.X ||
-                    NaviInfluence.Point.Pos.Y != regionPosition.Y)
-                    if (region.NaviMesh.UpdateInfluence(NaviInfluence, regionPosition, Bounds.Radius) == false)
-                        Logger.Warn($"Failed to update navi influence for ENTITY={ToString()} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");
+                if (NaviInfluence.Point.Pos.X != regionPosition.X || NaviInfluence.Point.Pos.Y != regionPosition.Y)
+                    Verify.IsTrue(region.NaviMesh.UpdateInfluence(NaviInfluence, regionPosition, Bounds.Radius), $"Failed to update navi influence for ENTITY={ToString()} MISSION={MissionPrototype.GetNameFormatted()}");
             }
             else
-                if (region.NaviMesh.AddInfluence(regionPosition, Bounds.Radius, NaviInfluence) == false)
-                Logger.Warn($"Failed to add navi influence for ENTITY={ToString()} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");
+            {
+                Verify.IsTrue(region.NaviMesh.AddInfluence(regionPosition, Bounds.Radius, NaviInfluence), $"Failed to add navi influence for ENTITY={ToString()} MISSION={MissionPrototype.GetNameFormatted()}");
+            }
         }
 
         public PathFlags GetPathFlags()
@@ -1257,22 +1260,25 @@ namespace MHServerEmu.Games.Entities
 
         public NaviPathResult CheckCanPathTo(Vector3 toPosition, PathFlags pathFlags)
         {
-            var region = Region;
-            if (IsInWorld == false || region == null)
-            {
-                Logger.Warn($"Entity not InWorld when trying to check for a path! Entity: {ToString()}");
+            Region region = Region;
+            if (!Verify.IsTrue(IsInWorld && region != null, $"Entity not InWorld when trying to check for a path!\n Entity: {this}"))
                 return NaviPathResult.Failed;
-            }
 
             bool hasNaviInfluence = false;
             if (HasNavigationInfluence)
             {
+                // This is client-accurate, but it appears likely to be a bug: hasNaviInfluence will be false,
+                // and EnableNavigationInfluence() will never be called below. This was the case as far back as 1.10,
+                // so it's way too risky to make changes to this, but it's something to keep in mind if bugs pop up.
+                // It probably works out because something else re-enables the influence immediately after this is called.
                 DisableNavigationInfluence();
                 hasNaviInfluence = HasNavigationInfluence;
             }
 
-            var result = NaviPath.CheckCanPathTo(region.NaviMesh, _regionLocation.Position, toPosition, _bounds.Radius, pathFlags);
-            if (hasNaviInfluence) EnableNavigationInfluence();
+            NaviPathResult result = NaviPath.CheckCanPathTo(region.NaviMesh, _regionLocation.Position, toPosition, _bounds.Radius, pathFlags);
+
+            if (hasNaviInfluence)
+                EnableNavigationInfluence();
 
             return result;
         }
@@ -1375,11 +1381,9 @@ namespace MHServerEmu.Games.Entities
         public virtual PowerUseResult ActivatePower(PrototypeId powerRef, ref PowerActivationSettings settings)
         {
             Power power = GetPower(powerRef);
-            if (power == null)
-            {
-                Logger.Warn($"ActivatePower(): Requested activation of power {GameDatabase.GetPrototypeName(powerRef)} but that power not found on {this}");
+            if (!Verify.IsNotNull(power, $"Requested activation of power {powerRef.GetName()} but that power not found on {this}"))
                 return PowerUseResult.AbilityMissing;
-            }
+
             return ActivatePower(power, ref settings);
         }
 
@@ -1471,13 +1475,13 @@ namespace MHServerEmu.Games.Entities
 
         public bool ActivePowerDisablesOrientation()
         {
-            if (IsExecutingPower == false) return false;
-            var activePower = ActivePower;
-            if (activePower == null)
-            {
-                Logger.Warn($"WorldEntity has ActivePowerRef set, but is missing the power in its power collection! Power: [{GameDatabase.GetPrototypeName(ActivePowerRef)}] WorldEntity: [{ToString()}]");
+            if (IsExecutingPower == false)
                 return false;
-            }
+
+            Power activePower = ActivePower;
+            if (!Verify.IsNotNull(activePower, $"WorldEntity has ActivePowerRef set, but is missing the power in its power collection! Power: [{ActivePowerRef.GetName()}] WorldEntity: [{this}]"))
+                return false;
+
             return activePower.DisableOrientationWhileActive();
         }
 
@@ -2382,8 +2386,6 @@ namespace MHServerEmu.Games.Entities
 
         public void ApplyPropertyTicker(PropertyTicker.TickData tickData)
         {
-            //Logger.Debug($"ApplyPropertyTicker(): [{tickData}] => [{this}]");
-
             if (IsInWorld == false || tickData.TickDurationSeconds <= 0f)
                 return;
 
@@ -2534,11 +2536,8 @@ namespace MHServerEmu.Games.Entities
 
                 // Validate data type - this system supports only float properties and health
                 PropertyInfo propertyInfo = propertyInfoTable.LookupPropertyInfo(convertedProperty);
-                if (propertyInfo.DataType != PropertyDataType.Real && convertedProperty != PropertyEnum.Health)
-                {
-                    Logger.Warn($"ApplyDamageConversionInternal(): Trying to convert to invalid property type for power {context.PowerPrototype}");
+                if (!Verify.IsTrue(propertyInfo.DataType == PropertyDataType.Real || convertedProperty == PropertyEnum.Health, $"Trying to convert to invalid property {convertedProperty} for power {context.PowerPrototype}"))
                     continue;
-                }
 
                 // Convert value
                 float convertedValue = context.DamageBase * kvp.Value;
@@ -3525,8 +3524,12 @@ namespace MHServerEmu.Games.Entities
 
                     bool enable = newValue == false;    // !doDisable
 
-                    if (ConditionCollection?.EnablePowerConditions(disablePowerRef, enable) == false)
-                        Logger.Warn($"OnPropertyChange(): EnablePowerConditions failed to [{(enable ? "enable" : "disable")}] conditions of creatorPower=[{disablePowerRef.GetName()}] on owner=[{this}]");
+                    ConditionCollection conditionCollection = ConditionCollection;
+                    if (conditionCollection != null)
+                    {
+                        bool success = conditionCollection.EnablePowerConditions(disablePowerRef, enable);
+                        Verify.IsTrue(success, $"EnablePowerConditions failed to [{(enable ? "enable" : "disable")}] conditions of creatorPower=[{disablePowerRef.GetName()}] on owner=[{this}]");
+                    }
 
                     break;
 
@@ -4160,7 +4163,7 @@ namespace MHServerEmu.Games.Entities
                     continue;
                 }
 
-                Logger.Warn($"ApplyLootTableSourceOverrides(): Failed to find override for loot table source {lootTableSource.GetName()} for entity [{this}] in region [{region}]");
+                Verify.IsTrue(false, $"Failed to find override for loot table source {lootTableSource.GetName()} for entity [{this}] in region [{region}]");
             }
 
             foreach (var kvp in overrides)
@@ -4406,11 +4409,12 @@ namespace MHServerEmu.Games.Entities
 
                         PowerActivationSettings powerSettings = new(Id, Vector3.Zero, _regionLocation.Position);
                         powerSettings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
-                        var result = ActivatePower(powerRef, ref powerSettings);
-                        if (result == PowerUseResult.Success)
+                        PowerUseResult result = ActivatePower(powerRef, ref powerSettings);
+
+                        if (Verify.IsTrue(result == PowerUseResult.Success, $"ProcessEntityAction ActivatePower [{powerRef.GetName()}] = {result}"))
                             EntityActionComponent.PerformPowers.Add(powerRef);
                         else
-                            return Logger.WarnReturn(false, $"ProcessEntityAction ActivatePower [{powerRef}] = {result}");
+                            return false;
                     }
                 }
             }

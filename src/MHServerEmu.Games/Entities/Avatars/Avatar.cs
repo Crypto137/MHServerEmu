@@ -3794,8 +3794,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
 
-                bool evalSuccess = Eval.RunBool(evalProto, evalContext);
-                Verify.IsTrue(evalSuccess, $"The following EvalOnEnduranceUpdate failed:\nEval: [{evalProto.ExpressionString()}]");
+                bool evalSucceeded = Eval.RunBool(evalProto, evalContext);
+                Verify.IsTrue(evalSucceeded, $"The following EvalOnEnduranceUpdate in an avatar failed:\nEval: [{evalProto.ExpressionString()}]\nAvatar: [{this}]");
             }
 
             // Initialize or reset the update event pointer for this mana type

@@ -270,11 +270,8 @@ namespace MHServerEmu.Games.Entities
                     {
                         Property.FromParam(id, 0, out PrototypeId powerProtoRef);
                         PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-                        if (powerProto == null)
-                        {
-                            Logger.Warn("OnPropertyChange(): powerProto == null");
+                        if (!Verify.IsNotNull(powerProto))
                             break;
-                        }
 
                         if (Power.IsCooldownPersistent(powerProto))
                             Properties[PropertyEnum.PowerCooldownDurationPersistent, powerProtoRef] = newValue;
@@ -286,11 +283,8 @@ namespace MHServerEmu.Games.Entities
                 {
                     Property.FromParam(id, 0, out PrototypeId powerProtoRef);
                     PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-                    if (powerProto == null)
-                    {
-                        Logger.Warn("OnPropertyChange(): powerProto == null");
+                    if (!Verify.IsNotNull(powerProto))
                         break;
-                    }
 
                     if (Power.IsCooldownPersistent(powerProto))
                         Properties[PropertyEnum.PowerCooldownStartTimePersistent, powerProtoRef] = newValue;
@@ -323,18 +317,15 @@ namespace MHServerEmu.Games.Entities
             foreach (PrototypeId invProtoRef in _unlockedInventoryList)
             {
                 PlayerStashInventoryPrototype stashInvProto = GameDatabase.GetPrototype<PlayerStashInventoryPrototype>(invProtoRef);
-                if (stashInvProto == null)
-                {
-                    Logger.Warn("OnUnpackComplete(): stashInvProto == null");
+                if (!Verify.IsNotNull(stashInvProto))
                     continue;
-                }
 
                 if (stashInvProto.IsPlayerStashInventory && IsUsingUnifiedStash == false && stashInvProto.ConvenienceLabel == InventoryConvenienceLabel.UnifiedStash)
                     continue;
 
                 Inventory inventory = GetInventoryByRef(invProtoRef);
-                if (inventory == null && AddInventory(invProtoRef) == false)
-                    Logger.Warn($"OnUnpackComplete(): Failed to add inventory, invProtoRef={invProtoRef.GetName()}");
+                if (inventory == null)
+                    Verify.IsTrue(AddInventory(invProtoRef), $"Failed to add inventory, invProtoRef={invProtoRef.GetName()}");
             }
 
             // Restore persistent cooldowns
@@ -346,11 +337,8 @@ namespace MHServerEmu.Games.Entities
                 {
                     Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
                     PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-                    if (powerProto == null)
-                    {
-                        Logger.Warn("OnUnpackComplete(): powerProto == null");
+                    if (!Verify.IsNotNull(powerProto))
                         continue;
-                    }
 
                     // Discard if no longer flagged as persistent or stored on player
                     if (Power.IsCooldownPersistent(powerProto) == false || Power.IsCooldownOnPlayer(powerProto) == false)
@@ -363,11 +351,8 @@ namespace MHServerEmu.Games.Entities
                 {
                     Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
                     PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-                    if (powerProto == null)
-                    {
-                        Logger.Warn("OnUnpackComplete(): powerProto == null");
+                    if (!Verify.IsNotNull(powerProto))
                         continue;
-                    }
 
                     // Discard if no longer flagged as persistent or stored on player
                     if (Power.IsCooldownPersistent(powerProto) == false || Power.IsCooldownOnPlayer(powerProto) == false)
@@ -476,8 +461,7 @@ namespace MHServerEmu.Games.Entities
                         VendorPurchaseData purchaseData = new(PrototypeId.Invalid);
                         success &= Serializer.Transfer(archive, ref purchaseData);
 
-                        if (_vendorPurchaseDataDict.TryAdd(purchaseData.InventoryProtoRef, purchaseData) == false)
-                            Logger.Warn($"Serialize(): Failed to add deserialized vendor purchase data {purchaseData}");
+                        Verify.IsTrue(_vendorPurchaseDataDict.TryAdd(purchaseData.InventoryProtoRef, purchaseData));
                     }
                 }
 
@@ -573,8 +557,7 @@ namespace MHServerEmu.Games.Entities
         /// </summary>
         public string GetName(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
         {
-            if ((avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count) == false)
-                Logger.Warn("GetName(): avatarIndex out of range");
+            Verify.IsTrue(avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count);
 
             if (avatarIndex == PlayerAvatarIndex.Secondary)
                 return _secondaryPlayerName.Get();
@@ -800,11 +783,8 @@ namespace MHServerEmu.Games.Entities
 
             foreach (EntityInventoryAssignmentPrototype invAssignmentProto in playerProto.StashInventories)
             {
-                if (invAssignmentProto.Inventory == PrototypeId.Invalid)
-                {
-                    Logger.Warn("GetStashInventoryProtoRefs(): invAssignmentProto.Inventory == PrototypeId.Invalid");
+                if (!Verify.IsTrue(invAssignmentProto.Inventory != PrototypeId.Invalid))
                     continue;
-                }
 
                 bool isLocked = GetInventoryByRef(invAssignmentProto.Inventory) == null;
 
@@ -930,7 +910,6 @@ namespace MHServerEmu.Games.Entities
             // Reorder if our sort order overflows
             if (orderOverflow)
             {
-                Logger.Warn($"StashTabInsert(): Sort order overflow, reordering");
                 int fixedOrder = 0;
                 foreach (var kvp in sortedTabs)
                 {
@@ -960,11 +939,8 @@ namespace MHServerEmu.Games.Entities
             foreach (var entry in inventory)
             {
                 Item item = entityManager.GetEntity<Item>(entry.Id);
-                if (item == null)
-                {
-                    Logger.Warn("OnStashInventoryViewed(): item == null");
+                if (!Verify.IsNotNull(item))
                     continue;
-                }
 
                 item.Properties[PropertyEnum.ItemRecentlyAddedGlint] = false;
             }
@@ -996,11 +972,8 @@ namespace MHServerEmu.Games.Entities
             foreach (var entry in inventory)
             {
                 Entity entity = entityManager.GetEntity<Entity>(entry.Id);
-                if (entity == null)
-                {
-                    Logger.Warn("RevealInventory(): entity == null");
+                if (!Verify.IsNotNull(entity))
                     continue;
-                }
 
                 AOI.ConsiderEntity(entity);
             }
@@ -1049,11 +1022,8 @@ namespace MHServerEmu.Games.Entities
                         float itemVariation = item.Properties[PropertyEnum.ItemVariation];
                         PowerIndexProperties indexProps = new(0, characterLevel, combatLevel, itemLevel, itemVariation);
 
-                        if (currentAvatar.AssignPower(powerProtoRef, indexProps) == null)
-                        {
-                            Logger.Warn($"OnOtherEntityAddedToMyInventory(): Failed to assign item power {powerProtoRef.GetName()} to avatar {currentAvatar}");
-                            return;
-                        }
+                        Power itemPower = currentAvatar.AssignPower(powerProtoRef, indexProps);
+                        Verify.IsNotNull(itemPower, $"Failed to assign item power {powerProtoRef.GetName()} to avatar {currentAvatar}");
                     }
                 }
             }
@@ -1067,11 +1037,8 @@ namespace MHServerEmu.Games.Entities
                 {
                     Property.FromParam(kvp.Key, 0, out PrototypeId vendorTypeProtoRef);
                     VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
-                    if (vendorTypeProto == null)
-                    {
-                        Logger.Warn("OnOtherEntityAddedToMyInventory(): vendorTypeProto == null");
+                    if (!Verify.IsNotNull(vendorTypeProto))
                         continue;
-                    }
 
                     if (vendorTypeProto.IsCrafter == false)
                         continue;
@@ -1161,15 +1128,15 @@ namespace MHServerEmu.Games.Entities
 
             // Validate ownership
             Player itemOwner = item.GetOwnerOfType<Player>();
-            if (itemOwner != null && itemOwner != this)
-                return Logger.WarnReturn(false, $"TryInventoryMove(): Player [{this}] is attempting to move item [{item}] owned by another player [{itemOwner}]");
+            if (!Verify.IsTrue(itemOwner == null || itemOwner == this, $"Player [{this}] is attempting to move item [{item}] owned by another player [{itemOwner}]"))
+                return false;
 
             Player containerOwner = container.GetOwnerOfType<Player>();
-            if (containerOwner != null && containerOwner != this)
-                return Logger.WarnReturn(false, $"TryInventoryMove(): Player [{this}] is attempting to move item [{item}] to container [{container}] owned by another player [{containerOwner}]");
+            if (!Verify.IsTrue(containerOwner == null || containerOwner == this, $"Player [{this}] is attempting to move item [{item}] to container [{container}] owned by another player [{containerOwner}]"))
+                return false;
 
-            if (itemOwner == null && containerOwner == null)
-                return Logger.WarnReturn(false, $"TryInventoryMove(): Player [{this}] is attempting to move item [{item}] to container [{container}], and neither of them is owned by this player");
+            if (!Verify.IsTrue(itemOwner == this || containerOwner == this, $"Player [{this}] is attempting to move item [{item}] to container [{container}], and neither of them is owned by this player"))
+                return false;
 
             // Validate inventory
             Inventory inventory = container.GetInventoryByRef(inventoryProtoRef);
@@ -1191,10 +1158,11 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            // Repeat PlayerCanMove validation done by the client
+            // Repeat PlayerCanMove validation done by the client (note: this can fail because of interaction desyncs)
             InventoryLocation invLoc = new(containerId, inventoryProtoRef, slot);
-            if (item.PlayerCanMove(this, ref invLoc, out InventoryResult canMoveResult, out PropertyEnum canMoveResultProperty, out _) == false)
-                return Logger.WarnReturn(false, $"TryInventoryMove(): PlayerCanMove check failed, player=[{this}], item={item}, canMoveResult={canMoveResult}, canMoveResultProperty=[{canMoveResultProperty}]");
+            bool canMove = item.PlayerCanMove(this, ref invLoc, out InventoryResult canMoveResult, out PropertyEnum canMoveResultProperty, out _);
+            if (!Verify.IsTrue(canMove, $"PlayerCanMove check failed, player=[{this}], item={item}, canMoveResult={canMoveResult}, canMoveResultProperty=[{canMoveResultProperty}]"))
+                return false;
 
             // Move
             ulong? stackEntityId = InvalidId;
@@ -1225,12 +1193,12 @@ namespace MHServerEmu.Games.Entities
 
             // Validate ownership
             Player itemOwner = item.GetOwnerOfType<Player>();
-            if (itemOwner != this)
-                return Logger.WarnReturn(false, $"TryInventoryStackSplit(): Player [{this}] is attempting to split stack [{item}] owned by another player [{itemOwner}]");
+            if (!Verify.IsTrue(itemOwner == this, $"Player [{this}] is attempting to split stack [{item}] owned by another player [{itemOwner}]"))
+                return false;
 
             Player containerOwner = container.GetOwnerOfType<Player>();
-            if (container != this && containerOwner != this)
-                return Logger.WarnReturn(false, $"TryInventoryStackSplit(): Player [{this}] is attempting to split stack [{item}] to container [{container}] owned by another player [{containerOwner}]");
+            if (!Verify.IsTrue(container == this || containerOwner == this, $"Player [{this}] is attempting to split stack [{item}] to container [{container}] owned by another player [{containerOwner}]"))
+                return false;
 
             // Validate inventory
             Inventory inventory = container.GetInventoryByRef(inventoryProtoRef);
@@ -1296,10 +1264,10 @@ namespace MHServerEmu.Games.Entities
             settings.SourceEntityId = avatar.Id;
             settings.SourcePosition = avatar.RegionLocation.Position;
 
-            if (item.EnterWorld(region, dropPosition, Orientation.Zero, settings) == false)
+            if (!Verify.IsTrue(item.EnterWorld(region, dropPosition, Orientation.Zero, settings), $"Item {item} failed to enter world"))
             {
-                item.Destroy();     // We have to destroy this item because it's no longer in player's inventory
-                return Logger.WarnReturn(false, $"TrashItem(): Item {item} failed to enter world");
+                item.Destroy();
+                return false;
             }
 
             // Reapply lifespan
@@ -1319,11 +1287,8 @@ namespace MHServerEmu.Games.Entities
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId currencyProtoRef);
                 CurrencyPrototype currencyProto = currencyProtoRef.As<CurrencyPrototype>();
-                if (currencyProto == null)
-                {
-                    Logger.Warn("CanAcquireCurrencyItem(): currencyProto == null");
+                if (!Verify.IsNotNull(currencyProto))
                     continue;
-                }
 
                 int currentAmount = Properties[PropertyEnum.ItemCurrency, currencyProtoRef];
                 int delta = kvp.Value;
@@ -1372,14 +1337,12 @@ namespace MHServerEmu.Games.Entities
 
                 result = item.ChangeInventoryLocation(deliveryBox);
 
-                if (result != InventoryResult.Success)
+                if (!Verify.IsTrue(result == InventoryResult.Success, $"Failed to add item {item} to the delivery box for player {this} for reason {result}, moving this item to the error recovery inventory"))
                 {
                     // Second level of overflow - this should not happen under normal circumstances
-                    Logger.Warn($"AcquireItem(): Failed to add item {item} to the delivery box for player {this} for reason {result}, moving this item to the error recovery inventory");
-
                     Inventory errorRecovery = GetInventory(InventoryConvenienceLabel.ErrorRecovery);
-                    if (errorRecovery == null)
-                        return Logger.WarnReturn(InventoryResult.NoAvailableInventory, $"AcquireItem(): Error recovery inventory is not available for item {item}, player {this}");
+                    if (!Verify.IsNotNull(errorRecovery, $"Error recovery inventory is not available for item {item}, player {this}"))
+                        return InventoryResult.NoAvailableInventory;
 
                     result = item.ChangeInventoryLocation(errorRecovery);
                 }
@@ -1415,11 +1378,8 @@ namespace MHServerEmu.Games.Entities
 
                 Property.FromParam(kvp.Key, 0, out PrototypeId currencyProtoRef);
                 CurrencyPrototype currencyProto = currencyProtoRef.As<CurrencyPrototype>();
-                if (currencyProto == null)
-                {
-                    Logger.Warn("AcquireCurrencyItem(): currencyProto == null");
+                if (!Verify.IsNotNull(currencyProto))
                     continue;
-                }
 
                 int currentAmount = Properties[PropertyEnum.ItemCurrency, currencyProtoRef];
                 if (currencyProto.MaxAmount > 0 && currentAmount + delta > currencyProto.MaxAmount)
@@ -1628,33 +1588,32 @@ namespace MHServerEmu.Games.Entities
             return InventoryResult.InvalidPlayerCannotMoveIntoThisInventory;
         }
 
-        protected override bool InitInventories(bool populateInventories)
+        protected override bool InitInventories(bool populate)
         {
-            bool success = base.InitInventories(populateInventories);
+            bool success = base.InitInventories(populate);
 
             PlayerPrototype playerProto = Prototype as PlayerPrototype;
             if (!Verify.IsNotNull(playerProto)) return false;
 
+            if (playerProto.StashInventories.IsNullOrEmpty())
+                return success;
+
             foreach (EntityInventoryAssignmentPrototype invEntryProto in playerProto.StashInventories)
             {
-                var stashInvProto = invEntryProto.Inventory.As<PlayerStashInventoryPrototype>();
-                if (stashInvProto == null)
-                {
-                    Logger.Warn("InitInventories(): stashInvProto == null");
+                if (!Verify.IsTrue(invEntryProto.Inventory != PrototypeId.Invalid))
                     continue;
-                }
+
+                Verify.IsTrue(invEntryProto.LootTable == PrototypeId.Invalid, $"The StashInventories entry for the following stash page inventory in the Player blueprint specifies a LootTable, which is not going to be used!\n[{invEntryProto.Inventory.GetName()}]");
+
+                PlayerStashInventoryPrototype stashInvProto = invEntryProto.Inventory.As<PlayerStashInventoryPrototype>();
+                if (!Verify.IsNotNull(stashInvProto))
+                    continue;
 
                 if (stashInvProto.IsPlayerStashInventory && IsUsingUnifiedStash == false && stashInvProto.ConvenienceLabel == InventoryConvenienceLabel.UnifiedStash)
                     continue;
 
                 if (stashInvProto.LockedByDefault == false)
-                {
-                    if (AddInventory(invEntryProto.Inventory) == false)
-                    {
-                        Logger.Warn($"InitInventories(): Failed to add inventory, invProtoRef={GameDatabase.GetPrototypeName(invEntryProto.Inventory)}");
-                        success = false;
-                    }
-                }
+                    success &= Verify.IsTrue(AddInventory(invEntryProto.Inventory));
             }
 
             return success;
@@ -1666,17 +1625,12 @@ namespace MHServerEmu.Games.Entities
         private void OnEnterGameInitStashTabOptions()
         {
             using var stashInvRefsHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> stashInvRefs);
-            if (GetStashInventoryProtoRefs(stashInvRefs, false, true))
+            if (!Verify.IsTrue(GetStashInventoryProtoRefs(stashInvRefs, false, true))) return;
+
+            foreach (PrototypeId stashRef in stashInvRefs)
             {
-                foreach (PrototypeId stashRef in stashInvRefs)
-                {
-                    if (_stashTabOptionsDict.ContainsKey(stashRef) == false)
-                        StashTabInsert(stashRef, 0);
-                }
-            }
-            else
-            {
-                Logger.Warn("OnEnterGameInitStashTabOptions(): GetStashInventoryProtoRefs(stashInvRefs, false, true) == false");
+                if (_stashTabOptionsDict.ContainsKey(stashRef) == false)
+                    StashTabInsert(stashRef, 0);
             }
         }
 
@@ -2013,12 +1967,7 @@ namespace MHServerEmu.Games.Entities
 
         public void SetAvatarLibraryProperties()
         {
-            if (CurrentAvatar == null)
-            {
-                // We should have a current avatar at this point
-                Logger.Warn("SetAvatarLibraryProperties(): CurrentAvatar == null");
-                return;
-            }
+            if (!Verify.IsNotNull(CurrentAvatar)) return;
 
             int maxAvatarLevel = 1;
 
@@ -2068,11 +2017,8 @@ namespace MHServerEmu.Games.Entities
             foreach (var entry in teamUpLibrary)
             {
                 Agent teamUpAgent = entityManager.GetEntity<Agent>(entry.Id);
-                if (teamUpAgent == null)
-                {
-                    Logger.Warn("SetTeamUpLibraryProperties(): teamUpAgent == null");
+                if (!Verify.IsNotNull(teamUpAgent))
                     continue;
-                }
 
                 if (teamUpAgent.IsAtLevelCap)
                     teamUpsAtMaxLevel++;
@@ -3158,11 +3104,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             Player tradePartner = Game.EntityManager.GetPlayerByName(PlayerTradePartnerName);
-            if (tradePartner == null)
-            {
-                Logger.Warn("CancelPlayerTrade(): tradePartner == null");
-                return;
-            }
+            if (!Verify.IsNotNull(tradePartner)) return;
 
             DoCancelPlayerTrade(this, tradePartner);     
         }
@@ -3176,11 +3118,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             Player tradePartner = Game.EntityManager.GetPlayerByName(PlayerTradePartnerName);
-            if (tradePartner == null)
-            {
-                Logger.Warn("SetPlayerTradeConfirmFlag(): tradePartner == null");
-                return;
-            }
+            if (!Verify.IsNotNull(tradePartner)) return;
 
             confirmFlag &= HasInventorySpaceToReceivePlayerTrade();
 
@@ -3200,11 +3138,7 @@ namespace MHServerEmu.Games.Entities
                 return;
 
             Player tradePartner = Game.EntityManager.GetPlayerByName(PlayerTradePartnerName);
-            if (tradePartner == null)
-            {
-                Logger.Warn("OnPlayerTradeInventoryChanged(): tradePartner == null");
-                return;
-            }
+            if (!Verify.IsNotNull(tradePartner)) return;
 
             IncrementPlayerTradeSequenceNumber();
             tradePartner.IncrementPlayerTradeSequenceNumber();
@@ -3336,11 +3270,13 @@ namespace MHServerEmu.Games.Entities
 
         private static bool ExchangePlayerTradeInventories(Player playerA, Player playerB)
         {
-            if (playerA.GetInventoriesForPlayerTrade(out Inventory tradeInvA, out Inventory generalInvA, out Inventory fallbackInvA) == false)
-                return Logger.WarnReturn(false, $"ExchangePlayerTradeInventories(): Failed to get one or more trade inventories for initiator player [{playerA}]");
+            bool gotA = playerA.GetInventoriesForPlayerTrade(out Inventory tradeInvA, out Inventory generalInvA, out Inventory fallbackInvA);
+            if (!Verify.IsTrue(gotA, $"Failed to get one or more trade inventories for initiator player [{playerA}]"))
+                return false;
 
-            if (playerB.GetInventoriesForPlayerTrade(out Inventory tradeInvB, out Inventory generalInvB, out Inventory fallbackInvB) == false)
-                return Logger.WarnReturn(false, $"ExchangePlayerTradeInventories(): Failed to get one or more trade inventories for target player [{playerA}]");
+            bool gotB = playerB.GetInventoriesForPlayerTrade(out Inventory tradeInvB, out Inventory generalInvB, out Inventory fallbackInvB);
+            if (!Verify.IsTrue(gotB, $"Failed to get one or more trade inventories for target player [{playerB}]"))
+                return false;
 
             using var itemsAHandle = ListPool<Entity>.Instance.Get(out List<Entity> itemsA);
             using var itemsBHandle = ListPool<Entity>.Instance.Get(out List<Entity> itemsB);
@@ -3362,18 +3298,11 @@ namespace MHServerEmu.Games.Entities
             {
                 ulong entityId = tradeInv.GetAnyEntity();
                 Entity entity = entityManager.GetEntity<Entity>(entityId);
-                
-                if (entity == null)
-                {
-                    Logger.Error("GatherItemsForPlayerTrade(): entity == null");
-                    return;
-                }
+                if (!Verify.IsNotNull(entity, LoggingLevel.Error)) return;
 
-                if (entity.ChangeInventoryLocation(null) != InventoryResult.Success)
-                {
-                    Logger.Error($"GatherItemsForPlayerTrade(): Failed to remove entity [{entity}] from the trade inventory");
+                InventoryResult result = entity.ChangeInventoryLocation(null);
+                if (!Verify.IsTrue(result == InventoryResult.Success, LoggingLevel.Error, $"Failed to remove entity [{entity}] from the trade inventory"))
                     return;
-                }
 
                 items.Add(entity);
             }
@@ -3392,14 +3321,10 @@ namespace MHServerEmu.Games.Entities
                 ulong? stackId = 0;
                 InventoryResult result = item.ChangeInventoryLocation(destinationInv, Inventory.InvalidSlot, ref stackId, true);
                 
-                if (result != InventoryResult.Success)
+                if (!Verify.IsTrue(result == InventoryResult.Success, $"Failed to move item [{item}] to destination inventory with result {result}!\noldOwner=[{oldOwner}], newOwner=[{newOwner}]"))
                 {
-                    Logger.Warn($"ReceiveItemsFromPlayerTrade(): Failed to move item [{item}] to destination inventory with result {result}!\noldOwner=[{oldOwner}], newOwner=[{newOwner}]");
-
                     result = item.ChangeInventoryLocation(fallbackInv, Inventory.InvalidSlot, ref stackId, true);
-
-                    if (result != InventoryResult.Success)
-                        Logger.Error($"ReceiveItemsFromPlayerTrade(): Failed to move item [{item}] to fallback inventory with result {result}!\noldOwner=[{oldOwner}], newOwner=[{newOwner}]");
+                    Verify.IsTrue(result == InventoryResult.Success, LoggingLevel.Error, $"Failed to move item [{item}] to fallback inventory with result {result}!\noldOwner=[{oldOwner}], newOwner=[{newOwner}]");
                 }
 
                 // Do not remove the item yet if we only moved a part of a stack.
@@ -3414,8 +3339,9 @@ namespace MHServerEmu.Games.Entities
 
         private bool ClearPlayerTradeInventory()
         {
-            if (GetInventoriesForPlayerTrade(out Inventory tradeInv, out Inventory generalInv, out Inventory fallbackInv) == false)
-                return Logger.WarnReturn(false, $"ClearPlayerTradeInventory(): Failed to get one or more of the trade inventories for player [{this}]");
+            bool gotInventories = GetInventoriesForPlayerTrade(out Inventory tradeInv, out Inventory generalInv, out Inventory fallbackInv);
+            if (!Verify.IsTrue(gotInventories, $"Failed to get one or more of the trade inventories for player [{this}]"))
+                return false;
 
             EntityManager entityManager = Game.EntityManager;
 
@@ -3425,11 +3351,12 @@ namespace MHServerEmu.Games.Entities
                 Entity entity = entityManager.GetEntity<Entity>(entityId);
                 if (!Verify.IsNotNull(entity)) return false;
 
-                if (entity.ChangeInventoryLocation(generalInv) != InventoryResult.Success)
+                InventoryResult result = entity.ChangeInventoryLocation(generalInv);
+                if (!Verify.IsTrue(result == InventoryResult.Success, $"Failed to return [{entity}] to general inventory for player [{this}]"))
                 {
-                    Logger.Warn($"ClearPlayerTradeInventory(): Failed to return [{entity}] to general inventory for player [{this}]");
-                    if (entity.ChangeInventoryLocation(fallbackInv) != InventoryResult.Success)
-                        return Logger.ErrorReturn(false, $"ClearPlayerTradeInventory(): Failed to return [{entity}] to fallback inventory for player [{this}]");
+                    result = entity.ChangeInventoryLocation(fallbackInv);
+                    if (!Verify.IsTrue(result == InventoryResult.Success, $"Failed to return [{entity}] to fallback inventory for player [{this}]"))
+                        return false;
                 }
             }
 
@@ -3474,13 +3401,17 @@ namespace MHServerEmu.Games.Entities
         {
             if (targetId != InvalidId && interactorId != InvalidId)
             {
-                var interactor = Game.EntityManager.GetEntity<WorldEntity>(interactorId);
+                WorldEntity interactor = Game.EntityManager.GetEntity<WorldEntity>(interactorId);
                 if (interactor == null || interactor.IsInWorld == false)
                     return false;
 
-                var target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
                 if (ValidateDialogTarget(target, interactorId) == false)
-                    return Logger.WarnReturn(false, $"SetDialogTargetId(): Failed to validate dialog target for target=[{target}], interactor=[{interactor}]");
+                {
+                    // Target validation can fail because of desyncs, need a better way of handling this than log spam.
+                    Logger.Warn($"SetDialogTargetId(): Failed to validate dialog target for target=[{target}], interactor=[{interactor}]");
+                    return false;
+                }
             }
 
             DialogTargetId = targetId;
@@ -4207,7 +4138,7 @@ namespace MHServerEmu.Games.Entities
 
             TimeSpan currentTime = Clock.UnixTime;
 
-            if (LootUtilities.GetLastLootCooldownRolloverWallTime(rolloverProperties, currentTime, out TimeSpan lastRolloverTime))
+            if (Verify.IsTrue(LootUtilities.GetLastLootCooldownRolloverWallTime(rolloverProperties, currentTime, out TimeSpan lastRolloverTime)))
             {
                 if (lastRolloverTime > _loginRewardCooldownTimeStart)
                 {
@@ -4216,10 +4147,6 @@ namespace MHServerEmu.Games.Entities
                     _loginRewardCooldownTimeStart = currentTime;
                     Logger.Trace($"GetLoginCount(): Rollover for player [{this}], loginCount = {_loginCount}");
                 }
-            }
-            else
-            {
-                Logger.Warn("GetLoginCount(): Failed to get last loot cooldown rollover wall time");
             }
 
             loginCount = (int)_loginCount;
@@ -4233,11 +4160,8 @@ namespace MHServerEmu.Games.Entities
             foreach (PrototypeId loginRewardProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<LoginRewardPrototype>(PrototypeIterateFlags.NoAbstract))
             {
                 LoginRewardPrototype loginRewardProto = loginRewardProtoRef.As<LoginRewardPrototype>();
-                if (loginRewardProto == null)
-                {
-                    Logger.Warn("GiveLoginRewards(): loginRewardProto == null");
+                if (!Verify.IsNotNull(loginRewardProto))
                     continue;
-                }
 
                 if (loginRewardProto.Day > loginCount)
                     continue;
@@ -4247,11 +4171,9 @@ namespace MHServerEmu.Games.Entities
                 if (Properties.HasProperty(rewardId))
                     continue;
 
-                if (lootManager.GiveItem(loginRewardProto.Item, LootContext.CashShop, this) == false)
-                {
-                    Logger.Warn($"GiveLoginRewards(): Failed to give login reward {loginRewardProto} to player [{this}]");
+                bool success = lootManager.GiveItem(loginRewardProto.Item, LootContext.CashShop, this);
+                if (!Verify.IsTrue(success, $"Failed to give login reward {loginRewardProto} to player [{this}]"))
                     continue;
-                }
 
                 Properties[rewardId] = (long)Clock.UnixTime.TotalSeconds;
             }
@@ -4263,8 +4185,8 @@ namespace MHServerEmu.Games.Entities
 
             foreach (PrototypeId eventDailyGiftProtoRef in Game.EventDailyGifts)
             {
-                if (lootManager.GiveItem(eventDailyGiftProtoRef, LootContext.CashShop, this) == false)
-                    Logger.Warn($"GiveEventDailyGifts(): Failed to give event daily gift {eventDailyGiftProtoRef.GetName()} to player [{this}]");
+                bool success = lootManager.GiveItem(eventDailyGiftProtoRef, LootContext.CashShop, this);
+                Verify.IsTrue(success, $"Failed to give event daily gift {eventDailyGiftProtoRef.GetName()} to player [{this}]");
             }
         }
 
@@ -4381,18 +4303,12 @@ namespace MHServerEmu.Games.Entities
                     continue;
 
                 AvatarPrototype avatarProto = slot.AvatarRef.As<AvatarPrototype>();
-                if (avatarProto == null)
-                {
-                    Logger.Warn("OnPartyCircleChanged(): avatarProto == null");
+                if (!Verify.IsNotNull(avatarProto))
                     continue;
-                }
 
                 CostumePrototype costumeProto = slot.CostumeRef.As<CostumePrototype>();
-                if (costumeProto == null)
-                {
-                    Logger.Warn("OnPartyCircleChanged(): costumeProto == null");
+                if (!Verify.IsNotNull(costumeProto))
                     continue;
-                }
 
                 avatars.Add(avatarProto);
                 costumes.Add(costumeProto);
@@ -4476,11 +4392,7 @@ namespace MHServerEmu.Games.Entities
         public void ScheduleTeleportToPartyMember()
         {
             ulong pendingTeleportPartyMemberId = Properties[PropertyEnum.PendingTeleportPartyMemberId];
-            if (pendingTeleportPartyMemberId == 0)
-            {
-                Logger.Warn("ScheduleTeleportToPartyMember(): pendingTeleportPartyMemberId == 0");
-                return;
-            }
+            if (!Verify.IsTrue(pendingTeleportPartyMemberId != 0)) return;
 
             ScheduleEntityEvent(_teleportToPartyMemberEvent, TimeSpan.Zero, pendingTeleportPartyMemberId);
 
@@ -4489,11 +4401,8 @@ namespace MHServerEmu.Games.Entities
 
         public void OnAddedToParty(Party party)
         {
-            if (PartyId != 0)
-            {
-                Logger.Warn($"OnAddedToParty(): Already in party 0x{PartyId:X}");
+            if (!Verify.IsTrue(PartyId == 0, $"Already in party 0x{PartyId:X}"))
                 return;
-            }
 
             _partyId.Set(party.PartyId);
             UpdatePartyAOI(party);
@@ -4716,10 +4625,8 @@ namespace MHServerEmu.Games.Entities
             if (guildId != GuildManager.InvalidGuildId)
             {
                 Social.Guilds.Guild guild = Game.GuildManager.GetGuild(guildId);
-                if (guild != null)
+                if (Verify.IsNotNull(guild))
                     Community.UpdateGuild(guild);
-                else
-                    Logger.Warn("SetGuildMembership(): guild == null");
             }
             else
             {
@@ -4813,14 +4720,10 @@ namespace MHServerEmu.Games.Entities
             foreach (var kvp in unlockedPermaBuffs.IteratePropertyRange(PropertyEnum.PermaBuff))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId permaBuffProtoRef);
-                if (permaBuffProtoRef == PrototypeId.Invalid)
-                {
-                    Logger.Warn("InitPermaBuffs(): permaBuffProtoRef == PrototypeId.Invalid");
+                if (!Verify.IsTrue(permaBuffProtoRef != PrototypeId.Invalid))
                     continue;
-                }
 
-                if (ApplyPermaBuff(permaBuffProtoRef) == false)
-                    Logger.Warn($"InitPermaBuffs(): Failed to apply PermaBuff {permaBuffProtoRef.GetName()} to player [{this}]");
+                Verify.IsTrue(ApplyPermaBuff(permaBuffProtoRef), $"Failed to apply PermaBuff {permaBuffProtoRef.GetName()} to player [{this}]");
             }
         }
 
@@ -4854,7 +4757,7 @@ namespace MHServerEmu.Games.Entities
                         break;
 
                     default:
-                        Logger.Warn($"ApplyPermaBuff(): The following PermaBuff contains non-numeric property(ies), which is not currently supported!\nPermaBuff: [{permaBuffProtoRef.GetName()}]");
+                        Verify.IsTrue(false, $"The following PermaBuff contains non-numeric property(ies), which is not currently supported!\nPermaBuff: [{permaBuffProtoRef.GetName()}]");
                         break;
                 }
             }
