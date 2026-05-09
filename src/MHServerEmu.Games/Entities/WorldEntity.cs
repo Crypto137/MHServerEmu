@@ -1758,14 +1758,16 @@ namespace MHServerEmu.Games.Entities
         {
             // NOTE: This should also initialize procs granted by equipment because
             // equipment proc properties should already be aggregated with the owner.
-            Verify.IsTrue(UpdateProcEffectPowers(Properties, true), $"UpdateProcEffectPowers failed when initializing entity=[{this}]");
+            bool didAssignAllPowers = UpdateProcEffectPowers(Properties, true);
+            Verify.IsTrue(didAssignAllPowers, $"UpdateProcEffectPowers failed when initializing entity=[{this}]");
         }
 
         protected override void OnAttachedPropertiesPreAdd(PropertyCollection properties)
         {
             base.OnAttachedPropertiesPreAdd(properties);
 
-            Verify.IsTrue(UpdateProcEffectPowers(properties, true), $"UpdateProcEffectPowers failed when attaching properties to entity=[{this}]");
+            bool didAssignAllPowers = UpdateProcEffectPowers(properties, true);
+            Verify.IsTrue(didAssignAllPowers, $"UpdateProcEffectPowers failed when attaching properties to entity=[{this}]");
         }
 
         protected override void OnAttachedPropertiesPostRemove(PropertyCollection properties)
