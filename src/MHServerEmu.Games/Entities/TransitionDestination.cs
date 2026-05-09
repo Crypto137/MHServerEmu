@@ -13,8 +13,6 @@ namespace MHServerEmu.Games.Entities
 {
     public class TransitionDestination : ISerialize
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private int _type;     // This is some other type enum, not RegionTransitionType.
         private PrototypeId _regionRef;
         private PrototypeId _areaRef;
@@ -127,7 +125,7 @@ namespace MHServerEmu.Games.Entities
 
             // Default to target prototype data.
             RegionConnectionTargetPrototype targetProto = _targetRef.As<RegionConnectionTargetPrototype>();
-            if (targetProto == null) return Logger.WarnReturn(false, "IsAvailable(): targetProto == null");
+            if (!Verify.IsNotNull(targetProto)) return false;
             return targetProto.EnabledByDefault;
         }
 
