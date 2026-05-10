@@ -19,8 +19,6 @@ namespace MHServerEmu.Games.Entities.Items
 
     public class ItemSpec : ISerialize
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private PrototypeId _itemProtoRef;
         private PrototypeId _rarityProtoRef;
         private int _itemLevel;
@@ -189,11 +187,8 @@ namespace MHServerEmu.Games.Entities.Items
 
             foreach (AffixSpec affixSpec in _affixSpecList)
             {
-                if (affixSpec.AffixProto == null)
-                {
-                    Logger.Warn("NumAffixesOfCategory(): affixSpec.AffixProto == null");
+                if (!Verify.IsNotNull(affixSpec.AffixProto))
                     continue;
-                }
 
                 if (affixSpec.AffixProto.HasCategory(affixCategoryProto))
                     numAffixes++;
@@ -208,11 +203,8 @@ namespace MHServerEmu.Games.Entities.Items
 
             foreach (AffixSpec affixSpec in _affixSpecList)
             {
-                if (affixSpec.AffixProto == null)
-                {
-                    Logger.Warn("NumAffixesOfPosition(): affixSpec.AffixProto == null");
+                if (!Verify.IsNotNull(affixSpec.AffixProto))
                     continue;
-                }
 
                 if (affixSpec.AffixProto.Position == affixPosition)
                     numAffixes++;
@@ -250,7 +242,7 @@ namespace MHServerEmu.Games.Entities.Items
         public bool GetTradeRestricted()
         {
             PrototypeId bindingRef = GameDatabase.GlobalsPrototype.ItemBindingAffix;
-            if (bindingRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "GetTradeRestricted(): bindingRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(bindingRef != PrototypeId.Invalid)) return false;
 
             foreach (AffixSpec affixSpec in _affixSpecList)
             {
@@ -263,14 +255,12 @@ namespace MHServerEmu.Games.Entities.Items
 
         public bool SetBindingState(bool bound, PrototypeId agentProtoRef = PrototypeId.Invalid, bool? tradeRestricted = null)
         {
-            if (agentProtoRef != PrototypeId.Invalid && EquippableBy != PrototypeId.Invalid && agentProtoRef != EquippableBy)
-            {
-                Logger.Warn("SetBindingState(): Mismatch between equippable avatar and binding request agent detected, defaulting to account-bound");
+            if (!Verify.IsTrue(agentProtoRef == PrototypeId.Invalid || _equippableBy == PrototypeId.Invalid || agentProtoRef == _equippableBy,
+                "Mismatch between equippable avatar and binding request agent detected, defaulting to account-bound"))
                 return SetBindingState(true);
-            }
 
-            if (bound == false && tradeRestricted == true)
-                return Logger.WarnReturn(false, "SetBindingState(): Cannot set ItemSpec to both unbound and trade-restricted, not changing binding");
+            if (!Verify.IsTrue(bound || tradeRestricted != true, "Cannot set ItemSpec to both unbound and trade-restricted, not changing binding"))
+                return false;
 
             // Binding state is stored as an affix scoped to the bound avatar's prototype
             PrototypeId itemBindingAffixProtoRef = GameDatabase.GlobalsPrototype.ItemBindingAffix;
@@ -333,7 +323,7 @@ namespace MHServerEmu.Games.Entities.Items
         public bool SetTradeRestricted(bool tradeRestricted, bool unbind)
         {
             PrototypeId bindingRef = GameDatabase.GlobalsPrototype.ItemBindingAffix;
-            if (bindingRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "SetTradeRestricted(): bindingRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(bindingRef != PrototypeId.Invalid)) return false;
 
             bool stateChanged = false;
 
@@ -375,7 +365,7 @@ namespace MHServerEmu.Games.Entities.Items
         public bool GetEquipEngineEffectsDisabled()
         {
             PrototypeId noVfxAffixRef = GameDatabase.GlobalsPrototype.ItemNoVisualsAffix;
-            if (noVfxAffixRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DisableEquipEngineEffects(): noVfxAffixRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(noVfxAffixRef != PrototypeId.Invalid)) return false;
 
             foreach (AffixSpec affixSpec in _affixSpecList)
             {
@@ -392,7 +382,7 @@ namespace MHServerEmu.Games.Entities.Items
                 return false;
 
             PrototypeId noVfxAffixRef = GameDatabase.GlobalsPrototype.ItemNoVisualsAffix;
-            if (noVfxAffixRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DisableEquipEngineEffects(): noVfxAffixRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(noVfxAffixRef != PrototypeId.Invalid)) return false;
 
             AffixSpec affixSpec = new(noVfxAffixRef.As<AffixPrototype>(), PrototypeId.Invalid, 1);
             _affixSpecList.Add(affixSpec);
@@ -402,8 +392,8 @@ namespace MHServerEmu.Games.Entities.Items
 
         public bool AddAffixSpec(AffixSpec affixSpec)
         {
-            if (affixSpec.IsValid == false)
-                return Logger.WarnReturn(false, $"AddAffixSpec(): Trying to add invalid AffixSpec to ItemSpec! ItemSpec: {this}");
+            if (!Verify.IsTrue(affixSpec.IsValid, $"Trying to add invalid AffixSpec to ItemSpec! ItemSpec: {this}"))
+                return false;
 
             // V52_HACK: Version 1.52 has a bug where Item::GetAffixIcons() does not look at all affixes to determine
             // which set of rune icons to show in runeword tooltips, and the order of crafted rune affixes is random.
@@ -428,7 +418,7 @@ namespace MHServerEmu.Games.Entities.Items
             PrototypeId equippableByBefore = _equippableBy;
 
             ItemPrototype itemProto = _itemProtoRef.As<ItemPrototype>();
-            if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "OnAffixesRolled(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return MutationResults.Error;
 
             // Change EquippableBy if needed
             if (itemProto.IsAvatarRestricted)
@@ -440,15 +430,8 @@ namespace MHServerEmu.Games.Entities.Items
                 {
                     foreach (AffixEntryPrototype affixEntryProto in itemProto.AffixesBuiltIn)
                     {
-                        if (affixEntryProto.Avatar != PrototypeId.Invalid && affixEntryProto.Avatar != _equippableBy)
-                        {
-                            Logger.Warn(string.Format("The Avatar required for this built-in affix is different than the item's equippableBy!\n" +
-                                "Affix: {0}\nAvatar required: {1}\nSpec: {2}\nResolver: {3}",
-                                affixEntryProto.Affix.GetName(),
-                                affixEntryProto.Avatar.GetName(),
-                                this,
-                                resolver));
-                        }
+                        if (affixEntryProto.Avatar != PrototypeId.Invalid)
+                            Verify.IsTrue(affixEntryProto.Avatar == _equippableBy, $"The Avatar required for this built-in affix is different than the item's equippableBy!\nAffix: {affixEntryProto.Affix.GetName()}\nAvatar required: {affixEntryProto.Avatar.GetName()}\nSpec: {this}\nResolver: {resolver}");
                     }
                 }
             }
@@ -462,11 +445,8 @@ namespace MHServerEmu.Games.Entities.Items
                     if (affixSpec.ScopeProtoRef == PrototypeId.Invalid)
                         continue;
 
-                    if (affixSpec.AffixProto == null)
-                    {
-                        Logger.Warn("OnAffixesRolled(): affixSpec.AffixProto == null");
+                    if (!Verify.IsNotNull(affixSpec.AffixProto))
                         continue;
-                    }
 
                     if (affixSpec.AffixProto is not AffixPowerModifierPrototype affixPowerModifierProto)
                         continue;
