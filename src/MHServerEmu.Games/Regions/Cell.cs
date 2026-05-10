@@ -170,10 +170,10 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public void OnHotspotEnter(WorldEntity whom, PrototypeGuid hotspotGuid)
+        public void OnHotspotEnter(WorldEntity overlappedWith, PrototypeGuid hotspotGuid)
         {
             if (GetHotspot(hotspotGuid, out Hotspot hotspot))
-                hotspot.OnOverlapBegin(whom, whom.RegionLocation.Position, whom.RegionLocation.Position);
+                hotspot.OnOverlapBegin(overlappedWith, overlappedWith.RegionLocation.Position, overlappedWith.RegionLocation.Position);
         }
 
         private bool GetHotspot(PrototypeGuid hotspotGuid, out Hotspot hotspot)
@@ -220,10 +220,10 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
-        public void OnHotspotLeave(WorldEntity whom, PrototypeGuid hotspotGuid)
+        public void OnHotspotLeave(WorldEntity overlappedWith, PrototypeGuid hotspotGuid)
         {
             if (GetHotspot(hotspotGuid, out Hotspot hotspot))
-                hotspot.OnOverlapEnd(whom);
+                hotspot.OnOverlapEnd(overlappedWith);
         }
 
         public void Generate()

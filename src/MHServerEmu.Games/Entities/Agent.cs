@@ -1993,29 +1993,29 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        public override void OnCollide(WorldEntity whom, Vector3 whoPos)
+        public override void OnCollide(WorldEntity collidedWith, Vector3 thisPosition)
         {
             // Trigger procs
-            TryActivateOnCollideProcs(ProcTriggerType.OnCollide, whom, whoPos);
+            TryActivateOnCollideProcs(ProcTriggerType.OnCollide, collidedWith, thisPosition);
 
-            if (whom != null)
-                TryActivateOnCollideProcs(ProcTriggerType.OnCollideEntity, whom, whoPos);
+            if (collidedWith != null)
+                TryActivateOnCollideProcs(ProcTriggerType.OnCollideEntity, collidedWith, thisPosition);
             else
-                TryActivateOnCollideProcs(ProcTriggerType.OnCollideWorldGeo, whom, whoPos);
+                TryActivateOnCollideProcs(ProcTriggerType.OnCollideWorldGeo, collidedWith, thisPosition);
 
             // Notify AI
-            AIController?.OnAIOnCollide(whom);
+            AIController?.OnAIOnCollide(collidedWith);
         }
 
-        public override void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
+        public override void OnOverlapBegin(WorldEntity overlappedWith, Vector3 thisPosition, Vector3 otherPosition)
         {
-            base.OnOverlapBegin(whom, whoPos, whomPos);
+            base.OnOverlapBegin(overlappedWith, thisPosition, otherPosition);
 
             // Trigger procs
-            TryActivateOnOverlapBeginProcs(whom, whoPos);
+            TryActivateOnOverlapBeginProcs(overlappedWith, thisPosition);
 
             // Notify AI
-            AIController?.OnAIOverlapBegin(whom);
+            AIController?.OnAIOverlapBegin(overlappedWith);
         }
 
         #endregion

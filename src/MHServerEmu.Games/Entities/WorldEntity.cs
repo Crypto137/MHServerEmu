@@ -3789,9 +3789,11 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public virtual void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
+        public virtual void OnOverlapBegin(WorldEntity overlappedWith, Vector3 thisPosition, Vector3 otherPosition)
         {
-            if (whom is not Hotspot hotspot) return;
+            if (overlappedWith is not Hotspot hotspot)
+                return;
+            
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.NegateHotspots))
             {
                 Property.FromParam(kvp.Key, 0, out int type);
@@ -3843,8 +3845,8 @@ namespace MHServerEmu.Games.Entities
                 ScheduleEntityEvent(_negateHotspotsEvent, TimeSpan.Zero);
         }
 
-        public virtual void OnOverlapEnd(WorldEntity whom) { }
-        public virtual void OnCollide(WorldEntity whom, Vector3 whoPos) { }
+        public virtual void OnOverlapEnd(WorldEntity overlappedWith) { }
+        public virtual void OnCollide(WorldEntity collidedWith, Vector3 thisPosition) { }
 
         public virtual void OnSkillshotReflected(Missile missile)
         {

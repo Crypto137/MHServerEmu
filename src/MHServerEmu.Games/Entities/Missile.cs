@@ -328,11 +328,13 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public override void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
+        public override void OnOverlapBegin(WorldEntity overlappedWith, Vector3 thisPosition, Vector3 otherPosition)
         {
-            base.OnOverlapBegin(whom, whoPos, whomPos);
+            base.OnOverlapBegin(overlappedWith, thisPosition, otherPosition);
 
-            if (whom != null) OnCollide(whom, whoPos);
+            if (!Verify.IsNotNull(overlappedWith)) return;
+
+            OnCollide(overlappedWith, thisPosition);
         }
 
         public override void OnCollide(WorldEntity collidedWith, Vector3 position)
