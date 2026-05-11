@@ -11,8 +11,6 @@ namespace MHServerEmu.Games.Entities.Inventories
     /// </summary>
     public struct InventoryLocation : IEquatable<InventoryLocation>
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public static readonly InventoryLocation Invalid = new();
 
         public ulong ContainerId { get; private set; } = Entity.InvalidId;     // Entity id
@@ -47,7 +45,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         /// </summary>
         public static bool SerializeTo(Archive archive, ref InventoryLocation invLoc)
         {
-            if (archive.IsPacking == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsPacking == false");
+            if (!Verify.IsTrue(archive.IsPacking)) return false;
 
             bool success = true;
             
@@ -67,7 +65,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         /// </summary>
         public static bool SerializeFrom(Archive archive, ref InventoryLocation invLoc)
         {
-            if (archive.IsUnpacking == false) return Logger.WarnReturn(false, "SerializeFrom(): archive.IsUnpacking == false");
+            if (!Verify.IsTrue(archive.IsUnpacking)) return false;
 
             bool success = true;
 

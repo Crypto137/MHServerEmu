@@ -7,8 +7,6 @@ namespace MHServerEmu.Games.Entities.Inventories
 {
     public class InventoryCollection
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Dictionary<PrototypeId, Inventory> _inventoryDict = new();
         private Entity _owner;
 
@@ -21,16 +19,16 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public bool CreateAndAddInventory(PrototypeId invProtoRef)
         {
-            if (_owner == null) return Logger.WarnReturn(false, "CreateAndAddInventory(): _owner == null");
-            if (invProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "CreateAndAddInventory(): invProtoRef == PrototypeId.Invalid");
-            
-            if (GetInventoryByRef(invProtoRef) != null)
-                return Logger.WarnReturn(false, $"Trying to add a duplicate Inventory [{GameDatabase.GetPrototypeName(invProtoRef)}] to an entity's InventoryCollection.\nEntity: [{_owner}]");
+            if (!Verify.IsNotNull(_owner)) return false;
+            if (!Verify.IsTrue(invProtoRef != PrototypeId.Invalid)) return false;
+
+            if (!Verify.IsTrue(GetInventoryByRef(invProtoRef) == null, $"Trying to add a duplicate Inventory [{invProtoRef.GetName()}] to an entity's InventoryCollection.\nEntity: [{_owner}]"))
+                return false;
 
             Inventory inventory = new(_owner.Game);
 
-            if (inventory.Initialize(invProtoRef, _owner.Id) == false)
-                return Logger.WarnReturn(false, $"Failed to initialize inventory [{GameDatabase.GetPrototypeName(invProtoRef)}] for entity [{_owner}]");
+            if (!Verify.IsTrue(inventory.Initialize(invProtoRef, _owner.Id), $"Failed to initialize inventory [{invProtoRef.GetName()}] for entity [{_owner}]"))
+                return false;
 
             _inventoryDict.Add(invProtoRef, inventory);
             return true;
@@ -48,7 +46,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         {
             outInventory = null;
 
-            if (_owner == null) return Logger.WarnReturn(false, "GetInventoryForItem(): _owner == null");
+            if (!Verify.IsNotNull(_owner)) return false;
 
             // NOTE: The client uses the sort flag here, but it's bad for performance, so I will leave it out for now
             foreach (Inventory inventory in new InventoryIterator(_owner/*, InventoryIterationFlags.SortByPrototypeRef*/))
