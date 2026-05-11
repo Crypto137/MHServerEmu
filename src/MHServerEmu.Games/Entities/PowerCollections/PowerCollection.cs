@@ -18,16 +18,14 @@ namespace MHServerEmu.Games.Entities.PowerCollections
     {
         private const int MaxNumRecordsToSerialize = 256;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
-        private readonly SortedDictionary<PrototypeId, PowerCollectionRecord> _powerDict = new();
+        private readonly SortedDictionary<PrototypeId, PowerCollectionRecord> _powers = new();
         private readonly Stack<Power> _condemnedPowers = new();
         private readonly WorldEntity _owner;
  
         public Power ThrowablePower { get; private set; }
         public Power ThrowableCancelPower { get; private set; }
 
-        public int PowerCount { get => _powerDict.Count; }
+        public int PowerCount { get => _powers.Count; }
 
         public PowerCollection(WorldEntity owner)
         {
@@ -47,16 +45,13 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     numberOfRecords = 0;
                     if (powerCollection != null)
                     {
-                        foreach (PowerCollectionRecord record in powerCollection._powerDict.Values)
+                        foreach (PowerCollectionRecord record in powerCollection._powers.Values)
                         {
                             if (record.ShouldSerializeRecordForPacking(archive) == false)
                                 continue;
 
-                            if (numberOfRecords >= MaxNumRecordsToSerialize)
-                            {
-                                Logger.Warn("SerializeRecordCount(): numberOfRecords >= MaxNumRecordsToSerialize");
+                            if (!Verify.IsTrue(numberOfRecords < MaxNumRecordsToSerialize))
                                 break;
-                            }
 
                             numberOfRecords++;
                         }
@@ -75,13 +70,12 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public static bool SerializeTo(Archive archive, PowerCollection powerCollection, uint numberOfRecords)
         {
-            if (archive.IsPacking == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsPacking == false");
-            if (archive.IsReplication == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsReplication == false");
+            if (!Verify.IsTrue(archive.IsPacking && archive.IsReplication)) return false;
 
             bool success = true;
 
             PowerCollectionRecord previousRecord = null;
-            foreach (PowerCollectionRecord record in powerCollection._powerDict.Values)
+            foreach (PowerCollectionRecord record in powerCollection._powers.Values)
             {
                 if (record.ShouldSerializeRecordForPacking(archive))
                 {
@@ -91,20 +85,20 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 }
             }
 
-            if (numberOfRecords != 0) return Logger.ErrorReturn(false, "SerializeTo(): numberOfRecords != 0");
+            if (!Verify.IsTrue(numberOfRecords == 0)) return false;
             return success;
         }
 
         public static bool SerializeFrom(Archive archive, PowerCollection powerCollection, uint numberOfRecords)
         {
-            if (archive.IsUnpacking == false) return Logger.WarnReturn(false, "SerializeFrom(): archive.IsUnpacking == false");
+            if (!Verify.IsTrue(archive.IsUnpacking)) return false;
 
             bool success = true;
 
-            if (powerCollection != null && powerCollection._powerDict.Count > 0)
+            if (powerCollection != null && powerCollection._powers.Count > 0)
             {
-                Logger.Error("SerializeFrom(): When preparing to unpack a serialized PowerCollection, there was already data in the receiving _powerDict");
-                powerCollection._powerDict.Clear();
+                Verify.IsTrue(false, "When preparing to unpack a serialized PowerCollection, there was already data in the receiving _powers structure");
+                powerCollection._powers.Clear();
             }
 
             PowerCollectionRecord previousRecord = null;
@@ -112,8 +106,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             {
                 PowerCollectionRecord record = new();
                 success &= record.SerializeFrom(archive, previousRecord);
-                if (powerCollection != null)
-                    powerCollection._powerDict.Add(record.PowerPrototypeRef, record);
+                powerCollection?._powers.Add(record.PowerPrototypeRef, record);
                 previousRecord = record;
             }
 
@@ -122,12 +115,12 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         
         public SortedDictionary<PrototypeId, PowerCollectionRecord>.Enumerator GetEnumerator()
         {
-            return _powerDict.GetEnumerator();
+            return _powers.GetEnumerator();
         }
 
         public Power GetPower(PrototypeId powerProtoRef)
         {
-            if (_powerDict.TryGetValue(powerProtoRef, out PowerCollectionRecord record) == false)
+            if (_powers.TryGetValue(powerProtoRef, out PowerCollectionRecord record) == false)
                 return null;
 
             return record.Power;
@@ -135,7 +128,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public void GetPowersMatchingAnyKeyword(List<Power> powers, PrototypeId[] keywords)
         {
-            foreach (PowerCollectionRecord record in _powerDict.Values)
+            foreach (PowerCollectionRecord record in _powers.Values)
             {
                 Power power = record.Power;
                 if (power == null)
@@ -160,19 +153,22 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public Power AssignPower(PrototypeId powerProtoRef, in PowerIndexProperties indexProps, PrototypeId triggeringPowerRef = PrototypeId.Invalid, bool sendPowerAssignmentToClients = true)
         {
-            var powerProto = powerProtoRef.As<PowerPrototype>();
-            if (powerProto == null) return Logger.WarnReturn<Power>(null, "AssignPower(): powerProto == null");
+            PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+            if (!Verify.IsNotNull(powerProto)) return null;
 
-            if (Power.IsComboEffect(powerProto) == false && (_owner == null || _owner.IsInWorld == false))
-                return Logger.WarnReturn<Power>(null, "AssignPower(): PowerCollection only supports Assign() of powers while the owner is in world!");
+            if (Power.IsComboEffect(powerProto) == false)
+            {
+                if (!Verify.IsTrue(_owner != null && _owner.IsInWorld, $"PowerCollection now only supports Assign() of powers while the owner is in world!\nEntity: [{_owner}]\nPower: [{powerProtoRef.GetName()}]"))
+                    return null;
+            }
 
             return AssignPowerInternal(powerProtoRef, indexProps, triggeringPowerRef, sendPowerAssignmentToClients);
         }
 
         public bool UnassignPower(PrototypeId powerProtoRef, bool sendPowerUnassignToClients = true)
         {
-            if (_owner == null || _owner.IsInWorld == false)
-                return Logger.WarnReturn(false, "UnassignPower(): PowerCollection only supports Unassign() of powers while the owner is in world!");
+            if (!Verify.IsTrue(_owner != null && _owner.IsInWorld, $"PowerCollection now only supports Unassign() of powers while the owner is in world!\nEntity: [{_owner}]\nPower: [{powerProtoRef.GetName()}]"))
+                return false;
 
             return UnassignPowerInternal(powerProtoRef, sendPowerUnassignToClients);
         }
@@ -195,7 +191,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             // your own powers are sent one by one as they are assigned when
             // your avatar enters world.
 
-            if (_owner == null) return Logger.WarnReturn(false, "SendEntireCollection(): _owner == null");
+            if (!Verify.IsNotNull(_owner)) return false;
 
             // Missile powers are assigned in parallel by the client when MissileCreationContext is applied in OnEnteredWorld().
             if (_owner is Missile)
@@ -203,12 +199,11 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
             // Make sure the provided player is actually interested in our owner
             AreaOfInterest aoi = player.AOI;
-            if (aoi.InterestedInEntity(_owner.Id, AOINetworkPolicyValues.AOIChannelProximity) == false)
-                return Logger.WarnReturn(false, "SendEntireCollection(): Attempting to send an entire power collection to a player not interested in this collection's owner");
+            if (!Verify.IsTrue(aoi.InterestedInEntity(_owner.Id, AOINetworkPolicyValues.AOIChannelProximity))) return false;
 
             var assignCollectionBuilder = NetMessageAssignPowerCollection.CreateBuilder();
 
-            foreach (PowerCollectionRecord record in _powerDict.Values)
+            foreach (PowerCollectionRecord record in _powers.Values)
             {
                 if (record.Power.GetPowerCategory() == PowerCategoryType.ComboEffect)
                     continue;
@@ -234,45 +229,37 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         public void OnOwnerEnteredWorld()
         {
             // Notify powers of the owner entering world
-            foreach (PowerCollectionRecord record in _powerDict.Values)
+            foreach (PowerCollectionRecord record in _powers.Values)
                 record.Power?.OnOwnerEnteredWorld();
         }
 
         public void OnOwnerExitedWorld()
         {
             // Notify powers of the owner exiting world
-            foreach (PowerCollectionRecord record in _powerDict.Values)
+            foreach (PowerCollectionRecord record in _powers.Values)
                 record.Power?.OnOwnerExitedWorld();
 
             // Copy to a temporary list to be able to remove entries while iterating
             using var recordsHandle = ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Instance.Get(out var records);
 
             // This needs to be done in a loop to remove all copies of powers with RefCount higher than 0.
-            const int MaxCount = 100;
-            int count = 0;
-
-            while (_powerDict.Count > 0)
+            while (_powers.Count > 0)
             {
-                if (++count >= MaxCount)
-                {
-                    Logger.Error($"OnOwnerExitedWorld(): Infinite loop detected when unassigning powers from [{_owner}]");
-                    foreach (var kvp in _powerDict)
-                        Logger.Warn($"{kvp.Value.PowerPrototypeRef.GetName()} x{kvp.Value.PowerRefCount}");
-                    break;
-                }
-
-                records.Set(_powerDict);
+                records.Set(_powers);
 
                 bool unassignedAny = false;
                 foreach (var kvp in records)
                 {
                     Power power = kvp.Value.Power;
 
+                    // This is needed for our iteration workaround because triggered powers may remain in the temp list after being unassigned from the main collection.
+                    if (_powers.ContainsKey(kvp.Key) == false)
+                        continue;
+
                     // Simply remove records that have no valid powers
-                    if (power == null)
+                    if (!Verify.IsNotNull(power))
                     {
-                        Logger.Warn("OnOwnerExitedWorld(): power == null");
-                        _powerDict.Remove(kvp.Key);
+                        _powers.Remove(kvp.Key);
                         continue;
                     }
 
@@ -285,18 +272,12 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     unassignedAny = true;
                 }
 
-                if (unassignedAny == false)
+                // Combo powers that are used to enter/exit a transform mode are not unassigned along with their triggering power.
+                // Because of this, there may still be powers left in the collection when a transformed owner avatar exits world.
+                // This appears to be not a bug, but rather a questionable design decision made by Gazillion.
+                if (unassignedAny == false && _powers.Count > 0)
                 {
-                    // Combo powers that are used to enter/exit a transform mode are not unassigned along with their triggering power.
-                    // Because of this, there may still be powers left in the collection when a transformed owner avatar exits world.
-                    // This is not a bug, but rather a questionable design decision made by Gazillion.
-                    if (_powerDict.Count > 0 && _owner is Avatar avatar && avatar.CurrentTransformMode == PrototypeId.Invalid)
-                    {
-                        Logger.Warn($"OnOwnerExitedWorld(): Failed to unassign {_powerDict.Count} power(s) from [{_owner}]");
-                        foreach (var kvp in _powerDict)
-                            Logger.Warn($"{kvp.Value.PowerPrototypeRef.GetName()}");
-                    }
-
+                    Verify.IsTrue(_owner is Avatar avatar && avatar.CurrentTransformMode != PrototypeId.Invalid);
                     break;
                 }
             }
@@ -310,7 +291,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 var keywordProto = GameDatabase.GetPrototype<PowerKeywordPrototype>(keywordProtoRef);
                 if (keywordProto != null)
                 {
-                    foreach (PowerCollectionRecord record in _powerDict.Values)
+                    foreach (PowerCollectionRecord record in _powers.Values)
                     {
                         if (record.Power == null || record.Power.HasKeyword(keywordProto) == false)
                             continue;
@@ -322,19 +303,19 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 }
             }
 
-            foreach (PowerCollectionRecord record in _powerDict.Values)
+            foreach (PowerCollectionRecord record in _powers.Values)
                 record.Power?.OnOwnerCastSpeedChange();
         }
 
         public void OnOwnerLevelChange()
         {
-            foreach (PowerCollectionRecord record in _powerDict.Values)
+            foreach (PowerCollectionRecord record in _powers.Values)
                 record.Power?.OnOwnerLevelChange();
         }
 
         public void OnOwnerDeallocate()
         {
-            foreach (var kvp in _powerDict)
+            foreach (var kvp in _powers)
                 kvp.Value.Power.OnDeallocate();
 
             DeleteCondemnedPowers();
@@ -342,7 +323,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         private PowerCollectionRecord GetPowerRecordByRef(PrototypeId powerProtoRef)
         {
-            if (_powerDict.TryGetValue(powerProtoRef, out PowerCollectionRecord record) == false)
+            if (_powers.TryGetValue(powerProtoRef, out PowerCollectionRecord record) == false)
                 return null;
 
             return record;
@@ -351,8 +332,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         private Power AssignPowerInternal(PrototypeId powerProtoRef, in PowerIndexProperties indexProps, PrototypeId triggeringPowerRef, bool sendPowerAssignmentToClients)
         {
             // Do pre-assignment validation, this check combines and inlines PowerCollection::preAssignPowerInternal() and PowerCollection::validatePowerData()
-            if (GameDatabase.DataDirectory.PrototypeIsApproved(powerProtoRef) == false)
-                return Logger.WarnReturn<Power>(null, $"AssignPowerInternal(): Power is not approved for use ({GameDatabase.GetPrototypeName(powerProtoRef)})");
+            if (!Verify.IsTrue(GameDatabase.DataDirectory.PrototypeIsApproved(powerProtoRef), $"Power is not yet ready for game or review.\n[{powerProtoRef.GetName()}]"))
+                return null;
 
             // Send power assignment message to interested clients
             if (sendPowerAssignmentToClients && _owner != null && _owner.IsInGame)
@@ -386,67 +367,48 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     isPowerProgressionPower = triggeringPowerRecord.IsPowerProgressionPower;
                     isTeamUpPassiveWhileAway = triggeringPowerRecord.IsTeamUpPassiveWhileAway;
                 }
-                else
+                else if (Verify.IsNotNull(_owner))
                 {
-                    if (_owner != null)
+                    if (_owner is Agent agentOwner)
                     {
-                        if (_owner is Agent agentOwner)
+                        isPowerProgressionPower = agentOwner.HasPowerInPowerProgression(powerProtoRef);
+                        if (isPowerProgressionPower == false)
                         {
-                            isPowerProgressionPower = agentOwner.HasPowerInPowerProgression(powerProtoRef);
-
-                            if (isPowerProgressionPower == false)
+                            Avatar avatarOwner = _owner.GetMostResponsiblePowerUser<Avatar>();
+                            if (avatarOwner != null)
                             {
-                                var avatarOwner = _owner.GetMostResponsiblePowerUser<Avatar>();
-                                if (avatarOwner != null)
+                                Agent teamUpAgent = avatarOwner.CurrentTeamUpAgent;
+                                if (teamUpAgent != null)
                                 {
-                                    Agent teamUpAgent = avatarOwner.CurrentTeamUpAgent;
-                                    if (teamUpAgent != null)
+                                    teamUpAgent.GetPowerProgressionInfo(powerProtoRef, out var info);
+                                    if (info.IsForTeamUp)
                                     {
-                                        teamUpAgent.GetPowerProgressionInfo(powerProtoRef, out var info);
-                                        if (info.IsForTeamUp)
-                                        {
-                                            isPowerProgressionPower = true;
-                                            isTeamUpPassiveWhileAway = info.IsPassivePowerOnAvatarWhileAway;
-                                        }
+                                        isPowerProgressionPower = true;
+                                        isTeamUpPassiveWhileAway = info.IsPassivePowerOnAvatarWhileAway;
                                     }
-
                                 }
                             }
-                        }
-                        else
-                        {
-                            isTeamUpPassiveWhileAway = _owner.Properties[PropertyEnum.IsTeamUpAwaySource];
                         }
                     }
                     else
                     {
-                        Logger.Warn("AssignPowerInternal(): _owner == null");
+                        isTeamUpPassiveWhileAway = _owner.Properties[PropertyEnum.IsTeamUpAwaySource];
                     }
                 }
 
                 powerRecord = CreatePowerRecord(powerProtoRef, indexProps, triggeringPowerRef, isPowerProgressionPower, isTeamUpPassiveWhileAway);
-                if (powerRecord == null)
-                    return Logger.WarnReturn<Power>(null, "AssignPowerInternal(): powerRecord == null");
+                if (!Verify.IsNotNull(powerRecord)) return null;
             }
             else
             {
-                if (powerRecord.Power == null)
-                    return Logger.WarnReturn<Power>(null, "AssignPowerInternal(): powerRecord.Power == null");
-
-                if (powerRecord.PowerPrototypeRef != powerProtoRef)
-                    return Logger.WarnReturn<Power>(null, "AssignPowerInternal(): powerRecord.PowerPrototypeRef != powerProtoRef");
+                if (!Verify.IsNotNull(powerRecord.Power)) return null;
+                if (!Verify.IsTrue(powerRecord.PowerPrototypeRef == powerProtoRef)) return null;
 
                 // Only proc and combo effects can be assigned multiple times
                 bool isProcEffect = powerRecord.Power.IsProcEffect();
                 bool isComboEffect = powerRecord.Power.IsComboEffect() && powerRecord.Power.GetActivationType() != PowerActivationType.Passive;
-
-                if (isProcEffect == false && isComboEffect == false)
-                {
-                    return Logger.WarnReturn<Power>(null, string.Format(
-                        "AssignPowerInternal(): The following power being assigned multiple times to a PowerCollection is not a Combo or Proc effect power, which is not allowed!\nOwner: [{0}]\nPower: [{1}]",
-                        _owner != null ? _owner.ToString() : "Unknown",
-                        powerRecord.Power.ToString()));
-                }
+                if (!Verify.IsTrue(isProcEffect || isComboEffect, $"The following power being assigned multiple times to a PowerCollection is not a Combo or Proc effect power, which is not allowed!\nOwner: [{_owner}]\nPower: [{powerRecord.Power}]"))
+                    return null;
 
                 // Increment power ref count
                 powerRecord.PowerRefCount++;
@@ -459,12 +421,12 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             bool isAvatarPowerProgressionPower, bool isTeamUpPassivePowerWhileAway)
         {
             Power power = CreatePower(powerProtoRef, indexProps, triggeringPowerRef, isTeamUpPassivePowerWhileAway);
-            if (power == null) return Logger.WarnReturn<PowerCollectionRecord>(null, "CreatePowerRecord(): power == null");
+            if (!Verify.IsNotNull(power)) return null;
 
             // Here we have a custom Initialize() method not present in the client to clean up record initialization
             PowerCollectionRecord record = new();
             record.Initialize(power, powerProtoRef, indexProps, 1, isAvatarPowerProgressionPower, isTeamUpPassivePowerWhileAway);
-            _powerDict.Add(record.PowerPrototypeRef, record);   // PowerCollection::addPowerRecord()
+            _powers.Add(record.PowerPrototypeRef, record);   // PowerCollection::addPowerRecord()
 
             FinishAssignPower(power);
             return record;
@@ -472,11 +434,14 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         private Power CreatePower(PrototypeId powerProtoRef, in PowerIndexProperties indexProps, PrototypeId triggeringPowerRef, bool isTeamUpPassivePowerWhileAway)
         {
-            if (powerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn<Power>(null, "CreatePower(): powerProtoRef == PrototypeId.Invalid");
-            if (_owner == null) return Logger.WarnReturn<Power>(null, "CreatePower(): _owner == null");
-            if (_owner.Game == null) return Logger.WarnReturn<Power>(null, "CreatePower(): _owner.Game == null");
+            if (!Verify.IsTrue(powerProtoRef != PrototypeId.Invalid)) return null;
+            if (!Verify.IsNotNull(_owner)) return null;
 
-            Power power = _owner.Game.AllocatePower(powerProtoRef);
+            Game game = _owner.Game;
+            if (!Verify.IsNotNull(game)) return null;
+
+            Power retPower = game.AllocatePower(powerProtoRef);
+            if (!Verify.IsNotNull(retPower)) return null;
 
             // Assemble property values passed as arguments into a collection
             using PropertyCollection initializeProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
@@ -489,25 +454,21 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             if (triggeringPowerRef != PrototypeId.Invalid)
                 initializeProperties[PropertyEnum.TriggeringPowerRef, powerProtoRef] = triggeringPowerRef;
 
-            power.Initialize(_owner, isTeamUpPassivePowerWhileAway, initializeProperties);
+            retPower.Initialize(_owner, isTeamUpPassivePowerWhileAway, initializeProperties);
 
-            return power;
+            return retPower;
         }
 
         private void FinishAssignPower(Power power)
         {
             if (power.GetPowerCategory() == PowerCategoryType.ThrowablePower)
             {
-                if (ThrowablePower != null)
-                    Logger.Warn("FinishAssignPower(): Trying to assign a throwable power when this entity already has a throwable power in its power collection");
-
+                Verify.IsTrue(ThrowablePower == null, $"Trying to assign a throwable power while this entity already has a throwable power in its power collection. \nEntity: [{_owner}]");
                 ThrowablePower = power;
             }
             else if (power.GetPowerCategory() == PowerCategoryType.ThrowableCancelPower)
             {
-                if (ThrowableCancelPower != null)
-                    Logger.Warn("FinishAssignPower(): Trying to assign a throwable cancel power when this entity already has a throwable cancel power in its power collection");
-
+                Verify.IsTrue(ThrowableCancelPower == null, $"Trying to assign a throwable cancel power when this entity already has a throwable cancel power in its power collection. \nEntity: [{_owner}]");
                 ThrowableCancelPower = power;
             }
 
@@ -521,22 +482,19 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         private bool AssignTriggeredPowers(Power power)
         {
-            if (_owner == null) return Logger.WarnReturn(false, "AssignTriggeredPowers(): _owner == null");
+            if (!Verify.IsNotNull(_owner)) return false;
 
             PowerPrototype powerProto = power.Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "AssignTriggeredPowers(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
 
             PrototypeId powerProtoRef = power.PrototypeDataRef;
-            if (powerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "AssignTriggeredPowers(): powerProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(powerProtoRef != PrototypeId.Invalid)) return false;
 
             if (powerProto.ActionsTriggeredOnPowerEvent.IsNullOrEmpty())
                 return true;
 
-            if (_owner is not Agent && _owner.Prototype is not HotspotPrototype)
-            {
-                return Logger.WarnReturn(false, $"AssignTriggeredPowers(): The following entity can't cast combo powers, but is assigning a power"
-                    + " that specifies PowerEventActions, which are only supported for agents/hotspots:\n[{_owner}]\n[{powerProto}]");
-            }
+            if (!Verify.IsTrue(_owner is Agent || _owner.Prototype is HotspotPrototype, $"The following entity can't cast combo powers, but is assigning a power that specifies PowerEventActions, which are only supported for agents/hotspots:\n[{_owner}]\n[{powerProto}]"))
+                return false;
 
             PowerIndexProperties indexProps = new(power.Properties[PropertyEnum.PowerRank], power.Properties[PropertyEnum.CharacterLevel],
                 power.Properties[PropertyEnum.CombatLevel], power.Properties[PropertyEnum.ItemLevel]);
@@ -549,11 +507,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             foreach (PowerEventActionPrototype triggeredPowerEventProto in powerProto.ActionsTriggeredOnPowerEvent)
             {
                 PowerEventType powerEventType = triggeredPowerEventProto.PowerEvent;
-                if (powerEventType == PowerEventType.None)
-                {
-                    Logger.Warn($"AssignTriggeredPowers(): This power contains a triggered power event with a null type\nPower: [{powerProto}]");
+                if (!Verify.IsTrue(powerEventType != PowerEventType.None, $"This power contains a triggered power event with a null type\nPower: [{powerProto}]"))
                     continue;
-                }
 
                 // Check if this power event has triggered powers that need assignment
                 switch (triggeredPowerEventProto.EventAction)
@@ -561,40 +516,26 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     case PowerEventActionType.UsePower:
                     case PowerEventActionType.ScheduleActivationAtPercent:
                     case PowerEventActionType.ScheduleActivationInSeconds:
-                        if (triggeredPowerEventProto.Power == PrototypeId.Invalid)
-                        {
-                            Logger.Warn($"AssignTriggeredPowers(): Power [{power}] for agent [{_owner}] has a triggered power event with no power specified");
+                        if (!Verify.IsTrue(triggeredPowerEventProto.Power != PrototypeId.Invalid, $"Power [{power}] for agent [{_owner}] has a triggered power event with no power specified"))
                             continue;
-                        }
+
                         triggeredPowerRefList.Add(triggeredPowerEventProto.Power);
                         break;
 
                     case PowerEventActionType.TransformModeStart:
-                        var contextProto = triggeredPowerEventProto.PowerEventContext as PowerEventContextTransformModePrototype;
-                        if (contextProto == null)
-                        {
-                            Logger.Warn("AssignTriggeredPowers(): contextProto == null");
+                        PowerEventContextTransformModePrototype contextProto = triggeredPowerEventProto.PowerEventContext as PowerEventContextTransformModePrototype;
+                        if (!Verify.IsNotNull(contextProto))
                             continue;
-                        }
 
-                        var transformModeProto = contextProto.TransformMode.As<TransformModePrototype>();
-                        if (transformModeProto == null)
-                        {
-                            Logger.Warn("AssignTriggeredPowers(): transformModeProto == null");
+                        TransformModePrototype transformModeProto = contextProto.TransformMode.As<TransformModePrototype>();
+                        if (!Verify.IsNotNull(transformModeProto))
                             continue;
-                        }
 
-                        if (transformModeProto.EnterTransformModePower == PrototypeId.Invalid)
-                        {
-                            Logger.Warn($"AssignTriggeredPowers(): Power [{power}] for agent [{_owner}] has a triggered TransformModeStart power event with no EnterTransformMode power specified");
+                        if (!Verify.IsTrue(transformModeProto.EnterTransformModePower != PrototypeId.Invalid, $"Power [{power}] for agent [{_owner}] has a triggered TransformModeStart power event with no EnterTransformMode power specified"))
                             continue;
-                        }
 
-                        if (transformModeProto.ExitTransformModePower == PrototypeId.Invalid)
-                        {
-                            Logger.Warn($"AssignTriggeredPowers(): Power [{power}] for agent [{_owner}] has a triggered TransformModeStart power event with no ExitTransformModePower power specified");
+                        if (!Verify.IsTrue(transformModeProto.ExitTransformModePower != PrototypeId.Invalid, $"Power [{power}] for agent [{_owner}] has a triggered TransformModeStart power event with no ExitTransformModePower power specified"))
                             continue;
-                        }
 
                         triggeredPowerRefList.Add(transformModeProto.EnterTransformModePower);
                         triggeredPowerRefList.Add(transformModeProto.ExitTransformModePower);
@@ -611,11 +552,13 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 }
 
                 // Make sure this power doesn't assign more than one OnTargetKill / OnPowerEnded triggered powers
-                if (powerEventType == PowerEventType.OnTargetKill || (powerEventType == PowerEventType.OnPowerEnd && triggeredPowerEventProto.HasEvalEventTriggerChance == false))
+                if (powerEventType == PowerEventType.OnTargetKill ||
+                    (powerEventType == PowerEventType.OnPowerEnd && triggeredPowerEventProto.HasEvalEventTriggerChance == false))
                 {
-                    if (MathHelper.BitTest(assignedPowers, 1 << (int)powerEventType))
+                    if (!Verify.IsTrue(MathHelper.BitTest(assignedPowers, 1 << (int)powerEventType) == false,
+                        $"This power contains multiple powers of type OnTargetKill or OnPowerEnded\nPower: [{powerProto}]"))
                     {
-                        Logger.Warn($"AssignTriggeredPowers(): This power contains multiple powers of type OnTargetKill or OnPowerEnded\nPower: [{powerProto}]");
+                        triggeredPowerRefList.Clear();
                         continue;
                     }
                 }
@@ -625,18 +568,15 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 // Assign triggered powers we determined we need to assign
                 foreach (PrototypeId triggeredPowerRef in triggeredPowerRefList)
                 {
-                    if (triggeredPowerRef == PrototypeId.Invalid)
-                    {
-                        Logger.Warn("AssignTriggeredPowers(): triggeredPowerRef == PrototypeId.Invalid");
+                    if (!Verify.IsTrue(triggeredPowerRef != PrototypeId.Invalid))
                         continue;
-                    }
 
                     // Some powers apparently can trigger themselves, no need to assign them again
                     if (triggeredPowerRef == powerProtoRef)
                         continue;
 
-                    if (AssignPower(triggeredPowerRef, indexProps, powerProtoRef, false) == null)
-                        return Logger.WarnReturn(false, "AssignTriggeredPowers(): AssignPower() == null");
+                    if (!Verify.IsNotNull(AssignPower(triggeredPowerRef, indexProps, powerProtoRef, false)))
+                        return false;
                 }
 
                 triggeredPowerRefList.Clear();
@@ -647,19 +587,21 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         private bool UnassignPowerInternal(PrototypeId powerProtoRef, bool sendPowerUnassignToClients)
         {
-            if (_owner == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): _owner == null");
-            if (_owner.Game == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): _owner.Game == null");
+            if (!Verify.IsNotNull(_owner)) return false;
+
+            Game game = _owner.Game;
+            if (!Verify.IsNotNull(game)) return false;
 
             // Find and validate the record for our powerProtoRef
             PowerCollectionRecord powerRecord = GetPowerRecordByRef(powerProtoRef);
-            if (powerRecord == null)
-                return Logger.WarnReturn(false, $"UnassignPowerInternal(): When unassigning, failed to find power record for {powerProtoRef.GetName()}\n  Owner:[{_owner}]\n  NumRecordsInCollection:{_powerDict.Count} NumCondemnedPowers:{_condemnedPowers.Count}");
+            if (!Verify.IsNotNull(powerRecord, $"When unassigning, failed to find power record for {powerProtoRef.GetName()}\n  Owner:[{_owner}]\n  NumRecordsInCollection:{_powers.Count} NumCondemnedPowers:{_condemnedPowers.Count}"))
+                return false;
 
-            if (powerRecord.Power == null)
-                return Logger.WarnReturn(false, $"UnassignPowerInternal(): When unassigning, the power record was found but had no power instance! Power: [{powerProtoRef.GetName()}], RefCount: [{powerRecord.PowerRefCount}], Owner: [{_owner}]");
+            if (!Verify.IsNotNull(powerRecord.Power, $"When unassigning, the power record was found but had no power instance! Power: [{powerProtoRef.GetName()}], RefCount: [{powerRecord.PowerRefCount}], Owner: [{_owner}]"))
+                return false;
 
-            if (powerRecord.PowerRefCount < 1)
-                return Logger.WarnReturn(false, $"UnassignPowerInternal(): When unassigned, the power record had an invalid refcount! Power: [{powerProtoRef.GetName()}], RefCount: [{powerRecord.PowerRefCount}], Owner: [{_owner}]");
+            if (!Verify.IsTrue(powerRecord.PowerRefCount > 0, $"When unassigned, the power record had an invalid refcount! Power: [{powerProtoRef.GetName()}], RefCount: [{powerRecord.PowerRefCount}], Owner: [{_owner}]"))
+                return false;
 
             // Start by subtracting from the PowerRefCount
             powerRecord.PowerRefCount--;
@@ -669,10 +611,11 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             {
                 FinishUnassignPower(powerRecord.Power);
 
-                _owner.Game.EntityManager.RegisterEntityForCondemnedPowerDeletion(_owner.Id);
+                game.EntityManager.RegisterEntityForCondemnedPowerDeletion(_owner.Id);
                 _condemnedPowers.Push(powerRecord.Power);
+                powerRecord.ClearPower();
 
-                DestroyPowerRecord(powerRecord.PowerPrototypeRef);
+                Verify.IsTrue(DestroyPowerRecord(powerRecord.PowerPrototypeRef));
             }
 
             // Send power unassignment message to interested clients
@@ -683,7 +626,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     .SetPowerProtoId((ulong)powerProtoRef)
                     .Build();
 
-                _owner.Game.NetworkManager.SendMessageToInterested(unassignPowerMessage, _owner, AOINetworkPolicyValues.AOIChannelProximity);
+                game.NetworkManager.SendMessageToInterested(unassignPowerMessage, _owner, AOINetworkPolicyValues.AOIChannelProximity);
             }
 
             return true;
@@ -691,35 +634,28 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         private bool DestroyPowerRecord(PrototypeId powerProtoRef)
         {
-            // Is this extra validation worth the performance cost of looking the record up again?
-            if (_powerDict.TryGetValue(powerProtoRef, out PowerCollectionRecord powerRecord) == false)
+            if (_powers.TryGetValue(powerProtoRef, out PowerCollectionRecord powerRecord) == false)
                 return false;
 
-            if (powerRecord.PowerRefCount != 0)
-                Logger.Warn("DestroyPowerRecord(): Power record is not empty");
+            Verify.IsTrue(powerRecord.Power == null && powerRecord.PowerRefCount == 0, $"Power Record not empty during Destroy Power Record - Power Ref [{powerProtoRef.GetName()}]");
 
-            return _powerDict.Remove(powerProtoRef);
+            _powers.Remove(powerProtoRef);
+            return true;
         }
 
         private void FinishUnassignPower(Power power)
         {
             if (power.GetPowerCategory() == PowerCategoryType.ThrowablePower)
             {
-                if (ThrowablePower == null)
-                    Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable power when this entity does not have a throwable power in its power collection");
-
-                if (ThrowablePower != power)
-                    Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable power that isn't the same as this power collection's throwable power");
+                Verify.IsNotNull(ThrowablePower, $"Trying to unassign a throwable power when this entity does not have a throwable power in its power collection. \nEntity: [{_owner}]");
+                Verify.IsTrue(ThrowablePower == power, $"Trying to unassign a throwable power that isn't the same as this power collection's throwable power. \nEntity: [{_owner}]");
 
                 ThrowablePower = null;
             }
             else if (power.GetPowerCategory() == PowerCategoryType.ThrowableCancelPower)
             {
-                if (ThrowableCancelPower == null)
-                    Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable cancel power when this entity does not have a throwable cancel power in its power collection");
-
-                if (ThrowableCancelPower != power)
-                    Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable cancel power that isn't the same as this power collection's throwable cancel power");
+                Verify.IsNotNull(ThrowableCancelPower, $"Trying to unassign a throwable cancel power when this entity does not have a throwable cancel power in its power collection. \nEntity: [{_owner}]");
+                Verify.IsTrue(ThrowableCancelPower == power, $"Trying to unassign a throwable cancel power that isn't the same as this power collection's throwable cancel power. \nEntity: [{_owner}]");
 
                 ThrowableCancelPower = null;
             }
@@ -736,14 +672,13 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         private bool UnassignTriggeredPowers(Power power)
         {
             // NOTE: This is very similar to AssignTriggeredPowers()
-
-            if (_owner == null) return Logger.WarnReturn(false, "UnassignTriggeredPowers(): _owner == null");
+            if (!Verify.IsNotNull(_owner)) return false;
 
             PowerPrototype powerProto = power.Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "UnassignTriggeredPowers(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
 
             PrototypeId powerProtoRef = power.PrototypeDataRef;
-            if (powerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "UnassignTriggeredPowers(): powerProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(powerProtoRef != PrototypeId.Invalid)) return false;
 
             if (powerProto.ActionsTriggeredOnPowerEvent.IsNullOrEmpty())
                 return true;
@@ -754,11 +689,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             foreach (PowerEventActionPrototype triggeredPowerEventProto in powerProto.ActionsTriggeredOnPowerEvent)
             {
                 PowerEventType powerEventType = triggeredPowerEventProto.PowerEvent;
-                if (powerEventType == PowerEventType.None)
-                {
-                    Logger.Warn($"UnassignTriggeredPowers(): This power contains a triggered power event with a null type\nPower: [{powerProto}]");
+                if (!Verify.IsTrue(powerEventType != PowerEventType.None, $"This power contains a triggered power event with a null type\nPower: [{powerProto}]"))
                     continue;
-                }
 
                 // Check if this power event has triggered powers that need assignment
                 switch (triggeredPowerEventProto.EventAction)
@@ -766,28 +698,20 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     case PowerEventActionType.UsePower:
                     case PowerEventActionType.ScheduleActivationAtPercent:
                     case PowerEventActionType.ScheduleActivationInSeconds:
-                        if (triggeredPowerEventProto.Power == PrototypeId.Invalid)
-                        {
-                            Logger.Warn($"UnassignTriggeredPowers(): Power [{power}] for agent [{_owner}] has a triggered power event with no power specified");
+                        if (!Verify.IsTrue(triggeredPowerEventProto.Power != PrototypeId.Invalid, $"Power [{power}] for agent [{_owner}] has a triggered power event with no power specified"))
                             continue;
-                        }
+
                         triggeredPowerRefList.Add(triggeredPowerEventProto.Power);
                         break;
 
                     case PowerEventActionType.TransformModeStart:
-                        var contextProto = triggeredPowerEventProto.PowerEventContext as PowerEventContextTransformModePrototype;
-                        if (contextProto == null)
-                        {
-                            Logger.Warn("UnassignTriggeredPowers(): contextProto == null");
+                        PowerEventContextTransformModePrototype contextProto = triggeredPowerEventProto.PowerEventContext as PowerEventContextTransformModePrototype;
+                        if (!Verify.IsNotNull(contextProto))
                             continue;
-                        }
 
-                        var transformModeProto = contextProto.TransformMode.As<TransformModePrototype>();
-                        if (transformModeProto == null)
-                        {
-                            Logger.Warn("UnassignTriggeredPowers(): transformModeProto == null");
+                        TransformModePrototype transformModeProto = contextProto.TransformMode.As<TransformModePrototype>();
+                        if (!Verify.IsNotNull(transformModeProto))
                             continue;
-                        }
 
                         // NOTE: Assignment happens for any type of owner, but unassignment is for avatars only. Is this intended?
                         if (_owner is Avatar avatar)
@@ -796,17 +720,11 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
                             if (currentTransformMode == PrototypeId.Invalid || currentTransformMode != transformModeProto.DataRef)
                             {
-                                if (transformModeProto.EnterTransformModePower == PrototypeId.Invalid)
-                                {
-                                    Logger.Warn($"UnassignTriggeredPowers(): Power [{power}] for agent [{_owner}] has a triggered TransformModeStart power event with no EnterTransformMode power specified");
+                                if (!Verify.IsTrue(transformModeProto.EnterTransformModePower != PrototypeId.Invalid, $"Power [{power}] for agent [{_owner}] has a triggered TransformModeStart power event with no EnterTransformMode power specified"))
                                     continue;
-                                }
 
-                                if (transformModeProto.ExitTransformModePower == PrototypeId.Invalid)
-                                {
-                                    Logger.Warn($"UnassignTriggeredPowers(): Power [{power}] for agent [{_owner}] has a triggered TransformModeStart power event with no ExitTransformModePower power specified");
+                                if (!Verify.IsTrue(transformModeProto.ExitTransformModePower != PrototypeId.Invalid, $"Power [{power}] for agent [{_owner}] has a triggered TransformModeStart power event with no ExitTransformModePower power specified"))
                                     continue;
-                                }
 
                                 triggeredPowerRefList.Add(transformModeProto.EnterTransformModePower);
                                 triggeredPowerRefList.Add(transformModeProto.ExitTransformModePower);
@@ -827,11 +745,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 // Assign triggered powers we determined we need to assign
                 foreach (PrototypeId triggeredPowerRef in triggeredPowerRefList)
                 {
-                    if (triggeredPowerRef == PrototypeId.Invalid)
-                    {
-                        Logger.Warn("UnassignTriggeredPowers(): triggeredPowerRef == PrototypeId.Invalid");
+                    if (!Verify.IsTrue(triggeredPowerRef != PrototypeId.Invalid))
                         continue;
-                    }
 
                     // Some powers apparently can trigger themselves, no need to unassign them
                     if (triggeredPowerRef == powerProtoRef)
