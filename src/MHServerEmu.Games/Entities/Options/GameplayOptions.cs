@@ -40,8 +40,6 @@ namespace MHServerEmu.Games.Entities.Options
     {
         private const int NumChatTabs = 4;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private static readonly long[] GamePlayOptionDefaults = new long[]
         {
             0,      // AutoPartyEnabled
@@ -88,11 +86,8 @@ namespace MHServerEmu.Games.Entities.Options
         {
             // Settings
             int numSettings = netStruct.OptionSettingsCount;
-            if (numSettings > (int)GameplayOptionSetting.NumSettings)
-            {
-                Logger.Warn($"GameplayOptions(): numSettings > GameplayOptionSetting.NumSettings");
+            if (!Verify.IsTrue(numSettings <= (int)GameplayOptionSetting.NumSettings))
                 numSettings = (int)GameplayOptionSetting.NumSettings;
-            }
 
             for (int i = 0; i < numSettings; i++)
                 _optionSettings[i] = (long)netStruct.OptionSettingsList[i];
@@ -103,11 +98,8 @@ namespace MHServerEmu.Games.Entities.Options
 
             // Chat tab channels
             int numChannels = netStruct.ChatTabChannelsArrayCount;
-            if (numChannels > NumChatTabs)
-            {
-                Logger.Warn($"GameplayOptions(): numTabs > NumChatTabs");
+            if (!Verify.IsTrue(numChannels <= NumChatTabs))
                 numChannels = NumChatTabs;
-            }
 
             for (int i = 0; i < numChannels; i++)
                 _chatTabChannels[i] = (PrototypeId)netStruct.ChatTabChannelsArrayList[i].ChannelProtoId;
@@ -116,11 +108,11 @@ namespace MHServerEmu.Games.Entities.Options
             for (var slot = EquipmentInvUISlot.Gear01; slot <= EquipmentInvUISlot.Gear05; slot++)
             {
                 int index = (int)slot - 1;
-                if (index >= netStruct.ArmorRarityVaporizeThresholdProtoIdCount)
-                {
-                    Logger.Warn($"GameplayOptions(): index >= netStruct.ArmorRarityVaporizeThresholdProtoIdCount");
+                if (!Verify.IsTrue(index < netStruct.ArmorRarityVaporizeThresholdProtoIdCount))
                     continue;
-                }
+
+                if (!Verify.IsTrue(IsGearSlotVaporizing(slot)))
+                    continue;
 
                 _armorRarityVaporizeThresholdDict[slot] = (PrototypeId)netStruct.ArmorRarityVaporizeThresholdProtoIdList[(int)slot - 1]; ;
             }
@@ -210,9 +202,7 @@ namespace MHServerEmu.Games.Entities.Options
         /// </summary>
         public PrototypeId GetChatTabChannel(int tabIndex)
         {
-            if ((tabIndex >= 0 && tabIndex < NumChatTabs) == false)
-                return Logger.WarnReturn(PrototypeId.Invalid, $"GetChatTabChannel(): Invalid tabIndex {tabIndex}");
-
+            if (!Verify.IsTrue(tabIndex >= 0 && tabIndex < NumChatTabs)) return PrototypeId.Invalid;
             return _chatTabChannels[tabIndex];
         }
 
@@ -221,12 +211,15 @@ namespace MHServerEmu.Games.Entities.Options
         /// </summary>
         public bool SetChatTabChannel(int tabIndex, PrototypeId channelProtoRef, bool doUpdate)
         {
-            if ((tabIndex >= 0 && tabIndex < NumChatTabs) == false)
-                return Logger.WarnReturn(false, $"SetChatTabChannel(): Invalid tabIndex {tabIndex}");
+            if (!Verify.IsTrue(tabIndex >= 0 && tabIndex < NumChatTabs)) return false;
 
-            if (_chatTabChannels[tabIndex] == channelProtoRef) return false;
+            if (_chatTabChannels[tabIndex] == channelProtoRef)
+                return false;
+
             _chatTabChannels[tabIndex] = channelProtoRef;
-            if (doUpdate) DoUpdate();
+            if (doUpdate)
+                DoUpdate();
+
             return true;
         }
 
@@ -255,17 +248,15 @@ namespace MHServerEmu.Games.Entities.Options
         /// <summary>
         /// Sets the <see cref="PrototypeId"/> of the vaporize rarity threshold for the specified <see cref="EquipmentInvUISlot"/>.
         /// </summary>
-        public bool SetArmorRarityVaporizeThreshold(PrototypeId rarityRef, EquipmentInvUISlot slot)
+        public void SetArmorRarityVaporizeThreshold(PrototypeId rarityRef, EquipmentInvUISlot slot)
         {
-            if (IsGearSlotVaporizing(slot) == false)
-                return Logger.WarnReturn(false, $"SetArmorRarityVaporizeThreshold(): {slot} is not a valid vaporize slot");
+            if (!Verify.IsTrue(IsGearSlotVaporizing(slot))) return;
 
-            PrototypeId oldRarityRef = _armorRarityVaporizeThresholdDict[slot];
-            if (rarityRef == oldRarityRef) return false;
+            if (rarityRef == _armorRarityVaporizeThresholdDict[slot])
+                return;
 
             _armorRarityVaporizeThresholdDict[slot] = rarityRef;
             DoUpdate();
-            return true;
         }
 
         /// <summary>
@@ -345,9 +336,8 @@ namespace MHServerEmu.Games.Entities.Options
         /// </summary>
         private bool GetChannelDefaultSubscription(PrototypeId chatChannelRef)
         {
-            var chatChannelPrototype = GameDatabase.GetPrototype<ChatChannelPrototype>(chatChannelRef);
-            if (chatChannelPrototype == null)
-                return Logger.WarnReturn(false, $"GetChannelDefaultSubscription(): chatChannelRef {chatChannelRef} is invalid");
+            ChatChannelPrototype chatChannelPrototype = chatChannelRef.As<ChatChannelPrototype>();
+            if (!Verify.IsNotNull(chatChannelPrototype)) return false;
 
             // TODO: LocaleManager::GetCurrentLocale();
             // Assume the locale is English for now
