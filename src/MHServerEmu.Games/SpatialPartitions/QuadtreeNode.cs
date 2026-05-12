@@ -3,7 +3,7 @@ using MHServerEmu.Core.Collisions;
 
 namespace MHServerEmu.Games.SpatialPartitions
 {
-    public class QuadtreeNode<T>
+    public class QuadtreeNode<T> where T: class
     {
         private InlineArray4<QuadtreeNode<T>> _children;
 
