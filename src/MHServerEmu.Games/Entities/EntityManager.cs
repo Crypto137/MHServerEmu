@@ -69,20 +69,16 @@ namespace MHServerEmu.Games.Entities
         // As an alternative, we could also move PlayerIterator to EntityManager as a nested struct.
         public HashSet<Player> Players { get; } = new();
 
-        public PhysicsManager PhysicsManager { get; set; }
-        public EntityInvasiveCollection AllEntities { get; private set; }
-        public EntityInvasiveCollection SimulatedEntities { get; private set; }
-        public EntityInvasiveCollection LocomotionEntities { get; private set; }
+        public PhysicsManager PhysicsManager { get; set; } = new();
+        public EntityInvasiveCollection AllEntities { get; private set; } = new(EntityCollection.All);
+        public EntityInvasiveCollection SimulatedEntities { get; private set; } = new(EntityCollection.Simulated);
+        public EntityInvasiveCollection LocomotionEntities { get; private set; } = new(EntityCollection.Locomotion);
 
         public bool IsAIEnabled { get; private set; } = true;
 
         public EntityManager(Game game)
         {            
             _game = game;
-            PhysicsManager = new();
-            AllEntities = new(EntityCollection.All);
-            SimulatedEntities = new(EntityCollection.Simulated);
-            LocomotionEntities = new(EntityCollection.Locomotion);
         }
 
         public Dictionary<ulong, Entity>.ValueCollection.Enumerator GetEnumerator()

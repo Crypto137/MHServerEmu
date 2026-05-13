@@ -1181,8 +1181,16 @@ namespace MHServerEmu.Games.Entities
 
         public void RegisterForPendingPhysicsResolve()
         {
-            PhysicsManager physMan = Game?.EntityManager?.PhysicsManager;
-            physMan?.RegisterEntityForPendingPhysicsResolve(this);
+            Game game = Game;
+            if (!Verify.IsNotNull(game)) return;
+
+            EntityManager entityMan = game.EntityManager;
+            if (!Verify.IsNotNull(entityMan)) return;
+
+            PhysicsManager physMan = entityMan.PhysicsManager;
+            if (!Verify.IsNotNull(physMan)) return;
+
+            physMan.RegisterEntityForPendingPhysicsResolve(this);
         }
 
         #endregion

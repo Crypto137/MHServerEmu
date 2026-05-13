@@ -1,8 +1,9 @@
 ﻿using MHServerEmu.Core.Collections;
-using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities.Physics
 {
@@ -44,17 +45,28 @@ namespace MHServerEmu.Games.Entities.Physics
 
         private int GetCurrentForceReadIndex()
         {
-            var physicsMgr = GetPhysicsManager();
-            if (physicsMgr == null) return 0;
+            PhysicsManager physicsMgr = GetPhysicsManager();
+            if (!Verify.IsNotNull(physicsMgr)) return 0;
             return physicsMgr.CurrentForceReadIndex;
         }
 
-        private PhysicsManager GetPhysicsManager() => Entity?.Game?.EntityManager?.PhysicsManager;
+        private PhysicsManager GetPhysicsManager()
+        {
+            if (!Verify.IsNotNull(Entity)) return null;
+
+            Game game = Entity.Game;
+            if (!Verify.IsNotNull(game)) return null;
+
+            EntityManager entityMan = game.EntityManager;   // variable name from the client
+            if (!Verify.IsNotNull(entityMan)) return null;
+
+            return entityMan.PhysicsManager;
+        }
 
         private int GetCurrentForceWriteIndex()
         {
-            var physicsMgr = GetPhysicsManager();
-            if (physicsMgr == null) return 0;
+            PhysicsManager physicsMgr = GetPhysicsManager();
+            if (!Verify.IsNotNull(physicsMgr)) return 0;
             return physicsMgr.CurrentForceWriteIndex;
         }
 
@@ -68,7 +80,7 @@ namespace MHServerEmu.Games.Entities.Physics
 
         public void OnPhysicsUpdateFinished()
         {
-            var index = GetCurrentForceReadIndex();
+            int index = GetCurrentForceReadIndex();
 
             if (Entity.IsInWorld && Vector3.IsNearZero(_repulsionForces[index]) == false)
                 Entity.RegisterForPendingPhysicsResolve();
@@ -101,10 +113,11 @@ namespace MHServerEmu.Games.Entities.Physics
 
         public void AddRepulsionForce(in Vector3 force)
         {
-            if (Entity == null) return;
+            if (!Verify.IsNotNull(Entity)) return;
+
             if (Entity.Locomotor != null)
             {
-                if (Vector3.IsFinite(force) == false) return;
+                if (!Verify.IsTrue(Vector3.IsFinite(force))) return;
                 _repulsionForces[GetCurrentForceWriteIndex()] += force;
                 Entity.RegisterForPendingPhysicsResolve();
             }
@@ -122,21 +135,23 @@ namespace MHServerEmu.Games.Entities.Physics
 
         public void ApplyKnockbackForce(in Vector3 position, float time, float speed, float acceleration)
         {
-            // Logger.Debug($"ApplyKnockbackForce(): entity=[{Entity.PrototypeName}] source=[{position}], time={time}, acceleration={acceleration}");
-
-            var physicsMgr = GetPhysicsManager();
-            if (physicsMgr == null || Entity.IsInWorld == false) return;
-            if (Segment.IsNearZero(speed) && Segment.IsNearZero(acceleration)) return;
-            if (time <= 0) return;
+            PhysicsManager physicsMgr = GetPhysicsManager();
+            if (!Verify.IsNotNull(physicsMgr)) return;
 
             physicsMgr.AddKnockbackForce(Entity, position, time, speed, acceleration);
         }
 
         private void ApplyForce(in Vector3 force, bool external)
         {
-            if (!Vector3.IsFinite(force) || Vector3.IsNearZero(force) || !Entity.IsInWorld || Entity.Locomotor == null)
+            if (!Verify.IsTrue(Vector3.IsFinite(force))) return;
+
+            if (Vector3.IsNearZero(force))
                 return;
-            var index = GetCurrentForceWriteIndex();
+
+            if (!Verify.IsTrue(Entity.IsInWorld)) return;
+            if (!Verify.IsNotNull(Entity.Locomotor)) return;
+
+            int index = GetCurrentForceWriteIndex();
             _hasExternalForces[index] |= external;
             _externalForces[index] += force;
             Entity.RegisterForPendingPhysicsResolve();
@@ -144,47 +159,56 @@ namespace MHServerEmu.Games.Entities.Physics
 
         public void DetachAllChildren()
         {
-            if (Entity == null) return;
-            var manager = Entity.Game.EntityManager;
+            if (!Verify.IsNotNull(Entity)) return;
+
+            EntityManager entityManager = Entity.Game.EntityManager;
 
             using var attachedEntitiesHandle = ListPool<ulong>.Instance.Get(out List<ulong> attachedEntities);
             if (GetAttachedEntities(attachedEntities))
-                foreach (var entityId in attachedEntities)
+            {
+                foreach (ulong entityId in attachedEntities)
                 {
-                    var childEntity = manager.GetEntity<WorldEntity>(entityId);
+                    WorldEntity childEntity = entityManager.GetEntity<WorldEntity>(entityId);
                     if (childEntity != null)
                         DetachChild(childEntity.Physics);
                 }
+            }
+
             AttachedEntities?.Clear();
         }
 
-        public void AttachChild(EntityPhysics physics)
+        public void AttachChild(EntityPhysics childEntityPhysics)
         {
-            if (Entity == null && physics.Entity == null) return;
-            if (Entity.IsInWorld == false || Entity.TestStatus(EntityStatus.ExitingWorld)) return;
-            if (physics.Entity.IsInWorld == false || physics.Entity.TestStatus(EntityStatus.ExitingWorld)) return;
+            if (!Verify.IsNotNull(Entity)) return;
+            if (!Verify.IsNotNull(childEntityPhysics.Entity)) return;
+            if (!Verify.IsTrue(Entity.IsInWorld && Entity.TestStatus(EntityStatus.ExitingWorld) == false)) return;
+            if (!Verify.IsTrue(childEntityPhysics.Entity.IsInWorld && childEntityPhysics.Entity.TestStatus(EntityStatus.ExitingWorld) == false)) return;
 
             AttachedEntities ??= new();
-            AttachedEntities.Add(physics.Entity.Id);
+            AttachedEntities.Add(childEntityPhysics.Entity.Id);
         }
 
-        public void DetachChild(EntityPhysics physics)
+        public void DetachChild(EntityPhysics childEntityPhysics)
         {
-            if (AttachedEntities != null && Entity != null && physics.Entity != null)
-                AttachedEntities.Remove(physics.Entity.Id);
+            if (!Verify.IsNotNull(AttachedEntities)) return;
+            if (!Verify.IsNotNull(Entity)) return;
+            if (!Verify.IsNotNull(childEntityPhysics.Entity)) return;
+
+            AttachedEntities.Remove(childEntityPhysics.Entity.Id);
         }
 
         public void AcquireCollisionId()
         {
-            if (CollisionId != -1) return;
-            var region = Entity?.Region;
+            if (!Verify.IsTrue(CollisionId == -1)) return;
+
+            Region region = Entity?.Region;
             if (region != null)
-                CollisionId =   region.AcquireCollisionId();
+                CollisionId = region.AcquireCollisionId();
         }
 
         public void ReleaseCollisionId()
         {
-            var region = Entity?.Region;
+            Region region = Entity?.Region;
             if (region != null && CollisionId != -1)
             {
                 region.ReleaseCollisionId(CollisionId);
@@ -194,10 +218,13 @@ namespace MHServerEmu.Games.Entities.Physics
 
         public bool IsOverlappingEntity(ulong entityId)
         {
-            if (Entity == null || Entity.Game == null) return false;
-            if (OverlappedEntities.TryGetValue(entityId, out var overlappedEntity))
-                return overlappedEntity.Overlapped;
-            return false;
+            if (!Verify.IsNotNull(Entity)) return false;
+            if (!Verify.IsNotNull(Entity.Game)) return false;
+
+            if (OverlappedEntities.TryGetValue(entityId, out OverlapEntityEntry overlappedEntity) == false)
+                return false;
+
+            return overlappedEntity.Overlapped;
         }
     }
 
