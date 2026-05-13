@@ -278,6 +278,11 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public virtual void AdjustDifficulty(DebugGlobalsPrototype debugGlobals)
+        {
+            // This appears to be a debug-only initialization step.
+        }
+
         public virtual void OnPostInit(EntitySettings settings)
         {
             if (settings.ArchiveData == null)
