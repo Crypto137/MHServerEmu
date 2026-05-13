@@ -926,6 +926,18 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        public override bool OnPowerUnassigned(Power power)
+        {
+            if (base.OnPowerUnassigned(power) == false)
+                return false;
+
+            // This fixes PowerChargesMaxBonusForKwd.
+            if (GetPowerChargesMax(power.PrototypeDataRef) > 0)
+                Properties.RemoveProperty(new(PropertyEnum.PowerChargesMaxBonus, power.PrototypeDataRef));
+
+            return true;
+        }
+
         public override void OnPowerEnded(Power power, EndPowerFlags flags)
         {
             base.OnPowerEnded(power, flags);
@@ -2540,9 +2552,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Unassign
             UnassignPower(mappedPowerRef);
             Properties.RemoveProperty(new(PropertyEnum.AvatarMappedPower, originalPowerRef));
-
-            // This fixes broken interaction between mapped powers and PowerChargesMaxBonusForKwd.
-            Properties.RemoveProperty(new(PropertyEnum.PowerChargesMaxBonus, mappedPowerRef));
 
             // Refresh the original power
             GetPowerProgressionInfo(originalPowerRef, out PowerProgressionInfo originalPowerInfo);
