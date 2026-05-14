@@ -524,7 +524,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     }
                     else 
                     {
-                        Logger.Warn($"DoDeathRelease(): Unimplemented behavior {onKilledInfoProto.DeathReleaseBehavior}");
+                        Verify.IsTrue(false, $"Unimplemented behavior {onKilledInfoProto.DeathReleaseBehavior}");
                         return false;
                     }
 
@@ -533,7 +533,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     return true;
 
                 default:
-                    Logger.Warn($"DoDeathRelease(): Unimplemented request type {requestType}");
+                    Verify.IsTrue(false, $"Unimplemented request type {requestType}");
                     return false;
             }
         }
@@ -819,26 +819,35 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool PerformPreInteractPower(WorldEntity target, bool hasDialog)
         {
-            var player = GetOwnerOfType<Player>();
-            if (player == null) return false;
+            Player player = GetOwnerOfType<Player>();
+            if (!Verify.IsNotNull(player)) return false;
 
-            var targetProto = target.WorldEntityPrototype;
-            if (targetProto == null || IsExecutingPower) return false;
+            if (IsExecutingPower)
+                return false;
 
-            var powerRef = targetProto.PreInteractPower;
-            var powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
-            if (powerProto == null) return false;
+            WorldEntityPrototype targetProto = target.WorldEntityPrototype;
+            if (!Verify.IsNotNull(targetProto)) return false;
+
+            PrototypeId powerRef = targetProto.PreInteractPower;
+            if (powerRef == PrototypeId.Invalid)
+                return false;
+
+            PowerPrototype powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
+            if (!Verify.IsNotNull(powerProto)) return false;
 
             if (HasPowerInPowerCollection(powerRef) == false)
-                AssignPower(powerRef, new(0, CharacterLevel, CombatLevel));
+            {
+                PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+                if (!Verify.IsNotNull(AssignPower(powerRef, indexProps))) return false;
+            }
 
             if (powerProto.Activation != PowerActivationType.Passive)
             {
                 PowerActivationSettings settings = new(Id, RegionLocation.Position, RegionLocation.Position);
                 settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
-                var result = ActivatePower(powerRef, ref settings);
-                if (result != PowerUseResult.Success)
-                    return Logger.WarnReturn(false, $"PerformPreInteractPower ActivatePower [{powerRef}] = {result}");
+                PowerUseResult result = ActivatePower(powerRef, ref settings);
+                if (!Verify.IsTrue(result == PowerUseResult.Success, $"Pre-interact power failed to activate! result={result}, power={powerProto}, player=[{player}], avatar=[{this}]"))
+                    return false;
             }
 
             player.Properties[PropertyEnum.InteractTargetId] = target.Id;
@@ -849,22 +858,25 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool PreInteractPowerEnd()
         {
-            var player = GetOwnerOfType<Player>();
-            if (player == null) return false;
+            Player player = GetOwnerOfType<Player>();
+            if (!Verify.IsNotNull(player)) return false;
 
             ulong targetId = player.Properties[PropertyEnum.InteractTargetId];
             player.Properties.RemoveProperty(PropertyEnum.InteractTargetId);
             player.Properties.RemoveProperty(PropertyEnum.InteractHasDialog);
 
-            var targetEntity = Game.EntityManager.GetEntity<WorldEntity>(targetId);
-            if (targetEntity == null) return false;
+            WorldEntity targetEntity = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+            if (targetEntity == null)
+                return false;
 
             player.Properties[PropertyEnum.InteractReadyForTargetId] = targetId;
 
             if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
+            {
                 player.SendMessage(NetMessageOnPreInteractPowerEnd.CreateBuilder()
                     .SetIdTargetEntity(targetId)
                     .SetAvatarIndex(0).Build());
+            }
 
             return true;
         }
@@ -1339,8 +1351,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                             PowerUseResult result = CanActivatePower(continuousPower, targetId, targetPosition);
                             if (result == PowerUseResult.Success)
                                 ActivatePower(continuousPower, ref settings);
-                            //else
-                            //    Logger.Debug($"CheckContinuousPower(): result={result}");
                         }
                     }
                 }
@@ -4164,8 +4174,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                 player.MissionInteractRelease(this, missionRef);
                 return false;
             }
-
-            //Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
 
             WorldEntityPrototype objectProto = interactableObject.WorldEntityPrototype;
             if (objectProto.PreInteractPower != PrototypeId.Invalid)
@@ -7147,8 +7155,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // This eval doesn't seem to be used in any data for version 1.52, but it may have been used in older versions.
             EvalPrototype evalOnPartySizeChange = AvatarPrototype.OnPartySizeChange;
-            if (evalOnPartySizeChange != null)
-                Logger.Debug("SetPartySize(): evalOnPartySizeChange != null");
+            Verify.IsTrue(evalOnPartySizeChange == null, LoggingLevel.Debug);
         }
 
         // PartyBoostCondition is a condition that scales with the number of party members that have this condition (e.g. Avengers Assemble boosts).
