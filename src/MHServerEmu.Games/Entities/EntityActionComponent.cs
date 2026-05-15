@@ -14,7 +14,6 @@ namespace MHServerEmu.Games.Entities
     public class ActionSet : HashSet<EntitySelectorActionPrototype> { }
     public class EntityActionComponent
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
         public WorldEntity Owner { get; private set; }
         public Dictionary<EntitySelectorActionEventType, ActionSet> ActionTable { get; private set; }
         public Dictionary<EntitySelectorActionEventType, ActionSet> CancelTable { get; private set; }
@@ -48,13 +47,16 @@ namespace MHServerEmu.Games.Entities
 
         private void RegisterAction(EntitySelectorActionPrototype action)
         {
-            if (Owner == null || action == null || action.EventTypes.IsNullOrEmpty()) return;
+            if (!Verify.IsNotNull(Owner)) return;
+            if (!Verify.IsNotNull(action)) return;
+            if (!Verify.IsTrue(action.EventTypes.HasValue())) return;
+            
             foreach (var eventType in action.EventTypes) 
             {                
                 if (ActionTable.TryGetValue(eventType, out ActionSet actionSet) == false)
                 { 
                     actionSet = new();
-                    ActionTable[eventType] = actionSet;
+                    ActionTable.Add(eventType, actionSet);
                 }
                 actionSet.Add(action);
             }
@@ -68,10 +70,13 @@ namespace MHServerEmu.Games.Entities
 
         private void DeregisterAction(EntitySelectorActionPrototype action)
         {
-            if (Owner == null || action == null || action.EventTypes.IsNullOrEmpty()) return;
+            if (!Verify.IsNotNull(Owner)) return;
+            if (!Verify.IsNotNull(action)) return;
+            if (!Verify.IsTrue(action.EventTypes.HasValue())) return;
+
             foreach (var eventType in action.EventTypes)
             {
-                if (ActionTable.TryGetValue(eventType, out ActionSet actionSet) == false) return;               
+                if (ActionTable.TryGetValue(eventType, out ActionSet actionSet) == false) continue;               
                 actionSet.Remove(action);
                 if (actionSet.Count == 0) ActionTable.Remove(eventType);
             }
@@ -98,7 +103,8 @@ namespace MHServerEmu.Games.Entities
 
             using PropertyCollection collection = ObjectPoolManager.Instance.Get<PropertyCollection>();
             collection[PropertyEnum.AICustomThinkRateMS] = 1000;
-            if (selectorProto != null) {
+            if (Verify.IsNotNull(selectorProto))
+            {
                 collection[PropertyEnum.AIAggroRangeAlly] = selectorProto.DefaultAggroRangeAlly;
                 collection[PropertyEnum.AIAggroRangeHostile] = selectorProto.DefaultAggroRangeHostile;
                 collection[PropertyEnum.AIProximityRangeOverride] = selectorProto.DefaultProximityRangeHostile;
@@ -113,7 +119,8 @@ namespace MHServerEmu.Games.Entities
 
         public bool Trigger(EntitySelectorActionEventType eventType)
         {
-            if (Owner == null || Owner.IsControlledEntity) return false;
+            if (!Verify.IsNotNull(Owner)) return false;
+            if (!Verify.IsTrue(Owner.IsControlledEntity == false)) return false;
 
             CancelActions(eventType);
             if (ActionTable.TryGetValue(eventType, out ActionSet actionSet))
@@ -129,11 +136,15 @@ namespace MHServerEmu.Games.Entities
 
         private bool ScheduleAction(EntitySelectorActionPrototype action, EntitySelectorActionEventType eventType)
         {
-            if (Owner == null || action == null) return false;
+            if (!Verify.IsNotNull(Owner)) return false;
+            if (!Verify.IsNotNull(action)) return false;
+
             if (_pendingActions.ContainsKey(action)) return false;
             DeregisterAction(action);
-            var scheduler = Game.Current.GameEventScheduler;
-            if (scheduler == null) return false;
+
+            EventScheduler scheduler = Game.Current.GameEventScheduler;
+            if (!Verify.IsNotNull(scheduler)) return false;
+
             CancelTableInsert(action);
 
             TimeSpan reactionTime = TimeSpan.FromMilliseconds(action.ReactionTimeMS);
@@ -164,16 +175,18 @@ namespace MHServerEmu.Games.Entities
         private bool CancelActionEvent(EntitySelectorActionPrototype action)
         {
             if (_pendingActions.TryGetValue(action, out FireActionPointer fireAction) == false) return false;
-            var scheduler = Game.Current.GameEventScheduler;
-            if (scheduler == null) return false;
+
+            EventScheduler scheduler = Game.Current.GameEventScheduler;
+            if (!Verify.IsNotNull(scheduler)) return false;            
             scheduler.CancelEvent(fireAction);
+
             _pendingActions.Remove(action);
             return true;
         }
 
         private bool CancelTableRemove(EntitySelectorActionPrototype action)
         {
-            if (action == null) return false;
+            if (!Verify.IsNotNull(action)) return false;
             bool removed = false;
             if (action.CancelOnEventTypes.HasValue())
                 foreach (var eventType in action.CancelOnEventTypes)
@@ -184,7 +197,7 @@ namespace MHServerEmu.Games.Entities
 
         private void CancelTableInsert(EntitySelectorActionPrototype action)
         {
-            if (action == null) return;
+            if (!Verify.IsNotNull(action)) return;
             if (action.CancelOnEventTypes.HasValue())
                 foreach (var eventType in action.CancelOnEventTypes)
                 {
@@ -219,8 +232,8 @@ namespace MHServerEmu.Games.Entities
 
         public void RestartPendingActions()
         {
-            var scheduler = Game.Current.GameEventScheduler;
-            if (scheduler == null) return;
+            EventScheduler scheduler = Game.Current.GameEventScheduler;
+            if (!Verify.IsNotNull(scheduler)) return;
 
             using var actionsHandle = ListPool<EntitySelectorActionPrototype>.Instance.Get(out List<EntitySelectorActionPrototype> actions);
             actions.AddRange(_pendingActions.Keys);         
@@ -234,10 +247,12 @@ namespace MHServerEmu.Games.Entities
 
         public void CancelAll()
         {
-            var scheduler = Game.Current.GameEventScheduler;
-            if (scheduler == null) return;
+            EventScheduler scheduler = Game.Current.GameEventScheduler;
+            if (!Verify.IsNotNull(scheduler)) return;
+
             foreach (var kvp in _pendingActions)
                 scheduler.CancelEvent(kvp.Value);
+
             scheduler.CancelAllEvents(_pendingEvents);
         }
     }
