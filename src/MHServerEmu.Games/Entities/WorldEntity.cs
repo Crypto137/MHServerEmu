@@ -180,7 +180,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsCloneParent { get => IsClonePerPlayer && Properties[PropertyEnum.RestrictedToPlayerGuid] == 0; }
         public Dictionary<ulong, long> TankingContributors { get; private set; }
         public Dictionary<ulong, long> DamageContributors { get; private set; }
-        public TagPlayers TagPlayers { get; private set; }
+        public PlayerTagCollection PlayerTags { get; private set; }
         public Inventory SummonedInventory { get => GetInventory(InventoryConvenienceLabel.Summoned); }
 
         public WorldEntity(Game game) : base(game)
@@ -232,7 +232,7 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.HealthPctBonus] = LiveTuningManager.GetLiveWorldEntityTuningVar(worldEntityProto, WorldEntityTuningVar.eWETV_MobHealth) - 1.0f;
             Properties[PropertyEnum.VariationSeed] = settings.VariationSeed != 0 ? settings.VariationSeed : Game.Random.Next(1, 10000);
 
-            TagPlayers = new(this);
+            PlayerTags = new(this);
 
             return true;
         }
@@ -2234,7 +2234,7 @@ namespace MHServerEmu.Games.Entities
                     killedPlayer.OnScoringEvent(new(ScoringEventType.AvatarDeath));
                     var killer = avatar?.GetOwnerOfType<Player>();
                    
-                    foreach (var tagPlayer in TagPlayers.GetPlayers())
+                    foreach (var tagPlayer in PlayerTags.GetPlayers())
                     {
                         if (tagPlayer == killer)
                             tagPlayer.OnScoringEvent(new(ScoringEventType.AvatarKill));
@@ -2298,7 +2298,7 @@ namespace MHServerEmu.Games.Entities
                 var powerTime = Game.CurrentTime - TimeSpan.FromSeconds(10);
                 var manager = Game.EntityManager;
 
-                foreach (var tag in TagPlayers.Tags)
+                foreach (var tag in PlayerTags.Tags)
                 {
                     if (playerUid != tag.PlayerUID)
                     {
@@ -4275,7 +4275,7 @@ namespace MHServerEmu.Games.Entities
 
         public void SetTaggedBy(Player player, PowerPrototype powerProto)
         {
-            TagPlayers.Add(player, powerProto);
+            PlayerTags.Add(player, powerProto);
             var group = SpawnGroup;
             if (group != null && group.SpawnerId != InvalidId)
             {

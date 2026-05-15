@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (Mission.IsOpenMission == false)
             {
                 bool tagged = false;
-                var tagPlayers = spawner.TagPlayers;
+                var tagPlayers = spawner.PlayerTags;
                 foreach (var tagPlayer in tagPlayers.GetPlayers())
                     if (IsMissionPlayer(tagPlayer))
                     {

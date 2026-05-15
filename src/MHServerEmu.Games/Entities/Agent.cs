@@ -239,7 +239,7 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.WeaponMissing] = false;
             Properties[PropertyEnum.NoEntityCollide] = false;
 
-            TagPlayers.Clear();
+            PlayerTags.Clear();
 
             // Reset state
             PrototypeId stateRef = Properties[PropertyEnum.EntityState];
