@@ -222,11 +222,11 @@ namespace MHServerEmu.Games.Entities
 
         public void FireAction(EntitySelectorActionPrototype action, EntitySelectorActionEventType eventType)
         {
-            // Logger.Debug($"FireAction {Owner.PrototypeName} {eventType}");
-            if (action == null || Owner == null) return;
+            if (!Verify.IsNotNull(action)) return;
+            if (!Verify.IsNotNull(Owner)) return;
+
             CancelAction(action); 
-            if(Owner.ProcessEntityAction(action) == false 
-                && eventType == EntitySelectorActionEventType.OnSimulated)
+            if (Owner.ProcessEntityAction(action) == false && eventType == EntitySelectorActionEventType.OnSimulated)
                 RegisterAction(action);
         }
 

@@ -1175,9 +1175,6 @@ namespace MHServerEmu.Games.Entities
                 GetRegion()?.PlayerEquippedItemEvent.Invoke(new(this, eventItem));
             }
 
-            // TODO: Log inventory movements to a separate file?
-            //Logger.Trace($"TryInventoryMove(): [{item}] to container=[{container}], inventory=[{inventory}], slot=[{slot}]");
-
             return true;
         }
 
@@ -1816,7 +1813,7 @@ namespace MHServerEmu.Games.Entities
                 if (avatarSwapChannelResult == PowerUseResult.RegionRestricted)
                     failReason = SwitchToAvatarFailedReason.eSAFR_RegionRestrictionKwd;
 
-                Logger.Warn($"BeginAvatarSwitch(): Failed to activate swap channel power for avatar [{currentAvatar}], result={avatarSwapChannelResult}");
+                Verify.IsTrue(false, $"Failed to activate swap channel power for avatar [{currentAvatar}], result={avatarSwapChannelResult}");
                 currentAvatar.SendSwitchToAvatarFailedMessage(failReason);
                 return false;
             }

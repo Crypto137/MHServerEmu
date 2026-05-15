@@ -91,9 +91,6 @@ namespace MHServerEmu.Games.Entities
             resolver.Initialize(Game.Random);
             resolver.SetContext(LootContext.Crafting, this);
 
-            // Log this crafting attempt in case there is a memory leak or something
-            //Logger.Debug($"Craft(): recipeItem=[{recipeItem}], ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft} player=[{this}]");
-
             // Prepare crafting ingredients
             using var ingredientsHandle = ListPool<Item>.Instance.Get(out List<Item> ingredients);
             using var autoPopulatedIngredientsHandle = DictionaryPool<Item, int>.Instance.Get(out Dictionary<Item, int> autoPopulatedIngredients);

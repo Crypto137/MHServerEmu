@@ -1555,7 +1555,7 @@ namespace MHServerEmu.Games.Entities
                             break;
 
                         default:
-                            Logger.Warn($"CheckProcChance(): Unhandled ProcChanceMultiplierBehaviorType {powerProto.ProcChanceMultiplierBehavior} in [{powerProto}]");
+                            Verify.IsTrue(false, $"Unhandled ProcChanceMultiplierBehaviorType {powerProto.ProcChanceMultiplierBehavior} in [{powerProto}]");
                             break;
                     }
                 }
@@ -1624,9 +1624,7 @@ namespace MHServerEmu.Games.Entities
                     : PrototypeId.Invalid;
             }
 
-            if (success == false)
-                Logger.Warn($"CheckOnHitRecursion(): Recursion check failed for procPower=[{procPower}], triggeringPower=[{triggeringPowerProto}]");
-
+            Verify.IsTrue(success, $"Recursion check failed for procPower=[{procPower}], triggeringPower=[{triggeringPowerProto}]");
             return success;
         }
 

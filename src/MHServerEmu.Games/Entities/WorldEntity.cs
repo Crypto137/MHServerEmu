@@ -2718,7 +2718,6 @@ namespace MHServerEmu.Games.Entities
                 return PowerUseResult.OwnerNotSimulated;
 
             PrototypeId procPowerProtoRef = procPower.PrototypeDataRef;
-            //Logger.Debug($"ActivateProcPower(): {procPowerProtoRef.GetName()} on [{this}]");
 
             // Apply target override if there is one
             ulong procTargetOverrideId = activator.Properties[PropertyEnum.ProcTargetOverride, procPowerProtoRef];
@@ -4389,11 +4388,7 @@ namespace MHServerEmu.Games.Entities
 
         public void TriggerEntityActionEvent(EntitySelectorActionEventType actionType)
         {
-            if (EntityActionComponent != null)
-            {
-                // Logger.Trace($"TriggerEntityActionEvent {PrototypeName} {actionType}");
-                EntityActionComponent.Trigger(actionType);
-            }
+            EntityActionComponent?.Trigger(actionType);
         }
 
         public virtual bool ProcessEntityAction(EntitySelectorActionPrototype action)
