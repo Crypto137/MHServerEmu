@@ -31,11 +31,8 @@ namespace MHServerEmu.Games.Entities.Persistence
                 foreach (var entry in player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary))
                 {
                     Agent teamUp = entityManager.GetEntity<Agent>(entry.Id);
-                    if (teamUp == null)
-                    {
-                        Logger.Warn("StoreInventoryEntities(): teamUp == null");
+                    if (!Verify.IsNotNull(teamUp))
                         continue;
-                    }
 
                     // Team-ups shouldn't have transferrable summons, but disabling it explicitly just in case.
                     StoreContainer(teamUp, dbAccount, false);
@@ -69,11 +66,8 @@ namespace MHServerEmu.Games.Entities.Persistence
             foreach (var entry in player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary))
             {
                 Agent teamUp = entityManager.GetEntity<Agent>(entry.Id);
-                if (teamUp == null)
-                {
-                    Logger.Warn("RestoreInventoryEntities(): teamUp == null");
+                if (!Verify.IsNotNull(teamUp))
                     continue;
-                }
 
                 RestoreContainer(teamUp, dbAccount.Items);
                 RestoreContainer(teamUp, dbAccount.TransferredEntities);
@@ -82,7 +76,7 @@ namespace MHServerEmu.Games.Entities.Persistence
 
         private static bool StoreContainer(Entity container, DBAccount dbAccount, bool allowReplicateForTransfer)
         {
-            if (container == null) return Logger.WarnReturn(false, "StoreContainer(): container == null");
+            if (!Verify.IsNotNull(container, LoggingLevel.Error)) return false;
 
             foreach (Inventory inventory in new InventoryIterator(container))
             {
@@ -100,7 +94,7 @@ namespace MHServerEmu.Games.Entities.Persistence
 
         private static bool StoreInventory(Entity container, Inventory inventory, DBAccount dbAccount)
         {
-            if (inventory == null) return Logger.WarnReturn(false, "StoreInventory(): inventory == null");
+            if (!Verify.IsNotNull(inventory, LoggingLevel.Error)) return false;
 
             DBEntityCollection entities;
 
@@ -134,24 +128,15 @@ namespace MHServerEmu.Games.Entities.Persistence
             foreach (var entry in inventory)
             {
                 Entity entity = entityManager.GetEntity<Entity>(entry.Id);
-                
-                if (entity == null)
-                {
-                    Logger.Warn("StoreInventory(): entity == null");
+                if (!Verify.IsNotNull(entity, LoggingLevel.Error))
                     continue;
-                }
 
                 using Archive archive = new(ArchiveSerializeType.Database);
-                if (Serializer.Transfer(archive, ref entity) == false)
-                {
-                    Logger.Error($"StoreInventory(): Failed to serialize entity {entity}");
+                if (!Verify.IsTrue(Serializer.Transfer(archive, ref entity), LoggingLevel.Error, $"Failed to serialize entity {entity}"))
                     continue;
-                }
 
                 entities.UpdateEntity((long)entity.DatabaseUniqueId, containerDbGuid, inventoryProtoGuid, entry.Slot,
                     (long)GameDatabase.GetPrototypeGuid(entity.PrototypeDataRef), archive.AsSpan());
-
-                //Logger.Debug($"StoreInventory(): Archived entity {entity}");
             }
 
             return true;
@@ -169,31 +154,19 @@ namespace MHServerEmu.Games.Entities.Persistence
             {
                 DBEntity dbEntity = dbEntityList[i];
 
-                if (dbEntity.ContainerDbGuid != containerDbGuid)
-                {
-                    Logger.Warn($"RestoreContainer(): Attempting to restore entity belonging to 0x{dbEntity.ContainerDbGuid:X} in 0x{containerDbGuid:X}");
+                if (!Verify.IsTrue(dbEntity.ContainerDbGuid == containerDbGuid, LoggingLevel.Error, $"Attempting to restore entity belonging to 0x{dbEntity.ContainerDbGuid:X} in 0x{containerDbGuid:X}"))
                     continue;
-                }
 
                 PrototypeId inventoryProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)dbEntity.InventoryProtoGuid);
-                if (inventoryProtoRef == PrototypeId.Invalid)
-                {
-                    Logger.Warn($"RestoreContainer(): Failed to retrieve inventory proto ref for guid {dbEntity.InventoryProtoGuid}");
+                if (!Verify.IsTrue(inventoryProtoRef != PrototypeId.Invalid, LoggingLevel.Error, $"Failed to retrieve inventory proto ref for guid {dbEntity.InventoryProtoGuid}"))
                     continue;
-                }
 
-                if (container.GetInventoryByRef(inventoryProtoRef) == null)
-                {
-                    Logger.Warn($"RestoreContainer(): Container {container} does not have inventory {inventoryProtoRef.GetName()}");
+                if (!Verify.IsNotNull(container.GetInventoryByRef(inventoryProtoRef), LoggingLevel.Error, $"Container {container} does not have inventory {inventoryProtoRef.GetName()}"))
                     continue;
-                }
 
                 PrototypeId entityProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)dbEntity.EntityProtoGuid);
-                if (entityProtoRef == PrototypeId.Invalid)
-                {
-                    Logger.Warn($"RestoreContainer(): Failed to retrieve entity proto ref for guid {dbEntity.EntityProtoGuid}");
+                if (!Verify.IsTrue(entityProtoRef != PrototypeId.Invalid, LoggingLevel.Error, $"Failed to retrieve entity proto ref for guid {dbEntity.EntityProtoGuid}"))
                     continue;
-                }
 
                 using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
                 settings.DbGuid = (ulong)dbEntity.DbGuid;
@@ -202,7 +175,7 @@ namespace MHServerEmu.Games.Entities.Persistence
                 settings.ArchiveSerializeType = ArchiveSerializeType.Database;
                 settings.ArchiveData = dbEntity.ArchiveData;
 
-                entityManager.CreateEntity(settings);
+                Verify.IsNotNull(entityManager.CreateEntity(settings), LoggingLevel.Error);
             }
 
             return true;

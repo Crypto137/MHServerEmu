@@ -22,8 +22,8 @@ namespace MHServerEmu.Games.Entities.Persistence
                         break;
                 }
 
-                if (success == false)
-                    return Logger.WarnReturn(false, $"ApplyVersioning(): Failed to apply versioning to loaded version {loadedVersion}");
+                if (!Verify.IsTrue(success, LoggingLevel.Error, $"Failed to apply versioning! player=[{player}] loadedVersion=[{loadedVersion}]"))
+                    return false;
 
                 Logger.Trace($"Applied versioning to archive version {loadedVersion} for player [{player}]");
                 loadedVersion++;
