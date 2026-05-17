@@ -59,6 +59,26 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return _values[index];
         }
 
+        public bool GetAt(int position, out float value)
+        {
+            if (position < MinPosition)
+            {
+                value = _values[0];
+                Verify.IsTrue(false, $"Curve position ({position}) below min of ({MinPosition}) Curve: {this}");
+                return false;
+            }
+            else if (position > MaxPosition)
+            {
+                value = _values[MaxPosition - MinPosition];
+                Verify.IsTrue(false, $"Curve position ({position}) above max of ({MaxPosition}) Curve: {this}");
+                return false;
+            }
+
+            int index = position - MinPosition;
+            value = _values[index];
+            return true;
+        }
+
         /// <summary>
         /// Returns the value at the specified position as <see cref="int"/>.
         /// </summary>
