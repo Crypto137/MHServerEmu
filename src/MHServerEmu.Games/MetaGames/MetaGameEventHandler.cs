@@ -79,7 +79,7 @@ namespace MHServerEmu.Games.MetaGames
             // assists
             if (_proto.AssistsEntry >= 0)
             {
-                var tags = avatar.TagPlayers;
+                var tags = avatar.PlayerTags;
                 foreach (var player in tags.GetPlayers(TimeSpan.FromMilliseconds(_proto.AssistsMS)))
                 {
                     if (player == killer) continue;

@@ -17,8 +17,6 @@ namespace MHServerEmu.Games.Entities.Items
 {
     public class AffixSpec : ISerialize
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private PrototypeId _scopeProtoRef;
         private int _seed;
 
@@ -93,11 +91,8 @@ namespace MHServerEmu.Games.Entities.Items
 
             while (affixPicker.PickRemove(out AffixPrototype pickedAffixProto))
             {
-                if (pickedAffixProto == null)
-                {
-                    Logger.Warn("RollAffix(): affixProto == null");
+                if (!Verify.IsNotNull(pickedAffixProto))
                     continue;
-                }
 
                 AffixProto = pickedAffixProto;
                 result |= SetScope(random, rollFor, itemSpec, affixSet, BehaviorOnPowerMatch.Ignore);
@@ -142,8 +137,7 @@ namespace MHServerEmu.Games.Entities.Items
         public MutationResults SetScope(GRandom random, PrototypeId rollFor, ItemSpec itemSpec,
             HashSet<ScopedAffixRef> affixSet, BehaviorOnPowerMatch behaviorOnPowerMatch)
         {
-            if (AffixProto == null)
-                return Logger.WarnReturn(MutationResults.Error, "SetScope(): AffixProto == null");
+            if (!Verify.IsNotNull(AffixProto)) return MutationResults.Error;
 
             if (AffixProto is AffixPowerModifierPrototype powerAffixProto)
             {
@@ -166,19 +160,14 @@ namespace MHServerEmu.Games.Entities.Items
         private MutationResults SetAffixScopePower(GRandom random, PrototypeId rollFor, ItemSpec itemSpec,
             HashSet<ScopedAffixRef> affixSet, BehaviorOnPowerMatch behaviorOnPowerMatch)
         {
-            // Validate
-            if (AffixProto == null)
-                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopePower(): AffixProto == null");
+            if (!Verify.IsNotNull(AffixProto)) return MutationResults.Error;
 
-            if (AffixProto is not AffixPowerModifierPrototype powerAffixProto)
-                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopePower(): AffixProto is not AffixPowerModifierPrototype powerAffixProto");
+            AffixPowerModifierPrototype powerAffixProto = AffixProto as AffixPowerModifierPrototype;
+            if (!Verify.IsNotNull(powerAffixProto)) return MutationResults.Error;
+            if (!Verify.IsTrue(powerAffixProto.IsForSinglePowerOnly)) return MutationResults.Error;
 
-            if (powerAffixProto.IsForSinglePowerOnly == false)
-                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopePower(): powerAffixProto.IsForSinglePowerOnly == false");
-
-            var avatarProto = rollFor.As<AvatarPrototype>();
-            if (avatarProto == null)
-                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopePower(): avatarProto == null");
+            AvatarPrototype avatarProto = rollFor.As<AvatarPrototype>();
+            if (!Verify.IsNotNull(avatarProto)) return MutationResults.Error;
 
             // Run evals
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
@@ -197,25 +186,15 @@ namespace MHServerEmu.Games.Entities.Items
 
             foreach (PowerProgressionEntryPrototype entryProto in powerProgEntries)
             {
-                // Entry validation
-                if (entryProto.PowerAssignment == null)
-                {
-                    Logger.Warn("SetAffixScopePower(): entryProto.PowerAssignment == null");
+                if (!Verify.IsNotNull(entryProto.PowerAssignment))
                     continue;
-                }
 
-                if (entryProto.PowerAssignment.Ability == PrototypeId.Invalid)
-                {
-                    Logger.Warn("SetAffixScopePower(): entryProto.PowerAssignment.Ability == PrototypeId.Invalid");
+                if (!Verify.IsTrue(entryProto.PowerAssignment.Ability != PrototypeId.Invalid))
                     continue;
-                }
 
-                var powerProto = entryProto.PowerAssignment.Ability.As<PowerPrototype>();
-                if (powerProto == null)
-                {
-                    Logger.Warn("SetAffixScopePower(): powerProto == null");
+                PowerPrototype powerProto = entryProto.PowerAssignment.Ability.As<PowerPrototype>();
+                if (!Verify.IsNotNull(powerProto))
                     continue;
-                }
 
                 // Skip irrelevant entries
                 if (Power.IsUltimatePower(powerProto))
@@ -259,11 +238,8 @@ namespace MHServerEmu.Games.Entities.Items
                 }
 
                 Curve maxRankCurve = entryProto.MaxRankForPowerAtCharacterLevel.AsCurve();
-                if (maxRankCurve == null)
-                {
-                    Logger.Warn("SetAffixScopePower(): maxRankCurve == null");
+                if (!Verify.IsNotNull(maxRankCurve))
                     continue;
-                }
 
                 if (maxRankCurve.GetIntAt(maxRankCurve.MaxPosition) <= 1)
                     continue;
@@ -297,8 +273,7 @@ namespace MHServerEmu.Games.Entities.Items
         private MutationResults SetAffixPowerForPowerGroupBonus(AffixPowerModifierPrototype powerAffixProto,
             PrototypeId rollFor, HashSet<ScopedAffixRef> affixSet)
         {
-            if (powerAffixProto.IsForSinglePowerOnly)
-                return Logger.WarnReturn(MutationResults.Error, "SetAffixPowerForPowerGroupBonus(): affixPowerModifierProto.IsForSinglePowerOnly");
+            if (!Verify.IsTrue(powerAffixProto.IsForSinglePowerOnly == false)) return MutationResults.Error;
 
             if (powerAffixProto.PowerKeywordFilter != PrototypeId.Invalid)
             {
@@ -317,29 +292,25 @@ namespace MHServerEmu.Games.Entities.Items
             else if (powerAffixProto.PowerProgTableTabRef != PrototypeId.Invalid)
             {
                 // Power tab scope (applies to powers in the specified power tab)
-                
-                if (rollFor == PrototypeId.Invalid)
+                if (!Verify.IsTrue(rollFor != PrototypeId.Invalid, $"Trying to SetAffixPower() for a power mod affix that grants a bonus to power progression table page, but there is not rollFor avatar!\n[{powerAffixProto}]"))
+                    return MutationResults.Error;
+
+                AvatarPrototype avatarProto = rollFor.As<AvatarPrototype>();
+                if (!Verify.IsNotNull(avatarProto)) return MutationResults.Error;
+
+                PowerProgTableTabRefPrototype powerProgTableTabRefProto = powerAffixProto.PowerProgTableTabRef.As<PowerProgTableTabRefPrototype>();
+                if (!Verify.IsNotNull(powerProgTableTabRefProto)) return MutationResults.Error;
+
+                PowerProgressionTablePrototype powerProgTableProto = avatarProto.GetPowerProgressionTableAtIndex(powerProgTableTabRefProto.PowerProgTableTabIndex);
+                if (avatarProto.ApprovedForUse())   // Fail loudly or silently depending on avatar approval state
                 {
-                    return Logger.WarnReturn(MutationResults.Error, "SetAffixPowerForPowerGroupBonus(): Trying to SetAffixPower() for a power mod affix that grants a bonus " +
-                        $"to power progression table page, but there is not rollFor avatar!\n[{powerAffixProto}]");
+                    if (!Verify.IsNotNull(powerProgTableProto, $"Trying to SetAffixPower() for a power mod affix that grants a bonus to power progression table page for a shipping avatar, but the avatar does not have a power progression table at the specified index!\nAvatar: [{avatarProto}]\nAffix: [{powerAffixProto}]\nIndex: [{powerProgTableTabRefProto.PowerProgTableTabIndex}]"))
+                        return MutationResults.Error;
                 }
-
-                var avatarProto = rollFor.As<AvatarPrototype>();
-                if (avatarProto == null) return Logger.WarnReturn(MutationResults.Error, "SetAffixPowerForPowerGroupBonus(): avatarProto == null");
-
-                var powerProgTableTabRefProto = powerAffixProto.PowerProgTableTabRef.As<PowerProgTableTabRefPrototype>();
-                if (powerProgTableTabRefProto == null) return Logger.WarnReturn(MutationResults.Error, "SetAffixPowerForPowerGroupBonus(): powerProgTableTabRefProto == null");
-
-                if (avatarProto.GetPowerProgressionTableAtIndex(powerProgTableTabRefProto.PowerProgTableTabIndex) == null)
+                else
                 {
-                    if (avatarProto.ApprovedForUse())
-                    {
-                        Logger.Warn($"SetAffixPowerForPowerGroupBonus(): Trying to SetAffixPower() for a power mod affix that grants a bonus to " +
-                            "power progression table page for a shipping avatar, but the avatar does not have a power progression table " +
-                            $"at the specified index!\nAvatar: [{avatarProto}]\nAffix: [{powerAffixProto}]\nIndex: [{powerProgTableTabRefProto.PowerProgTableTabIndex}]");
-                    }
-
-                    return MutationResults.Error | MutationResults.ErrorReasonAffixScopePowerGroup;
+                    if (powerProgTableProto == null)
+                        return MutationResults.Error | MutationResults.ErrorReasonAffixScopePowerGroup;
                 }
 
                 // NOTE: The client checks for invalid scope rather than rollFor, which may be a bug
@@ -388,11 +359,8 @@ namespace MHServerEmu.Games.Entities.Items
                 scopeFilter.Add(scopedAffixRef.ScopeProtoRef);
 
                 RegionAffixPrototype regionAffixProto = scopedAffixRef.ScopeProtoRef.As<RegionAffixPrototype>();
-                if (regionAffixProto == null)
-                {
-                    Logger.Warn("SetAffixScopeRegionAffix(): regionAffixProto == null");
+                if (!Verify.IsNotNull(regionAffixProto))
                     continue;
-                }
 
                 if (regionAffixProto.RestrictsAffixes.HasValue())
                 {
@@ -400,14 +368,10 @@ namespace MHServerEmu.Games.Entities.Items
                         scopeFilter.Add(restrictedAffixRef);
                 }
 
-                if (regionAffixProto.Category != PrototypeId.Invalid)
+                if (Verify.IsTrue(regionAffixProto.Category != PrototypeId.Invalid))
                 {
                     var affixCategoryProto = regionAffixProto.Category.As<RegionAffixCategoryPrototype>();
                     regionAffixCategoryPickDict[affixCategoryProto]++;
-                }
-                else
-                {
-                    Logger.Warn("SetAffixScopeRegionAffix(): regionAffixProto.Category == PrototypeId.Invalid");
                 }
             }
 
@@ -432,38 +396,26 @@ namespace MHServerEmu.Games.Entities.Items
                 : extraCategoryList;
 
             // Validation
-            if (AffixProto == null)
-                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopeRegionAffix(): AffixProto == null");
+            if (!Verify.IsNotNull(AffixProto)) return MutationResults.Error;
 
-            if (AffixProto is not AffixRegionModifierPrototype affixRegionModifierProto)
-                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopeRegionAffix(): AffixProto is not AffixRegionModifierPrototype affixRegionModifierProto");
+            AffixRegionModifierPrototype affixRegionModifierProto = AffixProto as AffixRegionModifierPrototype;
+            if (!Verify.IsNotNull(affixRegionModifierProto)) return MutationResults.Error;
+            if (!Verify.IsTrue(affixRegionModifierProto.AffixTable != PrototypeId.Invalid)) return MutationResults.Error;
 
-            if (affixRegionModifierProto.AffixTable == PrototypeId.Invalid)
-                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopeRegionAffix(): affixRegionModifierProto.AffixTable == PrototypeId.Invalid");
-
-            var regionAffixTableProto = affixRegionModifierProto.AffixTable.As<RegionAffixTablePrototype>();
-            if (regionAffixTableProto == null)
-                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopeRegionAffix(): regionAffixTableProto == null");
-
-            if (regionAffixTableProto.RegionAffixes.IsNullOrEmpty())
-                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopeRegionAffix(): regionAffixTableProto.RegionAffixes.IsNullOrEmpty()");
+            RegionAffixTablePrototype regionAffixTableProto = affixRegionModifierProto.AffixTable.As<RegionAffixTablePrototype>();
+            if (!Verify.IsNotNull(regionAffixTableProto)) return MutationResults.Error;
+            if (!Verify.IsTrue(regionAffixTableProto.RegionAffixes.HasValue())) return MutationResults.Error;
 
             // Build affix scope picker
             Picker<PrototypeId> scopePicker = new(random);
 
             foreach (RegionAffixWeightedEntryPrototype entryProto in regionAffixTableProto.RegionAffixes)
             {
-                if (entryProto.Affix == PrototypeId.Invalid)
-                {
-                    Logger.Warn("SetAffixScopeRegionAffix(): entryProto.Affix == PrototypeId.Invalid");
+                if (!Verify.IsTrue(entryProto.Affix != PrototypeId.Invalid))
                     continue;
-                }
 
-                if (entryProto.Weight == 0)
-                {
-                    Logger.Warn("SetAffixScopeRegionAffix(): entryProto.Weight == 0");
+                if (!Verify.IsTrue(entryProto.Weight != 0))
                     continue;
-                }
 
                 if (scopeFilter.Contains(entryProto.Affix))
                     continue;

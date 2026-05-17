@@ -22,11 +22,7 @@ namespace MHServerEmu.Games.Entities
 
         public PlayerIterator(Region region)
         {
-            if (region == null)
-            {
-                Logger.Warn("PlayerIterator(): region == null");
-                return;
-            }
+            if (!Verify.IsNotNull(region)) return;
 
             _game = region.Game;
             _region = region;

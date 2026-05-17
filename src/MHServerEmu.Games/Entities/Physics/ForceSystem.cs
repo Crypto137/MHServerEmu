@@ -6,12 +6,11 @@ namespace MHServerEmu.Games.Entities.Physics
     public class ForceSystem
     {
         public Vector3 Epicenter { get; set; }
-        public ForceSystemMemberList Members { get; private set; }
+        public ForceSystemMemberList Members { get; private set; } = new();
 
         public ForceSystem(Vector3 epicenter) 
         {
             Epicenter = epicenter;
-            Members = new ();
         }
     }
 

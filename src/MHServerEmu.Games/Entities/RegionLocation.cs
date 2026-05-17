@@ -19,8 +19,6 @@ namespace MHServerEmu.Games.Entities
 	        InvalidCell = 2,
         };
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public static RegionLocation Invalid { get; }
 
         private Region _region;
@@ -121,34 +119,32 @@ namespace MHServerEmu.Games.Entities
             _cell = null;
         }
 
-        public SetPositionResult SetPosition(Vector3 value)
+        public SetPositionResult SetPosition(Vector3 newPosition)
         {
-            if (Vector3.IsFinite(value) == false)
-                return Logger.WarnReturn(SetPositionResult.Invalid, $"SetPosition() Non-finite position ({value}) given to region location: {this}");
+            if (!Verify.IsTrue(Vector3.IsFinite(newPosition), $"Non-finite position ({newPosition}) given to region location: {this}"))
+                return SetPositionResult.Invalid;
 
             if (_region == null)
                 return SetPositionResult.InvalidRegion;
 
             Cell oldCell = Cell;
 
-            if (oldCell == null || oldCell.IntersectsXY(value) == false)
+            if (oldCell == null || oldCell.IntersectsXY(newPosition) == false)
             {
-                Cell newCell = _region.GetCellAtPosition(value);
+                Cell newCell = _region.GetCellAtPosition(newPosition);
                 if (newCell == null)
                     return SetPositionResult.InvalidCell;
 
                 _cell = newCell;
             }
 
-            _position = value;
+            _position = newPosition;
             return SetPositionResult.Success;
         }
 
         public bool SetOrientation(Orientation orientation)
         {
-            if (Orientation.IsFinite(ref orientation) == false)
-                return Logger.WarnReturn(false, "SetOrientation(): Orientation.IsFinite(orientation) == false");
-
+            if (!Verify.IsTrue(Orientation.IsFinite(ref orientation))) return false;
             _orientation = orientation;
             return true;
         }

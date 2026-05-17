@@ -14,8 +14,6 @@ namespace MHServerEmu.Games.Entities.Inventories
         private const uint InitialCapacity = 128;
         private const uint MaxCapacity = 1024;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         // NOTE: We can't use the size of the bit array as is because it's a multiple of the word size (8 for ulong)
         private PrototypeId _inventoryProtoRef = PrototypeId.Invalid;
         private uint _numItems = 0;
@@ -48,7 +46,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             if (_numItems == numItems)
                 return true;
 
-            if (numItems > MaxCapacity) return Logger.WarnReturn(false, "Initialize(): numItems > MaxCapacity");
+            if (!Verify.IsTrue(numItems <= MaxCapacity)) return false;
 
             _numItems = numItems;
 
@@ -72,17 +70,13 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public bool HasItemBeenPurchased(uint slot)
         {
-            if (slot >= _numItems)
-                return Logger.WarnReturn(false, "HasItemBeenPurchased(): slot >= _numItems");
-
+            if (!Verify.IsTrue(slot < _numItems)) return false;
             return _itemBits[(int)slot];
         }
 
         public bool RecordItemPurchase(uint slot)
         {
-            if (slot >= _numItems)
-                return Logger.WarnReturn(false, "RecordItemPurchase(): slot >= _numItems");
-
+            if (!Verify.IsTrue(slot < _numItems)) return false;
             _itemBits.Set((int)slot);
             return true;
         }

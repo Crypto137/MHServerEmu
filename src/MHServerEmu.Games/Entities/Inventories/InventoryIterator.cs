@@ -27,8 +27,6 @@ namespace MHServerEmu.Games.Entities.Inventories
     /// </summary>
     public readonly struct InventoryIterator
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Entity _entity;
         private readonly InventoryIterationFlags _flags;
 
@@ -170,8 +168,7 @@ namespace MHServerEmu.Games.Entities.Inventories
                     return true;
 
                 InventoryPrototype inventoryPrototype = inventory.Prototype;
-                if (inventoryPrototype == null)
-                    return Logger.WarnReturn(false, $"IsValid(): Unable to get inventory prototype for inventory {inventory}");
+                if (!Verify.IsNotNull(inventoryPrototype)) return false;
 
                 // Filter by flags
                 if (_flags.HasFlag(InventoryIterationFlags.PlayerGeneral) && inventoryPrototype.IsPlayerGeneralInventory)

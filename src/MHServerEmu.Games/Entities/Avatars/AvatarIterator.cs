@@ -14,8 +14,6 @@ namespace MHServerEmu.Games.Entities.Avatars
     public readonly struct AvatarIterator
     {
         // NOTE: In the client this iterator uses unfinished AvatarMode functionality that we don't really need to implement
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Player _player;
         private readonly AvatarIteratorMode _iteratorMode;
         private readonly PrototypeId _avatarProtoRef;
@@ -124,11 +122,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     // we are skipping avatar mode check here
 
                     Avatar avatar = _entityManager.GetEntity<Avatar>(entry.Id);
-                    if (avatar == null)
-                    {
-                        Logger.Warn("AdvanceToValidAvatar(): avatar == null");
+                    if (!Verify.IsNotNull(avatar))
                         continue;
-                    }
 
                     Current = avatar;
                     return true;

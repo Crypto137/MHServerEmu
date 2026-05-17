@@ -159,7 +159,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
             float score = 0.0f;
 
-            if (entity.IsHostileToPlayers() && entity.TagPlayers.HasTags)
+            if (entity.IsHostileToPlayers() && entity.PlayerTags.HasTags)
             {
                 if (_scoreLevelCurve != null)
                 {

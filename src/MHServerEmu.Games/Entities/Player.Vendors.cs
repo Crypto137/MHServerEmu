@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Dialog;
@@ -87,10 +88,10 @@ namespace MHServerEmu.Games.Entities
 
         public bool AwardVendorXP(int amount, PrototypeId vendorTypeProtoRef, ulong vendorId = InvalidId)
         {
-            if (amount <= 0) return Logger.WarnReturn(false, "AwardVendorXP(): amount <= 0");
+            if (!Verify.IsTrue(amount > 0)) return false;
 
             VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
-            if (vendorTypeProto == null) return Logger.WarnReturn(false, "AwardVendorXP(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return false;
 
             Properties.AdjustProperty(amount, new(PropertyEnum.VendorXP, vendorTypeProtoRef));
             TryLevelUpVendor(vendorTypeProto, vendorId, false);
@@ -99,7 +100,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool TryDoVendorXPCapRollover(VendorXPCapInfoPrototype vendorXPCapInfoProto)
         {
-            if (vendorXPCapInfoProto == null) return Logger.WarnReturn(false, "TryDoVendorXPCapRollover(): vendorXPCapInfoProto == null");
+            if (!Verify.IsNotNull(vendorXPCapInfoProto)) return false;
             PrototypeId vendorTypeProtoRef = vendorXPCapInfoProto.Vendor;
 
             // Find out when the current rollover happened
@@ -135,13 +136,13 @@ namespace MHServerEmu.Games.Entities
             EntityManager entityManager = Game.EntityManager;
 
             Item item = entityManager.GetEntity<Item>(itemId);
-            if (item == null) return Logger.WarnReturn(false, "BuyItemFromVendor(): item == null");
+            if (!Verify.IsNotNull(item)) return false;
 
             ItemPrototype itemProto = item.ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "BuyItemFromVendor(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             WorldEntity vendor = entityManager.GetEntity<WorldEntity>(vendorId);
-            if (vendor == null) return Logger.WarnReturn(false, "BuyItemFromVendor(): vendor == null");
+            if (!Verify.IsNotNull(vendor)) return false;
 
             // Find the inventory slot to put the purchased item in
             uint vendorSlot = Inventory.InvalidSlot;
@@ -152,19 +153,19 @@ namespace MHServerEmu.Games.Entities
             {
                 // Get purchase data for non-buyback items
                 purchaseData = GetVendorPurchaseData(item.InventoryLocation.InventoryRef, false);
-                if (purchaseData == null) return Logger.WarnReturn(false, "BuyItemFromVendor(): purchaseData == null");
+                if (!Verify.IsNotNull(purchaseData)) return false;
 
                 vendorSlot = item.InventoryLocation.Slot;
-                if (purchaseData.HasItemBeenPurchased(vendorSlot)) return Logger.WarnReturn(false, "BuyItemFromVendor(): purchaseData.HasItemBeenPurchased(vendorSlot)");
+                if (!Verify.IsTrue(purchaseData.HasItemBeenPurchased(vendorSlot) == false)) return false;
             }
 
             Inventory destinationInventory = GetInventory(itemProto.DestinationFromVendor);
-            if (destinationInventory == null) return Logger.WarnReturn(false, "BuyItemFromVendor(): destinationInventory == null");
+            if (!Verify.IsNotNull(destinationInventory)) return false;
 
             if (destinationSlot == Inventory.InvalidSlot)
                 destinationSlot = destinationInventory.GetFreeSlot(item, true);
 
-            if (destinationSlot == Inventory.InvalidSlot) return Logger.WarnReturn(false, "BuyItemFromVendor(): destinationSlot == Inventory.InvalidSlot");
+            if (!Verify.IsTrue(destinationSlot != Inventory.InvalidSlot)) return false;
 
             // Some items are cloned when they are purchased
             bool isCloning = item.IsClonedWhenPurchasedFromVendor && isInBuybackInventory == false;
@@ -180,9 +181,7 @@ namespace MHServerEmu.Games.Entities
                     settings.OptionFlags &= ~EntitySettingsOptionFlags.EnterGame;
 
                 Item clonedItem = entityManager.CreateEntity(settings) as Item;
-
-                if (clonedItem == null)
-                    return Logger.WarnReturn(false, $"BuyItemFromVendor(): Failed to clone item [{item}]");
+                if (!Verify.IsNotNull(clonedItem)) return false;
 
                 item = clonedItem;
             }
@@ -194,11 +193,12 @@ namespace MHServerEmu.Games.Entities
             if (isCloning == false)
             {
                 // Move the item to the player's inventory and record the purchase if we are not cloning
-                if (item.ChangeInventoryLocation(destinationInventory, destinationSlot) != InventoryResult.Success)
-                    return Logger.WarnReturn(false, $"BuyItemFromVendor(): Failed to put purchased item [{item}] into inventory of player [{this}]");
+                if (!Verify.IsTrue(item.ChangeInventoryLocation(destinationInventory, destinationSlot) == InventoryResult.Success, 
+                    $"Failed to put purchased item [{item}] into inventory of player [{this}]"))
+                    return false;
 
                 if (isInBuybackInventory == false && purchaseData != null)
-                    purchaseData.RecordItemPurchase(vendorSlot);
+                    Verify.IsTrue(purchaseData.RecordItemPurchase(vendorSlot));
             }
 
             // Events
@@ -227,14 +227,14 @@ namespace MHServerEmu.Games.Entities
                 return false;
 
             Item item = Game?.EntityManager.GetEntity<Item>(itemId);
-            if (item == null) return Logger.WarnReturn(false, "SellItemToVendor(): item == null");
+            if (!Verify.IsNotNull(item)) return false;
 
             int sellPrice = (int)item.GetSellPrice(this);
             if (ValidateItemSellPrice(item, sellPrice) == false)
                 return false;
 
             Inventory buybackInventory = GetInventoryByRef(GameDatabase.GlobalsPrototype.VendorBuybackInventory);
-            if (buybackInventory == null) return Logger.WarnReturn(false, "SellItemToVendor(): buybackInventory == false");
+            if (!Verify.IsNotNull(buybackInventory)) return false;
 
             // Find a free slot in the buyback inventory to put this item in
             uint lastSlot = (uint)buybackInventory.GetCapacity() - 1;
@@ -253,9 +253,7 @@ namespace MHServerEmu.Games.Entities
             {
                 ulong lastEntityId = buybackInventory.GetEntityInSlot(lastSlot);
                 Entity lastEntity = Game.EntityManager.GetEntity<Entity>(lastEntityId);
-                if (lastEntity == null)
-                    Logger.Warn("SellItemToVendor(): lastEntity == null");
-                else
+                if (Verify.IsNotNull(lastEntity))
                     lastEntity.Destroy();
 
                 freeSlot = lastSlot;
@@ -268,22 +266,19 @@ namespace MHServerEmu.Games.Entities
             {
                 ulong entityToShiftId = buybackInventory.GetEntityInSlot(i - 1);
                 Entity entityToShift = Game.EntityManager.GetEntity<Entity>(entityToShiftId);
-                if (entityToShift == null)
-                {
-                    Logger.Warn("SellItemToVendor(): entityToShift == null");
+                if (!Verify.IsNotNull(entityToShift))
                     continue;
-                }
 
                 Inventory.ChangeEntityInventoryLocation(entityToShift, buybackInventory, i, ref stackEntityId, false);
             }
 
             // Put our newly sold item in the first slot
-            if (buybackInventory.IsSlotFree(0) == false)
-                return Logger.WarnReturn(false, "SellItemToVendor(): buybackInventory.IsSlotFree(0) == false");
+            if (!Verify.IsTrue(buybackInventory.IsSlotFree(0))) return false;
 
             stackEntityId = null;
-            if (Inventory.ChangeEntityInventoryLocation(item, buybackInventory, 0, ref stackEntityId, false) != InventoryResult.Success)
-                return Logger.WarnReturn(false, $"SellItemToVendor(): Failed to add item {item} to the buyback inventory");
+            InventoryResult moveToBuybackResult = Inventory.ChangeEntityInventoryLocation(item, buybackInventory, 0, ref stackEntityId, false);
+            if (!Verify.IsTrue(moveToBuybackResult == InventoryResult.Success, $"Failed to add item {item} to the buyback inventory"))
+                return false;
 
             // Sell successful, record sell price and add credits
             item.Properties[PropertyEnum.ItemSoldPrice] = sellPrice;
@@ -300,14 +295,14 @@ namespace MHServerEmu.Games.Entities
                 return false;
 
             Item item = Game?.EntityManager.GetEntity<Item>(itemId);
-            if (item == null) return Logger.WarnReturn(false, "DonateItemToVendor(): item == null");
+            if (!Verify.IsNotNull(item)) return false;
 
             WorldEntity vendor = Game.EntityManager.GetEntity<WorldEntity>(vendorId);
-            if (vendor == null) return Logger.WarnReturn(false, "DonateItemToVendor(): vendor == null");
+            if (!Verify.IsNotNull(vendor)) return false;
 
             PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
             VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
-            if (vendorTypeProto == null) return Logger.WarnReturn(false, "DonateItemToVendor(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return false;
 
             // TODO: vendor.IsGlobalEventVendor for Events/GlobalEvents/Events/BiFrostUnlock/BifrostUnlock.prototype
 
@@ -340,17 +335,17 @@ namespace MHServerEmu.Games.Entities
                 return false;
 
             WorldEntity vendor = Game.EntityManager.GetEntity<WorldEntity>(vendorId);
-            if (vendor == null) return Logger.WarnReturn(false, "RefreshVendorInventory(): vendor == null");
+            if (!Verify.IsNotNull(vendor)) return false;
 
             PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
-            if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "RefreshVendorInventory(): vendorTypeProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(vendorTypeProtoRef != PrototypeId.Invalid)) return false;
 
             return RefreshVendorInventoryInternal(vendorTypeProtoRef);
         }
 
         public bool RefreshVendorInventory(PrototypeId vendorTypeProtoRef)
         {
-            if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "RefreshVendorInventory(): vendorTypeProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(vendorTypeProtoRef != PrototypeId.Invalid)) return false;
 
             if (CanRefreshVendorInventory(vendorTypeProtoRef, false) != VendorResult.RefreshSuccess)
                 return false;
@@ -361,16 +356,14 @@ namespace MHServerEmu.Games.Entities
         public PurchaseUnlockResult CanPurchaseUnlock(PrototypeId agentProtoRef)
         {
             AgentPrototype agentProto = agentProtoRef.As<AgentPrototype>();
-            if (agentProto == null) return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "CanPurchaseUnlock(): agentProto == null");
-
-            if (agentProto is not AvatarPrototype && agentProto is not AgentTeamUpPrototype)
-                return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "CanPurchaseUnlock(): agentProto is not AvatarPrototype && agentProto is not AgentTeamUpPrototype");
+            if (!Verify.IsNotNull(agentProto)) return PurchaseUnlockResult.UnknownFailure;
+            if (!Verify.IsTrue(agentProto is AvatarPrototype || agentProto is AgentTeamUpPrototype)) return PurchaseUnlockResult.UnknownFailure;
 
             if (agentProto.IsLiveTuningEnabled() == false)
                 return PurchaseUnlockResult.UnknownFailure;
 
             ItemCostPrototype itemCostProto = GetItemCostPrototypeToUnlockWithEternitySplinters(agentProtoRef);
-            if (itemCostProto == null) return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "CanPurchaseUnlock(): itemCostProto == null");
+            if (!Verify.IsNotNull(itemCostProto)) return PurchaseUnlockResult.UnknownFailure;
 
             if (agentProto is AvatarPrototype)
             {
@@ -394,11 +387,8 @@ namespace MHServerEmu.Games.Entities
             foreach (PrototypeId tokenProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CharacterTokenPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 CharacterTokenPrototype tokenProto = tokenProtoRef.As<CharacterTokenPrototype>();
-                if (tokenProto == null)
-                {
-                    Logger.Warn("GetItemCostPrototypeToUnlockWithEternitySplinters(): tokenProto == null");
+                if (!Verify.IsNotNull(tokenProto))
                     continue;
-                }
 
                 if (tokenProto.Character != agentProtoRef)
                     continue;
@@ -426,20 +416,18 @@ namespace MHServerEmu.Games.Entities
                 return result;
 
             AgentPrototype agentProto = agentProtoRef.As<AgentPrototype>();
-            if (agentProto == null) return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "PurchaseUnlock(): agentProto == null");
+            if (!Verify.IsNotNull(agentProto)) return PurchaseUnlockResult.UnknownFailure;
 
             ItemCostPrototype itemCostProto = GetItemCostPrototypeToUnlockWithEternitySplinters(agentProtoRef);
-            if (itemCostProto == null) return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "PurchaseUnlock(): itemCostProto == null");
+            if (!Verify.IsNotNull(itemCostProto)) return PurchaseUnlockResult.UnknownFailure;
 
             if (agentProto is AvatarPrototype)
             {
-                if (UnlockAvatar(agentProtoRef, true) == false)
-                    return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "PurchaseUnlock(): UnlockAvatar(agentProtoRef, true) == false");
+                if (!Verify.IsTrue(UnlockAvatar(agentProtoRef, true))) return PurchaseUnlockResult.UnknownFailure;
             }
             else
             {
-                if (UnlockTeamUpAgent(agentProtoRef, true) == false)
-                    return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "PurchaseUnlock(): UnlockTeamUpAgent(agentProtoRef, true) == false");
+                if (!Verify.IsTrue(UnlockTeamUpAgent(agentProtoRef, true))) return PurchaseUnlockResult.UnknownFailure;
             }
 
             itemCostProto.PayItemCost(this, DummyItem);
@@ -457,11 +445,8 @@ namespace MHServerEmu.Games.Entities
                 VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
                 TryLevelUpVendor(vendorTypeProto, InvalidId, true);
 
-                if (Properties[PropertyEnum.VendorLevel, vendorTypeProtoRef] == 0)
-                {
-                    Logger.Warn($"InitializeVendors(): Failed to initialize vendor level for vendor type {vendorTypeProto}");
+                if (!Verify.IsTrue(Properties[PropertyEnum.VendorLevel, vendorTypeProtoRef] != 0))
                     continue;
-                }
 
                 if (Properties[PropertyEnum.VendorRollSeed, vendorTypeProtoRef] == 0)
                 {
@@ -473,7 +458,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool TryLevelUpVendor(VendorTypePrototype vendorTypeProto, ulong vendorId, bool isInitializing)
         {
-            if (vendorTypeProto == null) return Logger.WarnReturn(false, "TryLevelUpVendor(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return false;
             PrototypeId vendorTypeProtoRef = vendorTypeProto.DataRef;
 
             if (CalculateVendorLevel(vendorTypeProto, out int newLevel) == false)
@@ -492,11 +477,11 @@ namespace MHServerEmu.Games.Entities
         {
             newLevel = 0;
 
-            if (vendorTypeProto == null) return Logger.WarnReturn(false, "CalculateVendorLevel(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return false;
             PrototypeId vendorTypeProtoRef = vendorTypeProto.DataRef;
 
             Curve levelingCurve = GetVendorLevelingCurve(vendorTypeProto);
-            if (levelingCurve == null) return Logger.WarnReturn(false, "CalculateVendorLevel(): levelingCurve == null");
+            if (!Verify.IsNotNull(levelingCurve)) return false;
 
             int maxLevel = GetVendorMaxLevel(vendorTypeProto);
             int oldLevel = Properties[PropertyEnum.VendorLevel, vendorTypeProtoRef];
@@ -524,23 +509,23 @@ namespace MHServerEmu.Games.Entities
 
         private Curve GetVendorLevelingCurve(VendorTypePrototype vendorTypeProto)
         {
-            if (vendorTypeProto == null) return Logger.WarnReturn<Curve>(null, "GetVendorLevelingCurve(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return null;
 
             CurveId vendorLevelingCurveId = vendorTypeProto.VendorLevelingCurve;
-            if (vendorLevelingCurveId == CurveId.Invalid) return Logger.WarnReturn<Curve>(null, "GetVendorLevelingCurve(): vendorLevelingCurveId == CurveId.Invalid");
+            if (!Verify.IsTrue(vendorLevelingCurveId != CurveId.Invalid)) return null;
 
             return CurveDirectory.Instance.GetCurve(vendorLevelingCurveId);
         }
 
         private int GetVendorMaxLevel(VendorTypePrototype vendorTypeProto)
         {
-            if (vendorTypeProto == null) return Logger.WarnReturn(0, "GetVendorMaxLevel(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return 0;
             PrototypeId vendorTypeProtoRef = vendorTypeProto.DataRef;
 
             int currentLevel = Properties[PropertyEnum.VendorLevel, vendorTypeProtoRef];
 
             Curve levelingCurve = GetVendorLevelingCurve(vendorTypeProto);
-            if (levelingCurve == null) return Logger.WarnReturn(0, "GetVendorMaxLevel(): levelingCurve == null");
+            if (!Verify.IsNotNull(levelingCurve)) return 0;
 
             // No more valid data in the curve = we are at max level
             int nextLevel = currentLevel + 1;
@@ -557,21 +542,19 @@ namespace MHServerEmu.Games.Entities
 
         private int GetVendorXPRequirement(VendorTypePrototype vendorTypeProto, int level)
         {
-            if (vendorTypeProto == null) return Logger.WarnReturn(VendorInvalidXP, "GetVendorXPRequirement(): vendorTypeProto == null");
-            if (level < VendorMinLevel) return Logger.WarnReturn(VendorInvalidXP, "GetVendorXPRequirement(): level < VendorMinLevel");
+            if (!Verify.IsNotNull(vendorTypeProto)) return VendorInvalidXP;
+            if (!Verify.IsTrue(level >= VendorMinLevel)) return VendorInvalidXP;
 
-            Curve levelingCurve = GetVendorLevelingCurve(vendorTypeProto);
-            if (levelingCurve == null) return Logger.WarnReturn(VendorInvalidXP, "GetVendorXPRequirement(): levelingCurve == null");
+            Curve levelCurve = GetVendorLevelingCurve(vendorTypeProto);
+            if (!Verify.IsNotNull(levelCurve)) return VendorInvalidXP;
+            if (!Verify.IsTrue(level >= levelCurve.MinPosition && level <= levelCurve.MaxPosition)) return VendorInvalidXP;
 
-            if (level < levelingCurve.MinPosition || level > levelingCurve.MaxPosition)
-                return Logger.WarnReturn(VendorInvalidXP, "GetVendorXPRequirement(): level < levelingCurve.MinPosition || level > levelingCurve.MaxPosition");
-
-            return levelingCurve.GetIntAt(level);
+            return levelCurve.GetIntAt(level);
         }
 
         private bool OnVendorLevelUp(VendorTypePrototype vendorTypeProto, ulong vendorId, int newLevel)
         {
-            if (vendorTypeProto == null) return Logger.WarnReturn(false, "OnVendorLevelUp(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return false;
             PrototypeId vendorTypeProtoRef = vendorTypeProto.DataRef;
 
             SetVendorEnergyPct(vendorTypeProtoRef, 1f);
@@ -592,7 +575,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool UpdateVendorLootProperties(VendorTypePrototype vendorTypeProto)
         {
-            if (vendorTypeProto == null) return Logger.WarnReturn(false, "UpdateVendorLootProperties(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return false;
             PrototypeId vendorTypeProtoRef = vendorTypeProto.DataRef;
 
             // VendorRollAvatar / VendorRollLevel
@@ -655,7 +638,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool ClearVendorPurchaseData(VendorTypePrototype vendorTypeProto)
         {
-            if (vendorTypeProto == null) return Logger.WarnReturn(false, "ClearVendorPurchaseData(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return false;
 
             // Crafters do not have purchase data
             if (vendorTypeProto.IsCrafter)
@@ -675,7 +658,7 @@ namespace MHServerEmu.Games.Entities
 
         private float GetCurrentVendorEnergyPct(VendorTypePrototype vendorTypeProto)
         {
-            if (vendorTypeProto == null) return Logger.WarnReturn(0f, "GetCurrentVendorEnergyPct(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return 0f;
             PrototypeId vendorTypeProtoRef = vendorTypeProto.DataRef;
 
             float lastRefreshPctEngAfter = Properties[PropertyEnum.VendorLastRefreshPctEngAfter, vendorTypeProtoRef];
@@ -687,7 +670,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool SetVendorEnergyPct(PrototypeId vendorTypeProtoRef, float energyPct)
         {
-            if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "SetVendorEnergyPct(): vendorTypeProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(vendorTypeProtoRef != PrototypeId.Invalid)) return false;
 
             Properties[PropertyEnum.VendorLastRefreshPctEngAfter, vendorTypeProtoRef] = Math.Clamp(energyPct, 0f, 1f);
             Properties[PropertyEnum.VendorLastRefreshTime, vendorTypeProtoRef] = Game.CurrentTime;
@@ -697,7 +680,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool RollVendorInventory(VendorTypePrototype vendorTypeProto, bool isInitializing)
         {
-            if (vendorTypeProto == null) return Logger.WarnReturn(false, "RollVendorInventory(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return false;
             PrototypeId vendorTypeProtoRef = vendorTypeProto.DataRef;
 
             if (isInitializing && _initializedVendorTypeProtoRefs.Add(vendorTypeProtoRef) == false)
@@ -712,7 +695,7 @@ namespace MHServerEmu.Games.Entities
 
             // Get roll settings from properties
             int rollSeed = Properties[PropertyEnum.VendorRollSeed, vendorTypeProtoRef];
-            if (rollSeed == 0) return Logger.WarnReturn(false, "RollVendorInventory(): rollSeed == 0");
+            if (!Verify.IsTrue(rollSeed != 0)) return false;
 
             int rollTableLevel = Properties[PropertyEnum.VendorRollTableLevel, vendorTypeProtoRef];
 
@@ -723,20 +706,14 @@ namespace MHServerEmu.Games.Entities
             {
                 // Get the inventory
                 Inventory inventory = GetInventoryByRef(inventoryProtoRef);
-                if (inventory == null)
-                {
-                    Logger.Warn("RollVendorInventory(): inventory == null");
+                if (!Verify.IsNotNull(inventory))
                     continue;
-                }
 
-                // Find the purchase data for it to filter out items that have already been bought before
+                // Find the purchase data for it to filter out items that have already been bought before.
+                // This should have already been initialized for non-crafter vendors
                 VendorPurchaseData purchaseData = GetVendorPurchaseData(inventoryProtoRef, false);
-                if (purchaseData == null && vendorTypeProto.IsCrafter == false)
-                {
-                    // This should have already been initialized for non-crafter vendors
-                    Logger.Warn("RollVendorInventory(): purchaseData == null");
+                if (!Verify.IsTrue(purchaseData != null || vendorTypeProto.IsCrafter))
                     purchaseData = GetVendorPurchaseData(inventoryProtoRef, true);
-                }
 
                 // Destroy whatever was in it
                 inventory.DestroyContained();
@@ -765,11 +742,8 @@ namespace MHServerEmu.Games.Entities
                         if (lootTableProtoRef != PrototypeId.Invalid)
                         {
                             itLootTableProto = lootTableProtoRef.As<LootTablePrototype>();
-                            if (itLootTableProto == null)
-                            {
-                                Logger.Warn("RollVendorInventory(): itLootTableProto == null");
+                            if (!Verify.IsNotNull(itLootTableProto))
                                 continue;
-                            }
 
                             if (itLootTableProto.IsLiveTuningEnabled() == false)
                                 continue;
@@ -802,22 +776,16 @@ namespace MHServerEmu.Games.Entities
                     resolver.SetContext(LootContext.Vendor, this);
 
                     LootRollResult rollResult = lootTableProto.RollLootTable(rollSettings, resolver);
-                    if (rollResult == LootRollResult.Failure)
-                    {
-                        // Skip the rest of this table if nothing rolled at all
-                        Logger.Warn($"RollVendorInventory(): Loot roll failed for loot table {lootTableProto}, vendor type {vendorTypeProto}");
+                    // Skip the rest of this table if nothing rolled at all
+                    if (!Verify.IsTrue(rollResult != LootRollResult.Failure, $"Loot roll failed for loot table {lootTableProto}, vendor type {vendorTypeProto}"))
                         continue;
-                    }
 
                     // Create the rolled items
                     using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
                     resolver.FillLootResultSummary(lootResultSummary);
 
-                    if (lootResultSummary.Types != LootType.Item)
-                    {
-                        Logger.Warn($"RollVendorInventory(): Rolled non-item loot for loot table {lootTableProto}, vendor type {vendorTypeProto}");
+                    if (!Verify.IsTrue(lootResultSummary.Types == LootType.Item, $"Rolled non-item loot for loot table {lootTableProto}, vendor type {vendorTypeProto}"))
                         continue;
-                    }
 
                     // Initialize purchase data for the roll (this will do nothing if we are restoring old purchases)
                     purchaseData?.Initialize((uint)lootResultSummary.ItemSpecs.Count);
@@ -827,11 +795,8 @@ namespace MHServerEmu.Games.Entities
                         ItemSpec itemSpec = lootResultSummary.ItemSpecs[i];
                         uint slot = (uint)i;
 
-                        if (inventory.IsSlotFree(slot) == false)
-                        {
-                            Logger.Warn("RollVendorInventory(): inventory.IsSlotFree(slot) == false");
+                        if (!Verify.IsTrue(inventory.IsSlotFree(slot)))
                             continue;
-                        }
 
                         // Skip purchased items
                         if (purchaseData?.HasItemBeenPurchased(slot) == true)
@@ -850,16 +815,12 @@ namespace MHServerEmu.Games.Entities
                             entitySettings.OptionFlags &= ~EntitySettingsOptionFlags.EnterGame;
 
                         Item item = entityManager.CreateEntity(entitySettings) as Item;
-                        if (item == null)
-                        {
-                            Logger.Warn("RollVendorInventory(): item == null");
+                        if (!Verify.IsNotNull(item))
                             continue;
-                        }
 
                         InventoryResult inventoryResult = item.ChangeInventoryLocation(inventory, slot);
-                        if (inventoryResult != InventoryResult.Success)
+                        if (!Verify.IsTrue(inventoryResult == InventoryResult.Success, $"Failed to put item {item} into inventory {inventory} for reason {inventoryResult}"))
                         {
-                            Logger.Warn($"RollVendorInventory(): Failed to put item {item} into inventory {inventory} for reason {inventoryResult}");
                             item.Destroy();
                             continue;
                         }
@@ -881,18 +842,12 @@ namespace MHServerEmu.Games.Entities
                         foreach (var entry in learnedRecipeInv)
                         {
                             Item recipe = entityManager.GetEntity<Item>(entry.Id);
-                            if (recipe == null)
-                            {
-                                Logger.Warn("RollVendorInventory(): recipe == null");
+                            if (!Verify.IsNotNull(recipe))
                                 continue;
-                            }
 
                             CraftingRecipePrototype recipeProto = recipe.ItemPrototype as CraftingRecipePrototype;
-                            if (recipeProto == null)
-                            {
-                                Logger.Warn("RollVendorInventory(): recipeProto == null");
+                            if (!Verify.IsNotNull(recipeProto))
                                 continue;
-                            }
 
                             if (vendorTypeProto.ContainsCraftingRecipeCategory(recipeProto.RecipeCategory) == false)
                                 continue;
@@ -906,11 +861,8 @@ namespace MHServerEmu.Games.Entities
                                 settings.OptionFlags &= ~EntitySettingsOptionFlags.EnterGame;
 
                             Entity recipeClone = entityManager.CreateEntity(settings);
-                            if (recipeClone == null)
-                            {
-                                Logger.Warn("RollVendorInventory(): recipeClone == null");
+                            if (!Verify.IsNotNull(recipeClone))
                                 continue;
-                            }
 
                             InitializeCraftingIngredientAvailable(recipeProto, craftingIngredientSet);
                         }
@@ -930,10 +882,10 @@ namespace MHServerEmu.Games.Entities
         private bool RefreshVendorInventoryInternal(PrototypeId vendorTypeProtoRef)
         {
             VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
-            if (vendorTypeProto == null) return Logger.WarnReturn(false, "RefreshVendorInventoryInternal(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return false;
 
             float newVendorEnergyPct = GetCurrentVendorEnergyPct(vendorTypeProto) - vendorTypeProto.VendorEnergyPctPerRefresh;
-            if (newVendorEnergyPct < 0f) return Logger.WarnReturn(false, "RefreshVendorInventoryInternal(): newVendorEnergyPct < 0f");
+            if (!Verify.IsTrue(newVendorEnergyPct >= 0f)) return false;
 
             UpdateVendorLootProperties(vendorTypeProto);
             RollVendorInventory(vendorTypeProto, false);
@@ -952,21 +904,21 @@ namespace MHServerEmu.Games.Entities
         {
             // Validate the item
             Item item = Game?.EntityManager.GetEntity<Item>(itemId);
-            if (item == null) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): item == null");
+            if (!Verify.IsNotNull(item)) return VendorResult.BuyFailure;
 
             ItemPrototype itemProto = item.ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return VendorResult.BuyFailure;
 
             if (itemProto.IsLiveTuningVendorEnabled() == false)
                 return VendorResult.BuyItemDisabledByLiveTuning;
 
             // Validate the avatar
             Avatar avatar = GetActiveAvatarByIndex(avatarIndex);
-            if (avatar == null) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): avatar == null");
+            if (!Verify.IsNotNull(avatar)) return VendorResult.BuyFailure;
 
             // Validate the inventory
             Inventory inventory = GetInventory(itemProto.DestinationFromVendor);
-            if (inventory == null) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): inventory == null");
+            if (!Verify.IsNotNull(inventory)) return VendorResult.BuyFailure;
 
             uint freeSlot = inventory.GetFreeSlot(item, true);
             if (freeSlot == Inventory.InvalidSlot)
@@ -1009,8 +961,8 @@ namespace MHServerEmu.Games.Entities
 
             // Validate the vendor
             WorldEntity vendor = Game.EntityManager.GetEntity<WorldEntity>(vendorId);
-            if (vendor == null) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): vendor == null");
-            if (vendor.IsVendor == false) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): vendor.IsVendor == false");
+            if (!Verify.IsNotNull(vendor)) return VendorResult.BuyFailure;
+            if (!Verify.IsTrue(vendor.IsVendor)) return VendorResult.BuyFailure;
 
             if (avatar.InInteractRange(vendor, InteractionMethod.Buy) == false)
                 return VendorResult.BuyOutOfRange;
@@ -1021,7 +973,7 @@ namespace MHServerEmu.Games.Entities
             // Make sure this item is in one of this vendor's inventories
             PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
             VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
-            if (vendorTypeProto == null) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return VendorResult.BuyFailure;
 
             if (vendorTypeProto.ContainsInventory(item.InventoryLocation.InventoryRef) == false && item.IsInBuybackInventory == false)
                 return VendorResult.BuyNotInVendorInventory;
@@ -1032,11 +984,11 @@ namespace MHServerEmu.Games.Entities
         private VendorResult CanSellItemToVendor(int avatarIndex, ulong itemId, ulong vendorId)
         {
             WorldEntity vendor = Game?.EntityManager.GetEntity<WorldEntity>(vendorId);
-            if (vendor == null) return Logger.WarnReturn(VendorResult.SellFailure, "CanSellItemToVendor(): vendor == null");
+            if (!Verify.IsNotNull(vendor)) return VendorResult.SellFailure;
 
             PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
             VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
-            if (vendorTypeProto == null) return Logger.WarnReturn(VendorResult.SellFailure, "CanSellItemToVendor(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return VendorResult.SellFailure;
 
             if (vendorTypeProto.AllowActionSell == false)
                 return VendorResult.SellFailure;
@@ -1053,14 +1005,14 @@ namespace MHServerEmu.Games.Entities
 
             // Check if this price can fit into the ItemSoldPrice property
             PropertyInfoPrototype itemSoldPriceInfoProto = propertyInfoTable.LookupPropertyInfo(PropertyEnum.ItemSoldPrice).Prototype;
-            if (itemSoldPriceInfoProto == null) return Logger.WarnReturn(false, "ValidateItemSellPrice(): itemSoldPriceInfoProto == null");
+            if (!Verify.IsNotNull(itemSoldPriceInfoProto)) return false;
 
-            if (sellPrice > itemSoldPriceInfoProto.Max)
-                return Logger.WarnReturn(false, $"ValidateItemSellPrice(): sellPrice [{sellPrice}] exceeds ItemSoldPrice Property Max of [{itemSoldPriceInfoProto.Max}]! item=[{item}] player=[{this}]");
+            if (!Verify.IsTrue(sellPrice <= itemSoldPriceInfoProto.Max, $"sellPrice [{sellPrice}] exceeds ItemSoldPrice Property Max of [{itemSoldPriceInfoProto.Max}]! item=[{item}] player=[{this}]"))
+                return false;
 
             // Check if this price is within the credits cap
             PropertyInfoPrototype currencyPropInfoProto = propertyInfoTable.LookupPropertyInfo(PropertyEnum.Currency).Prototype;
-            if (currencyPropInfoProto == null) return Logger.WarnReturn(false, "ValidateItemSellPrice(): currencyPropInfoProto == null");
+            if (!Verify.IsNotNull(currencyPropInfoProto)) return false;
 
             PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
             int currentCredits = Properties[PropertyEnum.Currency, creditsProtoRef];
@@ -1074,11 +1026,11 @@ namespace MHServerEmu.Games.Entities
         private VendorResult CanDonateItemToVendor(int avatarIndex, ulong itemId, ulong vendorId)
         {
             WorldEntity vendor = Game?.EntityManager.GetEntity<WorldEntity>(vendorId);
-            if (vendor == null) return Logger.WarnReturn(VendorResult.DonateFailure, "CanDonateItemToVendor(): vendor == null");
+            if (!Verify.IsNotNull(vendor)) return VendorResult.DonateFailure;
 
             PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
             VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
-            if (vendorTypeProto == null) return Logger.WarnReturn(VendorResult.DonateFailure, "CanDonateItemToVendor(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return VendorResult.DonateFailure;
 
             if (vendorTypeProto.AllowActionDonate == false)
                 return VendorResult.DonateFailure;
@@ -1090,7 +1042,7 @@ namespace MHServerEmu.Games.Entities
             {
                 PrototypeId globalEventProtoRef = vendor.GetVendorGlobalEvent();
                 GlobalEventPrototype globalEventProto = globalEventProtoRef.As<GlobalEventPrototype>();
-                if (globalEventProto == null) return Logger.WarnReturn(VendorResult.DonateNotAcceptingDonations, "CanDonateItemToVendor(): globalEventProto == null");
+                if (!Verify.IsNotNull(globalEventProto)) return VendorResult.DonateNotAcceptingDonations;
 
                 if (globalEventProto.Active == false)
                     return VendorResult.DonateNotAcceptingDonations;
@@ -1105,10 +1057,10 @@ namespace MHServerEmu.Games.Entities
         private VendorResult CanRefreshVendorInventory(ulong vendorId)
         {
             WorldEntity vendor = Game?.EntityManager.GetEntity<WorldEntity>(vendorId);
-            if (vendor == null) return Logger.WarnReturn(VendorResult.RefreshFailure, "CanRefreshVendorInventory(): vendor == null");
+            if (!Verify.IsNotNull(vendor)) return VendorResult.RefreshFailure;
 
             PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
-            if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(VendorResult.RefreshFailure, "CanRefreshVendorInventory(): vendorTypeProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(vendorTypeProtoRef != PrototypeId.Invalid)) return VendorResult.RefreshFailure;
 
             return CanRefreshVendorInventory(vendorTypeProtoRef, true);
         }
@@ -1116,7 +1068,7 @@ namespace MHServerEmu.Games.Entities
         private VendorResult CanRefreshVendorInventory(PrototypeId vendorTypeProtoRef, bool isPlayerRequest)
         {
             VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
-            if (vendorTypeProto == null) return Logger.WarnReturn(VendorResult.RefreshFailure, "CanRefreshVendorInventory(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return VendorResult.RefreshFailure;
 
             if (isPlayerRequest && vendorTypeProto.AllowActionRefresh == false)
                 return VendorResult.RefreshNotAllowed;
@@ -1133,14 +1085,14 @@ namespace MHServerEmu.Games.Entities
         private VendorResult CanPerformVendorOpAtVendor(int avatarIndex, ulong itemId, ulong vendorId, InteractionMethod interactionMethod)
         {
             Game game = Game;
-            if (game == null) return Logger.WarnReturn(VendorResult.OpFailure, "CanPerformVendorOpAtVendor(): game == null");
+            if (!Verify.IsNotNull(game)) return VendorResult.OpFailure;
 
             // Validate the item
             Item item = game.EntityManager.GetEntity<Item>(itemId);
-            if (item == null) return Logger.WarnReturn(VendorResult.OpFailure, "CanPerformVendorOpAtVendor(): item == null");
+            if (!Verify.IsNotNull(item)) return VendorResult.OpFailure;
 
             ItemPrototype itemProto = item.ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(VendorResult.OpFailure, "CanPerformVendorOpAtVendor(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return VendorResult.OpFailure;
 
             // Check if this item can be sold
             if (itemProto.CanBeSoldToVendor == false)
@@ -1158,12 +1110,12 @@ namespace MHServerEmu.Games.Entities
 
             // Validate the vendor
             WorldEntity vendor = game.EntityManager.GetEntity<WorldEntity>(vendorId);
-            if (vendor == null) return Logger.WarnReturn(VendorResult.OpFailure, "CanPerformVendorOpAtVendor(): vendor == null");
-            if (vendor.IsVendor == false) return Logger.WarnReturn(VendorResult.OpFailure, "CanPerformVendorOpAtVendor(): vendor.IsVendor == false");
+            if (!Verify.IsNotNull(vendor)) return VendorResult.OpFailure;
+            if (!Verify.IsTrue(vendor.IsVendor)) return VendorResult.OpFailure;
 
             // Validate the avatar
             Avatar avatar = GetActiveAvatarByIndex(avatarIndex);
-            if (avatar == null) return Logger.WarnReturn(VendorResult.OpFailure, "CanPerformVendorOpAtVendor(): avatar == null");
+            if (!Verify.IsNotNull(avatar)) return VendorResult.OpFailure;
 
             // Check if this avatar is within interaction range of the vendor
             if (avatar.InInteractRange(vendor, interactionMethod) == false)

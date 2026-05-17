@@ -48,8 +48,6 @@ namespace MHServerEmu.Games.Entities
 
     public class EntityRegionSpatialPartition
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly WorldEntityRegionSpatialPartition _primaryPartition;
         private readonly WorldEntityRegionSpatialPartition _notAffectedByPowersPartition;
         private readonly Dictionary<ulong, WorldEntityRegionSpatialPartition> _playerRestrictedPartitions = new();
@@ -74,18 +72,18 @@ namespace MHServerEmu.Games.Entities
 
         public bool Update(WorldEntity element)
         {
-            var loc = element.SpatialPartitionLocation;
+            EntityRegionSpatialPartitionLocation loc = element.SpatialPartitionLocation;
             if (loc.IsValid == false)
             {
                 return Insert(element);
             }
             else
             {
-                var node = loc.Node;
+                QuadtreeNode<WorldEntity> node = loc.Node;
                 if (node != null)
                 {
-                    var tree = node.Tree;
-                    if (tree == null) return Logger.WarnReturn(false, "Update(): tree == null");
+                    Quadtree<WorldEntity> tree = node.Tree;
+                    if (!Verify.IsNotNull(tree)) return false;
                     return tree.Update(element);
                 }
 
@@ -95,24 +93,26 @@ namespace MHServerEmu.Games.Entities
 
         public bool Remove(WorldEntity element)
         {
-            var loc = element.SpatialPartitionLocation;
-            if (loc.IsValid == false) return false;
+            EntityRegionSpatialPartitionLocation loc = element.SpatialPartitionLocation;
+            if (loc.IsValid == false)
+                return false;
+
             TotalElements--;
 
             if (element is Avatar avatar)
             {
-                if (_avatarIteratorCount != 0)
-                    Logger.Warn("Remove(): _avatarIteratorCount != 0");
-
-                _avatars.Remove(avatar);
+                Verify.IsTrue(_avatarIteratorCount == 0);
+                Verify.IsTrue(_avatars.Remove(avatar));
             }
 
-            var node = loc.Node;
+            QuadtreeNode<WorldEntity> node = loc.Node;
             if (node != null)
             {
-                var tree = node.Tree;
-                if (tree != null) return tree.Remove(element);
+                Quadtree<WorldEntity> tree = node.Tree;
+                if (!Verify.IsNotNull(tree)) return false;
+                return tree.Remove(element);
             }
+
             return false;
         }
 
@@ -131,16 +131,14 @@ namespace MHServerEmu.Games.Entities
 
                 if (element is Avatar avatar)
                 {
-                    if (_avatarIteratorCount != 0)
-                        Logger.Warn("Insert(): _avatarIteratorCount != 0");
-
+                    Verify.IsTrue(_avatarIteratorCount == 0);
                     if (_avatars.Contains(avatar) == false)
                         _avatars.Add(avatar);
                 }
             }
             else
             {
-                if (_playerRestrictedPartitions.TryGetValue(restrictedToPlayerGuid, out var spatialPartition) == false)
+                if (_playerRestrictedPartitions.TryGetValue(restrictedToPlayerGuid, out WorldEntityRegionSpatialPartition spatialPartition) == false)
                 {
                     spatialPartition = new(_bounds, _minRadius, EntityRegionSPContextFlags.PlayerRestrictedPartitions);
                     _playerRestrictedPartitions.Add(restrictedToPlayerGuid, spatialPartition);
@@ -155,8 +153,7 @@ namespace MHServerEmu.Games.Entities
 
         public static bool DoesSphereContainAvatar(in Sphere sphere, Avatar avatar)
         {
-            if (avatar != null && sphere.Intersects(avatar.RegionLocation.Position)) return true;
-            return false;
+            return avatar != null && sphere.Intersects(avatar.RegionLocation.Position);
         }
 
         public ElementIterator<TVolume> IterateElementsInVolume<TVolume>(TVolume volume, EntityRegionSPContext context) where TVolume : IBounds
@@ -203,9 +200,8 @@ namespace MHServerEmu.Games.Entities
             {
                 // Ownership of the partition list should be transferred to the Enumerator instance,
                 // see the Enumerator constructor below for more information.
-                if (_partitions != null)
+                if (!Verify.IsTrue(_partitions == null))
                 {
-                    Logger.Warn("Dispose(): _partitions != null");
                     ListPool<WorldEntityRegionSpatialPartition>.Instance.Return(_partitions);
                     _partitions = null;
                 }
@@ -284,8 +280,7 @@ namespace MHServerEmu.Games.Entities
                         WorldEntityRegionSpatialPartition partition = _partitions[index];
                         _partitions.RemoveAt(index);
 
-                        if (partition == null)
-                            return Logger.WarnReturn(false, "MoveNext(): partition == null");
+                        if (!Verify.IsNotNull(partition)) return false;
 
                         _subIterator.Dispose();
                         _subIterator = partition.IterateElementsInVolume(_volume).GetEnumerator();

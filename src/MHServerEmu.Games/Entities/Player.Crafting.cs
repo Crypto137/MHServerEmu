@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -44,24 +45,24 @@ namespace MHServerEmu.Games.Entities
         {
             // Validate arguments
             Item recipeItem = Game.EntityManager.GetEntity<Item>(recipeItemId);
-            if (recipeItem == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): recipeItem == null");
+            if (!Verify.IsNotNull(recipeItem)) return CraftingResult.CraftingFailed;
 
             CraftingRecipePrototype recipeProto = recipeItem.Prototype as CraftingRecipePrototype;
-            if (recipeProto == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): recipeProto == null");
+            if (!Verify.IsNotNull(recipeProto)) return CraftingResult.CraftingFailed;
 
             Inventory resultsInv = GetInventory(InventoryConvenienceLabel.CraftingResults);
-            if (resultsInv == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): resultsInv == null");
+            if (!Verify.IsNotNull(resultsInv)) return CraftingResult.CraftingFailed;
 
             WorldEntity vendor = Game.EntityManager.GetEntity<WorldEntity>(vendorId);
-            if (vendor == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): vendor == null");
+            if (!Verify.IsNotNull(vendor)) return CraftingResult.CraftingFailed;
 
             Avatar avatar = CurrentAvatar;
-            if (avatar == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): avatar == null");
+            if (!Verify.IsNotNull(avatar)) return CraftingResult.CraftingFailed;
 
             // Validate craftability
             CraftingResult canCraftRecipeResult = recipeItem.CanCraftRecipe(this, ingredientIds, vendor, isRecraft);
-            if (canCraftRecipeResult != CraftingResult.Success)
-                return Logger.WarnReturn(canCraftRecipeResult, $"Craft(): CanCraftRecipe() failed for player=[{this}], recipeItem=[{recipeItem}], result=[{canCraftRecipeResult}]");
+            if (!Verify.IsTrue(canCraftRecipeResult == CraftingResult.Success, $"CanCraftRecipe() failed for player=[{this}], recipeItem=[{recipeItem}], result=[{canCraftRecipeResult}]"))
+                return canCraftRecipeResult;
 
             // Get crafting costs (already validated in CanCraftRecipe() above)
             using PropertyCollection currencyCost = ObjectPoolManager.Instance.Get<PropertyCollection>();
@@ -72,26 +73,23 @@ namespace MHServerEmu.Games.Entities
             {
                 // Move the input from slot 0 so that the newly created output can occupy it
                 ulong recraftItemId = resultsInv.GetEntityInSlot(0);
-                if (recipeItemId == InvalidId) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): recraftItemId == InvalidId");
+                if (!Verify.IsTrue(recipeItemId != InvalidId)) return CraftingResult.CraftingFailed;
 
                 Item recraftItem = Game.EntityManager.GetEntity<Item>(recraftItemId);
-                if (recraftItem == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): recraftItem == null");
+                if (!Verify.IsNotNull(recipeItem)) return CraftingResult.CraftingFailed;
 
                 uint recraftFreeSlot = resultsInv.GetFreeSlot(recraftItem, false, false);
-                if (recraftFreeSlot == Inventory.InvalidSlot) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): recraftFreeSlot = Inventory.InvalidSlot");
+                if (!Verify.IsTrue(recraftFreeSlot != Inventory.InvalidSlot)) return CraftingResult.CraftingFailed;
 
                 ulong? stackEntityId = null;    // do not allow stacking here
                 InventoryResult recraftItemMoveResult = recraftItem.ChangeInventoryLocation(resultsInv, recraftFreeSlot, ref stackEntityId, false);
-                if (recraftItemMoveResult != InventoryResult.Success) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): recraftItemMoveResult != recraftItemMoveResult != InventoryResult.Success");
+                if (!Verify.IsTrue(recraftItemMoveResult == InventoryResult.Success)) return CraftingResult.CraftingFailed;
             }
 
             // Crafting is done through generating new items via the loot system
             using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
             resolver.Initialize(Game.Random);
             resolver.SetContext(LootContext.Crafting, this);
-
-            // Log this crafting attempt in case there is a memory leak or something
-            //Logger.Debug($"Craft(): recipeItem=[{recipeItem}], ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft} player=[{this}]");
 
             // Prepare crafting ingredients
             using var ingredientsHandle = ListPool<Item>.Instance.Get(out List<Item> ingredients);
@@ -117,7 +115,7 @@ namespace MHServerEmu.Games.Entities
                 if (rollResult == LootRollResult.Success)
                     break;
 
-                Logger.Warn($"Craft(): Loot roll failed, attempt=[{i + 1}/{MaxRollAttempts}], recipeitem=[{recipeItem}], player=[{this}]");
+                Logger.Trace($"Craft(): Loot roll failed, attempt=[{i + 1}/{MaxRollAttempts}], recipeitem=[{recipeItem}], player=[{this}]");
                 resolver.SetContext(LootContext.Crafting, this);    // reset partial results to prevent potential abuse
             }
 
@@ -128,14 +126,14 @@ namespace MHServerEmu.Games.Entities
             resolver.FillLootResultSummary(summary);
 
             const LootType LootTypeFilter = LootType.Item | LootType.LootMutation | LootType.VendorXP | LootType.CallbackNode;
-            if ((summary.Types & ~LootTypeFilter) != LootType.None)
-                return Logger.WarnReturn(CraftingResult.LootRollFailed, $"Craft(): Unsupported loot types rolled! lootTypes=[{summary.Types}], recipeItem=[{recipeItem}], ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft}, player=[{this}]");
+            if (!Verify.IsTrue((summary.Types & ~LootTypeFilter) == LootType.None, $"Unsupported loot types rolled! lootTypes=[{summary.Types}], recipeItem=[{recipeItem}], isRecraft={isRecraft}, player=[{this}]"))
+                return CraftingResult.LootRollFailed;
 
             // Do the crafting: create output, consume ingredients, and pay costs
             if (CraftCreateOutputItemsFromSummary(recipeProto, ingredients, summary, resultsInv, outputItems) == false)
             {
                 // Bail out if output creation failed for whatever reason.
-                Logger.Error($"Craft(): Failed to create output items! recipeItem=[{recipeItem}], ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft}, player=[{this}]");
+                Verify.IsTrue(false, LoggingLevel.Error, $"Failed to create output items! recipeItem=[{recipeItem}], ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft}, player=[{this}]");
 
                 // Since we haven't consumed any ingredients or paid any cost yet, we just need to clean up partially created items.
                 foreach (Item item in outputItems)
@@ -157,25 +155,25 @@ namespace MHServerEmu.Games.Entities
         public CraftingResult CanCraftRecipeWithVendor(int avatarIndex, Item recipeItem, WorldEntity vendor)
         {
             PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
-            if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipeWithVendor(): vendorTypeProtoRef == PrototypeId.Invalid");
-
+            if (!Verify.IsTrue(vendorTypeProtoRef != PrototypeId.Invalid)) return CraftingResult.CraftingFailed;
+            
             VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
-            if (vendorTypeProto == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipeWithVendor(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return CraftingResult.CraftingFailed;
 
             if (vendorTypeProto.IsCrafter == false)
                 return CraftingResult.CraftingFailed;
 
             CraftingRecipePrototype recipeProto = recipeItem.ItemPrototype as CraftingRecipePrototype;
-            if (recipeProto == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipeWithVendor(): recipeProto == null");
+            if (!Verify.IsNotNull(recipeProto)) return CraftingResult.CraftingFailed;
 
             PrototypeId invProtoRef = recipeItem.InventoryLocation.InventoryRef;
-            if (invProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipeWithVendor(): invProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(invProtoRef != PrototypeId.Invalid)) return CraftingResult.CraftingFailed;
 
             if (vendorTypeProto.ContainsInventory(invProtoRef) == false)
                 return CraftingResult.CraftingFailed;
 
             Avatar avatar = GetActiveAvatarByIndex(avatarIndex);
-            if (avatar == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipeWithVendor(): avatar == null");
+            if (!Verify.IsNotNull(avatar)) return CraftingResult.CraftingFailed;
 
             int vendorLevel = Properties[PropertyEnum.VendorLevel, vendorTypeProtoRef];
             if (recipeProto.UnlockAtCrafterRank > vendorLevel)
@@ -186,27 +184,21 @@ namespace MHServerEmu.Games.Entities
 
         public bool HasLearnedCraftingRecipe(PrototypeId recipeProtoRef)
         {
-            if (recipeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "HasLearnedCraftingReipe(): recipeProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(recipeProtoRef != PrototypeId.Invalid)) return false;
 
             Inventory learnedRecipeInv = GetInventory(InventoryConvenienceLabel.CraftingRecipesLearned);
-            if (learnedRecipeInv == null) return Logger.WarnReturn(false, "HasLearnedCraftingReipe(): learnedRecipeInv == null");
+            if (!Verify.IsNotNull(learnedRecipeInv)) return false;
 
             EntityManager entityManager = Game.EntityManager;
             foreach (var entry in learnedRecipeInv)
             {
                 ulong recipeId = entry.Id;
-                if (recipeId == InvalidId)
-                {
-                    Logger.Warn("HasLearnedCraftingRecipe(): recipeId == InvalidId");
+                if (!Verify.IsTrue(recipeId != InvalidId))
                     continue;
-                }
 
                 Item recipe = entityManager.GetEntity<Item>(recipeId);
-                if (recipe == null)
-                {
-                    Logger.Warn("HasLearnedCraftingRecipe(): recipe == null");
+                if (!Verify.IsNotNull(recipe))
                     continue;
-                }
 
                 if (recipe.PrototypeDataRef == recipeProtoRef)
                     return true;
@@ -282,11 +274,8 @@ namespace MHServerEmu.Games.Entities
                         continue;
 
                     Item item = entityManager.GetEntity<Item>(entry.Id);
-                    if (item == null)
-                    {
-                        Logger.Warn("UpdateCraftingIngredientAvailableStackCounts(): item == null");
+                    if (!Verify.IsNotNull(item))
                         continue;
-                    }
 
                     Properties.AdjustProperty(item.CurrentStackSize, new(PropertyEnum.CraftingIngredientAvailable, entry.ProtoRef));
                 }
@@ -297,8 +286,8 @@ namespace MHServerEmu.Games.Entities
             List<Item> ingredients, Dictionary<Item, int> autoPopulatedIngredients)
         {
             CraftingInputPrototype[] recipeInputs = recipeProto?.RecipeInputs;
-            if (recipeInputs.IsNullOrEmpty()) return Logger.WarnReturn(false, "CraftPrepareIngredients(): recipeInputs.IsNullOrEmpty()");
-            if (recipeInputs.Length != ingredientIds.Count) return Logger.WarnReturn(false, "CraftPrepareIngredients(): recipeInputs.Length != ingredientIds.Count");
+            if (!Verify.IsTrue(recipeInputs.HasValue())) return false;
+            if (!Verify.IsTrue(recipeInputs.Length == ingredientIds.Count)) return false;
 
             EntityManager entityManager = Game.EntityManager;
 
@@ -311,7 +300,7 @@ namespace MHServerEmu.Games.Entities
                 if (ingredientId != InvalidId)  // Explicitly specified ingredients
                 {
                     Item ingredient = entityManager.GetEntity<Item>(ingredientId);
-                    if (ingredient == null) return Logger.WarnReturn(false, "CraftPrepareIngredients(): ingredient == null");
+                    if (!Verify.IsNotNull(ingredient)) return false;
 
                     // Add the item reference to the list to consume it after crafting output is created
                     ingredients.Add(ingredient);
@@ -324,13 +313,13 @@ namespace MHServerEmu.Games.Entities
                 else                            // AutoPopulated ingredients
                 {
                     AutoPopulatedInputPrototype inputProto = recipeInputs[i] as AutoPopulatedInputPrototype;
-                    if (inputProto == null) return Logger.WarnReturn(false, "CraftPrepareIngredients(): inputProto == null");
+                    if (!Verify.IsNotNull(inputProto)) return false;
 
                     ItemPrototype autoPopulatedIngredientProto = inputProto.AutoPopulatedIngredientPrototype;
-                    if (autoPopulatedIngredientProto == null) return Logger.WarnReturn(false, "CraftPrepareIngredients(): autoPopulatedIngredientProto == null");
+                    if (!Verify.IsNotNull(autoPopulatedIngredientProto)) return false;
 
-                    if (autoPopulatedIngredientCounts.ContainsKey(autoPopulatedIngredientProto.DataRef))
-                        return Logger.WarnReturn(false, $"CraftPrepareIngredients(): AutoPopulated ingredient {autoPopulatedIngredientProto} specified multiple times for recipe {recipeProto}");
+                    if (!Verify.IsTrue(autoPopulatedIngredientCounts.ContainsKey(autoPopulatedIngredientProto.DataRef) == false, $"AutoPopulated ingredient {autoPopulatedIngredientProto} specified multiple times for recipe {recipeProto}"))
+                        return false;
 
                     autoPopulatedIngredientCounts.Add(autoPopulatedIngredientProto.DataRef, inputProto.Quantity);
 
@@ -353,17 +342,11 @@ namespace MHServerEmu.Games.Entities
                         continue;
 
                     Item ingredient = entityManager.GetEntity<Item>(entry.Id);
-                    if (ingredient == null)
-                    {
-                        Logger.Warn("CraftPrepareIngredients(): ingredient == null");
+                    if (!Verify.IsNotNull(ingredient))
                         continue;
-                    }
 
-                    if (ingredient.IsScheduledToDestroy)
-                    {
-                        Logger.Warn("CraftPrepareIngredients(): ingredient.IsScheduledToDestroy");
+                    if (!Verify.IsTrue(ingredient.IsScheduledToDestroy == false))
                         continue;
-                    }
 
                     // Add the item reference to the dictionary to consume it after crafting output is created
                     int quantityToConsume = Math.Min(quantity, ingredient.CurrentStackSize);
@@ -380,7 +363,8 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            return Logger.WarnReturn(false, $"CraftPrepareIngredients(): Failed to find auto-populated ingredients for recipe [{recipeProto}] crafted by player [{this}]");
+            Verify.IsTrue(false, $"Failed to find auto-populated ingredients for recipe [{recipeProto}] crafted by player [{this}]");
+            return false;
         }
 
         private bool CraftCreateOutputItemsFromSummary(CraftingRecipePrototype recipeProto, List<Item> ingredients, LootResultSummary summary, Inventory resultsInv, List<Item> outputItems)
@@ -407,12 +391,13 @@ namespace MHServerEmu.Games.Entities
                 properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
 
                 Entity entity = entityManager.CreateEntity(settings);
-                if (entity == null) return Logger.WarnReturn(false, "CraftCreateOutputItemsFromSummary(): entity == null");
+                if (!Verify.IsNotNull(entity)) return false;
 
-                if (entity is not Item item)
+                Item item = entity as Item;
+                if (!Verify.IsNotNull(item))
                 {
                     entity.Destroy();
-                    return Logger.WarnReturn(false, "CraftCreateOutputItemsFromSummary(): entity is not Item");
+                    return false;
                 }
 
                 outputItems.Add(item);
@@ -437,8 +422,7 @@ namespace MHServerEmu.Games.Entities
 
             if (isCloneRecipe)
             {
-                if (lootNodes.Length != outputItems.Count)
-                    return Logger.WarnReturn(false, "CraftCreateOutputItemsFromSummary(): lootNodes.Length != outputItems.Count");
+                if (!Verify.IsTrue(lootNodes.Length == outputItems.Count)) return false;
 
                 for (int i = 0; i < outputItems.Count; i++)
                 {
@@ -446,20 +430,17 @@ namespace MHServerEmu.Games.Entities
                         continue;
 
                     Item outputItem = outputItems[i];
-                    if (outputItem == null)
-                    {
-                        Logger.Warn("CraftCreateOutputItemsFromSummary(): outputItem == null");
+                    if (!Verify.IsNotNull(outputItem))
                         continue;
-                    }
 
                     clonedItems.Add(outputItem);
 
                     // Copy additional properties from the source item
                     int index = cloneProto.SourceIndex;
-                    if (index < 0 || index >= ingredients.Count) return Logger.WarnReturn(false, "CraftCreateOutputItemsFromSummary(): index < 0 || index >= ingredients.Count");
+                    if (!Verify.IsTrue(index >= 0 && index < ingredients.Count)) return false;
                         
                     Item sourceItem = ingredients[index];
-                    if (sourceItem == null) return Logger.WarnReturn(false, "CraftCreateOutputItemsFromSummary(): sourceItem == null");
+                    if (!Verify.IsNotNull(sourceItem)) return false;
 
                     outputItem.Properties.CopyProperty(sourceItem.Properties, PropertyEnum.ItemLimitedEdition);
 
