@@ -12,6 +12,7 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Properties.Evals
@@ -1169,40 +1170,40 @@ namespace MHServerEmu.Games.Properties.Evals
                 case EvalOp.LoadContextInt: return RunLoadContextInt((LoadContextIntPrototype)evalProto, data);
                 case EvalOp.LoadContextProtoRef: return RunLoadContextProtoRef((LoadContextProtoRefPrototype)evalProto, data);
                 case EvalOp.For: return RunFor((ForPrototype)evalProto, data);
-                case EvalOp.ForEachConditionInContext: return RunForEachConditionInContext(evalProto, data);
-                case EvalOp.ForEachProtoRefInContextRefList: return RunForEachProtoRefInContextRefList(evalProto, data);
-                case EvalOp.IfElse: return RunIfElse(evalProto, data);
-                case EvalOp.Scope: return RunScope(evalProto, data);
-                case EvalOp.ExportError: return RunExportError(evalProto, data);
-                case EvalOp.LoadCurve: return RunLoadCurve(evalProto, data);
-                case EvalOp.Add: return RunAdd(evalProto, data);
-                case EvalOp.Div: return RunDiv(evalProto, data);
-                case EvalOp.Exponent: return RunExponent(evalProto, data);
-                case EvalOp.Max: return RunMax(evalProto, data);
-                case EvalOp.Min: return RunMin(evalProto, data);
-                case EvalOp.Modulus: return RunModulus(evalProto, data);
-                case EvalOp.Mult: return RunMult(evalProto, data);
-                case EvalOp.Sub: return RunSub(evalProto, data);
-                case EvalOp.AssignProp: return RunAssignProp(evalProto, data);
-                case EvalOp.AssignPropEvalParams: return RunAssignPropEvalParams(evalProto, data);
-                case EvalOp.HasProp: return RunHasProp(evalProto, data);
-                case EvalOp.LoadProp: return RunLoadProp(evalProto, data);
-                case EvalOp.LoadPropContextParams: return RunLoadPropContextParams(evalProto, data);
-                case EvalOp.LoadPropEvalParams: return RunLoadPropEvalParams(evalProto, data);
-                case EvalOp.SwapProp: return RunSwapProp(evalProto, data);
-                case EvalOp.RandomFloat: return RunRandomFloat(evalProto, data);
-                case EvalOp.RandomInt: return RunRandomInt(evalProto, data);
-                case EvalOp.LoadEntityToContextVar: return RunLoadEntityToContextVar(evalProto, data);
-                case EvalOp.LoadConditionCollectionToContext: return RunLoadConditionCollectionToContext(evalProto, data);
-                case EvalOp.EntityHasKeyword: return RunEntityHasKeyword(evalProto, data);
-                case EvalOp.EntityHasTalent: return RunEntityHasTalent(evalProto, data);
-                case EvalOp.GetCombatLevel: return RunGetCombatLevel(evalProto, data);
-                case EvalOp.GetPowerRank: return RunGetPowerRank(evalProto, data);
-                case EvalOp.CalcPowerRank: return RunCalcPowerRank(evalProto, data);
-                case EvalOp.IsInParty: return RunIsInParty(evalProto, data);
-                case EvalOp.GetDamageReductionPct: return RunGetDamageReductionPct(evalProto, data);
-                case EvalOp.GetDistanceToEntity: return RunGetDistanceToEntity(evalProto, data);
-                case EvalOp.IsDynamicCombatLevelEnabled: return RunIsDynamicCombatLevelEnabled(evalProto, data);
+                case EvalOp.ForEachConditionInContext: return RunForEachConditionInContext((ForEachConditionInContextPrototype)evalProto, data);
+                case EvalOp.ForEachProtoRefInContextRefList: return RunForEachProtoRefInContextRefList((ForEachProtoRefInContextRefListPrototype)evalProto, data);
+                case EvalOp.IfElse: return RunIfElse((IfElsePrototype)evalProto, data);
+                case EvalOp.Scope: return RunScope((ScopePrototype)evalProto, data);
+                case EvalOp.ExportError: return RunExportError((ExportErrorPrototype)evalProto, data);
+                case EvalOp.LoadCurve: return RunLoadCurve((LoadCurvePrototype)evalProto, data);
+                case EvalOp.Add: return RunAdd((AddPrototype)evalProto, data);
+                case EvalOp.Div: return RunDiv((DivPrototype)evalProto, data);
+                case EvalOp.Exponent: return RunExponent((ExponentPrototype)evalProto, data);
+                case EvalOp.Max: return RunMax((MaxPrototype)evalProto, data);
+                case EvalOp.Min: return RunMin((MinPrototype)evalProto, data);
+                case EvalOp.Modulus: return RunModulus((ModulusPrototype)evalProto, data);
+                case EvalOp.Mult: return RunMult((MultPrototype)evalProto, data);
+                case EvalOp.Sub: return RunSub((SubPrototype)evalProto, data);
+                case EvalOp.AssignProp: return RunAssignProp((AssignPropPrototype)evalProto, data);
+                case EvalOp.AssignPropEvalParams: return RunAssignPropEvalParams((AssignPropEvalParamsPrototype)evalProto, data);
+                case EvalOp.HasProp: return RunHasProp((HasPropPrototype)evalProto, data);
+                case EvalOp.LoadProp: return RunLoadProp((LoadPropPrototype)evalProto, data);
+                case EvalOp.LoadPropContextParams: return RunLoadPropContextParams((LoadPropContextParamsPrototype)evalProto, data);
+                case EvalOp.LoadPropEvalParams: return RunLoadPropEvalParams((LoadPropEvalParamsPrototype)evalProto, data);
+                case EvalOp.SwapProp: return RunSwapProp((SwapPropPrototype)evalProto, data);
+                case EvalOp.RandomFloat: return RunRandomFloat((RandomFloatPrototype)evalProto, data);
+                case EvalOp.RandomInt: return RunRandomInt((RandomIntPrototype)evalProto, data);
+                case EvalOp.LoadEntityToContextVar: return RunLoadEntityToContextVar((LoadEntityToContextVarPrototype)evalProto, data);
+                case EvalOp.LoadConditionCollectionToContext: return RunLoadConditionCollectionToContext((LoadConditionCollectionToContextPrototype)evalProto, data);
+                case EvalOp.EntityHasKeyword: return RunEntityHasKeyword((EntityHasKeywordPrototype)evalProto, data);
+                case EvalOp.EntityHasTalent: return RunEntityHasTalent((EntityHasTalentPrototype)evalProto, data);
+                case EvalOp.GetCombatLevel: return RunGetCombatLevel((GetCombatLevelPrototype)evalProto, data);
+                case EvalOp.GetPowerRank: return RunGetPowerRank((GetPowerRankPrototype)evalProto, data);
+                case EvalOp.CalcPowerRank: return RunCalcPowerRank((CalcPowerRankPrototype)evalProto, data);
+                case EvalOp.IsInParty: return RunIsInParty((IsInPartyPrototype)evalProto, data);
+                case EvalOp.GetDamageReductionPct: return RunGetDamageReductionPct((GetDamageReductionPctPrototype)evalProto, data);
+                case EvalOp.GetDistanceToEntity: return RunGetDistanceToEntity((GetDistanceToEntityPrototype)evalProto, data);
+                case EvalOp.IsDynamicCombatLevelEnabled: return RunIsDynamicCombatLevelEnabled((IsDynamicCombatLevelEnabledPrototype)evalProto, data);
                 default:
                     Verify.IsTrue(false, "Invalid Operation");
                     return evalVar;
@@ -1776,33 +1777,35 @@ namespace MHServerEmu.Games.Properties.Evals
             return evalVar;
         }
 
-        private static EvalVar RunForEachConditionInContext(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunForEachConditionInContext(ForEachConditionInContextPrototype forEachProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
 
-            if (evalProto is not ForEachConditionInContextPrototype forEachProto) return evalVar;
+            if (!Verify.IsNotNull(forEachProto)) return evalVar;
 
-            if (forEachProto.ScopeLoopBody.IsNullOrEmpty())
-                return Logger.WarnReturn(evalVar, "No evals in ForEachProtoRefInContextRefList eval ScopeLoopBody");
+            if (!Verify.IsTrue(forEachProto.ScopeLoopBody.HasValue(), "No evals in ForEachProtoRefInContextRefList eval ScopeLoopBody"))
+                return evalVar;
 
-            var dataCallerStackProps = data.CallerStackProperties;
-            var dataLocalStackProps = data.LocalStackProperties;
+            PropertyCollection dataCallerStackProps = data.CallerStackProperties;
+            PropertyCollection dataLocalStackProps = data.LocalStackProperties;
             data.CallerStackProperties = dataLocalStackProps;
-            using var localStackProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            using PropertyCollection localStackProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
             data.LocalStackProperties = localStackProps;
 
             if (forEachProto.PreLoop != null)
             {
                 evalVar = Run(forEachProto.PreLoop, data);
-                if (evalVar.Type == EvalReturnType.Error) return Return();
+                if (!Verify.IsTrue(evalVar.Type != EvalReturnType.Error)) goto Return;
             }
 
-            if (FromValue(GetEvalVarFromContext(forEachProto.ConditionCollectionContext, data, false), out ConditionCollection conditionCollection) == false)
-                return evalVar;
+            if (!Verify.IsTrue(FromValue(GetEvalVarFromContext(forEachProto.ConditionCollectionContext, data, false), out ConditionCollection conditionCollection)))
+                goto Return; // NOTE: The client code just returns here without restoring stack properties, which is going to mess things up.
 
             if (conditionCollection != null)
-                foreach (var condition in conditionCollection)
+            {
+                foreach (Condition condition in conditionCollection)
                 {
                     data.SetVar_PropertyCollectionPtr(EvalContext.Condition, condition.Properties);
                     data.SetReadOnlyVar_ProtoRefVectorPtr(EvalContext.ConditionKeywords, condition.GetKeywords());
@@ -1810,28 +1813,34 @@ namespace MHServerEmu.Games.Properties.Evals
                     if (forEachProto.LoopConditionPreScope != null)
                     {
                         evalVar = Run(forEachProto.LoopConditionPreScope, data);
-                        if (evalVar.Type != EvalReturnType.Bool) return Return();
-                        if (evalVar.Value.Bool == false) break;
+                        if (!Verify.IsTrue(evalVar.Type == EvalReturnType.Bool)) goto Return;
+
+                        if (evalVar.Value.Bool == false)
+                            break;
                     }
 
-                    foreach (EvalPrototype eachProto in forEachProto.ScopeLoopBody)
+                    foreach (EvalPrototype evalProto in forEachProto.ScopeLoopBody)
                     {
-                        if (eachProto == null) continue;
+                        if (!Verify.IsNotNull(evalProto))
+                            continue;
 
                         data.CallerStackProperties = dataLocalStackProps;
                         data.LocalStackProperties = localStackProps;
 
-                        evalVar = Run(eachProto, data);
-                        if (evalVar.Type == EvalReturnType.Error) return Return();
+                        evalVar = Run(evalProto, data);
+                        if (!Verify.IsTrue(evalVar.Type != EvalReturnType.Error)) goto Return;
                     }
 
                     if (forEachProto.LoopConditionPostScope != null)
                     {
                         evalVar = Run(forEachProto.LoopConditionPostScope, data);
-                        if (evalVar.Type != EvalReturnType.Bool) return Return();
-                        if (evalVar.Value.Bool == false) break;
+                        if (!Verify.IsTrue(evalVar.Type == EvalReturnType.Bool)) goto Return;
+
+                        if (evalVar.Value.Bool == false)
+                            break;
                     }
                 }
+            }
 
             data.SetVar_ConditionCollectionPtr(EvalContext.Condition, null);
             data.SetVar_ProtoRefVectorPtr(EvalContext.ConditionKeywords, null);
@@ -1842,45 +1851,44 @@ namespace MHServerEmu.Games.Properties.Evals
             if (forEachProto.PostLoop != null)
             {
                 evalVar = Run(forEachProto.PostLoop, data);
-                if (evalVar.Type == EvalReturnType.Error) return Return();
+                if (!Verify.IsTrue(evalVar.Type != EvalReturnType.Error)) goto Return;
             }
 
-            return Return();
-
-            EvalVar Return()
-            {
-                data.CallerStackProperties = dataCallerStackProps;
-                data.LocalStackProperties = dataLocalStackProps;
-                return evalVar;
-            }
+        Return:
+            data.CallerStackProperties = dataCallerStackProps;
+            data.LocalStackProperties = dataLocalStackProps;
+            return evalVar;
         }
 
-        private static EvalVar RunForEachProtoRefInContextRefList(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunForEachProtoRefInContextRefList(ForEachProtoRefInContextRefListPrototype forEachProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
 
-            if (evalProto is not ForEachProtoRefInContextRefListPrototype forEachProto) return evalVar;
+            if (!Verify.IsNotNull(forEachProto)) return evalVar;
 
-            if (forEachProto.ScopeLoopBody.IsNullOrEmpty())
-                return Logger.WarnReturn(evalVar, "No evals in ForEachProtoRefInContextRefList eval ScopeLoopBody");
+            if (!Verify.IsTrue(forEachProto.ScopeLoopBody.HasValue(), "No evals in ForEachProtoRefInContextRefList eval ScopeLoopBody"))
+                return evalVar;
 
-            var dataCallerStackProps = data.CallerStackProperties;
-            var dataLocalStackProps = data.LocalStackProperties;
+            PropertyCollection dataCallerStackProps = data.CallerStackProperties;
+            PropertyCollection dataLocalStackProps = data.LocalStackProperties;
             data.CallerStackProperties = dataLocalStackProps;
-            using var localStackProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            using PropertyCollection localStackProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
             data.LocalStackProperties = localStackProps;
 
             if (forEachProto.PreLoop != null)
             {
                 evalVar = Run(forEachProto.PreLoop, data);
-                if (evalVar.Type == EvalReturnType.Error) return Return();
+                if (!Verify.IsTrue(evalVar.Type != EvalReturnType.Error)) goto Return;
             }
 
+            // This can use one of two possible proto ref collection types. The client has two templated versions of
+            // RunForEachProtoRefInContextRefListType that it calls in succession, while we handle it all inside one.
             if (RunForEachProtoRefInContextRefListType(forEachProto, data, ref evalVar, dataLocalStackProps, localStackProps) == false)
             {
-                Logger.Warn("A ForEachProtoRefInContextRefList prototype specified a ProtoRefListContext that is not a valid PrototypeDataRefList or PrototypeDataRefVector.");
-                return Return();
+                Verify.IsTrue(false, "A ForEachProtoRefInContextRefList prototype specified a ProtoRefListContext that is not a valid PrototypeDataRefList or PrototypeDataRefVector.");
+                goto Return;
             }
 
             data.CallerStackProperties = dataLocalStackProps;
@@ -1889,72 +1897,83 @@ namespace MHServerEmu.Games.Properties.Evals
             if (forEachProto.PostLoop != null)
             {
                 evalVar = Run(forEachProto.PostLoop, data);
-                if (evalVar.Type == EvalReturnType.Error)
-                    return Return();
+                if (!Verify.IsTrue(evalVar.Type != EvalReturnType.Error)) goto Return;
             }
 
-            return Return();
-
-            EvalVar Return()
-            {
-                data.CallerStackProperties = dataCallerStackProps;
-                data.LocalStackProperties = dataLocalStackProps;
-                return evalVar;
-            }
+        Return:
+            data.CallerStackProperties = dataCallerStackProps;
+            data.LocalStackProperties = dataLocalStackProps;
+            return evalVar;
         }
 
         private static bool RunForEachProtoRefInContextRefListType(ForEachProtoRefInContextRefListPrototype forEachProto, EvalContextData data, ref EvalVar evalVar,
             PropertyCollection originalLocalStackProps, PropertyCollection localStackProps)
         {
-            if (forEachProto == null || originalLocalStackProps == null) return false;
+            if (!Verify.IsNotNull(forEachProto)) return false;
+            if (!Verify.IsNotNull(originalLocalStackProps)) return false;
 
             EvalVar varList = GetEvalVarFromContext(forEachProto.ProtoRefListContext, data, false);
-            if (FromValue(varList, out List<PrototypeId> protoRefList) == false)
+            IReadOnlyList<PrototypeId> protoRefList = null;
+
+            if (FromValue(varList, out List<PrototypeId> mutableProtoRefList))
             {
-                if (FromValue(varList, out PrototypeId[] protoRefVector)) // part from Eval::runForEachProtoRefInContextRefList
-                    protoRefList = new (protoRefVector);
+                protoRefList = mutableProtoRefList;
+            }
+            else
+            {
+                // This handles the vector template specialization case from the client.
+                if (FromValue(varList, out PrototypeId[] protoRefVector))
+                    protoRefList = protoRefVector;
                 else
                     return false;
             }
 
             if (protoRefList != null)
-                foreach (var protoRef in protoRefList)
+            {
+                for (int i = 0; i < protoRefList.Count; i++)
                 {
+                    PrototypeId protoRef = protoRefList[i];
+
                     if (forEachProto.LoopCondition != null)
                     {
                         evalVar = Run(forEachProto.LoopCondition, data);
-                        if (evalVar.Type != EvalReturnType.Bool) return false;
-                        if (evalVar.Value.Bool == false) break;
+                        if (!Verify.IsTrue(evalVar.Type == EvalReturnType.Bool)) return false;
+
+                        if (evalVar.Value.Bool == false)
+                            break;
                     }
 
                     localStackProps[PropertyEnum.EvalLoopVarProtoRef, 0] = protoRef;
 
-                    foreach (var evalProto in forEachProto.ScopeLoopBody)
+                    foreach (EvalPrototype evalProto in forEachProto.ScopeLoopBody)
                     {
-                        if (evalProto == null) continue;
+                        if (!Verify.IsNotNull(evalProto))
+                            continue;
 
                         data.CallerStackProperties = originalLocalStackProps;
                         data.LocalStackProperties = localStackProps;
 
                         evalVar = Run(evalProto, data);
-                        if (evalVar.Type == EvalReturnType.Error) return false;
+                        if (!Verify.IsTrue(evalVar.Type != EvalReturnType.Error)) return false;
                     }
                 }
+            }
 
             return true;
         }
 
-        private static EvalVar RunIfElse(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunIfElse(IfElsePrototype ifElseProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not IfElsePrototype ifElseProto) return evalVar;
 
-            if (ifElseProto.Conditional == null)
-                return Logger.WarnReturn(evalVar, "IfElse Eval with a NULL Conditional field!");
+            if (!Verify.IsNotNull(ifElseProto)) return evalVar;
 
-            if (ifElseProto.EvalIf == null)
-                return Logger.WarnReturn(evalVar, "IfElse Eval with a NULL EvalIf field!");
+            if (!Verify.IsNotNull(ifElseProto.Conditional, "IfElse Eval with a NULL Conditional field!"))
+                return evalVar;
+
+            if (!Verify.IsNotNull(ifElseProto.EvalIf, "IfElse Eval with a NULL EvalIf field!"))
+                return evalVar;
 
             EvalVar conditionalVar = Run(ifElseProto.Conditional, data);
             bool conditionalValue;
@@ -1966,43 +1985,51 @@ namespace MHServerEmu.Games.Properties.Evals
                     FromValue(conditionalVar, out conditionalValue);
                     break;
                 default:
-                    return Logger.WarnReturn(evalVar, "Non-Value/Bool Conditional.");
+                    Verify.IsTrue(false, "Non-Value/Bool Conditional.");
+                    return evalVar;
             }
 
             if (conditionalValue)
+            {
                 evalVar = Run(ifElseProto.EvalIf, data);
+            }
             else
+            {
                 if (ifElseProto.EvalElse != null)
                     evalVar = Run(ifElseProto.EvalElse, data);
                 else
                     evalVar.SetUndefined();
+            }
 
             return evalVar;
         }
 
-        private static EvalVar RunScope(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunScope(ScopePrototype scopeProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not ScopePrototype scopeProto) return evalVar;
 
-            if (scopeProto.Scope.IsNullOrEmpty())
-                return Logger.WarnReturn(evalVar, "No eval entries in Scope eval");
+            if (!Verify.IsNotNull(scopeProto)) return evalVar;
 
-            var dataCallerStackProps = data.CallerStackProperties;
-            var dataLocalStackProps = data.LocalStackProperties;
-            using var localStackProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            if (!Verify.IsTrue(scopeProto.Scope.HasValue(), "No eval entries in Scope eval"))
+                return evalVar;
+
+            PropertyCollection dataCallerStackProps = data.CallerStackProperties;
+            PropertyCollection dataLocalStackProps = data.LocalStackProperties;
+
+            using PropertyCollection localStackProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
 
             bool errors = false;
-            foreach (var evalEach in scopeProto.Scope)
+            foreach (EvalPrototype evalProto in scopeProto.Scope)
             {
-                if (evalEach == null) continue;
+                if (!Verify.IsNotNull(evalProto))
+                    continue;
 
                 data.CallerStackProperties = dataLocalStackProps;
                 data.LocalStackProperties = localStackProps;
 
-                evalVar = Run(evalEach, data);
-                if (evalVar.Type == EvalReturnType.Error) errors = true;
+                evalVar = Run(evalProto, data);
+                errors |= evalVar.Type == EvalReturnType.Error;
             }
 
             data.CallerStackProperties = dataCallerStackProps;
@@ -2014,28 +2041,27 @@ namespace MHServerEmu.Games.Properties.Evals
             return evalVar;
         }
 
-        private static EvalVar RunExportError(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunExportError(ExportErrorPrototype exportErrorProto, EvalContextData data)
         {
             EvalVar evalVar = new();
             evalVar.SetError();
-            Logger.Warn("Eval failed to export correctly from Calligraphy");
+            Verify.IsTrue(false, "Eval failed to export correctly from Calligraphy");
             return evalVar;
         }
 
-        private static EvalVar RunLoadCurve(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunLoadCurve(LoadCurvePrototype loadCurveProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not LoadCurvePrototype loadCurveProto) return evalVar;
 
-            if (loadCurveProto.Curve == CurveId.Invalid)
-                return Logger.WarnReturn(evalVar, "LoadCurvePrototype contains Invalid \"Curve\" Field");
+            if (!Verify.IsTrue(loadCurveProto.Curve != CurveId.Invalid, "LoadCurvePrototype contains Invalid \"Curve\" Field"))
+                return evalVar;
 
-            if (loadCurveProto.Index == null)
-                return Logger.WarnReturn(evalVar, "LoadCurvePrototype contains NULL \"Index\" Field");
+            if (!Verify.IsNotNull(loadCurveProto.Index, "LoadCurvePrototype contains NULL \"Index\" Field"))
+                return evalVar;
 
             Curve curve = GameDatabase.GetCurve(loadCurveProto.Curve);
-            if (curve == null) return evalVar;
+            if (!Verify.IsNotNull(curve)) return evalVar;
 
             EvalVar indexVar = Run(loadCurveProto.Index, data);
             int index;
@@ -2048,266 +2074,262 @@ namespace MHServerEmu.Games.Properties.Evals
                     index = (int)indexVar.Value.Float;
                     break;
                 default:
-                    return Logger.WarnReturn(evalVar, $"LoadCurvePrototype contains an invalid var type for its \"Index\" Field! (Index var type=[{indexVar.Type}])");
+                    Verify.IsTrue(false, $"LoadCurvePrototype contains an invalid var type for its \"Index\" Field! (Index var type=[{indexVar.Type}])");
+                    return evalVar;
             }
 
-            if (curve.IndexInRange(index) == false)
-            {
-                Logger.Warn($"LoadCurvePrototype index ({index}) is out of range of the curve {GameDatabase.GetCurveName(loadCurveProto.Curve)}, clamping to bounds and still running");
+            if (!Verify.IsTrue(curve.IndexInRange(index), $"LoadCurvePrototype index ({index}) is out of range of the curve {loadCurveProto.Curve.GetName()}, clamping to bounds and still running"))
                 index = Math.Clamp(index, curve.MinPosition, curve.MaxPosition);
-            }
 
             evalVar.SetFloat(curve.GetAt(index));
             return evalVar;
         }
 
-        private static EvalVar RunAdd(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunAdd(AddPrototype addProto, EvalContextData data)
         {
             EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not AddPrototype addProto) return evalVar;
 
-            EvalVar arg1 = Run(addProto.Arg1, data);
-            if (arg1.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Add: Non-Numeric/Error field Arg1");
+            EvalVar lhs = Run(addProto.Arg1, data);
+            if (!Verify.IsTrue(lhs.IsNumeric(), "Add: Non-Numeric/Error field Arg1"))
+                return evalVar;
 
-            EvalVar arg2 = Run(addProto.Arg2, data);
-            if (arg2.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Add: Non-Numeric/Error field Arg2");
+            EvalVar rhs = Run(addProto.Arg2, data);
+            if (!Verify.IsTrue(rhs.IsNumeric(), "Add: Non-Numeric/Error field Arg2"))
+                return evalVar;
 
-            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
-                evalVar.SetInt(arg1.Value.Int + arg2.Value.Int);
-            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(arg1.Value.Int + arg2.Value.Float);
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
-                evalVar.SetFloat(arg1.Value.Float + arg2.Value.Int);
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(arg1.Value.Float + arg2.Value.Float);
+            if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Int)
+                evalVar.SetInt(lhs.Value.Int + rhs.Value.Int);
+            else if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(lhs.Value.Int + rhs.Value.Float);
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Int)
+                evalVar.SetFloat(lhs.Value.Float + rhs.Value.Int);
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(lhs.Value.Float + rhs.Value.Float);
             else
-                Logger.Warn("Error with arg types!");
+                Verify.IsTrue(false, "Error with arg types!");
 
             return evalVar;
         }
 
-        private static EvalVar RunDiv(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunDiv(DivPrototype divProto, EvalContextData data)
         {
             EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not DivPrototype divProto) return evalVar;
 
-            EvalVar arg1 = Run(divProto.Arg1, data);
-            if (arg1.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Div: Non-Numeric/Error field Arg1");
+            EvalVar lhs = Run(divProto.Arg1, data);
+            if (!Verify.IsTrue(lhs.IsNumeric(), "Div: Non-Numeric/Error field Arg1"))
+                return evalVar;
 
-            EvalVar arg2 = Run(divProto.Arg2, data);
-            if (arg2.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Div: Non-Numeric/Error field Arg2");
+            EvalVar rhs = Run(divProto.Arg2, data);
+            if (!Verify.IsTrue(rhs.IsNumeric(), "Div: Non-Numeric/Error field Arg2"))
+                return evalVar;
 
-            if (arg2.Type == EvalReturnType.Int && arg2.Value.Int == 0)
-                return Logger.WarnReturn(evalVar, "Div: Arg2=0 DIVZERO!");
-            else if (arg2.Type == EvalReturnType.Float && arg2.Value.Float == 0)
-                return Logger.WarnReturn(evalVar, "Div: Arg2=0.0f DIVZERO!");
+            if (rhs.Type == EvalReturnType.Int)
+            {
+                if (!Verify.IsTrue(rhs.Value.Int != 0, "Div: Arg2=0 DIVZERO!"))
+                    return evalVar;
+            }
+            else if (rhs.Type == EvalReturnType.Float)
+            {
+                if (!Verify.IsTrue(rhs.Value.Float != 0f, "Div: Arg2=0.0f DIVZERO!"))
+                    return evalVar;
+            }
 
-            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
-                evalVar.SetFloat(arg1.Value.Int / (float)arg2.Value.Int);
-            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(arg1.Value.Int / arg2.Value.Float);
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
-                evalVar.SetFloat(arg1.Value.Float / arg2.Value.Int);
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(arg1.Value.Float / arg2.Value.Float);
+            if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Int)
+                evalVar.SetFloat(lhs.Value.Int / (float)rhs.Value.Int);
+            else if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(lhs.Value.Int / rhs.Value.Float);
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Int)
+                evalVar.SetFloat(lhs.Value.Float / rhs.Value.Int);
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(lhs.Value.Float / rhs.Value.Float);
             else
-                Logger.Warn("Error with arg types!");
+                Verify.IsTrue(false, "Error with arg types!");
 
             return evalVar;
         }
 
-        private static EvalVar RunExponent(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunExponent(ExponentPrototype exponentProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not ExponentPrototype exponentProto) return evalVar;
 
             EvalVar baseVar = Run(exponentProto.BaseArg, data);
-            if (baseVar.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Exponent: Non-Numeric/Error field Base");
+            if (!Verify.IsTrue(baseVar.IsNumeric(), "Exponent: Non-Numeric/Error field Base"))
+                return evalVar;
 
             EvalVar exponentVar = Run(exponentProto.ExpArg, data);
-            if (exponentVar.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Exponent: Non-Numeric/Error field Exponent");
+            if (!Verify.IsTrue(exponentVar.IsNumeric(), "Exponent: Non-Numeric/Error field Exponent"))
+                return evalVar;
 
-            if (FromValue(baseVar, out float baseFloat) == false)
-                return Logger.WarnReturn(evalVar, "Exponent: Error Extracting Base from evalVar");
+            if (!Verify.IsTrue(FromValue(baseVar, out float baseFloat), "Exponent: Error Extracting Base from evalVar"))
+                return evalVar;
 
-            if (FromValue(exponentVar, out float expFloat) == false)
-                return Logger.WarnReturn(evalVar, "Exponent: Error Extracting Exponent from evalVar");
+            if (!Verify.IsTrue(FromValue(exponentVar, out float expFloat), "Exponent: Error Extracting Exponent from evalVar"))
+                return evalVar;
 
             evalVar.SetFloat(MathF.Pow(baseFloat, expFloat));
             return evalVar;
         }
 
-        private static EvalVar RunMax(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunMax(MaxPrototype maxProto, EvalContextData data)
         {
             EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not MaxPrototype maxProto) return evalVar;
 
-            EvalVar arg1 = Run(maxProto.Arg1, data);
-            if (arg1.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Max: Non-Numeric/Error field Arg1");
-
-            EvalVar arg2 = Run(maxProto.Arg2, data);
-            if (arg2.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Max: Non-Numeric/Error field Arg2");
-
-            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
-                evalVar.SetInt(Math.Max(arg1.Value.Int, arg2.Value.Int));
-            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(Math.Max(arg1.Value.Int, arg2.Value.Float));
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
-                evalVar.SetFloat(Math.Max(arg1.Value.Float, arg2.Value.Int));
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(Math.Max(arg1.Value.Float, arg2.Value.Float));
-            else
-                Logger.Warn("Error with arg types!");
-
-            return evalVar;
-        }
-
-        private static EvalVar RunMin(EvalPrototype evalProto, EvalContextData data)
-        {
-            EvalVar evalVar = new();
-            evalVar.SetError();
-            if (evalProto is not MinPrototype minProto) return evalVar;
-
-            EvalVar arg1 = Run(minProto.Arg1, data);
-            if (arg1.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Min: Non-Numeric/Error field Arg1");
-
-            EvalVar arg2 = Run(minProto.Arg2, data);
-            if (arg2.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Min: Non-Numeric/Error field Arg2");
-
-            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
-                evalVar.SetInt(Math.Min(arg1.Value.Int, arg2.Value.Int));
-            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(Math.Min(arg1.Value.Int, arg2.Value.Float));
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
-                evalVar.SetFloat(Math.Min(arg1.Value.Float, arg2.Value.Int));
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(Math.Min(arg1.Value.Float, arg2.Value.Float));
-            else
-                Logger.Warn("Error with arg types!");
-
-            return evalVar;
-        }
-
-        private static EvalVar RunModulus(EvalPrototype evalProto, EvalContextData data)
-        {
-            EvalVar evalVar = new();
-            evalVar.SetError();
-            if (evalProto is not ModulusPrototype modulusProto) return evalVar;
-
-            EvalVar arg1 = Run(modulusProto.Arg1, data);
-            if (arg1.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Modulus: Non-Numeric/Error field Arg1");
-
-            EvalVar arg2 = Run(modulusProto.Arg2, data);
-            if (arg2.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Modulus: Non-Numeric/Error field Arg2");
-            
-            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
-                evalVar.SetInt(MathHelper.Modulus(arg1.Value.Int, arg2.Value.Int));
-            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(MathHelper.FloatModulus(arg1.Value.Int, arg2.Value.Float));
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
-                evalVar.SetFloat(MathHelper.FloatModulus(arg1.Value.Float, arg2.Value.Int));
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(MathHelper.FloatModulus(arg1.Value.Float, arg2.Value.Float));
-            else
-                Logger.Warn("Error with arg types!");
-
-            return evalVar;
-        }
-
-        private static EvalVar RunMult(EvalPrototype evalProto, EvalContextData data)
-        {
-            EvalVar evalVar = new();
-            evalVar.SetError();
-            if (evalProto is not MultPrototype multProto) return evalVar;
-
-            EvalVar arg1 = Run(multProto.Arg1, data);
-            if (arg1.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Multiply: Non-Numeric/Error field Arg1");
-
-            EvalVar arg2 = Run(multProto.Arg2, data);
-            if (arg2.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Multiply: Non-Numeric/Error field Arg2");
-
-            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
-                evalVar.SetInt(arg1.Value.Int * arg2.Value.Int);
-            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(arg1.Value.Int * arg2.Value.Float);
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
-                evalVar.SetFloat(arg1.Value.Float * arg2.Value.Int);
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(arg1.Value.Float * arg2.Value.Float);
-            else
-                Logger.Warn("Error with arg types!");
-
-            return evalVar;
-        }
-
-        private static EvalVar RunSub(EvalPrototype evalProto, EvalContextData data)
-        {
-            EvalVar evalVar = new();
-            evalVar.SetError();
-            if (evalProto is not SubPrototype subProto) return evalVar;
-
-            EvalVar arg1 = Run(subProto.Arg1, data);
-            if (arg1.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Subtract: Non-Numeric/Error field Arg1");
-
-            EvalVar arg2 = Run(subProto.Arg2, data);
-            if (arg2.IsNumeric() == false)
-                return Logger.WarnReturn(evalVar, "Subtract: Non-Numeric/Error field Arg2");
-
-            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
-                evalVar.SetInt(arg1.Value.Int - arg2.Value.Int);
-            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(arg1.Value.Int - arg2.Value.Float);
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
-                evalVar.SetFloat(arg1.Value.Float - arg2.Value.Int);
-            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
-                evalVar.SetFloat(arg1.Value.Float - arg2.Value.Float);
-            else
-                Logger.Warn("Error with arg types!");
-
-            return evalVar;
-        }
-
-        private static EvalVar RunAssignProp(EvalPrototype evalProto, EvalContextData data)
-        {
-            EvalVar evalVar = new ();
-            evalVar.SetError();
-
-            if (evalProto is not AssignPropPrototype assignPropProto) return evalVar;
-
-            if (assignPropProto.Eval == null)
-                return Logger.WarnReturn(evalVar, "AssignPropPrototype contains NULL \"Eval\" Field");
-
-            if (assignPropProto.Prop == PropertyId.Invalid)
-                return Logger.WarnReturn(evalVar, "AssignPropPrototype contains Invalid \"Prop\" Field");
-
-            EvalVar assignVar = Run(assignPropProto.Eval, data);
-            if (assignVar.Type == EvalReturnType.Error || assignVar.Type == EvalReturnType.Undefined)
-                return Logger.WarnReturn(evalVar, "AssignPrototype has Eval that returns Error or Undefined Value");
-
-            if (FromValue(GetEvalVarFromContext(assignPropProto.Context, data, true), out PropertyCollection collection, data.Game) == false)
+            EvalVar lhs = Run(maxProto.Arg1, data);
+            if (!Verify.IsTrue(lhs.IsNumeric(), "Max: Non-Numeric/Error field Arg1"))
                 return evalVar;
 
-            if (collection == null)
-                return Logger.WarnReturn(evalVar, "Invalid Context");
+            EvalVar rhs = Run(maxProto.Arg2, data);
+            if (!Verify.IsTrue(rhs.IsNumeric(), "Max: Non-Numeric/Error field Arg2"))
+                return evalVar;
+
+            if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Int)
+                evalVar.SetInt(Math.Max(lhs.Value.Int, rhs.Value.Int));
+            else if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(Math.Max(lhs.Value.Int, rhs.Value.Float));
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Int)
+                evalVar.SetFloat(Math.Max(lhs.Value.Float, rhs.Value.Int));
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(Math.Max(lhs.Value.Float, rhs.Value.Float));
+            else
+                Verify.IsTrue(false, "Error with arg types!");
+
+            return evalVar;
+        }
+
+        private static EvalVar RunMin(MinPrototype minProto, EvalContextData data)
+        {
+            EvalVar evalVar = new();
+            evalVar.SetError();
+
+            EvalVar lhs = Run(minProto.Arg1, data);
+            if (!Verify.IsTrue(lhs.IsNumeric(), "Min: Non-Numeric/Error field Arg1"))
+                return evalVar;
+
+            EvalVar rhs = Run(minProto.Arg2, data);
+            if (!Verify.IsTrue(rhs.IsNumeric(), "Min: Non-Numeric/Error field Arg2"))
+                return evalVar;
+
+            if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Int)
+                evalVar.SetInt(Math.Min(lhs.Value.Int, rhs.Value.Int));
+            else if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(Math.Min(lhs.Value.Int, rhs.Value.Float));
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Int)
+                evalVar.SetFloat(Math.Min(lhs.Value.Float, rhs.Value.Int));
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(Math.Min(lhs.Value.Float, rhs.Value.Float));
+            else
+                Verify.IsTrue(false, "Error with arg types!");
+
+            return evalVar;
+        }
+
+        private static EvalVar RunModulus(ModulusPrototype modulusProto, EvalContextData data)
+        {
+            EvalVar evalVar = new();
+            evalVar.SetError();
+
+            EvalVar lhs = Run(modulusProto.Arg1, data);
+            if (!Verify.IsTrue(lhs.IsNumeric(), "Modulus: Non-Numeric/Error field Arg1"))
+                return evalVar;
+
+            EvalVar rhs = Run(modulusProto.Arg2, data);
+            if (!Verify.IsTrue(rhs.IsNumeric(), "Modulus: Non-Numeric/Error field Arg2"))
+                return evalVar;
+
+            if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Int)
+                evalVar.SetInt(MathHelper.Modulus(lhs.Value.Int, rhs.Value.Int));
+            else if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(MathHelper.FloatModulus(lhs.Value.Int, rhs.Value.Float));
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Int)
+                evalVar.SetFloat(MathHelper.FloatModulus(lhs.Value.Float, rhs.Value.Int));
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(MathHelper.FloatModulus(lhs.Value.Float, rhs.Value.Float));
+            else
+                Verify.IsTrue(false, "Error with arg types!");
+
+            return evalVar;
+        }
+
+        private static EvalVar RunMult(MultPrototype multProto, EvalContextData data)
+        {
+            EvalVar evalVar = new();
+            evalVar.SetError();
+
+            EvalVar lhs = Run(multProto.Arg1, data);
+            if (!Verify.IsTrue(lhs.IsNumeric(), "Multiply: Non-Numeric/Error field Arg1"))
+                return evalVar;
+
+            EvalVar rhs = Run(multProto.Arg2, data);
+            if (!Verify.IsTrue(rhs.IsNumeric(), "Multiply: Non-Numeric/Error field Arg2"))
+                return evalVar;
+
+            if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Int)
+                evalVar.SetInt(lhs.Value.Int * rhs.Value.Int);
+            else if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(lhs.Value.Int * rhs.Value.Float);
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Int)
+                evalVar.SetFloat(lhs.Value.Float * rhs.Value.Int);
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(lhs.Value.Float * rhs.Value.Float);
+            else
+                Verify.IsTrue(false, "Error with arg types!");
+
+            return evalVar;
+        }
+
+        private static EvalVar RunSub(SubPrototype subProto, EvalContextData data)
+        {
+            EvalVar evalVar = new();
+            evalVar.SetError();
+
+            EvalVar lhs = Run(subProto.Arg1, data);
+            if (!Verify.IsTrue(lhs.IsNumeric(), "Subtract: Non-Numeric/Error field Arg1"))
+                return evalVar;
+
+            EvalVar rhs = Run(subProto.Arg2, data);
+            if (!Verify.IsTrue(rhs.IsNumeric(), "Subtract: Non-Numeric/Error field Arg2"))
+                return evalVar;
+
+            if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Int)
+                evalVar.SetInt(lhs.Value.Int - rhs.Value.Int);
+            else if (lhs.Type == EvalReturnType.Int && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(lhs.Value.Int - rhs.Value.Float);
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Int)
+                evalVar.SetFloat(lhs.Value.Float - rhs.Value.Int);
+            else if (lhs.Type == EvalReturnType.Float && rhs.Type == EvalReturnType.Float)
+                evalVar.SetFloat(lhs.Value.Float - rhs.Value.Float);
+            else
+                Verify.IsTrue(false, "Error with arg types!");
+
+            return evalVar;
+        }
+
+        private static EvalVar RunAssignProp(AssignPropPrototype assignPropProto, EvalContextData data)
+        {
+            EvalVar evalVar = new();
+            evalVar.SetError();
+
+            if (!Verify.IsNotNull(assignPropProto)) return evalVar;
+
+            if (!Verify.IsNotNull(assignPropProto.Eval, "AssignPropPrototype contains NULL \"Eval\" Field"))
+                return evalVar;
+
+            if (!Verify.IsTrue(assignPropProto.Prop != PropertyId.Invalid, "AssignPropPrototype contains Invalid \"Prop\" Field"))
+                return evalVar;
+
+            EvalVar assignVar = Run(assignPropProto.Eval, data);
+            if (!Verify.IsTrue(assignVar.Type != EvalReturnType.Error && assignVar.Type != EvalReturnType.Undefined, "AssignPrototype has Eval that returns Error or Undefined Value"))
+                return evalVar;
+
+            if (!Verify.IsTrue(FromValue(GetEvalVarFromContext(assignPropProto.Context, data, true), out PropertyCollection collection, data.Game)))
+                return evalVar;
+
+            if (!Verify.IsNotNull(collection, "Invalid Context"))
+                return evalVar;
 
             PropertyId propId = assignPropProto.Prop;
             PropertyEnum propEnum = propId.Enum;
@@ -2317,102 +2339,100 @@ namespace MHServerEmu.Games.Properties.Evals
             switch (propertyType)
             {
                 case PropertyDataType.Integer:
-                    if (FromValue(assignVar, out long intValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out long intValue), $"Unable to convert TYPE to Int, Property: [{propInfo.PropertyName}]"))
                     {
-                        // HACK: Fix for Health = Health * 0.999f evals
-                        // (not sure if this is actually happening, but leaving it here for now just in case)
-                        if (intValue == 0 && propId.Enum == PropertyEnum.Health)
-                        {
-                            Logger.Warn("RunAssignProp(): Eval is trying to set Health to 0");
+                        // HACK: Fix for Health = Health * 0.999f evals potentially resulting in 0 assignment without going through the death codepath.
+                        if (!Verify.IsTrue(propEnum != PropertyEnum.Health || intValue > 0))
                             intValue = 1;
-                        }
 
                         collection[propId] = intValue;
                     }
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to Int, Property: [{propInfo.PropertyName}]");
+                    {
+                        return evalVar;
+                    }
                     break;
 
                 case PropertyDataType.Real:
-                    if (FromValue(assignVar, out float floatValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out float floatValue), $"Unable to convert TYPE to Float, Property: [{propInfo.PropertyName}]"))
                         collection[propId] = floatValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to Float, Property: [{propInfo.PropertyName}]");
+                        return evalVar;
                     break;
 
                 case PropertyDataType.Boolean:
-                    if (FromValue(assignVar, out bool boolValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out bool boolValue), $"Unable to convert TYPE to Bool, Property: [{propInfo.PropertyName}]"))
                         collection[propId] = boolValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to Bool, Property: [{propInfo.PropertyName}]");
+                        return evalVar;
                     break;
 
                 case PropertyDataType.EntityId:
-                    if (FromValue(assignVar, out ulong entityIdValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out ulong entityIdValue), $"Unable to convert TYPE to EntityId, Property: [{propInfo.PropertyName}]"))
                         collection[propId] = entityIdValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to EntityId, Property: [{propInfo.PropertyName}]");
+                        return evalVar;
                     break;
 
                 case PropertyDataType.RegionId:
-                    if (FromValue(assignVar, out ulong regionIdValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out ulong regionIdValue), $"Unable to convert TYPE to RegionId, Property: [{propInfo.PropertyName}]"))
                         collection[propId] = regionIdValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to RegionId, Property: [{propInfo.PropertyName}]");
+                        return evalVar;
                     break;
 
                 case PropertyDataType.Prototype:
-                    if (FromValue(assignVar, out PrototypeId protoRefValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out PrototypeId protoRefValue), $"Unable to convert TYPE to Prototype, Property: [{propInfo.PropertyName}]"))
                         collection[propId] = protoRefValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to Prototype, Property: [{propInfo.PropertyName}]");
+                        return evalVar;
                     break;
 
                 case PropertyDataType.Asset:
-                    if (FromValue(assignVar, out AssetId assetValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out AssetId assetValue), $"Unable to convert TYPE to Asset, Property: [{propInfo.PropertyName}]"))
                         collection[propId] = assetValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to Asset, Property: [{propInfo.PropertyName}]");
+                        return evalVar;
                     break;
 
                 case PropertyDataType.Time:
-                    if (FromValue(assignVar, out long timeSpanValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out long timeSpanValue), $"Unable to convert TYPE to Int, Property: [{propInfo.PropertyName}]"))
                         collection[propId] = TimeSpan.FromMilliseconds(timeSpanValue);
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to Int, Property: [{propInfo.PropertyName}]");
+                        return evalVar;
                     break;
 
                 default:
-                    return Logger.WarnReturn(evalVar, $"Assignment into invalid property (property type is not int/float/bool)! Property: [{propInfo.PropertyName}]");
+                    Verify.IsTrue(false, $"Assignment into invalid property (property type is not int/float/bool)! Property: [{propInfo.PropertyName}]");
+                    return evalVar;
             }
 
             evalVar.SetUndefined();
             return evalVar;
         }
 
-        private static EvalVar RunAssignPropEvalParams(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunAssignPropEvalParams(AssignPropEvalParamsPrototype assignPropEvalParamsProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
 
-            if (evalProto is not AssignPropEvalParamsPrototype assignPropEvalParamsProto)
+            if (!Verify.IsNotNull(assignPropEvalParamsProto)) return evalVar;
+
+            if (!Verify.IsNotNull(assignPropEvalParamsProto.Eval, "AssignPropEvalParamsPrototype contains NULL \"Eval\" Field"))
                 return evalVar;
 
-            if (assignPropEvalParamsProto.Eval == null)
-                return Logger.WarnReturn(evalVar, "AssignPropEvalParamsPrototype contains NULL \"Eval\" Field");
-
-            if (assignPropEvalParamsProto.Prop == PrototypeId.Invalid)
-                return Logger.WarnReturn(evalVar, "AssignPropEvalParamsPrototype contains Invalid \"Prop\" Field");
+            if (!Verify.IsTrue(assignPropEvalParamsProto.Prop != PrototypeId.Invalid, "AssignPropEvalParamsPrototype contains Invalid \"Prop\" Field"))
+                return evalVar;
 
             EvalVar assignVar = Run(assignPropEvalParamsProto.Eval, data);
-            if (assignVar.Type == EvalReturnType.Error || assignVar.Type == EvalReturnType.Undefined)
-                return Logger.WarnReturn(evalVar, "AssignPropEvalParamsPrototype has Eval that returns Error or Undefined Value");
-
-            if (FromValue(GetEvalVarFromContext(assignPropEvalParamsProto.Context, data, true), out PropertyCollection collection, data.Game) == false)
+            if (!Verify.IsTrue(assignVar.Type != EvalReturnType.Error && assignVar.Type != EvalReturnType.Undefined, "AssignPropEvalParamsPrototype has Eval that returns Error or Undefined Value"))
                 return evalVar;
 
-            if (collection == null)
-                return Logger.WarnReturn(evalVar, "Invalid Context");
+            if (!Verify.IsTrue(FromValue(GetEvalVarFromContext(assignPropEvalParamsProto.Context, data, true), out PropertyCollection collection, data.Game)))
+                return evalVar;
+
+            if (!Verify.IsNotNull(collection, "Invalid Context"))
+                return evalVar;
 
             PropertyInfoTable propInfoTable = GameDatabase.PropertyInfoTable;
             PropertyEnum propEnum = propInfoTable.GetPropertyEnumFromPrototype(assignPropEvalParamsProto.Prop);
@@ -2423,7 +2443,9 @@ namespace MHServerEmu.Games.Properties.Evals
 
             for (int i = 0; i < propInfo.ParamCount; i++)
             {
-                if (i >= 4) break;
+                if (!Verify.IsTrue(i < 4))
+                    break;
+
                 EvalPrototype paramEval = i switch
                 {
                     0 => assignPropEvalParamsProto.Param0,
@@ -2433,27 +2455,30 @@ namespace MHServerEmu.Games.Properties.Evals
                     _ => null
                 };
 
-                if (paramEval == null) continue;
+                if (paramEval == null)
+                    continue;
 
+                // NOTE: We don't check the return value of FromValue() here, same as the client, so these can potentially be invalid / zero.
                 switch (propInfo.GetParamType(i))
                 {
                     case PropertyParamType.Asset:
-                        if (FromValue(Run(paramEval, data), out AssetId assetParam))
-                            paramValues[i] = Property.ToParam(assetParam);
+                        FromValue(Run(paramEval, data), out AssetId assetParam);
+                        paramValues[i] = Property.ToParam(assetParam);
                         break;
 
                     case PropertyParamType.Prototype:
-                        if (FromValue(Run(paramEval, data), out PrototypeId protoRefParam))
-                            paramValues[i] = Property.ToParam(propEnum, i, protoRefParam);
+                        FromValue(Run(paramEval, data), out PrototypeId protoRefParam);
+                        paramValues[i] = Property.ToParam(propEnum, i, protoRefParam);
                         break;
 
                     case PropertyParamType.Integer:
-                        if (FromValue(Run(paramEval, data), out int intParam))
-                            paramValues[i] = (PropertyParam)intParam;
+                        FromValue(Run(paramEval, data), out int intParam);
+                        paramValues[i] = (PropertyParam)intParam;
                         break;
 
                     default:
-                        return Logger.WarnReturn(evalVar, "Encountered an unknown prop param type in an AssignPropEvalParams Eval!");
+                        Verify.IsTrue(false, "Encountered an unknown prop param type in an AssignPropEvalParams Eval!");
+                        return evalVar;
                 }
             }
 
@@ -2462,100 +2487,103 @@ namespace MHServerEmu.Games.Properties.Evals
             switch (propInfo.DataType)
             {
                 case PropertyDataType.Integer:
-                    if (FromValue(assignVar, out long intValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out long intValue), $"Unable to convert TYPE to Int, Property: {propInfo.PropertyName}"))
                         collection[propId] = intValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to Int, Property: {propInfo.PropertyName}");
+                        return evalVar;
                     break;
 
                 case PropertyDataType.Real:
-                    if (FromValue(assignVar, out float floatValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out float floatValue), $"Unable to convert TYPE to Float, Property: {propInfo.PropertyName}"))
                         collection[propId] = floatValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to Float, Property: {propInfo.PropertyName}");
+                        return evalVar;
                     break;
 
                 case PropertyDataType.Boolean:
-                    if (FromValue(assignVar, out bool boolValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out bool boolValue), $"Unable to convert TYPE to Bool, Property: {propInfo.PropertyName}"))
                         collection[propId] = boolValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to Bool, Property: {propInfo.PropertyName}");
+                        return evalVar;
                     break;
 
                 case PropertyDataType.EntityId:
-                    if (FromValue(assignVar, out ulong entityIdValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out ulong entityIdValue), $"Unable to convert TYPE to EntityId, Property: {propInfo.PropertyName}"))
                         collection[propId] = entityIdValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to EntityId, Property: {propInfo.PropertyName}");
+                        return evalVar;
                     break;
 
                 case PropertyDataType.RegionId:
-                    if (FromValue(assignVar, out ulong regionIdValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out ulong regionIdValue), $"Unable to convert TYPE to RegionId, Property: {propInfo.PropertyName}"))
                         collection[propId] = regionIdValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to RegionId, Property: {propInfo.PropertyName}");
+                        return evalVar;
                     break;
 
                 case PropertyDataType.Prototype:
-                    if (FromValue(assignVar, out PrototypeId protoRefValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out PrototypeId protoRefValue), $"Unable to convert TYPE to Prototype, Property: {propInfo.PropertyName}"))
                         collection[propId] = protoRefValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to Prototype, Property: {propInfo.PropertyName}");
+                        return evalVar;
                     break;
 
                 case PropertyDataType.Asset:
-                    if (FromValue(assignVar, out AssetId assetValue))
+                    if (Verify.IsTrue(FromValue(assignVar, out AssetId assetValue), $"Unable to convert TYPE to Asset, Property: {propInfo.PropertyName}"))
                         collection[propId] = assetValue;
                     else
-                        return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to Asset, Property: {propInfo.PropertyName}");
+                        return evalVar;
                     break;
 
                 default:
-                    return Logger.WarnReturn(evalVar, $"Assignment into invalid property (property type is not int/float/bool)! Property: {propInfo.PropertyName}");
+                    Verify.IsTrue(false, $"Assignment into invalid property (property type is not int/float/bool)! Property: {propInfo.PropertyName}");
+                    return evalVar;
             }
 
             evalVar.SetUndefined();
             return evalVar;
         }
 
-        private static EvalVar RunHasProp(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunHasProp(HasPropPrototype hasPropProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not HasPropPrototype hasPropProto) return evalVar;
 
-            if (hasPropProto.Prop == PropertyId.Invalid)
-                return Logger.WarnReturn(evalVar, "HasPropPrototype contains Invalid \"Prop\" Field");
+            if (!Verify.IsNotNull(hasPropProto)) return evalVar;
 
-            if (FromValue(GetEvalVarFromContext(hasPropProto.Context, data, false), out PropertyCollection collection, data.Game) == false)
+            if (!Verify.IsTrue(hasPropProto.Prop != PropertyId.Invalid, "HasPropPrototype contains Invalid \"Prop\" Field"))
                 return evalVar;
 
-            if (collection == null)
-                return Logger.WarnReturn(evalVar, "Invalid Context");
+            if (!Verify.IsTrue(FromValue(GetEvalVarFromContext(hasPropProto.Context, data, false), out PropertyCollection collection, data.Game)))
+                return evalVar;
+
+            if (!Verify.IsNotNull(collection, "Invalid Context"))
+                return evalVar;
 
             evalVar.SetBool(collection.HasProperty(hasPropProto.Prop));
             return evalVar;
         }
 
-        private static EvalVar RunLoadProp(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunLoadProp(LoadPropPrototype loadPropProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not LoadPropPrototype loadPropProto) return evalVar;
 
-            if (loadPropProto.Prop == PropertyId.Invalid)
-                return Logger.WarnReturn(evalVar, "LoadPropPrototype contains Invalid \"Prop\" Field");
+            if (!Verify.IsNotNull(loadPropProto)) return evalVar;
+
+            if (!Verify.IsTrue(loadPropProto.Prop != PropertyId.Invalid, "LoadPropPrototype contains Invalid \"Prop\" Field"))
+                return evalVar;
 
             PropertyId propId = loadPropProto.Prop;
             PropertyEnum propEnum = propId.Enum;
             PropertyInfo propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propEnum);
             PropertyDataType propertyType = propInfo.DataType;
 
-            if (FromValue(GetEvalVarFromContext(loadPropProto.Context, data, false), out PropertyCollection collection, data.Game) == false)
+            if (!Verify.IsTrue(FromValue(GetEvalVarFromContext(loadPropProto.Context, data, false), out PropertyCollection collection, data.Game)))
                 return evalVar;
 
-            if (collection == null)
-                return Logger.WarnReturn(evalVar, $"Invalid Context ({loadPropProto.Context}) when trying to load prop.\nProp: {propInfo.PropertyName}");
+            if (!Verify.IsNotNull(collection, $"Invalid Context ({loadPropProto.Context}) when trying to load prop.\nProp: {propInfo.PropertyName}"))
+                return evalVar;
 
             switch (propertyType)
             {
@@ -2589,112 +2617,117 @@ namespace MHServerEmu.Games.Properties.Evals
                     break;
 
                 default:
-                    return Logger.WarnReturn(evalVar, "Assignment into invalid property!");
+                    Verify.IsTrue(false, "Assignment into invalid property!");
+                    return evalVar;
             }
 
             return evalVar;
         }
 
-        private static EvalVar RunLoadPropContextParams(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunLoadPropContextParams(LoadPropContextParamsPrototype loadPropContextParamsProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not LoadPropContextParamsPrototype loadPropContextParamsProto) return evalVar;
 
-            if (loadPropContextParamsProto.Prop == PrototypeId.Invalid)
-                return Logger.WarnReturn(evalVar, "LoadPropContextParamsPrototype contains invalid \"Prop\" field");
+            if (!Verify.IsNotNull(loadPropContextParamsProto)) return evalVar;
 
-            if (FromValue(GetEvalVarFromContext(loadPropContextParamsProto.PropertyIdContext, data, false), out PropertyId propIdParams) == false)
+            if (!Verify.IsTrue(loadPropContextParamsProto.Prop != PrototypeId.Invalid, "LoadPropContextParamsPrototype contains invalid \"Prop\" field"))
                 return evalVar;
 
-            if (propIdParams == PropertyId.Invalid)
-                return Logger.WarnReturn(evalVar, "LoadPropContextParams eval being run with a context that has an invalid propertyId");
-
-            if (FromValue(GetEvalVarFromContext(loadPropContextParamsProto.PropertyCollectionContext, data, false), out PropertyCollection collection, data.Game) == false)
+            if (!Verify.IsTrue(FromValue(GetEvalVarFromContext(loadPropContextParamsProto.PropertyIdContext, data, false), out PropertyId propIdToGetParamsFrom)))
                 return evalVar;
 
-            if (collection == null)
-                return Logger.WarnReturn(evalVar, "Invalid Context");
+            if (!Verify.IsTrue(propIdToGetParamsFrom != PropertyId.Invalid, "LoadPropContextParams eval being run with a context that has an invalid propertyId"))
+                return evalVar;
+
+            if (!Verify.IsTrue(FromValue(GetEvalVarFromContext(loadPropContextParamsProto.PropertyCollectionContext, data, false), out PropertyCollection collection, data.Game)))
+                return evalVar;
+
+            if (!Verify.IsNotNull(collection, "Invalid Context"))
+                return evalVar;
 
             PropertyInfoTable propInfoTable = GameDatabase.PropertyInfoTable;
             PropertyEnum propEnum = propInfoTable.GetPropertyEnumFromPrototype(loadPropContextParamsProto.Prop);
-            PropertyInfo propInfoValue = propInfoTable.LookupPropertyInfo(propEnum);
-            PropertyInfo propInfoParams = propInfoTable.LookupPropertyInfo(propIdParams.Enum);
+            PropertyInfo infoForPropToGetValueOf = propInfoTable.LookupPropertyInfo(propEnum);
+            PropertyInfo infoForPropToGetParamsFrom = propInfoTable.LookupPropertyInfo(propIdToGetParamsFrom.Enum);
 
-            if (propInfoParams.ParamCount != propInfoValue.ParamCount)
-                return evalVar;
+            if (!Verify.IsTrue(infoForPropToGetParamsFrom.ParamCount == infoForPropToGetValueOf.ParamCount)) return evalVar;
 
-            Span<PropertyParam> paramValues = stackalloc PropertyParam[propInfoParams.ParamCount];
-            for (int i = 0; i < propInfoParams.ParamCount; ++i)
+            Span<PropertyParam> paramValues = stackalloc PropertyParam[infoForPropToGetParamsFrom.ParamCount];
+            for (int i = 0; i < infoForPropToGetParamsFrom.ParamCount; ++i)
             {
-                if (propInfoParams.GetParamType(i) != propInfoValue.GetParamType(i)) return evalVar;
+                if (!Verify.IsTrue(infoForPropToGetParamsFrom.GetParamType(i) == infoForPropToGetValueOf.GetParamType(i)))
+                    return evalVar;
 
-                switch (propInfoParams.GetParamType(i))
+                switch (infoForPropToGetParamsFrom.GetParamType(i))
                 {
                     case PropertyParamType.Asset:
-                        Property.FromParam(propIdParams.Enum, i, propIdParams.GetParam(i), out AssetId assetRefParam);
+                        Property.FromParam(propIdToGetParamsFrom.Enum, i, propIdToGetParamsFrom.GetParam(i), out AssetId assetRefParam);
                         paramValues[i] = Property.ToParam(assetRefParam);
                         break;
                     case PropertyParamType.Prototype:
-                        Property.FromParam(propIdParams.Enum, i, propIdParams.GetParam(i), out PrototypeId protoRefParam);
+                        Property.FromParam(propIdToGetParamsFrom.Enum, i, propIdToGetParamsFrom.GetParam(i), out PrototypeId protoRefParam);
                         paramValues[i] = Property.ToParam(propEnum, i, protoRefParam);
                         break;
                     case PropertyParamType.Integer:
-                        int intParam = (int)propIdParams.GetParam(i);
+                        int intParam = (int)propIdToGetParamsFrom.GetParam(i);
                         paramValues[i] = (PropertyParam)intParam;
                         break;
                     default:
-                        return Logger.WarnReturn(evalVar, "Encountered an unknown prop param type in a LoadPropContextParams Eval!");
+                        Verify.IsTrue(false, "Encountered an unknown prop param type in a LoadPropContextParams Eval!");
+                        return evalVar;
                 }
             }
 
-            PropertyId propIdValue = new(propEnum, paramValues);
+            PropertyId propIdToGetValueOf = new(propEnum, paramValues);
 
-            switch (propInfoValue.DataType)
+            switch (infoForPropToGetValueOf.DataType)
             {
                 case PropertyDataType.Integer:
-                    evalVar.SetInt(collection[propIdValue]);
+                    evalVar.SetInt(collection[propIdToGetValueOf]);
                     break;
                 case PropertyDataType.Curve:
                 case PropertyDataType.Real:
-                    evalVar.SetFloat(collection[propIdValue]);
+                    evalVar.SetFloat(collection[propIdToGetValueOf]);
                     break;
                 case PropertyDataType.Boolean:
-                    evalVar.SetBool(collection[propIdValue]);
+                    evalVar.SetBool(collection[propIdToGetValueOf]);
                     break;
                 case PropertyDataType.EntityId:
-                    evalVar.SetEntityId(collection[propIdValue]);
+                    evalVar.SetEntityId(collection[propIdToGetValueOf]);
                     break;
                 case PropertyDataType.RegionId:
-                    evalVar.SetRegionId(collection[propIdValue]);
+                    evalVar.SetRegionId(collection[propIdToGetValueOf]);
                     break;
                 case PropertyDataType.Prototype:
-                    evalVar.SetProtoRef(collection[propIdValue]);
+                    evalVar.SetProtoRef(collection[propIdToGetValueOf]);
                     break;
                 case PropertyDataType.Asset:
-                    evalVar.SetAssetRef(collection[propIdValue]);
+                    evalVar.SetAssetRef(collection[propIdToGetValueOf]);
                     break;
                 default:
-                    return Logger.WarnReturn(evalVar, "Assignment into invalid property!");
+                    Verify.IsTrue(false, "Assignment into invalid property!");
+                    return evalVar;
             }
 
             return evalVar;
         }
 
-        private static EvalVar RunLoadPropEvalParams(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunLoadPropEvalParams(LoadPropEvalParamsPrototype loadPropEvalParamsProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not LoadPropEvalParamsPrototype loadPropEvalParamsProto) return evalVar;
 
-            if (loadPropEvalParamsProto.Prop == PrototypeId.Invalid)
-                return Logger.WarnReturn(evalVar, "LoadPropEvalParamsPrototype contains invalid \"Prop\" field");
+            if (!Verify.IsNotNull(loadPropEvalParamsProto)) return evalVar;
 
-            if (FromValue(GetEvalVarFromContext(loadPropEvalParamsProto.Context, data, false), out PropertyCollection collection, data.Game) == false)
+            if (!Verify.IsTrue(loadPropEvalParamsProto.Prop != PrototypeId.Invalid, "LoadPropEvalParamsPrototype contains invalid \"Prop\" field"))
                 return evalVar;
 
-            if (collection == null)
-                return Logger.WarnReturn(evalVar, "Invalid Context");
+            if (!Verify.IsTrue(FromValue(GetEvalVarFromContext(loadPropEvalParamsProto.Context, data, false), out PropertyCollection collection, data.Game)))
+                return evalVar;
+
+            if (!Verify.IsNotNull(collection, "Invalid Context"))
+                return evalVar;
 
             PropertyInfoTable propInfoTable = GameDatabase.PropertyInfoTable;
             PropertyEnum propEnum = propInfoTable.GetPropertyEnumFromPrototype(loadPropEvalParamsProto.Prop);
@@ -2705,7 +2738,9 @@ namespace MHServerEmu.Games.Properties.Evals
 
             for (int i = 0; i < propInfo.ParamCount; ++i)
             {
-                if (i >= 4) break;
+                if (!Verify.IsTrue(i < 4))
+                    break;
+
                 EvalPrototype paramEval = i switch
                 {
                     0 => loadPropEvalParamsProto.Param0,
@@ -2715,27 +2750,30 @@ namespace MHServerEmu.Games.Properties.Evals
                     _ => null
                 };
 
-                if (paramEval == null) continue;
+                if (paramEval == null)
+                    continue;
 
+                // NOTE: We don't check the return value of FromValue() here, same as the client, so these can potentially be invalid / zero.
                 switch (propInfo.GetParamType(i))
                 {
                     case PropertyParamType.Asset:
-                        if (FromValue(Run(paramEval, data), out AssetId assetRefParam))
-                            paramValues[i] = Property.ToParam(assetRefParam);
+                        FromValue(Run(paramEval, data), out AssetId assetRefParam);
+                        paramValues[i] = Property.ToParam(assetRefParam);
                         break;
 
                     case PropertyParamType.Prototype:
-                        if (FromValue(Run(paramEval, data), out PrototypeId protoRefParam))
-                            paramValues[i] = Property.ToParam(propEnum, i, protoRefParam);
+                        FromValue(Run(paramEval, data), out PrototypeId protoRefParam);
+                        paramValues[i] = Property.ToParam(propEnum, i, protoRefParam);
                         break;
 
                     case PropertyParamType.Integer:
-                        if (FromValue(Run(paramEval, data), out int intParam))
-                            paramValues[i] = (PropertyParam)intParam;
+                        FromValue(Run(paramEval, data), out int intParam);
+                        paramValues[i] = (PropertyParam)intParam;
                         break;
 
                     default:
-                        return Logger.WarnReturn(evalVar, "Encountered an unknown prop param type in a LoadPropEvalParams Eval!");
+                        Verify.IsTrue(false, "Encountered an unknown prop param type in a LoadPropEvalParams Eval!");
+                        return evalVar;
                 }
             }
 
@@ -2766,118 +2804,122 @@ namespace MHServerEmu.Games.Properties.Evals
                     evalVar.SetAssetRef(collection[propId]);
                     break;
                 default:
-                    return Logger.WarnReturn(evalVar, "Assignment into invalid property!");
+                    Verify.IsTrue(false, "Assignment into invalid property!");
+                    return evalVar;
             }
 
             return evalVar;
         }
 
-        private static EvalVar RunSwapProp(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunSwapProp(SwapPropPrototype swapPropProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not SwapPropPrototype swapPropProto) return evalVar;
 
-            if (swapPropProto.Prop == PropertyId.Invalid)
-                return Logger.WarnReturn(evalVar, "SwapPropPrototype contains Invalid \"Prop\" Field");
+            if (!Verify.IsNotNull(swapPropProto)) return evalVar;
+
+            if (!Verify.IsTrue(swapPropProto.Prop != PropertyId.Invalid, "SwapPropPrototype contains Invalid \"Prop\" Field"))
+                return evalVar;
 
             PropertyInfoTable propInfoTable = GameDatabase.PropertyInfoTable;
             PropertyInfo propInfo = propInfoTable.LookupPropertyInfo(swapPropProto.Prop.Enum);
             PropertyInfoPrototype propInfoProto = propInfo.Prototype;
-            if (propInfoProto == null)
-                return Logger.WarnReturn(evalVar, "No PropertyInfoPrototype");
 
-            if (propInfoProto.AggMethod != AggregationMethod.None)
-                return Logger.WarnReturn(evalVar, $"SwapPropPrototype cannot swap with a property with an AggMethod other than None. Property: {propInfoProto}");
-
-            if (FromValue(GetEvalVarFromContext(swapPropProto.LeftContext, data, true), out PropertyCollection collectionLeft, data.Game) == false)
+            if (!Verify.IsNotNull(propInfoProto, "No PropertyInfoPrototype"))
                 return evalVar;
 
-            if (collectionLeft == null)
-                return Logger.WarnReturn(evalVar, "Invalid Left Context");
-
-            if (FromValue(GetEvalVarFromContext(swapPropProto.RightContext, data, true), out PropertyCollection collectionRight, data.Game) == false)
+            if (!Verify.IsTrue(propInfoProto.AggMethod == AggregationMethod.None, $"SwapPropPrototype cannot swap with a property with an AggMethod other than None. Property: {propInfoProto}"))
                 return evalVar;
 
-            if (collectionRight == null)
-                return Logger.WarnReturn(evalVar, "Invalid Right Context");
+            if (!Verify.IsTrue(FromValue(GetEvalVarFromContext(swapPropProto.LeftContext, data, true), out PropertyCollection collectionLeft, data.Game)))
+                return evalVar;
+
+            if (!Verify.IsNotNull(collectionLeft, "Invalid Context"))
+                return evalVar;
+
+            if (!Verify.IsTrue(FromValue(GetEvalVarFromContext(swapPropProto.RightContext, data, true), out PropertyCollection collectionRight, data.Game)))
+                return evalVar;
+
+            if (!Verify.IsNotNull(collectionRight, "Invalid Context"))
+                return evalVar;
 
             PropertyId propId = swapPropProto.Prop;
             (collectionRight[propId], collectionLeft[propId]) = (collectionLeft[propId], collectionRight[propId]);
+
             evalVar.SetUndefined();
             return evalVar;
         }
 
-        private static EvalVar RunRandomFloat(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunRandomFloat(RandomFloatPrototype randomFloatProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not RandomFloatPrototype randomFloatProto) return evalVar;
 
-            if (data.Game == null)
-                return Logger.WarnReturn(evalVar, "The context given to a RandomFloat Eval doesn't have a valid Game to use for the random generator!");
+            if (!Verify.IsNotNull(randomFloatProto)) return evalVar;
+
+            if (!Verify.IsNotNull(data.Game, "The context given to a RandomFloat Eval doesn't have a valid Game to use for the random generator!"))
+                return evalVar;
 
             float randomValue = data.Game.Random.NextFloat(randomFloatProto.Min, randomFloatProto.Max);
             evalVar.SetFloat(randomValue);
-
             return evalVar;
         }
 
-        private static EvalVar RunRandomInt(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunRandomInt(RandomIntPrototype randomIntProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not RandomIntPrototype randomIntProto) return evalVar;
 
-            if (data.Game == null)
-                return Logger.WarnReturn(evalVar, "The context given to a RandomInt Eval doesn't have a valid Game to use for the random generator!");
+            if (!Verify.IsNotNull(randomIntProto)) return evalVar;
+
+            if (!Verify.IsNotNull(data.Game, "The context given to a RandomInt Eval doesn't have a valid Game to use for the random generator!"))
+                return evalVar;
 
             int randomValue = data.Game.Random.Next(randomIntProto.Min, randomIntProto.Max + 1);
             evalVar.SetInt(randomValue);
-
             return evalVar;
         }
 
-        private static EvalVar RunLoadEntityToContextVar(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunLoadEntityToContextVar(LoadEntityToContextVarPrototype loadEntityToContextVarProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not LoadEntityToContextVarPrototype loadEntityToContextVarProto) return evalVar;
 
-            if (loadEntityToContextVarProto.EntityId == null) return evalVar;
+            if (!Verify.IsNotNull(loadEntityToContextVarProto)) return evalVar;
+            if (!Verify.IsNotNull(loadEntityToContextVarProto.EntityId)) return evalVar;
 
-            if (data.Game == null)
-                return Logger.WarnReturn(evalVar, "The context given to a LoadEntityToContextVar Eval doesn't have a valid Game to use for the entity lookup!");
+            if (!Verify.IsNotNull(data.Game, "The context given to a LoadEntityToContextVar Eval doesn't have a valid Game to use for the entity lookup!"))
+                return evalVar;
 
             EvalVar entityIdEvalResult = Run(loadEntityToContextVarProto.EntityId, data);
-            if (entityIdEvalResult.Type != EvalReturnType.EntityId)
-                return Logger.WarnReturn(evalVar, $"A LoadEntityToContextVar eval has an EntityId field Eval that did not return an EntityId (Return type=[{entityIdEvalResult.Type}])");
+            if (!Verify.IsTrue(entityIdEvalResult.Type == EvalReturnType.EntityId, $"A LoadEntityToContextVar eval has an EntityId field Eval that did not return an EntityId (Return type=[{entityIdEvalResult.Type}])"))
+                return evalVar;
 
             Entity entity = data.Game.EntityManager.GetEntity<Entity>(entityIdEvalResult.Value.EntityId);
-            data.SetVar_PropertyCollectionPtr(loadEntityToContextVarProto.Context, entity.Properties);
+            data.SetVar_PropertyCollectionPtr(loadEntityToContextVarProto.Context, entity?.Properties);
 
             evalVar.SetUndefined();
             return evalVar;
         }
 
-        private static EvalVar RunLoadConditionCollectionToContext(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunLoadConditionCollectionToContext(LoadConditionCollectionToContextPrototype loadConditionCollectionProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not LoadConditionCollectionToContextPrototype loadConditionCollectionProto) return evalVar;
 
-            if (loadConditionCollectionProto.EntityId == null) return evalVar;
+            if (!Verify.IsNotNull(loadConditionCollectionProto)) return evalVar;
+            if (!Verify.IsNotNull(loadConditionCollectionProto.EntityId)) return evalVar;
 
-            if (data.Game == null)
-                return Logger.WarnReturn(evalVar, "The context given to a LoadConditionCollectionToContext Eval doesn't have a valid Game to use for the entity lookup!");
+            if (!Verify.IsNotNull(data.Game, "The context given to a LoadConditionCollectionToContext Eval doesn't have a valid Game to use for the entity lookup!"))
+                return evalVar;
 
-            if (data.ContextVars[(int)loadConditionCollectionProto.Context].Var.Type != EvalReturnType.Undefined)
-                Logger.Warn("Attempting to assign to a ContextVar that is currently in use! Operation will be performed but this is usually a bad idea!");
+            Verify.IsTrue(data.ContextVars[(int)loadConditionCollectionProto.Context].Var.Type == EvalReturnType.Undefined,
+                "Attempting to assign to a ContextVar that is currently in use! Operation will be performed but this is usually a bad idea!");
 
             EvalVar entityIdEvalResult = Run(loadConditionCollectionProto.EntityId, data);
-            if (entityIdEvalResult.Type != EvalReturnType.EntityId)
-                return Logger.WarnReturn(evalVar,
-                    $"A LoadConditionCollectionToContext eval has an EntityId field Eval that did not return an EntityId (Return type=[{entityIdEvalResult.Type}])");
+            if (!Verify.IsTrue(entityIdEvalResult.Type == EvalReturnType.EntityId,
+                $"A LoadConditionCollectionToContext eval has an EntityId field Eval that did not return an EntityId (Return type=[{entityIdEvalResult.Type}])"))
+                return evalVar;
 
             WorldEntity entity = data.Game.EntityManager.GetEntity<WorldEntity>(entityIdEvalResult.Value.EntityId);
             if (entity != null)
@@ -2887,149 +2929,152 @@ namespace MHServerEmu.Games.Properties.Evals
             return evalVar;
         }
 
-        private static EvalVar RunEntityHasKeyword(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunEntityHasKeyword(EntityHasKeywordPrototype entityHasKeywordProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            // NOTE: Pre-BUE specialization powers use this instead of EntityHasTalent, which didn't exist back then.
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not EntityHasKeywordPrototype entityHasKeywordProto) return evalVar;
 
-            if (entityHasKeywordProto.Keyword == PrototypeId.Invalid)
-                return Logger.WarnReturn(evalVar, "EntityHasKeyword Eval doesn't have a valid Keyword to check!");
+            if (!Verify.IsNotNull(entityHasKeywordProto)) return evalVar;
+
+            if (!Verify.IsTrue(entityHasKeywordProto.Keyword != PrototypeId.Invalid, "EntityHasKeyword Eval doesn't have a valid Keyword to check!"))
+                return evalVar;
 
             EvalVar contextVar = data.ContextVars[(int)entityHasKeywordProto.Context].Var;
-            if (contextVar.Type != EvalReturnType.EntityPtr)
-                return Logger.WarnReturn(evalVar, "EntityHasKeyword was given a context variable that is not an EntityPtr.");
+            if (!Verify.IsTrue(contextVar.Type == EvalReturnType.EntityPtr,
+                "EntityHasKeyword was given a context variable that is not an EntityPtr."))
+                return evalVar;
 
             evalVar.SetBool(false);
 
-            if (FromValue(contextVar, out Entity entity))
-                if (entity is WorldEntity worldEntity)
-                {
-                    if (entityHasKeywordProto.ConditionKeywordOnly)
-                        evalVar.SetBool(worldEntity.HasConditionWithKeyword(entityHasKeywordProto.Keyword));
-                    else
-                        evalVar.SetBool(worldEntity.HasKeyword(entityHasKeywordProto.Keyword) || worldEntity.HasConditionWithKeyword(entityHasKeywordProto.Keyword));
-                }
+            if (FromValue(contextVar, out Entity entity) && entity is WorldEntity worldEntity)
+            {
+                if (entityHasKeywordProto.ConditionKeywordOnly)
+                    evalVar.SetBool(worldEntity.HasConditionWithKeyword(entityHasKeywordProto.Keyword));
+                else
+                    evalVar.SetBool(worldEntity.HasKeyword(entityHasKeywordProto.Keyword) || worldEntity.HasConditionWithKeyword(entityHasKeywordProto.Keyword));
+            }
 
             return evalVar;
         }
 
-        private static EvalVar RunEntityHasTalent(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunEntityHasTalent(EntityHasTalentPrototype entityHasTalentProto, EvalContextData data)
         {
-            EvalVar evalVar = new ();
+            EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not EntityHasTalentPrototype entityHasTalentProto) return evalVar;
 
-            if (entityHasTalentProto.Talent == PrototypeId.Invalid)
-                return Logger.WarnReturn(evalVar, "EntityHasTalent Eval doesn't have a valid Talent to check!");
+            if (!Verify.IsNotNull(entityHasTalentProto)) return evalVar;
+
+            if (!Verify.IsTrue(entityHasTalentProto.Talent != PrototypeId.Invalid, "EntityHasTalent Eval doesn't have a valid Talent to check!"))
+                return evalVar;
 
             EvalVar contextVar = data.ContextVars[(int)entityHasTalentProto.Context].Var;
-            if (contextVar.Type != EvalReturnType.EntityPtr)
-                return Logger.WarnReturn(evalVar, "EntityHasTalent was given a context variable that is not an EntityPtr.");
+            if (!Verify.IsTrue(contextVar.Type == EvalReturnType.EntityPtr, "EntityHasTalent was given a context variable that is not an EntityPtr."))
+                return evalVar;
 
             evalVar.SetBool(false);
 
-            if (FromValue(contextVar, out Entity entity))
-                if (entity is WorldEntity worldEntity)
-                    evalVar.SetBool(worldEntity.HasPowerInPowerCollection(entityHasTalentProto.Talent));
+            if (FromValue(contextVar, out Entity entity) && entity is WorldEntity worldEntity)
+                evalVar.SetBool(worldEntity.HasPowerInPowerCollection(entityHasTalentProto.Talent));
 
             return evalVar;
         }
 
-        private static EvalVar RunGetCombatLevel(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunGetCombatLevel(GetCombatLevelPrototype getCombatLevelProto, EvalContextData data)
         {
             EvalVar evalVar = new ();
             evalVar.SetError();
-            if (evalProto is not GetCombatLevelPrototype getCombatLevelProto) return evalVar;
+
+            if (!Verify.IsNotNull(getCombatLevelProto)) return evalVar;
 
             EvalVar contextVar = data.ContextVars[(int)getCombatLevelProto.Context].Var;
-            if (contextVar.Type != EvalReturnType.EntityPtr)
-                return Logger.WarnReturn(evalVar, "GetCombatLevel was given a context variable that is not an EntityPtr.");
+            if (!Verify.IsTrue(contextVar.Type == EvalReturnType.EntityPtr, "GetCombatLevel was given a context variable that is not an EntityPtr."))
+                return evalVar;
 
             evalVar.SetInt(0);
 
-            if (FromValue(contextVar, out Entity entity))
-                if (entity is Agent agent)
-                    evalVar.SetInt(agent.CombatLevel);
+            if (FromValue(contextVar, out Entity entity) && entity is Agent agent)
+                evalVar.SetInt(agent.CombatLevel);
 
             return evalVar;
         }
 
-        private static EvalVar RunGetPowerRank(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunGetPowerRank(GetPowerRankPrototype getPowerRankProto, EvalContextData data)
         {
             EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not GetPowerRankPrototype getPowerRankProto) return evalVar;
 
-            if (getPowerRankProto.Power == PrototypeId.Invalid)
-                return Logger.WarnReturn(evalVar, "GetPowerRank Eval doesn't have a valid Power to check!");
+            if (!Verify.IsNotNull(getPowerRankProto)) return evalVar;
+
+            if (!Verify.IsTrue(getPowerRankProto.Power != PrototypeId.Invalid, "GetPowerRank Eval doesn't have a valid Power to check!"))
+                return evalVar;
 
             EvalVar contextVar = data.ContextVars[(int)getPowerRankProto.Context].Var;
-            if (contextVar.Type != EvalReturnType.EntityPtr)
-                return Logger.WarnReturn(evalVar, "GetPowerRank was given a context variable that is not an EntityPtr.");
+            if (!Verify.IsTrue(contextVar.Type == EvalReturnType.EntityPtr, "GetPowerRank was given a context variable that is not an EntityPtr."))
+                return evalVar;
 
             evalVar.SetInt(0);
 
-            if (FromValue(contextVar, out Entity entity))
-                if (entity is Agent agent)
-                    evalVar.SetInt(agent.GetPowerRank(getPowerRankProto.Power));
+            if (FromValue(contextVar, out Entity entity) && entity is Agent agent)
+                evalVar.SetInt(agent.GetPowerRank(getPowerRankProto.Power));
 
             return evalVar;
         }
 
-        private static EvalVar RunCalcPowerRank(EvalPrototype evalProto, EvalContextData data)
-        {
-            EvalVar evalVar = new ();
-            evalVar.SetError();
-            if (evalProto is not CalcPowerRankPrototype calcPowerRankProto) return evalVar;
-            
-            if (calcPowerRankProto.Power == PrototypeId.Invalid)
-                return Logger.WarnReturn(evalVar, "CalcPowerRank Eval doesn't have a valid Power to check!");
-
-            EvalVar contextVar = data.ContextVars[(int)calcPowerRankProto.Context].Var;
-            if (contextVar.Type != EvalReturnType.EntityPtr)
-                return Logger.WarnReturn(evalVar, "CalcPowerRank was given a context variable that is not an EntityPtr.");
-
-            evalVar.SetInt(0);
-
-            if (FromValue(contextVar, out Entity entity))
-                if (entity is Agent agent)
-                {
-                    EvalVar defaultContextVar = GetEvalVarFromContext(EvalContext.Default, data, false, false);
-                    PropertyCollection defaultContextProps = null;
-                    if (defaultContextVar.Type == EvalReturnType.PropertyCollectionPtr)
-                        FromValue(defaultContextVar, out defaultContextProps, data.Game);
-
-                    EvalVar var1ContextVar = GetEvalVarFromContext(EvalContext.Var1, data, false, false);
-                    PropertyCollection var1ContextProps = null;
-                    if (var1ContextVar.Type == EvalReturnType.PropertyCollectionPtr)
-                        FromValue(var1ContextVar, out var1ContextProps, data.Game);
-
-                    bool showNextRank = 
-                        (defaultContextProps != null && defaultContextProps[PropertyEnum.PowerRankShowNextRank]) 
-                        || (var1ContextProps != null && var1ContextProps[PropertyEnum.PowerRankShowNextRank]);
-
-                    if (agent.GetPowerProgressionInfo(calcPowerRankProto.Power, out PowerProgressionInfo powerInfo) == false)
-                        return evalVar;
-
-                    int powerRank = agent.ComputePowerRank(ref powerInfo, agent.GetPowerSpecIndexActive(), out _);
-                    if (showNextRank) powerRank++;
-
-                    evalVar.SetInt(powerRank);
-                }
-
-            return evalVar;
-        }
-
-        private static EvalVar RunIsInParty(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunCalcPowerRank(CalcPowerRankPrototype calcPowerRankProto, EvalContextData data)
         {
             EvalVar evalVar = new();
             evalVar.SetError();
-            if (evalProto is not IsInPartyPrototype isInPartyProto) return evalVar;
+
+            if (!Verify.IsNotNull(calcPowerRankProto)) return evalVar;
+
+            if (!Verify.IsTrue(calcPowerRankProto.Power != PrototypeId.Invalid, "CalcPowerRank Eval doesn't have a valid Power to check!"))
+                return evalVar;
+
+            EvalVar contextVar = data.ContextVars[(int)calcPowerRankProto.Context].Var;
+            if (!Verify.IsTrue(contextVar.Type == EvalReturnType.EntityPtr, "CalcPowerRank was given a context variable that is not an EntityPtr."))
+                return evalVar;
+
+            evalVar.SetInt(0);
+
+            if (FromValue(contextVar, out Entity entity) && entity is Agent agent)
+            {
+                EvalVar defaultContextVar = GetEvalVarFromContext(EvalContext.Default, data, false, false);
+                PropertyCollection defaultContextProps = null;
+                if (defaultContextVar.Type == EvalReturnType.PropertyCollectionPtr)
+                    FromValue(defaultContextVar, out defaultContextProps, data.Game);
+
+                EvalVar var1ContextVar = GetEvalVarFromContext(EvalContext.Var1, data, false, false);
+                PropertyCollection var1ContextProps = null;
+                if (var1ContextVar.Type == EvalReturnType.PropertyCollectionPtr)
+                    FromValue(var1ContextVar, out var1ContextProps, data.Game);
+
+                bool showNextRank =
+                    (defaultContextProps != null && defaultContextProps[PropertyEnum.PowerRankShowNextRank])
+                    || (var1ContextProps != null && var1ContextProps[PropertyEnum.PowerRankShowNextRank]);
+
+                if (!Verify.IsTrue(agent.GetPowerProgressionInfo(calcPowerRankProto.Power, out PowerProgressionInfo powerInfo))) return evalVar;
+
+                int powerRank = agent.ComputePowerRank(ref powerInfo, agent.GetPowerSpecIndexActive(), out _);
+                if (showNextRank)
+                    powerRank++;
+
+                evalVar.SetInt(powerRank);
+            }
+
+            return evalVar;
+        }
+
+        private static EvalVar RunIsInParty(IsInPartyPrototype isInPartyProto, EvalContextData data)
+        {
+            EvalVar evalVar = new();
+            evalVar.SetError();
+
+            if (!Verify.IsNotNull(isInPartyProto)) return evalVar;
 
             EvalVar contextVar = data.ContextVars[(int)isInPartyProto.Context].Var;
-            if (contextVar.Type != EvalReturnType.EntityPtr)
-                return Logger.WarnReturn(evalVar, "GetPartySize was given a context variable that is not an EntityPtr.");
+            if (!Verify.IsTrue(contextVar.Type == EvalReturnType.EntityPtr, "GetPartySize was given a context variable that is not an EntityPtr."))
+                return evalVar;
 
             evalVar.SetBool(false);
 
@@ -3043,58 +3088,61 @@ namespace MHServerEmu.Games.Properties.Evals
             return evalVar;
         }
 
-        private static EvalVar RunGetDamageReductionPct(EvalPrototype evalProto, EvalContextData data)
-        {
-            EvalVar evalVar = new ();
-            evalVar.SetError();
-            if (evalProto is not GetDamageReductionPctPrototype getDamageReductionPctProto) return evalVar;
-
-            EvalVar contextVar = data.ContextVars[(int)getDamageReductionPctProto.Context].Var;
-            if (contextVar.Type != EvalReturnType.EntityPtr)
-                return Logger.WarnReturn(evalVar, "GetDamageReductionPct was given a context variable that is not an EntityPtr.");
-
-            evalVar.SetFloat(0f);
-
-            if (FromValue(contextVar, out Entity entity))
-                if (entity is WorldEntity worldEntity)
-                {
-                    float defenseRating = worldEntity.GetDefenseRating(getDamageReductionPctProto.VsDamageType);
-                    evalVar.SetFloat(worldEntity.GetDamageReductionPct(defenseRating, worldEntity.Properties, null));
-                }
-
-            return evalVar;
-        }
-
-        private static EvalVar RunGetDistanceToEntity(EvalPrototype evalProto, EvalContextData data)
-        {
-            EvalVar evalVar = new ();
-            evalVar.SetError();
-            if (evalProto is not GetDistanceToEntityPrototype getDistanceToEntityProto) return evalVar;
-
-            EvalVar sourceVar = data.ContextVars[(int)getDistanceToEntityProto.SourceEntity].Var;
-            if (sourceVar.Type != EvalReturnType.EntityPtr)
-                return Logger.WarnReturn(evalVar, "GetDistanceToEntity was given a source context variable that is not an EntityPtr.");
-
-            EvalVar targetVar = data.ContextVars[(int)getDistanceToEntityProto.TargetEntity].Var;
-            if (targetVar.Type != EvalReturnType.EntityPtr)
-                return Logger.WarnReturn(evalVar, "GetDistanceToEntity was given a target context variable that is not an EntityPtr.");
-
-            evalVar.SetFloat(0f);
-
-            if (FromValue(sourceVar, out Entity sourceEntity) && FromValue(targetVar, out Entity targetEntity))
-                if (sourceEntity is WorldEntity sourceWorldEntity && targetEntity is WorldEntity targetWorldEntity)
-                    evalVar.SetFloat(sourceWorldEntity.GetDistanceTo(targetWorldEntity, getDistanceToEntityProto.EdgeToEdge));
-
-            return evalVar;
-        }
-
-        private static EvalVar RunIsDynamicCombatLevelEnabled(EvalPrototype evalProto, EvalContextData data)
+        private static EvalVar RunGetDamageReductionPct(GetDamageReductionPctPrototype getDamageReductionPctProto, EvalContextData data)
         {
             EvalVar evalVar = new();
             evalVar.SetError();
-            evalVar.SetBool(true);
+
+            if (!Verify.IsNotNull(getDamageReductionPctProto)) return evalVar;
+
+            EvalVar contextVar = data.ContextVars[(int)getDamageReductionPctProto.Context].Var;
+            if (!Verify.IsTrue(contextVar.Type == EvalReturnType.EntityPtr, "GetDamageReductionPct was given a context variable that is not an EntityPtr."))
+                return evalVar;
+
+            evalVar.SetFloat(0f);
+
+            if (FromValue(contextVar, out Entity entity) && entity is WorldEntity worldEntity)
+            {
+                float defenseRating = worldEntity.GetDefenseRating(getDamageReductionPctProto.VsDamageType);
+                evalVar.SetFloat(worldEntity.GetDamageReductionPct(defenseRating, worldEntity.Properties, null));
+            }
+
             return evalVar;
         }
 
+        private static EvalVar RunGetDistanceToEntity(GetDistanceToEntityPrototype getDistanceToEntityProto, EvalContextData data)
+        {
+            EvalVar evalVar = new();
+            evalVar.SetError();
+
+            EvalVar sourceVar = data.ContextVars[(int)getDistanceToEntityProto.SourceEntity].Var;
+            if (!Verify.IsTrue(sourceVar.Type == EvalReturnType.EntityPtr, "GetDistanceToEntity was given a context variable that is not an EntityPtr."))
+                return evalVar;
+
+            EvalVar targetVar = data.ContextVars[(int)getDistanceToEntityProto.TargetEntity].Var;
+            if (!Verify.IsTrue(targetVar.Type == EvalReturnType.EntityPtr, "GetDistanceToEntity was given a context variable that is not an EntityPtr."))
+                return evalVar;
+
+            evalVar.SetFloat(0f);
+
+            FromValue(sourceVar, out Entity sourceEntity);
+            FromValue(targetVar, out Entity targetEntity);
+
+            if (sourceEntity is WorldEntity sourceWorldEntity && targetEntity is WorldEntity targetWorldEntity)
+                evalVar.SetFloat(sourceWorldEntity.GetDistanceTo(targetWorldEntity, getDistanceToEntityProto.EdgeToEdge));                    
+
+            return evalVar;
+        }
+
+        private static EvalVar RunIsDynamicCombatLevelEnabled(IsDynamicCombatLevelEnabledPrototype isDynamicCombatLevelEnabledProto, EvalContextData data)
+        {
+            EvalVar evalVar = new();
+            evalVar.SetError();
+
+            // NOTE: Get Game from context data and check the DCL flag in AdminCommandManager for pre-BUE versions of the game.
+            evalVar.SetBool(true);
+
+            return evalVar;
+        }
     }
 }
