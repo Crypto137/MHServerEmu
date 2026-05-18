@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2026.05.18 09:54:30 UTC` using server version `1.0.1`.
+This list was automatically generated on `2026.05.18 10:03:54 UTC` using server version `1.0.1`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -79,7 +79,7 @@ Debug commands for development.
 | !debug setmarker [MarkerRef] | No description available.                                                                                               | Admin      | Any            |
 | !debug spawn [on/off]        | No description available.                                                                                               | Admin      | Any            |
 | !debug test                  | Runs test code.                                                                                                         | Admin      | Any            |
-| !debug verifyreport          | Returns a report on verify failures encountered since the last server restart.                                          | Moderator  | Client         |
+| !debug verifyreport          | Returns a report on verify failures encountered since the last server restart.                                          | Admin      | Any            |
 
 ## Entity
 Entity management commands.

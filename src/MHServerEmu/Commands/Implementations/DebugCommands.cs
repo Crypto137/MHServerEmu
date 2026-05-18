@@ -256,12 +256,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("verifyreport")]
         [CommandDescription("Returns a report on verify failures encountered since the last server restart.")]
-        [CommandUserLevel(AccountUserLevel.Moderator)]
-        [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string VerifyReport(string[] @params, NetClient client)
         {
-            PlayerConnection playerConnection = (PlayerConnection)client;
-            Game game = playerConnection.Game;
             string timestamp = DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat);
 
             Dictionary<(string File, int Line), int> knownFailures = new();
@@ -280,13 +277,20 @@ namespace MHServerEmu.Commands.Implementations
 
             string filePath = $"Download/VerifyReport_{timestamp}.txt";
 
-            playerConnection.SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
-                .SetResponse($"Saved verify report to {filePath}")
-                .SetFilerelativepath(filePath)
-                .SetFilecontents(sb.ToString())
-                .Build());
+            if (client is PlayerConnection playerConnection)
+            {
+                playerConnection.SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
+                    .SetResponse($"Saved verify report to {filePath}")
+                    .SetFilerelativepath(filePath)
+                    .SetFilecontents(sb.ToString())
+                    .Build());
 
-            return string.Empty;
+                return string.Empty;
+            }
+            else
+            {
+                return sb.ToString();
+            }
         }
     }
 }
