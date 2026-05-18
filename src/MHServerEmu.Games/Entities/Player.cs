@@ -2904,6 +2904,8 @@ namespace MHServerEmu.Games.Entities
 
         public bool DiscoverEntity(WorldEntity worldEntity, bool updateInterest, bool syncWithParty = true)
         {
+            if (!Verify.IsNotNull(worldEntity)) return false;
+
             MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(worldEntity);
             if (!Verify.IsNotNull(mapDiscoveryData)) return false;
 
@@ -2933,6 +2935,8 @@ namespace MHServerEmu.Games.Entities
 
         public bool UndiscoverEntity(WorldEntity worldEntity, bool updateInterest)
         {
+            if (!Verify.IsNotNull(worldEntity)) return false;
+
             MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(worldEntity);
             if (!Verify.IsNotNull(mapDiscoveryData)) return false;
 
