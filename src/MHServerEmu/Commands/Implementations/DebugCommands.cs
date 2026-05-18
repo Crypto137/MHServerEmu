@@ -1,4 +1,5 @@
 ﻿using System.Runtime;
+using System.Text;
 using Gazillion;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Helpers;
@@ -29,6 +30,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandUserLevel(AccountUserLevel.Admin)]
         public string Test(string[] @params, NetClient client)
         {
+            Verify.IsTrue(false);
             return string.Empty;
         }
 
@@ -235,7 +237,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandDescription("Returns a report representing the state of the ScheduledEventPool in the current game.")]
         [CommandUserLevel(AccountUserLevel.Moderator)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string GetEventPoolStatus(string[] @params, NetClient client)
+        public string GetEventPoolReport(string[] @params, NetClient client)
         {
             PlayerConnection playerConnection = (PlayerConnection)client;
             Game game = playerConnection.Game;
@@ -247,6 +249,41 @@ namespace MHServerEmu.Commands.Implementations
                 .SetResponse($"Saved scheduled event pool report for the current game to {filePath}")
                 .SetFilerelativepath(filePath)
                 .SetFilecontents(reportString)
+                .Build());
+
+            return string.Empty;
+        }
+
+        [Command("verifyreport")]
+        [CommandDescription("Returns a report on verify failures encountered since the last server restart.")]
+        [CommandUserLevel(AccountUserLevel.Moderator)]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string VerifyReport(string[] @params, NetClient client)
+        {
+            PlayerConnection playerConnection = (PlayerConnection)client;
+            Game game = playerConnection.Game;
+            string timestamp = DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat);
+
+            Dictionary<(string File, int Line), int> knownFailures = new();
+            Verify.GetKnownFailures(knownFailures);
+
+            int totalCount = 0;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"Verify Report for {timestamp}");
+            foreach (var kvp in knownFailures)
+            {
+                sb.AppendLine($"    {kvp.Key.File}:{kvp.Key.Line} = {kvp.Value}");
+                totalCount += kvp.Value;
+            }
+            sb.AppendLine($"TOTAL: {totalCount} failures from {knownFailures.Count} sources");
+
+            string filePath = $"Download/VerifyReport_{timestamp}.txt";
+
+            playerConnection.SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
+                .SetResponse($"Saved verify report to {filePath}")
+                .SetFilerelativepath(filePath)
+                .SetFilecontents(sb.ToString())
                 .Build());
 
             return string.Empty;

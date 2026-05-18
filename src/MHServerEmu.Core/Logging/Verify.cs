@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Core.Logging
 {
@@ -9,7 +10,7 @@ namespace MHServerEmu.Core.Logging
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly HashSet<(string, int)> KnownFailures = new();
+        private static readonly Dictionary<(string File, int Line), int> KnownFailures = new();
 
         // This mimics the Assert API used in things like xunit.
 
@@ -148,6 +149,18 @@ namespace MHServerEmu.Core.Logging
         #endregion
 
         /// <summary>
+        /// Adds counts for verify failures encountered since the last server restart to the provided <see cref="Dictionary{TKey, TValue}"/>.
+        /// </summary>
+        public static void GetKnownFailures(Dictionary<(string File, int Line), int> outKnownFailures)
+        {
+            lock (KnownFailures)
+            {
+                foreach (var kvp in KnownFailures)
+                    outKnownFailures.Add(kvp.Key, kvp.Value);
+            }
+        }
+
+        /// <summary>
         /// Logs a message with the specified <see cref="LoggingLevel"/> when a verify check fails.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -160,7 +173,7 @@ namespace MHServerEmu.Core.Logging
             bool isNew;
 
             lock (KnownFailures)
-                isNew = KnownFailures.Add((file, line));
+                KnownFailures.GetValueRefOrAddDefault((file, line), out isNew)++;
 
             if (isNew)
                 stackTrace = $" StackTrace:\n{Environment.StackTrace}";
