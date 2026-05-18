@@ -9,6 +9,8 @@ namespace MHServerEmu.Core.Logging
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private static readonly HashSet<(string, int)> KnownFailures = new();
+
         // This mimics the Assert API used in things like xunit.
 
         #region IsTrue
@@ -152,7 +154,18 @@ namespace MHServerEmu.Core.Logging
         private static void VerifyFail(string message, string member, string file, int line, LoggingLevel level)
         {
             // This imitates Gazillion::Verify::VerifyFail(). We can potentially do other things with these here like Gazillion.
-            Logger.Log(level, $"Verify failed: {message}\n\tFile:{file} Line:{line} Member:{member}()");
+
+            // Include a stack trace when a verify is encountered for the first time on a particular line.
+            string stackTrace = string.Empty;
+            bool isNew;
+
+            lock (KnownFailures)
+                isNew = KnownFailures.Add((file, line));
+
+            if (isNew)
+                stackTrace = $" StackTrace:\n{Environment.StackTrace}";
+
+            Logger.Log(level, $"Verify failed: {message}\n\tFile:{file} Line:{line} Member:{member}(){stackTrace}");
         }
     }
 }
