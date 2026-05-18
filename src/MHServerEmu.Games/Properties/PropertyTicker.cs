@@ -13,8 +13,6 @@ namespace MHServerEmu.Games.Properties
         private const int InfiniteTicks = -1;
         public const ulong InvalidId = 0;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Game _game;
         private readonly EventPointer<TickEvent> _tickEvent = new();
 
@@ -82,10 +80,9 @@ namespace MHServerEmu.Games.Properties
             return true;
         }
 
-        public bool Start(TimeSpan duration, bool isPaused)
+        public void Start(TimeSpan duration, bool isPaused)
         {
-            if (IsTicking())
-                return Logger.WarnReturn(false, $"Start(): Ticker [{this}] is already ticking");
+            if (!Verify.IsTrue(IsTicking() == false)) return;
 
             // A condition's duration does not run out when it is paused, so we get infinite ticks
             _tickingStartTime = _game.CurrentTime;
@@ -96,22 +93,17 @@ namespace MHServerEmu.Games.Properties
                 Tick(false);
             else
                 ScheduleTick(_updateInterval, false);
-
-            return true;
         }
 
-        public bool Stop(bool tickOnStop)
+        public void Stop(bool tickOnStop)
         {
-            if (IsTicking() == false)
-                return Logger.WarnReturn(false, $"Stop(): Ticker [{this}] is not ticking");
+            if (!Verify.IsTrue(IsTicking())) return;
 
             _tickingStartTime = TimeSpan.Zero;
             CancelScheduledTick();
 
             if (tickOnStop && _remainingTicks > 0)
                 Tick(true);
-
-            return true;
         }
 
         public void Update(TimeSpan duration, bool isPaused)
@@ -137,7 +129,7 @@ namespace MHServerEmu.Games.Properties
                 return false;
 
             WorldEntity target = _game.EntityManager.GetEntity<WorldEntity>(_targetId);
-            if (target == null) return Logger.WarnReturn(false, "IsTickOnStart(): target == null");
+            if (!Verify.IsNotNull(target)) return false;
 
             // Apply on start only to condition ticker that target their owner
             Condition condition = target.ConditionCollection?.GetCondition(conditionId);
@@ -224,15 +216,13 @@ namespace MHServerEmu.Games.Properties
             return tickDurationSeconds;
         }
 
-        private bool ScheduleTick(TimeSpan delay, bool isLastTick)
+        private void ScheduleTick(TimeSpan delay, bool isLastTick)
         {
-            if (IsTicking() == false) return Logger.WarnReturn(false, "ScheduleTick(): IsTicking() == false");
-            if (_tickEvent.IsValid) return Logger.WarnReturn(false, "ScheduleTick(): _tickEvent.IsValid");
+            if (!Verify.IsTrue(IsTicking())) return;
+            if (!Verify.IsTrue(_tickEvent.IsValid == false)) return;
 
             _game.GameEventScheduler.ScheduleEvent(_tickEvent, delay);
             _tickEvent.Get().Initialize(this, isLastTick);
-
-            return true;
         }
 
         private bool CancelScheduledTick()

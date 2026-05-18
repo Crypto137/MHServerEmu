@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
@@ -118,14 +117,19 @@ namespace MHServerEmu.Games.Properties
                     }
                 }
 
-                // All mixins should have a matching info. If this goes off, something went wrong
-                if (infoFound == false)
-                    Logger.Warn($"Failed to find matching property info for property mixin {propertyName}");
+                Verify.IsTrue(infoFound, $"Property mixin {propertyName} failed to find PropertyInfo with matching name.");
             }
 
             // Preload infos
-            foreach (PropertyInfo propertyInfo in _propertyInfos)
-                LoadPropertyInfo(propertyInfo);                
+            for (int i = 0; i < _propertyInfos.Length; i++)
+            {
+                PropertyInfo info = _propertyInfos[i];
+                
+                if (!Verify.IsTrue(info.Id != PropertyId.Invalid, $"Property enum {(PropertyEnum)i} was left unbound to a PropertyInfo."))
+                    continue;
+
+                Verify.IsTrue(LoadPropertyInfo(info));
+            }
 
             // Preload property default prototypes
             foreach (PrototypeId propertyPrototypeRef in dataDirectory.IteratePrototypesInHierarchy<PropertyPrototype>())
@@ -156,11 +160,8 @@ namespace MHServerEmu.Games.Properties
                     PropertyInfo checkInfo = _propertyInfos[(int)checkStack.Pop().Enum];
                     foreach (PropertyId evalId in checkInfo.DependentEvals)
                     {
-                        if (evalId == info.Id)
-                        {
-                            Logger.Warn($"Initialize(): Cyclic property eval dependency found in property {info.PropertyInfoName}");
+                        if (!Verify.IsTrue(evalId != info.Id, $"Cyclic property eval dependency found in property {info.PropertyName}"))
                             continue;
-                        }
 
                         checkStack.Push(evalId);
                     }
@@ -168,14 +169,13 @@ namespace MHServerEmu.Games.Properties
             }
 
             // Calculate default values for enum properties
-            List<bool> evalDoneList = new(_propertyInfos.Length);
-            evalDoneList.Fill(false, _propertyInfos.Length);
+            bool[] checkedEvals = new bool[_propertyInfos.Length];
 
             Queue<PropertyEnum> evalQueue = new();
             foreach (PropertyInfo info in _propertyInfos)
             {
-                if (info.IsEvalProperty == false) continue;
-                evalQueue.Enqueue(info.Id.Enum);
+                if (info.IsEvalProperty)
+                    evalQueue.Enqueue(info.Id.Enum);
             }
 
             using PropertyCollection dummyCollection = ObjectPoolManager.Instance.Get<PropertyCollection>();
@@ -194,7 +194,7 @@ namespace MHServerEmu.Games.Properties
                 {
                     int dependencyIndex = (int)dependencyId.Enum;
                     PropertyInfo dependencyInfo = _propertyInfos[dependencyIndex];
-                    if (dependencyInfo.IsEvalProperty && evalDoneList[dependencyIndex] == false)
+                    if (dependencyInfo.IsEvalProperty && checkedEvals[dependencyIndex] == false)
                     {
                         hasInput = false;
                         break;
@@ -211,7 +211,7 @@ namespace MHServerEmu.Games.Properties
                 if (info.IsEvalAlwaysCalculated == false)
                     info.SetEvalDefaultValue(PropertyCollection.EvalProperty(info.Id, evalContext));
 
-                evalDoneList[(int)evalPropertyEnum] = true;
+                checkedEvals[(int)evalPropertyEnum] = true;
             }
 
             // Finish initialization
@@ -221,9 +221,8 @@ namespace MHServerEmu.Games.Properties
 
         public PropertyInfo LookupPropertyInfo(PropertyEnum propertyEnum)
         {
-            if (propertyEnum == PropertyEnum.Invalid)
-                return Logger.WarnReturn<PropertyInfo>(null, "LookupPropertyInfo(): propertyEnum == PropertyEnum.Invalid");
-
+            Debug.Assert(propertyEnum != PropertyEnum.Invalid);
+            Debug.Assert((int)propertyEnum < _propertyInfos.Length);
             return _propertyInfos[(int)propertyEnum];
         }
 

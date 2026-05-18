@@ -11,8 +11,6 @@ namespace MHServerEmu.Games.Properties
     /// </summary>
     public class PropertyTickerManager
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Dictionary<ulong, PropertyTicker> _tickerDict = new();
 
         private Entity _owner;
