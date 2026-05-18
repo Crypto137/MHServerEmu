@@ -917,6 +917,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (base.OnPowerUnassigned(power) == false)
                 return false;
 
+            if (_pendingAction.PowerProtoRef == power.PrototypeDataRef)
+                CancelPendingAction();
+
             // This fixes PowerChargesMaxBonusForKwd.
             if (GetPowerChargesMax(power.PrototypeDataRef) > 0)
                 Properties.RemoveProperty(new(PropertyEnum.PowerChargesMaxBonus, power.PrototypeDataRef));
