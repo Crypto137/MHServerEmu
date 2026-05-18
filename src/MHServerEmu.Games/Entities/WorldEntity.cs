@@ -3062,8 +3062,10 @@ namespace MHServerEmu.Games.Entities
 
                     foreach (PrototypeId powerProtoRef in modProto.PassivePowers)
                     {
-                        // Unassign power if it's already there
-                        UnassignPower(powerProtoRef);
+                        // Unassign power if it's already there. This may be a world entity without a power collection
+                        // that gets a region-wide affix power assigned to it (e.g. spawners in the Trainyard DR scenario).
+                        if (PowerCollection != null && HasPowerInPowerCollection(powerProtoRef))
+                            Verify.IsTrue(UnassignPower(powerProtoRef));
 
                         Verify.IsNotNull(AssignPower(powerProtoRef, indexProps), $"Failed to assign passive power {powerProtoRef.GetName()} for mod {modProto}");
                     }
