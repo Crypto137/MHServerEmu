@@ -291,9 +291,7 @@ namespace MHServerEmu.Games.Entities
                         position = worldEntity.FloorToCenter(position);
                     }
 
-                    // NOTE: While this is not client-accurate, if we don't clean up the entity here, it will stay in the message handler collection and cause a memory leak
-                    if (worldEntity.EnterWorld(region, position, settings.Orientation, settings) == false)
-                        return false;
+                    worldEntity.EnterWorld(region, position, settings.Orientation, settings);
                 }
             }
 

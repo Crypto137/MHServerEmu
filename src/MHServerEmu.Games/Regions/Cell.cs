@@ -393,7 +393,14 @@ namespace MHServerEmu.Games.Regions
             }
 
             CalcMarkerTransform(entityMarker, transform, options, out Vector3 entityPosition, out Orientation entityOrientation);
-            if (RegionBounds.Intersects(entityPosition) == false) entityPosition.RoundToNearestInteger();
+            if (RegionBounds.Intersects(entityPosition) == false)
+            {
+                entityPosition.RoundToNearestInteger();
+
+                // Some marker prototypes have invalid positions, resulting in entities being spawned out of bounds. Ignore them.
+                if (RegionBounds.Intersects(entityPosition) == false)
+                    return;
+            }
 
             var region = Region;
             var destructibleKeyword = GameDatabase.KeywordGlobalsPrototype.DestructibleKeywordPrototype;            
