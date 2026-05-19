@@ -2449,47 +2449,48 @@ namespace MHServerEmu.Games.Entities
             AIController?.OnAIPowerEnded(power.PrototypeDataRef, flags);
         }
 
-        public override bool OnNegativeStatusEffectApplied(ulong conditionId)
+        public override void OnNegativeStatusEffectApplied(ulong conditionId)
         {
             base.OnNegativeStatusEffectApplied(conditionId);
 
             // Apply CCReactCondition (if this agent has one)
             PrototypeId ccReactConditionProtoRef = AgentPrototype.CCReactCondition;
             if (ccReactConditionProtoRef == PrototypeId.Invalid)
-                return true;
+                return;
 
             Condition negativeStatusCondition = ConditionCollection.GetCondition(conditionId);
-            if (!Verify.IsNotNull(negativeStatusCondition)) return false;
+            if (!Verify.IsNotNull(negativeStatusCondition)) return;
 
             // Skip hit react conditions
             if (negativeStatusCondition.IsHitReactCondition())
-                return true;
+                return;
 
             // Skip self-applied conditions
             if (negativeStatusCondition.ConditionPrototype.Scope == ConditionScopeType.User)
-                return true;
+                return;
 
             ConditionPrototype ccReactConditionProto = ccReactConditionProtoRef.As<ConditionPrototype>();
-            if (!Verify.IsNotNull(ccReactConditionProto)) return false;
+            if (!Verify.IsNotNull(ccReactConditionProto)) return;
 
             using var negativeStatusListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> negativeStatusList);
-            if (!Verify.IsTrue(negativeStatusCondition.IsANegativeStatusEffect(negativeStatusList))) return false;
+            if (!Verify.IsTrue(negativeStatusCondition.IsANegativeStatusEffect(negativeStatusList))) return;
 
-            // Apply only when this negative status condition has movement / cast speed decreases and no other statuses
+            // Skip negative status conditions that only have movement / cast speed decreases and no other statuses
             bool hasMovementSpeedDecrease = negativeStatusCondition.Properties.HasProperty(PropertyEnum.MovementSpeedDecrPct);
             bool hasCastSpeedDecrease = negativeStatusCondition.Properties.HasProperty(PropertyEnum.CastSpeedDecrPct);
 
-            if (((hasMovementSpeedDecrease || hasCastSpeedDecrease) && negativeStatusList.Count == 1) ||
-                ((hasMovementSpeedDecrease && hasCastSpeedDecrease) && negativeStatusList.Count == 2))
-            {
-                TimeSpan duration = ccReactConditionProto.GetDuration(null, this);
+            if (negativeStatusList.Count == 1 && (hasMovementSpeedDecrease || hasCastSpeedDecrease))
+                return;
 
-                Condition ccReactCondition = ConditionCollection.AllocateCondition();
-                ccReactCondition.InitializeFromConditionPrototype(ConditionCollection.NextConditionId, Game, Id, Id, Id, ccReactConditionProto, duration);
-                ConditionCollection.AddCondition(ccReactCondition);
-            }
+            if (negativeStatusList.Count == 2 && hasMovementSpeedDecrease && hasCastSpeedDecrease)
+                return;
 
-            return true;
+            // Apply
+            TimeSpan duration = ccReactConditionProto.GetDuration(null, this);
+
+            Condition ccReactCondition = ConditionCollection.AllocateCondition();
+            ccReactCondition.InitializeFromConditionPrototype(ConditionCollection.NextConditionId, Game, Id, Id, Id, ccReactConditionProto, duration);
+            ConditionCollection.AddCondition(ccReactCondition);
         }
 
         protected override void OnDamaged(PowerResults powerResults)

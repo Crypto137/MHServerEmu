@@ -3792,10 +3792,9 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnPowerEnded(Power power, EndPowerFlags flags) { }
         public virtual void OnConditionRemoved(Condition condition) { }
 
-        public virtual bool OnNegativeStatusEffectApplied(ulong conditionId)
+        public virtual void OnNegativeStatusEffectApplied(ulong conditionId)
         {
             TryActivateOnNegStatusAppliedProcs();
-            return true;
         }
 
         public virtual void OnOverlapBegin(WorldEntity overlappedWith, Vector3 thisPosition, Vector3 otherPosition)
