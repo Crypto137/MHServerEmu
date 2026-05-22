@@ -319,6 +319,8 @@ namespace MHServerEmu.Games.Powers
             ScheduleIndexPropertiesReapplication(PowerIndexPropertyFlags.CharacterLevel | PowerIndexPropertyFlags.CombatLevel);
         }
 
+        public virtual void OnPayloadInit(PowerPayload payload) { }
+
         public virtual void OnDeallocate()
         {
             if (_activationPhase != PowerActivationPhase.Inactive)
@@ -860,7 +862,8 @@ namespace MHServerEmu.Games.Powers
             if (triggeredPower == null) return Logger.WarnReturn(false,
                 $"ScheduledActivateCallback(): Couldn't find the power to activate for a scheduled activation. Owner: {Owner}\nPower ref hash ID: {triggeredPowerProtoRef}");
 
-            return DoActivateComboPower(triggeredPower, triggeredPowerEvent, ref settings);
+            DoActivateComboPower(triggeredPower, triggeredPowerEvent, ref settings);
+            return true;
         }
 
         public virtual bool ApplyPower(PowerApplication powerApplication)
