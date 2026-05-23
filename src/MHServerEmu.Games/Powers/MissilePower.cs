@@ -119,19 +119,17 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        protected override bool OnEndPowerCancelEvents(EndPowerFlags flags)
+        protected override void OnEndPowerCancelEvents(EndPowerFlags flags)
         {
             base.OnEndPowerCancelEvents(flags);
 
             if (flags.HasFlag(EndPowerFlags.ExplicitCancel))
             {
                 var prototype = MissilePowerPrototype;
-                if (prototype == null) return false;
+                if (prototype == null) return;
                 if (prototype.MissileAllowCreationAfterPwrEnds == false)
                     CancelCreationDelayEvent();
             }
-
-            return true;
         }
 
         private MissileCreateResult CreateMissileLooper(PowerApplication powerApplication)

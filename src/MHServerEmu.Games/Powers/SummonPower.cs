@@ -165,7 +165,7 @@ namespace MHServerEmu.Games.Powers
                 DestroySummoned(false);
         }
 
-        protected override bool SetToggleState(bool value, bool doNotStartCooldown = false)
+        protected override void SetToggleState(bool value, bool doNotStartCooldown = false)
         {
             base.SetToggleState(value, doNotStartCooldown);
 
@@ -174,8 +174,6 @@ namespace MHServerEmu.Games.Powers
                 if (SummonPowerPrototype?.SummonsLiveWhilePowerActive == true)
                     DestroySummoned(false);
             }
-
-            return true;
         }
 
         protected override PowerUseResult RunExtraActivation(ref PowerActivationSettings settings)

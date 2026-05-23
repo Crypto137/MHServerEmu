@@ -1125,7 +1125,7 @@ namespace MHServerEmu.Games.Powers
             if (powerProto.CanBeInterrupted == false)
                 return false;
 
-            if (_endPowerEvent.IsValid && _endPowerEvent.Get().Flags.HasFlag(EndPowerFlags.ChanneledLoopEnd))
+            if (_powerEndEvent.IsValid && _powerEndEvent.Get().Flags.HasFlag(EndPowerFlags.ChanneledLoopEnd))
                 return false;
 
             return true;
