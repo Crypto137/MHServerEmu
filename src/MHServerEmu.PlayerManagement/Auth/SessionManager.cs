@@ -243,7 +243,8 @@ namespace MHServerEmu.PlayerManagement.Auth
                 if (_clientDict.Remove(sessionId) == false)
                     Logger.Warn($"RemoveActiveSession(): No client for sessionId {sessionId:X}");
 
-                _platformTicketManager.RemoveToken(session.PlatformTicket);
+                if (session != null)
+                    _platformTicketManager.RemoveToken(session.PlatformTicket);
             }
         }
 
