@@ -58,8 +58,6 @@ namespace MHServerEmu.Games.Powers.Conditions
 
     public class Condition : IKeyworded
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         // NOTE: If you add any new fields here, also add them to Clear()
 
         private ConditionSerializationFlags _serializationFlags;
@@ -242,7 +240,7 @@ namespace MHServerEmu.Games.Powers.Conditions
             }
             else
             {
-                if (owner == null) return Logger.WarnReturn(false, "Serialize(): owner == null");
+                if (!Verify.IsNotNull(owner)) return false;
 
                 uint serializationFlags = 0;
                 success &= Serializer.Transfer(archive, ref serializationFlags);
@@ -301,8 +299,7 @@ namespace MHServerEmu.Games.Powers.Conditions
                 }
 
                 // Make sure we were able to find our prototype, or things are going to go very wrong
-                if (_conditionPrototype == null)
-                    return Logger.ErrorReturn(false, $"Serialize(): Failed to find the ConditionPrototype reference during unpacking");
+                if (!Verify.IsNotNull(_conditionPrototype)) return false;
 
                 // Default owner asset is AssetId.Invalid
                 _ownerAssetRef = AssetId.Invalid;
@@ -447,8 +444,8 @@ namespace MHServerEmu.Games.Powers.Conditions
                 WorldEntity creator = payload.Game.EntityManager.GetEntity<WorldEntity>(_creatorId);
                 WorldEntity target = payload.Game.EntityManager.GetEntity<WorldEntity>(payload.TargetId);
 
-                if (GenerateConditionProperties(Properties, conditionProto, payload.Properties, creator, target, payload.Game) == false)
-                    Logger.Warn($"InitializeFromPowerMixinPrototype(): Failed to generate properties for [{this}]");
+                Verify.IsTrue(GenerateConditionProperties(Properties, conditionProto, payload.Properties, creator, target, payload.Game),
+                    $"Failed to generate properties for [{this}]");
             }
 
             return true;
@@ -495,8 +492,8 @@ namespace MHServerEmu.Games.Powers.Conditions
                 WorldEntity creator = game.EntityManager.GetEntity<WorldEntity>(_creatorId);
                 WorldEntity target = game.EntityManager.GetEntity<WorldEntity>(targetId);
 
-                if (GenerateConditionProperties(Properties, conditionProto, null, creator, target, game) == false)
-                    Logger.Warn($"InitializeFromConditionPrototype(): Failed to generate properties for [{this}]");
+                Verify.IsTrue(GenerateConditionProperties(Properties, conditionProto, null, creator, target, game),
+                    $"Failed to generate properties for [{this}]");
             }
 
             return true;
@@ -540,7 +537,7 @@ namespace MHServerEmu.Games.Powers.Conditions
 
             _conditionPrototypeRef = conditionStore.ConditionProtoRef;
             _conditionPrototype = _conditionPrototypeRef.As<ConditionPrototype>();
-            if (_conditionPrototype == null) return Logger.ErrorReturn(false, "InitializeFromConditionStore(): _conditionPrototype == null");
+            if (!Verify.IsNotNull(_conditionPrototype)) return false;
 
             _creatorPowerPrototypeRef = conditionStore.CreatorPowerPrototypeRef;
             _creatorPowerPrototype = _creatorPowerPrototypeRef.As<PowerPrototype>();
@@ -558,15 +555,12 @@ namespace MHServerEmu.Games.Powers.Conditions
             TimeSpan duration = TimeSpan.FromMilliseconds(conditionStore.TimeRemaining);
 
             int killCount = conditionStore.Properties[PropertyEnum.ConditionKillCountLimit];
-            if (duration <= TimeSpan.Zero && killCount <= 0)
-            {
-                Logger.Warn($"InitializeFromConditionStore(): Found infinite condition [{this}] without a kill count (owner=[{owner}])");
+            if (!Verify.IsTrue(duration > TimeSpan.Zero || killCount > 0, $"Found infinite condition [{this}] without a kill count (owner=[{owner}])"))
                 duration = TimeSpan.FromMilliseconds(1);
-            }
 
             if (conditionStore.SerializeGameTime != 0)
             {
-                if (IsRealTime())
+                if (Verify.IsTrue(IsRealTime(), $"Condition [{this}] was saved as a real-time condition, but it's not flagged as real-time in the prototype (owner=[{owner}])"))
                 {
                     TimeSpan timeSinceSerialize = currentTime - TimeSpan.FromMilliseconds(conditionStore.SerializeGameTime);
                     duration -= timeSinceSerialize;
@@ -574,10 +568,6 @@ namespace MHServerEmu.Games.Powers.Conditions
                     // Expire ASAP if this condition ran out while it was stored
                     if (duration <= TimeSpan.Zero)
                         duration = TimeSpan.FromMilliseconds(1);
-                }
-                else
-                {
-                    Logger.Warn($"InitializeFromConditionStore(): Condition [{this}] was saved as a real-time condition, but it's not flagged as real-time in the prototype (owner=[{owner}])");
                 }
             }
 
@@ -591,11 +581,8 @@ namespace MHServerEmu.Games.Powers.Conditions
             foreach (var kvp in conditionStore.Properties)
             {
                 PropertyInfoPrototype propertyInfoProto = infoTable.LookupPropertyInfo(kvp.Key.Enum)?.Prototype;
-                if (propertyInfoProto == null)
-                {
-                    Logger.Warn("StoreCondition(): propertyInfoProto == null");
+                if (!Verify.IsNotNull(propertyInfoProto))
                     continue;
-                }
 
                 if (propertyInfoProto.SerializeConditionSrcToCondition == false)
                     continue;
@@ -617,8 +604,9 @@ namespace MHServerEmu.Games.Powers.Conditions
                 }
             }
 
-            if (GenerateConditionProperties(Properties, _conditionPrototype, initializeProperties, null, owner, owner.Game) == false)
-                return Logger.ErrorReturn(false, $"InitializeFromConditionStore(): Failed to generate properties for [{this}]");
+            if (!Verify.IsTrue(GenerateConditionProperties(Properties, _conditionPrototype, initializeProperties, null, owner, owner.Game),
+                $"Failed to generate properties for [{this}]"))
+                return false;
 
             return true;
         }
@@ -650,11 +638,8 @@ namespace MHServerEmu.Games.Powers.Conditions
             foreach (var kvp in propertiesToCopy)
             {
                 PropertyInfoPrototype propertyInfoProto = infoTable.LookupPropertyInfo(kvp.Key.Enum)?.Prototype;
-                if (propertyInfoProto == null)
-                {
-                    Logger.Warn("SaveToConditionStore(): propertyInfoProto == null");
+                if (!Verify.IsNotNull(propertyInfoProto))
                     continue;
-                }
 
                 if (propertyInfoProto.SerializeConditionSrcToCondition == false)
                     continue;
@@ -677,21 +662,20 @@ namespace MHServerEmu.Games.Powers.Conditions
             return true;
         }
 
-        public bool CacheStackId()
+        public void CacheStackId()
         {
             // Non-power conditions cannot stack
             PowerPrototype powerProto = CreatorPowerPrototype;
             if (powerProto == null)
-                return true;
+                return;
 
             if (StackId.PrototypeRef != PrototypeId.Invalid)
-                return true;
+                return;
 
             ConditionPrototype conditionProto = ConditionPrototype;
-            if (conditionProto == null) return Logger.WarnReturn(false, "CacheStackId(): conditionProto == null");
+            if (!Verify.IsNotNull(conditionProto)) return;
 
             StackId = ConditionCollection.MakeConditionStackId(powerProto, conditionProto, UltimateCreatorId, CreatorPlayerId, out _);
-            return true;
         }
 
         public bool CanStackWith(in StackId stackId)
@@ -707,7 +691,7 @@ namespace MHServerEmu.Games.Powers.Conditions
                 return null;
 
             ConditionPrototype conditionProto = ConditionPrototype;
-            if (conditionProto == null) return Logger.WarnReturn<StackingBehaviorPrototype>(null, "GetStackingBehaviorProto(): conditionProto == null");
+            if (!Verify.IsNotNull(conditionProto)) return null;
 
             return conditionProto.StackingBehavior != null ? conditionProto.StackingBehavior : powerProto.StackingBehaviorLEGACY;
         }
@@ -727,9 +711,7 @@ namespace MHServerEmu.Games.Powers.Conditions
 
         public void SetDuration(long duration)
         {
-            if (duration <= 0)
-                Logger.Warn("SetDuration(): duration <= 0");
-
+            Verify.IsTrue(duration > 0);
             _durationMS = duration < 0 ? 0 : duration;
         }
 
@@ -742,10 +724,10 @@ namespace MHServerEmu.Games.Powers.Conditions
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
 
-            foreach (EvalPrototype evalPartyBoost in evals)
+            foreach (EvalPrototype evalProto in evals)
             {
-                if (Eval.RunBool(evalPartyBoost, evalContext) == false)
-                    Logger.Warn($"RunEvalPartyBoost(): EvalPartyBoost failed in condition [{this}]");
+                bool curEvalSucceeded = Eval.RunBool(evalProto, evalContext);
+                Verify.IsTrue(curEvalSucceeded, $"The following EvalPartyBoost Eval in a condition failed:\nEval: [{evalProto.ExpressionString()}]\nCondition: [{this}]");
             }
         }
 
@@ -762,31 +744,31 @@ namespace MHServerEmu.Games.Powers.Conditions
 
         public bool IsPersistToDB()
         {
-            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsPersistToDB(): _conditionPrototype == null");
+            if (!Verify.IsNotNull(_conditionPrototype)) return false;
             return _conditionPrototype.PersistToDB;
         }
 
         public bool IsRealTime()
         {
-            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsRealTime(): _conditionPrototype == null");
+            if (!Verify.IsNotNull(_conditionPrototype)) return false;
             return _conditionPrototype.RealTime;
         }
 
         public bool IsBoost()
         {
-            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsBoost(): _conditionPrototype == null");
+            if (!Verify.IsNotNull(_conditionPrototype)) return false;
             return _conditionPrototype.IsBoost;
         }
 
         public bool IsPartyBoost()
         {
-            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsPartyBoost(): _conditionPrototype == null");
+            if (!Verify.IsNotNull(_conditionPrototype)) return false;
             return _conditionPrototype.IsPartyBoost;
         }
 
         public bool IsHitReactCondition()
         {
-            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsHitReactCondition(): _conditionPrototype == null");
+            if (!Verify.IsNotNull(_conditionPrototype)) return false;
             return _conditionPrototype.IsHitReactCondition;
         }
 
@@ -802,39 +784,38 @@ namespace MHServerEmu.Games.Powers.Conditions
 
         public bool IsTransferToCurrentAvatar()
         {
-            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsTransferToCurrentAvatar(): _conditionPrototype == null");
+            if (!Verify.IsNotNull(_conditionPrototype)) return false;
             return _conditionPrototype.TransferToCurrentAvatar;
         }
 
         public bool IsPauseDurationCountdown()
         {
-            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsPauseDurationCountdown(): _conditionPrototype == null");
+            if (!Verify.IsNotNull(_conditionPrototype)) return false;
             return _conditionPrototype.PauseDurationCountdown;
         }
 
         public bool ShouldApplyOverTimeEffectsToOriginator()
         {
-            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsPauseDurationCountdown(): _conditionPrototype == null");
+            if (!Verify.IsNotNull(_conditionPrototype)) return false;
             return _conditionPrototype.ApplyOverTimeEffectsToOriginator;
         }
 
         public bool ShouldApplyInitialTickImmediately()
         {
-            if (_conditionPrototype == null) return Logger.WarnReturn(false, "ShouldApplyInitialTickImmediately(): _conditionPrototype == null");
+            if (!Verify.IsNotNull(_conditionPrototype)) return false;
             return _conditionPrototype.ApplyInitialTickImmediately;
         }
 
         public PrototypeId[] GetKeywords()
         {
-            if (_conditionPrototype == null) return Logger.WarnReturn<PrototypeId[]>(null, "GetKeywords(): _conditionPrototype == null");
+            if (!Verify.IsNotNull(_conditionPrototype)) return null;
             return _conditionPrototype.Keywords;
         }
 
         public KeywordsMask GetKeywordsMask()
         {
             ConditionPrototype conditionProto = ConditionPrototype;
-            if (conditionProto == null) return Logger.WarnReturn(KeywordsMask.Empty, "GetKeywordsMask(): conditionProto == null");
-
+            if (!Verify.IsNotNull(_conditionPrototype)) return KeywordsMask.Empty;
             return conditionProto.KeywordsMask;
         }
 
@@ -927,10 +908,9 @@ namespace MHServerEmu.Games.Powers.Conditions
 
                 foreach (EvalPrototype evalProto in conditionProto.EvalOnCreate)
                 {
-                    bool evalSuccess = Eval.RunBool(evalProto, evalContext);
-                    success &= evalSuccess;
-                    if (evalSuccess == false)
-                        Logger.Warn($"GenerateConditionProperties(): The following EvalOnCreate Eval in a condition failed:\nEval: [{evalProto.ExpressionString()}]\nCondition: [{conditionProto}]\nSource entity: [{sourceEntity}]\nDest entity: [{destEntity}]");
+                    bool curEvalSucceeded = Eval.RunBool(evalProto, evalContext);
+                    success &= curEvalSucceeded;
+                    Verify.IsTrue(curEvalSucceeded, $"The following EvalOnCreate Eval in a condition failed:\nEval: [{evalProto.ExpressionString()}]\nCondition: [{conditionProto}]\nSource entity: [{sourceEntity}]\nDest entity: [{destEntity}]");
                 }
             }
 
@@ -951,16 +931,15 @@ namespace MHServerEmu.Games.Powers.Conditions
             return success;
         }
 
-        private bool UpdateOwnerAssetRef(WorldEntity owner)
+        private void UpdateOwnerAssetRef(WorldEntity owner)
         {
-            if (_conditionPrototype == null) return Logger.WarnReturn(false, "UpdateOwnerAssetRef(): _conditionPrototype == null");
+            if (!Verify.IsNotNull(_conditionPrototype)) return;
 
             AssetId assetRef = DetermineAssetRefByOwner(owner, _conditionPrototype);
             if (assetRef == _ownerAssetRef)
-                return false;
+                return;
 
             _ownerAssetRef = assetRef;
-            return true;
         }
 
         private static AssetId DetermineAssetRefByOwner(WorldEntity owner, ConditionPrototype conditionProto)
