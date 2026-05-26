@@ -243,7 +243,10 @@ namespace MHServerEmu.Games.Powers
 
         public bool IsValidSituationalTarget(WorldEntity target)
         {
-            return _situationalComponent != null;
+            if (!Verify.IsNotNull(_situationalComponent, $"Trying to validate situational target for power [{this}] but it doesn't have a situational behavior!"))
+                return false;
+
+            return _situationalComponent.IsTriggeringSituation(target);
         }
 
         /// <summary>
@@ -442,9 +445,10 @@ namespace MHServerEmu.Games.Powers
             // Check situational component
             if (powerProto.SituationalComponent != null && creator != null)
             {
-                // NOTE: Is this correct? Shouldn't it be the opposite?
+                // It may appear weird that IsValidSituationalTarget() being true results in this method returning false,
+                // but this is client-accurate and has been the case since at least 1.10.
                 Power power = creator.GetPower(powerProto.DataRef);
-                if (power != null && power.IsSituationalPower && power.IsValidSituationalTarget(target))
+                if (power != null && Verify.IsTrue(power.IsSituationalPower) && power.IsValidSituationalTarget(target))
                     return false;
             }
 

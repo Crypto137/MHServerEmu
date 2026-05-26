@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
@@ -15,16 +16,15 @@ namespace MHServerEmu.Games.Powers
 {
     public class SituationalPowerComponent
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Game _game;
         private readonly SituationalPowerComponentPrototype _prototype;
         private readonly HashSet<ulong> _triggeringEntities = new();
-        private bool _registered;
 
         private readonly Event<EntityDeadGameEvent>.Action _deadAction;
         private readonly EventPointer<PowerRelockEvent> _relockEvent = new();
         private readonly EventGroup _eventGroup = new();
+
+        private bool _registered;
 
         public Power Power { get; private set; }
         public bool TargetsTriggeringEntity { get => _prototype.TargetsTriggeringEntity; }
@@ -61,14 +61,27 @@ namespace MHServerEmu.Games.Powers
             PowerUnlock();
         }
 
+        public bool IsTriggeringSituation(WorldEntity entity)
+        {
+            if (!Verify.IsNotNull(entity)) return false;
+            return _triggeringEntities.Contains(entity.Id);
+        }
+
         private void RegisterEvents()
         {
-            if (_registered) return;
+            if (_registered)
+                return;
 
-            var region = Power.Owner?.Region;
-            if (region == null) return;
+            WorldEntity powerOwner = Power.Owner;
+            if (!Verify.IsNotNull(powerOwner)) return;
 
-            if (SituationalTrigger.RegisterEvents() == false) return;
+            Region region = powerOwner.Region;
+            if (region == null)
+                return;
+
+            if (SituationalTrigger.RegisterEvents() == false)
+                return;
+
             region.EntityDeadEvent.AddActionBack(_deadAction);
 
              _registered = true;
@@ -76,11 +89,16 @@ namespace MHServerEmu.Games.Powers
 
         private void UnRegisterEvents()
         {
-            if (_registered == false) return;
+            if (_registered == false)
+                return;
+
             _registered = false;
 
-            var region = Power.Owner?.Region;
-            if (region == null) return;
+            WorldEntity powerOwner = Power.Owner;
+            if (!Verify.IsNotNull(powerOwner)) return;
+
+            Region region = powerOwner.Region;
+            if (!Verify.IsNotNull(region)) return;
 
             SituationalTrigger.UnRegisterEvents();
             region.EntityDeadEvent.RemoveAction(_deadAction);
@@ -88,16 +106,30 @@ namespace MHServerEmu.Games.Powers
 
         public void OnPowerAssigned()
         {
-            if (_registered == false) return;
-            if (Power.Owner?.Region == null) return;
+            if (_registered == false)
+                return;
+
+            WorldEntity powerOwner = Power.Owner;
+            if (!Verify.IsNotNull(powerOwner)) return;
+
+            Region region = powerOwner.Region;
+            if (region == null)
+                return;
 
             SituationalTrigger.OnPowerAssigned();
         }
 
         public void OnPowerEquipped()
         {
-            if (_registered == false) return;
-            if (Power.Owner?.Region == null) return;
+            if (_registered == false)
+                return;
+
+            WorldEntity powerOwner = Power.Owner;
+            if (!Verify.IsNotNull(powerOwner)) return;
+
+            Region region = powerOwner.Region;
+            if (region == null)
+                return;
 
             SituationalTrigger.OnPowerEquipped();
         }
@@ -117,7 +149,7 @@ namespace MHServerEmu.Games.Powers
                 }
                 else
                 {
-                    var nearestEntity = GetNearestTriggeringEntity();
+                    WorldEntity nearestEntity = GetNearestTriggeringEntity();
                     if (nearestEntity != null)
                         targetId = nearestEntity.Id;
 ;               }
@@ -128,23 +160,23 @@ namespace MHServerEmu.Games.Powers
 
         private void OnTriggerRevert(ulong targetId)
         {
-            if (targetId == Entity.InvalidId) return;
+            if (!Verify.IsTrue(targetId != Entity.InvalidId)) return;
 
             RemoveTriggeringEntity(targetId);
 
-            if (_triggeringEntities.Count > 0) return;
-
-            if (_relockEvent.IsValid == false || _prototype.ForceRelockOnTriggerRevert)  
-                PowerRelock();
+            if (_triggeringEntities.Count == 0)
+            {
+                if (_relockEvent.IsValid == false || _prototype.ForceRelockOnTriggerRevert)
+                    PowerRelock();
+            }
         }
 
         public bool OnTrigger(WorldEntity target)
         {
-            if (target == null) return false;
+            if (!Verify.IsNotNull(target)) return false;
 
             if (CanTrigger(target))
             {
-                if (SituationalTrigger.Debug) Logger.Debug($"OnTrigger[{Power.Owner.PrototypeName}] Passed {target.PrototypeName} for {Power.PrototypeDataRef.GetNameFormatted()}");
                 if (_prototype.SituationalTrigger.ActivateOnTriggerSuccess)
                     ActivatePower(target);
                 else
@@ -152,50 +184,59 @@ namespace MHServerEmu.Games.Powers
 
                 return true;
             }
-            else OnTriggerRevert(target.Id);
+            else
+            {
+                OnTriggerRevert(target.Id);
+            }
             
             return false;
         }
 
         private bool CanTrigger(WorldEntity target)
         {
-            var powerOwner = Power.Owner;
-            if (powerOwner == null) return false;
+            WorldEntity powerOwner = Power.Owner;
+            if (!Verify.IsNotNull(powerOwner)) return false;
             
+            // Target
             if (TargetsTriggeringEntity) 
             {
-                if (SituationalTrigger.Debug) Logger.Debug($"CanTrigger[{powerOwner.PrototypeName}] {target.PrototypeName} for {Power.PrototypeDataRef.GetNameFormatted()}");
-                if (Power.IsValidTarget(target) == false) return false;
-                if (Power.IsInRange(target, RangeCheckType.Activation) == false) return false;
+                if (Power.IsValidTarget(target) == false)
+                    return false;
+
+                if (Power.IsInRange(target, RangeCheckType.Activation) == false)
+                    return false;
             }
 
-            if (SituationalTrigger.Debug) Logger.Debug($"CanTrigger ChanceToTrigger[{powerOwner.PrototypeName}] {target.PrototypeName} for {Power.PrototypeDataRef.GetNameFormatted()}");
+            // ChanceToTrigger eval
+            if (!Verify.IsNotNull(_prototype.ChanceToTrigger)) return false;
 
-            // chance to trigger
-            if (_prototype.ChanceToTrigger == null) return false;
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Power.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, powerOwner.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
-            float chance = Eval.RunFloat(_prototype.ChanceToTrigger, evalContext);
-            if (_game.Random.NextFloat() > chance) return false;
 
-            return SituationalTrigger.CanTrigger(powerOwner, target);
+            float chance = Eval.RunFloat(_prototype.ChanceToTrigger, evalContext);
+            if (_game.Random.NextFloat() > chance)
+                return false;
+            
+            // SituationalTrigger
+            if (SituationalTrigger.CanTrigger(powerOwner, target) == false)
+                return false;
+
+            return true;
         }
 
         private void ActivatePower(WorldEntity target)
         {
-            var powerOwner = Power.Owner;
-            if (powerOwner == null) return;            
-            
-            if (SituationalTrigger.Debug) Logger.Debug($"ActivatePower[{powerOwner.PrototypeName}] {target.PrototypeName} for {Power.PrototypeDataRef.GetNameFormatted()}");
+            WorldEntity powerOwner = Power.Owner;
+            if (!Verify.IsNotNull(powerOwner)) return;
 
-            var powerRef = Power.PrototypeDataRef;
-            if (powerRef == PrototypeId.Invalid) return;
+            PrototypeId powerRef = Power.PrototypeDataRef;
+            if (!Verify.IsTrue(powerRef != PrototypeId.Invalid)) return;
 
             ulong targetId = powerOwner.Id;
-            var ownerPosition = powerOwner.RegionLocation.Position;
-            var targetPositon = ownerPosition;
+            Vector3 ownerPosition = powerOwner.RegionLocation.Position;
+            Vector3 targetPositon = ownerPosition;
 
             if (TargetsTriggeringEntity)
             {
@@ -214,25 +255,28 @@ namespace MHServerEmu.Games.Powers
             AddTriggeringEntity(targetId);
         }
 
-        private void AddTriggeringEntity(ulong targetId)
+        private void AddTriggeringEntity(ulong triggeringEntityId)
         {
-            if (targetId == Entity.InvalidId) return;
-            _triggeringEntities.Add(targetId);
-            SendUpdateSituationalTarget(targetId, true);
+            if (!Verify.IsTrue(triggeringEntityId != Entity.InvalidId)) return;
+
+            _triggeringEntities.Add(triggeringEntityId);
+            SendUpdateSituationalTarget(triggeringEntityId, true);
         }
 
-        private void RemoveTriggeringEntity(ulong targetId)
+        private void RemoveTriggeringEntity(ulong triggeringEntityId)
         {
-            if (_triggeringEntities.Remove(targetId))
-                SendUpdateSituationalTarget(targetId, false);
+            if (!Verify.IsTrue(triggeringEntityId != Entity.InvalidId)) return;
+
+            if (_triggeringEntities.Remove(triggeringEntityId))
+                SendUpdateSituationalTarget(triggeringEntityId, false);
         }
 
         private void SendUpdateSituationalTarget(ulong targetId, bool addTarget)
         {
-            var powerOwner = Power.Owner;
-            if (powerOwner == null) return;
-            var networkManager = _game.NetworkManager;
-            if (networkManager == null) return;
+            if (!Verify.IsTrue(targetId != Entity.InvalidId)) return;
+
+            WorldEntity powerOwner = Power.Owner;
+            if (!Verify.IsNotNull(powerOwner)) return;
 
             var message = NetMessageUpdateSituationalTarget.CreateBuilder()
                 .SetPowerOwnerId(powerOwner.Id)
@@ -241,22 +285,23 @@ namespace MHServerEmu.Games.Powers
                 .SetAddTarget(addTarget)
                 .Build();
 
-            networkManager.SendMessageToInterested(message, powerOwner, AOINetworkPolicyValues.AOIChannelOwner);
+            _game.NetworkManager.SendMessageToInterested(message, powerOwner, AOINetworkPolicyValues.AOIChannelOwner);
         }
 
         private WorldEntity GetNearestTriggeringEntity()
         {
-            var powerOwner = Power.Owner;
-            if (powerOwner == null) return null;
+            WorldEntity powerOwner = Power.Owner;
+            if (!Verify.IsNotNull(powerOwner)) return null;
 
-            var manager = _game.EntityManager;
             WorldEntity nearestEntity = null;
             float minDistance = float.MaxValue;
 
-            foreach (var targetId in _triggeringEntities)
+            EntityManager entityManager = _game.EntityManager;
+            foreach (ulong targetId in _triggeringEntities)
             {
-                var target = manager.GetEntity<WorldEntity>(targetId);
-                if (target == null) continue;
+                WorldEntity target = entityManager.GetEntity<WorldEntity>(targetId);
+                if (target == null)
+                    continue;
 
                 float distance = powerOwner.GetDistanceTo(target, false);
                 if (powerOwner.GetDistanceTo(target, false) < minDistance)
@@ -281,31 +326,42 @@ namespace MHServerEmu.Games.Powers
 
         private void PowerLock()
         {
-            var owner = Power.Owner;
-            if (owner == null || Power.PrototypeDataRef == PrototypeId.Invalid) return;
-            owner.Properties[PropertyEnum.SinglePowerLock, Power.PrototypeDataRef] = true;
+            WorldEntity powerOwner = Power.Owner;
+            if (!Verify.IsNotNull(powerOwner)) return;
+
+            PrototypeId powerRef = Power.PrototypeDataRef;
+            if (!Verify.IsTrue(powerRef != PrototypeId.Invalid)) return;
+
+            powerOwner.Properties[PropertyEnum.SinglePowerLock, powerRef] = true;
         }
 
         private void PowerUnlock()
         {
-            var owner = Power.Owner;
-            if (owner == null || Power.PrototypeDataRef == PrototypeId.Invalid) return;
-            owner.Properties.RemoveProperty(new(PropertyEnum.SinglePowerLock, Power.PrototypeDataRef));
+            WorldEntity powerOwner = Power.Owner;
+            if (!Verify.IsNotNull(powerOwner)) return;
+
+            PrototypeId powerRef = Power.PrototypeDataRef;
+            if (!Verify.IsTrue(powerRef != PrototypeId.Invalid)) return;
+
+            powerOwner.Properties.RemoveProperty(new(PropertyEnum.SinglePowerLock, Power.PrototypeDataRef));
         }
 
         private void SchedulePowerRelock()
         {
-            var timeOffset = TimeSpan.FromMilliseconds(_prototype.ActivationWindowMS);
-            if (timeOffset <= TimeSpan.Zero) return;
+            TimeSpan activationWindow = TimeSpan.FromMilliseconds(_prototype.ActivationWindowMS);
+            if (activationWindow <= TimeSpan.Zero)
+                return;
 
-            var scheduler = _game.GameEventScheduler;
-            if (scheduler == null) return;
+            EventScheduler scheduler = _game.GameEventScheduler;
+            if (!Verify.IsNotNull(scheduler)) return;
 
             if (_relockEvent.IsValid)
-                scheduler.RescheduleEvent(_relockEvent, timeOffset);
+            {
+                scheduler.RescheduleEvent(_relockEvent, activationWindow);
+            }
             else
             {
-                scheduler.ScheduleEvent(_relockEvent, timeOffset, _eventGroup);
+                scheduler.ScheduleEvent(_relockEvent, activationWindow, _eventGroup);
                 _relockEvent.Get().Initialize(this);
             }
         }
