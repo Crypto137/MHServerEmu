@@ -264,10 +264,11 @@ namespace MHServerEmu.Core.VectorMath
 
         public static Vector3 NextVector3(GRandom random, Vector3 vector, Vector3 variance)
         {
-            Vector3 halfVaiance = variance / 2.0f;
-            float z = random.NextFloat(vector.Z - halfVaiance.Z, vector.Z + halfVaiance.Z);
-            float y = random.NextFloat(vector.Y - halfVaiance.Y, vector.Y + halfVaiance.Y);
-            float x = random.NextFloat(vector.X - halfVaiance.X, vector.X + halfVaiance.X);
+            // This needs to be generated in the Z-Y-X order to stay in sync with the client.
+            Vector3 halfVariance = variance / 2.0f;
+            float z = random.NextFloat(vector.Z - halfVariance.Z, vector.Z + halfVariance.Z);
+            float y = random.NextFloat(vector.Y - halfVariance.Y, vector.Y + halfVariance.Y);
+            float x = random.NextFloat(vector.X - halfVariance.X, vector.X + halfVariance.X);
             return new Vector3(x, y, z);
         }
 

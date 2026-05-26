@@ -3846,12 +3846,11 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        protected virtual bool EndPowerInternal(EndPowerFlags flags)
+        protected virtual void EndPowerInternal(EndPowerFlags flags)
         {
             PowerPrototype powerProto = Prototype;
-            if (!Verify.IsNotNull(powerProto)) return false;
+            if (!Verify.IsNotNull(powerProto)) return;
             powerProto.OnEndPower(this, Owner);
-            return true;
         }
 
         protected virtual bool OnEndPowerCheckTooEarly(EndPowerFlags flags)

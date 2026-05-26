@@ -140,12 +140,12 @@ namespace MHServerEmu.Games.Powers
             return false;
         }
 
-        protected override bool EndPowerInternal(EndPowerFlags flags)
+        protected override void EndPowerInternal(EndPowerFlags flags)
         {
             base.EndPowerInternal(flags);
 
             var powerProto = SummonPowerPrototype;
-            if (powerProto == null) return false;
+            if (powerProto == null) return;
 
             bool goodEnd = (flags & (EndPowerFlags.ExplicitCancel | EndPowerFlags.ChanneledLoopEnd | EndPowerFlags.PowerEventAction)) != 0;
             bool badEnd = (flags & (EndPowerFlags.Force | EndPowerFlags.ExitWorld | EndPowerFlags.Unassign)) != 0;
@@ -154,7 +154,6 @@ namespace MHServerEmu.Games.Powers
                     DestroySummoned(flags.HasFlag(EndPowerFlags.ExitWorld));
 
             Game.GameEventScheduler.CancelEvent(_summonIntervalEvent);
-            return true;
         }
 
         protected override void OnEndChannelingPhase()
