@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Commands.Attributes;
+﻿using System.Text;
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.VectorMath;
@@ -94,13 +95,30 @@ namespace MHServerEmu.Commands.Implementations
             if (entity == null) return "No entity found.";
 
             CommandHelper.SendMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.PrototypeDataRef)}");
-            CommandHelper.SendMessageSplit(client, entity.Properties.ToString(), false);
+
+            StringBuilder sb = new();
+            sb.AppendLine(entity.Properties.ToString());
+
             if (entity is WorldEntity worldEntity)
             {
-                CommandHelper.SendMessageSplit(client, worldEntity.Bounds.ToString(), false);
-                CommandHelper.SendMessageSplit(client, worldEntity.PowerCollectionToString(), false);
-                CommandHelper.SendMessageSplit(client, worldEntity.ConditionCollectionToString(), false);
+                sb.AppendLine(worldEntity.Bounds.ToString());
+
+                sb.AppendLine("Powers:");
+                if (worldEntity.PowerCollection != null)
+                {
+                    foreach (var kvp in worldEntity.PowerCollection)
+                        sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(kvp.Value.PowerPrototypeRef)}");
+                }
+
+                sb.AppendLine("Conditions:");
+                if (worldEntity.ConditionCollection != null)
+                {
+                    foreach (var condition in worldEntity.ConditionCollection)
+                        sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(condition.CreatorPowerPrototypeRef)}");
+                }
             }
+
+            CommandHelper.SendMessageSplit(client, sb.ToString(), false);
             return string.Empty;
         }
 

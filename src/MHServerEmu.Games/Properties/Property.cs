@@ -78,8 +78,6 @@ namespace MHServerEmu.Games.Properties
     /// </summary>
     public static class Property
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public const int MaxParamCount = 4;
 
         // 11 bits for enum, the rest are params defined by PropertyInfo
@@ -212,7 +210,7 @@ namespace MHServerEmu.Games.Properties
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
 
             AssetType assetType = AssetDirectory.Instance.GetAssetType(propertyInfo.GetParamAssetType(paramIndex));
-            if (assetType == null) return Logger.WarnReturn(AssetId.Invalid, "PropertyEnumToAsset(): assetType == null");
+            if (!Verify.IsNotNull(assetType)) return AssetId.Invalid;
 
             return assetType.GetAssetRefFromEnum(enumValue);
         }

@@ -23,15 +23,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
-        public virtual bool Clear()
+        public virtual void Clear()
         {
             PowerProtoRef = PrototypeId.Invalid;
             TargetId = Entity.InvalidId;
             TargetPosition = Vector3.Zero;
             RandomSeed = 0;
             Interrupted = false;
-
-            return true;
         }
     }
 }

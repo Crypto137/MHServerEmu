@@ -58,11 +58,13 @@ namespace MHServerEmu.Games.Entities
 
         public override bool Initialize(EntitySettings settings)
         {
-            base.Initialize(settings);
+            if (!Verify.IsTrue(base.Initialize(settings))) return false;
 
-            GetPowerCollectionAllocateIfNull();
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return false;
 
-            var hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(GetPowerCollectionAllocateIfNull())) return false;
+
             _skipCollide = settings.HotspotSkipCollide;
             HasApplyEffectsDelay = hotspotProto.ApplyEffectsDelayMS > 0;
 
@@ -85,17 +87,19 @@ namespace MHServerEmu.Games.Entities
         {
             HasApplyEffectsDelay = false;
 
-            var manager = Game.EntityManager;
-            if (manager == null) return;
+            EntityManager entityManager = Game.EntityManager;
+            if (!Verify.IsNotNull(entityManager)) return;
 
             using var overlappingEntitiesHandle = ListPool<ulong>.Instance.Get(out List<ulong> overlappingEntities);
             if (Physics.GetOverlappingEntities(overlappingEntities))
             {
-                var overlapPosition = RegionLocation.Position;
+                Vector3 overlapPosition = RegionLocation.Position;
                 foreach (ulong entityId in overlappingEntities)
                 {
-                    var target = manager.GetEntity<WorldEntity>(entityId);
-                    if (target == null) continue;
+                    WorldEntity target = entityManager.GetEntity<WorldEntity>(entityId);
+                    if (!Verify.IsNotNull(target))
+                        continue;
+
                     OnOverlapBegin(target, overlapPosition, target.RegionLocation.Position);
                 }
             }
@@ -104,28 +108,29 @@ namespace MHServerEmu.Games.Entities
         public override void OnEnteredWorld(EntitySettings settings)
         {
             base.OnEnteredWorld(settings);
-            var hotspotProto = HotspotPrototype;
+
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
+
             if (hotspotProto.ApplyEffectsDelayMS > 0)
             {
-                if (Game.GameEventScheduler == null) return;
+                if (!Verify.IsNotNull(Game.GameEventScheduler)) return;
                 ScheduleEntityEvent(_applyEffectsDelayEvent, TimeSpan.FromMilliseconds(hotspotProto.ApplyEffectsDelayMS));
             }
 
-            var missilesData = hotspotProto.DirectApplyToMissilesData;
+            HotspotDirectApplyToMissilesDataPrototype missilesData = hotspotProto.DirectApplyToMissilesData;
             if (missilesData != null)
             {
                 _directApplyToMissileProperties = new();
+
                 if (missilesData.EvalPropertiesToApply != null)
                 {
                     using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
                     evalContext.Game = Game;
                     evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, _directApplyToMissileProperties);
                     evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
-                    if (Eval.RunBool(missilesData.EvalPropertiesToApply, evalContext) == false) 
-                    {
-                        Logger.Warn("Eval.RunBool EvalPropertiesToApply == false");
-                        return; 
-                    }
+
+                    if (!Verify.IsTrue(Eval.RunBool(missilesData.EvalPropertiesToApply, evalContext))) return;
                 }
             }
 
@@ -136,7 +141,7 @@ namespace MHServerEmu.Games.Entities
             {
                 _missionConditionEntityCounter = new();
                 _missionAvatars = new();
-                MissionEntityTracker();
+                InitializeMissionEntityTracker();
                 return;
             }
 
@@ -194,71 +199,93 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnExitedWorld();
 
-            var scheduler = Game?.GameEventScheduler;
-            if (scheduler == null) return;
+            EventScheduler scheduler = Game?.GameEventScheduler;
+            if (!Verify.IsNotNull(scheduler)) return;
 
             scheduler.CancelEvent(_applyEffectsDelayEvent);
             CancelPowerEvents();
         }
 
-        public override void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
+        public override void OnOverlapBegin(WorldEntity overlappedWith, Vector3 thisPosition, Vector3 otherPosition)
         {
-            base.OnOverlapBegin(whom, whoPos, whomPos);
+            base.OnOverlapBegin(overlappedWith, thisPosition, otherPosition);
 
-            if (HasApplyEffectsDelay || whom == null || whom is Hotspot) return;
+            if (HasApplyEffectsDelay)
+                return;
 
-            if (whom is Missile missile)
+            if (!Verify.IsNotNull(overlappedWith)) return;
+
+            if (overlappedWith is Hotspot)
+                return;
+
+            if (overlappedWith is Missile missile)
             {
-                HandleOverlapBegin_Missile(missile, whomPos);
+                HandleOverlapBegin_Missile(missile, otherPosition);
                 return;
             }
 
-            if (whom is Avatar avatar)
+            if (overlappedWith is Avatar avatar)
                 HandleOverlapBegin_Player(avatar);
 
             if (IsMissionHotspot)
-                HandleOverlapBegin_Missions(whom);
+            {
+                HandleOverlapBegin_Missions(overlappedWith);
+            }
             else
             {
-                var hotspotProto = HotspotPrototype;
-                if (hotspotProto != null && (hotspotProto.AppliesPowers.HasValue() || hotspotProto.AppliesIntervalPowers.HasValue()))
-                    HandleOverlapBegin_Powers(whom);
+                HotspotPrototype hotspotProto = HotspotPrototype;
+                if (!Verify.IsNotNull(hotspotProto)) return;
 
-                HandleOverlapBegin_PowerEvent(whom);
+                if (hotspotProto.AppliesPowers.HasValue() || hotspotProto.AppliesIntervalPowers.HasValue())
+                    HandleOverlapBegin_Powers(overlappedWith);
+
+                HandleOverlapBegin_PowerEvent(overlappedWith);
             }
         }
 
-        public override void OnOverlapEnd(WorldEntity whom)
+        public override void OnOverlapEnd(WorldEntity overlappedWith)
         {
-            if (HasApplyEffectsDelay || whom == null || whom is Hotspot) return;
+            base.OnOverlapEnd(overlappedWith);
 
-            if (whom is Missile missile)
+            if (HasApplyEffectsDelay)
+                return;
+
+            if (!Verify.IsNotNull(overlappedWith)) return;
+
+            if (overlappedWith is Hotspot)
+                return;
+
+            if (overlappedWith is Missile missile)
             {
                 HandleOverlapEnd_Missile(missile);
                 return;
             }
 
-            if (whom is Avatar avatar)
+            if (overlappedWith is Avatar avatar)
                 HandleOverlapEnd_Player(avatar);
 
             if (IsMissionHotspot)
-                HandleOverlapEnd_Missions(whom);
+            {
+                HandleOverlapEnd_Missions(overlappedWith);
+            }
             else
             {
-                HandleOverlapEnd_PowerEvent(whom);
+                HandleOverlapEnd_PowerEvent(overlappedWith);
 
-                var hotspotProto = HotspotPrototype;
-                if (hotspotProto != null && (hotspotProto.AppliesPowers.HasValue() || hotspotProto.AppliesIntervalPowers.HasValue()))
-                    HandleOverlapEnd_Powers(whom);
+                HotspotPrototype hotspotProto = HotspotPrototype;
+                if (!Verify.IsNotNull(hotspotProto)) return;
+
+                if (hotspotProto.AppliesPowers.HasValue() || hotspotProto.AppliesIntervalPowers.HasValue())
+                    HandleOverlapEnd_Powers(overlappedWith);
             }
         }
 
         public override void OnSkillshotReflected(Missile missile)
         {
-            var hotspotProto = HotspotPrototype;
-            if (hotspotProto == null) return;
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
 
-            var missilesData = hotspotProto.DirectApplyToMissilesData;
+            HotspotDirectApplyToMissilesDataPrototype missilesData = hotspotProto.DirectApplyToMissilesData;
             if (missilesData != null && missilesData.AffectsReflectedMissilesOnly)
             {
                 if (missile.IsMovedIndependentlyOnClient)
@@ -279,7 +306,8 @@ namespace MHServerEmu.Games.Entities
 
         public override SimulateResult SetSimulated(bool simulated)
         {
-            var result = base.SetSimulated(simulated);
+            SimulateResult result = base.SetSimulated(simulated);
+
             if (result == SimulateResult.Set)
             {
                 ScheduleActivePowersEvent();
@@ -291,6 +319,7 @@ namespace MHServerEmu.Games.Entities
                 CancelPowerEvents();
                 StopPropertyTicker(_hotspotTicker);
             }
+
             return result;
         }
 
@@ -316,7 +345,9 @@ namespace MHServerEmu.Games.Entities
 
         public void OnHotspotNegated(WorldEntity negator, HotspotNegateByAllianceType allianceType, PrototypeId keywordRef, int users)
         {
-            var hotspotProto = HotspotPrototype;
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
+
             if (hotspotProto.Negatable == false) return;
 
             var manager = Game.EntityManager;
@@ -386,10 +417,10 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapBegin_Missile(Missile missile, Vector3 missilePosition)
         {
-            var hotspotProto = HotspotPrototype;
-            if (hotspotProto == null) return;
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
 
-            var missilesData = hotspotProto.DirectApplyToMissilesData;
+            HotspotDirectApplyToMissilesDataPrototype missilesData = hotspotProto.DirectApplyToMissilesData;
             if (missilesData != null)
             {
                 if ((missilesData.AffectsAllyMissiles && IsFriendlyTo(missile))
@@ -408,11 +439,11 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapEnd_Missile(Missile missile)
         {
-            var hotspotProto = HotspotPrototype;
-            if (hotspotProto == null) return;
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
 
-            if (hotspotProto.DirectApplyToMissilesData != null 
-                && hotspotProto.DirectApplyToMissilesData.AffectsReflectedMissilesOnly) return;
+            if (hotspotProto.DirectApplyToMissilesData != null && hotspotProto.DirectApplyToMissilesData.AffectsReflectedMissilesOnly)
+                return;
 
             if (_directApplyToMissileProperties != null && _directApplyToMissileProperties.IsChildOf(missile.Properties))
                 _directApplyToMissileProperties.RemoveFromParent(missile.Properties);
@@ -420,50 +451,68 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapBegin_Missions(WorldEntity target)
         {
-            bool targetAvatar = target is Avatar;
-            if (targetAvatar) _missionAvatars?.Add(target.Id);
+            bool targetIsAvatar = target is Avatar;
+            if (targetIsAvatar)
+            {
+                if (!Verify.IsNotNull(_missionAvatars)) return;
+                _missionAvatars.Add(target.Id);
+            }
 
-            bool missionEvent = false;
-            if (_missionConditionEntityCounter.Count > 0)
-                foreach(var context in _missionConditionEntityCounter)
+            bool hasMissionEvent = false;
+            if (_missionConditionEntityCounter != null)
+            {
+                foreach (MissionConditionContext context in _missionConditionEntityCounter.Keys)
                 {
-                    var missionRef = context.Key.MissionRef;
-                    var conditionProto = context.Key.ConditionProto;
+                    PrototypeId missionRef = context.MissionRef;
+                    MissionConditionPrototype conditionProto = context.ConditionProto;
                     if (EvaluateTargetCondition(target, missionRef, conditionProto))
                     {
-                        _missionConditionEntityCounter[context.Key]++;
-                        missionEvent = true;
+                        _missionConditionEntityCounter[context]++;
+                        hasMissionEvent = true;
                     }
                 }
+            }
 
-            if (Region == null) return;
-            // entered hotspot mision event
-            if (missionEvent || targetAvatar)
-                Region.EntityEnteredMissionHotspotEvent.Invoke(new(target, this));
+            // entered hotspot mission event
+            if (hasMissionEvent || targetIsAvatar)
+            {
+                Region region = Region;
+                if (Verify.IsNotNull(region))
+                    region.EntityEnteredMissionHotspotEvent.Invoke(new(target, this));
+            }                
         }
 
         private void HandleOverlapEnd_Missions(WorldEntity target)
         {
-            bool targetAvatar = target is Avatar;
-            if (targetAvatar) _missionAvatars?.Remove(target.Id);
+            bool targetIsAvatar = target is Avatar;
+            if (targetIsAvatar)
+            {
+                if (!Verify.IsNotNull(_missionAvatars)) return;
+                _missionAvatars.Remove(target.Id);
+            }
 
-            bool missionEvent = false;
-            if (_missionConditionEntityCounter.Count > 0)
-                foreach (var context in _missionConditionEntityCounter)
+            bool hasMissionEvent = false;
+            if (_missionConditionEntityCounter != null)
+            {
+                foreach (MissionConditionContext context in _missionConditionEntityCounter.Keys)
                 {
-                    var missionRef = context.Key.MissionRef;
-                    var conditionProto = context.Key.ConditionProto;
+                    PrototypeId missionRef = context.MissionRef;
+                    MissionConditionPrototype conditionProto = context.ConditionProto;
                     if (EvaluateTargetCondition(target, missionRef, conditionProto))
                     {
-                        _missionConditionEntityCounter[context.Key]--;
-                        missionEvent = true;
+                        _missionConditionEntityCounter[context]--;
+                        hasMissionEvent = true;
                     }
                 }
+            }
 
-            if (Region == null) return;
-            // left hotspot mision event
-            if (missionEvent || targetAvatar)
-                Region.EntityLeftMissionHotspotEvent.Invoke(new(target, this));
+            // left hotspot mission event
+            if (hasMissionEvent || targetIsAvatar)
+            {
+                Region region = Region;
+                if (Verify.IsNotNull(region))
+                    region.EntityLeftMissionHotspotEvent.Invoke(new(target, this));
+            }
         }
 
         public bool ContainsAvatar(Avatar avatar)
@@ -475,17 +524,18 @@ namespace MHServerEmu.Games.Entities
         {
             if (_missionConditionEntityCounter != null)
             {
-                var key = new MissionConditionContext(missionRef, conditionProto);
+                MissionConditionContext key = new(missionRef, conditionProto);
                 if (_missionConditionEntityCounter.TryGetValue(key, out int count))
                     return count;
             }
+
             return 0;
         }
 
         private void HandleOverlapBegin_Player(Avatar avatar)
         {
-            var player = avatar.GetOwnerOfType<Player>();
-            if (player == null) return;
+            Player player = avatar.GetOwnerOfType<Player>();
+            if (!Verify.IsNotNull(player)) return;
 
             player.OnScoringEvent(new(ScoringEventType.HotspotEnter, Prototype));
 
@@ -493,15 +543,15 @@ namespace MHServerEmu.Games.Entities
             if (waypointRef != PrototypeId.Invalid)
                 player.UnlockWaypoint(waypointRef);
 
-            var manager = Game.EntityManager;
+            EntityManager entityManager = Game.EntityManager;
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.HotspotTriggerEntity))
             {
                 Property.FromParam(kvp.Key, 0, out int triggerEnum);
                 ulong spawnerId = kvp.Value;
-                if (spawnerId != 0)
+                if (spawnerId != InvalidId)
                 {
-                    var spawner = manager.GetEntity<Spawner>(spawnerId);
-                    if (spawner != null)
+                    Spawner spawner = entityManager.GetEntity<Spawner>(spawnerId);
+                    if (Verify.IsNotNull(spawner))
                     {
                         spawner.Trigger((EntityTriggerEnum)triggerEnum);
                         ScheduleDestroyEvent(TimeSpan.Zero);
@@ -513,7 +563,8 @@ namespace MHServerEmu.Games.Entities
             if (targetRespawnRef != PrototypeId.Invalid)
                 player.Properties[PropertyEnum.RespawnHotspotOverrideInst, targetRespawnRef] = Id;
 
-            var hotspotProto = HotspotPrototype;
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
 
             if (hotspotProto.UINotificationOnEnter != null && _notifiedPlayers.Contains(player.Id) == false)
             {
@@ -530,8 +581,8 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapEnd_Player(Avatar avatar)
         {
-            var player = avatar.GetOwnerOfType<Player>();
-            if (player == null) return;
+            Player player = avatar.GetOwnerOfType<Player>();
+            if (!Verify.IsNotNull(player)) return;
 
             PrototypeId targetRespawnRef = Properties[PropertyEnum.RespawnHotspotOverride];
             if (targetRespawnRef != PrototypeId.Invalid && player.Properties[PropertyEnum.RespawnHotspotOverrideInst, targetRespawnRef] == Id)
@@ -542,16 +593,22 @@ namespace MHServerEmu.Games.Entities
         {
             //Logger.Trace($"HandleOverlapBegin_PowerEvent {this} {target}");
 
-            if (CanOverlapEvents(target) == false) return;
+            if (CanTriggerOverlapEvents(target) == false)
+                return;
+            
             _overlapEventsTargetCount++;
 
-            var hotspotProto = HotspotPrototype;
-            if (hotspotProto.OverlapEventsMaxTargets != 0 && _overlapEventsTargetCount > hotspotProto.OverlapEventsMaxTargets) return;
-            
-            var owner = Game.EntityManager.GetEntity<WorldEntity>(PowerUserOverrideId);
-            if (owner == null || owner.IsInWorld == false) return;
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
 
-            var power = owner.GetPower(owner.Properties[PropertyEnum.CreatorPowerPrototype]);
+            if (hotspotProto.OverlapEventsMaxTargets != 0 && _overlapEventsTargetCount > hotspotProto.OverlapEventsMaxTargets)
+                return;
+            
+            WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(PowerUserOverrideId);
+            if (owner == null || owner.IsInWorld == false)
+                return;
+
+            Power power = owner.GetPower(owner.Properties[PropertyEnum.CreatorPowerPrototype]);
             power?.HandleTriggerPowerEventOnHotspotOverlapBegin(target.Id);
         }
 
@@ -559,41 +616,64 @@ namespace MHServerEmu.Games.Entities
         {
             //Logger.Trace($"HandleOverlapEnd_PowerEvent {this} {target}");
 
-            if (CanOverlapEvents(target) == false) return;
+            if (CanTriggerOverlapEvents(target) == false)
+                return;
+
             _overlapEventsTargetCount--;
 
-            var hotspotProto = HotspotPrototype;
-            if (hotspotProto.OverlapEventsMaxTargets != 0 && _overlapEventsTargetCount >= hotspotProto.OverlapEventsMaxTargets) return;
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
 
-            var owner = Game.EntityManager.GetEntity<WorldEntity>(PowerUserOverrideId);
-            if (owner == null || owner.IsInWorld == false) return;
+            if (hotspotProto.OverlapEventsMaxTargets != 0 && _overlapEventsTargetCount >= hotspotProto.OverlapEventsMaxTargets)
+                return;
 
-            var power = owner.GetPower(owner.Properties[PropertyEnum.CreatorPowerPrototype]);
+            WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(PowerUserOverrideId);
+            if (owner == null || owner.IsInWorld == false)
+                return;
+
+            Power power = owner.GetPower(owner.Properties[PropertyEnum.CreatorPowerPrototype]);
             power?.HandleTriggerPowerEventOnHotspotOverlapEnd(target.Id);
         }
 
-        private bool CanOverlapEvents(WorldEntity target)
+        private bool CanTriggerOverlapEvents(WorldEntity target)
         {
-            var hotspotProto = HotspotPrototype;
-            if (hotspotProto.OverlapEventsTriggerOn == HotspotOverlapEventTriggerType.None) return false;
-            if (target.IsDestructible || target.IsTargetable(this) == false) return false;
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return false;
 
-            return hotspotProto.OverlapEventsTriggerOn switch
+            if (hotspotProto.OverlapEventsTriggerOn == HotspotOverlapEventTriggerType.None)
+                return false;
+
+            if (target.IsDestructible || target.IsTargetable(this) == false)
+                return false;
+
+            switch (hotspotProto.OverlapEventsTriggerOn)
             {
-                HotspotOverlapEventTriggerType.All => true,
-                HotspotOverlapEventTriggerType.Allies => IsFriendlyTo(target.Alliance),
-                HotspotOverlapEventTriggerType.Enemies => IsHostileTo(target.Alliance),
-                _ => false,
-            };
+                case HotspotOverlapEventTriggerType.All:
+                    return true;
+
+                case HotspotOverlapEventTriggerType.Allies:
+                    return IsFriendlyTo(target.Alliance);
+
+                case HotspotOverlapEventTriggerType.Enemies:
+                    return IsHostileTo(target.Alliance);
+
+                default:
+                    Verify.IsTrue(false);
+                    return false;
+            }
         }
 
         private void HandleOverlapBegin_Powers(WorldEntity target)
         {
-            if (target.IsAffectedByPowers() == false) return; 
-            if (_overlapPowerTargets == null) return;
+            if (target.IsAffectedByPowers() == false)
+                return;
+
+            if (!Verify.IsNotNull(_overlapPowerTargets)) return;
             
-            var hotspotProto = HotspotPrototype;
-            var powerTarget = new PowerTargetMap();
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
+            
+            PowerTargetMap powerTarget = new();
 
             if (hotspotProto.AppliesPowers.HasValue())
                 ApplyActivePowers(target, ref powerTarget);
@@ -606,19 +686,22 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapEnd_Powers(WorldEntity target)
         {
-            ulong targetId = target.Id;
-            var manager = Game.EntityManager;
+            if (!Verify.IsNotNull(_overlapPowerTargets)) return;
 
-            if (_overlapPowerTargets == null) return;
-            if (_overlapPowerTargets.TryGetValue(targetId, out var powerTarget) == false) return;
+            ulong targetId = target.Id;
+            EntityManager entityManager = Game.EntityManager;
+
+            if (_overlapPowerTargets.TryGetValue(targetId, out PowerTargetMap powerTarget) == false)
+                return;
 
             if (Debug) Logger.Debug($"OverlapEnd {target.PrototypeName}[{target.Id}]");
             if (powerTarget.ActivePowers.Any)
             {
                 EndPowerForActivePowers(target, ref powerTarget);
+
                 if (_activePowerTargetCount == 0 && HotspotPrototype.KillCreatorWhenHotspotIsEmpty)
                 {
-                    var creator = manager.GetEntity<WorldEntity>(OwnerId);
+                    WorldEntity creator = entityManager.GetEntity<WorldEntity>(OwnerId);
                     if (creator != null && creator.IsDead == false)
                         creator.Kill(this);
                 }
@@ -626,28 +709,39 @@ namespace MHServerEmu.Games.Entities
 
             _overlapPowerTargets.Remove(targetId);
             if (_overlapPowerTargets.Count == 0)
+            {
                 CancelPowerEvents();
+                Verify.IsTrue(_activePowerTargetCount == 0);
+            }
         }
 
         public override void OnPowerEnded(Power power, EndPowerFlags flags)
         {
-            var powerRef = power.PrototypeDataRef;
-            if (powerRef == PrototypeId.Invalid) return;
-            var hotspotProto = HotspotPrototype;
+            PrototypeId powerRef = power.PrototypeDataRef;
+            if (!Verify.IsTrue(powerRef != PrototypeId.Invalid)) return;
+            
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
 
             if (Debug) Logger.Debug($"OnPowerEnded {power.PrototypeDataRef.GetNameFormatted()}[{flags}]");
 
             if (flags.HasFlag(EndPowerFlags.ExitWorld) && hotspotProto.AppliesPowers.HasValue() && _overlapPowerTargets != null)
             {
+                // Powers not included in AppliesPowers can get here, ignore them.
                 int index = Array.IndexOf(hotspotProto.AppliesPowers, powerRef);
-                if (index == -1 || index >= 32) return;
+                if (index == -1)
+                    return;
 
+                if (!Verify.IsTrue(index < HotspotPowerMask.Size))
+                    return;
+
+                // TODO: iterate _overlapPowerTargets keys and get refs using GetValueOrDefault() to remove this pooled dictionary?
                 using var changedHandle = ListPool<(ulong, PowerTargetMap)>.Instance.Get(out List<(ulong, PowerTargetMap)> changed);
 
                 foreach (var kvp in _overlapPowerTargets)
                 {
-                    var key = kvp.Key;
-                    var powerTarget = kvp.Value;
+                    ulong key = kvp.Key;
+                    PowerTargetMap powerTarget = kvp.Value;
                     if (powerTarget.ActivePowers[index])
                     {
                         ClearActiveTargetPowers(ref powerTarget, index);
@@ -655,7 +749,7 @@ namespace MHServerEmu.Games.Entities
                     }
                 }
 
-                foreach(var kv in changed)
+                foreach (var kv in changed)
                     _overlapPowerTargets[kv.Item1] = kv.Item2;
             }
         }
@@ -664,21 +758,28 @@ namespace MHServerEmu.Games.Entities
         {
             if (Debug) Logger.Debug($"EndPowerForActivePowers for {target.PrototypeName}");
 
-            var hotspotProto = HotspotPrototype;
-            for (var i = 0; i < hotspotProto.AppliesPowers.Length; i++)
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
+            if (!Verify.IsTrue(hotspotProto.AppliesPowers.HasValue())) return;
+
+            for (int i = 0; i < hotspotProto.AppliesPowers.Length; i++)
+            {
                 if (powerTarget.ActivePowers[i])
                 {
-                    var powerProto = hotspotProto.AppliesPowers[i].As<PowerPrototype>();
-                    if (powerProto != null) 
-                        EndPowerForActiveTarget(powerProto.DataRef, target.Id, ref powerTarget, i);
+                    PowerPrototype powerProto = hotspotProto.AppliesPowers[i].As<PowerPrototype>();
+                    if (!Verify.IsNotNull(powerProto)) return;
+                    
+                    EndPowerForActiveTarget(powerProto.DataRef, target.Id, ref powerTarget, i);
                 }
+            }
         }
 
         private void EndPowerForActiveTarget(PrototypeId powerRef, ulong targetId, ref PowerTargetMap powerTarget, int index)
         {
             ClearActiveTargetPowers(ref powerTarget, index);
-            var power = GetPower(powerRef);
-            if (power == null) return;
+
+            Power power = GetPower(powerRef);
+            if (!Verify.IsNotNull(power)) return;
 
             if (Debug) Logger.Debug($"EndPowerForActiveTarget for {powerRef.GetNameFormatted()} {targetId}");
 
@@ -692,7 +793,7 @@ namespace MHServerEmu.Games.Entities
             if (powerTarget.ActivePowers[index])
             {
                 powerTarget.ActivePowers.Reset(index);
-                if (powerTarget.ActivePowers.Empty && _activePowerTargetCount > 0)
+                if (powerTarget.ActivePowers.Empty && Verify.IsTrue(_activePowerTargetCount > 0))
                     _activePowerTargetCount--;
             }
         }
@@ -706,30 +807,31 @@ namespace MHServerEmu.Games.Entities
             float centerOffset = Bounds.GetCenterOffset();
             if (centerOffset > 0.0f)
             {
-                var region = Region;
-                if (region == null) return ChangePositionResult.NotChanged;
+                Region region = Region;
+                if (!Verify.IsNotNull(region)) return ChangePositionResult.NotChanged;
 
-                var forward = Forward;
+                Vector3 forward = Forward;
                 if (isOrientation)
                 {
                     if (flags.HasFlag(ChangePositionFlags.EnterWorld) == false)
                     {
-                        var summonProto = GetSummonEntityContext();
-                        if (summonProto == null) return ChangePositionResult.NotChanged;
+                        SummonEntityContextPrototype summonProto = GetSummonEntityContext();
+                        if (!Verify.IsNotNull(summonProto)) return ChangePositionResult.NotChanged;
+
                         if (Segment.IsNearZero(summonProto.SummonOffsetAngle) == false)
                         {
                             float angle = MathHelper.ToRadians(summonProto.SummonOffsetAngle);
-                            var newOrientation = orientation.Value;
+                            Orientation newOrientation = orientation.Value;
                             newOrientation.Yaw += angle;
                             orientation = newOrientation;
                         }
                     }
 
-                    var transform = Transform3.BuildTransform(Vector3.Zero, orientation.Value);
+                    Transform3 transform = Transform3.BuildTransform(Vector3.Zero, orientation.Value);
                     forward = transform.Col0;
                 }
 
-                var offsetPosition = position.Value + forward * centerOffset;                
+                Vector3 offsetPosition = position.Value + forward * centerOffset;                
                 if (region.GetCellAtPosition(offsetPosition) != null)
                     position = offsetPosition;
 
@@ -739,31 +841,40 @@ namespace MHServerEmu.Games.Entities
             return base.ChangeRegionPosition(position, orientation, flags);
         }
 
-        private void MissionEntityTracker()
+        private void InitializeMissionEntityTracker()
         {
             EntityTrackingContextMap involvementMap = new();
-            if (GameDatabase.InteractionManager.GetEntityContextInvolvement(this, involvementMap) == false) return;
-            foreach (var involment in involvementMap)
+            if (GameDatabase.InteractionManager.GetEntityContextInvolvement(this, involvementMap) == false)
+                return;
+
+            foreach (var involvement in involvementMap)
             {
-                if (involment.Value.HasFlag(EntityTrackingFlag.Hotspot) == false) continue;
-                var missionRef = involment.Key;
-                var missionProto = GameDatabase.GetPrototype<MissionPrototype>(involment.Key);
-                if (missionProto == null) continue;
-                var conditionList = missionProto.HotspotConditionList;
-                if (conditionList == null) continue;
-                foreach(var conditionProto in conditionList)
+                if (involvement.Value.HasFlag(EntityTrackingFlag.Hotspot) == false)
+                    continue;
+                
+                PrototypeId missionRef = involvement.Key;
+                MissionPrototype missionProto = missionRef.As<MissionPrototype>();
+                if (missionProto == null)
+                    continue;
+                
+                List<MissionConditionPrototype> conditionList = missionProto.HotspotConditionList;
+                if (conditionList == null)
+                    continue;
+
+                foreach (MissionConditionPrototype conditionProto in conditionList)
+                {
                     if (EvaluateHotspotCondition(missionRef, conditionProto))
                     {
-                        var key = new MissionConditionContext(missionRef, conditionProto);
+                        MissionConditionContext key = new(missionRef, conditionProto);
                         _missionConditionEntityCounter[key] = 0;
                     }
+                }
             }
-
         }
 
         private bool EvaluateHotspotCondition(PrototypeId missionRef, MissionConditionPrototype conditionProto)
         {
-            if (conditionProto == null) return false;
+            if (!Verify.IsNotNull(conditionProto)) return false;
 
             if (conditionProto is MissionConditionHotspotContainsPrototype hotspotContainsProto)
                 return hotspotContainsProto.EntityFilter != null && hotspotContainsProto.EntityFilter.Evaluate(this, new(missionRef));
@@ -771,12 +882,14 @@ namespace MHServerEmu.Games.Entities
                 return hotspotEnterProto.EntityFilter != null && hotspotEnterProto.EntityFilter.Evaluate(this, new(missionRef));
             if (conditionProto is MissionConditionHotspotLeavePrototype hotspotLeaveProto)
                 return hotspotLeaveProto.EntityFilter != null && hotspotLeaveProto.EntityFilter.Evaluate(this, new(missionRef));
+
+            Verify.IsTrue(false);
             return false;
         }
 
         private bool EvaluateTargetCondition(WorldEntity target, PrototypeId missionRef, MissionConditionPrototype conditionProto)
         {
-            if (conditionProto == null) return false;
+            if (!Verify.IsNotNull(conditionProto)) return false;
 
             if (conditionProto is MissionConditionHotspotContainsPrototype hotspotContainsProto)
                 return hotspotContainsProto.TargetFilter != null && hotspotContainsProto.TargetFilter.Evaluate(target, new(missionRef));
@@ -784,6 +897,8 @@ namespace MHServerEmu.Games.Entities
                 return hotspotEnterProto.TargetFilter != null && hotspotEnterProto.TargetFilter.Evaluate(target, new(missionRef));
             if (conditionProto is MissionConditionHotspotLeavePrototype hotspotLeaveProto)
                 return hotspotLeaveProto.TargetFilter != null && hotspotLeaveProto.TargetFilter.Evaluate(target, new(missionRef));
+
+            Verify.IsTrue(false);
             return false;
         }
 
@@ -796,19 +911,22 @@ namespace MHServerEmu.Games.Entities
 
         private void OnApplyIntervalPowers()
         {
-            var hotspotProto = HotspotPrototype;
-            if (_overlapPowerTargets == null) return;
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
+            if (!Verify.IsTrue(hotspotProto.AppliesIntervalPowers.HasValue())) return;
+            if (!Verify.IsNotNull(_overlapPowerTargets)) return;
 
             if (hotspotProto.IntervalPowersRandomTarget)
             {
                 Picker<ulong> picker = _targetPicker;
-                var hasLOS = TriBool.Undefined;
+                bool? hasLOS = null;
                 ulong prevTargetId = InvalidId;
 
-                foreach (var powerRef in hotspotProto.AppliesIntervalPowers)
+                foreach (PrototypeId powerRef in hotspotProto.AppliesIntervalPowers)
                 {
-                    var powerProto = powerRef.As<PowerPrototype>();
-                    if (powerProto == null) continue; 
+                    PowerPrototype powerProto = powerRef.As<PowerPrototype>();
+                    if (!Verify.IsNotNull(powerProto))
+                        continue;
 
                     picker.Clear();
                     foreach (var targetPower in _overlapPowerTargets)
@@ -818,7 +936,8 @@ namespace MHServerEmu.Games.Entities
                     ulong targetId = InvalidId;
                     while (numTargets > 0 && picker.PickRemove(out targetId))
                     {
-                        if (targetId != prevTargetId) hasLOS = TriBool.Undefined;
+                        if (targetId != prevTargetId)
+                            hasLOS = null;
                         prevTargetId = targetId;
                         if (ActivateIntervalPowerForTarget(powerRef, targetId, ref hasLOS))
                             numTargets--;
@@ -830,13 +949,15 @@ namespace MHServerEmu.Games.Entities
                 int numTargets = 0;
                 foreach (var powerTarget in _overlapPowerTargets)
                 {
-                    var hasLOS = TriBool.Undefined;
+                    bool? hasLOS = null;
                     bool activated = false;
 
-                    foreach (var powerRef in hotspotProto.AppliesIntervalPowers)
+                    foreach (PrototypeId powerRef in hotspotProto.AppliesIntervalPowers)
                     {
-                        var powerProto = powerRef.As<PowerPrototype>();
-                        if (powerProto == null) continue;
+                        PowerPrototype powerProto = powerRef.As<PowerPrototype>();
+                        if (!Verify.IsNotNull(powerProto))
+                            continue;
+
                         ulong targetId = powerTarget.Key;
                         activated |= ActivateIntervalPowerForTarget(powerRef, targetId, ref hasLOS);
                     }
@@ -853,62 +974,75 @@ namespace MHServerEmu.Games.Entities
             ScheduleIntervalPowersEvent();
         }
 
-        private bool ActivateIntervalPowerForTarget(PrototypeId powerRef, ulong targetId, ref TriBool hasLOS)
+        private bool ActivateIntervalPowerForTarget(PrototypeId powerRef, ulong targetId, ref bool? hasLOS)
         {
-            var manager = Game?.EntityManager;
-            if (manager == null) return false;
+            EntityManager entityManager = Game?.EntityManager;
+            if (!Verify.IsNotNull(entityManager)) return false;
 
-            var target = manager.GetEntity<WorldEntity>(targetId);
-            if (target == null) return false;
+            WorldEntity target = entityManager.GetEntity<WorldEntity>(targetId);
+            if (!Verify.IsNotNull(target)) return false;
 
-            var power = GetPower(powerRef);
-            if (power == null) return false;
+            Power power = GetPower(powerRef);
+            if (!Verify.IsNotNull(power)) return false;
 
-            if (power.IsValidTarget(target) == false) return false;
+            if (power.IsValidTarget(target) == false)
+                return false;
 
             if (_checkLOS && power.RequiresLineOfSight())
             {
-                if (hasLOS == TriBool.Undefined)
-                    hasLOS = target.LineOfSightTo(GetHotspotCenter()) ? TriBool.True : TriBool.False;
-
-                if (hasLOS != TriBool.True)
+                hasLOS ??= target.LineOfSightTo(GetHotspotCenter());
+                if (hasLOS == false)
                     return false;
             }
 
-            var settings = new PowerActivationSettings(target.Id, target.RegionLocation.Position, RegionLocation.Position);
+            PowerActivationSettings settings = new(target.Id, target.RegionLocation.Position, RegionLocation.Position);
             settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
             if (_skipCollide) settings.Flags |= PowerActivationSettingsFlags.SkipRangeCheck;
 
-            var result = power.Activate(ref settings);
+            PowerUseResult result = power.Activate(ref settings);
             if (Debug) Logger.Debug($"ActivateIntervalPower {power.PrototypeDataRef.GetNameFormatted()} from {PrototypeName} to {target.PrototypeName}");
             return result == PowerUseResult.Success;
         }
 
         private void ScheduleIntervalPowersEvent()
         {
-            var hotspotProto = HotspotPrototype;
-            if (hotspotProto.AppliesIntervalPowers.IsNullOrEmpty()) return;
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
+
+            if (hotspotProto.AppliesIntervalPowers.IsNullOrEmpty())
+                return;
+
             int intervalMS = hotspotProto.IntervalPowersTimeDelayMS;
-            if (intervalMS <= 0) return;
-            if (_intervalPowersEvent.IsValid) return;
-            if (CanSchedulePowersEvent()) 
-                ScheduleEntityEvent(_intervalPowersEvent, TimeSpan.FromMilliseconds(intervalMS));
+            if (intervalMS <= 0)
+                return;
+
+            if (_intervalPowersEvent.IsValid)
+                return;
+
+            if (CanSchedulePowersEvent() == false)
+                return;
+
+            ScheduleEntityEvent(_intervalPowersEvent, TimeSpan.FromMilliseconds(intervalMS));
         }
 
         private void OnApplyActivePowers()
         {
-            if (_overlapPowerTargets == null) return;
+            if (!Verify.IsNotNull(_overlapPowerTargets)) return;
 
             var manager = Game.EntityManager;
 
+            // TODO: same ref based optimization as in OnPowerEnded()
             using var changedHandle = ListPool<(ulong, PowerTargetMap)>.Instance.Get(out List<(ulong, PowerTargetMap)> changed);
 
             foreach (var entry in _overlapPowerTargets)
             {
                 ulong targetId = entry.Key;
-                var powerTarget = entry.Value;
-                var target = manager.GetEntity<WorldEntity>(targetId);
-                if (target == null) continue;
+                PowerTargetMap powerTarget = entry.Value;
+                
+                WorldEntity target = manager.GetEntity<WorldEntity>(targetId);
+                if (!Verify.IsNotNull(target))
+                    continue;
+                
                 ApplyActivePowers(target, ref powerTarget);
                 changed.Add((targetId, powerTarget));
             }
@@ -921,23 +1055,28 @@ namespace MHServerEmu.Games.Entities
 
         private void ApplyActivePowers(WorldEntity target, ref PowerTargetMap powerTarget)
         {
-            var hotspotProto = HotspotPrototype;
-            if (_killSelf) return;
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
+            if (!Verify.IsTrue(hotspotProto.AppliesPowers.HasValue())) return;
 
-            if (hotspotProto.MaxSimultaneousTargets > 0 
-                && _activePowerTargetCount >= hotspotProto.MaxSimultaneousTargets
-                && powerTarget.ActivePowers.Empty) return;
+            if (_killSelf)
+                return;
+
+            if (hotspotProto.MaxSimultaneousTargets > 0 && _activePowerTargetCount >= hotspotProto.MaxSimultaneousTargets && powerTarget.ActivePowers.Empty)
+                return;
 
             bool hasLOS = false;
             bool checkedLOS = false;
             bool activated = false;
 
-            for (var i = 0; i < hotspotProto.AppliesPowers.Length; i++)
+            for (int i = 0; i < hotspotProto.AppliesPowers.Length; i++)
             {
-                if (powerTarget.IgnorePowers[i]) continue;
+                if (powerTarget.IgnorePowers[i])
+                    continue;
 
-                var powerProto = hotspotProto.AppliesPowers[i].As<PowerPrototype>();
-                if (powerProto == null) continue;
+                PowerPrototype powerProto = hotspotProto.AppliesPowers[i].As<PowerPrototype>();
+                if (!Verify.IsNotNull(powerProto))
+                    continue;
 
                 // check conditions
                 if (powerProto.AppliesConditions != null || powerProto.ConditionsByRef.HasValue())
@@ -946,7 +1085,8 @@ namespace MHServerEmu.Games.Entities
                     {
                         ClearActiveTargetPowers(ref powerTarget, i);
                         if (Debug) Logger.Debug($"hasOthers[{hasOthers}] {powerProto.DataRef.GetNameFormatted()} {target.PrototypeName} {target.Id}");
-                        if (hasOthers == false) continue;
+                        if (hasOthers == false)
+                            continue;
                     }
                 }
                 else
@@ -980,14 +1120,17 @@ namespace MHServerEmu.Games.Entities
 
             if (activated)
             {
-                if (hotspotProto.MaxLifetimeTargets > 0) _lifeTimeTargets++;
+                if (hotspotProto.MaxLifetimeTargets > 0)
+                    _lifeTimeTargets++;
                 OnPowerActivated();
             }
         }
 
         private void OnPowerActivated()
         {
-            var hotspotProto = HotspotPrototype;
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
+            
             if (hotspotProto.KillSelfWhenPowerApplied || (hotspotProto.MaxLifetimeTargets > 0 && _lifeTimeTargets >= hotspotProto.MaxLifetimeTargets))
                 _killSelf = true;
 
@@ -1002,28 +1145,28 @@ namespace MHServerEmu.Games.Entities
                     TryActivateOnDeathProcs(new());
                     ResetLifespan(TimeSpan.Zero);
                 }
+
                 CancelPowerEvents();
             }
         }
 
         private bool ActivatePowerForTarget(PrototypeId powerRef, WorldEntity target, ref PowerTargetMap powerTarget, int index)
         {
-            var power = GetPower(powerRef);
-            if (power == null) return false;
+            Power power = GetPower(powerRef);
+            if (!Verify.IsNotNull(power)) return false;
 
-            var settings = new PowerActivationSettings(target.Id, target.RegionLocation.Position, RegionLocation.Position);
+            PowerActivationSettings settings = new(target.Id, target.RegionLocation.Position, RegionLocation.Position);
             settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
             if (_skipCollide) settings.Flags |= PowerActivationSettingsFlags.SkipRangeCheck;
 
-            var result = power.Activate(ref settings);
-            if (result == PowerUseResult.Success)
-            {
-                if (powerTarget.ActivePowers.Empty) _activePowerTargetCount++;
-                powerTarget.ActivePowers.Set(index);
-                return true;
-            }
+            if (power.Activate(ref settings) != PowerUseResult.Success)
+                return false;
 
-            return false;
+            if (powerTarget.ActivePowers.Empty)
+                _activePowerTargetCount++;
+            powerTarget.ActivePowers.Set(index);
+
+            return true;
         }
 
         private Vector3 GetHotspotCenter()
@@ -1041,31 +1184,40 @@ namespace MHServerEmu.Games.Entities
             bool hasThis = false;
             hasOthers = false;
 
-            var conditionCollection = target.ConditionCollection;
-            if (conditionCollection == null) return false;
+            ConditionCollection conditionCollection = target.ConditionCollection;
+            if (!Verify.IsNotNull(conditionCollection)) return false;
 
             if (powerProto.AppliesConditions != null)
+            {
                 foreach (var mixinPrototype in powerProto.AppliesConditions)
                 {
-                    if (mixinPrototype.Prototype is not ConditionPrototype conditionProto) continue;
+                    ConditionPrototype conditionProto = mixinPrototype.Prototype as ConditionPrototype;
+                    if (!Verify.IsNotNull(conditionProto))
+                        continue;
+
                     if (CheckStackingBehavior(conditionProto, powerProto, conditionCollection, ref hasOthers, ref hasThis))
                     {
                         if (Debug) Logger.Warn($"AppliesConditions [{hasThis}] [{hasOthers}] for [{target.PrototypeName}] in {powerProto.DataRef.GetNameFormatted()}");
                         return hasThis;
                     }
                 }
+            }
 
             if (powerProto.ConditionsByRef.HasValue())
-                foreach (var conditionRef in powerProto.ConditionsByRef)
+            {
+                foreach (PrototypeId conditionRef in powerProto.ConditionsByRef)
                 {
-                    var conditionProto = conditionRef.As<ConditionPrototype>();
-                    if (conditionProto == null) continue;
+                    ConditionPrototype conditionProto = conditionRef.As<ConditionPrototype>();
+                    if (!Verify.IsNotNull(conditionProto))
+                        continue;
+
                     if (CheckStackingBehavior(conditionProto, powerProto, conditionCollection, ref hasOthers, ref hasThis))
                     {
                         if (Debug) Logger.Warn($"ConditionsByRef [{hasThis}] [{hasOthers}] for [{target.PrototypeName}] in {powerProto.DataRef.GetNameFormatted()}");
                         return hasThis;
                     }
                 }
+            }
 
             return hasThis;
         }
@@ -1073,8 +1225,9 @@ namespace MHServerEmu.Games.Entities
         private bool CheckStackingBehavior(ConditionPrototype conditionProto, PowerPrototype powerProto, 
             ConditionCollection conditionCollection, ref bool hasOthers, ref bool hasThis)
         {
-            var stackId = ConditionCollection.MakeConditionStackId(powerProto, conditionProto, _powerUserId, _powerPlayerId, out var stackingProto);
-            if (stackId.PrototypeRef == PrototypeId.Invalid || stackingProto == null) return false;
+            ConditionCollection.StackId stackId = ConditionCollection.MakeConditionStackId(powerProto, conditionProto, _powerUserId, _powerPlayerId, out StackingBehaviorPrototype stackingProto);
+            if (!Verify.IsTrue(stackId.PrototypeRef != PrototypeId.Invalid)) return false;
+            if (!Verify.IsNotNull(stackingProto)) return false;
 
             if (stackingProto.StacksFromDifferentCreators)
             {
@@ -1098,18 +1251,28 @@ namespace MHServerEmu.Games.Entities
 
         private void ScheduleActivePowersEvent()
         {
-            var hotspotProto = HotspotPrototype;
-            if (hotspotProto.AppliesPowers.IsNullOrEmpty()) return;
-            if (hotspotProto.MaxLifetimeTargets > 0 && _lifeTimeTargets >= hotspotProto.MaxLifetimeTargets) return;
-            if (_activePowersEvent.IsValid) return;
-            if (CanSchedulePowersEvent())
-                ScheduleEntityEvent(_activePowersEvent, TimeSpan.FromMilliseconds(_targetInvervalMS));
+            HotspotPrototype hotspotProto = HotspotPrototype;
+            if (!Verify.IsNotNull(hotspotProto)) return;
+
+            if (hotspotProto.AppliesPowers.IsNullOrEmpty())
+                return;
+
+            if (hotspotProto.MaxLifetimeTargets > 0 && _lifeTimeTargets >= hotspotProto.MaxLifetimeTargets)
+                return;
+
+            if (_activePowersEvent.IsValid)
+                return;
+
+            if (CanSchedulePowersEvent() == false)
+                return;
+                
+            ScheduleEntityEvent(_activePowersEvent, TimeSpan.FromMilliseconds(_targetInvervalMS));
         }
 
         private void CancelPowerEvents()
         {
-            var scheduler = Game?.GameEventScheduler;
-            if (scheduler == null) return;
+            EventScheduler scheduler = Game?.GameEventScheduler;
+            if (!Verify.IsNotNull(scheduler)) return;
 
             scheduler.CancelEvent(_activePowersEvent);
             scheduler.CancelEvent(_intervalPowersEvent);
@@ -1135,7 +1298,7 @@ namespace MHServerEmu.Games.Entities
         #endregion
     }
 
-    public class MissionConditionContext
+    public class MissionConditionContext    // TODO: change to struct
     {
         public PrototypeId MissionRef;
         public MissionConditionPrototype ConditionProto;
@@ -1167,6 +1330,8 @@ namespace MHServerEmu.Games.Entities
 
     public struct HotspotPowerMask
     {
+        public const int Size = 32;
+
         private uint _bits;
 
         public readonly bool Any => _bits != 0;

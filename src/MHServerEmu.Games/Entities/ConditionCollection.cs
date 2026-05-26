@@ -21,10 +21,8 @@ namespace MHServerEmu.Games.Entities
 {
     public class ConditionCollection : ISerialize
     {
-        public const int MaxConditions = 255;
+        public const int MaxConditions = 256;
         public const ulong InvalidConditionId = 0;
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly WorldEntity _owner;
 
@@ -58,45 +56,29 @@ namespace MHServerEmu.Games.Entities
                     // When the number of serialized conditions is >= 256, the client aborts deserialization without
                     // skipping, which can make it crash when trying to read the data ahead. This number is hardcoded,
                     // and it affects only archive serialization, protobuf messages can exceed this cap without issues.
+                    uint count = (uint)_currentConditions.Count;
+                    if (!Verify.IsTrue(count < MaxConditions))
+                        count = MaxConditions - 1;
 
-                    // Our options are as follows:
-                    // 1. Do nothing and allow clients to crash - crashing is bad.
-                    // 2. Cap the number of conditions server-side to 255 - may lead to unexpected behavior.
-                    // 3. Patch the client check - will require everyone to modify their clients.
-                    // 4. Do not send any conditions when the cap is exceeded - severe desync.
-                    // 5. Cap the number of serialized conditions to 255 - less desync than option 3.
-                    // All of these options are not ideal, but 5 seems to be the least intrusive.
-
-                    uint numConditions = (uint)_currentConditions.Count;
-                    if (numConditions > MaxConditions)
-                    {
-                        Logger.Warn($"Serialize(): Attempting to serialize a ConditionCollection that contains > {MaxConditions} conditions, some conditions will not be included!\nNumConditions={numConditions}\nOwner=[{_owner}]");
-                        numConditions = MaxConditions;
-                    }
-
-                    success &= Serializer.Transfer(archive, ref numConditions);
+                    success &= Serializer.Transfer(archive, ref count);
 
                     foreach (Condition condition in _currentConditions.Values)
                     {
                         success &= condition.Serialize(archive, _owner);
-
-                        if (--numConditions == 0)
+                        if (--count == 0)
                             break;
                     }
                 }
                 else
                 {
                     // Deserialization implementation mimics the client for reference.
-                    if (_currentConditions.Count != 0)
-                        return Logger.ErrorReturn(false, $"Serialize(): _currrentConditionDict is not empty");
+                    if (!Verify.IsTrue(_currentConditions.Count == 0)) return false;
 
-                    uint numConditions = 0;
-                    success &= Serializer.Transfer(archive, ref numConditions);
+                    uint count = 0;
+                    success &= Serializer.Transfer(archive, ref count);
+                    if (!Verify.IsTrue(count < MaxConditions)) return false;
 
-                    if (numConditions > MaxConditions)
-                        return Logger.ErrorReturn(false, $"Serialize(): numConditions > MaxConditions");
-
-                    for (uint i = 0; i < numConditions; i++)
+                    for (uint i = 0; i < count; i++)
                     {
                         Condition condition = AllocateCondition();
                         success &= condition.Serialize(archive, _owner);
@@ -129,8 +111,7 @@ namespace MHServerEmu.Games.Entities
                     }
 
                     // This is very bad and should never happen
-                    if (numConditions != 0)
-                        Logger.Error($"Serialize(): Count mismatch when serializing persistent conditions for owner [{_owner}]");
+                    Verify.IsTrue(numConditions == 0, LoggingLevel.Error, $"Count mismatch when serializing persistent conditions for owner [{_owner}]");
                 }
                 else
                 {
@@ -141,14 +122,14 @@ namespace MHServerEmu.Games.Entities
                         success &= conditionStore.Serialize(archive);
 
                         Condition condition = AllocateCondition();
-                        if (condition.InitializeFromConditionStore(NextConditionId, ref conditionStore, _owner))
+                        if (Verify.IsTrue(condition.InitializeFromConditionStore(NextConditionId, ref conditionStore, _owner),
+                            LoggingLevel.Error, $"Failed to initialize condition from ConditionStore for owner [{_owner}]"))
                         {
                             InsertCondition(condition);
                         }
                         else
                         {
                             success = false;
-                            Logger.Error($"Serialize(): Failed to initialize condition from ConditionStore for owner [{_owner}]");
                             DeleteCondition(condition);
                         }
                     }
@@ -160,8 +141,8 @@ namespace MHServerEmu.Games.Entities
 
         public bool OnUnpackComplete(Archive archive)
         {
-            if (archive.IsUnpacking == false) return Logger.WarnReturn(false, "OnUnpackComplete(): archive.IsUnpacking == false");
-            if (_owner == null) return Logger.WarnReturn(false, "OnUnpackComplete(): _owner == null");
+            if (!Verify.IsTrue(archive.IsUnpacking)) return false;
+            if (!Verify.IsNotNull(_owner)) return false;
 
             Avatar avatar = _owner.GetSelfOrOwnerOfType<Avatar>();
             ulong ownerPlayerDbId = avatar != null ? avatar.OwnerPlayerDbId : 0;
@@ -185,11 +166,8 @@ namespace MHServerEmu.Games.Entities
                 if (stackingBehaviorProto == null)
                     continue;
 
-                if (GetNumberOfStacks(condition) > stackingBehaviorProto.MaxNumStacks)
-                {
-                    Logger.Warn($"OnUnpackComplete(): The number of stacks for condition [{condition}] exceeds the maximum of {stackingBehaviorProto.MaxNumStacks} for owner [{_owner}]");
+                if (!Verify.IsTrue(GetNumberOfStacks(condition) <= stackingBehaviorProto.MaxNumStacks, $"Stack number exceeds max! condition=[{condition}], maxNumStacks={stackingBehaviorProto.MaxNumStacks}, owner=[{_owner}]"))
                     RemoveStack(condition.StackId);
-                }
             }
 
             return true;
@@ -213,7 +191,7 @@ namespace MHServerEmu.Games.Entities
         /// </summary>
         public Condition GetConditionByRef(PrototypeId conditionRef)
         {
-            if (conditionRef == PrototypeId.Invalid) return Logger.WarnReturn<Condition>(null, $"GetConditionByRef(): conditionRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(conditionRef != PrototypeId.Invalid)) return null;
 
             foreach (Condition condition in _currentConditions.Values)
             {
@@ -282,7 +260,7 @@ namespace MHServerEmu.Games.Entities
 
         public int GetNumberOfStacks(in StackId stackId)
         {
-            if (stackId.PrototypeRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "GetNumberOfStacks(): stackId.PrototypeRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(stackId.PrototypeRef != PrototypeId.Invalid)) return 0;
 
             if (_stackCountCache.TryGetValue(stackId, out int stackCount) == false)
                 return 0;
@@ -347,9 +325,7 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            // The available number of stack slots should always be >= 0
-            if (numStacksAvailable < 0)
-                return Logger.WarnReturn(0, "GetStackingData(): numStacksAvailable < 0");
+            if (!Verify.IsTrue(numStacksAvailable >= 0)) return 0;
 
             // Determine the number of stacks to apply based on the application style
             int numStacksToApply = 0;
@@ -391,7 +367,8 @@ namespace MHServerEmu.Games.Entities
                     break;
 
                 default:
-                    return Logger.WarnReturn(0, $"GetStackingData(): Unsupported application style {stackingBehaviorProto.ApplicationStyle}");
+                    Verify.IsTrue(false, $"Unsupported application style {stackingBehaviorProto.ApplicationStyle}");
+                    return 0;
             }
 
             return numStacksToApply;
@@ -400,7 +377,7 @@ namespace MHServerEmu.Games.Entities
         public static StackId MakeConditionStackId(PowerPrototype powerProto, ConditionPrototype conditionProto, ulong creatorEntityId,
             ulong creatorPlayerId, out StackingBehaviorPrototype stackingBehaviorProto)
         {
-            bool useLegacyStackingBehavior = false;
+            bool isLegacy = false;
 
             if (conditionProto?.StackingBehavior != null)
             {
@@ -409,19 +386,18 @@ namespace MHServerEmu.Games.Entities
             else
             {
                 stackingBehaviorProto = powerProto.StackingBehaviorLEGACY;
-                useLegacyStackingBehavior = true;
+                isLegacy = true;
             }
 
-            if (stackingBehaviorProto == null)
-                return Logger.WarnReturn(StackId.Invalid, "MakeConditionStackId(): stackingBehaviorProto == null");
+            if (!Verify.IsNotNull(stackingBehaviorProto)) return StackId.Invalid;
 
             ulong stackCreatorId = Entity.InvalidId;
 
             if (stackingBehaviorProto.StacksFromDifferentCreators == false)
             {
                 stackCreatorId = creatorPlayerId != Entity.InvalidId ? creatorPlayerId : creatorEntityId;
-                if (stackCreatorId == Entity.InvalidId)
-                    return Logger.WarnReturn(StackId.Invalid, $"MakeConditionStackId(): Invalid creator id! creatorEntityId=[{creatorEntityId}] creatorPlayerId=[{creatorPlayerId}] power=[{powerProto}] condition=[{conditionProto}]");
+                if (!Verify.IsTrue(stackCreatorId != Entity.InvalidId, $"Invalid creator id! creatorEntityId=[{creatorEntityId}] creatorPlayerId=[{creatorPlayerId}] power=[{powerProto}] condition=[{conditionProto}]"))
+                    return StackId.Invalid;
             }
 
             if (stackingBehaviorProto.StacksByKeyword.HasValue())
@@ -432,9 +408,8 @@ namespace MHServerEmu.Games.Entities
             }
             else if (stackingBehaviorProto.StacksWithOtherPower != PrototypeId.Invalid)
             {
-                // Legacy stacking with other powers
-                if (useLegacyStackingBehavior == false)
-                    return Logger.WarnReturn(StackId.Invalid, "MakeConditionStackId(): Stacking with other powers is supported only for legacy stacking behavior");
+                // Stacking with other powers is supported only for "legacy" stacking behaviors.
+                if (!Verify.IsTrue(isLegacy)) return StackId.Invalid;
 
                 PrototypeId powerProtoRef = powerProto.DataRef < stackingBehaviorProto.StacksWithOtherPower ? powerProto.DataRef : stackingBehaviorProto.StacksWithOtherPower;
                 return new(powerProtoRef, -1, stackCreatorId);
@@ -442,23 +417,23 @@ namespace MHServerEmu.Games.Entities
             else if (conditionProto.DataRef != PrototypeId.Invalid)
             {
                 // Standalone condition stacking
-                if (useLegacyStackingBehavior)
+                if (isLegacy)
                     return new(powerProto.DataRef, -1, stackCreatorId);
-
-                return new(conditionProto.DataRef, -1, stackCreatorId);
+                else
+                    return new(conditionProto.DataRef, -1, stackCreatorId);
             }
 
             // Power mixin condition stacking
-            if (useLegacyStackingBehavior)
+            if (isLegacy)
                 return new(powerProto.DataRef, -1, stackCreatorId);
-
-            return new(powerProto.DataRef, conditionProto.BlueprintCopyNum, stackCreatorId);
+            else
+                return new(powerProto.DataRef, conditionProto.BlueprintCopyNum, stackCreatorId);
         }
 
         public bool AddCondition(Condition condition)
         {
-            if (condition == null) return Logger.WarnReturn(false, "AddCondition(): condition == null");
-            if (condition.IsInCollection) return Logger.WarnReturn(false, "AddCondition(): condition.IsInCollection");
+            if (!Verify.IsNotNull(condition)) return false;
+            if (!Verify.IsTrue(condition.IsInCollection == false)) return false;
 
             bool success = false;
 
@@ -492,11 +467,8 @@ namespace MHServerEmu.Games.Entities
                 stackCount++;
 
                 // Do the insertion
-                if (InsertCondition(condition) == false)
-                {
-                    Logger.Warn("AddCondition(): InsertCondition(condition) == false");
-                    break;
-                }    
+                if (!Verify.IsTrue(InsertCondition(condition)))
+                    break;  
 
                 condition.ResetStartTime();
 
@@ -518,7 +490,6 @@ namespace MHServerEmu.Games.Entities
                     break;
 
                 success = true;
-                //Logger.Trace($"AddCondition(): {condition} - {condition.Duration.TotalMilliseconds} ms");
 
                 // Trigger additional effects
                 WorldEntity creator = _owner.Game.EntityManager.GetEntity<WorldEntity>(condition.CreatorId);
@@ -541,11 +512,8 @@ namespace MHServerEmu.Games.Entities
                 // Check stacking behavior
                 if (powerProto != null)
                 {
-                    if (stackingBehaviorProto == null)
-                    {
-                        Logger.Warn("AddCondition(): stackingBehaviorProto == null");
+                    if (!Verify.IsNotNull(stackingBehaviorProto))
                         break;
-                    }
 
                     if (stackingBehaviorProto.RemoveStackOnMaxNumStacksReached && stackCount >= stackingBehaviorProto.MaxNumStacks && handle.Valid())
                         RemoveStack(condition.StackId);
@@ -572,10 +540,10 @@ namespace MHServerEmu.Games.Entities
         public bool RefreshCondition(ulong conditionId, ulong creatorId, TimeSpan durationDelta = default)
         {
             Condition condition = GetCondition(conditionId);
-            if (condition == null) return Logger.WarnReturn(false, "RefreshCondition(): condition == null");
+            if (!Verify.IsNotNull(condition)) return false;
 
             Game game = _owner.Game;
-            if (game == null) return Logger.WarnReturn(false, "RefreshCondition(): game == null");
+            if (!Verify.IsNotNull(game)) return false;
 
             // Modify duration if needed
             if (durationDelta != default)
@@ -635,10 +603,11 @@ namespace MHServerEmu.Games.Entities
 
         public bool RemoveOrUnpauseCondition(ulong conditionId)
         {
-            if (_owner == null) return Logger.WarnReturn(false, "RemoveOrUnpauseCondition(): _owner == null");
+            if (!Verify.IsNotNull(_owner)) return false;
 
             Condition condition = GetCondition(conditionId);
-            if (condition == null) return false;
+            if (condition == null)
+                return false;
 
             return RemoveOrUnpauseCondition(condition);
         }
@@ -665,10 +634,10 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public bool RemoveAllConditions(bool removePersistToDB = true)
+        public void RemoveAllConditions(bool removePersistToDB = true)
         {
-            if (_owner == null) return Logger.WarnReturn(false, "RemoveAllConditions(): _owner == null");
-            if (_owner.Game == null) return Logger.WarnReturn(false, "RemoveAllConditions(): _owner.Game == null");
+            Game game = _owner?.Game;
+            if (!Verify.IsNotNull(game)) return;
 
             foreach (Condition condition in this)
             {
@@ -677,8 +646,6 @@ namespace MHServerEmu.Games.Entities
                 
                 RemoveCondition(condition);
             }
-
-            return true;
         }
 
         public void RemoveConditionsWithConditionPrototypeRef(PrototypeId protoRef)
@@ -733,8 +700,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool PauseCondition(Condition condition, bool notifyClient)
         {
-            if (condition.IsPaused)
-                return Logger.WarnReturn(false, $"PauseCondition(): Condition [{condition}] is already paused");
+            if (!Verify.IsTrue(condition.IsPaused == false)) return false;
 
             CancelScheduledConditionEnd(condition);
 
@@ -754,14 +720,12 @@ namespace MHServerEmu.Games.Entities
         /// </summary>
         public bool UnpauseCondition(Condition condition, bool notifyClient)
         {
-            if (condition.IsPaused == false)    // return true to indicate that condition wasn't removed
-                return Logger.WarnReturn(true, $"UnpauseCondition(): Condition [{condition}] is not paused");
+            if (!Verify.IsTrue(condition.IsPaused)) return true;    // return true to indicate that condition wasn't removed
 
             condition.ResetStartTimeFromPaused();
             condition.PauseTime = TimeSpan.Zero;
 
-            if (ScheduleConditionEnd(condition) == false)
-                return Logger.WarnReturn(false, $"UnpauseCondition(): Failed to reschedule paused condition [{condition}]");
+            if (!Verify.IsTrue(ScheduleConditionEnd(condition))) return false;
 
             UpdateTicker(condition);
 
@@ -809,8 +773,8 @@ namespace MHServerEmu.Games.Entities
                     return false;
 
                 // Trying to figure out if this orphan condition bug is a data issue with a specific power (DiamondFormCondition) or a more broad issue
-                if (power.IsToggled() && power.IsToggledOn() == false && power.PrototypeDataRef != (PrototypeId)17994345800984565974)
-                    Logger.Warn($"TryRestorePowerCondition(): Toggled power is off, but has an active condition! power=[{power}]");
+                Verify.IsTrue(power.IsToggled() == false || power.IsToggledOn() || power.PrototypeDataRef == (PrototypeId)17994345800984565974,
+                    $"Toggled power is off, but has an active condition! power=[{power}]");
 
                 if (power.IsTrackingCondition(_owner.Id, condition) == false)
                     power.TrackCondition(_owner.Id, condition);
@@ -820,7 +784,7 @@ namespace MHServerEmu.Games.Entities
 
             // Sometimes the condition should remain even if the power that created it is gone
             PowerPrototype powerProto = condition.CreatorPowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "TryRestorePowerCondition(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
 
             // Consumable items that grant conditions (e.g. boosts)
             if (Power.IsItemPower(powerProto))
@@ -836,17 +800,17 @@ namespace MHServerEmu.Games.Entities
 
         public bool TransferConditionsFrom(ConditionCollection other)
         {
-            if (other == null) return Logger.WarnReturn(false, "TransferConditionsFrom(): other == null");
+            if (!Verify.IsNotNull(other)) return false;
 
             // Make sure both condition collections belong to the same player owner
             Player player = _owner.GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "TransferConditionsFrom(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             Player otherPlayer = other._owner.GetOwnerOfType<Player>();
-            if (otherPlayer == null) return Logger.WarnReturn(false, "TransferConditionsFrom(): otherPlayer == null");
+            if (!Verify.IsNotNull(otherPlayer)) return false;
 
-            if (player != otherPlayer)
-                return Logger.WarnReturn(false, $"TransferConditionsFrom(): Attempted to transfer conditions from [{otherPlayer}] to [{player}] ([{other._owner}] to [{_owner}])");
+            if (!Verify.IsTrue(player == otherPlayer, $"Attempted to transfer conditions from [{otherPlayer}] to [{player}] ([{other._owner}] to [{_owner}])"))
+                return false;
 
             // Transfer
             foreach (Condition condition in other)
@@ -855,15 +819,10 @@ namespace MHServerEmu.Games.Entities
                     continue;
 
                 Condition conditionCopy = AllocateCondition();
-                if (conditionCopy.InitializeFromOtherCondition(NextConditionId, condition, _owner))
-                {
+                if (Verify.IsTrue(conditionCopy.InitializeFromOtherCondition(NextConditionId, condition, _owner), $"Failed to copy condition [{condition}] from [{other._owner}] to [{_owner}]"))
                     AddCondition(conditionCopy);
-                }
                 else
-                {
-                    Logger.Warn($"TransferConditionsFrom(): Failed to copy condition [{condition}] from [{other._owner}] to [{_owner}]");
                     DeleteCondition(conditionCopy);
-                }
 
                 other.RemoveCondition(condition.Id);
             }
@@ -894,8 +853,8 @@ namespace MHServerEmu.Games.Entities
 
         public static bool DeleteCondition(Condition condition)
         {
-            if (condition == null) return Logger.WarnReturn(false, "DeleteCondition(): condition == null");
-            if (condition.IsInCollection) return Logger.WarnReturn(false, "DeleteCondition(): condition.IsInCollection");
+            if (!Verify.IsNotNull(condition)) return false;
+            if (!Verify.IsTrue(condition.IsInCollection == false)) return false;
 
             condition.Properties.Unbind();
 
@@ -945,13 +904,12 @@ namespace MHServerEmu.Games.Entities
         private bool InsertCondition(Condition condition)
         {
             // NOTE: The client uses Handle here, but do we actually need it?
+            if (!Verify.IsNotNull(condition)) return false;
+            if (!Verify.IsNotNull(_owner)) return false;
+            if (!Verify.IsTrue(condition.Id != InvalidConditionId)) return false;
+            if (!Verify.IsTrue(condition.IsInCollection == false)) return false;
 
-            if (condition == null) return Logger.WarnReturn(false, "InsertCondition(): condition == null");
-            if (condition.Id == InvalidConditionId) return Logger.WarnReturn(false, "InsertCondition(): condition.Id == InvalidConditionId");
-            if (condition.IsInCollection) return Logger.WarnReturn(false, "InsertCondition(): condition.IsInCollection");
-
-            if (_currentConditions.TryAdd(condition.Id, condition) == false)
-                return Logger.WarnReturn(false, $"InsertCondition(): Failed to insert condition id {condition.Id} for [{_owner}]");
+            if (!Verify.IsTrue(_currentConditions.TryAdd(condition.Id, condition))) return false;
 
             condition.Collection = this;
             condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
@@ -960,10 +918,8 @@ namespace MHServerEmu.Games.Entities
 
         private bool RemoveCondition(Condition condition)
         {
-            if (_owner == null) return Logger.WarnReturn(false, "RemoveCondition(): _owner == null");
-            if (condition == null) return false;
-
-            //Logger.Trace($"RemoveCondition(): {condition}");
+            if (!Verify.IsNotNull(_owner)) return false;
+            if (!Verify.IsNotNull(condition)) return false;
 
             CancelScheduledConditionEnd(condition);
 
@@ -1010,8 +966,7 @@ namespace MHServerEmu.Games.Entities
                 if (handle.Valid() == false)
                     return true;
 
-                if (_currentConditions.Remove(condition.Id) == false)
-                    Logger.Warn($"RemoveCondition(): Failed to remove condition id {condition.Id}");
+                Verify.IsTrue(_currentConditions.Remove(condition.Id));
 
                 condition.Collection = null;
                 _version++;
@@ -1043,10 +998,10 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private bool OnInsertCondition(Condition condition)
+        private void OnInsertCondition(Condition condition)
         {
-            if (condition == null) return Logger.WarnReturn(false, "OnInsertCondition(): condition == null");
-            if (condition.Collection != this) return Logger.WarnReturn(false, "OnInsertCondition(): condition.Collection != this");
+            if (!Verify.IsNotNull(condition)) return;
+            if (!Verify.IsTrue(condition.Collection == this)) return;
 
             Handle handle = new(this, condition);
 
@@ -1055,22 +1010,21 @@ namespace MHServerEmu.Games.Entities
             OnPreAccrueCondition(condition);
 
             if (handle.Valid() == false)
-                return true;
+                return;
 
             condition.IsEnabled = true;
             condition.CacheStackId();
 
-            if (_owner.UpdateProcEffectPowers(condition.Properties, true) == false)
-                Logger.Warn($"OnInsertCondition(): UpdateProcEffectPowers failed when adding condition=[{condition}] owner=[{_owner}]");
+            bool didAssignAllPowers = _owner.UpdateProcEffectPowers(condition.Properties, true);
+            Verify.IsTrue(didAssignAllPowers, $"UpdateProcEffectPowers failed when adding condition=[{condition}] owner=[{_owner}]");
             
             // Accrue properties from this condition on the owner (these are added and removed along with the condition)
             _owner.Properties.AddChildCollection(condition.Properties);
 
             if (handle.Valid() == false)
-                return true;
+                return;
 
             OnPostAccrueCondition(condition);
-            return true;
         }
 
         private void OnPreAccrueCondition(Condition condition)
@@ -1137,15 +1091,16 @@ namespace MHServerEmu.Games.Entities
 
         private void UnaccrueCondition(Condition condition)
         {
-            if (condition.Collection != this) Logger.Warn("UnaccrueCondition(): condition.Collection != this");
+            if (!Verify.IsNotNull(_owner)) return;
+            Verify.IsTrue(condition.Collection == this);
 
             Handle handle = new(this, condition);
             if (condition.IsEnabled)
             {
                 // Disable the condition
                 condition.IsEnabled = false;
-                if (condition.Properties.RemoveFromParent(_owner.Properties) == false)
-                    Logger.Warn($"RemoveFromParent FAILED owner=[{_owner}] condition=[{(handle.Valid() ? condition.ToString() : "INVALID")}]");
+                bool removed = condition.Properties.RemoveFromParent(_owner.Properties);
+                Verify.IsTrue(removed, $"RemoveFromParent FAILED owner=[{_owner}] condition=[{(handle.Valid() ? condition.ToString() : "INVALID")}]");
             }
 
             if (handle.Valid() == false)
@@ -1178,7 +1133,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool EnableCondition(Condition condition, bool enable)
         {
-            //Logger.Debug($"EnableCondition(): {condition} = {enable} (owner={_owner})");
+            if (!Verify.IsNotNull(_owner)) return false;
 
             PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
 
@@ -1196,12 +1151,14 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Enable/disable the condition
+            bool bRet = true;
+
             if (enable && condition.IsEnabled == false)
             {
                 condition.IsEnabled = true;
 
-                if (_owner.Properties.AddChildCollection(condition.Properties) == false)
-                    return Logger.WarnReturn(false, $"EnableCondition(): Failed to attach properties for condition=[{condition}], owner=[{_owner}])");
+                bRet = _owner.Properties.AddChildCollection(condition.Properties);
+                if (!Verify.IsTrue(bRet)) return false;
 
                 StartTicker(condition);
 
@@ -1210,20 +1167,20 @@ namespace MHServerEmu.Games.Entities
             {
                 condition.IsEnabled = false;
 
-                if (condition.Properties.RemoveFromParent(_owner.Properties) == false)
-                    return Logger.WarnReturn(false, $"EnableCondition(): Failed to detach properties for condition=[{condition}], owner=[{_owner}])");
+                bRet = condition.Properties.RemoveFromParent(_owner.Properties);
+                if (!Verify.IsTrue(bRet)) return false;
 
                 StopTicker(condition);
             }
 
-            return true;
+            return bRet;
         }
 
         private bool StartTicker(Condition condition)
         {
             ulong tickerId = condition.PropertyTickerId;
-            if (tickerId != PropertyTicker.InvalidId)
-                return Logger.WarnReturn(false, $"StartTicker(): Attempted to start a ticker for condition [{condition}] that already has ticker id {tickerId}");
+            if (!Verify.IsTrue(tickerId == PropertyTicker.InvalidId, $"Attempted to start a ticker for condition [{condition}] that already has ticker id {tickerId}"))
+                return false;
 
             condition.PropertyTickerId = _owner.StartPropertyTickingCondition(condition);
             return true;
@@ -1267,7 +1224,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool ScheduleConditionEnd(Condition condition)
         {
-            if (condition == null) return Logger.WarnReturn(false, "ScheduleConditionEnd(): condition == null");
+            if (!Verify.IsNotNull(condition)) return false;
 
             if (condition.Duration > TimeSpan.Zero)
             {
@@ -1290,7 +1247,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool CancelScheduledConditionEnd(Condition condition)
         {
-            if (condition == null) return Logger.WarnReturn(false, "CancelScheduledConditionEnd(): condition == null");
+            if (!Verify.IsNotNull(condition)) return false;
 
             EventPointer<RemoveConditionEvent> removeEvent = condition.RemoveEvent;
 
@@ -1334,9 +1291,7 @@ namespace MHServerEmu.Games.Entities
 
             if (stackCount <= 0)
             {
-                if (stackCount != 0)
-                    Logger.Warn("DecrementStackCountCache(): stackCount != 0");
-
+                Verify.IsTrue(stackCount == 0);
                 _stackCountCache.Remove(stackId);
             }
         }
@@ -1362,12 +1317,8 @@ namespace MHServerEmu.Games.Entities
                 if (condition.IsPersistToDB() == false)
                     continue;
 
-                // Do some extra validation
-                if (condition.ConditionPrototypeRef == PrototypeId.Invalid)
-                    return Logger.WarnReturn(0, "GetPersistentConditionCount(): condition.ConditionPrototypeRef == PrototypeId.Invalid");
-
-                if (condition.IsFinite == false)
-                    return Logger.WarnReturn(0, "GetPersistentConditionCount(): condition.IsFinite == false");
+                if (!Verify.IsTrue(condition.ConditionPrototypeRef != PrototypeId.Invalid)) return 0;
+                if (!Verify.IsTrue(condition.IsFinite)) return 0;
 
                 count++;
             }
@@ -1378,7 +1329,7 @@ namespace MHServerEmu.Games.Entities
         private bool CacheCancelOnProcTriggers(Condition condition)
         {
             ConditionPrototype conditionProto = condition?.ConditionPrototype;
-            if (conditionProto == null) return Logger.WarnReturn(false, "CacheCancelOnProcTriggers(): conditionProto == null");
+            if (!Verify.IsNotNull(conditionProto)) return false;
 
             if (conditionProto.CancelOnProcTriggers.IsNullOrEmpty())
                 return true;
@@ -1400,7 +1351,7 @@ namespace MHServerEmu.Games.Entities
         private bool RemoveCachedCancelOnProcTriggers(Condition condition)
         {
             ConditionPrototype conditionProto = condition?.ConditionPrototype;
-            if (conditionProto == null) return Logger.WarnReturn(false, "RemoveCachedCancelOnProcTriggers(): conditionProto == null");
+            if (!Verify.IsNotNull(conditionProto)) return false;
 
             if (conditionProto.CancelOnProcTriggers.IsNullOrEmpty())
                 return true;
@@ -1498,7 +1449,7 @@ namespace MHServerEmu.Games.Entities
 
             public Condition Get()
             {
-                if (Collection == null) Logger.WarnReturn(false, "Handle.Get(): Collection == null");
+                if (!Verify.IsNotNull(Collection)) return null;
 
                 if (CollectionVersion != Collection._version)
                 {

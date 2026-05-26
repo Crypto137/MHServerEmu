@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         private bool EvaluateEntity(Player killer, WorldEntity entity)
         {
             if (entity == null || entity is Hotspot) return false;
-            var tagPlayers = entity.TagPlayers;
+            var tagPlayers = entity.PlayerTags;
 
             if (Mission.IsOpenMission == false) 
             {
@@ -145,7 +145,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                 if (_proto.OpenMissionContribValueTanking != 0.0f)
                     SetContributions(entity.DamageContributors, _proto.OpenMissionContribValueTanking);
 
-                foreach (var player in entity.TagPlayers.GetPlayers())
+                foreach (var player in entity.PlayerTags.GetPlayers())
                     if (IsMissionPlayer(player))
                     {
                         if (killer == player) killerTagged = true;

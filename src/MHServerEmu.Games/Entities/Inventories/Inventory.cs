@@ -13,10 +13,8 @@ namespace MHServerEmu.Games.Entities.Inventories
     {
         public const uint InvalidSlot = uint.MaxValue;      // 0xFFFFFFFF / -1
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         // The client uses a set of std::pair here, the main requirement is that this has to be sorted by key (slot)
-        private SortedDictionary<uint, InvEntry> _entities = new();
+        private readonly SortedDictionary<uint, InvEntry> _entities = new();
 
         public Game Game { get; }
         public ulong OwnerId { get; private set; }
@@ -42,21 +40,21 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public override string ToString()
         {
-            return $"{GameDatabase.GetPrototypeName(PrototypeDataRef)}";
+            return PrototypeDataRef.GetName();
         }
 
         public bool Initialize(PrototypeId prototypeRef, ulong ownerId)
         {
-            var prototype = prototypeRef.As<InventoryPrototype>();
-            if (prototype == null) return Logger.WarnReturn(false, "Initialize(): prototype == null");
+            InventoryPrototype inventoryPrototype = prototypeRef.As<InventoryPrototype>();
+            if (!Verify.IsNotNull(inventoryPrototype)) return false;
 
-            Prototype = prototype;
+            Prototype = inventoryPrototype;
             OwnerId = ownerId;
-            Category = prototype.Category;
-            ConvenienceLabel = prototype.ConvenienceLabel;
-            MaxCapacity = prototype.CapacityUnlimited ? int.MaxValue : prototype.Capacity;
+            Category = inventoryPrototype.Category;
+            ConvenienceLabel = inventoryPrototype.ConvenienceLabel;
+            MaxCapacity = inventoryPrototype.CapacityUnlimited ? int.MaxValue : inventoryPrototype.Capacity;
 
-            if (ownerId == Entity.InvalidId) return Logger.WarnReturn(false, "Initialize(): ownerId == Entity.InvalidId");
+            if (!Verify.IsTrue(ownerId != Entity.InvalidId)) return false;
             return true;
         }
 
@@ -85,7 +83,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public Entity GetMatchingEntity(PrototypeId entityRef)
         {
-            if (entityRef == PrototypeId.Invalid) return Logger.WarnReturn<Entity>(null, "GetMatchingEntity(): entityRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(entityRef != PrototypeId.Invalid)) return null;
 
             foreach (var entry in this)
             {
@@ -98,8 +96,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public int GetMatchingEntities(PrototypeId entityRef, List<ulong> matchList = null)
         {
-            // NOTE: This is probably used for things like checking if a player has enough of something (e.g. crafting materials)
-            if (entityRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "GetMatchingEntities(): entityRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(entityRef != PrototypeId.Invalid)) return 0;
 
             int numMatches = 0;
 
@@ -123,7 +120,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public bool ContainsMatchingEntity(PrototypeId entityRef)
         {
-            if (entityRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "ContainsMatchingEntity(): entityRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(entityRef != PrototypeId.Invalid)) return false;
 
             foreach (var entry in this)
             {
@@ -136,33 +133,25 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public bool DestroyContained()
         {
-            if (Game == null) return Logger.WarnReturn(false, "DestroyContained(): Game == null");
+            Game game = Game;
+            if (!Verify.IsNotNull(game)) return false;
 
-            // NOTE: We store contained entity ids in a span to be able to remove entries while we iterate.
-            // Using a span instead of ToArray() or ToList() allows us to avoid extra heap allocations.
+            // NOTE: We store contained entity ids in a list to be able to remove entries while we iterate.
             // The original implementation uses a custom iterator here that restarts after every removed item.
-            Span<ulong> containedIds = stackalloc ulong[_entities.Count];
-            int i = 0;
-
+            using var containedIdsHandle = ListPool<ulong>.Instance.Get(out List<ulong> containedIds);
             foreach (InvEntry entry in _entities.Values)
-                containedIds[i++] = entry.EntityId;
+                containedIds.Add(entry.EntityId);
 
-            EntityManager entityManager = Game.EntityManager;
+            EntityManager entityManager = game.EntityManager;
 
             foreach (ulong containedId in containedIds)
             {
                 Entity contained = entityManager.GetEntity<Entity>(containedId);
-                if (contained == null)
-                {
-                    Logger.Warn("DestroyContained(): contained == null");
+                if (!Verify.IsNotNull(contained))
                     continue;
-                }
 
-                bool isDestroyingAllEntities = false;
-                if (entityManager == null)
-                    Logger.Warn("DestroyContained(): Game.EntityManager == null");
-                else
-                    isDestroyingAllEntities = entityManager.IsDestroyingAllEntities;
+                // Skipping entityManager verify from the client here because it doesn't make sense.
+                bool isDestroyingAllEntities = entityManager.IsDestroyingAllEntities;
 
                 // Entities that have the DetachOnContainerDestroyed are not destroyed (unless the EntityManager is currently cleaning up all entities)
                 if (contained.Properties[PropertyEnum.DetachOnContainerDestroyed] && isDestroyingAllEntities == false)
@@ -175,17 +164,16 @@ namespace MHServerEmu.Games.Entities.Inventories
                 contained.Destroy();
             }
 
+            // If things are added as a result of destroying other things, we need to do this in a loop like the client.
+            Verify.IsTrue(_entities.Count == 0);
+
             return true;
         }
 
         public void TriggerCleanupEvent(InventoryEvent inventoryEvent)
         {
             InventoryPrototype inventoryProto = Prototype;
-            if (inventoryProto == null)
-            {
-                Logger.Warn("TriggerCleanupEvent(): inventoryProto == null");
-                return;
-            }
+            if (!Verify.IsNotNull(inventoryProto)) return;
 
             InventoryEvent destroyOnEvent = inventoryProto.DestroyContainedOnEvent;
             if (destroyOnEvent == InventoryEvent.Invalid || destroyOnEvent != inventoryEvent)
@@ -199,11 +187,8 @@ namespace MHServerEmu.Games.Entities.Inventories
             foreach (var entry in this)
             {
                 Entity entity = entityManager.GetEntity<Entity>(entry.Id);
-                if (entity == null)
-                {
-                    Logger.Warn("TriggerInventoryCleanupEvent(): entity == null");
+                if (!Verify.IsNotNull(entity))
                     continue;
-                }
 
                 if (entity.Properties.HasProperty(PropertyEnum.InventoryAddTime) == false)
                     continue;
@@ -230,14 +215,16 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public int GetCapacity()
         {
-            if (Prototype == null) return Logger.WarnReturn(0, "GetCapacity(): Prototype == null");
+            InventoryPrototype inventoryPrototype = Prototype;
+            if (!Verify.IsNotNull(inventoryPrototype)) return 0;
 
-            int nSoftCap = Prototype.GetSoftCapacityDefaultSlots();
-            if (nSoftCap < 0) return MaxCapacity;
+            int nSoftCap = inventoryPrototype.GetSoftCapacityDefaultSlots();
+            if (nSoftCap < 0)
+                return MaxCapacity;
 
-            if (Owner == null) return Logger.WarnReturn(MaxCapacity, "GetCapacity(): Owner == null");
+            if (!Verify.IsNotNull(Owner)) return MaxCapacity;
 
-            foreach (PrototypeId slotGroupRef in Prototype.GetSoftCapacitySlotGroups())
+            foreach (PrototypeId slotGroupRef in inventoryPrototype.GetSoftCapacitySlotGroups())
             {
                 var slotGroup = slotGroupRef.As<InventoryExtraSlotsGroupPrototype>();
                 int extraSlots = Owner.Properties[PropertyEnum.InventoryExtraSlotsAvailable, slotGroup.DataRef];
@@ -248,31 +235,40 @@ namespace MHServerEmu.Games.Entities.Inventories
                 nSoftCap += extraSlots;
             }
 
-            if (nSoftCap > MaxCapacity) Logger.Warn($"GetCapacity(): Inventory softcap over max inventory limit. INVENTORY={this} OWNER={Owner}");
-
+            Verify.IsTrue(nSoftCap <= MaxCapacity, $"Inventory softcap over max inventory limit. INVENTORY={this} OWNER={Owner}");
             return Math.Min(nSoftCap, MaxCapacity);
         }
 
         public bool IsSlotFree(uint slot)
         {
-            if (slot == InvalidSlot) return Logger.WarnReturn(false, $"IsSlotFree(): Called with the invalid slot id for inventory {this}");
-            if (Game == null) return Logger.WarnReturn(false, "IsSlotFree(): Game == null");
+            if (!Verify.IsTrue(slot != InvalidSlot, $"IsSlotFree() called with the invalid slot id for inventory:\n[{this}]"))
+                return false;
 
-            if (Count >= GetCapacity()) return false;
-            if (slot >= GetCapacity()) return false;
-            if (GetEntityInSlot(slot) != Entity.InvalidId) return false;
+            Game game = Game;
+            if (!Verify.IsNotNull(game)) return false;
 
-            Entity inventoryOwner = Game.EntityManager.GetEntity<Entity>(OwnerId);
-            if (inventoryOwner == null) return Logger.WarnReturn(false, "IsSlotFree(): inventoryOwner == null");
+            if (Count >= GetCapacity())
+                return false;
 
-            if (inventoryOwner.ValidateInventorySlot(this, slot) == false) return false;
+            if (slot >= GetCapacity())
+                return false;
+
+            if (GetEntityInSlot(slot) != Entity.InvalidId)
+                return false;
+
+            Entity inventoryOwner = game.EntityManager.GetEntity<Entity>(OwnerId);
+            if (!Verify.IsNotNull(inventoryOwner)) return false;
+
+            if (inventoryOwner.ValidateInventorySlot(this, slot) == false)
+                return false;
 
             return true;
         }
 
         public uint GetFreeSlot(Entity entity, bool allowStacking, bool isAdding = false)
         {
-            if (Game == null) return Logger.WarnReturn(InvalidSlot, "GetFreeSlot(): Game == null");
+            Game game = Game;
+            if (!Verify.IsNotNull(game)) return InvalidSlot;
 
             if (entity != null && allowStacking)
             {
@@ -281,11 +277,12 @@ namespace MHServerEmu.Games.Entities.Inventories
                 if (stackSlot != InvalidSlot) return stackSlot;
             }
 
-            Entity inventoryOwner = Game.EntityManager.GetEntity<Entity>(OwnerId);
-            if (inventoryOwner == null) return Logger.WarnReturn(InvalidSlot, "GetFreeSlot(): inventoryOwner == null");
+            Entity inventoryOwner = game.EntityManager.GetEntity<Entity>(OwnerId);
+            if (!Verify.IsNotNull(inventoryOwner)) return InvalidSlot;
 
             // Make sure we actually have free slots
-            if (Count >= GetCapacity()) return InvalidSlot;
+            if (Count >= GetCapacity())
+                return InvalidSlot;
 
             // Look for a free slot between occupied ones
             // NOTE: This requires the slot / InvEntry collection to be sorted by slot
@@ -320,14 +317,13 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             foreach (var entry in this)
             {
-                if (entry.Id == entity.Id) continue;     // Stacking with itself sure sounds like a potential dupe
-                Entity existingEntity = entityManager.GetEntity<Entity>(entry.Id);
-                
-                if (existingEntity == null)
-                {
-                    Logger.Warn($"GetAutoStackSlot(): Missing entity found while iterating inventory. Id={entry.Id}");
+                // Stacking with itself sure sounds like a potential dupe
+                if (entry.Id == entity.Id)
                     continue;
-                }
+
+                Entity existingEntity = entityManager.GetEntity<Entity>(entry.Id);
+                if (!Verify.IsNotNull(existingEntity, $"Missing entity found while iterating inventory.  Id = {entry.Id}"))
+                    continue;
 
                 if (entity.CanStackOnto(existingEntity, isAdding))
                     return entry.Slot;
@@ -338,12 +334,13 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public InventoryResult PassesContainmentFilter(PrototypeId entityProtoRef)
         {
-            if (Prototype == null) return Logger.WarnReturn(InventoryResult.Invalid, "PassesContainmentFilter(): Prototype == null");
+            InventoryPrototype inventoryPrototype = Prototype;
+            if (!Verify.IsNotNull(inventoryPrototype)) return InventoryResult.Invalid;
             
-            var entityProto = entityProtoRef.As<EntityPrototype>();
-            if (entityProto == null) return Logger.WarnReturn(InventoryResult.Invalid, "PassesContainmentFilter(): entityProto == null");
+            EntityPrototype entityProto = entityProtoRef.As<EntityPrototype>();
+            if (!Verify.IsNotNull(entityProto)) return InventoryResult.Invalid;
 
-            if (Prototype.AllowEntity(entityProto) == false)
+            if (inventoryPrototype.AllowEntity(entityProto) == false)
                 return InventoryResult.InvalidDestInvContainmentFilters;
 
             return InventoryResult.Success;
@@ -357,13 +354,13 @@ namespace MHServerEmu.Games.Entities.Inventories
             if (IsEquipment == false) return result;
 
             Entity inventoryOwner = Game.EntityManager.GetEntity<Entity>(OwnerId);
-            if (inventoryOwner == null) return Logger.WarnReturn(InventoryResult.Invalid, "PassesEquipmentRestrictions(): inventoryOwner == null");
+            if (!Verify.IsNotNull(inventoryOwner)) return InventoryResult.Invalid;
 
             Agent inventoryAgentOwner = inventoryOwner.GetSelfOrOwnerOfType<Agent>();
-            if (inventoryAgentOwner == null) return Logger.WarnReturn(InventoryResult.Invalid, "PassesEquipmentRestrictions(): Found an equipment inventory belonging to a non-agent");
+            if (!Verify.IsNotNull(inventoryAgentOwner, "Found an equipment inventory belonging to a non-agent.")) return InventoryResult.Invalid;
 
             Item item = entity as Item;
-            if (item == null) return Logger.WarnReturn(InventoryResult.InvalidNotAnItem, "PassesEquipmentRestrictions(): item == null");
+            if (!Verify.IsNotNull(item)) return InventoryResult.InvalidNotAnItem;
 
             result = inventoryAgentOwner.CanEquip(item, out propertyRestriction);
             if (result == InventoryResult.Success)
@@ -392,10 +389,8 @@ namespace MHServerEmu.Games.Entities.Inventories
                 }
 
                 Inventory prevInventory = entity.GetOwnerInventory();
-
-                if (prevInventory == null)
-                    return Logger.WarnReturn(InventoryResult.NotInInventory,
-                        $"ChangeEntityInventoryLocation(): Unable to get owner inventory for move with entity {entity} at invLoc {invLoc}");
+                if (!Verify.IsNotNull(prevInventory, $"Unable to get owner inventory for move with entity {entity} at invLoc {invLoc}"))
+                    return InventoryResult.NotInInventory;
 
                 return prevInventory.MoveEntityTo(entity, destInventory, ref stackEntityId, allowStacking, destSlot);
             }
@@ -403,15 +398,12 @@ namespace MHServerEmu.Games.Entities.Inventories
             {
                 // If no valid destination is specified, it means we are removing an entity from the inventory it is currently in
 
-                if (invLoc.IsValid == false)
-                    return Logger.WarnReturn(InventoryResult.NotInInventory,
-                        $"ChangeEntityInventoryLocation(): Trying to remove entity {entity} from inventory, but it is not in any inventory");
+                if (!Verify.IsTrue(invLoc.IsValid, $"Trying to remove entity {entity} from inventory, but it is not in any inventory"))
+                    return InventoryResult.NotInInventory;
 
                 Inventory inventory = entity.GetOwnerInventory();
-
-                if (inventory == null)
-                    return Logger.WarnReturn(InventoryResult.NotInInventory,
-                        $"ChangeEntityInventoryLocation(): Unable to get owner inventory for remove with entity {entity} at invLoc {invLoc}");
+                if (!Verify.IsNotNull(inventory, $"Unable to get owner inventory for remove with entity {entity} at invLoc {invLoc}"))
+                    return InventoryResult.NotInInventory;
 
                 return inventory.RemoveEntity(entity);
             }
@@ -420,8 +412,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         public static InventoryResult ChangeEntityInventoryLocationOnCreate(Entity entity, Inventory destInventory, uint destSlot, bool isPacked,
             bool allowStacking, ref InventoryLocation prevInvLoc)
         {
-            if (entity.InventoryLocation.IsValid)
-                return Logger.WarnReturn(InventoryResult.SourceEntityAlreadyInAnInventory, "ChangeEntityInventoryLocationOnCreate(): Entity is already in an inventory");
+            if (!Verify.IsTrue(entity.InventoryLocation.IsValid == false)) return InventoryResult.SourceEntityAlreadyInAnInventory;
 
             if (isPacked)
                 return destInventory.UnpackArchivedEntity(entity, destSlot);
@@ -432,12 +423,10 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public static bool IsPlayerStashInventory(PrototypeId inventoryRef)
         {
-            if (inventoryRef == PrototypeId.Invalid)
-                return Logger.WarnReturn(false, "IsPlayerStashInventory(): inventoryRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(inventoryRef != PrototypeId.Invalid)) return false;
 
-            var inventoryProto = GameDatabase.GetPrototype<InventoryPrototype>(inventoryRef);
-            if (inventoryProto == null)
-                return Logger.WarnReturn(false, "IsPlayerStashInventory(): inventoryProto == null");
+            InventoryPrototype inventoryProto = inventoryRef.As<InventoryPrototype>();
+            if (!Verify.IsNotNull(inventoryProto)) return false;
 
             return inventoryProto.IsPlayerStashInventory;
         }
@@ -446,8 +435,8 @@ namespace MHServerEmu.Games.Entities.Inventories
         {
             // NOTE: The entity is actually added at the very end in DoAddEntity(). Everything before it is validation.
 
-            if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "AddEntity(): entity == null");
-            if (entity.IsRootOwner == false) return Logger.WarnReturn(InventoryResult.NotRootOwner, "AddEntity(): entity.IsRootOwner == false");
+            if (!Verify.IsNotNull(entity)) return InventoryResult.InvalidSourceEntity;
+            if (!Verify.IsTrue(entity.IsRootOwner)) return InventoryResult.NotRootOwner;
 
             // Look for a free slot of no slot if specified
             if (destSlot == InvalidSlot)
@@ -460,8 +449,8 @@ namespace MHServerEmu.Games.Entities.Inventories
             ulong existingEntityId = GetEntityInSlot(destSlot);
             if (existingEntityId != Entity.InvalidId)
             {
-                var existingEntity = Game.EntityManager.GetEntity<Entity>(existingEntityId);
-                if (existingEntity == null) return Logger.WarnReturn(InventoryResult.InvalidExistingEntityAtDest, "AddEntity(): existingEntity == null");
+                Entity existingEntity = Game.EntityManager.GetEntity<Entity>(existingEntityId);
+                if (!Verify.IsNotNull(existingEntity)) return InventoryResult.InvalidExistingEntityAtDest;
 
                 if (allowStacking && entity.CanStackOnto(existingEntity))
                     return DoStacking(entity, existingEntity, ref stackEntityId);
@@ -475,39 +464,38 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         private InventoryResult CheckAddEntity(Entity entity, uint destSlot)
         {
-            if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "CheckAddEntity(): entity == null");
-            if (destSlot == InvalidSlot) return Logger.WarnReturn(InventoryResult.InvalidSlotParam, "CheckAddEntity(): destSlot == InvalidSlot");
+            if (!Verify.IsNotNull(entity)) return InventoryResult.InvalidSourceEntity;
+            if (!Verify.IsTrue(destSlot != InvalidSlot)) return InventoryResult.InvalidSlotParam;
 
             InventoryResult canChangeInvResult = entity.CanChangeInventoryLocation(this);
-            if (canChangeInvResult != InventoryResult.Success)
-                return Logger.WarnReturn(canChangeInvResult, "CheckAddEntity(): canChangeInvResult != InventoryResult.Success");
+            if (!Verify.IsTrue(canChangeInvResult == InventoryResult.Success)) return canChangeInvResult;
 
-            if (IsSlotFree(destSlot) == false) return InventoryResult.SlotAlreadyOccupied;
+            if (IsSlotFree(destSlot) == false)
+                return InventoryResult.SlotAlreadyOccupied;
 
             return InventoryResult.Success;
         }
 
-        private InventoryResult DoAddEntity(Entity entity, uint destSlot, ref InventoryLocation prevInvLoc)
+        private InventoryResult DoAddEntity(Entity entity, uint slot, ref InventoryLocation prevInvLoc)
         {
-            if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "DoAddEntity(): entity == null");
+            if (!Verify.IsNotNull(entity)) return InventoryResult.InvalidSourceEntity;
 
             Entity inventoryOwner = Game.EntityManager.GetEntity<Entity>(OwnerId);
-            if (inventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "DoAddEntity(): owner == null");
+            if (!Verify.IsNotNull(inventoryOwner)) return InventoryResult.InventoryHasNoOwner;
 
-            if (destSlot >= GetCapacity()) return Logger.WarnReturn(InventoryResult.SlotExceedsCapacity, "DoAddEntity(): destSlot >= GetCapacity()");
+            if (!Verify.IsTrue(slot < GetCapacity())) return InventoryResult.SlotExceedsCapacity;
 
-            if (GetEntityInSlot(destSlot) != Entity.InvalidId) return InventoryResult.SlotAlreadyOccupied;
+            if (GetEntityInSlot(slot) != Entity.InvalidId)
+                return InventoryResult.SlotAlreadyOccupied;
 
             ref InventoryLocation existingInvLoc = ref entity.InventoryLocation;
-
-            if (existingInvLoc.IsValid)
-                return Logger.WarnReturn(InventoryResult.SourceEntityAlreadyInAnInventory,
-                    $"DoAddEntity(): Entity {entity} not expected in inventory, but is located at {existingInvLoc}");
+            if (!Verify.IsTrue(existingInvLoc.IsValid == false, $"Entity {entity} not expected in inventory, but is located at {existingInvLoc}"))
+                return InventoryResult.SourceEntityAlreadyInAnInventory;
 
             PreAdd(entity);
 
-            _entities.Add(destSlot, new InvEntry(entity.Id, entity.PrototypeDataRef, null));
-            entity.InventoryLocation.Set(OwnerId, PrototypeDataRef, destSlot);
+            _entities.Add(slot, new InvEntry(entity.Id, entity.PrototypeDataRef, null));
+            entity.InventoryLocation.Set(OwnerId, PrototypeDataRef, slot);
             ref InventoryLocation invLoc = ref entity.InventoryLocation;
 
             PostAdd(entity, ref prevInvLoc, ref invLoc);
@@ -524,26 +512,23 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         private InventoryResult DoRemoveEntity(Entity entity, bool finalMove, bool withinSameInventory)
         {
-            if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "DoRemoveEntity(): entity == null");
-            if (entity.IsRootOwner) return Logger.WarnReturn(InventoryResult.IsRootOwner, "DoRemoveEntity(): entity.IsRootOwner");
+            if (!Verify.IsNotNull(entity)) return InventoryResult.InvalidSourceEntity;
+            if (!Verify.IsTrue(entity.IsRootOwner == false)) return InventoryResult.IsRootOwner;
 
             Entity inventoryOwner = Owner;
-            if (inventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "DoRemoveEntity(): inventoryOwner == null");
+            if (!Verify.IsNotNull(inventoryOwner)) return InventoryResult.InventoryHasNoOwner;
 
             InventoryLocation invLoc = entity.InventoryLocation;    // copy
 
-            if (entity.GetOwnerInventory() != this)
-                return Logger.WarnReturn(InventoryResult.NotInInventory, 
-                    $"DoRemoveEntity(): Entity {entity} expected to be in {this} inventory but is instead located at {invLoc} inventory location");
+            if (!Verify.IsTrue(entity.GetOwnerInventory() == this, $"Entity {entity} expected to be in {this} inventory but is instead located at {invLoc} inventory location"))
+                return InventoryResult.NotInInventory;
 
             uint slot = invLoc.Slot;
-            if (slot == InvalidSlot)
-                return Logger.WarnReturn(InventoryResult.UnknownFailure, "DoRemoveEntity(): slot == InvalidSlot");
+            if (!Verify.IsTrue(slot != InvalidSlot)) return InventoryResult.UnknownFailure;
 
-            // NOTE: This is a bit simplified compared to the original, but should probably be fine. Original verify message below.
-            // Entity not in expected slot.  Slot contains entityId %lld, and entity %s is instead at invLoc %s
-            if (_entities.ContainsKey(slot) == false)
-                return Logger.WarnReturn(InventoryResult.NotFoundInThisInventory, "DoRemoveEntity(): Entity not in expected slot");
+            bool hasEntry = _entities.TryGetValue(slot, out var entry) && entry.EntityId == entity.Id && entry.PrototypeDataRef == entity.PrototypeDataRef;
+            if (!Verify.IsTrue(hasEntry, $"Entity not in expected slot.  Slot contains entityId {entry.EntityId}, and entity {entity} is instead at invLoc {invLoc}"))
+                return InventoryResult.NotFoundInThisInventory;
 
             PreRemove(entity);
 
@@ -564,12 +549,15 @@ namespace MHServerEmu.Games.Entities.Inventories
         private InventoryResult MoveEntityTo(Entity entity, Inventory destInventory, ref ulong? stackEntityId, bool allowStacking, uint destSlot)
         {
             // NOTE: This is probably the most complicated and potentially error-prone inventory operation, so there is a lot of validation here
+            if (!Verify.IsNotNull(entity)) return InventoryResult.InvalidSourceEntity;
 
-            if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "MoveEntityTo(): entity == null");
-            if (Owner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "MoveEntityTo(): Owner == null");
-            if (destInventory.Owner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "MoveEntityTo(): destInventory.Owner == null");
+            Entity myOwner = Owner;
+            Entity destOwner = destInventory.Owner;
+            if (!Verify.IsNotNull(myOwner)) return InventoryResult.InventoryHasNoOwner;
+            if (!Verify.IsNotNull(destOwner)) return InventoryResult.InventoryHasNoOwner;
 
-            if (entity.GetOwnerInventory() != this) return InventoryResult.NotInInventory;
+            if (entity.GetOwnerInventory() != this)
+                return InventoryResult.NotInInventory;
 
             // Same as AddEntity(), we look for a free slot if no specific slot is specified
             if (destSlot == InvalidSlot)
@@ -598,8 +586,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             if (existingEntityAtDestId != Entity.InvalidId)
             {
                 existingEntityAtDest = Game.EntityManager.GetEntity<Entity>(existingEntityAtDestId);
-                if (existingEntityAtDest == null) return Logger.WarnReturn(InventoryResult.InvalidExistingEntityAtDest,
-                    "MoveEntityTo(): existingEntityAtDest == null");
+                if (!Verify.IsNotNull(existingEntityAtDest)) return InventoryResult.InvalidExistingEntityAtDest;
 
                 // If possible, stack our entity with the entity at the destination
                 if (allowStacking && entity.CanStackOnto(existingEntityAtDest))
@@ -612,11 +599,11 @@ namespace MHServerEmu.Games.Entities.Inventories
                     return canChangeInvResult;
             }
 
-            // Check if we are moving entity within the same inventory (same owner and prototype)
-            bool withinSameInventory = Owner == destInventory.Owner && entity.InventoryLocation.InventoryRef == destInventory.PrototypeDataRef;
-
             // Remember previous inventory location of the entity we are moving
             InventoryLocation prevInvLoc = entity.InventoryLocation;    // copy
+
+            // Check if we are moving entity within the same inventory (same owner and prototype)
+            bool withinSameInventory = myOwner == destOwner && prevInvLoc.InventoryRef == destInventory.PrototypeDataRef;
 
             // Start moving things around
             InventoryResult result;
@@ -629,7 +616,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
                 // Remove it
                 result = destInventory.DoRemoveEntity(existingEntityAtDest, false, withinSameInventory);
-                if (result != InventoryResult.Success) return Logger.WarnReturn(result, "MoveEntityTo(): Failed to remove existing entity at destination");
+                if (!Verify.IsTrue(result == InventoryResult.Success)) return result;
             }
             else
             {
@@ -638,17 +625,17 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             // Remove the entity we are moving from its place
             result = DoRemoveEntity(entity, false, withinSameInventory);
-            if (result != InventoryResult.Success) return Logger.WarnReturn(result, "MoveEntityTo(): Failed to remove entity from its original location");
+            if (!Verify.IsTrue(result == InventoryResult.Success)) return result;
 
             // Add the entity we are moving to its destination
             result = destInventory.DoAddEntity(entity, destSlot, ref prevInvLoc);
-            if (result != InventoryResult.Success) return Logger.WarnReturn(result, "MoveEntityTo(): Failed to add entity to its destination");
+            if (!Verify.IsTrue(result == InventoryResult.Success)) return result;
 
             // Add the entity that was present at our destination's slot to where the entity we moved used to be
             if (existingEntityAtDest != null)
             {
                 result = DoAddEntity(existingEntityAtDest, prevInvLoc.Slot, ref existingEntityAtDestPrevInvLoc);
-                if (result != InventoryResult.Success) return Logger.WarnReturn(result, "MoveEntityTo(): Failed to add existing entity to the location of the original entity");
+                if (!Verify.IsTrue(result == InventoryResult.Success)) return result;
             }
 
             return InventoryResult.Success;
@@ -656,18 +643,16 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         private InventoryResult DoStacking(Entity entityToStack, Entity entityToStackWith, ref ulong? stackEntityId)
         {
-            if (entityToStack == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "DoStacking(): entityToStack == null");
-            if (entityToStackWith == null) return Logger.WarnReturn(InventoryResult.InvalidStackEntity, "DoStacking(): entityToStackWith == null");
-            if (entityToStack.CanStackOnto(entityToStackWith) == false) return Logger.WarnReturn(InventoryResult.StackTypeMismatch,
-                "DoStacking(): entityToStack.CanStackOnto(entityToStackWith) == false");
+            if (!Verify.IsNotNull(entityToStack)) return InventoryResult.InvalidSourceEntity;
+            if (!Verify.IsNotNull(entityToStackWith)) return InventoryResult.InvalidStackEntity;
+            if (!Verify.IsTrue(entityToStack.CanStackOnto(entityToStackWith))) return InventoryResult.StackTypeMismatch;
 
             int stackSize = entityToStackWith.CurrentStackSize + entityToStack.CurrentStackSize;
             int stackSizeMax = entityToStackWith.Properties[PropertyEnum.InventoryStackSizeMax];
             int remaining = stackSize - stackSizeMax;   // If > 0, it means entityToStack can't fit into entityToStackWith completely
 
-            if (remaining > 0 && entityToStack.InventoryLocation.IsValid == false)
-                return Logger.WarnReturn(InventoryResult.StackCombinePartial,
-                    "DoStacking(): remaining > 0 && entityToStack.InventoryLocation.IsValid == false");
+            if (remaining > 0 && !Verify.IsTrue(entityToStack.InventoryLocation.IsValid))
+                return InventoryResult.StackCombinePartial;
 
             // Prevent the target stack from overflowing
             stackSize = Math.Min(stackSize, stackSizeMax);
@@ -706,7 +691,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         private bool PostAdd(Entity entity, ref InventoryLocation prevInvLoc, ref InventoryLocation invLoc)
         {
-            if (entity == null) return Logger.WarnReturn(false, "PostAdd(): entity == null");
+            if (!Verify.IsNotNull(entity)) return false;
 
             entity.OnSelfAddedToOtherInventory();
 
@@ -723,7 +708,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             // Timestamp entities in expirable inventories.
             InventoryPrototype inventoryProto = Prototype;
-            if (inventoryProto == null) return Logger.WarnReturn(false, "PostAdd(): inventoryProto == null");
+            if (!Verify.IsNotNull(inventoryProto)) return false;
 
             if (inventoryProto.DestroyContainedOnEvent != InventoryEvent.Invalid &&
                 entity.Properties.HasProperty(PropertyEnum.InventoryAddTime) == false)
@@ -749,7 +734,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         private bool PostRemove(Entity entity, ref InventoryLocation prevInvLoc, bool withinSameInventory)
         {
-            if (entity == null) return Logger.WarnReturn(false, "PostRemove(): entity == null");
+            if (!Verify.IsNotNull(entity)) return false;
 
             entity.OnSelfRemovedFromOtherInventory(ref prevInvLoc);
             entity.UpdateInterestPolicies(true);
@@ -762,12 +747,16 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         private void PostFinalMove(Entity entity, ref InventoryLocation prevInvLoc, ref InventoryLocation invLoc)
         {
-            if (entity == null) return;
-            var manager = Game?.EntityManager;
-            if (manager == null) return;
+            if (!Verify.IsNotNull(entity)) return;
 
-            var oldOwner = manager.GetEntity<Entity>(prevInvLoc.ContainerId);
-            var newOwner = manager.GetEntity<Entity>(invLoc.ContainerId);
+            Game game = Game;
+            if (!Verify.IsNotNull(game)) return;
+
+            Entity oldOwner = game.EntityManager.GetEntity<Entity>(prevInvLoc.ContainerId);
+            Entity newOwner = game.EntityManager.GetEntity<Entity>(invLoc.ContainerId);
+            if (!Verify.IsTrue(oldOwner != null || newOwner != null)) return;
+
+            // InventorySlotChanged event not implemented
 
             if (oldOwner != null && oldOwner != newOwner)
                 oldOwner.EntityInventoryChangedEvent.Invoke(new(entity));
@@ -777,7 +766,8 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         private InventoryResult UnpackArchivedEntity(Entity entity, uint destSlot)
         {
-            return Logger.WarnReturn(InventoryResult.Invalid, "UnpackArchivedEntity(): Not yet implemented");
+            Verify.IsTrue(false);
+            return InventoryResult.Invalid;
         }
 
         public Enumerator GetEnumerator()

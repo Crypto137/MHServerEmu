@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2026.04.10 07:46:00 UTC` using server version `1.0.1`.
+This list was automatically generated on `2026.05.18 10:03:54 UTC` using server version `1.0.1`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -79,6 +79,7 @@ Debug commands for development.
 | !debug setmarker [MarkerRef] | No description available.                                                                                               | Admin      | Any            |
 | !debug spawn [on/off]        | No description available.                                                                                               | Admin      | Any            |
 | !debug test                  | Runs test code.                                                                                                         | Admin      | Any            |
+| !debug verifyreport          | Returns a report on verify failures encountered since the last server restart.                                          | Admin      | Any            |
 
 ## Entity
 Entity management commands.
@@ -222,17 +223,18 @@ Region management commands.
 ## Server
 Server management commands.
 
-| Command                           | Description                                       | User Level | Invoker Type   |
-| --------------------------------- | ------------------------------------------------- | ---------- | -------------  |
-| !server broadcast                 | Broadcasts a notification to all players.         | Admin      | Any            |
-| !server reloadaddg                | Reloads the Add G page.                           | Admin      | ServerConsole  |
-| !server reloadcatalog             | Reloads MTX store catalog.                        | Admin      | ServerConsole  |
-| !server reloaddashboard           | Reloads the web dashboard.                        | Admin      | ServerConsole  |
-| !server reloadlivetuning          | Reloads live tuning settings.                     | Admin      | ServerConsole  |
-| !server reloadplayernameblacklist | Reloads the player name blacklist.                | Admin      | ServerConsole  |
-| !server shutdown                  | Shuts the server down.                            | Admin      | Any            |
-| !server status                    | Prints server status.                             | Any        | Any            |
-| !server whitelist                 | Enables or disables account whitelist for logins. | Admin      | ServerConsole  |
+| Command                           | Description                                           | User Level | Invoker Type   |
+| --------------------------------- | ----------------------------------------------------- | ---------- | -------------  |
+| !server broadcast                 | Broadcasts a notification to all players.             | Admin      | Any            |
+| !server importdb                  | Imports data from the specified SQLite database file. | Admin      | ServerConsole  |
+| !server reloadaddg                | Reloads the Add G page.                               | Admin      | ServerConsole  |
+| !server reloadcatalog             | Reloads MTX store catalog.                            | Admin      | ServerConsole  |
+| !server reloaddashboard           | Reloads the web dashboard.                            | Admin      | ServerConsole  |
+| !server reloadlivetuning          | Reloads live tuning settings.                         | Admin      | ServerConsole  |
+| !server reloadplayernameblacklist | Reloads the player name blacklist.                    | Admin      | ServerConsole  |
+| !server shutdown                  | Shuts the server down.                                | Admin      | Any            |
+| !server status                    | Prints server status.                                 | Any        | Any            |
+| !server whitelist                 | Enables or disables account whitelist for logins.     | Admin      | ServerConsole  |
 
 ## Store
 Commands for interacting with the in-game store.

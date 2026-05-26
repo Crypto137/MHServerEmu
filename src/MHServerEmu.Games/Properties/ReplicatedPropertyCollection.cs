@@ -1,10 +1,8 @@
-﻿using System.Text;
-using Gazillion;
+﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
-using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -15,8 +13,6 @@ namespace MHServerEmu.Games.Properties
 {
     public class ReplicatedPropertyCollection : PropertyCollection, IArchiveMessageHandler
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private IArchiveMessageDispatcher _messageDispatcher = null;
         private AOINetworkPolicyValues _interestPolicies;
         private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
@@ -26,17 +22,22 @@ namespace MHServerEmu.Games.Properties
 
         public ReplicatedPropertyCollection() { }
 
+        public override string ToString()
+        {
+            return $"{nameof(_replicationId)}: {_replicationId}\n{base.ToString()}";
+        }
+
         public bool Bind(IArchiveMessageDispatcher messageDispatcher, AOINetworkPolicyValues interestPolicies)
         {
-            if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
+            if (!Verify.IsNotNull(messageDispatcher)) return false;
 
             if (IsBound)
             {
                 // If already bound to the dispatcher we need, all good
-                if (_messageDispatcher == messageDispatcher)
-                    return true;
+                if (!Verify.IsTrue(_messageDispatcher == messageDispatcher, $"Already bound with replicationId {_replicationId} to {_messageDispatcher}"))
+                    return false;
 
-                return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
+                return true;
             }
 
             _messageDispatcher = messageDispatcher;
@@ -80,14 +81,6 @@ namespace MHServerEmu.Games.Properties
             return success;
         }
 
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            sb.AppendLine($"{nameof(_replicationId)}: {_replicationId}");
-            sb.Append(base.ToString());
-            return sb.ToString();
-        }
-
         public void OnEntityChangePlayerAOI(Player player, InterestTrackOperation operation,
             AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies, AOINetworkPolicyValues archiveInterestPolicies)
         {
@@ -119,7 +112,6 @@ namespace MHServerEmu.Games.Properties
                     continue;
 
                 // Send newly applicable properties
-                //Logger.Trace($"OnEntityChangePlayerAOI(): [{ReplicationId}] {id}: {value.Print(propertyInfo.DataType)}");
 
                 player.SendMessage(NetMessageSetProperty.CreateBuilder()
                     .SetReplicationId(ReplicationId)
@@ -166,7 +158,6 @@ namespace MHServerEmu.Games.Properties
             if (_messageDispatcher.GetInterestedClients(interestedClientList, interestFilter))
             {
                 // Send update to interested
-                //Logger.Trace($"MarkPropertyChanged(): [{ReplicationId}] {id}: {value.Print(propertyInfo.DataType)}");
                 var setPropertyMessage = NetMessageSetProperty.CreateBuilder()
                     .SetReplicationId(ReplicationId)
                     .SetPropertyId(id.Raw.ReverseBits())    // In NetMessageSetProperty all bits are reversed rather than bytes
@@ -191,7 +182,6 @@ namespace MHServerEmu.Games.Properties
             if (_messageDispatcher.GetInterestedClients(interestedClientList, interestFilter))
             {
                 // Send update to interested
-                //Logger.Trace($"MarkPropertyRemoved(): [{ReplicationId}] {id}");
                 var removePropertyMessage = NetMessageRemoveProperty.CreateBuilder()
                     .SetReplicationId(ReplicationId)
                     .SetPropertyId(id.Raw.ReverseBits())    // In NetMessageRemoveProperty all bits are reversed rather than bytes

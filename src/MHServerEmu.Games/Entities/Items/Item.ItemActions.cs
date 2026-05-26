@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Avatars;
@@ -57,21 +58,15 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
 
                 case ItemActionType.ReplaceSelfItem:
-                    if (actionProto is not ItemActionReplaceSelfItemPrototype replaceSelfItemProto)
-                    {
-                        Logger.Warn("TriggerItemActionOnUse(): actionProto is not ItemActionReplaceSelfItemPrototype replaceSelfItemProto");
-                        return;
-                    }
+                    ItemActionReplaceSelfItemPrototype replaceSelfItemProto = actionProto as ItemActionReplaceSelfItemPrototype;
+                    if (!Verify.IsNotNull(replaceSelfItemProto)) return;
 
                     wasUsed |= DoItemActionReplaceSelfItem(replaceSelfItemProto.Item, player, avatar);
                     break;
 
                 case ItemActionType.ReplaceSelfLootTable:
-                    if (actionProto is not ItemActionReplaceSelfLootTablePrototype replaceSelfLootTableProto)
-                    {
-                        Logger.Warn("TriggerItemActionOnUse(): actionProto is not ItemActionReplaceSelfLootTablePrototype replaceSelfLootTableProto");
-                        return;
-                    }
+                    ItemActionReplaceSelfLootTablePrototype replaceSelfLootTableProto = actionProto as ItemActionReplaceSelfLootTablePrototype;
+                    if (!Verify.IsNotNull(replaceSelfLootTableProto)) return;
 
                     wasUsed |= DoItemActionReplaceSelfLootTable(replaceSelfLootTableProto.LootTable, replaceSelfLootTableProto.UseCurrentAvatarLevelForRoll, player, avatar);
                     break;
@@ -89,41 +84,29 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
 
                 case ItemActionType.UnlockPermaBuff:
-                    if (actionProto is not ItemActionUnlockPermaBuffPrototype unlockPermaBuffProto)
-                    {
-                        Logger.Warn("TriggerItemActionOnUse(): actionProto is not ItemActionUnlockPermaBuffPrototype unlockPermaBuffProto");
-                        return;
-                    }
+                    ItemActionUnlockPermaBuffPrototype unlockPermaBuffProto = actionProto as ItemActionUnlockPermaBuffPrototype;
+                    if (!Verify.IsNotNull(unlockPermaBuffProto)) return;
 
                     wasUsed |= DoItemActionUnlockPermaBuff(unlockPermaBuffProto.PermaBuff, player);
                     break;
 
                 case ItemActionType.UsePower:
-                    if (actionProto is not ItemActionUsePowerPrototype usePowerProto)
-                    {
-                        Logger.Warn("TriggerItemActionOnUse(): actionProto is not ItemActionUsePowerPrototype usePowerProto");
-                        return;
-                    }
+                    ItemActionUsePowerPrototype usePowerProto = actionProto as ItemActionUsePowerPrototype;
+                    if (!Verify.IsNotNull(usePowerProto)) return;
 
                     wasUsed |= DoItemActionUsePower(usePowerProto.Power, avatar);
                     break;
 
                 case ItemActionType.AwardTeamUpXP:
-                    if (actionProto is not ItemActionAwardTeamUpXPPrototype awardTeamUpXPProto)
-                    {
-                        Logger.Warn("TriggerItemActionOnUse(): actionProto is not ItemActionAwardTeamUpXPPrototype awardTeamUpXPProto");
-                        return;
-                    }
+                    ItemActionAwardTeamUpXPPrototype awardTeamUpXPProto = actionProto as ItemActionAwardTeamUpXPPrototype;
+                    if (!Verify.IsNotNull(awardTeamUpXPProto)) return;
 
                     wasUsed |= DoItemActionAwardTeamUpXP(avatar, awardTeamUpXPProto.XP);
                     break;
 
                 case ItemActionType.OpenUIPanel:
-                    if (actionProto is not ItemActionOpenUIPanelPrototype openUIPanelProto)
-                    {
-                        Logger.Warn("TriggerItemActionOnUse(): actionProto is not ItemActionOpenUIPanelPrototype openUIPanelProto");
-                        return;
-                    }
+                    ItemActionOpenUIPanelPrototype openUIPanelProto = actionProto as ItemActionOpenUIPanelPrototype;
+                    if (!Verify.IsNotNull(openUIPanelProto)) return;
 
                     wasUsed |= DoItemActionOpenUIPanel(player, openUIPanelProto.PanelName);
                     break;
@@ -142,13 +125,14 @@ namespace MHServerEmu.Games.Entities.Items
                     return true;
 
                 default:
-                    return Logger.WarnReturn(false, $"TriggerItemActionOnUsePowerActivated(): Unhandled action type {itemActionProto.ActionType}");
+                    Verify.IsTrue(false, $"Unhandled action type {itemActionProto.ActionType}");
+                    return false;
             }
         }
 
         private bool DoItemActionAssignPower()
         {
-            Logger.Debug($"DoItemActionAssignPower(): {this}");
+            Verify.IsTrue(false);
             return false;
         }
 
@@ -165,14 +149,13 @@ namespace MHServerEmu.Games.Entities.Items
 
         private bool DoItemActionPrestigeMode(Avatar avatar)
         {
-            Logger.Trace($"DoItemActionPrestigeMode(): [{this}] for [{avatar}]");
             return avatar.ActivatePrestigeMode();
         }
 
         private bool DoItemActionReplaceSelfItem(PrototypeId itemProtoRef, Player player, Avatar avatar)
         {
             ItemPrototype itemProto = itemProtoRef.As<ItemPrototype>();
-            if (itemProto == null) return Logger.WarnReturn(false, "DoItemActionReplaceSelfItem(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
             LootResult lootResult;
@@ -186,7 +169,7 @@ namespace MHServerEmu.Games.Entities.Items
             else
             {
                 ItemSpec itemSpec = Game.LootManager.CreateItemSpec(itemProtoRef, LootContext.CashShop, player, Properties[PropertyEnum.ItemLevel]);
-                if (itemSpec == null) return Logger.WarnReturn(false, "DoItemActionReplaceSelfItem(): itemSpec == null");
+                if (!Verify.IsNotNull(itemSpec)) return false;
                 lootResult = new(itemSpec);
             }
 
@@ -214,10 +197,10 @@ namespace MHServerEmu.Games.Entities.Items
             resolver.SetContext(LootContext.MysteryChest, player);
 
             LootRollResult result = lootTableProto.RollLootTable(inputSettings.LootRollSettings, resolver);
-            if (result == LootRollResult.NoRoll || result == LootRollResult.Failure)
+            if (!Verify.IsTrue(result != LootRollResult.NoRoll && result != LootRollResult.Failure))
             {
                 player.SendMessage(NetMessageLootRollFailed.DefaultInstance);
-                return Logger.WarnReturn(false, $"DoItemActionReplaceSelfLootTable(): Failed to roll loot table for {this}");
+                return false;
             }
 
             using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
@@ -237,25 +220,24 @@ namespace MHServerEmu.Games.Entities.Items
 
         private bool DoItemActionResetMissions(Avatar avatar)
         {
-            Logger.Trace($"DoItemActionResetMissions(): [{this}] for [{avatar}]");
             return avatar.ResetMissions();
         }
 
         private bool DoItemActionRespec()
         {
-            Logger.Debug($"DoItemActionRespec(): {this}");
+            Verify.IsTrue(false);
             return false;
         }
 
         private bool DoItemActionSaveDangerRoomScenario()
         {
-            Logger.Debug($"DoItemActionSaveDangerRoomScenario(): {this}");
+            Verify.IsTrue(false);
             return false;
         }
 
         private bool DoItemActionUnlockPermaBuff(PrototypeId permaBuffProtoRef, Player player)
         {
-            if (permaBuffProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "ItemActionUnlockPermaBuffPrototype(): permaBuffProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(permaBuffProtoRef != PrototypeId.Invalid)) return false;
 
             if (player.Properties[PropertyEnum.PermaBuff, permaBuffProtoRef])
                 return true;
@@ -266,7 +248,7 @@ namespace MHServerEmu.Games.Entities.Items
         private bool DoItemActionUsePower(PrototypeId powerProtoRef, Avatar avatar)
         {
             Power power = avatar.GetPower(powerProtoRef);
-            if (power == null) return Logger.WarnReturn(false, "DoItemActionUsePower(): power == null");
+            if (!Verify.IsNotNull(power)) return false;
 
             // Adjust index properties for this power specifically (if we have different items that activate the same power)
             power.Properties.CopyProperty(Properties, PropertyEnum.ItemLevel);
@@ -304,19 +286,19 @@ namespace MHServerEmu.Games.Entities.Items
             const LootType LootTypeFilter = LootType.Item | LootType.Currency | LootType.CallbackNode | LootType.VanityTitle;
 
             LootType unsupportedTypes = lootResultSummary.Types & ~LootTypeFilter;
-            if (unsupportedTypes != LootType.None)
-                return Logger.WarnReturn(false, $"ReplaceSelfHelper(): Summary contains unsupported loot types {unsupportedTypes}");
+            if (!Verify.IsTrue(unsupportedTypes == LootType.None, $"Summary for [{this}] contains unsupported loot types {unsupportedTypes}"))
+                return false;
 
             ItemPrototype itemProto = ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "ReplaceSelfHelper(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
-            if (InventoryLocation.ContainerId != player.Id) return Logger.WarnReturn(false, "ReplaceSelfHelper(): InventoryLocation.ContainerId != player.Id");
+            if (!Verify.IsTrue(InventoryLocation.ContainerId == player.Id)) return false;
 
             Inventory inventory = player.GetInventoryByRef(InventoryLocation.InventoryRef);
-            if (inventory == null) return Logger.WarnReturn(false, "ReplaceSelfHelper(): inventory == null");
+            if (!Verify.IsNotNull(inventory)) return false;
 
             Inventory deliveryBox = player.GetInventory(InventoryConvenienceLabel.DeliveryBox);
-            if (deliveryBox == null) return Logger.WarnReturn(false, "ReplaceSelfHelper(): deliveryBox == null");
+            if (!Verify.IsNotNull(deliveryBox)) return false;
 
             // Try to avoid delivery box overflow because people can abuse it to hoard loot and cause performance issues
             int itemCount = lootResultSummary.ItemSpecs.Count;
@@ -333,8 +315,12 @@ namespace MHServerEmu.Games.Entities.Items
             // If this is the last item in the stack, move it out of the inventory while we try to replace it
             InventoryLocation oldInvLoc = InventoryLocation;    // copy
 
-            if (CurrentStackSize <= 1 && ChangeInventoryLocation(null) != InventoryResult.Success)
-                return Logger.WarnReturn(false, $"ReplaceSelfHelper(): Failed to remove the last item in the stack from its inventory\nItem=[{this}]\nInvLoc=[{InventoryLocation}]");
+            if (CurrentStackSize <= 1)
+            {
+                InventoryResult removeResult = ChangeInventoryLocation(null);
+                if (!Verify.IsTrue(removeResult == InventoryResult.Success, $"Failed to remove the last item in the stack from its inventory\nItem=[{this}]\nInvLoc=[{InventoryLocation}]"))
+                    return false;
+            }
 
             // We need to keep track of everything we are doing so we can roll back if something goes wrong
             using var replacementItemListHandle = ListPool<(ulong, int)>.Instance.Get(out List<(ulong, int)> replacementItemList);
@@ -352,9 +338,8 @@ namespace MHServerEmu.Games.Entities.Items
                 settings.ItemSpec = itemSpec;
 
                 Item replacementItem = entityManager.CreateEntity(settings) as Item;
-                if (replacementItem == null)
+                if (!Verify.IsNotNull(replacementItem))
                 {
-                    Logger.Warn("ReplaceSelfHelper(): replacementItem == null");
                     CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, ref oldInvLoc);
                     return false;
                 }
@@ -362,9 +347,9 @@ namespace MHServerEmu.Games.Entities.Items
                 replacementItem.Properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
 
                 // Check if this item can be put into this inventory
-                if (replacementItem.CanChangeInventoryLocation(inventory) != InventoryResult.Success)
+                InventoryResult canPlace = replacementItem.CanChangeInventoryLocation(inventory);
+                if (!Verify.IsTrue(canPlace == InventoryResult.Success, $"Replacement item [{replacementItem}] cannot be put into inventory {inventory}"))
                 {
-                    Logger.Warn($"ReplaceSelfHelper(): Replacement item [{replacementItem}] cannot be put into inventory {inventory}");
                     replacementItemList.Add((replacementItem.Id, replacementItem.CurrentStackSize));
                     CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, ref oldInvLoc);
                     return false;
@@ -392,10 +377,9 @@ namespace MHServerEmu.Games.Entities.Items
                     wasAdded = true;
 
                 // Everything failed
-                if (wasAdded == false)
+                if (!Verify.IsTrue(wasAdded, $"Failed to put replacement item [{replacementItem}] anywhere"))
                 {
                     replacementItemList.Add((replacementItem.Id, replacementItem.CurrentStackSize));
-                    Logger.Warn($"ReplaceSelfHelper(): Failed to put replacement item [{replacementItem}] anywhere");
                     CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, ref oldInvLoc);
                     return false;
                 }
@@ -431,9 +415,8 @@ namespace MHServerEmu.Games.Entities.Items
 
             foreach (CurrencySpec currencySpec in lootResultSummary.Currencies)
             {
-                if (currencySpec.IsItem == false)
+                if (!Verify.IsTrue(currencySpec.IsItem, $"Attempted to replace item [{this}] with a non-item currency {currencySpec.AgentOrItemProtoRef.GetName()}"))
                 {
-                    Logger.Warn($"ReplaceSelfHelper(): Attempted to replace item [{this}] with a non-item currency {currencySpec.AgentOrItemProtoRef.GetName()}");
                     CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, ref oldInvLoc);
                     return false;
                 }
@@ -446,9 +429,8 @@ namespace MHServerEmu.Games.Entities.Items
                 settings.Properties = replacementCurrencyProperties;
 
                 Item currencyItem = entityManager.CreateEntity(settings) as Item;
-                if (currencyItem == null)
+                if (!Verify.IsNotNull(currencyItem))
                 {
-                    Logger.Warn("ReplaceSelfHelper(): currencyItem == null");
                     CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, ref oldInvLoc);
                     return false;
                 }
@@ -458,9 +440,8 @@ namespace MHServerEmu.Games.Entities.Items
                 bool acquired = player.AcquireCurrencyItem(currencyItem);
                 currencyItem.Destroy();
 
-                if (acquired == false)
+                if (!Verify.IsTrue(acquired, $"Failed to acquire replacement currency from item [{currencyItem}]"))
                 {
-                    Logger.Warn($"ReplaceSelfHelper(): Failed to acquire replacement currency from item [{currencyItem}]");
                     CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, ref oldInvLoc);
                     return false;
                 }
@@ -500,11 +481,8 @@ namespace MHServerEmu.Games.Entities.Items
             {
                 (ulong itemId, int count) = entry;
                 Item item = entityManager.GetEntity<Item>(itemId);
-                if (item == null)
-                {
-                    Logger.Warn("CleanUpReplaceSelfError(): item == null");
+                if (!Verify.IsNotNull(item))
                     continue;
-                }
 
                 item.DecrementStack(count);
             }
@@ -513,10 +491,11 @@ namespace MHServerEmu.Games.Entities.Items
             player.Properties.CopyPropertyRange(propertiesToRestore, PropertyEnum.Currency);
 
             // Return this item to its original location
-            if (InventoryLocation != invLoc && ChangeInventoryLocation(invLoc.GetInventory(), invLoc.Slot) != InventoryResult.Success)
+            if (InventoryLocation != invLoc)
             {
-                Logger.Warn($"CleanUpReplaceSelfError(): Failed to return item [{this}] to its original inventory location {invLoc}");
-                Destroy();
+                InventoryResult result = ChangeInventoryLocation(invLoc.GetInventory(), invLoc.Slot);
+                if (!Verify.IsTrue(result == InventoryResult.Success, $"Failed to return item [{this}] to its original inventory location {invLoc}"))
+                    Destroy();
             }
         }
     }

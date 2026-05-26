@@ -7,14 +7,15 @@ using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.Properties
 {
+    public enum PropertyStoreResult
+    {
+        Success,
+        Failure,
+        Deprecated,
+    }
+
     public ref struct PropertyStore
     {
-        // NOTE: This implementation was reverse engineered from the client, and it was originally designed
-        // to provide backward compatibility for newer versions of the game / data. We may want to refactor
-        // this to be less complex while keeping the same API.
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private byte _propertyVersion;
         private PropertyEnum _propertyEnum = PropertyEnum.Invalid;
         private ulong _propertyProtoGuid;   // PrototypeGuid
@@ -39,12 +40,12 @@ namespace MHServerEmu.Games.Properties
             ((Span<sbyte>)_paramTypes).Fill((sbyte)PropertyParamType.Invalid);
         }
 
-        public bool Serialize(ref PropertyId propertyId, ref PropertyValue propertyValue, PropertyCollection propertyCollection, Archive archive)
+        public PropertyStoreResult Serialize(ref PropertyId propertyId, ref PropertyValue propertyValue, PropertyCollection propertyCollection, Archive archive)
         {
             if (archive.IsPacking)
             {
-                if (StoreProperty(propertyId, propertyValue) == false)
-                    return Logger.WarnReturn(false, $"Serialize(): Error storing property {propertyId}");
+                if (!Verify.IsTrue(StoreProperty(propertyId, propertyValue), $"Error storing property {propertyId}"))
+                    return PropertyStoreResult.Failure;
             }
 
             bool success = true;
@@ -66,9 +67,12 @@ namespace MHServerEmu.Games.Properties
 
                     case PropertyParamType.Asset:
                     case PropertyParamType.Prototype:
-                        success &= Serializer.Transfer(archive, ref _paramValueGuids[i]); break;
+                        success &= Serializer.Transfer(archive, ref _paramValueGuids[i]);
+                        break;
 
-                    default: return Logger.WarnReturn(false, $"Serialize(): Invalid property param type {paramType} for index {i}");
+                    default:
+                        Verify.IsTrue(false, $"Invalid property param type {paramType} for index {i}");
+                        return PropertyStoreResult.Failure;
                 }
             }
 
@@ -97,16 +101,17 @@ namespace MHServerEmu.Games.Properties
                     break;
 
                 default:
-                    return Logger.WarnReturn(false, $"Serialize(): Unsupported property data type {dataType}");
+                    Verify.IsTrue(false, "Unsupported property data type {dataType}");
+                    break;
             }
 
-            if (success == false)
-                return Logger.WarnReturn(false, $"Serialize(): Failed to (de)serialize property {propertyId}");
+            if (!Verify.IsTrue(success, $"Failed to (de)serialize property {propertyId}"))
+                return PropertyStoreResult.Failure;
 
             if (archive.IsUnpacking)
                 return RestoreProperty(ref propertyId, ref propertyValue, propertyCollection);
 
-            return true;
+            return PropertyStoreResult.Success;
         }
 
         private bool StoreProperty(in PropertyId propertyId, in PropertyValue propertyValue)
@@ -134,8 +139,7 @@ namespace MHServerEmu.Games.Properties
                     case PropertyParamType.Asset:
                         Property.FromParam(propertyId, i, out AssetId assetRef);
                         AssetGuid paramValueAssetGuid = GameDatabase.GetAssetGuid(assetRef);
-                        if (paramValueAssetGuid == AssetGuid.Invalid)
-                            return Logger.WarnReturn(false, "StoreProperty(): paramValueAssetGuid == AssetGuid.Invalid");
+                        if (!Verify.IsTrue(paramValueAssetGuid != AssetGuid.Invalid)) return false;
 
                         _paramValueAssetRefs[i] = assetRef;
                         _paramValueGuids[i] = (ulong)paramValueAssetGuid;
@@ -145,8 +149,7 @@ namespace MHServerEmu.Games.Properties
                     case PropertyParamType.Prototype:
                         Property.FromParam(propertyId, i, out PrototypeId protoRef);
                         PrototypeGuid paramValueProtoGuid = GameDatabase.GetPrototypeGuid(protoRef);
-                        if (paramValueProtoGuid == PrototypeGuid.Invalid)
-                            return Logger.WarnReturn(false, "StoreProperty(): paramValueProtoGuid == PrototypeGuid.Invalid");
+                        if (!Verify.IsTrue(paramValueProtoGuid != PrototypeGuid.Invalid)) return false;
 
                         _paramValueProtoRefs[i] = protoRef;
                         _paramValueGuids[i] = (ulong)paramValueProtoGuid;
@@ -154,7 +157,8 @@ namespace MHServerEmu.Games.Properties
                         break;
 
                     default:
-                        return Logger.WarnReturn(false, $"StoreProperty(): Invalid property param type {paramType} for index {i}");
+                        Verify.IsTrue(false, $"Invalid property param type {paramType} for index {i}");
+                        break;
                 }
             }
 
@@ -185,43 +189,53 @@ namespace MHServerEmu.Games.Properties
                     break;
 
                 case PropertyDataType.Curve:
-                    return Logger.WarnReturn(false, "StoreProperty(): Property curve data type is not supported for storage");
+                    Verify.IsTrue(false, "Property curve data type is not currently supported for storage.");
+                    return false;
 
                 default:
-                    return Logger.WarnReturn(false, $"StoreProperty(): Unhandled property data type {propertyInfo.DataType}");
+                    Verify.IsTrue(false, $"Unhandled property data type {propertyInfo.DataType}");
+                    return false;
             }
 
             return true;
         }
 
-        private bool RestoreProperty(ref PropertyId propertyId, ref PropertyValue propertyValue, PropertyCollection propertyCollection)
+        private PropertyStoreResult RestoreProperty(ref PropertyId propertyId, ref PropertyValue propertyValue, PropertyCollection propertyCollection)
         {
             // Check if this property exists in the game database
             _propertyProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)_propertyProtoGuid);
             _propertyEnum = GameDatabase.PropertyInfoTable.GetPropertyEnumFromPrototype(_propertyProtoRef);
 
             if (_propertyEnum == PropertyEnum.Invalid)
-                return false;
+                return PropertyStoreResult.Deprecated;
 
-            // Property versioning happens here in the client
-            // We are skipping this because we don't have any data from older versions of the game (yet?)
+            SimpleVersionProperty();
+
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(_propertyEnum);
-            if (propertyInfo.Prototype.Version != _propertyVersion)
-                return Logger.WarnReturn(false, $"RestoreProperty(): Stored version {_propertyVersion} does not match database version {propertyInfo.PropertyVersion}");
+            if (_propertyVersion != propertyInfo.PropertyVersion)
+            {
+                PropertyStoreResult customVersionResult = CustomVersionProperty(propertyCollection);
+                if (customVersionResult != PropertyStoreResult.Success)
+                    return customVersionResult;
 
-            if (ResolveGuidsToDataRefs() == false)
-                return false;
+                if (!Verify.IsTrue(_propertyVersion == propertyInfo.PropertyVersion, "Version not current"))
+                    return PropertyStoreResult.Failure;
+            }
+
+            PropertyStoreResult guidResult = ResolveGuidsToDataRefs();
+            if (guidResult != PropertyStoreResult.Success)
+                return guidResult;
 
             if (BuildPropertyId(ref propertyId) == false)
-                return false;
+                return PropertyStoreResult.Failure;
 
             if (BuildPropertyValue(ref propertyValue) == false)
-                return false;
+                return PropertyStoreResult.Failure;
 
-            return true;
+            return PropertyStoreResult.Success;
         }
 
-        private bool ResolveGuidsToDataRefs()
+        private PropertyStoreResult ResolveGuidsToDataRefs()
         {
             for (int i = 0; i < _paramCount; i++)
             {
@@ -237,9 +251,13 @@ namespace MHServerEmu.Games.Properties
                             continue;
 
                         _paramValueAssetRefs[i] = GameDatabase.GetAssetRefFromGuid((AssetGuid)_paramValueGuids[i]);
-
                         if (_paramValueAssetRefs[i] == AssetId.Invalid)
-                            return Logger.WarnReturn(false, $"ResolveGuidsToDataRefs(): Failed to find asset ref for param guid {_paramValueGuids[i]}");
+                        {
+                            if (!Verify.IsTrue(GameDatabase.DataDirectory.GuidIsDeprecated(_paramValueGuids[i]), $"Stored property parameter asset guid {_paramValueGuids[i]} was not properly deprecated."))
+                                return PropertyStoreResult.Failure;
+
+                            return PropertyStoreResult.Deprecated;
+                        }
 
                         break;
 
@@ -248,14 +266,19 @@ namespace MHServerEmu.Games.Properties
                             continue;
 
                         _paramValueProtoRefs[i] = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)_paramValueGuids[i]);
-
                         if (_paramValueProtoRefs[i] == PrototypeId.Invalid)
-                            return Logger.WarnReturn(false, $"ResolveGuidsToDataRefs(): Failed to find proto ref for param guid {_paramValueGuids[i]}");
+                        {
+                            if (!Verify.IsTrue(GameDatabase.DataDirectory.GuidIsDeprecated(_paramValueGuids[i]), $"Stored property parameter prototype guid {_paramValueGuids[i]} was not properly deprecated."))
+                                return PropertyStoreResult.Failure;
+
+                            return PropertyStoreResult.Deprecated;
+                        }
 
                         break;
 
                     default:
-                        return Logger.WarnReturn(false, $"ResolveGuidsToDataRefs(): Unsupported property param type {paramType}");
+                        Verify.IsTrue(false, $"Unsupported property param type {paramType}");
+                        return PropertyStoreResult.Failure;
                 }
             }
 
@@ -278,9 +301,13 @@ namespace MHServerEmu.Games.Properties
                         break;
 
                     _propertyValueProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)_propertyValueGuid);
-
                     if (_propertyValueProtoRef == PrototypeId.Invalid)
-                        return Logger.WarnReturn(false, $"ResolveGuidsToDataRefs(): Failed to find proto ref for value guid {_propertyValueGuid}");
+                    {
+                        if (!Verify.IsTrue(GameDatabase.DataDirectory.GuidIsDeprecated(_propertyValueGuid), $"Stored property prototype guid {_propertyValueGuid} was not properly deprecated."))
+                            return PropertyStoreResult.Failure;
+
+                        return PropertyStoreResult.Deprecated;
+                    }
 
                     break;
 
@@ -290,23 +317,29 @@ namespace MHServerEmu.Games.Properties
 
                     _propertyValueAssetRef = GameDatabase.GetAssetRefFromGuid((AssetGuid)_propertyValueGuid);
                     if (_propertyValueAssetRef == AssetId.Invalid)
-                        return Logger.WarnReturn(false, $"ResolveGuidsToDataRefs(): Failed to find asset ref for value guid {_propertyValueGuid}");
+                    {
+                        if (!Verify.IsTrue(GameDatabase.DataDirectory.GuidIsDeprecated(_propertyValueGuid), $"Stored property asset guid {_propertyValueGuid} was not properly deprecated."))
+                            return PropertyStoreResult.Failure;
+
+                        return PropertyStoreResult.Deprecated;
+                    }
 
                     break;
 
                 default:
-                    return Logger.WarnReturn(false, $"BuildPropertyValue(): Unsupported property data type {dataType}");
+                    Verify.IsTrue(false, $"Unsupported property data type {dataType}");
+                    return PropertyStoreResult.Failure;
             }
 
-            return true;
+            return PropertyStoreResult.Success;
         }
 
         private bool BuildPropertyId(ref PropertyId propertyId)
         {
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(_propertyEnum);
 
-            if (_paramCount != propertyInfo.ParamCount)
-                return Logger.WarnReturn(false, "BuildPropertyId(): Stored property parameter count does not match current");
+            if (!Verify.IsTrue(_paramCount == propertyInfo.ParamCount, "Stored property parameter count does not match current.  Version function needed."))
+                return false;
 
             // Use span instead of array to avoid heap allocation for every property
             Span<PropertyParam> @params = stackalloc PropertyParam[Property.MaxParamCount];
@@ -315,8 +348,8 @@ namespace MHServerEmu.Games.Properties
             {
                 PropertyParamType paramType = (PropertyParamType)_paramTypes[i];
 
-                if (paramType != propertyInfo.GetParamType(i))
-                    return Logger.WarnReturn(false, "BuildPropertyId(): Stored property parameter type does not match current");
+                if (!Verify.IsTrue(paramType == propertyInfo.GetParamType(i), "Stored property parameter type does not match current.  Version function needed."))
+                    return false;
 
                 switch (paramType)
                 {
@@ -326,8 +359,8 @@ namespace MHServerEmu.Games.Properties
 
                     case PropertyParamType.Asset:
                         AssetTypeId paramValueAssetTypeRef = AssetDirectory.Instance.GetAssetTypeRef(_paramValueAssetRefs[i]);
-                        if (paramValueAssetTypeRef != propertyInfo.GetParamAssetType(i))
-                            return Logger.WarnReturn(false, "BuildPropertyId(): Stored property parameter asset type does not match current");
+                        if (!Verify.IsTrue(paramValueAssetTypeRef == propertyInfo.GetParamAssetType(i), "Stored property parameter asset type does not match current.  Version function needed."))
+                            return false;
 
                         @params[i] = Property.ToParam(_paramValueAssetRefs[i]);
 
@@ -338,16 +371,16 @@ namespace MHServerEmu.Games.Properties
                         BlueprintId defaultParamBlueprintRef = propertyInfo.GetParamPrototypeBlueprint(i);
 
                         Blueprint paramValueBlueprint = GameDatabase.GetBlueprint(paramValueBlueprintRef);
-
-                        if (paramValueBlueprint == null || paramValueBlueprint.IsA(defaultParamBlueprintRef) == false)
-                            return Logger.WarnReturn(false, "BuildPropertyId(): Stored property parameter prototype blueprint does not match current");
+                        if (!Verify.IsTrue(paramValueBlueprint?.IsA(defaultParamBlueprintRef) == true, "Stored property parameter prototype blueprint does not match current.  Version function needed."))
+                            return false;
 
                         @params[i] = Property.ToParam(_propertyEnum, i, _paramValueProtoRefs[i]);
 
                         break;
 
                     default:
-                        return Logger.WarnReturn(false, $"BuildPropertyId(): Invalid property param type {paramType} for index {i}");
+                        Verify.IsTrue(false, $"Invalid property param type {paramType} for index {i}");
+                        return false;
                 }
             }
 
@@ -360,8 +393,8 @@ namespace MHServerEmu.Games.Properties
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(_propertyEnum);
             PropertyDataType dataType = (PropertyDataType)_propertyDataType;
 
-            if (dataType != propertyInfo.DataType)
-                return Logger.WarnReturn(false, "BuildPropertyValue(): Stored property type does not match current runtime type");
+            if (!Verify.IsTrue(dataType == propertyInfo.DataType, "Stored property type does not match current runtime type.  Version function needed."))
+                return false;
 
             switch (dataType)
             {
@@ -388,11 +421,22 @@ namespace MHServerEmu.Games.Properties
                     break;
 
                 default:
-                    return Logger.WarnReturn(false, $"BuildPropertyValue(): Unsupported property type {dataType}");
+                    Verify.IsTrue(false, "Unknown property type");
+                    return false;
             }
 
             return true;
         }
 
+        private void SimpleVersionProperty()
+        {
+            // TODO
+        }
+
+        private PropertyStoreResult CustomVersionProperty(PropertyCollection propertyCollectoin)
+        {
+            // TODO
+            return PropertyStoreResult.Success;
+        }
     }
 }

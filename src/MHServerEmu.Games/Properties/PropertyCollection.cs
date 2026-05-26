@@ -20,8 +20,6 @@ namespace MHServerEmu.Games.Properties
     /// </summary>
     public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>, ISerialize, IPoolable, IDisposable
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly PropertyList _baseList = new();
         private readonly PropertyList _aggregateList = new();
         private readonly Dictionary<PropertyId, CurveProperty> _curveList = new();
@@ -155,6 +153,11 @@ namespace MHServerEmu.Games.Properties
 
         public PropertyCollection() { }
 
+        public override string ToString()
+        {
+            return _aggregateList.ToString();
+        }
+
         // NOTE: In the client GetProperty() and SetProperty() handle conversion to and from PropertyValue,
         // but we take care of that with implicit casting defined in PropertyValue.cs, so these methods are
         // largely redundant and are kept to avoid deviating from the client API.
@@ -179,11 +182,10 @@ namespace MHServerEmu.Games.Properties
             PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
             PropertyInfo propertyInfo = propertyInfoTable.LookupPropertyInfo(id.Enum);
 
-            if (propertyInfo.DataType != PropertyDataType.Real)
+            if (!Verify.IsTrue(propertyInfo.DataType == PropertyDataType.Real, "Attempting to look up min/max float values for a non-float property"))
             {
                 min = 0f;
                 max = 0f;
-                Logger.Warn("GetPropertyMinMaxFloat(): Attempting to lookup min/max float values for a non-float property");
                 return;
             }
 
@@ -240,8 +242,7 @@ namespace MHServerEmu.Games.Properties
         public CurveId GetCurveIdForCurveProperty(PropertyId curvePropertyId)
         {
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(curvePropertyId.Enum);
-            if (propertyInfo.IsCurveProperty == false)
-                return Logger.WarnReturn(CurveId.Invalid, $"GetCurveForCurveProperty(): {propertyInfo.PropertyName} is not a curve property");
+            if (!Verify.IsTrue(propertyInfo.IsCurveProperty)) return CurveId.Invalid;
 
             if (_curveList.TryGetValue(curvePropertyId, out CurveProperty curveProperty) == false)
                 return propertyInfo.DefaultValue;
@@ -252,8 +253,7 @@ namespace MHServerEmu.Games.Properties
         public PropertyId GetIndexPropertyIdForCurveProperty(PropertyId curvePropertyId)
         {
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(curvePropertyId.Enum);
-            if (propertyInfo.IsCurveProperty == false)
-                return Logger.WarnReturn(PropertyId.Invalid, $"GetIndexPropertyIdForCurveProperty(): {propertyInfo.PropertyName} is not a curve property");
+            if (!Verify.IsTrue(propertyInfo.IsCurveProperty)) return PropertyId.Invalid;
 
             if (_curveList.TryGetValue(curvePropertyId, out CurveProperty curveProperty) == false)
                 return PropertyId.Invalid;
@@ -496,23 +496,15 @@ namespace MHServerEmu.Games.Properties
         /// </remarks>
         public bool AddChildCollection(PropertyCollection childCollection)
         {
-            // Check child collection
-            if (childCollection == null)
-                return Logger.WarnReturn(false, "AddChildCollection(): childCollection is null");
+            if (!Verify.IsNotNull(childCollection)) return false;
+            if (!Verify.IsTrue(childCollection != this)) return false;
+            if (!Verify.IsTrue(_parentCollections?.Contains(childCollection) != true)) return false;
 
-            if (childCollection == this)
-                return Logger.WarnReturn(false, "AddChildCollection(): Attempted to add itself as a child");
+            if (!Verify.IsTrue(IsNotProtected(ProtectionType.Child), "Property collection protection check failed (parent's child collection)"))
+                return false;
 
-            // To make this more safe we might want to add a recursive check of all ancestors here
-            if (_parentCollections?.Contains(childCollection) == true)
-                return Logger.WarnReturn(false, "AddChildCollection(): Attempted to add a parent as a child");
-
-            // Check for protections
-            if (IsNotProtected(ProtectionType.Child) == false)
-                return Logger.WarnReturn(false, "AddChildCollection(): Property collection protection check failed (parent's child collection)");
-
-            if (childCollection.IsNotProtected(ProtectionType.Parent) == false)
-                return Logger.WarnReturn(false, "AddChildCollection(): Property collection protection check failed (child's parent collection)");
+            if (!Verify.IsTrue(childCollection.IsNotProtected(ProtectionType.Parent), "Property collection protection check failed (child's parent collection)"))
+                return false;
 
             // Allocate parent/child sets on demand
             _childCollections ??= new();
@@ -528,11 +520,11 @@ namespace MHServerEmu.Games.Properties
                 _childCollections.Remove(childCollection);
                 childCollection._parentCollections.Remove(this);
 
-                if (addedToChildCollection == false)
-                    return Logger.WarnReturn(false, $"AddChildCollection(): Failed to add to parent's child collection");
+                if (!Verify.IsTrue(addedToChildCollection, "Property collection add failed (parent's child collection)"))
+                    return false;
 
-                if (addedToParentCollection == false)
-                    return Logger.WarnReturn(false, $"AddChildCollection(): Failed to add to child's parent collection");
+                if (!Verify.IsTrue(addedToParentCollection, "Property collection add failed (child's parent collection)"))
+                    return false;
             }
 
             // Aggregate the new child collection
@@ -545,25 +537,20 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public bool RemoveChildCollection(PropertyCollection childCollection)
         {
-            if (childCollection == null)
-                return Logger.WarnReturn(false, "RemoveChildCollection(): childCollection is null");
+            if (!Verify.IsNotNull(childCollection)) return false;
 
-            // Check for protections, but continue anyway
-            if (IsNotProtected(ProtectionType.Child) == false)
-                Logger.Warn("RemoveChildCollection(): Property collection protection check failed (parent's child collection)");
-
-            if (childCollection.IsNotProtected(ProtectionType.Parent) == false)
-                Logger.Warn("RemoveChildCollection(): Property collection protection check failed (child's parent collection)");
+            Verify.IsTrue(IsNotProtected(ProtectionType.Child), "Property collection protection check failed (parent's child collection)");
+            Verify.IsTrue(childCollection.IsNotProtected(ProtectionType.Parent), "Property collection protection check failed (child's parent collection)");
 
             // Remove parent / child references
             bool childErasedInParent = _childCollections?.Remove(childCollection) == true;
             bool parentErasedInChild = childCollection._parentCollections?.Remove(this) == true;
 
-            if (childErasedInParent == false)
-                return Logger.WarnReturn(false, "RemoveChildCollection(): Failed to remove from parent's child collection");
+            if (!Verify.IsTrue(childErasedInParent, "Property collection erase failed (parent's child collection)"))
+                return false;
 
-            if (parentErasedInChild == false)
-                return Logger.WarnReturn(false, "RemoveChildCollection(): Failed to remove from child's parent collection");
+            if (!Verify.IsTrue(parentErasedInChild, "Property collection erase failed (child's parent collection)"))
+                return false;
 
             // Cache property info lookups for copying multiple properties of the same type in a row
             PropertyEnum previousEnum = PropertyEnum.Invalid;
@@ -589,9 +576,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public bool RemoveFromParent(PropertyCollection parentCollection)
         {
-            if (parentCollection == null)
-                return Logger.WarnReturn(false, "RemoveFromParent(): parentCollection is null");
-
+            if (!Verify.IsNotNull(parentCollection)) return false;
             return parentCollection.RemoveChildCollection(this);
         }
 
@@ -620,35 +605,26 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Subscribes the provided <see cref="IPropertyChangeWatcher"/> for property changes happening in this <see cref="PropertyCollection"/>.
         /// </summary>
-        public bool AttachWatcher(IPropertyChangeWatcher watcher)
+        public void AttachWatcher(IPropertyChangeWatcher watcher)
         {
             // VERIFY: m_isDeallocating == false
 
             _watchers ??= new();
-
-            if (_watchers.Add(watcher) == false)
-                return Logger.WarnReturn(false, $"AttachWatcher(): Failed to attach property change watcher {watcher}");
+            _watchers.Add(watcher);
 
             foreach (var kvp in this)
                 watcher.OnPropertyChange(kvp.Key, kvp.Value, kvp.Value, SetPropertyFlags.Refresh);
-
-            return true;
         }
 
         /// <summary>
         /// Unsubscribes the provided <see cref="IPropertyChangeWatcher"/> from property changes happening in this <see cref="PropertyCollection"/>.
         /// </summary>
-        public bool DetachWatcher(IPropertyChangeWatcher watcher)
+        public void DetachWatcher(IPropertyChangeWatcher watcher)
         {
-            if (watcher == null)
-                return Logger.WarnReturn(false, "DetachWatcher(): watcher == null");
+            if (!Verify.IsNotNull(watcher)) return;
 
-            if (_watchers?.Remove(watcher) != true)
-                return Logger.WarnReturn(false, $"DetachWatcher(): Failed to detach property change watcher {watcher}");
-
-            watcher.Detach(false);
-
-            return true;
+            if (_watchers?.Remove(watcher) == true)
+                watcher.Detach(false);
         }
 
         /// <summary>
@@ -662,8 +638,6 @@ namespace MHServerEmu.Games.Properties
             while (_watchers.Count > 0)
                 DetachWatcher(_watchers.First());
         }
-
-        public override string ToString() => _aggregateList.ToString();
 
         #region Iteration
 
@@ -804,11 +778,10 @@ namespace MHServerEmu.Games.Properties
 
                     if (archive.IsPersistent)
                     {
-                        // TODO: Deprecated property handling
                         PropertyStore propertyStore = new();
-                        success &= propertyStore.Serialize(ref id, ref value, this, archive);
-                        if (success)
-                            isValid = success;
+                        PropertyStoreResult result = propertyStore.Serialize(ref id, ref value, this, archive);
+                        success &= result != PropertyStoreResult.Failure;
+                        isValid = result == PropertyStoreResult.Success;    // this will skip assignment for deprecated properties
                     }
                     else
                     {
@@ -1006,9 +979,7 @@ namespace MHServerEmu.Games.Properties
             if (archive.IsPersistent)
             {
                 PropertyStore propertyStore = new();
-                success &= propertyStore.Serialize(ref id, ref value, this, archive);
-
-                //Logger.Debug($"SerializePropertyForPacking(): Packed {id} for persistent storage");
+                success &= propertyStore.Serialize(ref id, ref value, this, archive) == PropertyStoreResult.Success;
             }
             else
             {
@@ -1049,21 +1020,19 @@ namespace MHServerEmu.Games.Properties
         private bool UpdateCurvePropertyValue(CurveProperty curveProp, SetPropertyFlags flags, PropertyInfo info)
         {
             // Retrieve the curve we need
-            if (curveProp.CurveId == CurveId.Invalid) return Logger.WarnReturn(false, "UpdateCurvePropertyValue(): curveProp.CurveId == CurveId.Invalid");
+            if (!Verify.IsTrue(curveProp.CurveId != CurveId.Invalid)) return false;
 
             Curve curve = GameDatabase.DataDirectory.CurveDirectory.GetCurve(curveProp.CurveId);
-            if (curve == null) return Logger.WarnReturn(false, "UpdateCurvePropertyValue(): curve == null");
+            if (!Verify.IsNotNull(curve)) return false;
 
             // Get property info if we didn't get it and make sure it's for a curve property
-            if (info == null)
-                info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(curveProp.PropertyId.Enum);
+            info ??= GameDatabase.PropertyInfoTable.LookupPropertyInfo(curveProp.PropertyId.Enum);
+            if (!Verify.IsTrue(info.IsCurveProperty)) return false;
 
-            if (info?.IsCurveProperty != true)
-                return Logger.WarnReturn(false, $"UpdateCurvePropertyValue(): {curveProp.PropertyId} is not a curve property");
-
-            // Get curve value and round it if needed
+            // Get curve value and round it down if needed
             int indexValue = GetPropertyValue(curveProp.IndexPropertyId);
-            float resultValue = curve.GetAt(indexValue);
+            Verify.IsTrue(curve.GetAt(indexValue, out float resultValue));
+
             if (info.TruncatePropertyValueToInt)
                 resultValue = MathF.Floor(resultValue);
 
@@ -1181,7 +1150,7 @@ namespace MHServerEmu.Games.Properties
 
             PropertyValue oldValue = aggregateValue;
 
-            AggregatePropertyValue(info, propertyValue, ref aggregateValue);
+            AggregatePropertyValue(info, info.Prototype, propertyValue, ref aggregateValue);
             valueHasChanged = _aggregateList.SetPropertyValue(id, aggregateValue);
 
             if (valueHasChanged)
@@ -1243,7 +1212,7 @@ namespace MHServerEmu.Games.Properties
 
                     if (hasValue)
                     {
-                        AggregatePropertyValue(info, childValue, ref aggregateValue);
+                        AggregatePropertyValue(info, info.Prototype, childValue, ref aggregateValue);
                     }
                     else
                     {
@@ -1280,12 +1249,12 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Aggregates two values.
         /// </summary>
-        private static bool AggregatePropertyValue(PropertyInfo info, PropertyValue input, ref PropertyValue output)
+        private static void AggregatePropertyValue(PropertyInfo info, PropertyInfoPrototype propertyInfoPrototype, PropertyValue input, ref PropertyValue output)
         {
-            switch (info.DataType)
+            switch (propertyInfoPrototype.Type)
             {
                 case PropertyDataType.Boolean:
-                    switch (info.Prototype.AggMethod)
+                    switch (propertyInfoPrototype.AggMethod)
                     {
                         case AggregationMethod.Min:
                             output = input && output;
@@ -1300,16 +1269,18 @@ namespace MHServerEmu.Games.Properties
                             break;
 
                         case AggregationMethod.None:
-                            return Logger.WarnReturn(false, $"Property {info.PropertyName} with no aggregation method is attempting to be aggregated");
+                            Verify.IsTrue(false, $"Property {info.PropertyName} with no aggregation method is attempting to be aggregated.");
+                            break;
 
                         default:
-                            return Logger.WarnReturn(false, $"Property {info.PropertyName} specifies an unsupported aggregation method for its type");
+                            Verify.IsTrue(false, $"Property {info.PropertyName} specifies an unsupported aggregation method for its type.");
+                            break;
                     }
                     break;
 
                 case PropertyDataType.Real:
                 case PropertyDataType.Curve:
-                    switch (info.Prototype.AggMethod)
+                    switch (propertyInfoPrototype.AggMethod)
                     {
                         case AggregationMethod.Min:
                             output = MathF.Min(input.RawFloat, output.RawFloat);
@@ -1328,15 +1299,17 @@ namespace MHServerEmu.Games.Properties
                             break;
 
                         case AggregationMethod.None:
-                            return Logger.WarnReturn(false, $"Property {info.PropertyName} with no aggregation method is attempting to be aggregated");
+                            Verify.IsTrue(false, $"Property {info.PropertyName} with no aggregation method is attempting to be aggregated.");
+                            break;
 
                         case AggregationMethod.Set:
-                            return Logger.WarnReturn(false, $"Property {info.PropertyName} - numeric properties should not use the 'set' aggregation method");
+                            Verify.IsTrue(false, $"Property {info.PropertyName} - numeric properties should not use the 'set' aggregation method.");
+                            break;
                     }
                     break;
 
                 case PropertyDataType.Integer:
-                    switch (info.Prototype.AggMethod)
+                    switch (propertyInfoPrototype.AggMethod)
                     {
                         case AggregationMethod.Min:
                             output = Math.Min(input.RawLong, output.RawLong);
@@ -1355,31 +1328,33 @@ namespace MHServerEmu.Games.Properties
                             break;
 
                         case AggregationMethod.None:
-                            return Logger.WarnReturn(false, $"Property {info.PropertyName} with no aggregation method is attempting to be aggregated");
+                            Verify.IsTrue(false, $"Property {info.PropertyName} with no aggregation method is attempting to be aggregated.");
+                            break;
 
                         case AggregationMethod.Set:
-                            return Logger.WarnReturn(false, $"Property {info.PropertyName} - numeric properties should not use the 'set' aggregation method");
+                            Verify.IsTrue(false, $"Property {info.PropertyName} - numeric properties should not use the 'set' aggregation method.");
+                            break;
                     }
                     break;
 
                 default:
-                    switch (info.Prototype.AggMethod)
+                    switch (propertyInfoPrototype.AggMethod)
                     {
                         case AggregationMethod.Set:
                             output = input;
                             break;
 
                         case AggregationMethod.None:
-                            return Logger.WarnReturn(false, $"Property {info.PropertyName} with no aggregation method is attempting to be aggregated");
+                            break;
 
                         default:
-                            return Logger.WarnReturn(false, $"Property {info.PropertyName} specifies an unsupported aggregation method for its type");
+                            Verify.IsTrue(false, $"Property {info.PropertyName} specifies an unsupported aggregation method for its type.");
+                            break;
                     }
                     break;
             }
 
-            ClampPropertyValue(info.Prototype, ref output);
-            return true;
+            ClampPropertyValue(propertyInfoPrototype, ref output);
         }
 
         #region Eval Calculation
@@ -1398,8 +1373,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         private static PropertyValue EvalPropertyValue(PropertyInfo info, EvalContextData contextData)
         {
-            if (info.IsEvalProperty == false)
-                return Logger.WarnReturn(new PropertyValue(), "EvalPropertyValue(): info.IsEvalProperty == false");
+            if (!Verify.IsTrue(info.IsEvalProperty)) return false;
 
             PropertyValue value;
             switch (info.DataType)
@@ -1417,7 +1391,8 @@ namespace MHServerEmu.Games.Properties
                     break;
 
                 default:
-                    return Logger.WarnReturn(new PropertyValue(), $"EvalPropertyValue(): Unsupported eval property data type {info.DataType}");
+                    Verify.IsTrue(false, $"Unsupported eval property data type {info.DataType} for property {info.PropertyName}");
+                    return new PropertyValue();
             }
 
             ClampPropertyValue(info.Prototype, ref value);

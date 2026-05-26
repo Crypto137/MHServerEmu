@@ -88,22 +88,30 @@ namespace MHServerEmu.Games.Regions.Maps
             return _discoveredEntities.Contains(worldEntity.Id);
         }
 
-        public bool LoadPlayerDiscovered(Player player)
+        public void LoadPlayerDiscovered(Player player)
         {
-            var manager = player.Game.EntityManager;
-            if (manager == null) return Logger.WarnReturn(false, $"Update(): EntityManager == null");
+            if (!Verify.IsNotNull(player)) return;
 
-            var aoi = player.AOI;
-            foreach (var entityId in _discoveredEntities)
+            AreaOfInterest aoi = player.AOI;
+            if (!Verify.IsNotNull(aoi)) return;
+
+            EntityManager entityManager = player.Game.EntityManager;
+            foreach (ulong entityId in _discoveredEntities)
             {
-                var entity = manager.GetEntity<WorldEntity>(entityId);
-                if (entity != null) aoi.ConsiderEntity(entity);
+                WorldEntity entity = entityManager.GetEntity<WorldEntity>(entityId);
+                if (entity == null || entity.IsInWorld == false)
+                {
+                    _discoveredEntities.Remove(entityId);
+                    continue;
+                }
+
+                aoi.ConsiderEntity(entity);
             }
 
-            return LowResMapUpdate(player);
+            SendLowResMapUpdate(player);
         }
 
-        public bool LowResMapUpdate(Player player, Vector3? position = null)
+        public bool SendLowResMapUpdate(Player player, Vector3? position = null)
         {
             var aoi = player.AOI;
             if (aoi == null) return Logger.WarnReturn(false, $"LowResMapUpdate(): AOI == null");
@@ -159,7 +167,7 @@ namespace MHServerEmu.Games.Regions.Maps
 
         public bool RevealPosition(Player player, Vector3 position)
         {
-            return LowResMap.RevealPosition(position) && LowResMapUpdate(player, position);
+            return LowResMap.RevealPosition(position) && SendLowResMapUpdate(player, position);
         }
 
         public void Sync(Player owner, List<Player> otherPlayers)
@@ -196,7 +204,7 @@ namespace MHServerEmu.Games.Regions.Maps
                 if (otherMapDiscoveryData.LowResMap.Combine(LowResMap))
                 {
                     lowResMapChanged = true;
-                    otherMapDiscoveryData.LowResMapUpdate(otherPlayer);
+                    otherMapDiscoveryData.SendLowResMapUpdate(otherPlayer);
                 }
             }
 
@@ -208,7 +216,7 @@ namespace MHServerEmu.Games.Regions.Maps
             }
 
             if (lowResMapChanged)
-                LowResMapUpdate(owner);
+                SendLowResMapUpdate(owner);
         }
     }
 }

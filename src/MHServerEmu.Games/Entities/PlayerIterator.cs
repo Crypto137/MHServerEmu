@@ -9,8 +9,6 @@ namespace MHServerEmu.Games.Entities
     /// </summary>
     public readonly struct PlayerIterator
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Game _game;
         private readonly Region _region;
 
@@ -22,11 +20,7 @@ namespace MHServerEmu.Games.Entities
 
         public PlayerIterator(Region region)
         {
-            if (region == null)
-            {
-                Logger.Warn("PlayerIterator(): region == null");
-                return;
-            }
+            if (!Verify.IsNotNull(region)) return;
 
             _game = region.Game;
             _region = region;

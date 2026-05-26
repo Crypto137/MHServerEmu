@@ -2,14 +2,15 @@
 
 namespace MHServerEmu.Games.Entities
 {
-    public class TagPlayers
+    public class PlayerTagCollection
     {
-        private readonly SortedSet<TagInfo> _tags = [];
+        private readonly SortedSet<TagInfo> _tags = new();
+
         public SortedSet<TagInfo> Tags { get => _tags; }
         public bool HasTags { get => _tags.Count > 0; }
         public WorldEntity Owner { get; }
 
-        public TagPlayers(WorldEntity worldEntity)
+        public PlayerTagCollection(WorldEntity worldEntity)
         {
             Owner = worldEntity;
         }
@@ -39,10 +40,10 @@ namespace MHServerEmu.Games.Entities
 
     public readonly struct PlayerTagIterator
     {
-        private readonly TagPlayers _tags;
+        private readonly PlayerTagCollection _tags;
         private readonly TimeSpan _time;
 
-        public PlayerTagIterator(TagPlayers tags, TimeSpan time)
+        public PlayerTagIterator(PlayerTagCollection tags, TimeSpan time)
         {
             _tags = tags;
             _time = time;
@@ -60,7 +61,7 @@ namespace MHServerEmu.Games.Entities
             private Player _current;
             private SortedSet<TagInfo>.Enumerator _enumerator;
 
-            public Enumerator(TagPlayers tagPlayers, TimeSpan maxAge)
+            public Enumerator(PlayerTagCollection tagPlayers, TimeSpan maxAge)
             {
                 var game = tagPlayers.Owner.Game;
                 _manager = game.EntityManager;

@@ -141,9 +141,12 @@ namespace MHServerEmu.Games.Entities.Items
 
         public override bool IsAutoStackedWhenAddedToInventory()
         {
-            var itemProto = Prototype as ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "IsAutoStackedWhenAddedToInventory(): itemProto == null");
-            if (itemProto.StackSettings == null) return false;
+            ItemPrototype itemProto = Prototype as ItemPrototype;
+            if (!Verify.IsNotNull(itemProto)) return false;
+
+            if (itemProto.StackSettings == null)
+                return false;
+
             return itemProto.StackSettings.AutoStackWhenAddedToInventory;
         }
 
@@ -208,18 +211,11 @@ namespace MHServerEmu.Games.Entities.Items
                     // Apply team-up affixes to avatar if needed
                     if (inventoryProto.Category == InventoryCategory.TeamUpEquipment)
                     {
-                        if (owner is not Agent ownerAgent)
-                        {
-                            Logger.Warn("OnSelfAddedToOtherInventory(): owner is not Agent ownerAgent");
-                            return;
-                        }
+                        Agent ownerAgent = owner as Agent;
+                        if (!Verify.IsNotNull(ownerAgent)) return;
 
                         Player owningPlayer = ownerAgent.GetOwnerOfType<Player>();
-                        if (owningPlayer == null)
-                        {
-                            Logger.Warn("OnSelfAddedToOtherInventory(): player == null");
-                            return;
-                        }
+                        if (!Verify.IsNotNull(owningPlayer)) return;
 
                         Avatar avatar = owningPlayer.CurrentAvatar;
                         if (avatar != null && avatar.IsInWorld && avatar.CurrentTeamUpAgent == ownerAgent)
@@ -266,15 +262,12 @@ namespace MHServerEmu.Games.Entities.Items
 
         public bool ApplyTeamUpAffixesToAvatar(Avatar avatar)
         {
-            if (GetOwnerOfType<Player>() != avatar.GetOwnerOfType<Player>()) return Logger.WarnReturn(false, "ApplyTeamUpAffixesToAvatar(): GetOwnerOfType<Player>() != avatar.GetOwnerOfType<Player>()");
+            if (!Verify.IsTrue(GetOwnerOfType<Player>() == avatar.GetOwnerOfType<Player>())) return false;
             
             foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
             {
-                if (copyEntry.Properties == null || copyEntry.AffixProto == null)
-                {
-                    Logger.Warn("ApplyTeamUpAffixesToAvatar(): copyEntry.Properties == null || copyEntry.AffixProto == null");
+                if (!Verify.IsTrue(copyEntry.Properties != null && copyEntry.AffixProto != null))
                     continue;
-                }
 
                 if (copyEntry.AffixProto is not AffixTeamUpPrototype affixProto)
                     continue;
@@ -283,8 +276,7 @@ namespace MHServerEmu.Games.Entities.Items
                     continue;
 
                 bool didAssignAllPowers = avatar.UpdateProcEffectPowers(copyEntry.Properties, true);
-                if (didAssignAllPowers == false)
-                    Logger.Warn($"ApplyTeamUpAffixesToAvatar(): UpdateProcEffectPowers failed in ApplyTeamUpAffixesToAvatar for affix=[{affixProto}] item=[{this}] avatar=[{avatar}]");
+                Verify.IsTrue(didAssignAllPowers, $"UpdateProcEffectPowers failed in ApplyTeamUpAffixesToAvatar for affix=[{affixProto}] item=[{this}] avatar=[{avatar}]");
 
                 if (avatar.Properties.HasChildCollection(copyEntry.Properties))
                     continue;
@@ -299,11 +291,8 @@ namespace MHServerEmu.Games.Entities.Items
         {
             foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
             {
-                if (copyEntry.Properties == null || copyEntry.AffixProto == null)
-                {
-                    Logger.Warn("RemoveTeamUpAffixesFromAvatar(): copyEntry.Properties == null || copyEntry.AffixProto == null");
+                if (!Verify.IsTrue(copyEntry.Properties != null && copyEntry.AffixProto != null))
                     continue;
-                }
 
                 if (copyEntry.AffixProto is not AffixTeamUpPrototype affixProto)
                     continue;
@@ -321,12 +310,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         public void StartTicking(Entity owner)
         {
-            if (_tickerId != PropertyTicker.InvalidId)
-            {
-                Logger.Warn("StartTicking(): _tickerId != PropertyTicker.InvalidId");
-                return;
-            }
-
+            if (!Verify.IsTrue(_tickerId == PropertyTicker.InvalidId)) return;
             _tickerId = owner.StartPropertyTicker(Properties, Id, Id, TimeSpan.FromMilliseconds(1000));
         }
 
@@ -383,11 +367,7 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
 
                 case PropertyEnum.PetItemDonationCount:
-                    if (IsPetItem == false)
-                    {
-                        Logger.Warn("OnPropertyChange(): IsPetItem == false");
-                        return;
-                    }
+                    if (!Verify.IsTrue(IsPetItem)) return;
 
                     if (ItemPrototype.IsPetTechAffixUnlocked(this, id))
                     {
@@ -397,8 +377,8 @@ namespace MHServerEmu.Games.Entities.Items
                     else if (newValue == 0 && oldValue != 0)
                     {
                         Property.FromParam(id, 0, out int updatedAffixPos);
-                        if (RemovePetTechAffix((AffixPosition)updatedAffixPos) == false)
-                            Logger.Warn($"OnPropertyChange(): Failed to remove pet tech affix props!\n Item: {this}\n AffixPos: {(AffixPosition)updatedAffixPos}");
+                        Verify.IsTrue(RemovePetTechAffix((AffixPosition)updatedAffixPos),
+                            $"Failed to remove pet tech affix props!\n Item: {this}\n AffixPos: {(AffixPosition)updatedAffixPos}");
                     }
 
                     break;
@@ -415,13 +395,13 @@ namespace MHServerEmu.Games.Entities.Items
             if (IsBoundToCharacter && TestStatus(EntityStatus.SkipItemBindingCheck) == false)
             {
                 Player player = GetOwnerOfType<Player>();
-                if (player == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanChangeInventoryLocation(): player == null");
+                if (!Verify.IsNotNull(player)) return InventoryResult.Invalid;
 
                 Entity destInvOwner = Game.EntityManager.GetEntity<Entity>(destInventory.OwnerId);
-                if (destInvOwner == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanChangeInventoryLocation(): destInvOwner == null");
+                if (!Verify.IsNotNull(destInvOwner)) return InventoryResult.Invalid;
 
                 Player destInvOwnerAsPlayer = destInvOwner.GetSelfOrOwnerOfType<Player>();
-                if (destInvOwnerAsPlayer == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanChangeInventoryLocation(): destInvOwnerAsPlayer == null");
+                if (!Verify.IsNotNull(destInvOwnerAsPlayer)) return InventoryResult.Invalid;
 
                 if (player != destInvOwnerAsPlayer)
                     return InventoryResult.InvalidBound;
@@ -449,32 +429,32 @@ namespace MHServerEmu.Games.Entities.Items
             resultItem = null;
 
             // Validate ownership
-            if (player.Owns(this) == false) return Logger.WarnReturn(false, "PlayerCanMove(): player.Owns(this) == false");
+            if (!Verify.IsTrue(player.Owns(this))) return false;
 
             // Validate inventories
             ref InventoryLocation fromInvLoc = ref InventoryLocation;
 
-            if (fromInvLoc.IsValid == false)
-                return Logger.WarnReturn(false, $"PlayerCanMove() is being called with a fromInvLoc that isn't valid (the pickup interaction should be used for that case!)\nItem: [{this}]");
+            if (!Verify.IsTrue(fromInvLoc.IsValid, $"PlayerCanMove() is being called with a fromInvLoc that isn't valid (the pickup interaction should be used for that case!)\nItem: [{this}]"))
+                return false;
 
-            if (destInvLoc.IsValid == false)
-                return Logger.WarnReturn(false, $"PlayerCanMove() is being called with a destInvLoc that isn't valid (RequestItemTrash() should be used for that case!)\nItem: [{this}]");
+            if (!Verify.IsTrue(destInvLoc.IsValid, $"PlayerCanMove() is being called with a destInvLoc that isn't valid (RequestItemTrash() should be used for that case!)\nItem: [{this}]"))
+                return false;
 
             Entity fromInventoryOwner = Game.EntityManager.GetEntity<Entity>(fromInvLoc.ContainerId);
-            if (fromInventoryOwner == null)
-                return Logger.WarnReturn(false, $"PlayerCanMove(): Unable to get source owner sourceInvLoc=[{fromInvLoc}] when moving [{this}]");
+            if (!Verify.IsNotNull(fromInventoryOwner, $"Unable to get source owner sourceInvLoc=[{fromInvLoc}] when moving [{this}]"))
+                return false;
 
             Inventory fromInventory = fromInventoryOwner.GetInventoryByRef(fromInvLoc.InventoryRef);
-            if (fromInventory == null)
-                return Logger.WarnReturn(false, $"PlayerCanMove(): Invalid source inventory for sourceInvLoc=[{fromInvLoc}], sourceOwner=[{fromInventoryOwner}], when moving [{this}]");
+            if (!Verify.IsNotNull(fromInventory, $"Invalid source inventory for sourceInvLoc=[{fromInvLoc}], sourceOwner=[{fromInventoryOwner}], when moving [{this}]"))
+                return false;
 
             Entity toInventoryOwner = Game.EntityManager.GetEntity<Entity>(destInvLoc.ContainerId);
-            if (toInventoryOwner == null)
-                return Logger.WarnReturn(false, $"PlayerCanMove(): Unable to get destination owner destInvLoc=[{destInvLoc}] when moving [{this}]");
+            if (!Verify.IsNotNull(toInventoryOwner, $"Unable to get destination owner destInvLoc=[{destInvLoc}] when moving [{this}]"))
+                return false;
 
             Inventory toInventory = toInventoryOwner.GetInventoryByRef(destInvLoc.InventoryRef);
-            if (toInventory == null)
-                return Logger.WarnReturn(false, $"PlayerCanMove(): Invalid dest inventory [{destInvLoc}] on destOwner=[{toInventoryOwner}] when moving [{this}]");
+            if (!Verify.IsNotNull(toInventory, $"Invalid dest inventory [{destInvLoc}] on destOwner=[{toInventoryOwner}] when moving [{this}]"))
+                return false;
 
             // Check if this item can be moved to the requested destination
             result = CanChangeInventoryLocation(toInventory, out resultProperty);
@@ -530,7 +510,7 @@ namespace MHServerEmu.Games.Entities.Items
                 return false;
 
             ItemPrototype itemProto = ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "PlayerCanDestroy(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             if (itemProto.CanBeDestroyed == false)
                 return false;
@@ -545,10 +525,10 @@ namespace MHServerEmu.Games.Entities.Items
         public bool CanBeEquippedWithItem(Item otherItem)
         {
             ItemPrototype itemProto = ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "CanBeEquippedWithItem(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             ItemPrototype otherItemProto = otherItem?.ItemPrototype;
-            if (otherItemProto == null) return Logger.WarnReturn(false, "CanBeEquippedWithItem(): otherItemProto == null");
+            if (!Verify.IsNotNull(otherItemProto)) return false;
 
             return CanBeEquippedWithItemHelper(itemProto, otherItem) && CanBeEquippedWithItemHelper(otherItemProto, this);
         }
@@ -575,7 +555,7 @@ namespace MHServerEmu.Games.Entities.Items
             if (isRecraft == false)
             {
                 Inventory resultsInv = player.GetInventory(InventoryConvenienceLabel.CraftingResults);
-                if (resultsInv == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipe(): resultsInv == null");
+                if (!Verify.IsNotNull(resultsInv)) return CraftingResult.CraftingFailed;
 
                 if (resultsInv.Count > 0)
                     return CraftingResult.CraftingFailed;
@@ -599,7 +579,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
             VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
-            if (vendorTypeProto == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipe(): vendorTypeProto == null");
+            if (!Verify.IsNotNull(vendorTypeProto)) return CraftingResult.CraftingFailed;
 
             bool isInRecipeLibrary = false;
 
@@ -609,20 +589,14 @@ namespace MHServerEmu.Games.Entities.Items
                 foreach (PrototypeId crafterVendorInvProtoRef in inventoryList)
                 {
                     Inventory crafterVendorInv = player.GetInventoryByRef(crafterVendorInvProtoRef);
-                    if (crafterVendorInv == null)
-                    {
-                        Logger.Warn("CanCraftRecipe(): crafterVendorInv == null");
+                    if (!Verify.IsNotNull(crafterVendorInv))
                         continue;
-                    }
 
                     foreach (var entry in crafterVendorInv)
                     {
                         Item vendorRecipe = entityManager.GetEntity<Item>(entry.Id);
-                        if (vendorRecipe == null)
-                        {
-                            Logger.Warn("CanCraftRecipe(): vendorRecipe == null");
+                        if (!Verify.IsNotNull(vendorRecipe))
                             continue;
-                        }
 
                         if (vendorRecipe.PrototypeDataRef == PrototypeDataRef)
                         {
@@ -687,11 +661,8 @@ namespace MHServerEmu.Games.Entities.Items
         {
             foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
             {
-                if (copyEntry.AffixProto == null)
-                {
-                    Logger.Warn("HasAffixInPosition(): copyEntry.AffixProto == null");
+                if (!Verify.IsNotNull(copyEntry.AffixProto))
                     continue;
-                }
 
                 if (copyEntry.AffixProto.Position == affixPosition)
                     return true;
@@ -702,7 +673,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         public bool IsPetTechFullyUpgraded()
         {
-            if (IsPetItem == false) return Logger.WarnReturn(false, "IsPetTechFullyUpgraded(): IsPetItem == false");
+            if (!Verify.IsTrue(IsPetItem)) return false;
 
             for (AffixPosition position = AffixPosition.PetTech1; position <= AffixPosition.PetTech5; position++)
             {
@@ -764,7 +735,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         public uint GetVendorBaseXPGain(Player player)
         {
-            if (player == null) return Logger.WarnReturn(0u, "GetVendorBaseXPGain(): player == null");
+            if (!Verify.IsNotNull(player)) return 0;
             float xpGain = GetSellPrice(player);
             xpGain *= LiveTuningManager.GetLiveGlobalTuningVar(Gazillion.GlobalTuningVar.eGTV_VendorXPGain);
             return (uint)xpGain;
@@ -772,7 +743,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         public uint GetVendorXPGain(WorldEntity vendor, Player player)
         {
-            if (player == null) return Logger.WarnReturn(0u, "GetVendorXPGain(): player == null");
+            if (!Verify.IsNotNull(player)) return 0;
 
             // This eval simply returns 1 even back in 1.10
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
@@ -786,10 +757,10 @@ namespace MHServerEmu.Games.Entities.Items
 
         public uint GetSellPrice(Player player)
         {
-            if (player == null) return Logger.WarnReturn(0u, "GetSellPrice(): player == null");
+            if (!Verify.IsNotNull(player)) return 0;
 
             ItemPrototype itemProto = Prototype as ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(0u, "GetSellPrice(): proto == null");
+            if (!Verify.IsNotNull(itemProto)) return 0;
 
             return itemProto.Cost != null ? (uint)itemProto.Cost.GetSellPriceInCredits(player, this) : 0u;
         }
@@ -797,10 +768,10 @@ namespace MHServerEmu.Games.Entities.Items
         public static int GetEquippableAtLevelForItemLevel(int itemLevel)
         {
             AdvancementGlobalsPrototype advanGlobalsProto = GameDatabase.AdvancementGlobalsPrototype;
-            if (advanGlobalsProto == null) return Logger.WarnReturn(0, "GetEquippableAtLevelForItemLevel(): advanGlobalsProto == null");
+            if (!Verify.IsNotNull(advanGlobalsProto)) return 0;
 
             Curve itemEquipReqOffsetCurve = CurveDirectory.Instance.GetCurve(advanGlobalsProto.ItemEquipRequirementOffset);
-            if (itemEquipReqOffsetCurve == null) return Logger.WarnReturn(0, "GetEquippableAtLevelForItemLevel(): itemEquipReqOffsetCurve == null");
+            if (!Verify.IsNotNull(itemEquipReqOffsetCurve)) return 0;
 
             return Math.Clamp(itemLevel + itemEquipReqOffsetCurve.GetIntAt(itemLevel), 1, advanGlobalsProto.GetAvatarLevelCap());
         }
@@ -819,10 +790,10 @@ namespace MHServerEmu.Games.Entities.Items
 
         public bool DecrementStack(int count = 1)
         {
-            if (count < 1) return Logger.WarnReturn(false, "DecrementStack(): count < 1");
+            if (!Verify.IsTrue(count > 0)) return false;
 
             int currentStackSize = CurrentStackSize;
-            if (count > currentStackSize) return Logger.WarnReturn(false, "DecrementStack(): count > currentStackSize");
+            if (!Verify.IsTrue(count <= currentStackSize)) return false;
 
             int newCount = Math.Max(0, currentStackSize - count);
 
@@ -851,19 +822,19 @@ namespace MHServerEmu.Games.Entities.Items
 
             // Check inventories
             Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(InventoryResult.PlayerOwnerNotFound, "SplitStack(): player == null");
+            if (!Verify.IsNotNull(player)) return InventoryResult.PlayerOwnerNotFound;
 
             Entity fromInventoryOwner = Game.EntityManager.GetEntity<Entity>(fromInvLoc.ContainerId);
-            if (fromInventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "SplitStack(): fromInventoryOwner == null");
+            if (!Verify.IsNotNull(fromInventoryOwner)) return InventoryResult.InventoryHasNoOwner;
 
             Inventory fromInventory = fromInventoryOwner.GetInventoryByRef(fromInvLoc.InventoryRef);
-            if (fromInventory == null) return Logger.WarnReturn(InventoryResult.NoAvailableInventory, "SplitStack(): fromInventory == null");
+            if (!Verify.IsNotNull(fromInventory)) return InventoryResult.NoAvailableInventory;
 
             Entity toInventoryOwner = Game.EntityManager.GetEntity<Entity>(toInvLoc.ContainerId);
-            if (toInventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "SplitStack(): toInventoryOwner == null");
+            if (!Verify.IsNotNull(toInventoryOwner)) return InventoryResult.InventoryHasNoOwner;
 
             Inventory toInventory = toInventoryOwner.GetInventoryByRef(toInvLoc.InventoryRef);
-            if (toInventory == null) return Logger.WarnReturn(InventoryResult.InvalidReceivingInventory, "SplitStack(): toInventory == null");
+            if (!Verify.IsNotNull(toInventory)) return InventoryResult.InvalidReceivingInventory;
 
             // Find a free slot if needed
             if (toInvLoc.Slot == Inventory.InvalidSlot)
@@ -882,20 +853,17 @@ namespace MHServerEmu.Games.Entities.Items
             // Do the split
             InventoryResult splitResult = DoStackSplit(ref toInvLoc, toInventory, count, out ulong newItemId);
 
-            if (splitResult != InventoryResult.Success)
+            if (!Verify.IsTrue(splitResult == InventoryResult.Success, LoggingLevel.Error, $"SplitStack() FAILED for item [{this}] belonging to player [{player}], reason=[{splitResult}]"))
             {
-                Logger.Error($"SplitStack(): FAILED for item [{this}] belonging to player [{player}], reason=[{splitResult}]");
-
                 // Clean up the newly created item if something went wrong (hopefully this never ever happens)
                 Item newItem = Game.EntityManager.GetEntity<Item>(newItemId);
-                if (newItem != null)
+                if (!Verify.IsNotNull(newItem, LoggingLevel.Error))
                 {
                     InventoryResult errorRecoveryResult = newItem.ChangeInventoryLocation(fromInventory, fromInvLoc.Slot);
-                    if (errorRecoveryResult != InventoryResult.Success)
-                    {
-                        Logger.Error($"SplitStack(): ERROR RECOVERY FAILED for item [{this}] belonging to player [{player}], reason=[{errorRecoveryResult}], something has gone REALLY wrong");
+                    if (!Verify.IsTrue(errorRecoveryResult == InventoryResult.Success, LoggingLevel.Error, $"SplitStack() ERROR RECOVERY FAILED for item [{this}] belonging to player [{player}], reason=[{errorRecoveryResult}], something has gone REALLY wrong"))
                         newItem.Destroy();
-                    }
+
+                    return errorRecoveryResult;
                 }
             }
 
@@ -929,8 +897,8 @@ namespace MHServerEmu.Games.Entities.Items
             
             newItem.SetStatus(EntityStatus.SkipItemBindingCheck, false);
 
-            if (stackEntityId == Id)
-                return Logger.WarnReturn(InventoryResult.UnknownFailure, $"DoStackSplit(): Splitting stack [{this}] resulted in the item being stacked with itself");
+            if (!Verify.IsTrue(stackEntityId != Id, $"Splitting stack [{this}] resulted in the item being stacked with itself"))
+                return InventoryResult.UnknownFailure;
 
             return moveResult; 
         }
@@ -965,15 +933,15 @@ namespace MHServerEmu.Games.Entities.Items
 
         private bool ApplyItemSpec(ItemSpec itemSpec)
         {
-            if (itemSpec.IsValid == false) return Logger.WarnReturn(false, $"ApplyItemSpec(): Invalid ItemSpec on Item {this}!");
+            if (!Verify.IsTrue(itemSpec.IsValid, $"Invalid ItemSpec on Item {this}!"))
+                return false;
 
             _itemSpec.Set(itemSpec);
 
             ItemPrototype itemProto = ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "ApplyItemSpec(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
-            if (ApplyItemSpecProperties() == false)
-                return Logger.WarnReturn(false, "ApplyItemSpec(): Failed to apply ItemSpec properties");
+            if (!Verify.IsTrue(ApplyItemSpecProperties())) return false;
 
             itemProto.OnApplyItemSpec(this, _itemSpec);
 
@@ -986,12 +954,15 @@ namespace MHServerEmu.Games.Entities.Items
                 {
                     float randomMult = random.NextFloat();
 
-                    if (propertyEntryProto is PropertyPickInRangeEntryPrototype pickInRangeProto)
-                        OnBuiltInPropertyRoll(randomMult, pickInRangeProto);
-                    else if (propertyEntryProto is PropertySetEntryPrototype setProto)
-                        OnBuiltInPropertySet(setProto);
+                    PropertyPickInRangeEntryPrototype propPickEntryProto = propertyEntryProto as PropertyPickInRangeEntryPrototype;
+                    PropertySetEntryPrototype propSetEntryProto = propertyEntryProto as PropertySetEntryPrototype;
+                    if (!Verify.IsTrue(propPickEntryProto != null || propSetEntryProto != null))
+                        continue;
+
+                    if (propPickEntryProto != null)
+                        OnBuiltInPropertyRoll(randomMult, propPickEntryProto);
                     else
-                        Logger.Warn($"ApplyItemSpec(): Invalid property entry prototype {propertyEntryProto}");
+                        OnBuiltInPropertySet(propSetEntryProto);
                 }
             }
 
@@ -1006,11 +977,8 @@ namespace MHServerEmu.Games.Entities.Items
                 foreach (BuiltInAffixDetails builtInAffixDetails in detailsList)
                 {
                     AffixPrototype affixProto = builtInAffixDetails.AffixEntryProto.Affix.As<AffixPrototype>();
-                    if (affixProto == null)
-                    {
-                        Logger.Warn("ApplyItemSpec(): affixProto == null");
+                    if (!Verify.IsNotNull(affixProto))
                         continue;
-                    }
 
                     random.Seed(builtInAffixDetails.Seed);
                     OnAffixAdded(random, affixProto, builtInAffixDetails.ScopeProtoRef, builtInAffixDetails.AvatarProtoRef, builtInAffixDetails.LevelRequirement);
@@ -1023,11 +991,10 @@ namespace MHServerEmu.Games.Entities.Items
             {
                 AffixSpec affixSpec = affixSpecs[i];
 
-                if (affixSpec.Seed == 0) return Logger.WarnReturn(false, "ApplyItemSpec(): affixSpec.Seed == 0");
+                if (!Verify.IsTrue(affixSpec.Seed != 0)) return false;
                 random.Seed(affixSpec.Seed);
-                
-                if (affixSpec.AffixProto == null) return Logger.WarnReturn(false, "ApplyItemSpec(): affixSpec.AffixProto == null");
 
+                if (!Verify.IsNotNull(affixSpec.AffixProto)) return false;
                 OnAffixAdded(random, affixSpec.AffixProto, affixSpec.ScopeProtoRef, _itemSpec.EquippableBy, 0);
             }
 
@@ -1069,7 +1036,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             // Apply rarity
             RarityPrototype rarityProto = GameDatabase.GetPrototype<RarityPrototype>(_itemSpec.RarityProtoRef);
-            if (rarityProto == null) return Logger.WarnReturn(false, "ApplyItemSpec(): rarityProto == null");
+            if (!Verify.IsNotNull(rarityProto)) return false;
             Properties[PropertyEnum.ItemRarity] = _itemSpec.RarityProtoRef;
 
             // Apply level and level requirement
@@ -1126,10 +1093,10 @@ namespace MHServerEmu.Games.Entities.Items
         public bool InteractWithAvatar(Avatar avatar)
         {
             Player player = avatar?.GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "InteractWithAvatar(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             ItemPrototype itemProto = ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "InteractWithAvatar(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             if (PlayerCanUse(player, avatar) != InteractionValidateResult.Success)
                 return false;
@@ -1145,11 +1112,10 @@ namespace MHServerEmu.Games.Entities.Items
                     ItemActionBasePrototype[] choices = itemProto.ActionsTriggeredOnItemEvent.Choices;
 
                     int actionIndex = Properties[PropertyEnum.ItemEventActionIndex];
-                    if (actionIndex < 0 || actionIndex >= choices.Length)
-                        return Logger.WarnReturn(false, "InteractWithAvatar(): actionIndex < 0 || actionIndex >= choices.Length");
+                    if (!Verify.IsTrue(actionIndex >= 0 && actionIndex < choices.Length)) return false;
 
                     Prototype choiceProto = choices[actionIndex];
-                    if (choiceProto == null) return Logger.WarnReturn(false, "InteractWithAvatar(): choiceProto == null");
+                    if (!Verify.IsNotNull(choiceProto)) return false;
 
                     // Action entries can be single actions or action sets
 
@@ -1157,20 +1123,15 @@ namespace MHServerEmu.Games.Entities.Items
                     if (choiceProto is ItemActionSetPrototype actionSetProto)
                     {
                         // Only the top level action index is rolled, so we can't have any RNG in action sets
-                        if (actionSetProto.PickMethod != PickMethod.PickAll)
-                            return Logger.WarnReturn(false, "InteractWithAvatar(): actionSetProto.PickMethod != PickMethod.PickAll");
-
-                        if (actionSetProto.Choices == null)
-                            return Logger.WarnReturn(false, "InteractWithAvatar(): actionSetProto.Choices == null");
+                        if (!Verify.IsTrue(actionSetProto.PickMethod == PickMethod.PickAll)) return false;
+                        if (!Verify.IsTrue(actionSetProto.Choices.HasValue())) return false;
 
                         foreach (ItemActionBasePrototype actionBaseProto in actionSetProto.Choices)
                         {
-                            if (actionBaseProto is not ItemActionPrototype actionProto)
-                            {
-                                // Nesting of action sets is not supported by this system
-                                Logger.Warn("InteractWithAvatar(): actionBaseProto is not ItemActionPrototype itemActionProto");
+                            // Nesting of action sets is not supported by this system
+                            ItemActionPrototype actionProto = actionBaseProto as ItemActionPrototype;
+                            if (!Verify.IsNotNull(actionProto))
                                 continue;
-                            }
 
                             TriggerItemActionOnUse(actionProto, player, avatar, ref wasUsed, ref isConsumable);
                         }
@@ -1188,11 +1149,9 @@ namespace MHServerEmu.Games.Entities.Items
                     foreach (ItemActionBasePrototype actionBaseProto in itemProto.ActionsTriggeredOnItemEvent.Choices)
                     {
                         // PickAll is not compatible with action sets
-                        if (actionBaseProto is not ItemActionPrototype actionProto)
-                        {
-                            Logger.Warn("InteractWithAvatar(): actionBaseProto is not ItemActionPrototype itemActionProto");
+                        ItemActionPrototype actionProto = actionBaseProto as ItemActionPrototype;
+                        if (!Verify.IsNotNull(actionProto))
                             continue;
-                        }
 
                         TriggerItemActionOnUse(actionProto, player, avatar, ref wasUsed, ref isConsumable);
                     }
@@ -1234,7 +1193,7 @@ namespace MHServerEmu.Games.Entities.Items
             PrototypeId characterProtoRef = characterTokenProto.Character;
 
             EntityPrototype characterProto = characterTokenProto.Character.As<EntityPrototype>();
-            if (characterProto == null) return Logger.WarnReturn(false, "DoCharacterTokenInteraction(): characterProto == null");
+            if (!Verify.IsNotNull(characterProto)) return false;
 
             if (characterProto is AvatarPrototype)
             {
@@ -1246,7 +1205,7 @@ namespace MHServerEmu.Games.Entities.Items
                 if (wasUsed == false && characterTokenProto.GrantsUltimateUpgrade)
                 {
                     // Upgrade ultimate if the token wasn't used to unlock the avatar
-                    if (avatar.PrototypeDataRef != characterTokenProto.Character) return Logger.WarnReturn(false, "DoCharacterTokenInteraction(): avatar.PrototypeDataRef != characterTokenProto.Character");
+                    if (!Verify.IsTrue(avatar.PrototypeDataRef == characterTokenProto.Character)) return false;
 
                     if (avatar.CanUpgradeUltimate() == InteractionValidateResult.Success)
                     {
@@ -1271,8 +1230,8 @@ namespace MHServerEmu.Games.Entities.Items
             if (player.IsInventoryUnlocked(invStashProtoRef))
                 return false;
 
-            if (player.UnlockInventory(invStashProtoRef) == false)
-                return Logger.WarnReturn(false, $"DoInventoryStashTokenInteraction(): Failed to unlock inventory {invStashProtoRef.GetName()} for player [{player}] by interacting with [{this}]");
+            if (!Verify.IsTrue(player.UnlockInventory(invStashProtoRef), $"Failed to unlock inventory {invStashProtoRef.GetName()} for player [{player}] by interacting with [{this}]"))
+                return false;
 
             return true;
         }
@@ -1280,16 +1239,16 @@ namespace MHServerEmu.Games.Entities.Items
         private bool DoEmoteTokenInteraction(EmoteTokenPrototype emoteTokenProto, Player player)
         {
             PrototypeId avatarDataRef = emoteTokenProto.Avatar;
-            if (avatarDataRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoEmoteTokenInteraction(): avatarDataRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(avatarDataRef != PrototypeId.Invalid)) return false;
 
             PrototypeId emotePowerDataRef = emoteTokenProto.EmotePower;
-            if (emotePowerDataRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoEmoteTokenInteraction(): emotePowerDataRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(emotePowerDataRef != PrototypeId.Invalid)) return false;
 
             if (player.HasAvatarEmoteUnlocked(avatarDataRef, emotePowerDataRef))
                 return false;
 
-            if (player.UnlockAvatarEmote(avatarDataRef, emotePowerDataRef) == false)
-                return Logger.WarnReturn(false, $"DoEmoteTokenInteraction(): Failed to unlock emote! avatar=[{avatarDataRef.GetName()}], emote=[{emotePowerDataRef.GetName()}], item=[{this}], player=[{player}]");
+            if (!Verify.IsTrue(player.UnlockAvatarEmote(avatarDataRef, emotePowerDataRef), $"Failed to unlock emote! avatar=[{avatarDataRef.GetName()}], emote=[{emotePowerDataRef.GetName()}], item=[{this}], player=[{player}]"))
+                return false;
 
             return true;
         }
@@ -1297,20 +1256,21 @@ namespace MHServerEmu.Games.Entities.Items
         private bool DoCraftingRecipeInteraction(CraftingRecipePrototype craftingRecipeProto, Player player)
         {
             InventoryPrototype containingInvProto = InventoryLocation.InventoryPrototype;
-            if (containingInvProto == null) return Logger.WarnReturn(false, "DoCraftingRecipeInteraction(): containingInvProto == null");
+            if (!Verify.IsNotNull(containingInvProto)) return false;
 
             // This should have already been validated in PlayerCanUseCraftingRecipe()
-            if (containingInvProto.IsPlayerGeneralInventory == false)
-                return Logger.WarnReturn(false, $"DoCraftingRecipeInteraction(): Player [{player}] attempting to use a crafting recipe from inventory {containingInvProto.ConvenienceLabel}");
+            if (!Verify.IsTrue(containingInvProto.IsPlayerGeneralInventory, $"Player [{player}] attempting to use a crafting recipe from inventory {containingInvProto.ConvenienceLabel}"))
+                return false;
 
-            if (player.HasLearnedCraftingRecipe(craftingRecipeProto.DataRef))
-                return Logger.WarnReturn(false, $"DoCraftingRecipeInteraction(): Player [{player}] has already learned crafting recipe {craftingRecipeProto}");
+            if (!Verify.IsTrue(player.HasLearnedCraftingRecipe(craftingRecipeProto.DataRef) == false, $"Player [{player}] has already learned crafting recipe {craftingRecipeProto}"))
+                return false;
 
             Inventory learnedRecipeInv = player.GetInventory(InventoryConvenienceLabel.CraftingRecipesLearned);
-            if (learnedRecipeInv == null) return Logger.WarnReturn(false, "DoCraftingRecipeInteraction(): learnedRecipeInv == null");
+            if (!Verify.IsNotNull(learnedRecipeInv)) return false;
 
-            if (ChangeInventoryLocation(learnedRecipeInv) != InventoryResult.Success)
-                return Logger.WarnReturn(false, $"DoCraftingRecipeInteraction(): Recipe [{this}] failed to move to the learned recipe inventory for player [{player}]");
+            InventoryResult result = ChangeInventoryLocation(learnedRecipeInv);
+            if (!Verify.IsTrue(result == InventoryResult.Success, $"Recipe [{this}] failed to move to the learned recipe inventory for player [{player}]"))
+                return false;
 
             return true;
         }
@@ -1320,7 +1280,7 @@ namespace MHServerEmu.Games.Entities.Items
             // This method mostly mirrors InteractWithAvatar, but for the OnUsePowerActivated event
 
             ItemPrototype itemProto = ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "OnUsePowerActivated(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             if (itemProto.ActionsTriggeredOnItemEvent == null || itemProto.ActionsTriggeredOnItemEvent.Choices.IsNullOrEmpty())
                 return true;
@@ -1331,28 +1291,24 @@ namespace MHServerEmu.Games.Entities.Items
                 ItemActionBasePrototype[] choices = itemProto.ActionsTriggeredOnItemEvent.Choices;
 
                 int actionIndex = Properties[PropertyEnum.ItemEventActionIndex];
-                if (actionIndex < 0 || actionIndex >= choices.Length)
-                    return Logger.WarnReturn(false, "OnUsePowerActivated(): actionIndex < 0 || actionIndex >= choices.Length");
+                if (!Verify.IsTrue(actionIndex >= 0 && actionIndex < choices.Length)) return false;
 
                 Prototype choiceProto = choices[actionIndex];
-                if (choiceProto == null) return Logger.WarnReturn(false, "OnUsePowerActivated(): choiceProto == null");
+                if (!Verify.IsNotNull(choiceProto)) return false;
 
                 // Action entries can be single actions or action sets
 
                 // First check if the picked action is a set
                 if (choiceProto is ItemActionSetPrototype actionSetProto)
                 {
-                    if (actionSetProto.Choices == null)
-                        return Logger.WarnReturn(false, "OnUsePowerActivated(): actionSetProto.Choices == null");
+                    if (!Verify.IsTrue(actionSetProto.Choices.HasValue())) return false;
 
                     foreach (ItemActionBasePrototype actionBaseProto in actionSetProto.Choices)
                     {
-                        if (actionBaseProto is not ItemActionPrototype actionProto)
-                        {
-                            // Nesting of action sets is not supported by this system
-                            Logger.Warn("OnUsePowerActivated(): actionBaseProto is not ItemActionPrototype actionProto");
+                        // Nesting of action sets is not supported by this system
+                        ItemActionPrototype actionProto = actionBaseProto as ItemActionPrototype;
+                        if (!Verify.IsNotNull(actionProto))
                             continue;
-                        }
 
                         if (TriggerItemActionOnUsePowerActivated(actionProto))
                             return true;
@@ -1370,11 +1326,9 @@ namespace MHServerEmu.Games.Entities.Items
                 foreach (ItemActionBasePrototype actionBaseProto in itemProto.ActionsTriggeredOnItemEvent.Choices)
                 {
                     // PickAll is not compatible with action sets
-                    if (actionBaseProto is not ItemActionPrototype actionProto)
-                    {
-                        Logger.Warn("OnUsePowerActivated(): actionBaseProto is not ItemActionPrototype actionProto");
+                    ItemActionPrototype actionProto = actionBaseProto as ItemActionPrototype;
+                    if (!Verify.IsNotNull(actionProto))
                         continue;
-                    }
 
                     if (TriggerItemActionOnUsePowerActivated(actionProto))
                         return true;
@@ -1413,12 +1367,8 @@ namespace MHServerEmu.Games.Entities.Items
             {
                 AffixSpec affixSpec = gemAffixes[i];
                 AffixPrototype affixProto = affixSpec.AffixProto;
-
-                if (affixProto == null)
-                {
-                    Logger.Warn("CanSocketGem(): affixProto == null");
+                if (!Verify.IsNotNull(affixProto))
                     continue;
-                }
 
                 if (affixProto.IsGemAffix)
                 {
@@ -1427,8 +1377,8 @@ namespace MHServerEmu.Games.Entities.Items
                 }
             }
 
-            if (gemAffixProto == null)
-                return Logger.WarnReturn(false, $"CanSocketGem(): Unable to find socket affix on gem.\nGem: {gem}");
+            if (!Verify.IsNotNull(gemAffixProto, $"Unable to find socket affix on gem.\nGem: {gem}"))
+                return false;
 
             // Find a matching socket affix on the destination item
             IReadOnlyList<AffixSpec> itemAffixes = ItemSpec.AffixSpecs;
@@ -1436,12 +1386,8 @@ namespace MHServerEmu.Games.Entities.Items
             {
                 AffixSpec affixSpec = itemAffixes[i];
                 AffixPrototype affixProto = affixSpec.AffixProto;
-
-                if (affixProto == null)
-                {
-                    Logger.Warn("CanSocketGem(): affixProto == null");
+                if (!Verify.IsNotNull(affixProto))
                     continue;
-                }
 
                 if (affixProto.Position == gemAffixProto.Position)
                     return true;
@@ -1453,17 +1399,17 @@ namespace MHServerEmu.Games.Entities.Items
         public bool SocketGem(Item gem)
         {
             ItemPrototype gemProto = gem.ItemPrototype;
-            if (gemProto == null) return Logger.WarnReturn(false, "SocketGem(): gemProto == null");
+            if (!Verify.IsNotNull(gemProto)) return false;
 
             // The existence of the gem affix should have been already validated by CanSocketGem().
             IReadOnlyList<AffixSpec> gemAffixes = gem.ItemSpec.AffixSpecs;
             AffixSpec gemAffixSpec = gemAffixes.Count > 0 ? gemAffixes[0] : null;
 
             AffixPrototype gemAffixProto = gemAffixSpec?.AffixProto;
-            if (gemAffixProto == null) return Logger.WarnReturn(false, "SocketGem(): gemAffixProto == null");
+            if (!Verify.IsNotNull(gemAffixProto)) return false;
 
-            if (gemAffixProto.IsGemAffix == false)
-                return Logger.WarnReturn(false, $"SocketGem(): Trying to socket an affix that is not a supported!\n Affix: {gemAffixProto}\nItem: {this}");
+            if (!Verify.IsTrue(gemAffixProto.IsGemAffix, $"Trying to socket an affix that is not a supported!\n Affix: {gemAffixProto}\nItem: {this}"))
+                return false;
 
             // Find and remove the affix to replace
             AffixPrototype removeAffixProto = null;
@@ -1473,12 +1419,8 @@ namespace MHServerEmu.Games.Entities.Items
             {
                 AffixSpec affixSpec = affixes[i];
                 AffixPrototype affixProto = affixSpec.AffixProto;
-
-                if (affixProto == null)
-                {
-                    Logger.Warn("SocketGem(): affixProto == null");
+                if (!Verify.IsNotNull(affixProto))
                     continue;
-                }
 
                 if (affixProto.Position == gemAffixProto.Position)
                 {
@@ -1487,8 +1429,8 @@ namespace MHServerEmu.Games.Entities.Items
                 }
             }
 
-            if (removeAffixProto == null)
-                return Logger.WarnReturn(false, $"SocketGem(): Trying to set a socket on an item that doesn't have that affix position! Item: {this}");
+            if (!Verify.IsNotNull(removeAffixProto, $"Trying to set a socket on an item that doesn't have that affix position! Item: {this}"))
+                return false;
 
             RemoveSocketAffix(removeAffixProto);
 
@@ -1528,8 +1470,8 @@ namespace MHServerEmu.Games.Entities.Items
                 }
             }
 
-            if (removeSpecIt == -1)
-                return Logger.WarnReturn(false, $"RemoveSocketAffix(): Failed to find AffixSpec to remove.\nItem: {this}");
+            if (!Verify.IsTrue(removeSpecIt != -1, $"Failed to find AffixSpec to remove.\nItem: {this}"))
+                return false;
 
             affixes.RemoveAt(removeSpecIt);
 
@@ -1549,8 +1491,8 @@ namespace MHServerEmu.Games.Entities.Items
                 break;
             }
 
-            if (erased == false)
-                return Logger.WarnReturn(false, $"RemoveSocketAffix(): Failed to find AffixPropertyCopyEntry to remove.\nItem: {this}");
+            if (!Verify.IsTrue(erased, $"Failed to find AffixPropertyCopyEntry to remove.\nItem: {this}"))
+                return false;
 
             return true;
         }
@@ -1612,11 +1554,8 @@ namespace MHServerEmu.Games.Entities.Items
                 experiencePointsNeeded = GetAffixLevelUpXPRequirement(++newAffixLevel);
 
                 // Check for infinite loops with bad data
-                if (experiencePointsNeeded <= 0)
-                {
-                    Logger.Warn("TryLevelUpAffix(): experiencePointsNeeded <= 0");
+                if (!Verify.IsTrue(experiencePointsNeeded > 0))
                     break;
-                }
             }
 
             // Remove overcapped experience
@@ -1647,11 +1586,8 @@ namespace MHServerEmu.Games.Entities.Items
         {
             foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
             {
-                if (copyEntry.AffixProto == null)
-                {
-                    Logger.Warn("AwardLevelUpAffixes(): copyEntry.AffixProto == null");
+                if (!Verify.IsNotNull(copyEntry.AffixProto))
                     continue;
-                }
 
                 if (copyEntry.LevelRequirement > oldAffixLevel && copyEntry.LevelRequirement <= newAffixLevel)
                 {
@@ -1659,8 +1595,8 @@ namespace MHServerEmu.Games.Entities.Items
                     WorldEntity owner = GetOwnerOfType<WorldEntity>();
                     if (owner != null && IsEquipped)
                     {
-                        if (owner.UpdateProcEffectPowers(copyEntry.Properties, true) == false)
-                            Logger.Warn($"AwardLevelUpAffixes(): UpdateProcEffectPowers failed for affixLevel=[{copyEntry.LevelRequirement}] affix=[{copyEntry.AffixProto}] item=[{this}] owner=[{owner}]");
+                        bool didAssignAllPowers = owner.UpdateProcEffectPowers(copyEntry.Properties, true);
+                        Verify.IsTrue(didAssignAllPowers, $"UpdateProcEffectPowers failed for affixLevel=[{copyEntry.LevelRequirement}] affix=[{copyEntry.AffixProto}] item=[{this}] owner=[{owner}]");
                     }
 
                     Properties.AddChildCollection(copyEntry.Properties);
@@ -1668,11 +1604,8 @@ namespace MHServerEmu.Games.Entities.Items
                 else if (copyEntry.LevelRequirement <= oldAffixLevel && copyEntry.LevelRequirement > newAffixLevel)
                 {
                     // Detach affix properties if we no longer match the level requirement
-                    if (copyEntry.Properties == null)
-                    {
-                        Logger.Warn("AwardLevelUpAffixes(): copyEntry.Properties == null");
+                    if (!Verify.IsNotNull(copyEntry.Properties))
                         continue;
-                    }
 
                     if (copyEntry.Properties.RemoveFromParent(Properties))
                     {
@@ -1717,11 +1650,9 @@ namespace MHServerEmu.Games.Entities.Items
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(pickInRangeProto.Prop.Enum);            
             PropertyDataType propDataType = propertyInfo.DataType;
 
-            if (propDataType != PropertyDataType.Boolean && propDataType != PropertyDataType.Real && propDataType != PropertyDataType.Integer)
-            {
-                return Logger.WarnReturn(false, "OnBuiltInPropertyRoll(): The following Item has a built-in pick-in-range PropertyEntry with a property " +
-                    $"that is not an int/float/bool prop, which doesn't work!\nItem: [{this}]\nProperty: [{propertyInfo.PropertyName}]");
-            }
+            if (!Verify.IsTrue(propDataType == PropertyDataType.Real || propDataType == PropertyDataType.Integer || propDataType == PropertyDataType.Boolean,
+                $"The following Item has a built-in pick-in-range PropertyEntry with a property that is not an int/float/bool prop, which doesn't work!\nItem: [{this}]\nProperty: [{propertyInfo.PropertyName}]"))
+                return false;
 
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
@@ -1759,11 +1690,9 @@ namespace MHServerEmu.Games.Entities.Items
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(setProto.Prop.Enum);
             PropertyDataType propDataType = propertyInfo.DataType;
 
-            if (propDataType != PropertyDataType.Real && propDataType != PropertyDataType.Integer && propDataType != PropertyDataType.Asset)
-            {
-                return Logger.WarnReturn(false, "OnBuiltInPropertySet(): The following Item has a built-in set PropertyEntry with a property " +
-                    $"that is not an int/float/asset prop, which doesn't work!\nItem: [{this}]\nProperty: [{propertyInfo.PropertyName}]");
-            }
+            if (!Verify.IsTrue(propDataType == PropertyDataType.Real || propDataType == PropertyDataType.Integer || propDataType == PropertyDataType.Asset,
+                $"The following Item has a built-in set PropertyEntry with a property that is not an int/float/asset prop, which doesn't work!\nItem: [{this}]\nProperty: [{propertyInfo.PropertyName}]"))
+                return false;
 
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
@@ -1792,9 +1721,7 @@ namespace MHServerEmu.Games.Entities.Items
                 return true;
 
             bool affixHasBonusPropertiesToApply = affixProto.HasBonusPropertiesToApply;
-
-            if (affixHasBonusPropertiesToApply == false && affixProto.DataRef != GameDatabase.GlobalsPrototype.ItemNoVisualsAffix)
-                return Logger.WarnReturn(false, "OnAffixAdded(): affixHasBonusPropertiesToApply == false && affixProto.DataRef != GameDatabase.GlobalsPrototype.ItemNoVisualsAffix");
+            if (!Verify.IsTrue(affixHasBonusPropertiesToApply || affixProto.DataRef == GameDatabase.GlobalsPrototype.ItemNoVisualsAffix)) return false;
 
             // Initialized affixes are stored in a struct called AffixPropertiesCopyEntry
             AffixPropertiesCopyEntry affixEntry = new();
@@ -1805,7 +1732,7 @@ namespace MHServerEmu.Games.Entities.Items
             if (affixProto.Properties != null)
                 affixEntry.Properties.FlattenCopyFrom(affixProto.Properties, true);
 
-            var affixPowerModifierProto = affixProto as AffixPowerModifierPrototype;
+            AffixPowerModifierPrototype affixPowerModifierProto = affixProto as AffixPowerModifierPrototype;
             if (affixPowerModifierProto != null)
             {
                 int evalLevelVar = 0;
@@ -1814,70 +1741,41 @@ namespace MHServerEmu.Games.Entities.Items
                 {
                     // Verbose validation like in the client
 
-                    if (scopeProtoRef.As<PowerPrototype>() == null)
-                    {
-                        return Logger.WarnReturn(false, string.Format(
-                            "OnAffixAdded(): AffixPowerModifier IsForSinglePowerOnly but scopeProtoRef is not a power! Affix=[{0}] Scope=[{1}] Item=[{2}]",
-                            affixProto.ToString(),
-                            scopeProtoRef.GetName(),
-                            _itemSpec.ItemProtoRef.GetName()));
-                    }
+                    if (!Verify.IsNotNull(scopeProtoRef.As<PowerPrototype>(),
+                        $"AffixPowerModifier IsForSinglePowerOnly but scopeProtoRef is not a power! Affix=[{affixProto}] Scope=[{scopeProtoRef.GetName()}] Item=[{_itemSpec.ItemProtoRef.GetName()}]"))
+                        return false;
 
-                    if (avatarProtoRef == PrototypeId.Invalid && affixProto.IsGemAffix == false)
+                    if (avatarProtoRef != PrototypeId.Invalid)
                     {
-                        return Logger.WarnReturn(false, string.Format(
-                            "OnAffixAdded(): Non-gem AffixPowerModifier IsForSinglePowerOnly, but avatarProtoRef is invalid! Affix=[{0}] Scope=[{1}] Item=[{2}]",
-                            affixProto.ToString(),
-                            scopeProtoRef.GetName(),
-                            _itemSpec.ItemProtoRef.GetName()));
-                    }
+                        AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+                        if (!Verify.IsNotNull(avatarProto, $"Unable to get Avatar=[{avatarProtoRef.GetName()}]. Affix=[{affixProto}] Item=[{_itemSpec.ItemProtoRef.GetName()}]"))
+                            return false;
 
-                    AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
-                    if (avatarProto == null)
+                        PowerProgressionEntryPrototype powerProgEntry = avatarProto.GetPowerProgressionEntryForPower(scopeProtoRef);
+                        if (!Verify.IsNotNull(powerProgEntry,
+                            $"Unable to get Power[{scopeProtoRef.GetName()}] in Avatar[{avatarProtoRef.GetName()}] Power Progression Table. Affix=[{affixProto}] Item=[{_itemSpec.ItemProtoRef.GetName()}]"))
+                            return false;
+
+                        evalLevelVar = powerProgEntry.Level;    // <------- THIS IS IMPORTANT: we set an actual value here, and not just validating
+                    }
+                    else
                     {
-                        return Logger.WarnReturn(false, string.Format(
-                            "OnAffixAdded(): Unable to get Avatar=[{0}]. Affix=[{1}] Item=[{2}]",
-                            avatarProtoRef.GetName(),
-                            affixProto.ToString(),
-                            _itemSpec.ItemProtoRef.GetName()));
+                        if (!Verify.IsTrue(affixProto.IsGemAffix,
+                            $"Non-gem AffixPowerModifier IsForSinglePowerOnly, but avatarProtoRef is invalid! Affix=[{affixProto}] Scope=[{scopeProtoRef.GetName()}] Item=[{_itemSpec.ItemProtoRef.GetName()}]"))
+                            return false;
                     }
-
-                    PowerProgressionEntryPrototype powerProgEntry = avatarProto.GetPowerProgressionEntryForPower(scopeProtoRef);
-                    if (powerProgEntry == null)
-                    {
-                        return Logger.WarnReturn(false, string.Format(
-                            "OnAffixAdded(): Unable to get Power[{0}] in Avatar[{1}] Power Progression Table. Affix=[{2}] Item=[{3}]",
-                            scopeProtoRef.GetName(),
-                            avatarProtoRef.GetName(),
-                            affixProto.ToString(),
-                            _itemSpec.ItemProtoRef.GetName()));
-                    }
-
-                                                            //
-                    evalLevelVar = powerProgEntry.Level;    // <------- THIS IS IMPORTANT: we set an actual value here, and not just validating
-                                                            //
                 }
                 else if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
                 {
-                    if (scopeProtoRef.As<AvatarPrototype>() == null)
-                    {
-                        return Logger.WarnReturn(false, string.Format(
-                            "OnAffixAdded(): AffixPowerModifier is for PowerProgTableTabRef but scopeProtoRef is not an avatar! Affix=[{0}] Scope=[{1}] Item=[{2}]",
-                            affixProto.ToString(),
-                            scopeProtoRef.GetName(),
-                            _itemSpec.ItemProtoRef.GetName()));
-                    }
+                    if (!Verify.IsNotNull(scopeProtoRef.As<AvatarPrototype>(),
+                        $"AffixPowerModifier is for PowerProgTableTabRef but scopeProtoRef is not an avatar! Affix=[{affixProto}] Scope=[{scopeProtoRef.GetName()}] Item=[{_itemSpec.ItemProtoRef.GetName()}]"))
+                        return false;
                 }
                 else if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
                 {
-                    if (scopeProtoRef != PrototypeId.Invalid)
-                    {
-                        return Logger.WarnReturn(false, string.Format(
-                            "OnAffixAdded(): AffixPowerModifier is for PowerKeywordFilter but scopeProtoRef is NOT invalid as expected! Affix=[{0}] Scope=[{1}] Item=[{2}]",
-                            affixProto.ToString(),
-                            scopeProtoRef.GetName(),
-                            _itemSpec.ItemProtoRef.GetName()));
-                    }
+                    if (!Verify.IsTrue(scopeProtoRef == PrototypeId.Invalid,
+                        $"AffixPowerModifier is for PowerKeywordFilter but scopeProtoRef is NOT invalid as expected! Affix=[{affixProto}] Scope=[{scopeProtoRef.GetName()}] Item=[{_itemSpec.ItemProtoRef.GetName()}]"))
+                        return false;
                 }
 
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
@@ -1918,14 +1816,11 @@ namespace MHServerEmu.Games.Entities.Items
                     affixEntry.Properties[affixEntry.PowerModifierPropertyId] = GenerateIntWithinRange(random.NextFloat(), powerGrantMinRank, powerBoostMax);
                 }
             }
-            else if (affixProto is AffixRegionModifierPrototype affixRegionModifierProto)
+            else if (affixProto is AffixRegionModifierPrototype)
             {
                 RegionAffixPrototype regionAffixProto = scopeProtoRef.As<RegionAffixPrototype>();
-                if (regionAffixProto == null)
-                {
-                    return Logger.WarnReturn(false,
-                        $"OnAffixAdded(): AffixRegionModifier without a scope ref!\n Affix: {affixProto}\nItem: {_itemSpec.ItemProtoRef.GetName()}");
-                }
+                if (!Verify.IsNotNull(regionAffixProto, $"AffixRegionModifier without a scope ref!\n Affix: {affixProto}\nItem: {_itemSpec.ItemProtoRef.GetName()}"))
+                    return false;
 
                 if (regionAffixProto.Difficulty != 0)
                     affixEntry.Properties[PropertyEnum.RegionAffixDifficulty] = regionAffixProto.Difficulty;
@@ -1946,12 +1841,9 @@ namespace MHServerEmu.Games.Entities.Items
                     PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEntry.Prop.Enum);
                     PropertyDataType propDataType = propertyInfo.DataType;
 
-                    if (propDataType != PropertyDataType.Boolean && propDataType != PropertyDataType.Real && propDataType != PropertyDataType.Integer)
-                    {
-                        Logger.Warn("OnAffixAdded(): The following Affix has a built-in pick-in-range PropertyEntry with a property " +
-                            $"that is not an int/float/bool prop, which doesn't work!\nAffix: [{affixProto}]\nProperty: [{propertyInfo.PropertyName}]");
+                    if (!Verify.IsTrue(propDataType == PropertyDataType.Real || propDataType == PropertyDataType.Integer || propDataType == PropertyDataType.Boolean,
+                        $"The following Affix has a built-in pick-in-range PropertyEntry with a property that is not an int/float/bool prop, which doesn't work!\nAffix: [{affixProto}]\nProperty: [{propertyInfo.PropertyName}]"))
                         continue;
-                    }
 
                     using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
                     evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
@@ -1967,12 +1859,8 @@ namespace MHServerEmu.Games.Entities.Items
                     switch (propDataType)
                     {
                         case PropertyDataType.Boolean:
-                            if (valueMin < 0 || valueMax > 1)
-                            {
-                                Logger.Warn("OnAffixAdded(): The following Affix has a built-in pick-in-range PropertyEntry with a boolean property " +
-                                    $"and a range that is not in [0, 1]\nAffix: [{affixProto}]\nProperty: [{propertyInfo.PropertyName}]");
+                            if (!Verify.IsTrue(valueMin >= 0 && valueMin <= 1, $"The following Affix has a built-in pick-in-range PropertyEntry with a boolean property and a range that is not in [0, 1]\nAffix: [{affixProto}]\nProperty: [{propertyInfo.PropertyName}]"))
                                 continue;
-                            }
 
                             affixEntry.Properties[propertyEntry.Prop] = GenerateIntWithinRange(randomMult, valueMin, valueMax);
 
@@ -2017,16 +1905,14 @@ namespace MHServerEmu.Games.Entities.Items
             {
                 if (ItemPrototype.IsPetTechAffixUnlocked(this, affixProto.Position))
                 {
-                    if (Properties.AddChildCollection(affixEntry.Properties) == false)
-                        return Logger.WarnReturn(false, "OnAffixAdded(): Properties.AddChildCollection(affixEntry.Properties) == false");
+                    if (!Verify.IsTrue(Properties.AddChildCollection(affixEntry.Properties))) return false;
                 }
             }
             else if (affixEntry.LevelRequirement <= Properties[PropertyEnum.ItemAffixLevel])
             {
                 if (affixProto is not AffixTeamUpPrototype teamUpAffixProto || teamUpAffixProto.IsAppliedToOwnerAvatar == false)
                 {
-                    if (Properties.AddChildCollection(affixEntry.Properties) == false)
-                        return Logger.WarnReturn(false, "OnAffixAdded(): Properties.AddChildCollection(affixEntry.Properties) == false");
+                    if (!Verify.IsTrue(Properties.AddChildCollection(affixEntry.Properties))) return false;
                 }
             }
 
@@ -2097,11 +1983,8 @@ namespace MHServerEmu.Games.Entities.Items
             foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
             {
                 AffixPrototype affixProto = copyEntry.AffixProto;
-                if (affixProto == null)
-                {
-                    Logger.Warn("AwardPetTechAffix(): affixProto == null");
+                if (!Verify.IsNotNull(affixProto))
                     continue;
-                }
 
                 if (affixProto.Position != affixPos)
                     continue;
@@ -2109,8 +1992,8 @@ namespace MHServerEmu.Games.Entities.Items
                 WorldEntity owner = GetOwnerOfType<WorldEntity>();
                 if (owner != null && IsEquipped)
                 {
-                    if (owner.UpdateProcEffectPowers(copyEntry.Properties, true) == false)
-                        Logger.Warn($"AwardPetTechAffix(): UpdateProcEffectPowers failed in awardPetTechAffix for affixPos=[{affixPos}] affix=[{affixProto}] item=[{this}] owner=[{owner}]");
+                    bool didAssignAllPowers = owner.UpdateProcEffectPowers(copyEntry.Properties, true);
+                    Verify.IsTrue(didAssignAllPowers, $"UpdateProcEffectPowers failed in awardPetTechAffix for affixPos=[{affixPos}] affix=[{affixProto}] item=[{this}] owner=[{owner}]");
                 }
 
                 if (Properties.AddChildCollection(copyEntry.Properties) == false)
@@ -2119,7 +2002,7 @@ namespace MHServerEmu.Games.Entities.Items
                     bool isUnlocked = ItemPrototype.IsPetTechAffixUnlocked(this, affixPos);
                     bool hasChild = Properties.HasChildCollection(copyEntry.Properties);
 
-                    Logger.Warn($"AwardPetTechAffix(): Failed to AddChildCollection when awarding PetTech affix!\n Affix: {affixProto}\nItems Donated to this Affix: {donationCount}\n Item: [{this}]\nIsPetTechAffixUnlocked: {isUnlocked}\nItem Has Affix Prop Collection: {hasChild}");
+                    Verify.IsTrue(false, $"Failed to AddChildCollection when awarding PetTech affix!\n Affix: {affixProto}\nItems Donated to this Affix: {donationCount}\n Item: [{this}]\nIsPetTechAffixUnlocked: {isUnlocked}\nItem Has Affix Prop Collection: {hasChild}");
                 }
 
                 break;
@@ -2143,11 +2026,8 @@ namespace MHServerEmu.Games.Entities.Items
             foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
             {
                 AffixPrototype affixProto = copyEntry.AffixProto;
-                if (affixProto == null)
-                {
-                    Logger.Warn("RemovePetTechAffix(): affixProto == null");
+                if (!Verify.IsNotNull(affixProto))
                     continue;
-                }
 
                 if (affixProto.Position != affixPos)
                     continue;
@@ -2173,7 +2053,7 @@ namespace MHServerEmu.Games.Entities.Items
             // This has similar overall structure to HasItemActionType()
 
             ItemPrototype itemProto = ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "GetTriggeredPower(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return PrototypeId.Invalid;
 
             if (itemProto.ActionsTriggeredOnItemEvent == null || itemProto.ActionsTriggeredOnItemEvent.Choices.IsNullOrEmpty())
                 return PrototypeId.Invalid;
@@ -2184,11 +2064,10 @@ namespace MHServerEmu.Games.Entities.Items
             {
                 // Check just the action that was picked when this item was rolled
                 int actionIndex = Properties[PropertyEnum.ItemEventActionIndex];
-                if (actionIndex < 0 || actionIndex >= choices.Length)
-                    return Logger.WarnReturn(PrototypeId.Invalid, "GetTriggeredPower(): actionIndex < 0 || actionIndex >= choices.Length");
+                if (!Verify.IsTrue(actionIndex >= 0 && actionIndex < choices.Length)) return PrototypeId.Invalid;
 
                 Prototype choiceProto = choices[actionIndex];
-                if (choiceProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "GetTriggeredPower(): choiceProto == null");
+                if (!Verify.IsNotNull(choiceProto)) return PrototypeId.Invalid;
 
                 // Action entries can be single actions or action sets
 
@@ -2222,11 +2101,9 @@ namespace MHServerEmu.Games.Entities.Items
             foreach (ItemActionBasePrototype actionBaseProto in actions)
             {
                 // There should be no nested action sets
-                if (actionBaseProto is not ItemActionPrototype actionProto)
-                {
-                    Logger.Warn("GetTriggeredPowerFromActionSet(): itemActionBaseProto is not ItemActionPrototype itemActionProto");
+                ItemActionPrototype actionProto = actionBaseProto as ItemActionPrototype;
+                if (!Verify.IsNotNull(actionProto))
                     continue;
-                }
 
                 if (actionProto.TriggeringEvent != eventType)
                     continue;
@@ -2244,7 +2121,7 @@ namespace MHServerEmu.Games.Entities.Items
         private bool HasItemActionType(ItemActionType actionType)
         {
             ItemPrototype itemProto = ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "HasItemActionType(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             if (itemProto.ActionsTriggeredOnItemEvent == null || itemProto.ActionsTriggeredOnItemEvent.Choices.IsNullOrEmpty())
                 return false;
@@ -2255,11 +2132,10 @@ namespace MHServerEmu.Games.Entities.Items
             {
                 // Check just the action that was picked when this item was rolled
                 int actionIndex = Properties[PropertyEnum.ItemEventActionIndex];
-                if (actionIndex < 0 || actionIndex >= choices.Length)
-                    return Logger.WarnReturn(false, "HasItemActionType(): actionIndex < 0 || actionIndex >= choices.Length");
+                if (!Verify.IsTrue(actionIndex >= 0 && actionIndex < choices.Length)) return false;
 
                 Prototype choiceProto = choices[actionIndex];
-                if (choiceProto == null) return Logger.WarnReturn(false, "HasItemActionType(): choiceProto == null");
+                if (!Verify.IsNotNull(choiceProto)) return false;
 
                 // Action entries can be single actions or action sets
 
@@ -2299,7 +2175,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         private InteractionValidateResult PlayerCanUse(Player player, Avatar avatar, bool checkPower = true, bool checkInventory = true)
         {
-            if (player == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUse(): player == null");
+            if (!Verify.IsNotNull(player)) return InteractionValidateResult.UnknownFailure;
 
             int currentStackSize = CurrentStackSize;
             if (currentStackSize < 1)
@@ -2309,7 +2185,7 @@ namespace MHServerEmu.Games.Entities.Items
                 return InteractionValidateResult.ItemNotOwned;
 
             ItemPrototype itemProto = ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUse(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return InteractionValidateResult.UnknownFailure;
 
             if (itemProto.IsUsable == false)
                 return InteractionValidateResult.ItemNotUsable;
@@ -2421,7 +2297,7 @@ namespace MHServerEmu.Games.Entities.Items
                 return PlayerCanUseAwardTeamUpXP(player, avatar);
 
             AvatarPrototype avatarProto = avatar.AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUse(): avatarProto == null");
+            if (!Verify.IsNotNull(avatarProto)) return InteractionValidateResult.UnknownFailure;
 
             if (itemProto.IsUsableByAgent(avatarProto) == false)
                 return InteractionValidateResult.ItemRequirementsNotMet;
@@ -2471,8 +2347,8 @@ namespace MHServerEmu.Games.Entities.Items
         private InteractionValidateResult PlayerCanUseInventoryStashToken(Player player, InventoryStashTokenPrototype inventoryStashTokenProto)
         {
             PrototypeId invStashProtoRef = inventoryStashTokenProto.Inventory;
-            if (invStashProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUseInventoryStashToken(): invStashProtoRef == PrototypeId.Invalid");
-
+            if (!Verify.IsTrue(invStashProtoRef != PrototypeId.Invalid)) return InteractionValidateResult.UnknownFailure;
+            
             if (player.IsInventoryUnlocked(invStashProtoRef))
                 return InteractionValidateResult.InventoryAlreadyUnlocked;
 
@@ -2482,10 +2358,10 @@ namespace MHServerEmu.Games.Entities.Items
         private InteractionValidateResult PlayerCanUseEmoteToken(Player player, EmoteTokenPrototype emoteTokenProto)
         {
             PrototypeId avatarDataRef = emoteTokenProto.Avatar;
-            if (avatarDataRef == PrototypeId.Invalid) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUseEmoteToken(): avatarDataRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(avatarDataRef != PrototypeId.Invalid)) return InteractionValidateResult.UnknownFailure;
 
             PrototypeId emotePowerDataRef = emoteTokenProto.EmotePower;
-            if (emotePowerDataRef == PrototypeId.Invalid) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUseEmoteToken(): emotePowerDataRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(emotePowerDataRef != PrototypeId.Invalid)) return InteractionValidateResult.UnknownFailure;
 
             if (player.HasAvatarEmoteUnlocked(avatarDataRef, emotePowerDataRef))
                 return InteractionValidateResult.Error6;
@@ -2496,7 +2372,7 @@ namespace MHServerEmu.Games.Entities.Items
         private InteractionValidateResult PlayerCanUseCraftingRecipe(Player player)
         {
             InventoryPrototype containingInvProto = InventoryLocation.InventoryPrototype;
-            if (containingInvProto == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUseCraftingRecipe(): containingInvProto == null");
+            if (!Verify.IsNotNull(containingInvProto)) return InteractionValidateResult.UnknownFailure;
 
             if (containingInvProto.IsPlayerGeneralInventory == false && containingInvProto.IsPlayerVendorInventory == false)
                 return InteractionValidateResult.ItemNotUsable;
@@ -2528,7 +2404,7 @@ namespace MHServerEmu.Games.Entities.Items
         private InteractionValidateResult PlayerCanUsePowerAction(Player player, Avatar avatar)
         {
             PowerPrototype powerProto = OnUsePower.As<PowerPrototype>();
-            if (powerProto == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUsePowerAction(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return InteractionValidateResult.UnknownFailure;
 
             // Run the usual power validation check if it is assigned already
             Power power = avatar.GetPower(powerProto.DataRef);

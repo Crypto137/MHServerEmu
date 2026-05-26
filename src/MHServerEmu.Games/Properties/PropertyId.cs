@@ -238,17 +238,17 @@ namespace MHServerEmu.Games.Properties
         public PropertyParam GetParam(int index)
         {
             Span<PropertyParam> @params = stackalloc PropertyParam[Property.MaxParamCount];
-            GetParams(ref @params);
+            GetParams(@params);
             return @params[index];
         }
 
         /// <summary>
         /// Decodes encoded param values to a <see cref="Span{T}"/>.
         /// </summary>
-        public void GetParams(ref Span<PropertyParam> @params)
+        public void GetParams(Span<PropertyParam> @params)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Enum);
-            info.DecodeParameters(this, ref @params);
+            info.DecodeParameters(this, @params);
         }
     }
 }

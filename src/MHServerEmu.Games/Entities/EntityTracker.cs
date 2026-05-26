@@ -16,64 +16,62 @@ namespace MHServerEmu.Games.Entities
 
     public class EntityTrackingData
     {
-        public Dictionary<ulong, EntityTrackingFlag> Entities;
-        public SortedVector<ulong> Hotspots;
-
-        public EntityTrackingData()
-        {
-            Entities = new();
-            Hotspots = new();
-        }
+        public Dictionary<ulong, EntityTrackingFlag> Entities = new();
+        public SortedVector<ulong> Hotspots = new();
     }
 
     public class EntityTracker
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
-        private Region _region;
-        private LinkedList<Iterator> _iterators;
-        private Dictionary<PrototypeId, EntityTrackingData> _contextTrackingDataMap;
+        private readonly Region _region;
+        private readonly LinkedList<Iterator> _iterators = new();
+        private readonly Dictionary<PrototypeId, EntityTrackingData> _contextTrackingDataMap = new();
 
         public EntityTracker(Region region)
         {
             _region = region;
-            _iterators = new();
-            _contextTrackingDataMap = new();
         }
 
         public void ConsiderForTracking(WorldEntity entity)
         {
-            if (entity == null || entity.IsTrackable == false) return;
+            if (!Verify.IsNotNull(entity)) return;
 
-            var entityTracking = entity.TrackingContextMap;
+            if (entity.IsTrackable == false)
+                return;
+
+            EntityTrackingContextMap entityTracking = entity.TrackingContextMap;
             bool hasOldTracking = entityTracking.Count > 0;
 
-            var interactionTracking = new EntityTrackingContextMap();
+            EntityTrackingContextMap interactionTracking = new();
             bool hasNewTracking = GameDatabase.InteractionManager.GetEntityContextInvolvement(entity, interactionTracking);
 
-            var newTracking = new EntityTrackingContextMap();
-            var oldTracking = new EntityTrackingContextMap();
+            EntityTrackingContextMap insertMap = new();
+            EntityTrackingContextMap removeMap = new();
 
             if (hasNewTracking)
             {
                 foreach (var kvp in interactionTracking)
-                    newTracking[kvp.Key] = kvp.Value;
+                    insertMap[kvp.Key] = kvp.Value;
 
                 if (hasOldTracking)
+                {
                     foreach (var kvp in entityTracking)
+                    {
                         if (interactionTracking.ContainsKey(kvp.Key) == false)
-                            oldTracking[kvp.Key] = kvp.Value;
+                            removeMap[kvp.Key] = kvp.Value;
+                    }
+                }
             }
             else if (hasOldTracking)
             {
                 foreach (var kvp in entityTracking)
-                    oldTracking[kvp.Key] = kvp.Value;
+                    removeMap[kvp.Key] = kvp.Value;
             }
 
-            foreach (var kvp in newTracking)
+            foreach (var kvp in insertMap)
             {
-                var contextRef = kvp.Key;
-                if (contextRef == PrototypeId.Invalid) continue;
+                PrototypeId contextRef = kvp.Key;
+                if (!Verify.IsTrue(contextRef != PrototypeId.Invalid))
+                    continue;
 
                 if (ShouldTrackContext(contextRef))
                 {
@@ -82,10 +80,11 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            foreach (var kvp in oldTracking)
+            foreach (var kvp in removeMap)
             {
-                var contextRef = kvp.Key;
-                if (contextRef == PrototypeId.Invalid) continue;
+                PrototypeId contextRef = kvp.Key;
+                if (!Verify.IsTrue(contextRef != PrototypeId.Invalid))
+                    continue;
 
                 RemoveEntityFromContextMap(contextRef, entity);
                 entity.ModifyTrackingContext(contextRef, EntityTrackingFlag.None);
@@ -94,20 +93,28 @@ namespace MHServerEmu.Games.Entities
 
         public void RemoveFromTracking(WorldEntity entity)
         {
+            if (!Verify.IsNotNull(entity)) return;
+
             foreach (var kvp in entity.TrackingContextMap)
             {
-                var contextRef = kvp.Key;
-                if (contextRef == PrototypeId.Invalid) continue;
+                PrototypeId contextRef = kvp.Key;
+                if (!Verify.IsTrue(contextRef != PrototypeId.Invalid))
+                    continue;
+
                 RemoveEntityFromContextMap(contextRef, entity);
             }
+
             entity.TrackingContextMap.Clear();
         }
 
         private bool ShouldTrackContext(PrototypeId contextRef)
         {
-            if (_region == null) return false;
-            var openProto = GameDatabase.GetPrototype<OpenMissionPrototype>(contextRef);
-            if (openProto != null && openProto.IsActiveInRegion(_region.Prototype) == false) return false;
+            if (!Verify.IsNotNull(_region)) return false;
+
+            OpenMissionPrototype openProto = contextRef.As<OpenMissionPrototype>();
+            if (openProto != null && openProto.IsActiveInRegion(_region.Prototype) == false)
+                return false;
+            
             return true;
         }
 
@@ -120,7 +127,7 @@ namespace MHServerEmu.Games.Entities
 
         public void ModifyTrackingContext(WorldEntity entity, PrototypeId contextRef, EntityTrackingFlag flags)
         {
-            if (entity == null) return;
+            if (!Verify.IsNotNull(entity)) return;
 
             if (flags != EntityTrackingFlag.None)
                 InsertEntityIntoContextMap(contextRef, entity, flags);
@@ -132,8 +139,10 @@ namespace MHServerEmu.Games.Entities
 
         private void InsertEntityIntoContextMap(PrototypeId contextRef, WorldEntity entity, EntityTrackingFlag flags)
         {
-            if (entity == null || flags == EntityTrackingFlag.None) return;
-            if (_contextTrackingDataMap.TryGetValue(contextRef, out var data) == false)
+            if (!Verify.IsNotNull(entity)) return;
+            if (!Verify.IsTrue(flags != EntityTrackingFlag.None)) return;
+            
+            if (_contextTrackingDataMap.TryGetValue(contextRef, out EntityTrackingData data) == false)
             {
                 data = new();
                 _contextTrackingDataMap.Add(contextRef, data);
@@ -148,15 +157,13 @@ namespace MHServerEmu.Games.Entities
 
         private void RemoveEntityFromContextMap(PrototypeId contextRef, WorldEntity entity)
         {
-            if (entity == null) return;
-            if (_contextTrackingDataMap.TryGetValue(contextRef, out var data) == false) return;
+            if (!Verify.IsNotNull(entity)) return;
+            if (!Verify.IsTrue(_contextTrackingDataMap.TryGetValue(contextRef, out EntityTrackingData data))) return;
 
-            var entityId = entity.Id;
-            if (data.Entities.TryGetValue(entityId, out _) == false)
-            {
-                Logger.Warn($"Unable to find entity to remove. ENTITYID={entityId} CONTEXT={GameDatabase.GetFormattedPrototypeName(contextRef)} TRACKER={contextRef}");
+            ulong entityId = entity.Id;
+            if (!Verify.IsTrue(data.Entities.ContainsKey(entityId), $"Unable to find entity to remove. ENTITYID={entityId} CONTEXT={contextRef.GetNameFormatted()} TRACKER={this}"))
                 return;
-            }
+
             /*
             if (_iterators.Count > 0)
                 foreach (var iterator in _iterators)
@@ -166,6 +173,7 @@ namespace MHServerEmu.Games.Entities
                         iterator.Break = true;
                     }
             */
+
             data.Entities.Remove(entityId);
             data.Hotspots.Remove(entityId);
         }

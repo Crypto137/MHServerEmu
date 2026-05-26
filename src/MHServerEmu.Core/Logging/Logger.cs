@@ -171,7 +171,7 @@ namespace MHServerEmu.Core.Logging
         /// Logs a message on the specified <see cref="LoggingLevel"/>.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void Log(LoggingLevel level, string message, LogChannels channels = LogChannels.General, LogCategory category = LogCategory.Common)
+        public void Log(LoggingLevel level, string message, LogChannels channels = LogChannels.General, LogCategory category = LogCategory.Common)
         {
             LogMessage logMessage = new(level, _name, message, channels, category);
             LogRouter.AddLogMessage(logMessage);

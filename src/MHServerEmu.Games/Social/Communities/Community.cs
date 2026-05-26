@@ -467,6 +467,21 @@ namespace MHServerEmu.Games.Social.Communities
                 RemoveMember(playerDbId, CircleId.__Guild);
         }
 
+        public bool ClearCircle(CircleId circleId)
+        {
+            CommunityCircle circle = GetCircle(circleId);
+            if (circle == null) return Logger.WarnReturn(false, "ClearCircle(): circle == null");
+
+            using var membersToRemoveHandle = ListPool<ulong>.Instance.Get(out List<ulong> membersToRemove);
+            foreach (CommunityMember member in IterateMembers(circle))
+                membersToRemove.Add(member.DbId);
+
+            foreach (ulong playerDbId in membersToRemove)
+                RemoveMember(playerDbId, circleId);
+
+            return true;
+        }
+
         /// <summary>
         /// Returns the name of the specified <see cref="CircleId"/>.
         /// </summary>

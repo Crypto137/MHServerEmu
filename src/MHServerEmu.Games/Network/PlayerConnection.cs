@@ -235,6 +235,16 @@ namespace MHServerEmu.Games.Network
             if (PlayerVersioning.Apply(Player) == false)
                 return false;
 
+            // Clear friend/ignore lists for imported accounts
+            DBPlayerFlags playerFlags = (DBPlayerFlags)_dbAccount.Player.Flags;
+            if (playerFlags.HasFlag(DBPlayerFlags.Imported))
+            {
+                Player.Community.ClearCircle(CircleId.__Friends);
+                Player.Community.ClearCircle(CircleId.__Ignore);
+                Logger.Info($"Cleaned up community for imported player [{Player}]");
+                _dbAccount.Player.Flags &= (long)~DBPlayerFlags.Imported;
+            }
+
             Player.SetAvatarLibraryProperties();
             Player.SetTeamUpLibraryProperties();
 
@@ -470,10 +480,13 @@ namespace MHServerEmu.Games.Network
 
             AOI.SetRegion(region.Id, false, startPosition, startOrientation);
             region.PlayerEnteredRegionEvent.Invoke(new(Player, region.PrototypeDataRef));
-            Game.PartyManager.OnPlayerEnteredRegion(Player);
 
             // Load discovered map and entities
             Player.GetMapDiscoveryData(region.Id)?.LoadPlayerDiscovered(Player);
+
+            // PartyManager.OnPlayerEnteredRegion() will exchange discovery data with party members,
+            // so it needs to be done after we validate and clean up loaded data in LoadPlayerDiscovered().
+            Game.PartyManager.OnPlayerEnteredRegion(Player);
 
             Player.SendFullscreenMovieSync();
 

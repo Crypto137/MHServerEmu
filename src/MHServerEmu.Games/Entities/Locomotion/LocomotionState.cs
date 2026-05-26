@@ -52,8 +52,6 @@ namespace MHServerEmu.Games.Entities.Locomotion
     /// </summary>
     public struct LocomotionState
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public static ref LocomotionState Null { get => ref Unsafe.NullRef<LocomotionState>(); }
 
         public LocomotionFlags LocomotionFlags;
@@ -216,7 +214,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
             if (flags.HasFlag(LocomotionMessageFlags.UpdatePathNodes))
             {
-                if (state.PathGoalNodeIndex < 0) Logger.Warn("SerializeTo(): state.PathGoalNodeIndex < 0");
+                Verify.IsTrue(state.PathGoalNodeIndex >= 0);
 
                 uint pathGoalNodeIndex = (uint)state.PathGoalNodeIndex;
                 success &= Serializer.Transfer(archive, ref pathGoalNodeIndex);

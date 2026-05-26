@@ -340,6 +340,12 @@ namespace MHServerEmu.Games.GameData
             return true;
         }
 
+        public bool GuidIsDeprecated(ulong guid)
+        {
+            ulong newGuid = 0;
+            return GetGuidReplacement(guid, ref newGuid);
+        }
+
         /// <summary>
         /// Returns the <see cref="Blueprint"/> that the specified <see cref="BlueprintId"/> refers to.
         /// </summary>

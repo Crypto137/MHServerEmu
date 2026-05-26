@@ -1,5 +1,4 @@
-﻿using System.Text;
-using MHServerEmu.Core.Collections;
+﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Network;
@@ -13,26 +12,36 @@ namespace MHServerEmu.Games.Entities
     {
         private const int NumInterestPolicies = 8;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly HashSet<ulong> _interestedPlayerIds = new();
         private InlineArray8<int> _accumulatedPolicyCounts;
 
         public int PlayerCount { get => _interestedPlayerIds.Count; }
         public bool IsEmpty { get => PlayerCount == 0 && GetInterestedPoliciesUnion() == AOINetworkPolicyValues.AOIChannelNone; }
 
+        public InterestReferences() { }
+
+        public override string ToString()
+        {
+            return $"Player IDs: [{string.Join(',', _interestedPlayerIds)}] Policy Union: [{GetInterestedPoliciesUnion()}]";
+        }
+
+        public HashSet<ulong>.Enumerator GetEnumerator()
+        {
+            return _interestedPlayerIds.GetEnumerator();
+        }
+
         public bool Track(Entity entity, ulong playerId, InterestTrackOperation operation, AOINetworkPolicyValues gainedPolicies, AOINetworkPolicyValues lostPolicies)
         {
-            if (entity == null) return Logger.WarnReturn(false, "Track(): entity == null");
-            if (playerId == Entity.InvalidId) return Logger.WarnReturn(false, "Track(): playerId == Entity.InvalidId");
+            if (!Verify.IsNotNull(entity)) return false;
+            if (!Verify.IsTrue(playerId != Entity.InvalidId)) return false;
 
             if (operation == InterestTrackOperation.Add)
             {
-                if (_interestedPlayerIds.Contains(playerId))
-                    return Logger.WarnReturn(false, $"Track(): Player id {playerId} is already found in interest references for entity {entity} during add operation");
+                if (!Verify.IsTrue(_interestedPlayerIds.Contains(playerId) == false, $"Player id {playerId} is already found in interest references for entity {entity} during add operation"))
+                    return false;
 
-                if (lostPolicies != AOINetworkPolicyValues.AOIChannelNone)
-                    return Logger.WarnReturn(false, $"Track(): Expected no lost policies ({lostPolicies}) when scoring entity {entity} for add interest for player id {playerId}");
+                if (!Verify.IsTrue(lostPolicies == AOINetworkPolicyValues.AOIChannelNone, $"Expected no lost policies ({lostPolicies}) when scoring entity {entity} for add interest for player id {playerId}"))
+                    return false;
 
                 // Add the player and increment policy counts
                 _interestedPlayerIds.Add(playerId);
@@ -40,11 +49,11 @@ namespace MHServerEmu.Games.Entities
             }
             else if (operation == InterestTrackOperation.Remove)
             {
-                if (_interestedPlayerIds.Contains(playerId) == false)
-                    return Logger.WarnReturn(false, $"Track(): Player id {playerId} is not found in the interest scorecord for entity {entity} during remove operation");
+                if (!Verify.IsTrue(_interestedPlayerIds.Contains(playerId), $"Player id {playerId} is not found in the interest scorecord for entity {entity} during remove operation"))
+                    return false;
 
-                if (gainedPolicies != AOINetworkPolicyValues.AOIChannelNone)
-                    return Logger.WarnReturn(false, $"Track(): Expected no gained policies ({gainedPolicies}) when scoring entity {entity} for remove interest for player id {playerId}");
+                if (!Verify.IsTrue(gainedPolicies == AOINetworkPolicyValues.AOIChannelNone, $"Expected no gained policies ({gainedPolicies}) when scoring entity {entity} for remove interest for player id {playerId}"))
+                    return false;
 
                 // Remove the player and decremenet policy counts
                 _interestedPlayerIds.Remove(playerId);
@@ -52,11 +61,11 @@ namespace MHServerEmu.Games.Entities
             }
             else
             {
-                if (operation != InterestTrackOperation.Modify)
-                    return Logger.WarnReturn(false, $"Track(): Expected modify operation for entity {entity} interest tracking with player id {playerId}");
+                if (!Verify.IsTrue(operation == InterestTrackOperation.Modify, $"Expected modify operation for entity {entity} interest tracking with player id {playerId}"))
+                    return false;
 
-                if (_interestedPlayerIds.Contains(playerId) == false)
-                    return Logger.WarnReturn(false, $"Track(): Player id {playerId} not found in interest references for modify operation for entity {entity}");
+                if (!Verify.IsTrue(_interestedPlayerIds.Contains(playerId), $"Player id {playerId} not found in interest references for modify operation for entity {entity}"))
+                    return false;
 
                 // Increment and decrement policy counts for the previously added player
                 AccumulatePolicyCounts(entity, playerId, gainedPolicies, false);
@@ -90,35 +99,10 @@ namespace MHServerEmu.Games.Entities
             return _interestedPlayerIds.Contains(player.Id);
         }
 
-        public HashSet<ulong>.Enumerator GetEnumerator()
-        {
-            return _interestedPlayerIds.GetEnumerator();
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-
-            sb.Append("Player IDs: [");
-
-            foreach (ulong playerId in _interestedPlayerIds)
-                sb.Append(playerId).Append(',');
-
-            if (_interestedPlayerIds.Count > 0)
-                sb.Length--;
-
-            sb.Append("] ");
-
-            AOINetworkPolicyValues policyUnion = GetInterestedPoliciesUnion();
-            sb.Append($"Policy Union: [{policyUnion}]");
-
-            return sb.ToString();
-        }
-
         private bool AccumulatePolicyCounts(Entity entity, ulong playerId, AOINetworkPolicyValues interestPolicies, bool remove)
         {
-            if (entity == null) return Logger.WarnReturn(false, "AccumulatePolicyCounts(): entity == null");
-            if (playerId == Entity.InvalidId) return Logger.WarnReturn(false, "AccumulatePolicyCounts(): playerId == Entity.InvalidId");
+            if (!Verify.IsNotNull(entity)) return false;
+            if (!Verify.IsTrue(playerId != Entity.InvalidId)) return false;
 
             int delta = remove ? -1 : 1;
             int policyBits = (int)interestPolicies;

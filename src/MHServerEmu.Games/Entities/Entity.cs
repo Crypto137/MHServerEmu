@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
 using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
@@ -234,19 +235,19 @@ namespace MHServerEmu.Games.Entities
 
         public virtual bool Initialize(EntitySettings settings)
         {
-            if (Game == null) return Logger.WarnReturn(false, "Initialize(): Game == null");
+            if (!Verify.IsNotNull(Game)) return false;
 
             Id = settings.Id;
-            if (Id == InvalidId) return Logger.WarnReturn(false, "Initialize(): Id == Entity.InvalidId");
+            if (!Verify.IsTrue(Id != InvalidId)) return false;
 
             DatabaseUniqueId = settings.DbGuid;
 
             // Set prototype reference
             PrototypeDataRef = settings.EntityRef;
-            if (PrototypeDataRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "Initialize(): Invalid PrototypeDataRef");
+            if (!Verify.IsTrue(PrototypeDataRef != PrototypeId.Invalid)) return false;
 
             Prototype = PrototypeDataRef.As<EntityPrototype>();
-            if (Prototype == null) return Logger.WarnReturn(false, "Initialize(): Prototype == null");
+            if (!Verify.IsNotNull(Prototype)) return false;
 
             // Bind fields that use the legacy replication system (RepVar / ReplicatedPropertyCollection)
             BindReplicatedFields();
@@ -277,6 +278,11 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public virtual void AdjustDifficulty(DebugGlobalsPrototype debugGlobals)
+        {
+            // This appears to be a debug-only initialization step.
+        }
+
         public virtual void OnPostInit(EntitySettings settings)
         {
             if (settings.ArchiveData == null)
@@ -286,7 +292,7 @@ namespace MHServerEmu.Games.Entities
                     Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMax];
             }
 
-            if (Prototype.EvalOnCreate?.Length > 0)
+            if (Prototype.EvalOnCreate.HasValue())
             {
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
                 evalContext.Game = Game;
@@ -294,8 +300,9 @@ namespace MHServerEmu.Games.Entities
 
                 foreach (EvalPrototype evalProto in Prototype.EvalOnCreate)
                 {
-                    if (Eval.RunBool(evalProto, evalContext) == false)
-                        Logger.Warn($"OnPostInit(): Failed to run eval {evalProto.ExpressionString()}");
+                    // Entity::GenerateEntityProperties()
+                    bool curEvalSucceeded = Eval.RunBool(evalProto, evalContext);
+                    Verify.IsTrue(curEvalSucceeded, $"The following EvalOnCreate Eval in an entity failed:\nEval: [{evalProto.ExpressionString()}]\nEntity: [{this}]");
                 }
             }
         }
@@ -433,8 +440,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (IsSimulated != simulated)
             {
-                if (simulated == true && (this is not WorldEntity worldEntity || worldEntity.IsInWorld == false))
-                    Logger.Debug($"SetSimulated(): An entity must be in the world to be simulated {ToString()}");
+                Verify.IsTrue(simulated == false || (this is WorldEntity worldEntity && worldEntity.IsInWorld), $"An entity must be in the world to be simulated {this}");
                 ModifyCollectionMembership(EntityCollection.Simulated, simulated);
                 return simulated ? SimulateResult.Set : SimulateResult.Clear;
             }
@@ -463,7 +469,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool DestroyContained()
         {
-            if (Game == null) return Logger.WarnReturn(false, "DestroyContained(): Game == null");
+            if (!Verify.IsNotNull(Game)) return false;
 
             foreach (Inventory inventory in InventoryCollection)
                 inventory.DestroyContained();
@@ -567,12 +573,9 @@ namespace MHServerEmu.Games.Entities
 
         public void Attach(PropertyCollection propertyCollection)
         {
-            if (propertyCollection != Properties)
-            {
-                Logger.Warn("Attach(): Entities can attach only to their own property collection");
-                return;
-            }
-
+            // Entities can attach only to their own property collection,
+            // this is a workaround we're using to replace multiple inheritance from the client.
+            if (!Verify.IsTrue(propertyCollection == Properties)) return;
             Properties.AttachWatcher(this);
         }
 
@@ -761,11 +764,8 @@ namespace MHServerEmu.Games.Entities
         public void AttachProperties(PrototypeId modTypeRef, PrototypeId modRef, ulong index,
             PropertyCollection properties, PropertyCollection indexProperties, int rank = 1, bool overwrite = false)
         {
-            //Logger.Debug($"AttachProperties(): [modTypeRef={modTypeRef.GetName()}, modRef={modRef.GetName()}] to [{this}]");
-
             // Create the list on demand
-            if (_attachedProperties == null)
-                _attachedProperties = new();
+            _attachedProperties ??= new();
 
             AttachedPropertiesEntry foundEntry = null;
             foreach (AttachedPropertiesEntry entry in _attachedProperties)
@@ -780,7 +780,7 @@ namespace MHServerEmu.Games.Entities
             if (foundEntry == null)
             {
                 PropertyCollection newCollection = CreateAndCloneAttachedModCollection(properties, rank, indexProperties, modRef);
-                if (newCollection == null) { Logger.Warn("AttachProperties(): newCollection == null"); return; }
+                if (!Verify.IsNotNull(newCollection)) return;
 
                 AttachedPropertiesEntry entry = new();
                 entry.ModTypeRef = modTypeRef;
@@ -789,11 +789,7 @@ namespace MHServerEmu.Games.Entities
                 entry.Properties = newCollection;
                 entry.PropertyTickerId = 0;
 
-                if (IsSimulated == false)
-                {
-                    Logger.Warn("AttachProperties(): Mod is trying to start a PropertyTicker when the owner is not Simulated, over time properties will not work. " +
-                        $"Mod: {modRef.GetName()}\n Owner: {this}");
-                }
+                Verify.IsTrue(IsSimulated, $"Mod is trying to start a PropertyTicker when the owner is not Simulated, over time properties will not work. Mod: {modRef.GetName()}\n Owner: {this}");
 
                 StartPropertyTickingMod(entry);
 
@@ -801,28 +797,20 @@ namespace MHServerEmu.Games.Entities
             }
             else if (overwrite)
             {
-                if (foundEntry.Properties != null)
+                if (Verify.IsNotNull(foundEntry.Properties))
                 {
                     foundEntry.Properties.RemoveFromParent(Properties);
                     OnAttachedPropertiesPostRemove(foundEntry.Properties);
-                }
-                else
-                {
-                    Logger.Warn("AttachProperties(): foundEntry.Properties == null");
                 }
 
                 StopPropertyTickingMod(foundEntry);
 
                 PropertyCollection newCollection = CreateAndCloneAttachedModCollection(properties, rank, indexProperties, modRef);
-                if (newCollection == null) { Logger.Warn("AttachProperties(): newCollection == null"); return; }
+                if (!Verify.IsNotNull(newCollection)) return;
 
                 foundEntry.Properties = newCollection;
 
-                if (IsSimulated == false)
-                {
-                    Logger.Warn("AttachProperties(): Mod is trying to start a PropertyTicker when the owner is not Simulated, over time properties will not work. " +
-                        $"Mod: {modRef.GetName()}\n Owner: {this}");
-                }
+                Verify.IsTrue(IsSimulated, $"Mod is trying to start a PropertyTicker when the owner is not Simulated, over time properties will not work. Mod: {modRef.GetName()}\n Owner: {this}");
 
                 StartPropertyTickingMod(foundEntry);
             }
@@ -831,9 +819,7 @@ namespace MHServerEmu.Games.Entities
 
         public void DetachProperties(PrototypeId modTypeRef, PrototypeId modRef, ulong index)
         {
-            //Logger.Debug($"DetachProperties(): modTypeRef={modTypeRef.GetName()}, modRef={modRef.GetName()}");
-
-            if (_attachedProperties == null) { Logger.Warn("DetachProperties(): _attachedProperties == null"); return; }
+            if (!Verify.IsNotNull(_attachedProperties)) return;
 
             AttachedPropertiesEntry foundEntry = null;
             foreach (AttachedPropertiesEntry entry in _attachedProperties)
@@ -848,7 +834,7 @@ namespace MHServerEmu.Games.Entities
             if (foundEntry != null)
             {
                 PropertyCollection properties = foundEntry.Properties;
-                if (properties == null) { Logger.Warn("DetachProperties(): properties == null"); return; }
+                if (!Verify.IsNotNull(properties)) return;
 
                 StopPropertyTickingMod(foundEntry);
 
@@ -892,7 +878,7 @@ namespace MHServerEmu.Games.Entities
             PropertyCollection indexProperties, PrototypeId modRef)
         {
             ModPrototype modProto = GameDatabase.GetPrototype<ModPrototype>(modRef);
-            if (modProto == null) return Logger.WarnReturn<PropertyCollection>(null, "CreateAndCloneAttachedModCollection(): modProto == null");
+            if (!Verify.IsNotNull(modProto)) return null;
 
             PropertyCollection modProperties = new();
 
@@ -1079,7 +1065,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool Owns(Entity entity)
         {
-            if (entity == null) return Logger.WarnReturn(false, "Owns(): entity == null");
+            if (!Verify.IsNotNull(entity)) return false;
             return entity.IsOwnedBy(Id);
         }
 
@@ -1167,8 +1153,8 @@ namespace MHServerEmu.Games.Entities
             if (destInventory != null)
             {
                 InventoryResult destInventoryResult = CanChangeInventoryLocation(destInventory);
-                if (destInventoryResult != InventoryResult.Success) return Logger.WarnReturn(destInventoryResult,
-                    $"ChangeInventoryLocation(): result=[{destInventoryResult}] allowStacking=[{allowStacking}] destSlot=[{destSlot}] destInventory=[{destInventory}] entity=[{Id}]");
+                if (!Verify.IsTrue(destInventoryResult == InventoryResult.Success, $"result=[{destInventoryResult}] allowStacking=[{allowStacking}] destSlot=[{destSlot}] destInventory=[{destInventory}] entity=[{Id}]"))
+                    return destInventoryResult;
             }
 
             return Inventory.ChangeEntityInventoryLocation(this, destInventory, destSlot, ref stackEntityId, allowStacking);
@@ -1183,7 +1169,7 @@ namespace MHServerEmu.Games.Entities
         public bool CanStack()
         {
             if (MaxStackSize < 2) return false;
-            if (CurrentStackSize > MaxStackSize) Logger.WarnReturn(false, "CanStack(): CurrentStackSize > MaxStackSize");
+            if (!Verify.IsTrue(CurrentStackSize <= MaxStackSize)) return false;
             if (CurrentStackSize == MaxStackSize) return false;
             return true;
         }
@@ -1214,30 +1200,23 @@ namespace MHServerEmu.Games.Entities
 
         public void TriggerInventoryCleanupEvent(InventoryEvent inventoryEvent)
         {
-            if (inventoryEvent == InventoryEvent.Invalid)
-            {
-                Logger.Warn("TriggerInventoryCleanupEvent(): inventoryEvent == InventoryEvent.Invalid");
-                return;
-            }
+            if (!Verify.IsTrue(inventoryEvent != InventoryEvent.Invalid)) return;
 
             foreach (Inventory inventory in new InventoryIterator(this))
                 inventory.TriggerCleanupEvent(inventoryEvent);
         }
 
-        protected virtual bool InitInventories(bool populateInventories)
+        protected virtual bool InitInventories(bool populate)
         {
             bool success = true;
 
             EntityPrototype entityPrototype = Prototype;
-            if (entityPrototype == null) return Logger.WarnReturn(false, "InitInventories(): entityPrototype == null");
+            if (!Verify.IsNotNull(entityPrototype)) return false;
 
-            foreach (EntityInventoryAssignmentPrototype invAssignmentProto in entityPrototype.Inventories)
+            if (entityPrototype.Inventories.HasValue())
             {
-                if (AddInventory(invAssignmentProto.Inventory, invAssignmentProto.LootTable) == false)
-                {
-                    Logger.Warn($"InitInventories(): Failed to add inventory, invProtoRef={GameDatabase.GetPrototypeName(invAssignmentProto.Inventory)}");
-                    success = false;
-                }
+                foreach (EntityInventoryAssignmentPrototype invAssignmentProto in entityPrototype.Inventories)
+                    success &= Verify.IsTrue(AddInventory(invAssignmentProto.Inventory, populate ? invAssignmentProto.LootTable : PrototypeId.Invalid));
             }
 
             return success;
@@ -1257,21 +1236,24 @@ namespace MHServerEmu.Games.Entities
         {
             if (collection == EntityCollection.All) return true;
             var list = GetInvasiveCollection(collection);
-            if (list == null) return Logger.WarnReturn(false, "ModifyCollectionMembership(): list == null");
+            if (!Verify.IsNotNull(list)) return false;
 
             bool isInCollection = IsInCollection(collection);
             if (add && isInCollection == false)
             {
                 if (collection == EntityCollection.Simulated || collection == EntityCollection.Locomotion)
                 {
-                    if (TestStatus(EntityStatus.Destroyed))
-                        return Logger.WarnReturn(false, $"ModifyCollectionMembership(): Trying to add destroyed entity {ToString()} to collection {collection}");
+                    if (!Verify.IsTrue(TestStatus(EntityStatus.Destroyed) == false, $"Trying to add destroyed entity {ToString()} to collection {collection}"))
+                        return false;
 
-                    if (IsInGame == false)
-                        return Logger.WarnReturn(false, $"ModifyCollectionMembership(): Trying to add out of game entity {ToString()} to collection {collection}");
+                    if (!Verify.IsTrue(IsInGame, $"Trying to add out of game entity {ToString()} to collection {collection}"))
+                        return false;
 
-                    if (this is WorldEntity worldEntity && worldEntity.IsInWorld == false)
-                        return Logger.WarnReturn(false, $"ModifyCollectionMembership(): Trying to add out of world entity {ToString()} to collection {collection}");
+                    if (this is WorldEntity worldEntity)
+                    {
+                        if (!Verify.IsTrue(worldEntity.IsInWorld, $"Trying to add out of world entity {ToString()} to collection {collection}"))
+                            return false;
+                    }
                 }
 
                 if (collection == EntityCollection.Simulated) SetFlag(EntityFlags.IsSimulated, true);
@@ -1423,11 +1405,8 @@ namespace MHServerEmu.Games.Entities
 
         public virtual bool ScheduleDestroyEvent(TimeSpan delay)
         {
-            if (TestStatus(EntityStatus.PendingDestroy))
-                return Logger.WarnReturn(false, $"ScheduleDestroyEvent(): Entity {this} is already pending destroy");
-
-            if (TestStatus(EntityStatus.Destroyed))
-                return Logger.WarnReturn(false, $"ScheduleDestroyEvent(): Entity {this} is already destroyed");
+            if (!Verify.IsTrue(TestStatus(EntityStatus.PendingDestroy) == false)) return false;
+            if (!Verify.IsTrue(TestStatus(EntityStatus.Destroyed) == false)) return false;
 
             if (_scheduledDestroyEvent.IsValid)
             {
@@ -1450,11 +1429,8 @@ namespace MHServerEmu.Games.Entities
 
         public bool ScheduledDestroyCallback()
         {
-            if (TestStatus(EntityStatus.PendingDestroy))
-                return Logger.WarnReturn(false, $"ScheduledDestroyCallback(): Entity {this} is already pending destroy");
-
-            if (TestStatus(EntityStatus.Destroyed))
-                return Logger.WarnReturn(false, $"ScheduledDestroyCallback(): Entity {this} is already destroyed");
+            if (!Verify.IsTrue(TestStatus(EntityStatus.PendingDestroy) == false)) return false;
+            if (!Verify.IsTrue(TestStatus(EntityStatus.Destroyed) == false)) return false;
 
             Destroy();
             return true;

@@ -1,5 +1,4 @@
-﻿using System.Text;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
@@ -13,11 +12,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         [Flags]
         private enum SerializationFlags
         {
-            // These serialization flags were introduced in version 1.25 (to be confirmed), and
-            // they are used to reduce the size of power collections in world entity creation
-            // net messages by omitting common values (0 or 1) and values that repeat in multiple
-            // records in a row (such as character / combat level).
-            None = 0,
+            None                                = 0,
             PowerRefCountIsOne                  = 1 << 0,
             PowerRankIsZero                     = 1 << 1,
             CharacterLevelIsOne                 = 1 << 2,
@@ -28,8 +23,6 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             ItemLevelIsOne                      = 1 << 7,
             ItemVariationIsOne                  = 1 << 8
         }
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         private PowerPrototype _powerProto = null;
         private PowerIndexProperties _indexProps = new();
@@ -47,6 +40,11 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public PowerCollectionRecord() { }
 
+        public override string ToString()
+        {
+            return $"[x{_powerRefCount}] {_powerProto} ({_indexProps})";
+        }
+
         public void Initialize(Power power, PrototypeId powerPrototypeRef, PowerIndexProperties indexProps, uint powerRefCount,
             bool isPowerProgressionPower, bool isTeamUpPassiveWhileAway)
         {
@@ -59,16 +57,19 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             IsTeamUpPassiveWhileAway = isTeamUpPassiveWhileAway;
         }
 
+        public void ClearPower()
+        {
+            Power = null;
+        }
+
         public bool ShouldSerializeRecordForPacking(Archive archive)
         {
-            if (archive.IsPacking == false)
-                return Logger.WarnReturn(false, "ShouldSerializeRecordForPacking(): archive.IsPacking == false");
+            if (!Verify.IsTrue(archive.IsPacking)) return false;
 
             if (archive.IsReplication == false)
                 return false;
 
-            if (_powerProto == null)
-                return Logger.WarnReturn(false, "ShouldSerializeRecordForPacking(): _powerProto == null");
+            if (!Verify.IsNotNull(_powerProto)) return false;
 
             if (_powerProto.PowerCategory == PowerCategoryType.ComboEffect)
                 return false;
@@ -78,8 +79,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public bool SerializeTo(Archive archive, PowerCollectionRecord previousRecord)
         {
-            if (archive.IsPacking == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsPacking == false");
-            if (archive.IsReplication == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsReplication == false");
+            if (!Verify.IsTrue(archive.IsPacking && archive.IsReplication)) return false;
 
             bool success = true;
 
@@ -156,7 +156,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public bool SerializeFrom(Archive archive, PowerCollectionRecord previousRecord)
         {
-            if (archive.IsUnpacking == false) return Logger.WarnReturn(false, "SerializeFrom(): archive.IsUnpacking == false");
+            if (!Verify.IsTrue(archive.IsUnpacking)) return false;
 
             bool success = true;
 
@@ -175,22 +175,28 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             uint characterLevel = 1;
             if (flags.HasFlag(SerializationFlags.CharacterLevelIsFromPreviousRecord))
             {
-                if (previousRecord == null) return Logger.ErrorReturn(false, "SerializeFrom(): CharacterLevelIsFromPreviousRecord flag is set, but previousRecord is null");
+                if (!Verify.IsNotNull(previousRecord)) return false;
                 characterLevel = (uint)previousRecord._indexProps.CharacterLevel;
             }
             else if (flags.HasFlag(SerializationFlags.CharacterLevelIsOne) == false)
+            {
                 success &= Serializer.Transfer(archive, ref characterLevel);
+            }
 
             uint combatLevel = 1;
             if (flags.HasFlag(SerializationFlags.CombatLevelIsSameAsCharacterLevel))
+            {
                 combatLevel = characterLevel;
+            }
             else if (flags.HasFlag(SerializationFlags.CombatLevelIsFromPreviousRecord))
             {
-                if (previousRecord == null) return Logger.ErrorReturn(false, "SerializeFrom(): CombatLevelIsFromPreviousRecord flag is set, but previousRecord is null");
+                if (!Verify.IsNotNull(previousRecord)) return false;
                 combatLevel = (uint)previousRecord._indexProps.CombatLevel;
             }
             else
+            {
                 success &= Serializer.Transfer(archive, ref combatLevel);
+            }
 
             uint itemLevel = 1;
             if (flags.HasFlag(SerializationFlags.ItemLevelIsOne) == false)
@@ -207,11 +213,6 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 success &= Serializer.Transfer(archive, ref _powerRefCount);
 
             return success;
-        }
-
-        public override string ToString()
-        {
-            return $"[x{_powerRefCount}] {_powerProto} ({_indexProps})";
         }
     }
 }

@@ -16,8 +16,6 @@ namespace MHServerEmu.Games.Entities
 {
     public class Transition : WorldEntity
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private Dictionary<ulong, ulong> _dialogs;
         private Action<ulong, DialogResponse> _onDialogResponse;
 
@@ -198,7 +196,8 @@ namespace MHServerEmu.Games.Entities
                     return UseTransitionReturnToLastTown(player);
 
                 default:
-                    return Logger.WarnReturn(false, $"UseTransition(): Unimplemented region transition type {TransitionPrototype.Type}");
+                    Verify.IsTrue(false, $"Unimplemented region transition type {TransitionPrototype.Type}");
+                    return false;
             }
         }
 
@@ -207,10 +206,9 @@ namespace MHServerEmu.Games.Entities
             TransitionPrototype transitionProto = TransitionPrototype;
 
             Region region = Region;
-            if (region == null) return Logger.WarnReturn(false, "UseTransitionDefault(): region == null");
+            if (!Verify.IsNotNull(region)) return false;
 
-            if (_destinationList.Count == 0)
-                return Logger.WarnReturn(false, $"UseTransitionDefault(): No available destinations for [{this}]");
+            if (!Verify.IsTrue(_destinationList.Count > 0)) return false;
 
             if (_destinationList.Count == 1)
             {
@@ -222,8 +220,7 @@ namespace MHServerEmu.Games.Entities
                 return true;
             }
 
-            if (destinationIndex < 0 || destinationIndex >= _destinationList.Count)
-                return Logger.WarnReturn(false, $"UseTransitionDefault(): Destination index out of range for [{this}]");
+            if (!Verify.IsTrue(destinationIndex >= 0 && destinationIndex < _destinationList.Count)) return false;
             
             TransitionDestination destination = _destinationList[destinationIndex];
 
@@ -235,7 +232,7 @@ namespace MHServerEmu.Games.Entities
                 return false;
 
             RegionPrototype destinationRegionProto = destinationRegionRef.As<RegionPrototype>();
-            if (destinationRegionProto == null) return Logger.WarnReturn(false, "UseTransitionDefault(): destinationRegionProto == null");
+            if (!Verify.IsNotNull(destinationRegionProto)) return false;
 
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Transition);
@@ -313,11 +310,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool UseTransitionDirectReturn(Player player)
         {
-            if (_destinationList.Count == 0)
-                return Logger.WarnReturn(false, $"UseTransitionDirectReturn(): No available destinations for [{this}]");
-            
-            if (_destinationList.Count > 1)
-                return Logger.WarnReturn(false, $"UseTransitionDirectReturn(): More than one return destination for [{this}]");
+            if (!Verify.IsTrue(_destinationList.Count == 1)) return false;
 
             TransitionDestination destination = _destinationList[0];
 
@@ -382,8 +375,7 @@ namespace MHServerEmu.Games.Entities
                 dialog.AddButton(GameDialogResultEnum.eGDR_Option2, text, ButtonStyle.SecondaryPositive, isEnabled);
             }
 
-            if (_destinationList.Count > 2)
-                Logger.Warn($"ShowDestinationDialog(): Transition [{this}] has more than 2 destinations, the remaining destinations will not be included in the dialog");
+            Verify.IsTrue(_destinationList.Count <= 2, $"Transition [{this}] has more than 2 destinations, the remaining destinations will not be included in the dialog");
 
             Game.GameDialogManager.ShowDialog(dialog);            
         }
@@ -394,24 +386,13 @@ namespace MHServerEmu.Games.Entities
                 return;
 
             Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
-            if (player == null)
-            {
-                Logger.Warn("OnDialogResponse(): player == null");
-                return;
-            }
+            if (!Verify.IsNotNull(player)) return;
 
             Avatar avatar = player.CurrentAvatar;
-            if (avatar == null)
-            {
-                Logger.Warn("OnDialogResponse(): avatar == null");
-                return;
-            }
+            if (!Verify.IsNotNull(avatar)) return;
 
-            if (avatar.InInteractRange(this, Dialog.InteractionMethod.Use) == false)
-            {
-                Logger.Warn($"OnDialogResponse(): Avatar [{avatar}] is outside of interact range of [{this}]");
+            if (!Verify.IsTrue(avatar.InInteractRange(this, Dialog.InteractionMethod.Use), $"Avatar [{avatar}] is outside of interact range of [{this}]"))
                 return;
-            }
 
             int destinationIndex = response.ButtonIndex switch
             {
@@ -420,11 +401,7 @@ namespace MHServerEmu.Games.Entities
                 _                                 => -1,
             };
 
-            if (destinationIndex == -1)
-            {
-                Logger.Warn("OnDialogResponse(): destinationIndex == -1");
-                return;
-            }
+            if (!Verify.IsTrue(destinationIndex != -1)) return;
 
             UseTransitionDefault(player, destinationIndex);
         }

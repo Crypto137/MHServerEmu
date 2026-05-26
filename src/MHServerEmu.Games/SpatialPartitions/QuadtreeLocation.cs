@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.Games.SpatialPartitions
 {
-    public abstract class QuadtreeLocation<T>
+    public abstract class QuadtreeLocation<T> where T: class
     {
         public T Element { get; }
 

@@ -198,8 +198,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             Span<PropertyParam> leftParams = stackalloc PropertyParam[Property.MaxParamCount];
             Span<PropertyParam> rightParams = stackalloc PropertyParam[Property.MaxParamCount];
-            left.GetParams(ref leftParams);
-            right.GetParams(ref rightParams);
+            left.GetParams(leftParams);
+            right.GetParams(rightParams);
 
             for (int i = 0; i < Property.MaxParamCount; i++)
             {
@@ -222,8 +222,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             Span<PropertyParam> destParams = stackalloc PropertyParam[Property.MaxParamCount];
             Span<PropertyParam> sourceParams = stackalloc PropertyParam[Property.MaxParamCount];
-            destId.GetParams(ref destParams);
-            sourceId.GetParams(ref sourceParams);
+            destId.GetParams(destParams);
+            sourceId.GetParams(sourceParams);
 
             for (int i = 0; i < Property.MaxParamCount; i++)
             {

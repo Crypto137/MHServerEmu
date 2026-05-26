@@ -12,10 +12,8 @@ namespace MHServerEmu.Games.SpatialPartitions
 
     // Logically it probably makes more sense to have this in the Core.Collections namespace, but for now we are sticking to how it is in the client.
 
-    public abstract class Quadtree<TElement>
+    public abstract class Quadtree<TElement> where TElement: class
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private const int TargetThreshold = 6;
         private const float Loose = 2.0f;
 
@@ -41,8 +39,8 @@ namespace MHServerEmu.Games.SpatialPartitions
 
         public bool Update(TElement element)
         {
-            if (element == null) return Logger.WarnReturn(false, "Update(): element == null");
-            if (_outstandingIteratorCount > 0) return Logger.WarnReturn(false, $"Update(): _outstandingIteratorCount > 0 ({_outstandingIteratorCount})");
+            if (!Verify.IsNotNull(element)) return false;
+            if (!Verify.IsTrue(_outstandingIteratorCount <= 0)) return false;
 
             QuadtreeLocation<TElement> location = GetLocation(element);
             QuadtreeNode<TElement> node = location.Node;
@@ -55,8 +53,7 @@ namespace MHServerEmu.Games.SpatialPartitions
             if (node.LooseBounds.FullyContainsXY(elementBounds))
                 return false;
 
-            if (node.RemoveElement(location) == false)
-                return Logger.WarnReturn(false, "Update(): node.RemoveElement(location) == false");
+            if (!Verify.IsTrue(node.RemoveElement(location))) return false;
 
             _elementsCount--;
 
@@ -72,31 +69,32 @@ namespace MHServerEmu.Games.SpatialPartitions
                 parent = node.Parent;
             }
 
-            return Logger.WarnReturn(false, "Update(): Unknown failure");
+            Verify.IsTrue(false);
+            return false;
         }
 
         public bool Insert(TElement element)
         {
-            if (element == null) return Logger.WarnReturn(false, "Insert(): element == null");
-            if (_outstandingIteratorCount > 0) return Logger.WarnReturn(false, $"Insert(): _outstandingIteratorCount > 0 ({_outstandingIteratorCount})");
+            if (!Verify.IsNotNull(element)) return false;
+            if (!Verify.IsTrue(_outstandingIteratorCount <= 0)) return false;
 
             if (Root == null)
                 AllocateNode(new(_bounds.Center, _bounds.Radius2D() * Loose), null);
 
-            if (Root == null) return Logger.WarnReturn(false, "Insert(): Root == null");
+            if (!Verify.IsNotNull(Root)) return false;
 
             Aabb elementBounds = GetElementBounds(element);
             float elementRadius = elementBounds.Radius2D();
 
-            if ((elementRadius > 0.0f && Root.LooseBounds.FullyContainsXY(elementBounds)) == false)
-                return Logger.WarnReturn(false, $"Trying to insert element into quadtree with invalid size. ElementRadius={elementRadius}, ElementBounds={elementBounds}, Element={element}");
+            if (!Verify.IsTrue(elementRadius > 0f && Root.LooseBounds.FullyContainsXY(elementBounds), $"Trying to insert element into quadtree with invalid size. ElementRadius={elementRadius}, ElementBounds={elementBounds}, Element={element}"))
+                return false;
 
             return Insert(Root, element, elementBounds, elementBounds.Center, elementRadius);
         }
 
         private bool Insert(QuadtreeNode<TElement> node, TElement element, in Aabb elementBounds, in Vector3 elementCenter, float elementRadius)
         {
-            if (node == null) return Logger.WarnReturn(false, "Insert(): node == null");
+            if (!Verify.IsNotNull(node)) return false;
 
             QuadtreeLocation<TElement> location = GetLocation(element);
 
@@ -203,14 +201,14 @@ namespace MHServerEmu.Games.SpatialPartitions
 
         public bool Remove(TElement element)
         {
-            if (element == null) return Logger.WarnReturn(false, "Remove(): element == null");
-            if (_outstandingIteratorCount > 0) return Logger.WarnReturn(false, $"Remove(): _outstandingIteratorCount > 0 ({_outstandingIteratorCount})");
+            if (!Verify.IsNotNull(element)) return false;
+            if (!Verify.IsTrue(_outstandingIteratorCount <= 0)) return false;
 
             QuadtreeLocation<TElement> location = GetLocation(element);
             QuadtreeNode<TElement> node = location.Node;
 
-            if (node == null) return Logger.WarnReturn(false, "Remove(): node == null");
-            if (node.RemoveElement(location) == false) return Logger.WarnReturn(false, "Remove(): node.RemoveElement(location) == false");
+            if (!Verify.IsNotNull(node)) return false;
+            if (!Verify.IsTrue(node.RemoveElement(location))) return false;
 
             _elementsCount--;
 
@@ -271,12 +269,7 @@ namespace MHServerEmu.Games.SpatialPartitions
 
         private void DecrementIteratorCount()
         {
-            if (_outstandingIteratorCount <= 0)
-            {
-                Logger.Warn("DecrementIteratorCount(): _outstandingIteratorCount <= 0");
-                return;
-            }
-
+            if (!Verify.IsTrue(_outstandingIteratorCount > 0)) return;
             _outstandingIteratorCount--;
         }
 
@@ -381,11 +374,7 @@ namespace MHServerEmu.Games.SpatialPartitions
 
                 private void Init()
                 {
-                    if (_tree == null)
-                    {
-                        Logger.Warn("Init(): _tree == null");
-                        return;
-                    }
+                    if (!Verify.IsNotNull(_tree)) return;
 
                     if (_tree.Root == null)
                         return;
