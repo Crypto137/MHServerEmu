@@ -6,6 +6,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
@@ -22,7 +23,7 @@ namespace MHServerEmu.Games.Powers
     public class MissilePower : Power
     {
         private readonly GRandom _random = new();
-        private readonly HashSet<Player> _interestedPlayers = new();
+        private readonly HashSet<ulong> _interestedPlayers = new();
 
         private readonly EventPointer<CreateMissileDelayedEvent> _createMissileEvent = new();
 
@@ -54,7 +55,7 @@ namespace MHServerEmu.Games.Powers
             using var interestedPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> interestedPlayerList);
             Game.NetworkManager.GetInterestedPlayers(interestedPlayerList, Owner, AOINetworkPolicyValues.AOIChannelProximity);
             foreach (Player player in interestedPlayerList)
-                _interestedPlayers.Add(player);             
+                _interestedPlayers.Add(player.Id);             
 
             CancelCreationDelayEvent();
 
@@ -72,18 +73,18 @@ namespace MHServerEmu.Games.Powers
         protected override bool ApplyInternal(PowerApplication powerApplication)
         {
             // Remove interested players who became no longer interested between activation and application of this power
-            using var interestedPlayerSetHandle = HashSetPool<Player>.Instance.Get(out HashSet<Player> interestedPlayerSet);
+            using var interestedPlayerSetHandle = HashSetPool<ulong>.Instance.Get(out HashSet<ulong> interestedPlayerSet);
             using var interestedPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> interestedPlayerList);
 
             Game.NetworkManager.GetInterestedPlayers(interestedPlayerList, Owner, AOINetworkPolicyValues.AOIChannelProximity);
 
             foreach (Player player in interestedPlayerList)
-                interestedPlayerSet.Add(player);
+                interestedPlayerSet.Add(player.Id);
 
-            foreach (Player player in _interestedPlayers)
+            foreach (ulong playerId in _interestedPlayers)
             {
-                if (interestedPlayerSet.Contains(player) == false)
-                    _interestedPlayers.Remove(player);
+                if (interestedPlayerSet.Contains(playerId) == false)
+                    _interestedPlayers.Remove(playerId);
             }
 
             // Do the application
@@ -488,53 +489,61 @@ namespace MHServerEmu.Games.Powers
 
         private bool CreateMissileInternal(EntitySettings creationSettings, MissileCreationContextPrototype missileContext, PowerApplication powerApplication, EntityManager entityManager)
         {
+            if (!Verify.IsNotNull(missileContext)) return false;
+
             ulong regionId = creationSettings.RegionId;
-            if (missileContext == null) return false;
 
             // Clear region id so that client-independent missiles don't enter the world automatically
             // before we get the chance to set their replication channel to client-independent.
             if (missileContext.IndependentClientMovement) 
                 creationSettings.RegionId = 0;
 
-            if (entityManager.CreateEntity(creationSettings) is not Missile missile) return false;
+            Missile missileEntity = entityManager.CreateEntity(creationSettings) as Missile;
+            if (!Verify.IsNotNull(missileEntity)) return false;
 
             if (missileContext.IndependentClientMovement)
             {
                 // Add client independent replication channel to the missile manually for all players who
                 // were interested in the owner during the activation.
-                foreach (Player player in _interestedPlayers)
+                foreach (ulong playerId in _interestedPlayers)
                 {
+                    Player player = entityManager.GetEntity<Player>(playerId);
+                    if (player == null)
+                        continue;
+
                     AreaOfInterest aoi = player.AOI;
-                    aoi.AddClientIndependentEntity(missile);
+                    aoi.AddClientIndependentEntity(missileEntity);
                 }
 
                 // Restore regionId
                 creationSettings.RegionId = regionId;
-                var region = Game.RegionManager.GetRegion(regionId);
+                Region region = Game.RegionManager.GetRegion(regionId);
+                if (!Verify.IsNotNull(region)) return false;
 
                 // Add the missile to the world
-                missile.EnterWorld(region, creationSettings.Position, creationSettings.Orientation, creationSettings);
+                missileEntity.EnterWorld(region, creationSettings.Position, creationSettings.Orientation, creationSettings);
             }
 
-            var locomotor = missile.Locomotor;
-            if (locomotor == null) return false;
+            Locomotor locomotor = missileEntity.Locomotor;
+            if (!Verify.IsNotNull(locomotor)) return false;
 
             if (locomotor.Method == LocomotorMethod.MissileSeeking)
             {
-                if (missileContext.IndependentClientMovement) return false;
+                if (!Verify.IsTrue(missileContext.IndependentClientMovement == false)) return false;
 
-                var locomotionOptions = new LocomotionOptions { RepathDelay = TimeSpan.FromSeconds(0.5) };
+                LocomotionOptions locomotionOptions = new() { RepathDelay = TimeSpan.FromSeconds(0.5) };
                 if (missileContext.OneShot == false)
                     locomotionOptions.Flags |= LocomotionFlags.LocomotionNoEntityCollide;
 
-                if (missile.AIController == null)
+                if (missileEntity.AIController == null)
                 {
-                    ulong targetId = missile.Properties[PropertyEnum.MissileSeekTargetId];
-                    var target = entityManager.GetEntity<WorldEntity>(targetId);
+                    ulong targetId = missileEntity.Properties[PropertyEnum.MissileSeekTargetId];
+                    WorldEntity target = entityManager.GetEntity<WorldEntity>(targetId);
+
                     if (target != null && target.IsDead == false)
                     {
                         locomotor.FollowEntity(targetId, 0.0f, ref locomotionOptions);
-                        locomotor.FollowEntityMissingEvent.AddActionBack(missile.SeekTargetMissingAction);
+                        locomotor.FollowEntityMissingEvent.AddActionBack(missileEntity.SeekTargetMissingAction);
                     }
                     else
                     {
@@ -543,18 +552,25 @@ namespace MHServerEmu.Games.Powers
                 } 
                 else
                 {
-                    var style = TargetingStylePrototype;
+                    TargetingStylePrototype style = TargetingStylePrototype;
+
                     ulong targetId = powerApplication.TargetEntityId;
-                    if (targetId != Entity.InvalidId && (style.TargetingShape == TargetingShapeType.SingleTarget 
-                        || style.TargetingShape == TargetingShapeType.SingleTargetRandom))
+                    if (targetId != Entity.InvalidId &&
+                        (style.TargetingShape == TargetingShapeType.SingleTarget ||
+                        style.TargetingShape == TargetingShapeType.SingleTargetRandom))
                     {
-                        var target = entityManager.GetEntity<WorldEntity>(targetId);
-                        if (target != null) 
-                            missile.AIController?.SetTargetEntity(target);
+                        WorldEntity target = entityManager.GetEntity<WorldEntity>(targetId);
+                        if (target != null)
+                        {
+                            AIController aiController = missileEntity.AIController;
+                            if (!Verify.IsNotNull(aiController)) return false;
+                            aiController.SetTargetEntity(target);
+                        }
                     }
 
                     locomotor.MoveForward(ref locomotionOptions);
-                    var missileProto = missile.MissilePrototype;
+
+                    MissilePrototype missileProto = missileEntity.MissilePrototype;
                     if (missileProto.GetSeekDelayTime() > TimeSpan.Zero)
                         locomotor.SetMethod(LocomotorMethod.Default, missileProto.GetSeekDelaySpeed());
                 }

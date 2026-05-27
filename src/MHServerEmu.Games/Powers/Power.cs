@@ -34,7 +34,6 @@ namespace MHServerEmu.Games.Powers
         private const float PowerPositionSweepPaddingSquared = PowerPositionSweepPadding * PowerPositionSweepPadding;
 
         private static readonly TimeSpan CheckIfTargetIsKilledInterval = TimeSpan.FromMilliseconds(250);
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         private SituationalPowerComponent _situationalComponent;
         private KeywordsMask _keywordsMask;
@@ -621,8 +620,6 @@ namespace MHServerEmu.Games.Powers
 
         public virtual PowerUseResult Activate(ref PowerActivationSettings settings)
         {
-            //Logger.Trace($"Activate(): {Prototype}");
-
             PowerPrototype powerProto = Prototype;
             if (!Verify.IsNotNull(powerProto)) return PowerUseResult.GenericError;
 
