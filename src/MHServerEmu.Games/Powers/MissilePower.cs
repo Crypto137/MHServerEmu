@@ -1,14 +1,17 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
@@ -19,22 +22,21 @@ namespace MHServerEmu.Games.Powers
 {
     public class MissilePower : Power
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly GRandom _random = new();
-        private readonly HashSet<Player> _interestedPlayers = new();
+        private readonly HashSet<ulong> _interestedPlayers = new();
+
         private readonly EventPointer<CreateMissileDelayedEvent> _createMissileEvent = new();
+
+        public int TotalNumberOfMissilesCreated { get; private set; } = 0;
 
         protected TimeSpan CreationDelay { get => TimeSpan.FromMilliseconds((long)Properties[PropertyEnum.MissileCreationDelay]); }
 
-        public MissilePowerPrototype MissilePowerPrototype { get => Prototype as MissilePowerPrototype; }       
-        public int TotalNumberOfMissilesCreated { get; private set; }
+        public MissilePowerPrototype MissilePowerPrototype { get => Prototype as MissilePowerPrototype; }
         public int MissileCountPerCreationEvent { get => Properties[PropertyEnum.MissileCountPerCreationEvent]; }
         public int MaxNumberOfMissilesToCreateTotal { get => Properties[PropertyEnum.MissileCreationCountTotal]; }
 
         public MissilePower(Game game, PrototypeId prototypeDataRef) : base(game, prototypeDataRef)
         {
-            TotalNumberOfMissilesCreated = 0;
         }
 
         public override void OnDeallocate()
@@ -53,140 +55,152 @@ namespace MHServerEmu.Games.Powers
             using var interestedPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> interestedPlayerList);
             Game.NetworkManager.GetInterestedPlayers(interestedPlayerList, Owner, AOINetworkPolicyValues.AOIChannelProximity);
             foreach (Player player in interestedPlayerList)
-                _interestedPlayers.Add(player);             
+                _interestedPlayers.Add(player.Id);             
 
             CancelCreationDelayEvent();
+
             return base.Activate(ref settings);
         }
 
         protected override PowerUseResult ActivateInternal(ref PowerActivationSettings settings)
         {
             if (settings.PowerRandomSeed != 0)
-                _random.Seed((int)settings.PowerRandomSeed);
+                _random.Seed(settings.PowerRandomSeed);
+
             return base.ActivateInternal(ref settings);
         }
 
         protected override bool ApplyInternal(PowerApplication powerApplication)
         {
             // Remove interested players who became no longer interested between activation and application of this power
-            using var interestedPlayerSetHandle = HashSetPool<Player>.Instance.Get(out HashSet<Player> interestedPlayerSet);
+            using var interestedPlayerSetHandle = HashSetPool<ulong>.Instance.Get(out HashSet<ulong> interestedPlayerSet);
             using var interestedPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> interestedPlayerList);
 
             Game.NetworkManager.GetInterestedPlayers(interestedPlayerList, Owner, AOINetworkPolicyValues.AOIChannelProximity);
 
             foreach (Player player in interestedPlayerList)
-                interestedPlayerSet.Add(player);
+                interestedPlayerSet.Add(player.Id);
 
-            // NOTE: It should be safe to remove from a HashSet<T> during iteration as of .NET 6
-            foreach (Player player in _interestedPlayers)
+            foreach (ulong playerId in _interestedPlayers)
             {
-                if (interestedPlayerSet.Contains(player) == false)
-                    _interestedPlayers.Remove(player);
+                if (interestedPlayerSet.Contains(playerId) == false)
+                    _interestedPlayers.Remove(playerId);
             }
 
             // Do the application
-            if (base.ApplyInternal(powerApplication) == false) return false;
+            if (base.ApplyInternal(powerApplication) == false)
+                return false;
 
-            var prototype = MissilePowerPrototype;
-            if (prototype == null) return false;
+            MissilePowerPrototype prototype = MissilePowerPrototype;
+            if (!Verify.IsNotNull(prototype)) return false;
 
             TotalNumberOfMissilesCreated = 0;
-            if (prototype.MissileCreationContexts != null)
+
+            if (prototype.MissileCreationContexts.HasValue())
             {
                 MissileCreateResult result = CreateMissileLooper(powerApplication);
                 if (result == MissileCreateResult.Failure)
                 {
                     if (Properties[PropertyEnum.PowerActiveUntilProjExpire])
                         SchedulePowerEnd(TimeSpan.Zero, EndPowerFlags.Force, false);
+
                     return false;
                 }
 
                 if (result == MissileCreateResult.Success && ShouldScheduleMoreMissilesForCreation(prototype))
-                    if (ScheduleCreationDelayEvent(CreationDelay, powerApplication) == false)
-                        return Logger.WarnReturn(false, $"Failed to schedule a missile creation event Power:{ToString()}");
+                {
+                    if (!Verify.IsTrue(ScheduleCreationDelayEvent(CreationDelay, powerApplication), $"Failed to schedule a missile creation event Power:{this}"))
+                        return false;
+                }
             }
 
             return true;
         }
 
-        protected override bool EndPowerInternal(EndPowerFlags flags)
+        protected override void EndPowerInternal(EndPowerFlags flags)
         {
             base.EndPowerInternal(flags);
-            var prototype = MissilePowerPrototype;
-            if (prototype == null) return false;
+
+            MissilePowerPrototype prototype = MissilePowerPrototype;
+            if (!Verify.IsNotNull(prototype)) return;
+
             if (prototype.MissileAllowCreationAfterPwrEnds == false)
                 CancelCreationDelayEvent();
-            return true;
         }
 
-        protected override bool OnEndPowerCancelEvents(EndPowerFlags flags)
+        protected override void OnEndPowerCancelEvents(EndPowerFlags flags)
         {
             base.OnEndPowerCancelEvents(flags);
 
             if (flags.HasFlag(EndPowerFlags.ExplicitCancel))
             {
-                var prototype = MissilePowerPrototype;
-                if (prototype == null) return false;
+                MissilePowerPrototype prototype = MissilePowerPrototype;
+                if (!Verify.IsNotNull(prototype)) return;
+
                 if (prototype.MissileAllowCreationAfterPwrEnds == false)
                     CancelCreationDelayEvent();
             }
-
-            return true;
         }
 
         private MissileCreateResult CreateMissileLooper(PowerApplication powerApplication)
         {
-            var prototype = MissilePowerPrototype;
-            if (prototype == null || Game == null) return MissileCreateResult.Failure;
-            var entityManager = Game.EntityManager;
-            if (entityManager == null) return MissileCreateResult.Failure;
+            MissilePowerPrototype prototype = MissilePowerPrototype;
+            if (!Verify.IsNotNull(prototype)) return MissileCreateResult.Failure;
+
+            if (!Verify.IsNotNull(Game)) return MissileCreateResult.Failure;
+
+            EntityManager entityManager = Game.EntityManager;
+            if (!Verify.IsNotNull(entityManager)) return MissileCreateResult.Failure;
 
             int maxMissileCountPerCreationEvent = Math.Max(1, MissileCountPerCreationEvent);
             int maxMissilesToCreate = Math.Max(1, MaxNumberOfMissilesToCreateTotal);
 
-            var contexts = prototype.MissileCreationContexts;
-            int contextsLength = contexts.Length;
+            MissileCreationContextPrototype[] contexts = prototype.MissileCreationContexts;
+            int vectorSize = contexts.Length;
 
             for (int i = 0; i < maxMissileCountPerCreationEvent && TotalNumberOfMissilesCreated < maxMissilesToCreate; i++)
             {
                 int contextIndex;
-                MissileCreationContextPrototype contextProto;
+                MissileCreationContextPrototype contextPrototype;
 
                 if (prototype.MissileSelectRandomContext)
                 {
                     Picker<MissileCreationContextPrototype> picker = new(_random);
-                    foreach (var context in contexts)
+                    foreach (MissileCreationContextPrototype context in contexts)
                         picker.Add(context, context.RandomPickWeight);
-                    picker.Pick(out contextProto, out contextIndex);
+
+                    picker.Pick(out contextPrototype, out contextIndex);
                 }
                 else if (prototype.EvalSelectMissileContextIndex != null)
                 {
-                    var owner = entityManager.GetEntity<WorldEntity>(powerApplication.UserEntityId);
-                    var target = entityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
+                    WorldEntity owner = entityManager.GetEntity<WorldEntity>(powerApplication.UserEntityId);
+                    WorldEntity target = entityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
 
                     using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
                     evalContext.Game = Game;
                     evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, prototype.Properties);
-                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner?.Properties);
                     evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
                     evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
 
                     contextIndex = Eval.RunInt(prototype.EvalSelectMissileContextIndex, evalContext);
-                    if (contextIndex < 0 || contextIndex >= contextsLength)
-                        return Logger.WarnReturn(MissileCreateResult.Failure, $"Eval returned an out-of-range missile context index (max {contextsLength - 1}, index {contextIndex}). POWER={this}");
+                    if (!Verify.IsTrue(contextIndex >= 0 && contextIndex < vectorSize, $"Eval returned an out-of-range missile context index (max {vectorSize - 1}, index {contextIndex}). POWER={this}"))
+                        return MissileCreateResult.Failure;
 
-                    contextProto = contexts[contextIndex];
+                    contextPrototype = contexts[contextIndex];
                 }
                 else
                 {
-                    contextIndex = TotalNumberOfMissilesCreated % contextsLength;
-                    if (contextIndex < 0 || contextIndex >= contextsLength) return MissileCreateResult.Failure;
-                    contextProto = contexts[contextIndex];
+                    contextIndex = TotalNumberOfMissilesCreated % vectorSize;
+                    if (!Verify.IsTrue(contextIndex >= 0 && contextIndex < vectorSize)) return MissileCreateResult.Failure;
+
+                    contextPrototype = contexts[contextIndex];
                 }
 
-                if (contextProto == null) return MissileCreateResult.Failure;
-                if (CreateMissile(entityManager, contextProto, powerApplication, contextIndex, i) == false)
-                    return (i > 0) ? MissileCreateResult.SuccessFirst : MissileCreateResult.Failure;
+                if (!Verify.IsNotNull(contextPrototype)) return MissileCreateResult.Failure;
+
+                if (CreateMissile(entityManager, contextPrototype, powerApplication, contextIndex, i) == false)
+                    return (i > 0) ? MissileCreateResult.PartialSuccess : MissileCreateResult.Failure;
 
                 TotalNumberOfMissilesCreated++;
             }
@@ -196,24 +210,26 @@ namespace MHServerEmu.Games.Powers
 
         private bool CreateMissile(EntityManager entityManager, MissileCreationContextPrototype missileContext, PowerApplication powerApplication, int contextIndex, int missileIndex)
         {
-            if (Owner == null || Game == null || missileContext == null) return false;
+            if (!Verify.IsNotNull(Owner)) return false;
+            if (!Verify.IsNotNull(Game)) return false;
+            if (!Verify.IsNotNull(missileContext)) return false;
 
-            var region = Owner.Region;
-            if (region == null) return false;
+            Region region = Owner.Region;
+            if (!Verify.IsNotNull(region)) return false;
 
-            var missileProto = missileContext.Entity.As<MissilePrototype>();
-            if (missileProto == null) return false;
+            MissilePrototype missilePrototype = missileContext.Entity.As<MissilePrototype>();
+            if (!Verify.IsNotNull(missilePrototype)) return false;
 
             using EntitySettings creationSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
             creationSettings.EntityRef = missileContext.Entity;
             creationSettings.RegionId = region.Id;
             creationSettings.IgnoreNavi = missileContext.Ghost;
 
-            var ownerPosition = Owner.RegionLocation.Position;
-            var targetPosition = powerApplication.TargetPosition;
+            Vector3 ownerPosition = Owner.RegionLocation.Position;
+            Vector3 targetPosition = powerApplication.TargetPosition;
 
-            var toTarget = targetPosition - ownerPosition;
-            var direction = Vector3.Zero;
+            Vector3 toTarget = targetPosition - ownerPosition;
+            Vector3 direction = Vector3.Zero;
 
             if (Vector3.LengthSqr(toTarget) < Segment.Epsilon)
             {
@@ -245,23 +261,24 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            if (missileContext.IgnoresPitch) direction.Z = 0.0f;
+            if (missileContext.IgnoresPitch)
+                direction.Z = 0.0f;
 
             direction = Vector3.Normalize(direction);
 
-            if (missileContext.InitialDirectionAxisRotation == null) return false;
-            if (missileContext.InitialDirectionRandomVariance == null) return false;
+            if (!Verify.IsNotNull(missileContext.InitialDirectionAxisRotation)) return false;
+            if (!Verify.IsNotNull(missileContext.InitialDirectionRandomVariance)) return false;
 
-            var random = new GRandom(powerApplication.PowerRandomSeed + missileIndex * 10);
-            var angleVector = Vector3.NextVector3(random, missileContext.InitialDirectionAxisRotation.ToVector3(), missileContext.InitialDirectionRandomVariance.ToVector3());
+            GRandom random = new(powerApplication.PowerRandomSeed + missileIndex * 10);
+            Vector3 angleVector = Vector3.NextVector3(random, missileContext.InitialDirectionAxisRotation.ToVector3(), missileContext.InitialDirectionRandomVariance.ToVector3());
 
-            if (!Vector3.IsNearZero(angleVector))
+            if (Vector3.IsNearZero(angleVector) == false)
             {                
                 angleVector = Vector3.ToRadians(angleVector);
 
-                var axisX = Vector3.Normalize(toTarget);
-                var axisZ = Vector3.ZAxis;
-                var axisY = Vector3.Normalize(Vector3.Cross(axisX, axisZ));
+                Vector3 axisX = Vector3.Normalize(toTarget);
+                Vector3 axisZ = Vector3.ZAxis;
+                Vector3 axisY = Vector3.Normalize(Vector3.Cross(axisX, axisZ));
 
                 direction = Vector3.AxisAngleRotate(direction, axisZ, angleVector.X);
                 direction = Vector3.AxisAngleRotate(direction, -axisY, angleVector.Y);
@@ -280,14 +297,14 @@ namespace MHServerEmu.Games.Powers
                     break;
             }
 
-            creationSettings.Position += CreationOffset(direction, missileContext);
+            creationSettings.Position += GetCreationOffset(direction, missileContext);  // applyCreationOffset() in the client
 
             Bounds bounds = new();
             bounds.InitializeSphere(missileContext.Radius, BoundsCollisionType.Overlapping);
             bounds.Center = creationSettings.Position;
 
-            if (missileContext.Ghost == false 
-                && region.IsLocationClear(ref bounds, Region.GetPathFlagsForEntity(missileProto), PositionCheckFlags.None) == false)
+            if (missileContext.Ghost == false &&
+                region.IsLocationClear(ref bounds, Region.GetPathFlagsForEntity(missilePrototype), PositionCheckFlags.None) == false)
                 return false;
 
             if (region.GetCellAtPosition(creationSettings.Position) == null && region.ProjectBoundsIntoRegion(ref bounds, direction))
@@ -295,8 +312,8 @@ namespace MHServerEmu.Games.Powers
 
             if (missileContext.CreationOffsetCheckLOS && missileContext.CreationOffset != null && missileContext.CreationOffset.IsZero() == false)
             {
-                var offsetSq = Vector3.DistanceSquared2D(ownerPosition, creationSettings.Position);
-                var boundsSq = MathHelper.Square(Owner.Bounds.Radius + missileContext.Radius);
+                float offsetSq = Vector3.DistanceSquared2D(ownerPosition, creationSettings.Position);
+                float boundsSq = MathHelper.Square(Owner.Bounds.Radius + missileContext.Radius);
                 if (offsetSq > boundsSq && Owner.LineOfSightTo(creationSettings.Position) == false)
                     return false;
             }
@@ -304,19 +321,27 @@ namespace MHServerEmu.Games.Powers
             creationSettings.VariationSeed = powerApplication.FXRandomSeed;
             creationSettings.LocomotorHeightOverride = Math.Max(missileContext.Radius, creationSettings.Position.Z - RegionLocation.ProjectToFloor(region, creationSettings.Position).Z);
 
-            using var extraProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
-            SetExtraProperties(extraProperties, creationSettings, powerApplication, missileContext, contextIndex, missileProto);
+            using PropertyCollection extraProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            SetExtraProperties(extraProperties, creationSettings, powerApplication, missileContext, contextIndex, missilePrototype);
 
             creationSettings.Properties = extraProperties;
 
-            return CreateMissileInternal(creationSettings, missileContext, powerApplication, entityManager);
+            return Verify.IsTrue(CreateMissileInternal(creationSettings, missileContext, powerApplication, entityManager));
+        }
+
+        private static Vector3 GetCreationOffset(Vector3 direction, MissileCreationContextPrototype missileContext)
+        {
+            if (!Verify.IsNotNull(missileContext.CreationOffset)) return Vector3.Zero;
+            return Transform3.BuildTransform(Vector3.Zero, Orientation.FromDeltaVector(direction)) * missileContext.CreationOffset.ToVector3();
         }
 
         private void SetExtraProperties(PropertyCollection extraProperties, EntitySettings creationSettings, PowerApplication powerApplication, MissileCreationContextPrototype missileContext, int contextIndex, MissilePrototype missilePrototype)
         {
-            if (Owner == null || missileContext == null) return;
-            var ownerPosition = Owner.RegionLocation.Position;
-            var targetPosition = powerApplication.TargetPosition;
+            if (!Verify.IsNotNull(Owner)) return;
+            if (!Verify.IsNotNull(missileContext)) return;
+
+            Vector3 ownerPosition = Owner.RegionLocation.Position;
+            Vector3 targetPosition = powerApplication.TargetPosition;
 
             if (Owner is Missile)
             {
@@ -333,23 +358,27 @@ namespace MHServerEmu.Games.Powers
             float projectileSpeed = GetProjectileSpeed(ownerPosition, targetPosition);
             float range = GetRange();
 
-            var powerProto = MissilePowerPrototype;
-            if (powerProto == null) return;
+            MissilePowerPrototype powerPrototype = MissilePowerPrototype;
+            if (!Verify.IsNotNull(powerPrototype)) return;
 
             TransferMissilePierceChance(extraProperties);
 
-            if (powerProto.ExtraActivation != null)
-                if (powerProto.ExtraActivation is SecondaryActivateOnReleasePrototype secondary)
-                    if (secondary.RangeIncreasePerSecond != CurveId.Invalid)
-                    {
-                        var curve = GameDatabase.GetCurve(secondary.RangeIncreasePerSecond);
-                        if (curve == null) return;
-                        float timeRange = curve.GetAt(Rank);
-                        float activationTime = MathF.Min(
-                            (float)powerApplication.VariableActivationTime.TotalSeconds,
-                            (float)TimeSpan.FromMilliseconds(secondary.MaxReleaseTimeMS).TotalSeconds);
-                        range += timeRange * activationTime;
-                    }
+            if (powerPrototype.ExtraActivation != null &&
+                powerPrototype.ExtraActivation is SecondaryActivateOnReleasePrototype extraActivateOnRelease)
+            {
+                if (extraActivateOnRelease.RangeIncreasePerSecond != CurveId.Invalid)
+                {
+                    Curve curve = extraActivateOnRelease.RangeIncreasePerSecond.AsCurve();
+                    if (!Verify.IsNotNull(curve)) return;
+
+                    float rangeIncreasePerSecond = curve.GetAt(Rank);
+                    float activationTime = MathF.Min(
+                        (float)powerApplication.VariableActivationTime.TotalSeconds,
+                        (float)TimeSpan.FromMilliseconds(extraActivateOnRelease.MaxReleaseTimeMS).TotalSeconds);
+
+                    range += rangeIncreasePerSecond * activationTime;
+                }
+            }
 
             extraProperties[PropertyEnum.MissileBaseMoveSpeed] = projectileSpeed;
             extraProperties[PropertyEnum.MissileRange] = range;
@@ -358,19 +387,19 @@ namespace MHServerEmu.Games.Powers
             {
                 int lifespanOverride = missileContext.LifespanOverrideMS;
                 if (lifespanOverride != 0)
+                {
                     creationSettings.Lifespan = TimeSpan.FromMilliseconds(lifespanOverride);
+                }
                 else
                 {
-                    if (projectileSpeed == 0f)
-                    {
-                        // Projectile speed appears to be zero in some cases, need to figure out if this is intended.
-                        // When range / projectileSpeed = NaN, TimeSpan.FromSeconds() throws an exception.
-                        Logger.Warn($"SetExtraProperties(): projectileSpeed is 0 in [{powerProto}] belonging to [{Owner}].");
-                        projectileSpeed = 1f;
-                    }
+                    // Projectile speed appears to be zero in some cases, need to figure out if this is okay.
+                    // When range / projectileSpeed = NaN, TimeSpan.FromSeconds() throws an exception.
+                    TimeSpan lifespan = TimeSpan.Zero;
+                    if (Verify.IsTrue(projectileSpeed != 0f, $"Projectile speed is zero! power=[{powerPrototype}], owner=[{Owner}]"))
+                        lifespan = TimeSpan.FromSeconds(range / projectileSpeed);
 
                     float lifespanMult = missilePrototype.Locomotion.RotationSpeed > 0 ? 1.5f : 1.0f;
-                    creationSettings.Lifespan = TimeSpan.FromSeconds(range / projectileSpeed) * lifespanMult + missilePrototype.GetSeekDelayTime();
+                    creationSettings.Lifespan = lifespan * lifespanMult + missilePrototype.GetSeekDelayTime();
                 }
             }
 
@@ -379,8 +408,8 @@ namespace MHServerEmu.Games.Powers
 
             // CreatorPowerPrototype needs to be set after SerializeEntityPropertiesForPowerPayload so that it doesn't get overriden
             //extraProperties[PropertyEnum.CreatorPowerPrototype] = PrototypeDataRef;
+            
             extraProperties[PropertyEnum.PowerRank] = Rank;
-
             extraProperties.CopyProperty(Properties, PropertyEnum.CharacterLevel);
             extraProperties.CopyProperty(Properties, PropertyEnum.CombatLevel);
             extraProperties.CopyProperty(Properties, PropertyEnum.ItemLevel);
@@ -436,8 +465,7 @@ namespace MHServerEmu.Games.Powers
             extraProperties.CopyPropertyRange(Properties, PropertyEnum.DamageMultForPower);
 
             WorldEntity propertySourceEntity = GetPayloadPropertySourceEntity(GetUltimateOwner());
-            if (propertySourceEntity == null)
-                return;
+            if (!Verify.IsNotNull(propertySourceEntity)) return;
 
             SerializeEntityPropertiesForPowerPayload(propertySourceEntity, extraProperties);
 
@@ -449,8 +477,9 @@ namespace MHServerEmu.Games.Powers
             foreach (var kvp in Owner.Properties.IteratePropertyRange(PropertyEnum.MissilePierceChance))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId keywordRef);
-                var propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.MissilePierceChance);
-                if (keywordRef == (PrototypeId)propInfo.GetParamPrototypeBlueprint(0) || HasKeyword(GameDatabase.GetPrototype<KeywordPrototype>(keywordRef)))
+                PropertyInfo propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.MissilePierceChance);
+
+                if (keywordRef == (PrototypeId)propInfo.GetParamPrototypeBlueprint(0) || HasKeyword(keywordRef.As<KeywordPrototype>()))
                 {
                     extraProperties[PropertyEnum.MissilePierceChance] = kvp.Value;
                     break;
@@ -460,53 +489,61 @@ namespace MHServerEmu.Games.Powers
 
         private bool CreateMissileInternal(EntitySettings creationSettings, MissileCreationContextPrototype missileContext, PowerApplication powerApplication, EntityManager entityManager)
         {
+            if (!Verify.IsNotNull(missileContext)) return false;
+
             ulong regionId = creationSettings.RegionId;
-            if (missileContext == null) return false;
 
             // Clear region id so that client-independent missiles don't enter the world automatically
             // before we get the chance to set their replication channel to client-independent.
             if (missileContext.IndependentClientMovement) 
                 creationSettings.RegionId = 0;
 
-            if (entityManager.CreateEntity(creationSettings) is not Missile missile) return false;
+            Missile missileEntity = entityManager.CreateEntity(creationSettings) as Missile;
+            if (!Verify.IsNotNull(missileEntity)) return false;
 
             if (missileContext.IndependentClientMovement)
             {
                 // Add client independent replication channel to the missile manually for all players who
                 // were interested in the owner during the activation.
-                foreach (Player player in _interestedPlayers)
+                foreach (ulong playerId in _interestedPlayers)
                 {
+                    Player player = entityManager.GetEntity<Player>(playerId);
+                    if (player == null)
+                        continue;
+
                     AreaOfInterest aoi = player.AOI;
-                    aoi.AddClientIndependentEntity(missile);
+                    aoi.AddClientIndependentEntity(missileEntity);
                 }
 
                 // Restore regionId
                 creationSettings.RegionId = regionId;
-                var region = Game.RegionManager.GetRegion(regionId);
+                Region region = Game.RegionManager.GetRegion(regionId);
+                if (!Verify.IsNotNull(region)) return false;
 
                 // Add the missile to the world
-                missile.EnterWorld(region, creationSettings.Position, creationSettings.Orientation, creationSettings);
+                missileEntity.EnterWorld(region, creationSettings.Position, creationSettings.Orientation, creationSettings);
             }
 
-            var locomotor = missile.Locomotor;
-            if (locomotor == null) return false;
+            Locomotor locomotor = missileEntity.Locomotor;
+            if (!Verify.IsNotNull(locomotor)) return false;
 
             if (locomotor.Method == LocomotorMethod.MissileSeeking)
             {
-                if (missileContext.IndependentClientMovement) return false;
+                if (!Verify.IsTrue(missileContext.IndependentClientMovement == false)) return false;
 
-                var locomotionOptions = new LocomotionOptions { RepathDelay = TimeSpan.FromSeconds(0.5) };
+                LocomotionOptions locomotionOptions = new() { RepathDelay = TimeSpan.FromSeconds(0.5) };
                 if (missileContext.OneShot == false)
                     locomotionOptions.Flags |= LocomotionFlags.LocomotionNoEntityCollide;
 
-                if (missile.AIController == null)
+                if (missileEntity.AIController == null)
                 {
-                    ulong targetId = missile.Properties[PropertyEnum.MissileSeekTargetId];
-                    var target = entityManager.GetEntity<WorldEntity>(targetId);
+                    ulong targetId = missileEntity.Properties[PropertyEnum.MissileSeekTargetId];
+                    WorldEntity target = entityManager.GetEntity<WorldEntity>(targetId);
+
                     if (target != null && target.IsDead == false)
                     {
                         locomotor.FollowEntity(targetId, 0.0f, ref locomotionOptions);
-                        locomotor.FollowEntityMissingEvent.AddActionBack(missile.SeekTargetMissingAction);
+                        locomotor.FollowEntityMissingEvent.AddActionBack(missileEntity.SeekTargetMissingAction);
                     }
                     else
                     {
@@ -515,18 +552,25 @@ namespace MHServerEmu.Games.Powers
                 } 
                 else
                 {
-                    var style = TargetingStylePrototype;
+                    TargetingStylePrototype style = TargetingStylePrototype;
+
                     ulong targetId = powerApplication.TargetEntityId;
-                    if (targetId != Entity.InvalidId && (style.TargetingShape == TargetingShapeType.SingleTarget 
-                        || style.TargetingShape == TargetingShapeType.SingleTargetRandom))
+                    if (targetId != Entity.InvalidId &&
+                        (style.TargetingShape == TargetingShapeType.SingleTarget ||
+                        style.TargetingShape == TargetingShapeType.SingleTargetRandom))
                     {
-                        var target = entityManager.GetEntity<WorldEntity>(targetId);
-                        if (target != null) 
-                            missile.AIController?.SetTargetEntity(target);
+                        WorldEntity target = entityManager.GetEntity<WorldEntity>(targetId);
+                        if (target != null)
+                        {
+                            AIController aiController = missileEntity.AIController;
+                            if (!Verify.IsNotNull(aiController)) return false;
+                            aiController.SetTargetEntity(target);
+                        }
                     }
 
                     locomotor.MoveForward(ref locomotionOptions);
-                    var missileProto = missile.MissilePrototype;
+
+                    MissilePrototype missileProto = missileEntity.MissilePrototype;
                     if (missileProto.GetSeekDelayTime() > TimeSpan.Zero)
                         locomotor.SetMethod(LocomotorMethod.Default, missileProto.GetSeekDelaySpeed());
                 }
@@ -535,48 +579,48 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private static Vector3 CreationOffset(Vector3 direction, MissileCreationContextPrototype missileContext)
+        private bool ShouldScheduleMoreMissilesForCreation(MissilePowerPrototype missilePowerProto)
         {
-            if (missileContext.CreationOffset == null) return Vector3.Zero;
-            return Transform3.BuildTransform(Vector3.Zero, Orientation.FromDeltaVector(direction)) * missileContext.CreationOffset.ToVector3();
+            return CreationDelay > TimeSpan.Zero &&
+                (missilePowerProto.MissileAllowCreationAfterPwrEnds == false ||
+                TotalNumberOfMissilesCreated < MaxNumberOfMissilesToCreateTotal ||
+                MaxNumberOfMissilesToCreateTotal < 0);
         }
 
         private bool ScheduleCreationDelayEvent(TimeSpan delay, PowerApplication powerApplication)
         {
-            var scheduler = Game?.GameEventScheduler;
-            if (scheduler == null) return false;
-            if (_createMissileEvent.IsValid) return Logger.WarnReturn(false, $"ScheduleCreationDelayEvent called when event already scheduled. POWER={ToString()}");
+            EventScheduler scheduler = Game?.GameEventScheduler;
+            if (!Verify.IsNotNull(scheduler)) return false;
+
+            if (!Verify.IsTrue(_createMissileEvent.IsValid == false, $"ScheduleCreationDelayEvent called when event already scheduled. POWER={this}"))
+                return false;
+
             scheduler.ScheduleEvent(_createMissileEvent, delay, _pendingEvents);
             _createMissileEvent.Get().Initialize(this, powerApplication);
 
             return true;
         }
 
-        private bool ShouldScheduleMoreMissilesForCreation(MissilePowerPrototype missilePowerProto)
+        private void CancelCreationDelayEvent()
         {
-            return CreationDelay > TimeSpan.Zero
-                && (missilePowerProto.MissileAllowCreationAfterPwrEnds == false 
-                || TotalNumberOfMissilesCreated < MaxNumberOfMissilesToCreateTotal
-                || MaxNumberOfMissilesToCreateTotal < 0);
+            if (_createMissileEvent.IsValid == false)
+                return;
+
+            EventScheduler scheduler = Game?.GameEventScheduler;
+            if (!Verify.IsNotNull(scheduler)) return;
+
+            scheduler.CancelEvent(_createMissileEvent);
         }
 
-        public enum MissileCreateResult
+        private enum MissileCreateResult
         {
             Success,
             Failure,
-            SuccessFirst,
-        }
-
-        private void CancelCreationDelayEvent()
-        {
-            if (_createMissileEvent.IsValid)
-                Game?.GameEventScheduler?.CancelEvent(_createMissileEvent);
+            PartialSuccess,
         }
 
         private class CreateMissileDelayedEvent : ScheduledEvent
         {
-            private static readonly Logger Logger = LogManager.CreateLogger();
-
             private MissilePower _missilePower;
             private PowerApplication _powerApplication;
 
@@ -588,22 +632,25 @@ namespace MHServerEmu.Games.Powers
 
             public override bool OnTriggered()
             {
-                if (_missilePower == null) return Logger.WarnReturn(false, "OnTriggered(): _missilePower == null");
+                if (!Verify.IsNotNull(_missilePower)) return false;
 
-                var owner = _missilePower.Owner;
-                if (owner == null || (owner is Agent && owner.IsDead) || owner.IsInWorld == false) return false;
+                WorldEntity owner = _missilePower.Owner;
+                if (owner == null || (owner is Agent && owner.IsDead) || owner.IsInWorld == false)
+                    return false;
 
-                var missilePowerProto = _missilePower.MissilePowerPrototype;
-                if (missilePowerProto == null) return false;
+                MissilePowerPrototype missilePowerProto = _missilePower.MissilePowerPrototype;
+                if (!Verify.IsNotNull(missilePowerProto)) return false;
 
                 MissileCreateResult result = _missilePower.CreateMissileLooper(_powerApplication);
+                if (!Verify.IsTrue(result == MissileCreateResult.Success, $"CreateMissileDelayedEvent failed to create all its missiles! Result: {result}  Power: {_missilePower}  Owner: {owner}"))
+                    return false;
 
-                if (result != MissileCreateResult.Success) return Logger.WarnReturn(false, $"CreateMissileDelayedEvent failed to create all its missiles! " +
-                    $"Result: {result}  Power: {_missilePower}  Owner: {owner}");
-
-                if (_missilePower.ShouldScheduleMoreMissilesForCreation(missilePowerProto) 
-                    && _missilePower.ScheduleCreationDelayEvent(_missilePower.CreationDelay, _powerApplication) == false)
-                        return Logger.WarnReturn(false, $"Failed to schedule a missile creation event Power:{_missilePower}");
+                if (_missilePower.ShouldScheduleMoreMissilesForCreation(missilePowerProto))
+                {
+                    if (!Verify.IsTrue(_missilePower.ScheduleCreationDelayEvent(_missilePower.CreationDelay, _powerApplication),
+                        $"Failed to schedule a missile creation event Power:{_missilePower}"))
+                        return false;
+                }
 
                 return true;
             }

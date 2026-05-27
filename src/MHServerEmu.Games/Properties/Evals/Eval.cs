@@ -19,8 +19,6 @@ namespace MHServerEmu.Games.Properties.Evals
 {        
     public class Eval
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public static bool ValidateEvalContextsForField(EvalPrototype[] evals, HashSet<EvalContext> validContexts, string contextName)
         {
             using var contextsHandle = HashSetPool<EvalContext>.Instance.Get(out HashSet<EvalContext> contexts);

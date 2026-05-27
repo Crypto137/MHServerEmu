@@ -30,10 +30,12 @@ namespace MHServerEmu.Games.Powers.Conditions
         {
             Condition condition;
 
-            if (_conditionStack.Count == 0 && AllocateChunk() == false)
+            if (_conditionStack.Count == 0)
             {
-                Logger.Warn($"Get(): Exceeded maximum capacity ({this})");
-                condition = new();
+                if (Verify.IsTrue(AllocateChunk(), LoggingLevel.Error, $"Exceeded maximum pool capacity ({this})"))
+                    condition = _conditionStack.Pop();
+                else
+                    condition = new();
             }
             else
             {
@@ -42,14 +44,13 @@ namespace MHServerEmu.Games.Powers.Conditions
 
             condition.IsInPool = false;
             _activeConditions.Add(condition);
-            //Logger.Debug($"Get(): {this}");
             return condition;
         }
 
         public bool Return(Condition condition)
         {
-            if (_activeConditions.Remove(condition) == false)
-                return Logger.WarnReturn(false, $"Return(): Condition [{condition}] is not an active condition tracked by this pool");  
+            if (!Verify.IsTrue(_activeConditions.Remove(condition), LoggingLevel.Error, $"Condition [{condition}] is not an active condition tracked by this pool"))
+                return false;
 
             if (_conditionStack.Count >= _allocatedCount)
                 return false;

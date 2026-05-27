@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using MHServerEmu.Core.Collections;
+﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -12,8 +11,6 @@ namespace MHServerEmu.Games.Powers
 {
     public class PowerResults : PowerEffectsPacket
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private List<Condition> _conditionAddList;
         private List<ulong> _conditionRemoveList;
 
@@ -131,19 +128,17 @@ namespace MHServerEmu.Games.Powers
                 Flags &= ~flag;
         }
 
-        public bool AddConditionToAdd(Condition condition)
+        public void AddConditionToAdd(Condition condition)
         {
-            if (condition == null) return Logger.WarnReturn(false, "AddConditionToAdd(): condition == null");
+            if (!Verify.IsNotNull(condition)) return;
             _conditionAddList ??= new();
             _conditionAddList.Add(condition);
-            return true;
         }
 
-        public bool AddConditionToRemove(ulong conditionId)
+        public void AddConditionToRemove(ulong conditionId)
         {
             _conditionRemoveList ??= new();
             _conditionRemoveList.Add(conditionId);
-            return true;
         }
 
         public bool HasMeaningfulResults()

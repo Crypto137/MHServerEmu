@@ -1,6 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -39,12 +41,12 @@ namespace MHServerEmu.Games.Powers
         public PowerUseResult CanTrigger(PowerActivationSettingsFlags flags = PowerActivationSettingsFlags.None)
         {
             PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "CanTrigger(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return PowerUseResult.GenericError;
 
             if (Segment.IsNearZero(LiveTuningManager.GetLivePowerTuningVar(powerProto, PowerTuningVar.ePTV_PowerEnabled)))
                 return PowerUseResult.DisabledByLiveTuning;
 
-            if (Owner == null) return Logger.WarnReturn(PowerUseResult.GenericError, "CanTrigger(): Owner == null");
+            if (!Verify.IsNotNull(Owner)) return PowerUseResult.GenericError;
 
             if (Owner.IsDead && IsUseableWhileDead() == false)
                 return PowerUseResult.OwnerDead;
@@ -85,12 +87,12 @@ namespace MHServerEmu.Games.Powers
         public bool CheckCanTriggerEval()
         {
             PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
 
             if (powerProto.EvalCanTrigger == null)
                 return true;
 
-            if (Owner == null) return Logger.WarnReturn(false, "Owner == null");
+            if (!Verify.IsNotNull(Owner)) return false;
 
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.Game = Game;
@@ -105,13 +107,13 @@ namespace MHServerEmu.Games.Powers
         public PowerPositionSweepResult PowerPositionSweep(ref RegionLocation regionLocation, Vector3 targetPosition, ulong targetId,
             ref Vector3? resultPosition, bool forceDoNotMoveToExactTargetLocation = false, float rangeOverride = 0f)
         {
-            if (Owner == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): Owner == null");
+            if (!Verify.IsNotNull(Owner)) return PowerPositionSweepResult.Error;
 
             Region region = regionLocation.Region;
-            if (region == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): region == null");
+            if (!Verify.IsNotNull(region)) return PowerPositionSweepResult.Error;
 
             PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return PowerPositionSweepResult.Error;
 
             resultPosition = targetPosition;
 
@@ -120,7 +122,7 @@ namespace MHServerEmu.Games.Powers
                 if (movementPowerProto.PowerMovementPathPct > 0f || movementPowerProto.TeleportMethod != TeleportMethodType.None)
                 {
                     Locomotor locomotor = Owner.Locomotor;
-                    if (locomotor == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): locomotor == null");
+                    if (!Verify.IsNotNull(locomotor)) return PowerPositionSweepResult.Error;
 
                     bool doNotMoveToExactTargetLocation = forceDoNotMoveToExactTargetLocation || movementPowerProto.MoveToExactTargetLocation == false;
                     float range = Segment.IsNearZero(rangeOverride) ? GetRange() : rangeOverride;
@@ -155,11 +157,11 @@ namespace MHServerEmu.Games.Powers
 
         public bool IsInRange(WorldEntity target, RangeCheckType checkType)
         {
-            if (target == null) return Logger.WarnReturn(false, "IsInRange(): target == null");
+            if (!Verify.IsNotNull(target)) return false;
 
             PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
-            if (Owner == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
+            if (!Verify.IsNotNull(Owner)) return false;
 
             float range = GetRange();
             Vector3 userPosition = Owner.RegionLocation.Position;
@@ -173,8 +175,8 @@ namespace MHServerEmu.Games.Powers
         public bool IsInRange(Vector3 targetPosition, RangeCheckType checkType)
         {
             PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
-            if (Owner == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
+            if (!Verify.IsNotNull(Owner)) return false;
 
             float range = GetRange();
             Vector3 userPosition = Owner.RegionLocation.Position;
@@ -185,9 +187,9 @@ namespace MHServerEmu.Games.Powers
 
         public bool IsValidTarget(WorldEntity target)
         {
-            if (Owner == null) return Logger.WarnReturn(false, "IsValidTarget(): Owner == null");
+            if (!Verify.IsNotNull(Owner)) return false;
             PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "IsValidTarget(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
             return IsValidTarget(powerProto, Owner, Owner.Alliance, target);
         }
 
@@ -224,7 +226,7 @@ namespace MHServerEmu.Games.Powers
                 return true;
 
             Game game = target.Game;
-            if (game == null) return Logger.WarnReturn(false, "ValidateAOETarget(): game == null");
+            if (!Verify.IsNotNull(game)) return false;
 
             if (user == null)
             {
@@ -241,7 +243,10 @@ namespace MHServerEmu.Games.Powers
 
         public bool IsValidSituationalTarget(WorldEntity target)
         {
-            return _situationalComponent != null;
+            if (!Verify.IsNotNull(_situationalComponent, $"Trying to validate situational target for power [{this}] but it doesn't have a situational behavior!"))
+                return false;
+
+            return _situationalComponent.IsTriggeringSituation(target);
         }
 
         /// <summary>
@@ -282,7 +287,7 @@ namespace MHServerEmu.Games.Powers
                 return (false, true);
 
             TargetingReachPrototype reachPrototype = powerProto.GetTargetingReach();
-            if (reachPrototype == null) return Logger.WarnReturn((false, true), "IsValidTargetNoCasterEntityChecks(): reachPrototype == null");
+            if (!Verify.IsNotNull(reachPrototype)) return (false, true);
 
             if ((reachPrototype.EntityHealthState == EntityHealthState.Alive && target.IsDead) ||
                 (reachPrototype.EntityHealthState == EntityHealthState.Dead && target.IsDead == false))
@@ -292,7 +297,7 @@ namespace MHServerEmu.Games.Powers
 
             // Validate based on targeting style
             TargetingStylePrototype stylePrototype = powerProto.GetTargetingStyle();
-            if (stylePrototype == null) return Logger.WarnReturn((false, true), "IsValidTargetNoCasterEntityChecks(): stylePrototype == null");
+            if (!Verify.IsNotNull(stylePrototype)) return (false, true);
 
             if (stylePrototype.TargetingShape == TargetingShapeType.Self)
             {
@@ -330,7 +335,7 @@ namespace MHServerEmu.Games.Powers
             // but we are calling it IsValidTargetInternal() for clarity and consistency.
 
             TargetingReachPrototype reachPrototype = powerProto.GetTargetingReach();
-            if (reachPrototype == null) return Logger.WarnReturn(false, "IsValidTargetInternal(): reachPrototype == null");
+            if (!Verify.IsNotNull(reachPrototype)) return false;
 
             // Height
             switch (reachPrototype.TargetingHeightType)
@@ -375,7 +380,7 @@ namespace MHServerEmu.Games.Powers
 
             // Find creators of the owner entity (if there are any)
             Game game = target.Game;
-            if (game == null) return Logger.WarnReturn(false, "game == null");
+            if (!Verify.IsNotNull(game)) return false;
 
             Agent agentUser = user as Agent;
             Agent creator = null;
@@ -440,9 +445,10 @@ namespace MHServerEmu.Games.Powers
             // Check situational component
             if (powerProto.SituationalComponent != null && creator != null)
             {
-                // NOTE: Is this correct? Shouldn't it be the opposite?
+                // It may appear weird that IsValidSituationalTarget() being true results in this method returning false,
+                // but this is client-accurate and has been the case since at least 1.10.
                 Power power = creator.GetPower(powerProto.DataRef);
-                if (power != null && power.IsSituationalPower && power.IsValidSituationalTarget(target))
+                if (power != null && Verify.IsTrue(power.IsSituationalPower) && power.IsValidSituationalTarget(target))
                     return false;
             }
 
@@ -461,7 +467,7 @@ namespace MHServerEmu.Games.Powers
             AlliancePrototype userAllianceProto, WorldEntity creator, WorldEntity ultimateCreator)
         {
             TargetingReachPrototype targetingReachProto = powerProto.GetTargetingReach();
-            if (targetingReachProto == null) return Logger.WarnReturn(false, "TargetMeetsAISpecificConstraints(): targetingReachProto == null");
+            if (!Verify.IsNotNull(targetingReachProto)) return false;
 
             // Check user / creator / ultimate creator
             if (userEntityId == target.Id)
@@ -504,8 +510,8 @@ namespace MHServerEmu.Games.Powers
             if (restrictedToPlayerGuid != 0)
             {
                 Player player = avatarCreator.GetOwnerOfType<Player>();
-                if (player == null) return Logger.WarnReturn(false,
-                    $"TargetMeetsPlayerSpecificConstraints(): An avatar is trying to cast a power without an owning player!\nAvatar: [{avatarCreator}]");
+                if (!Verify.IsNotNull(player, $"An avatar is trying to cast a power without an owning player!\nAvatar: [{avatarCreator}]"))
+                    return false;
 
                 if (player.DatabaseUniqueId != restrictedToPlayerGuid)
                     return false;
@@ -555,8 +561,7 @@ namespace MHServerEmu.Games.Powers
 
         private static bool TargetMeetsRestrictionPropertyConstraints(WorldEntity target, PowerPrototype powerProto)
         {
-            if (powerProto.Properties == null)
-                return Logger.WarnReturn(false, "TargetMeetsRestrictionPropertyConstraints(): powerProto.Properties == null");
+            if (!Verify.IsNotNull(powerProto.Properties)) return false;
 
             // Check TargetRestriction properties
             foreach (var kvp in powerProto.Properties.IteratePropertyRange(PropertyEnum.TargetRestriction))
@@ -689,9 +694,7 @@ namespace MHServerEmu.Games.Powers
                     case TargetRestrictionType.DoesNotHaveKeyword:
                         {
                             Property.FromParam(kvp.Key, 1, out PrototypeId keywordProtoRef);
-
-                            if (keywordProtoRef == PrototypeId.Invalid)
-                                return Logger.WarnReturn(false, "TargetMeetsRestrictionPropertyConstraints(): keywordProtoRef == PrototypeId.Invalid");
+                            if (!Verify.IsTrue(keywordProtoRef != PrototypeId.Invalid)) return false;
 
                             bool hasKeyword = (DataDirectory.Instance.PrototypeIsA<EntityKeywordPrototype>(keywordProtoRef) && target.HasKeyword(keywordProtoRef))
                                 || (DataDirectory.Instance.PrototypeIsA<PowerKeywordPrototype>(keywordProtoRef) && target.HasConditionWithKeyword(keywordProtoRef));
@@ -715,9 +718,7 @@ namespace MHServerEmu.Games.Powers
                     case TargetRestrictionType.IsPrototypeOf:
                         {
                             Property.FromParam(kvp.Key, 2, out PrototypeId entityRef);
-                            
-                            if (entityRef == PrototypeId.Invalid)
-                                return Logger.WarnReturn(false, "TargetMeetsRestrictionPropertyConstraints(): entityRef == PrototypeId.Invalid");
+                            if (!Verify.IsTrue(entityRef != PrototypeId.Invalid)) return false;
 
                             if (target.PrototypeDataRef != entityRef)
                                 return false;
@@ -731,8 +732,7 @@ namespace MHServerEmu.Games.Powers
                             Property.FromParam(kvp.Key, 3, out PrototypeId propertyInfoProtoRef);
 
                             PropertyEnum propertyEnum = GameDatabase.PropertyInfoTable.GetPropertyEnumFromPrototype(propertyInfoProtoRef);
-                            if (propertyEnum == PropertyEnum.Invalid)
-                                return Logger.WarnReturn(false, "TargetMeetsRestrictionPropertyConstraints(): propertyEnum == PropertyEnum.Invalid");
+                            if (!Verify.IsTrue(propertyEnum != PropertyEnum.Invalid)) return false;
 
                             if (targetRestrictionType == TargetRestrictionType.HasProperty && target.Properties.HasProperty(propertyEnum) == false)
                                 return false;
@@ -796,7 +796,7 @@ namespace MHServerEmu.Games.Powers
                 return true;
 
             TargetingStylePrototype targetingPrototype = powerProto.GetTargetingStyle();
-            if (targetingPrototype == null) return Logger.WarnReturn(false, "IsInRangeInternal(): targetingPrototype == null");
+            if (!Verify.IsNotNull(targetingPrototype)) return false;
 
             if (targetingPrototype.TargetingShape == TargetingShapeType.Self)
                 return true;
@@ -828,7 +828,7 @@ namespace MHServerEmu.Games.Powers
 
         private static bool IsInApplicationRange(WorldEntity target, in Vector3 userPosition, ulong userEntityId, float range, PowerPrototype powerProto)
         {
-            if (target == null) return Logger.WarnReturn(false, "IsInApplicationRange(): target == null");
+            if (!Verify.IsNotNull(target)) return false;
 
             float userRadius = 0f;
             if (userEntityId != Entity.InvalidId)
@@ -847,13 +847,13 @@ namespace MHServerEmu.Games.Powers
         private PowerPositionSweepResult PowerPositionSweepInternal(ref RegionLocation regionLocation, Vector3 targetPosition,
             ulong targetId, ref Vector3? resultPosition, bool losCheck, bool losCheckAlongGround)
         {
-            if (Owner == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): Owner == null");
+            if (!Verify.IsNotNull(Owner)) return PowerPositionSweepResult.Error;
 
             Region region = regionLocation.Region;
-            if (region == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): region == null");
+            if (!Verify.IsNotNull(region)) return PowerPositionSweepResult.Error;
 
             PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return PowerPositionSweepResult.Error;
 
             // This is used multiple times, so we do a cast for it now
             MovementPowerPrototype movementPowerProto = powerProto as MovementPowerPrototype;
@@ -877,7 +877,7 @@ namespace MHServerEmu.Games.Powers
             if (losCheck == false && movementPowerProto != null)
             {
                 Locomotor locomotor = Owner.Locomotor;
-                if (locomotor == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): locomotor == null");
+                if (!Verify.IsNotNull(locomotor)) return PowerPositionSweepResult.Error;
 
                 bool doNotMoveToExactTargetLocation = movementPowerProto.MoveToExactTargetLocation == false;
 
@@ -918,8 +918,7 @@ namespace MHServerEmu.Games.Powers
             }
             else if (powerProto is SummonPowerPrototype summonPowerProto && losCheck == false)
             {
-                if (summonPowerProto.SummonEntityContexts == null)
-                    return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): summonPowerProto.SummonEntityContexts == null");
+                if (!Verify.IsTrue(summonPowerProto.SummonEntityContexts.HasValue())) return PowerPositionSweepResult.Error;
 
                 WorldEntityPrototype nonHotspotSummonEntityPrototype = null;
                 float maximumSphereRadius = 0f;
@@ -927,13 +926,11 @@ namespace MHServerEmu.Games.Powers
                 for (int i = 0; i < summonPowerProto.SummonEntityContexts.Length; i++)
                 {
                     WorldEntityPrototype summonedPrototype = summonPowerProto.GetSummonEntity(i, Owner.GetOriginalWorldAsset());
-                    if (summonedPrototype == null)
-                        return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): summonedPrototype == null");
+                    if (!Verify.IsNotNull(summonedPrototype)) return PowerPositionSweepResult.Error;
 
                     if (summonedPrototype is not HotspotPrototype)
                     {
-                        if (summonedPrototype.Bounds == null)
-                            return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): summonedPrototype.Bounds == null");
+                        if (!Verify.IsNotNull(summonedPrototype.Bounds)) return PowerPositionSweepResult.Error;
 
                         float sphereRadius = summonedPrototype.Bounds.GetSphereRadius();
                         if (sphereRadius > maximumSphereRadius)
@@ -1020,7 +1017,7 @@ namespace MHServerEmu.Games.Powers
         private bool CheckEnduranceCost()
         {
             PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CheckEnduranceCost(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
 
             // Only avatars have endurance costs
             if (Owner.Prototype is not AvatarPrototype avatarProto)
@@ -1060,7 +1057,7 @@ namespace MHServerEmu.Games.Powers
                     {
                         // NOTE: The client calls GetEnduranceCost() here again, but it makes no sense since we are doing it above already
                         float timeBetweenApplicationsSeconds = (float)GetChannelLoopTime().TotalSeconds;
-                        if (timeBetweenApplicationsSeconds <= 0f) return Logger.WarnReturn(false, "CheckEnduranceCost(): timeBetweenApplicationsSeconds <= 0f");
+                        if (!Verify.IsTrue(timeBetweenApplicationsSeconds > 0f)) return false;
                         recurringCost = cost / timeBetweenApplicationsSeconds;
                     }
                     else
@@ -1098,7 +1095,7 @@ namespace MHServerEmu.Games.Powers
 
         private bool CanStartCooldowns()
         {
-            if (Owner == null) return Logger.WarnReturn(false, "Owner == null");
+            if (!Verify.IsNotNull(Owner)) return false;
 
             if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
             {
@@ -1124,7 +1121,7 @@ namespace MHServerEmu.Games.Powers
         private bool CanBeUserCanceledNow()
         {
             PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CanBeUserCanceledNow(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
 
             if (IsCancelledOnRelease() || IsRecurring())
                 return true;
@@ -1132,7 +1129,7 @@ namespace MHServerEmu.Games.Powers
             if (powerProto.CanBeInterrupted == false)
                 return false;
 
-            if (_endPowerEvent.IsValid && _endPowerEvent.Get().Flags.HasFlag(EndPowerFlags.ChanneledLoopEnd))
+            if (_powerEndEvent.IsValid && _powerEndEvent.Get().Flags.HasFlag(EndPowerFlags.ChanneledLoopEnd))
                 return false;
 
             return true;
@@ -1140,7 +1137,7 @@ namespace MHServerEmu.Games.Powers
 
         private bool CanEndPower(EndPowerFlags flags)
         {
-            if (Owner == null) return Logger.WarnReturn(true, "CanEndPower(): Owner == null");
+            if (!Verify.IsNotNull(Owner)) return true;
 
             if (flags.HasFlag(EndPowerFlags.Unassign) ||
                 flags.HasFlag(EndPowerFlags.Interrupting) ||

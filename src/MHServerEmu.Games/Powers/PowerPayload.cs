@@ -24,13 +24,16 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Powers
 {
+    public interface IPowerPayloadDeliverCallback
+    {
+        public void OnDeliverPayload(PowerPayload payload);
+    }
+
     /// <summary>
     /// Snapshots the state of a <see cref="Power"/> and its owner and calculates effects to be applied as <see cref="PowerResults"/>.
     /// </summary>
     public class PowerPayload : PowerEffectsPacket
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         [ThreadStatic]
         public static PowerPayload ReusableTickerPayload;
 
@@ -58,7 +61,7 @@ namespace MHServerEmu.Games.Powers
         public ulong RegionId { get; private set; }
         public AlliancePrototype OwnerAlliance { get; private set; }
         public TimeSpan ExecutionTime { get; private set; }
-        public Action<PowerPayload> DeliverAction { get; set; }
+        public IPowerPayloadDeliverCallback DeliverCallback { get; set; }
         public EventGroup PendingEvents { get; } = new();
 
         public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; }
@@ -76,7 +79,7 @@ namespace MHServerEmu.Games.Powers
         /// Initializes this <see cref="PowerPayload"/> from a <see cref="PowerApplication"/> and snapshots
         /// the state of the <see cref="Power"/> and its owner.
         /// </summary>
-        public bool Init(Power power, PowerApplication powerApplication)
+        public void Init(Power power, PowerApplication powerApplication)
         {
             Game = power.Game;
             PowerPrototype = power.Prototype;
@@ -93,7 +96,7 @@ namespace MHServerEmu.Games.Powers
 
             // All payloads have to have valid owners on initialization
             WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
-            if (powerOwner == null) return Logger.WarnReturn(false, "powerOwner == null");
+            if (!Verify.IsNotNull(powerOwner)) return;
 
             _powerOwnerProto = powerOwner.WorldEntityPrototype;
 
@@ -128,7 +131,7 @@ namespace MHServerEmu.Games.Powers
 
             // Snapshot properties of the power and its owner
             WorldEntity propertySourceEntity = power.GetPayloadPropertySourceEntity(ultimateOwner);
-            if (propertySourceEntity == null) return Logger.WarnReturn(false, "Init(): propertySourceEntity == null");
+            if (!Verify.IsNotNull(propertySourceEntity)) return;
 
             // Save property source owner id for later calculations
             _propertySourceEntityId = propertySourceEntity != powerOwner ? propertySourceEntity.Id : powerOwner.Id;
@@ -235,7 +238,7 @@ namespace MHServerEmu.Games.Powers
             // Snapshot damage for conversion (e.g. barrier primary resources)
             if (power.Properties.HasProperty(PropertyEnum.DamageConvertToCondition))
             {
-                if (powerApplication.PowerResults != null)
+                if (Verify.IsNotNull(powerApplication.PowerResults))
                 {
                     foreach (var kvp in powerApplication.PowerResults.Properties.IteratePropertyRange(PropertyEnum.Damage))
                     {
@@ -243,20 +246,14 @@ namespace MHServerEmu.Games.Powers
                         Properties[PropertyEnum.DamageIncoming, damageType] = kvp.Value;
                     }
                 }
-                else
-                {
-                    Logger.Warn("Init(): powerApplication.PowerResults == null");
-                }
             }
 
             power.OnPayloadInit(this);
-
-            return true;
         }
 
         public void OnDeliverPayload()
         {
-            DeliverAction?.Invoke(this);
+            DeliverCallback?.OnDeliverPayload(this);
         }
 
         /// <summary>
@@ -348,10 +345,10 @@ namespace MHServerEmu.Games.Powers
         /// <remarks>
         /// Affected properties: Damage, DamageBaseUnmodified.
         /// </remarks>
-        private bool CalculateInitialDamage(PropertyCollection powerProperties)
+        private void CalculateInitialDamage(PropertyCollection powerProperties)
         {
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateDamage(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return;
 
             for (int damageType = 0; damageType < (int)DamageType.NumDamageTypes; damageType++)
             {
@@ -398,8 +395,6 @@ namespace MHServerEmu.Games.Powers
 
                 Properties[PropertyEnum.DamageBaseUnmodified, damageType] = damageBaseUnmodified;
             }
-
-            return true;
         }
 
         /// <summary>
@@ -408,10 +403,10 @@ namespace MHServerEmu.Games.Powers
         /// <remarks>
         /// Affected properties: PayloadDamageMultTotal, PayloadDamagePctModifierTotal, and PayloadDamageRatingTotal.
         /// </remarks>
-        private bool CalculateInitialDamageBonuses(Power power)
+        private void CalculateInitialDamageBonuses(Power power)
         {
             WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(_propertySourceEntityId);
-            if (powerOwner == null) return Logger.WarnReturn(false, "CalculateInitialDamageBonuses(): powerOwner == null");
+            if (!Verify.IsNotNull(powerOwner)) return;
 
             PropertyCollection ownerProperties = powerOwner.Properties;
 
@@ -453,11 +448,8 @@ namespace MHServerEmu.Games.Powers
                 foreach (var kvp in ownerProperties.IteratePropertyRange(propertyEnum))
                 {
                     Property.FromParam(kvp.Key, 0, out PrototypeId protoRefToCheck);
-                    if (protoRefToCheck == PrototypeId.Invalid)
-                    {
-                        Logger.Warn($"CalculateInitialDamageBonuses(): Invalid param proto ref for {propertyEnum}");
+                    if (!Verify.IsTrue(protoRefToCheck != PrototypeId.Invalid))
                         continue;
-                    }
 
                     // Filter power-specific bonuses
                     if (propertyEnum == PropertyEnum.DamageMultForPower || propertyEnum == PropertyEnum.DamagePctBonusForPower ||
@@ -507,11 +499,8 @@ namespace MHServerEmu.Games.Powers
                 foreach (var kvp in ownerProperties.IteratePropertyRange(PropertyEnum.DamageMultPowerCdKwd))
                 {
                     Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
-                    if (keywordProtoRef == PrototypeId.Invalid)
-                    {
-                        Logger.Warn($"CalculateInitialDamageBonuses(): Invalid keyword param proto ref for {kvp.Key.Enum}");
+                    if (!Verify.IsTrue(keywordProtoRef != PrototypeId.Invalid))
                         continue;
-                    }
 
                     KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
 
@@ -544,8 +533,6 @@ namespace MHServerEmu.Games.Powers
                 float damageRatingBonusByType = ownerProperties[PropertyEnum.DamageRatingBonusByType, damageType];
                 Properties.AdjustProperty(damageRatingBonusByType, new(PropertyEnum.PayloadDamageRatingTotal, damageType));
             }
-
-            return true;
         }
 
         /// <summary>
@@ -554,10 +541,10 @@ namespace MHServerEmu.Games.Powers
         /// <remarks>
         /// Affected properties: PayloadDamagePctWeakenTotal.
         /// </remarks>
-        private bool CalculateInitialDamagePenalties()
+        private void CalculateInitialDamagePenalties()
         {
             WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
-            if (powerOwner == null) return Logger.WarnReturn(false, "CalculateOwnerDamagePenalties(): powerOwner == null");
+            if (!Verify.IsNotNull(powerOwner)) return;
 
             // Apply weaken pct (maybe we should a separate CalculateOwnerDamagePenalties method for this?)
 
@@ -566,11 +553,8 @@ namespace MHServerEmu.Games.Powers
             foreach (var kvp in powerOwner.Properties.IteratePropertyRange(PropertyEnum.DamagePctWeakenForPowerKeyword))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
-                if (keywordProtoRef == PrototypeId.Invalid)
-                {
-                    Logger.Warn($"CalculateOwnerDamagePenalties(): Invalid param keyword proto ref for {keywordProtoRef}");
+                if (!Verify.IsTrue(keywordProtoRef != PrototypeId.Invalid))
                     continue;
-                }
 
                 if (HasKeyword(keywordProtoRef.As<KeywordPrototype>()) == false)
                     continue;
@@ -579,7 +563,6 @@ namespace MHServerEmu.Games.Powers
             }
 
             Properties[PropertyEnum.PayloadDamagePctWeakenTotal, DamageType.Any] = damagePctWeaken;
-            return true;
         }
 
         /// <summary>
@@ -588,7 +571,7 @@ namespace MHServerEmu.Games.Powers
         /// <remarks>
         /// Affected properties: Healing, HealingBasePct.
         /// </remarks>
-        private bool CalculateInitialHealing(PropertyCollection powerProperties)
+        private void CalculateInitialHealing(PropertyCollection powerProperties)
         {
             // Calculate healing
             float healingBase = powerProperties[PropertyEnum.HealingBase];
@@ -604,8 +587,6 @@ namespace MHServerEmu.Games.Powers
             // Set properties
             Properties[PropertyEnum.Healing] = healing;
             Properties.CopyProperty(powerProperties, PropertyEnum.HealingBasePct);
-
-            return true;
         }
 
         /// <summary>
@@ -614,7 +595,7 @@ namespace MHServerEmu.Games.Powers
         /// <remarks>
         /// Affected properties: EnduranceChange, SecondaryResourceChange.
         /// </remarks>
-        private bool CalculateInitialResourceChange(PropertyCollection powerProperties)
+        private void CalculateInitialResourceChange(PropertyCollection powerProperties)
         {
             // Primary resource / endurance (spirit, etc.)
             foreach (var kvp in powerProperties.IteratePropertyRange(PropertyEnum.EnduranceChangeBase))
@@ -625,8 +606,6 @@ namespace MHServerEmu.Games.Powers
 
             // Secondary resource
             Properties[PropertyEnum.SecondaryResourceChange] = powerProperties[PropertyEnum.SecondaryResourceChangeBase];
-
-            return true;
         }
 
         #endregion
@@ -649,11 +628,11 @@ namespace MHServerEmu.Games.Powers
         /// <summary>
         /// Calculates damage for a tick of an over time effect.
         /// </summary>
-        private bool CalculateOverTimeDamage(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
+        private void CalculateOverTimeDamage(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
         {
             // DoTs require a full power payload for calculations
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateOverTimeDamage(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return;
 
             long targetHealthMax = target.Properties[PropertyEnum.HealthMax];
 
@@ -696,8 +675,6 @@ namespace MHServerEmu.Games.Powers
                 if (damageUnmodified > 0f)
                     Properties[PropertyEnum.DamageBaseUnmodified, damageType] = damageUnmodified;
             }
-
-            return true;
         }
 
         /// <summary>
@@ -887,7 +864,7 @@ namespace MHServerEmu.Games.Powers
             CalculateResultDamageAccumulation(targetResults);
         }
 
-        private bool CalculateResultDamage(PowerResults results, WorldEntity target)
+        private void CalculateResultDamage(PowerResults results, WorldEntity target)
         {
             Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
             damageValues.Clear();
@@ -927,14 +904,14 @@ namespace MHServerEmu.Games.Powers
 
             // Don't do other calculations if there is no base damage
             if (hasBaseDamage == false)
-                return true;
+                return;
 
             // Check if this target can be affected by this payload
             if (CheckUnaffected(target))
             {
                 // Stop damage calculations if unaffected
                 results.SetFlag(PowerResultFlags.Unaffected, true);
-                return true;
+                return;
             }
 
             // Check crit / brutal strike chance
@@ -1035,11 +1012,8 @@ namespace MHServerEmu.Games.Powers
                     _                   => ProcTriggerType.None
                 };
 
-                if (triggerType == ProcTriggerType.None)
-                {
-                    Logger.Warn("CalculateResultDamage(): triggerType == ProcTriggerType.None");
+                if (!Verify.IsTrue(triggerType != ProcTriggerType.None))
                     continue;
-                }
 
                 target.TryActivateOnGotDamagedProcs(triggerType, results, -damageByType);
             }
@@ -1090,26 +1064,21 @@ namespace MHServerEmu.Games.Powers
 
                 results.SetFlag(PowerResultFlags.NoDamage, hasResultDamage == false);
             }
-
-            return true;
         }
 
-        private bool CalculateResultDamageCriticalModifier(PowerResults results, WorldEntity target)
+        private void CalculateResultDamageCriticalModifier(PowerResults results, WorldEntity target)
         {
-            // Not critical
             if (results.TestFlag(PowerResultFlags.Critical) == false && results.TestFlag(PowerResultFlags.SuperCritical) == false)
-                return true;
+                return;
 
             float critDamageMult = Power.GetCritDamageMult(Properties, target, results.TestFlag(PowerResultFlags.SuperCritical));
             ApplyDamageMultiplier(results.Properties, critDamageMult);
-
-            return true;
         }
 
-        private bool CalculateResultDamageRankBonus(PowerResults results, WorldEntity target)
+        private void CalculateResultDamageRankBonus(PowerResults results, WorldEntity target)
         {
             RankPrototype targetRankProto = target.GetRankPrototype();
-            if (targetRankProto == null) return Logger.WarnReturn(false, "CalculateResultDamageRankModifier(): targetRankProto == null");
+            if (!Verify.IsNotNull(targetRankProto)) return;
 
             float damageMult = 0f;
             float damagePct = 0f;
@@ -1139,8 +1108,6 @@ namespace MHServerEmu.Games.Powers
 
             if (damageRating != 0f)
                 results.Properties.AdjustProperty(damageRating, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
-
-            return true;
         }
 
         private static void CalculateResultDamageRankBonusHelper(ref float value, PropertyCollection properties, PropertyEnum propertyEnum, RankPrototype targetRankProto)
@@ -1149,11 +1116,8 @@ namespace MHServerEmu.Games.Powers
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId paramRankProtoRef);
                 RankPrototype paramRankProto = paramRankProtoRef.As<RankPrototype>();
-                if (paramRankProto == null)
-                {
-                    Logger.Warn("CalculateResultDamageRankModifierHelper(): paramRankProto == null");
+                if (!Verify.IsNotNull(paramRankProto))
                     continue;
-                }
 
                 if (paramRankProto.Rank == targetRankProto.Rank)
                     value += kvp.Value;
@@ -1194,10 +1158,10 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        private bool CalculateResultDamageTargetKeywordBonus(PowerResults results, WorldEntity target)
+        private void CalculateResultDamageTargetKeywordBonus(PowerResults results, WorldEntity target)
         {
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageKeywordModifier(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return;
 
             float damageMult = 0f;
             float damagePct = 0f;
@@ -1240,8 +1204,6 @@ namespace MHServerEmu.Games.Powers
 
             if (damageRating != 0f)
                 results.Properties.AdjustProperty(damageRating, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
-
-            return true;
         }
 
         private static void CalculateResultDamageKeywordBonusHelper(ref float value, PropertyCollection properties, PropertyEnum propertyEnum, WorldEntity target)
@@ -1268,11 +1230,8 @@ namespace MHServerEmu.Games.Powers
             foreach (var kvp in target.Properties.IteratePropertyRange(PropertyEnum.DamageRatingBonusForPowerVsTarget))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
-                if (powerProtoRef == PrototypeId.Invalid)
-                {
-                    Logger.Warn("CalculateResultDamagePowerBonus(): powerProtoRef == PrototypeId.Invalid");
+                if (!Verify.IsTrue(powerProtoRef != PrototypeId.Invalid))
                     continue;
-                }
 
                 if (powerProtoRef != PowerProtoRef)
                     continue;
@@ -1295,9 +1254,9 @@ namespace MHServerEmu.Games.Powers
                 results.Properties.AdjustProperty(damageRating, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
         }
 
-        private bool CalculateResultDamageNearbyDistanceBonus(PowerResults results, WorldEntity target)
+        private void CalculateResultDamageNearbyDistanceBonus(PowerResults results, WorldEntity target)
         {
-            if (target.IsInWorld == false) return Logger.WarnReturn(false, "CalculateResultDamageNearbyDistanceBonus(): target.IsInWorld == false");
+            if (!Verify.IsTrue(target.IsInWorld)) return;
 
             float damageRating = 0f;
 
@@ -1316,20 +1275,18 @@ namespace MHServerEmu.Games.Powers
 
             if (damageRating != 0f)
                 results.Properties.AdjustProperty(damageRating, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
-
-            return true;
         }
 
-        private bool CalculateResultDamageRangedDistanceBonus(PowerResults results, WorldEntity target)
+        private void CalculateResultDamageRangedDistanceBonus(PowerResults results, WorldEntity target)
         {
-            if (target.IsInWorld == false) return Logger.WarnReturn(false, "CalculateResultDamageRangedDistanceBonus(): target.IsInWorld == false");
+            if (!Verify.IsTrue(target.IsInWorld)) return;
 
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageRangedDistanceBonus(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return;
 
             // This bonus applies only to powers keyworded as ranged
             if (powerProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.RangedPowerKeywordPrototype) == false)
-                return true;
+                return;
 
             float damagePct = 0f;
 
@@ -1348,16 +1305,14 @@ namespace MHServerEmu.Games.Powers
             }
 
             // Fail silently here if no valid user position (TODO: see if there is anything else wrong that's causing this)
-            if (userPosition == Vector3.Zero)
-                return false;   //return Logger.WarnReturn(false, $"CalculateResultDamageRangedDistanceBonus(): No valid user position for powerProto=[{powerProto}], user=[{user}]");
+            if (userPosition == Vector3.Zero)   // if (!Verify.IsTrue(userPosition != Vector3.Zero))
+                return;
 
             CalculateResultDamageRangedDistanceBonusHelper(ref damagePct, PropertyEnum.DamagePctBonusDistanceClose, user, userPosition, target);
             CalculateResultDamageRangedDistanceBonusHelper(ref damagePct, PropertyEnum.DamagePctBonusDistanceFar, user, userPosition, target);
 
             if (damagePct != 0f)
                 results.Properties.AdjustProperty(damagePct, new(PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any));
-
-            return true;
         }
 
         private void CalculateResultDamageRangedDistanceBonusHelper(ref float value, PropertyEnum propertyEnum, WorldEntity user, Vector3 userPosition, WorldEntity target)
@@ -1383,23 +1338,23 @@ namespace MHServerEmu.Games.Powers
             value += maxDistanceBonus * distanceBonusMult;
         }
 
-        private bool CalculateResultDamagePvPBoost(PowerResults results, WorldEntity target)
+        private void CalculateResultDamagePvPBoost(PowerResults results, WorldEntity target)
         {
             Region region = target.Region;
-            if (region == null) return Logger.WarnReturn(false, "CalculateResultDamagePvPBoost(): region == null");
+            if (!Verify.IsNotNull(region)) return;
 
             PvP pvp = region.GetPvPMatch();
             if (pvp == null)
-                return true;
+                return;
 
             // This is dumb and should probably never be enabled.
             if (Game.CustomGameOptions.ApplyHiddenPvPDamageModifiers == false)
-                return true;
+                return;
 
             // Only avatar-originating damage gets boosted in PvP.
             Avatar avatar = Game.EntityManager.GetEntity<Avatar>(UltimateOwnerId);
             if (avatar == null)
-                return true;
+                return;
 
             PvPPrototype pvpProto = pvp.PvPPrototype;
             PropertyCollection avatarProps = avatar.Properties;
@@ -1421,26 +1376,24 @@ namespace MHServerEmu.Games.Powers
             }
 
             ApplyDamageMultiplier(results.Properties, boostPct);
-            return true;
         }
 
-        private bool CalculateResultDamageSplitBetweenTargets(PowerResults results)
+        private void CalculateResultDamageSplitBetweenTargets(PowerResults results)
         {
             // Used for SurturRaid (including Rogue's stolen power for Lord Brimstone) and MoleMan
             if (Properties[PropertyEnum.DamageSplitBetweenTargets] == false)
-                return true;
+                return;
 
             int targetsHit = Math.Max(1, Properties[PropertyEnum.TargetsHit]);
             if (targetsHit == 1)
-                return true;
+                return;
 
             float splitMult = 1f / targetsHit;
 
             ApplyDamageMultiplier(results.Properties, splitMult);
-            return true;
         }
 
-        private bool CalculateResultDamagePvPScaling(PowerResults results, WorldEntity target)
+        private void CalculateResultDamagePvPScaling(PowerResults results, WorldEntity target)
         {
             float pvpDamageMult = 1f;
 
@@ -1463,75 +1416,71 @@ namespace MHServerEmu.Games.Powers
             }
 
             ApplyDamageMultiplier(results.Properties, pvpDamageMult);
-            return true;
         }
 
-        private bool CalculateResultDamageDifficultyScaling(PowerResults results, WorldEntity target, out float difficultyMult)
+        private void CalculateResultDamageDifficultyScaling(PowerResults results, WorldEntity target, out float difficultyMult)
         {
             difficultyMult = 1f;
 
             // Do not apply difficulty scaling to player vs player or mob vs mob damage
             if (target.CanBePlayerOwned() == IsPlayerPayload)
-                return true;
+                return;
 
             TuningTable tuningTable = target.Region?.TuningTable;
-            if (tuningTable == null) return Logger.WarnReturn(false, "CalculateResultDamageDifficultyScaling(): tuningTable == null");
+            if (!Verify.IsNotNull(tuningTable)) return;
 
             // Scaling differs based on the rank of the target
             RankPrototype rankProto = IsPlayerPayload
                 ? target.GetRankPrototype()
                 : GameDatabase.GetPrototype<RankPrototype>(Properties[PropertyEnum.Rank]);
-            if (rankProto == null) return Logger.WarnReturn(false, "CalculateResultDamageDifficultyScaling(): rankProto == null");
+
+            if (!Verify.IsNotNull(rankProto)) return;
 
             difficultyMult = tuningTable.GetDamageMultiplier(IsPlayerPayload, rankProto.Rank, target.RegionLocation.Position);
             
             ApplyDamageMultiplier(results.Properties, difficultyMult);
-            return true;
         }
 
-        private bool CalculateResultDamageLiveTuningModifier(PowerResults results)
+        private void CalculateResultDamageLiveTuningModifier(PowerResults results)
         {
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageLiveTuningModifier(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return;
 
             Region region = Game.RegionManager.GetRegion(RegionId);
-            if (region == null) return Logger.WarnReturn(false, "CalculateResultDamageLiveTuningModifier(): region == null");
+            if (!Verify.IsNotNull(region)) return;
 
             PowerTuningVar tuningVar = region.ContainsPvPMatch() ? PowerTuningVar.ePTV_PowerDamagePVP : PowerTuningVar.ePTV_PowerDamagePVE;
             float tuningDamageMult = LiveTuningManager.GetLivePowerTuningVar(powerProto, tuningVar);
 
             ApplyDamageMultiplier(results.Properties, tuningDamageMult);
-            return true;
         }
 
-        private bool CalculateResultDamageBounceModifier(PowerResults results, WorldEntity target)
+        private void CalculateResultDamageBounceModifier(PowerResults results, WorldEntity target)
         {
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageBounceModifier(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return;
 
             Curve curve = powerProto.BounceDamagePctToSameIdCurve.AsCurve();
             if (curve == null)
-                return true;
+                return;
 
             int hitCount = GetHitCount(target.Id);
             float bounceMult = 1f + Math.Max(-1f, curve.GetAt(hitCount));
 
             ApplyDamageMultiplier(results.Properties, bounceMult);
-            return true;
         }
 
-        private bool CalculateResultDamageBonusReservoir(PowerResults results)
+        private void CalculateResultDamageBonusReservoir(PowerResults results)
         {
             // PropertyEnum.DamageBonusReservoir - appears to be unused in 1.48/1.52
             // Was used for Iron Man's Shield Overload in 1.10
-            return true;
         }
 
-        private bool CalculateResultDamageVulnerabilityModifier(PowerResults results, WorldEntity target)
+        private void CalculateResultDamageVulnerabilityModifier(PowerResults results, WorldEntity target)
         {
             // NOTE: For vulnerability we pick the highest multiplier out of generic, power-specific and PvP.
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageVulnerabilityModifier(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return;
 
             // PvP vulnerability
             float damagePctVulnerabilityPvP = target.IsInPvPMatch ? target.Properties[PropertyEnum.DamagePctVulnerabilityPvP] : 0f;
@@ -1585,8 +1534,6 @@ namespace MHServerEmu.Games.Powers
 
                 results.Properties[PropertyEnum.Damage, i] = damage;
             }
-
-            return true;
         }
 
         private void CalculateResultDamageBlockModifier(PowerResults results, WorldEntity target)
@@ -1602,10 +1549,10 @@ namespace MHServerEmu.Games.Powers
             ApplyDamageMultiplier(results.Properties, blockDamageMult);
         }
 
-        private bool CalculateResultDamageDefenseModifier(PowerResults results, WorldEntity target)
+        private void CalculateResultDamageDefenseModifier(PowerResults results, WorldEntity target)
         {
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageLiveTuningModifier(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return;
 
             Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
             damageValues.Clear();
@@ -1646,7 +1593,7 @@ namespace MHServerEmu.Games.Powers
                         secondaryActivateProto.DefensePenetrationType == damageType)
                     {
                         Curve curve = secondaryActivateProto.DefensePenetrationIncrPerSec.AsCurve();
-                        if (curve == null) return Logger.WarnReturn(false, "CalculateResultDamageDefenseModifier(): curve == null");
+                        if (!Verify.IsNotNull(curve)) return;
 
                         float timePenetrationBase = curve.GetAt(Properties[PropertyEnum.PowerRank]);
                         float activationTimeMS = Math.Min((float)activationTime.TotalMilliseconds, secondaryActivateProto.MaxReleaseTimeMS);
@@ -1670,9 +1617,6 @@ namespace MHServerEmu.Games.Powers
                 }
 
                 // Apply penetration (defense rating cannot become negative)
-                if (defensePenetration != 0f || defensePenetrationPct != 0f)
-                    Logger.Debug($"CalculateResultDamageDefenseModifier(): Found defense penetration for power {powerProto}");
-
                 defenseRating = Math.Max(defenseRating - defensePenetration, 0f);
                 defenseRating *= Math.Clamp(1f - defensePenetrationPct, 0f, 1f);
 
@@ -1686,14 +1630,12 @@ namespace MHServerEmu.Games.Powers
             // Set mitigated damage
             for (int i = 0; i < damageValues.Length; i++)
                 results.Properties[PropertyEnum.Damage, i] = damageValues[i];
-
-            return true;
         }
 
-        private bool CalculateResultDamagePctResistModifier(PowerResults results, WorldEntity target)
+        private void CalculateResultDamagePctResistModifier(PowerResults results, WorldEntity target)
         {
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamagePctResistModifier(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return;
 
             Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
             damageValues.Clear();
@@ -1724,11 +1666,8 @@ namespace MHServerEmu.Games.Powers
                 {
                     Property.FromParam(powerKeywordKvp.Key, 0, out PrototypeId keywordProtoRef);
                     KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
-                    if (keywordProto == null)
-                    {
-                        Logger.Warn("CalculateResultDamagePctResistModifier(): keywordProto == null");
+                    if (!Verify.IsNotNull(keywordProto))
                         continue;
-                    }
 
                     if (powerProto.HasKeyword(keywordProto))
                         damagePctResistVsPowerKeyword = Math.Max(damagePctResistVsPowerKeyword, powerKeywordKvp.Value);
@@ -1737,7 +1676,7 @@ namespace MHServerEmu.Games.Powers
                 damagePctResist += Math.Max(damagePctResistVsPower, damagePctResistVsPowerKeyword);
 
                 // DamagePctResistFromAngle / DamagePctResistFromDistance
-                if (target.IsInWorld)
+                if (Verify.IsTrue(target.IsInWorld))
                 {
                     float damagePctResistFromPosition = 0f;
 
@@ -1763,10 +1702,6 @@ namespace MHServerEmu.Games.Powers
 
                     damagePctResist += damagePctResistFromPosition;
                 }
-                else
-                {
-                    Logger.Warn("CalculateResultDamagePctResistModifier(): target.IsInWorld == false");
-                }
 
                 // DamagePctResistVsRank
                 float damagePctResistVsRank = 0f;
@@ -1789,15 +1724,13 @@ namespace MHServerEmu.Games.Powers
             // Set mitigated damage
             for (int i = 0; i < damageValues.Length; i++)
                 results.Properties[PropertyEnum.Damage, i] = damageValues[i];
-
-            return true;
         }
 
-        private bool CalculateResultDamageShieldModifier(PowerResults results, WorldEntity target)
+        private void CalculateResultDamageShieldModifier(PowerResults results, WorldEntity target)
         {
             ConditionCollection conditionCollection = target.ConditionCollection;
             if (conditionCollection == null)
-                return true;
+                return;
 
             using var conditionCheckListHandle = ListPool<ulong>.Instance.Get(out List<ulong> conditionCheckList);
 
@@ -1852,8 +1785,6 @@ namespace MHServerEmu.Games.Powers
                 if (isExpired && conditionProperties[PropertyEnum.DamageShieldRemoveWhenExpired])
                     results.AddConditionToRemove(condition.Id);
             }
-
-            return true;
         }
 
         private void CalculateResultDamageConversion(PowerResults results, WorldEntity target, float difficultyMult)
@@ -1874,11 +1805,11 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        private bool CalculateResultDamageMetaGameModifier(PowerResults results, WorldEntity target)
+        private void CalculateResultDamageMetaGameModifier(PowerResults results, WorldEntity target)
         {
             float damageMetaGameBossResistance = target.Properties[PropertyEnum.DamageMetaGameBossResistance];
             if (damageMetaGameBossResistance == 0f)
-                return true;
+                return;
 
             float metaGameMult = 1f - damageMetaGameBossResistance;
 
@@ -1891,25 +1822,24 @@ namespace MHServerEmu.Games.Powers
             }
 
             ApplyDamageMultiplier(results.Properties, metaGameMult);
-            return true;
         }
 
-        private bool CalculateResultDamagePvPReduction(PowerResults results, WorldEntity target)
+        private void CalculateResultDamagePvPReduction(PowerResults results, WorldEntity target)
         {
             Region region = target.Region;
-            if (region == null) return Logger.WarnReturn(false, "CalculateResultDamagePvPBoost(): region == null");
+            if (!Verify.IsNotNull(region)) return;
 
             PvP pvp = region.GetPvPMatch();
             if (pvp == null)
-                return true;
+                return;
 
             // This is dumb and should probably never be enabled.
             if (Game.CustomGameOptions.ApplyHiddenPvPDamageModifiers == false)
-                return true;
+                return;
 
             Avatar avatar = target.GetSelfOrOwnerOfType<Avatar>();
             if (avatar == null)
-                return true;
+                return;
 
             PvPPrototype pvpProto = pvp.PvPPrototype;
             PropertyCollection avatarProps = avatar.Properties;
@@ -1931,10 +1861,9 @@ namespace MHServerEmu.Games.Powers
             }
 
             ApplyDamageMultiplier(results.Properties, damageReduction);
-            return true;
         }
 
-        private bool CalculateResultDamageLevelScaling(PowerResults results, WorldEntity target, float difficultyMult)
+        private void CalculateResultDamageLevelScaling(PowerResults results, WorldEntity target, float difficultyMult)
         {
             // Calculate player->mob damage scaling
             float levelScalingMult = 1f;
@@ -1968,11 +1897,9 @@ namespace MHServerEmu.Games.Powers
                 // Set fake client damage
                 results.SetDamageForClient(damageType, damage);
             }
-
-            return true;
         }
 
-        private bool CalculateResultDamageTransfer(PowerResults results, WorldEntity target)
+        private void CalculateResultDamageTransfer(PowerResults results, WorldEntity target)
         {
             EntityManager entityManager = Game.EntityManager;
 
@@ -1999,18 +1926,15 @@ namespace MHServerEmu.Games.Powers
             foreach ((ulong transferTargetId, Condition condition) in damageTransferConditions)
             {
                 // Transferring to itself can cause a loop
-                if (transferTargetId == target.Id)
-                {
-                    Logger.Warn($"CalculateResultDamageTransfer(): Target [{target}] is attempting to transfer damage to itself");
+                if (!Verify.IsTrue(transferTargetId != target.Id, $"Target [{target}] is attempting to transfer damage to itself"))
                     continue;
-                }
 
                 WorldEntity transferTarget = entityManager.GetEntity<WorldEntity>(transferTargetId);
                 if (transferTarget == null || transferTarget.IsInWorld == false)
                     continue;
 
                 // Check transfer chance
-                if (Game.Random.NextFloat() > condition.Properties[PropertyEnum.DamageTransferChance])
+                if ((Game.Random.NextFloat() < condition.Properties[PropertyEnum.DamageTransferChance]) == false)
                     continue;
 
                 results.TransferToId = transferTargetId;
@@ -2082,21 +2006,19 @@ namespace MHServerEmu.Games.Powers
                 float damageForClient = results.GetDamageForClient(type) * transferRatio;
                 results.SetDamageForClient(type, damageForClient);
             }
-
-            return true;
         }
 
-        private bool CalculateResultHealing(PowerResults results, WorldEntity target)
+        private void CalculateResultHealing(PowerResults results, WorldEntity target)
         {
             // Check if our target can receive healing
 
             // DisableHealthGain has the highest priority
             if (target.Properties[PropertyEnum.DisableHealthGain])
-                return false;
+                return;
 
             // CanHeal can be overriden with PowerForceHealing
             if (target.CanHeal == false && Properties[PropertyEnum.PowerForceHealing] == false)
-                return false;
+                return;
 
             // Calculate healing amount
 
@@ -2133,11 +2055,9 @@ namespace MHServerEmu.Games.Powers
                 results.Properties[PropertyEnum.Healing] = healing;
                 results.HealingForClient = healing;
             }
-
-            return true;
         }
 
-        private bool CalculateResultResourceChanges(PowerResults results, WorldEntity target)
+        private void CalculateResultResourceChanges(PowerResults results, WorldEntity target)
         {
             // Primary resource (endurance / spirit)
             for (ManaType manaType = 0; manaType < ManaType.NumTypes; manaType++)
@@ -2162,11 +2082,9 @@ namespace MHServerEmu.Games.Powers
                 secondaryResourceChange += target.Properties[PropertyEnum.SecondaryResourceMax] * secondaryResourceChangePct;
 
             results.Properties[PropertyEnum.SecondaryResourceChange] = secondaryResourceChange;
-
-            return true;
         }
 
-        private bool CalculateResultDamageAccumulation(PowerResults results)
+        private void CalculateResultDamageAccumulation(PowerResults results)
         {
             // Start with the precalculated damage accumulation change (e.g. from an over time effect)
             results.Properties.CopyPropertyRange(Properties, PropertyEnum.DamageAccumulationChange);
@@ -2179,17 +2097,15 @@ namespace MHServerEmu.Games.Powers
 
                 results.Properties.AdjustProperty((float)kvp.Value, new(PropertyEnum.DamageAccumulationChange, damageType));
             }
-
-            return true;
         }
 
-        private bool CalculateResultConditionsToAdd(PowerResults results, WorldEntity target, bool calculateForTarget)
+        private void CalculateResultConditionsToAdd(PowerResults results, WorldEntity target, bool calculateForTarget)
         {
             if (PowerPrototype.AppliesConditions == null && PowerPrototype.ConditionsByRef.IsNullOrEmpty())
-                return true;
+                return;
 
             ConditionCollection conditionCollection = target?.ConditionCollection;
-            if (conditionCollection == null) return Logger.WarnReturn(false, "CalculateResultConditionsToAdd(): conditionCollection == null");
+            if (!Verify.IsNotNull(conditionCollection)) return;
 
             WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(results.PowerOwnerId);
             WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(results.UltimateOwnerId);
@@ -2202,18 +2118,15 @@ namespace MHServerEmu.Games.Powers
 
                 // Early out if this movement power doesn't have a movement duration available
                 if (PowerPrototype is MovementPowerPrototype movementPowerProto && movementPowerProto.IsTravelPower == false && movementDuration.HasValue == false)
-                    return true;
+                    return;
 
                 if (PowerPrototype.AppliesConditions != null)
                 {
                     foreach (var entry in PowerPrototype.AppliesConditions)
                     {
                         ConditionPrototype mixinConditionProto = entry.Prototype as ConditionPrototype;
-                        if (mixinConditionProto == null)
-                        {
-                            Logger.Warn("CalculateResultConditionsToAdd(): mixinConditionProto == null");
+                        if (!Verify.IsNotNull(mixinConditionProto))
                             continue;
-                        }
 
                         CalculateResultConditionsToAddHelper(results, target, owner, ultimateOwner, calculateForTarget,
                             conditionCollection, mixinConditionProto, movementDuration);
@@ -2225,11 +2138,8 @@ namespace MHServerEmu.Games.Powers
                     foreach (PrototypeId conditionProtoRef in PowerPrototype.ConditionsByRef)
                     {
                         ConditionPrototype conditionByRefProto = conditionProtoRef.As<ConditionPrototype>();
-                        if (conditionByRefProto == null)
-                        {
-                            Logger.Warn("CalculateResultConditionsToAdd(): conditionByRefProto == null");
+                        if (!Verify.IsNotNull(conditionByRefProto))
                             continue;
-                        }
 
                         CalculateResultConditionsToAddHelper(results, target, owner, ultimateOwner, calculateForTarget,
                             conditionCollection, conditionByRefProto, movementDuration);
@@ -2245,24 +2155,22 @@ namespace MHServerEmu.Games.Powers
                         Power power = owner.GetPower(PowerProtoRef);
                         power?.TrackCondition(target.Id, condition);
                     }
-                    else if (condition.Duration == TimeSpan.Zero)
+                    else
                     {
-                        Logger.Warn($"CalculateResultConditionsToAdd(): No owner to cancel infinite condition for {PowerPrototype}");
+                        Verify.IsTrue(condition.Duration != TimeSpan.Zero, $"No owner to cancel infinite condition for {PowerPrototype}");
                     }
                 }
             }
-
-            return true;
         }
 
-        private bool CalculateResultConditionsToAddHelper(PowerResults results, WorldEntity target, WorldEntity owner, WorldEntity ultimateOwner,
+        private void CalculateResultConditionsToAddHelper(PowerResults results, WorldEntity target, WorldEntity owner, WorldEntity ultimateOwner,
             bool calculateForTarget, ConditionCollection conditionCollection, ConditionPrototype conditionProto, TimeSpan? movementDuration)
         {
             // Make sure the condition matches the scope for the current results
             if ((conditionProto.Scope == ConditionScopeType.Target && calculateForTarget == false) ||
                 (conditionProto.Scope == ConditionScopeType.User && calculateForTarget))
             {
-                return false;
+                return;
             }
 
             // Check for condition immunities
@@ -2270,13 +2178,13 @@ namespace MHServerEmu.Games.Powers
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
                 if (keywordProtoRef != PrototypeId.Invalid && conditionProto.HasKeyword(keywordProtoRef))
-                    return false;
+                    return;
             }
 
             // Roll the chance to apply
             float chanceToApply = conditionProto.GetChanceToApplyConditionEffects(Properties, target, conditionCollection, PowerProtoRef, ultimateOwner);
-            if (Game.Random.NextFloat() >= chanceToApply)
-                return false;
+            if ((Game.Random.NextFloat() < chanceToApply) == false)
+                return;
 
             // Calculate conditions properties (these will be shared by all stacks)
             using PropertyCollection conditionProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
@@ -2284,7 +2192,7 @@ namespace MHServerEmu.Games.Powers
 
             // Calculate duration
             if (CalculateResultConditionDuration(results, target, owner, calculateForTarget, conditionProto, conditionProperties, movementDuration, out TimeSpan conditionDuration) == false)
-                return false;
+                return;
 
             // Calculate the number of stacks to apply and modify duration if needed
             int numStacksToApply = CalculateConditionNumStacksToApply(target, ultimateOwner, conditionCollection, conditionProto, ref conditionDuration);
@@ -2297,8 +2205,6 @@ namespace MHServerEmu.Games.Powers
                 CalculateResultConditionExtraProperties(results, target, condition);    // Sets properties specific to this stack
                 results.AddConditionToAdd(condition);
             }
-
-            return true;
         }
 
         private void CalculateResultNegativeStatusRemoval(PowerResults results, WorldEntity target)
@@ -2353,8 +2259,8 @@ namespace MHServerEmu.Games.Powers
                 // Movement and knockback condition last for as long as the movement is happening
                 if (movementDuration.HasValue)
                 {
-                    if (movementDuration <= TimeSpan.Zero)
-                        return Logger.WarnReturn(false, $"CalculateResultConditionDuration(): Calculated movement duration is <= TimeSpan.Zero, which would result in an infinite condition.\nowner=[{owner}]\ntarget=[{target}]");
+                    if (!Verify.IsTrue(movementDuration > TimeSpan.Zero, $"Calculated movement duration is zero, which would result in an infinite condition.\nowner=[{owner}]\ntarget=[{target}]"))
+                        return false;
 
                     conditionDuration = movementDuration.Value;
                 }
@@ -2427,16 +2333,17 @@ namespace MHServerEmu.Games.Powers
             else
             {
                 // Negative duration should never happen
-                return Logger.WarnReturn(false, $"CalculateConditionDuration(): Negative duration for {PowerPrototype}");
+                Verify.IsTrue(false, $"Negative duration for {PowerPrototype}");
+                return false;
             }
 
             return true;
         }
 
-        private bool CalculateResultConditionExtraProperties(PowerResults results, WorldEntity target, Condition condition)
+        private void CalculateResultConditionExtraProperties(PowerResults results, WorldEntity target, Condition condition)
         {
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultConditionExtraProperties(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return;
 
             PropertyCollection conditionProps = condition.Properties;
 
@@ -2461,11 +2368,7 @@ namespace MHServerEmu.Games.Powers
 
             // InformsHitInfoToAlly
             if (conditionProps[PropertyEnum.InformsHitInfoToAlly])
-            {
-                // This appears to be unused, log this in case it somehow pops up somewhere.
-                Logger.Debug($"CalculateResultConditionExtraProperties(): InformsHitInfoToAlly on target [{target}]");
                 conditionProps[PropertyEnum.InformsHitInfoToAllyId] = UltimateOwnerId;
-            }
 
             // TargetedCritBonus
             if (conditionProps[PropertyEnum.TargetedCritBonus] > 0f)
@@ -2481,11 +2384,9 @@ namespace MHServerEmu.Games.Powers
             // Add a reference to this payload if there is anything that needs ticking after all properties are set
             if (conditionProps.HasOverTimeProperties())
                 condition.PropertyTickerPayload = this;
-
-            return true;
         }
 
-        private bool CalculateResultConditionKnockbackProperties(PowerResults results, WorldEntity target, Condition condition)
+        private void CalculateResultConditionKnockbackProperties(PowerResults results, WorldEntity target, Condition condition)
         {
             // powerProto is validated in CalculateResultConditionExtraProperties() above
             PowerPrototype powerProto = PowerPrototype;
@@ -2513,11 +2414,11 @@ namespace MHServerEmu.Games.Powers
             }
 
             float movementSpeedOverrideBase = Properties[PropertyEnum.MovementSpeedOverride];
-            if (movementSpeedOverrideBase <= 0f) return Logger.WarnReturn(false, "CalculateResultConditionExtraProperties(): movementSpeedOverrideBase <= 0f");
+            if (!Verify.IsTrue(movementSpeedOverrideBase > 0f)) return;
 
             float knockbackTimeBase = MathF.Abs(knockbackDistance) / movementSpeedOverrideBase;
             if (Segment.IsNearZero(knockbackTimeBase))
-                return false;
+                return;
 
             // knockbackTime is adjusted for condition resistance compared to base
             float knockbackTimeResult = MathF.Min((float)condition.Duration.TotalSeconds, knockbackTimeBase);
@@ -2556,8 +2457,6 @@ namespace MHServerEmu.Games.Powers
             results.KnockbackSourcePosition = knockbackSourcePosition;
 
             condition.Properties[PropertyEnum.MovementSpeedOverride] = conditionMovementSpeedOverride;
-
-            return true;
         }
 
         private void CalculateResultConditionProcProperties(PowerResults results, WorldEntity target, PropertyCollection conditionProperties)
@@ -2727,24 +2626,24 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        private bool CalculateResultHitReaction(PowerResults results, WorldEntity target)
+        private void CalculateResultHitReaction(PowerResults results, WorldEntity target)
         {
             // Only agents can have hit reactions
             if (target is not Agent targetAgent)
-                return false;
+                return;
 
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultHitReaction(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return;
 
             // Check if this power can cause a hit react to this particular target
             if (Power.CanCauseHitReact(powerProto, targetAgent) == false)
-                return false;
+                return;
 
             // Check if there are any conditions that will be added that override hit reacts
             for (int i = 0; i < results.ConditionAddList.Count; i++)
             {
                 if (results.ConditionAddList[i].OverridesHitReactConditions())
-                    return false;
+                    return;
             }
 
             // Check if there is any damage
@@ -2760,7 +2659,7 @@ namespace MHServerEmu.Games.Powers
             }
 
             if (hasDamage == false)
-                return false;
+                return;
 
             // Check eval
             EvalPrototype interruptChanceFormula = GameDatabase.CombatGlobalsPrototype.EvalInterruptChanceFormulaPrototype; 
@@ -2771,13 +2670,13 @@ namespace MHServerEmu.Games.Powers
             evalContext.SetReadOnlyVar_ProtoRefVectorPtr(EvalContext.Var1, powerProto.Keywords);
 
             if (Eval.RunBool(interruptChanceFormula, evalContext) == false)
-                return false;
+                return;
 
             // All checks passed, now we add the hit reaction condition
 
             // agentProto should have already been validated in Power.CanCauseHitReact()
             ConditionPrototype conditionProto = targetAgent.AgentPrototype.HitReactCondition.As<ConditionPrototype>();
-            if (conditionProto == null) return Logger.WarnReturn(false, "CalculateResultHitReaction(): conditionProto == null");
+            if (!Verify.IsNotNull(conditionProto)) return;
 
             ConditionCollection conditionCollection = targetAgent.ConditionCollection;
 
@@ -2796,8 +2695,6 @@ namespace MHServerEmu.Games.Powers
             results.AddConditionToAdd(condition);
 
             targetAgent.StartHitReactionCooldown();
-
-            return true;
         }
 
         #endregion
@@ -2879,13 +2776,11 @@ namespace MHServerEmu.Games.Powers
         /// <summary>
         /// Copies all curve properties that use the specified <see cref="PropertyEnum"/> from the provided <see cref="PropertyCollection"/> to this <see cref="PowerPayload"/>.
         /// </summary>
-        private bool CopyCurvePropertyRange(PropertyCollection source, PropertyEnum propertyEnum)
+        private void CopyCurvePropertyRange(PropertyCollection source, PropertyEnum propertyEnum)
         {
             // Move this to PropertyCollection if it's used somewhere else as well
-
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
-            if (propertyInfo.IsCurveProperty == false)
-                return Logger.WarnReturn(false, $"CopyCurvePropertyRange(): {propertyEnum} is not a curve property");
+            if (!Verify.IsTrue(propertyInfo.IsCurveProperty)) return;
 
             foreach (var kvp in source.IteratePropertyRange(propertyEnum))
             {
@@ -2894,8 +2789,6 @@ namespace MHServerEmu.Games.Powers
 
                 Properties.SetCurveProperty(kvp.Key, curveId, indexProperty, propertyInfo, SetPropertyFlags.None, true);
             }
-
-            return true;
         }
 
         /// <summary>
@@ -2951,7 +2844,7 @@ namespace MHServerEmu.Games.Powers
         private bool CheckDodgeChance(WorldEntity target)
         {
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CheckDodgeChance(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
 
             // Some powers cannot be dodged
             if (powerProto.CanBeDodged == false)
@@ -2973,7 +2866,7 @@ namespace MHServerEmu.Games.Powers
         private bool CheckBlockChance(WorldEntity target)
         {
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CheckBlockChance(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
 
             // Some powers cannot be blocked
             if (powerProto.CanBeBlocked == false)
@@ -3067,7 +2960,7 @@ namespace MHServerEmu.Games.Powers
 
             // Targeted condition (e.g. knockback)
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateMovementDurationForCondition(): powerProto == null");
+            if (!Verify.IsNotNull(powerProto)) return false;
 
             float knockbackDistance = MathF.Abs(Power.GetKnockbackDistance(target, PowerOwnerId, powerProto, Properties, TargetPosition));
             float movementSpeedOverride = Properties[PropertyEnum.MovementSpeedOverride];
@@ -3177,10 +3070,10 @@ namespace MHServerEmu.Games.Powers
         {
             // Entities have varying difficulty modifiers to their CCResistScore based on their rank
             RankPrototype rankProto = target?.GetRankPrototype();
-            if (rankProto == null) return Logger.WarnReturn(0, "CalculateRegionCCResistScore(): rankProto == null");
+            if (!Verify.IsNotNull(rankProto)) return 0;
 
             TuningPrototype tuningProto = target.Region?.TuningTable?.Prototype;
-            if (tuningProto == null) return Logger.WarnReturn(0, "CalculateRegionCCResistScore(): tuningProto == null");
+            if (!Verify.IsNotNull(tuningProto)) return 0;
 
             if (tuningProto.NegativeStatusCurves.HasValue() == false)
                 return 0;
@@ -3200,7 +3093,7 @@ namespace MHServerEmu.Games.Powers
                     continue;
 
                 Curve curve = curveRef.AsCurve();
-                if (curve == null) return Logger.WarnReturn(0, "CalculateRegionCCResistScore(): curve == null");
+                if (!Verify.IsNotNull(curve)) return 0;
 
                 int level = Math.Clamp(target.CombatLevel, curve.MinPosition, curve.MaxPosition);
                 score = Math.Max(curve.GetIntAt(level), score);
@@ -3240,11 +3133,8 @@ namespace MHServerEmu.Games.Powers
                     case PropertyEnum.StatusResistByDurationPct:
                         // Validate that this is boolean property
                         PropertyInfoPrototype propertyInfoProto = protoRefToCheck.As<PropertyInfoPrototype>();
-                        if (propertyInfoProto == null || propertyInfoProto.Type != PropertyDataType.Boolean)
-                        {
-                            Logger.Warn("ApplyStatusResistByDuration(): propertyInfoProto == null || propertyInfoProto.Type != PropertyDataType.Boolean");
+                        if (!Verify.IsTrue(propertyInfoProto != null && propertyInfoProto.Type == PropertyDataType.Boolean))
                             continue;
-                        }
 
                         // Check for the specified flag property
                         PropertyEnum paramProperty = propertyInfoTable.GetPropertyEnumFromPrototype(protoRefToCheck);
@@ -3315,7 +3205,7 @@ namespace MHServerEmu.Games.Powers
             ConditionCollection.StackId stackId = ConditionCollection.MakeConditionStackId(PowerPrototype,
                 conditionProto, UltimateOwnerId, creatorPlayerId, out StackingBehaviorPrototype stackingBehaviorProto);
 
-            if (stackId.PrototypeRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "CalculateConditionNumStacksToApply(): stackId.PrototypeRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(stackId.PrototypeRef != PrototypeId.Invalid)) return 0;
 
             using var refreshListHandle = ListPool<ulong>.Instance.Get(out List<ulong> refreshList);
             using var removeListHandle = ListPool<ulong>.Instance.Get(out List<ulong> removeList);

@@ -7,11 +7,7 @@ namespace MHServerEmu.Games.Powers
 {
     public struct PowerProgressionInfo
     {
-        // TODO?: Potentially make this struct readonly, constructors private and Init() functions static
-
         public const int RankLocked = -1;
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         private ProgressionEntryPrototype _progressionEntryPrototype;
         private TalentEntryPrototype _talentEntryPrototype;
@@ -41,52 +37,42 @@ namespace MHServerEmu.Games.Powers
 
         public PowerProgressionInfo() { }
 
-        public bool InitNonProgressionPower(PrototypeId powerRef)
+        public void InitNonProgressionPower(PrototypeId powerRef)
         {
-            if (PowerPrototype != null) return Logger.WarnReturn(false, "InitNonProgressionPower(): PowerPrototype != null");
+            if (!Verify.IsTrue(PowerPrototype == null)) return;
 
             PowerPrototype = powerRef.As<PowerPrototype>();
-
-            return true;
         }
 
-        public bool InitForAvatar(PowerProgressionEntryPrototype powerProgressionEntryPrototype, PrototypeId mappedPowerRef, PrototypeId powerTabRef)
+        public void InitForAvatar(PowerProgressionEntryPrototype avatarPowerProgEntry, PrototypeId mappedPowerRef, PrototypeId powerTabRef)
         {
-            if (PowerPrototype != null) return Logger.WarnReturn(false, "InitForAvatar(): PowerPrototype != null");
+            if (!Verify.IsTrue(PowerPrototype == null)) return;
 
-            _progressionEntryPrototype = powerProgressionEntryPrototype;
+            _progressionEntryPrototype = avatarPowerProgEntry;
             MappedPowerRef = mappedPowerRef;
             PowerTabRef = powerTabRef;
 
-            if (powerProgressionEntryPrototype.PowerAssignment == null)
-                return Logger.WarnReturn(false, "InitForAvatar(): powerProgressionEntryPrototype.PowerAssignment == null");
-
-            PowerPrototype = powerProgressionEntryPrototype.PowerAssignment.Ability.As<PowerPrototype>();
-
-            return true;
+            if (!Verify.IsNotNull(avatarPowerProgEntry.PowerAssignment)) return;
+            PowerPrototype = avatarPowerProgEntry.PowerAssignment.Ability.As<PowerPrototype>();
         }
 
-        public bool InitForAvatar(TalentEntryPrototype talentEntryPrototype, TalentGroupPrototype talentGroupPrototype, uint talentIndex, uint talentGroupIndex)
+        public void InitForAvatar(TalentEntryPrototype talentEntryPrototype, TalentGroupPrototype talentGroupPrototype, uint talentIndex, uint talentGroupIndex)
         {
-            if (PowerPrototype != null) return Logger.WarnReturn(false, "InitForAvatar(): PowerPrototype != null");
+            if (!Verify.IsTrue(PowerPrototype == null)) return;
 
             _talentEntryPrototype = talentEntryPrototype;
             _talentGroupPrototype = talentGroupPrototype;
             TalentIndex = talentIndex;
             TalentGroupIndex = talentGroupIndex;
             PowerPrototype = talentEntryPrototype.Talent.As<PowerPrototype>();
-            
-            return true;
         }
 
-        public bool InitForTeamUp(TeamUpPowerProgressionEntryPrototype teamUpPowerProgressionEntryPrototype)
+        public void InitForTeamUp(TeamUpPowerProgressionEntryPrototype teamUpPowerProgressionEntryPrototype)
         {
-            if (PowerPrototype != null) return Logger.WarnReturn(false, "InitForTeamUp(): PowerPrototype != null");
-            
+            if (!Verify.IsTrue(PowerPrototype == null)) return;
+
             _progressionEntryPrototype = teamUpPowerProgressionEntryPrototype;
             PowerPrototype = teamUpPowerProgressionEntryPrototype.Power.As<PowerPrototype>();
-
-            return true;
         }
 
         public readonly int GetRequiredLevel()

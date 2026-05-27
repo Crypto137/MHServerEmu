@@ -16,6 +16,7 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -1029,33 +1030,7 @@ namespace MHServerEmu.Games.Entities
 
         private void OnPreAccrueCondition(Condition condition)
         {
-            StatusEffectEvent(condition, false);
-        }
-
-        private void StatusEffectEvent(Condition condition, bool ownerStatus)
-        {
-            var region = _owner?.Region;
-            if (region == null) return;
-
-            var manager = _owner.Game?.EntityManager;
-            if (manager == null) return;
-
-            foreach (var prop in condition.Properties)
-            {
-                bool conditionValue = prop.Value != 0;
-                bool ownerValue = _owner.Properties[prop.Key];
-                if (conditionValue == ownerValue) continue;
-
-                var creator = manager.GetEntity<WorldEntity>(condition.CreatorId);
-                var avatar = creator?.GetMostResponsiblePowerUser<Avatar>();
-                var player = avatar?.GetOwnerOfType<Player>();
-
-                var statusProp = prop.Key.Enum;
-                bool status = ownerStatus ? ownerValue : conditionValue;
-                var propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(statusProp);
-                bool negativeStatus = Condition.IsANegativeStatusEffectProperty(propInfo.PrototypeDataRef);
-                region.EntityStatusEffectEvent.Invoke(new(_owner, player, statusProp, status, negativeStatus));
-            }
+            CheckStatusEffectEvent(condition, false);
         }
 
         private void OnPostAccrueCondition(Condition condition)
@@ -1128,7 +1103,7 @@ namespace MHServerEmu.Games.Entities
             if (handle.Valid() == false)
                 return;
 
-            StatusEffectEvent(condition, true);
+            CheckStatusEffectEvent(condition, true);
         }
 
         private bool EnableCondition(Condition condition, bool enable)
@@ -1365,6 +1340,37 @@ namespace MHServerEmu.Games.Entities
             }
 
             return true;
+        }
+
+        private void CheckStatusEffectEvent(Condition condition, bool useOwnerStatus)
+        {
+            if (!Verify.IsNotNull(_owner)) return;
+
+            Region region = _owner.Region;
+            if (region == null)
+                return;
+
+            EntityManager entityManager = _owner.Game.EntityManager;
+
+            foreach (var kvp in condition.Properties)
+            {
+                bool conditionValue = kvp.Value;
+                bool ownerValue = _owner.Properties[kvp.Key];
+
+                if (conditionValue == ownerValue)
+                    continue;
+
+                WorldEntity creator = entityManager.GetEntity<WorldEntity>(condition.CreatorId);
+                Avatar avatar = creator?.GetMostResponsiblePowerUser<Avatar>();
+                Player player = avatar?.GetOwnerOfType<Player>();
+
+                PropertyEnum statusProp = kvp.Key.Enum;
+                bool status = useOwnerStatus ? ownerValue : conditionValue;
+                PropertyInfo propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(statusProp);
+                bool negativeStatus = Condition.IsANegativeStatusEffectProperty(propInfo.PrototypeDataRef);
+
+                region.EntityStatusEffectEvent.Invoke(new(_owner, player, statusProp, status, negativeStatus));
+            }
         }
 
         public readonly struct StackId : IEquatable<StackId>

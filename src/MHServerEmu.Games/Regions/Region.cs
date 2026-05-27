@@ -1192,12 +1192,6 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public WorldEntity SweepToFirstHitEntity<T>(ref Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, T canBlock) where T : ICanBlock
-        {
-            bool CanBlockFunc(WorldEntity otherEntity) => canBlock.CanBlock(otherEntity);
-            return SweepToFirstHitEntity(ref sweepBounds, sweepVelocity, ref resultHitPosition, CanBlockFunc);
-        }
-
         public WorldEntity SweepToFirstHitEntity(Vector3 startPosition, Vector3 targetPosition, WorldEntity owner,
             ulong targetEntityId, bool blocksLOS, float radiusOverride, ref Vector3? resultHitPosition)
         {
@@ -1215,11 +1209,11 @@ namespace MHServerEmu.Games.Regions
             sweepBounds.Center = startPosition;
             Vector3 sweepVector = targetPosition - startPosition;
 
-            bool CanBlockFunc(WorldEntity otherEntity) => CanBlockEntitySweep(otherEntity, owner, targetEntityId, blocksLOS);
-            return SweepToFirstHitEntity(ref sweepBounds, sweepVector, ref resultHitPosition, CanBlockFunc);
+            CanBlockEntitySweepFunc canBlockFunc = new(owner, targetEntityId, blocksLOS);
+            return SweepToFirstHitEntity(ref sweepBounds, sweepVector, ref resultHitPosition, canBlockFunc);
         }
 
-        private WorldEntity SweepToFirstHitEntity(ref Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, Func<WorldEntity, bool> canBlockFunc)
+        public WorldEntity SweepToFirstHitEntity<T>(ref Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, T canBlockFunc) where T: ICanBlock
         {
             Vector3 sweepStart = sweepBounds.Center;
             Vector3 sweepEnd = sweepStart + sweepVelocity;
@@ -1236,7 +1230,7 @@ namespace MHServerEmu.Games.Regions
 
             foreach (var otherEntity in IterateEntitiesInVolume(sweepBox, new()))
             {
-                if (canBlockFunc(otherEntity))
+                if (canBlockFunc.CanBlock(otherEntity))
                 {
                     float resultTime = 1.0f;
                     Vector3? resultNormal = null;
@@ -1299,6 +1293,15 @@ namespace MHServerEmu.Games.Regions
             }
 
             return false;
+        }
+
+        private readonly struct CanBlockEntitySweepFunc(WorldEntity owner, ulong targetEntityId, bool blocksLOS) : ICanBlock
+        {
+            public readonly WorldEntity Owner = owner;
+            public readonly ulong TargetEntityId = targetEntityId;
+            public readonly bool BlocksLOS = blocksLOS;
+
+            public bool CanBlock(WorldEntity other) => CanBlockEntitySweep(other, Owner, TargetEntityId, BlocksLOS);
         }
 
         public bool ChoosePositionAtOrNearPoint(ref Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags,

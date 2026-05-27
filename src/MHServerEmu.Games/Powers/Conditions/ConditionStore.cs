@@ -1,5 +1,4 @@
-﻿using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Serialization;
+﻿using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Properties;
@@ -11,8 +10,6 @@ namespace MHServerEmu.Games.Powers.Conditions
     /// </summary>
     public ref struct ConditionStore
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public PrototypeId ConditionProtoRef;
         public PrototypeId CreatorPowerPrototypeRef;
         public bool IsPaused;
