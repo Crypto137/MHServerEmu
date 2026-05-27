@@ -20,35 +20,16 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Powers
 {
-    public struct SummonContext
+    public class SummonPower : Power, IPowerPayloadDeliverCallback
     {
-        public Game Game;
-        public WorldEntity Target;
-        public SummonPowerPrototype PowerProto;
-        public ulong RegionId;
-        public Vector3 Position;
-        public Vector3 TargetPosition;
-        public ulong PowerOwnerId;
-        public ulong UltimateOwnerId;
-        public AlliancePrototype OwnerAlliance;
-        public TimeSpan VariableActivationTime;
-        public AssetId EntityAsset;
-        public PropertyCollection Properties;
-        public int MaxSummons;
-        public bool KillPrevious;
-    }
-
-    public class SummonPower : Power
-    {
-        public SummonPowerPrototype SummonPowerPrototype => Prototype as SummonPowerPrototype;
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
-        private int _totalSummonedEntities;
         private readonly EventPointer<SummonIntervalEvent> _summonIntervalEvent = new();
+
+        private int _totalSummonedEntities = 0;
+
+        public SummonPowerPrototype SummonPowerPrototype { get => Prototype as SummonPowerPrototype; }
 
         public SummonPower(Game game, PrototypeId prototypeDataRef) : base(game, prototypeDataRef)
         {
-            _totalSummonedEntities = 0;
         }
 
         public override bool ApplyPower(PowerApplication powerApplication)
@@ -66,22 +47,25 @@ namespace MHServerEmu.Games.Powers
 
         private void CheckSummonEntityRemoval()
         {
-            if (Owner == null) return;
+            if (!Verify.IsNotNull(Owner)) return;
 
-            var summonPowerProto = SummonPowerPrototype;
-            if (summonPowerProto == null || summonPowerProto.SummonEntityContexts.IsNullOrEmpty()) return;
+            SummonPowerPrototype summonPowerProto = SummonPowerPrototype;
+            if (!Verify.IsNotNull(summonPowerProto)) return;
+            if (!Verify.IsTrue(summonPowerProto.SummonEntityContexts.HasValue())) return;
 
-            var inventory = Owner.SummonedInventory;
-            if (inventory == null) return;
+            Inventory inventory = Owner.SummonedInventory;
+            if (inventory == null)
+                return;
 
-            List<WorldEntity> killList = [];
+            using var killListHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> killList);
 
-            foreach (var context in summonPowerProto.SummonEntityContexts)
+            foreach (SummonEntityContextPrototype context in summonPowerProto.SummonEntityContexts)
             {
-                if (context == null) return;
+                if (!Verify.IsNotNull(context)) return;
 
-                var removalProto = context.SummonEntityRemoval;
-                if (removalProto == null) continue;
+                SummonRemovalPrototype removalProto = context.SummonEntityRemoval;
+                if (removalProto == null)
+                    continue;
 
                 bool removalKeywords = removalProto.Keywords.HasValue();
                 bool removalPowers = removalProto.FromPowers.HasValue();
@@ -90,9 +74,10 @@ namespace MHServerEmu.Games.Powers
 
                 killList.Clear();
 
-                foreach (var summoned in new SummonedEntityIterator(Owner))
+                foreach (WorldEntity summoned in new SummonedEntityIterator(Owner))
                 {
-                    if (summoned.IsDead) continue;
+                    if (summoned.IsDead)
+                        continue;
 
                     bool found = false;
                     if (removalKeywords)
@@ -101,10 +86,12 @@ namespace MHServerEmu.Games.Powers
                     if (found == false && removalPowers)
                         found |= SummonedHasCreatorPower(summoned, removalProto.FromPowers);
 
-                    if (found) killList.Add(summoned);
+                    if (found)
+                        killList.Add(summoned);
                 }
 
-                foreach (var summoned in killList) KillSummoned(summoned, Owner);
+                foreach (WorldEntity summoned in killList)
+                    KillSummoned(summoned, Owner);
             }
         }
 
@@ -117,25 +104,33 @@ namespace MHServerEmu.Games.Powers
             }
             else
             {
-                if (summoned.IsSummonedPet()) owner?.TryActivateOnPetDeathProcs(summoned);
+                if (summoned.IsSummonedPet())
+                    owner?.TryActivateOnPetDeathProcs(summoned);
+
                 summoned.Destroy();
             }
         }
 
-        private static bool SummonedHasCreatorPower(WorldEntity summoned, PrototypeId[] fromPowers)
+        private static bool SummonedHasCreatorPower(WorldEntity summoned, PrototypeId[] creatorPowers)
         {
             PrototypeId creatorPowerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
 
-            foreach (var power in fromPowers)
-                if (creatorPowerRef == power) return true;
+            foreach (PrototypeId powerRef in creatorPowers)
+            {
+                if (creatorPowerRef == powerRef)
+                    return true;
+            }
 
             return false;
         }
 
         private static bool SummonedHasKeywords(WorldEntity summoned, PrototypeId[] keywords)
         {
-            foreach (var keyword in keywords)
-                if (summoned.HasKeyword(keyword)) return true;
+            foreach (PrototypeId keywordRef in keywords)
+            {
+                if (summoned.HasKeyword(keywordRef))
+                    return true;
+            }
 
             return false;
         }
@@ -144,14 +139,17 @@ namespace MHServerEmu.Games.Powers
         {
             base.EndPowerInternal(flags);
 
-            var powerProto = SummonPowerPrototype;
-            if (powerProto == null) return;
+            SummonPowerPrototype powerProto = SummonPowerPrototype;
+            if (!Verify.IsNotNull(powerProto)) return;
 
-            bool goodEnd = (flags & (EndPowerFlags.ExplicitCancel | EndPowerFlags.ChanneledLoopEnd | EndPowerFlags.PowerEventAction)) != 0;
-            bool badEnd = (flags & (EndPowerFlags.Force | EndPowerFlags.ExitWorld | EndPowerFlags.Unassign)) != 0;
-            if (badEnd || (goodEnd && powerProto.SummonsLiveWhilePowerActive))
+            bool normalEnd = (flags & (EndPowerFlags.ExplicitCancel | EndPowerFlags.ChanneledLoopEnd | EndPowerFlags.PowerEventAction)) != 0;
+            bool forcedEnd = (flags & (EndPowerFlags.Force | EndPowerFlags.ExitWorld | EndPowerFlags.Unassign)) != 0;
+
+            if (forcedEnd || (normalEnd && powerProto.SummonsLiveWhilePowerActive))
+            {
                 if (powerProto.TrackInInventory)
                     DestroySummoned(flags.HasFlag(EndPowerFlags.ExitWorld));
+            }
 
             Game.GameEventScheduler.CancelEvent(_summonIntervalEvent);
         }
@@ -160,7 +158,10 @@ namespace MHServerEmu.Games.Powers
         {
             base.OnEndChannelingPhase();
 
-            if (SummonPowerPrototype?.SummonsLiveWhilePowerActive == true)
+            SummonPowerPrototype powerProto = SummonPowerPrototype;
+            if (!Verify.IsNotNull(powerProto)) return;
+
+            if (powerProto.SummonsLiveWhilePowerActive)
                 DestroySummoned(false);
         }
 
@@ -170,20 +171,25 @@ namespace MHServerEmu.Games.Powers
 
             if (IsToggledOn() == false)
             {
-                if (SummonPowerPrototype?.SummonsLiveWhilePowerActive == true)
+                SummonPowerPrototype powerProto = SummonPowerPrototype;
+                if (!Verify.IsNotNull(powerProto)) return;
+
+                if (powerProto.SummonsLiveWhilePowerActive)
                     DestroySummoned(false);
             }
         }
 
         protected override PowerUseResult RunExtraActivation(ref PowerActivationSettings settings)
         {
-            var powerProto = SummonPowerPrototype;
-            if (powerProto == null) return PowerUseResult.ExtraActivationFailed;
+            SummonPowerPrototype powerProto = SummonPowerPrototype;
+            if (!Verify.IsNotNull(powerProto)) return PowerUseResult.ExtraActivationFailed;
 
-            if (powerProto.ExtraActivation is ExtraActivateOnSubsequentPrototype extraActivate) 
-                if (extraActivate.ExtraActivateEffect == SubsequentActivateType.DestroySummonedEntity)
-                    if (DestroySummoned(false) == 0)
-                        return PowerUseResult.ExtraActivationFailed;
+            if (powerProto.ExtraActivation is ExtraActivateOnSubsequentPrototype extraActivateOnSubsequent &&
+                extraActivateOnSubsequent.ExtraActivateEffect == SubsequentActivateType.DestroySummonedEntity)
+            {
+                if (DestroySummoned(false) == 0)
+                    return PowerUseResult.ExtraActivationFailed;
+            }
 
             return base.RunExtraActivation(ref settings);
         }
@@ -202,10 +208,10 @@ namespace MHServerEmu.Games.Powers
 
         private PowerUseResult CanSummonEntity()
         {
-            var prototype = SummonPowerPrototype;
-            if (prototype == null) return PowerUseResult.GenericError;
+            SummonPowerPrototype prototype = SummonPowerPrototype;
+            if (!Verify.IsNotNull(prototype)) return PowerUseResult.GenericError;
 
-            if (prototype.TrackInInventory && !prototype.KillPreviousSummons)
+            if (prototype.TrackInInventory && prototype.KillPreviousSummons == false)
             {
                 int maxNumSimultaneousSummons = prototype.GetMaxNumSimultaneousSummons(Properties);
                 if (maxNumSimultaneousSummons > 0)
@@ -233,81 +239,90 @@ namespace MHServerEmu.Games.Powers
 
         public void UpdateAndCheckTotalSummonedEntities()
         {
-            var proto = SummonPowerPrototype;
-            if (proto == null) return;
+            SummonPowerPrototype proto = SummonPowerPrototype;
+            if (!Verify.IsNotNull(proto)) return;
 
             int maxNumSummons = proto.GetMaxNumSummons(Properties);
             if (maxNumSummons > 0)
             {
-                if (_totalSummonedEntities < maxNumSummons) _totalSummonedEntities++;
+                if (_totalSummonedEntities < maxNumSummons)
+                    _totalSummonedEntities++;
 
                 if (proto.SummonMaxReachedDestroyOwner && _totalSummonedEntities >= maxNumSummons)
-                    Owner?.Kill();
+                {
+                    WorldEntity owner = Owner;
+                    if (Verify.IsNotNull(owner))
+                        owner.Kill();
+                }
             }
         }
 
         public override void OnPayloadInit(PowerPayload payload)
         {
-            payload.DeliverAction = OnDeliverPayload;
+            payload.DeliverCallback = this;
 
             if (Owner != null && Owner.Properties.HasProperty(PropertyEnum.ParentSpawnerGroupId))
                 payload.Properties[PropertyEnum.ParentSpawnerGroupId] = Owner.Properties[PropertyEnum.ParentSpawnerGroupId];
         }
 
-        private void OnDeliverPayload(PowerPayload payload)
+        public void OnDeliverPayload(PowerPayload payload)
         {
-            var game = payload.Game;
-            if (game == null) return;
+            Game game = payload.Game;
+            if (!Verify.IsNotNull(game)) return;
 
-            var manager = game.EntityManager;
-            if (manager == null) return;
+            EntityManager entityManager = game.EntityManager;
+            if (entityManager == null) return;
 
             if (payload.PowerPrototype is not SummonPowerPrototype powerProto) return;
 
             if (powerProto.SummonsLiveWhilePowerActive)
             {
-                var owner = manager.GetEntity<WorldEntity>(payload.PowerOwnerId);
-                if (owner == null || owner.IsInWorld == false) return;
+                WorldEntity owner = entityManager.GetEntity<WorldEntity>(payload.PowerOwnerId);
+                if (owner == null || owner.IsInWorld == false)
+                    return;
 
-                var power = owner.GetPower(powerProto.DataRef);
-                if (power == null || power.IsActive == false) return;
+                Power power = owner.GetPower(powerProto.DataRef);
+                if (power == null || power.IsActive == false)
+                    return;
             }
-
 
             if (powerProto.AttachSummonsToTarget || powerProto.UseTargetAsSource)
             {
                 using var targetListHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> targetList);
                 GetTargets(targetList, payload);
 
-                foreach (var target in targetList)
-                    SummonPayloadEntity(manager, powerProto, payload, target);
+                foreach (WorldEntity target in targetList)
+                    SummonPayloadEntity(entityManager, powerProto, payload, target);
 
                 if (targetList.Count == 0 && powerProto.UseTargetAsSource)
-                    SummonPayloadEntity(manager, powerProto, payload, null);
+                    SummonPayloadEntity(entityManager, powerProto, payload, null);
             }
             else
             {
                 WorldEntity target = null;
                 if (powerProto.AttachSummonsToCaster)
-                    target = manager.GetEntity<WorldEntity>(payload.PowerOwnerId);
+                    target = entityManager.GetEntity<WorldEntity>(payload.PowerOwnerId);
 
-                SummonPayloadEntity(manager, powerProto, payload, target);
+                SummonPayloadEntity(entityManager, powerProto, payload, target);
             }
         }
 
-        private static void SummonPayloadEntity(EntityManager manager, SummonPowerPrototype powerProto, PowerPayload payload, WorldEntity target)
+        private static void SummonPayloadEntity(EntityManager entityManager, SummonPowerPrototype powerProto, PowerPayload payload, WorldEntity target)
         {
-            var payloadProperties = payload.Properties;
+            PropertyCollection payloadProperties = payload.Properties;
+
             int summonNum = payloadProperties[PropertyEnum.SummonNumPerActivation];
-            if (summonNum < 1) return;
+            if (!Verify.IsTrue(summonNum >= 1)) return;
 
             int maxSummons = powerProto.GetMaxNumSimultaneousSummons(payloadProperties);
-            if (maxSummons != 0 && summonNum > maxSummons) return;
+            if (!Verify.IsTrue(maxSummons == 0 || (summonNum <= maxSummons))) return;
 
-            if (payload.OwnerAlliance == null) return;
+            if (!Verify.IsNotNull(payload.OwnerAlliance)) return;
+
+            if (!Verify.IsTrue(payload.PowerOwnerId != Entity.InvalidId)) return;
 
             if (payload.PowerOwnerId == Entity.InvalidId) return;
-            var owner = manager.GetEntity<WorldEntity>(payload.PowerOwnerId);
+            WorldEntity owner = entityManager.GetEntity<WorldEntity>(payload.PowerOwnerId);
 
             int count = 0;
 
@@ -316,8 +331,7 @@ namespace MHServerEmu.Games.Powers
 
             bool killPrevious = powerProto.KillPreviousSummons;
 
-            if (killPrevious == false && maxSummons > 0 && count >= maxSummons)
-                Logger.Warn($"Summoned more than allowed {count} of {maxSummons}");
+            Verify.IsTrue(killPrevious || maxSummons <= 0 || count < maxSummons, $"Summoning more than allowed {count} of {maxSummons}");
 
             SummonContext context = new()
             {
@@ -341,11 +355,10 @@ namespace MHServerEmu.Games.Powers
             {
                 context.KillPrevious = killPrevious && maxSummons > 0 && count >= maxSummons;
 
-                var result = SummonEntityContext(manager, context, i);
+                PowerUseResult result = SummonEntity(entityManager, ref context, i);
                 switch (result)
                 {
                     case PowerUseResult.Success:
-
                         count++;
 
                         if (killPrevious == false && maxSummons > 0 && count >= maxSummons)
@@ -363,25 +376,30 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        private void SummonEntityIndex(int index)
+        private void SummonIntervalCallback(int index)
         {
-            if (index < 0 || CanSummonEntity() != PowerUseResult.Success) return;
+            if (!Verify.IsTrue(index >= 0)) return;
 
-            if (Owner == null || Owner.IsInWorld == false) return;
+            if (CanSummonEntity() != PowerUseResult.Success)
+                return;
 
-            var manager = Game?.EntityManager;
-            if (manager == null) return;
+            if (!Verify.IsNotNull(Owner)) return;
+            if (!Verify.IsTrue(Owner.IsInWorld)) return;
 
-            var powerProto = SummonPowerPrototype;
-            if (powerProto.SummonEntityContexts.IsNullOrEmpty()) return;
+            EntityManager entityManager = Game?.EntityManager;
+            if (!Verify.IsNotNull(entityManager)) return;
 
-            var regionId = Owner.RegionLocation.RegionId;
-            var position = Owner.RegionLocation.Position;
+            SummonPowerPrototype powerProto = SummonPowerPrototype;
+            if (!Verify.IsNotNull(powerProto)) return;
+            if (!Verify.IsTrue(powerProto.SummonEntityContexts.HasValue())) return;
+
+            ulong regionId = Owner.RegionLocation.RegionId;
+            Vector3 position = Owner.RegionLocation.Position;
 
             ulong ultimateOwnerId = Entity.InvalidId;
             AssetId entityAsset;
 
-            var ultimateOwner = GetUltimateOwner();
+            WorldEntity ultimateOwner = GetUltimateOwner();
             if (ultimateOwner != null)
             {
                 ultimateOwnerId = ultimateOwner.Id;
@@ -417,30 +435,33 @@ namespace MHServerEmu.Games.Powers
                 KillPrevious = false
             };
 
-            SummonEntityContext(manager, context, index);
+            SummonEntity(entityManager, ref context, index);
 
             int nextIndex = (index + 1) % powerProto.SummonEntityContexts.Length;
             ScheduleSummonInterval(nextIndex);
         }
 
-        private static PowerUseResult SummonEntityContext(EntityManager manager, SummonContext context, int index)
+        private static PowerUseResult SummonEntity(EntityManager entityManager, ref SummonContext context, int index)
         {
-            var game = context.Game;
-            var powerProto = context.PowerProto;
+            Game game = context.Game;
+            SummonPowerPrototype powerProto = context.PowerProto;
 
-            if (powerProto.SummonEntityContexts.IsNullOrEmpty()) return PowerUseResult.GenericError;
+            if (!Verify.IsTrue(powerProto.SummonEntityContexts.HasValue())) return PowerUseResult.GenericError;
+
             int contextLength = powerProto.SummonEntityContexts.Length;
 
-            var owner = manager.GetEntity<WorldEntity>(context.PowerOwnerId);
+            WorldEntity owner = entityManager.GetEntity<WorldEntity>(context.PowerOwnerId);
             WorldEntity ultimateOwner = null;
 
             if (context.UltimateOwnerId != Entity.InvalidId)
-                ultimateOwner = manager.GetEntity<WorldEntity>(context.UltimateOwnerId);
+                ultimateOwner = entityManager.GetEntity<WorldEntity>(context.UltimateOwnerId);
 
-            var target = context.Target;
+            WorldEntity target = context.Target;
 
-            // get context index
+            // NOTE: This is similar to CreateMissileLooper() in MissilePower.
             int contextIndex;
+            SummonEntityContextPrototype contextProto;
+
             if (powerProto.SummonRandomSelection)
             {
                 contextIndex = game.Random.Next(0, contextLength);
@@ -462,15 +483,14 @@ namespace MHServerEmu.Games.Powers
                 contextIndex = index % contextLength;
             }
 
-            if (contextIndex < 0 || contextIndex >= contextLength) return PowerUseResult.GenericError;
+            if (!Verify.IsTrue(contextIndex >= 0 && contextIndex < contextLength)) return PowerUseResult.GenericError;
 
-            // check summon entity context prototype
-            var contextProto = powerProto.SummonEntityContexts[contextIndex];
-            if (contextProto == null) return PowerUseResult.GenericError;
+            contextProto = powerProto.SummonEntityContexts[contextIndex];
+            if (!Verify.IsNotNull(contextProto)) return PowerUseResult.GenericError;
 
             if (contextProto.SummonEntity == PrototypeId.Invalid)
             {
-                if (contextProto.SummonEntityRemoval == null) return PowerUseResult.GenericError;
+                if (!Verify.IsNotNull(contextProto.SummonEntityRemoval)) return PowerUseResult.GenericError;
                 return PowerUseResult.RestrictiveCondition;
             }
 
@@ -489,10 +509,10 @@ namespace MHServerEmu.Games.Powers
                     return PowerUseResult.RestrictiveCondition;
             }
 
-            // entity settings
+            // Start populating EntitySettings
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
 
-            // get entityRef and summon prototype
+            // EntityRef
             if (ultimateOwner != null)
                 settings.EntityRef = ultimateOwner.Properties[PropertyEnum.SummonEntityOverrideRef];
 
@@ -508,60 +528,62 @@ namespace MHServerEmu.Games.Powers
                     settings.EntityRef = summonProto.DataRef;
             }
 
-            if (summonProto == null) return PowerUseResult.GenericError;
+            if (!Verify.IsNotNull(summonProto)) return PowerUseResult.GenericError;
 
             if (summonProto.IsLiveTuningEnabled() == false)
                 return PowerUseResult.DisabledByLiveTuning;
 
-            // check region
-            var regionManager = game.RegionManager;
-            if (regionManager == null) return PowerUseResult.GenericError;
-            var region = regionManager.GetRegion(context.RegionId);
-            if (region == null) return PowerUseResult.GenericError;
+            // Region
+            RegionManager regionManager = game.RegionManager;
+            if (!Verify.IsNotNull(regionManager)) return PowerUseResult.GenericError;
+
+            Region region = regionManager.GetRegion(context.RegionId);
+            if (!Verify.IsNotNull(region)) return PowerUseResult.GenericError;
 
             settings.RegionId = region.Id;
 
-            // get region position
+            // Position
             if (IsOwnerCenteredAOE(context.PowerProto) || GetTargetingShape(powerProto) == TargetingShapeType.Self)
             {
                 settings.Position = context.Position;
             }
             else
             {
-                if (target != null && IsSummoned(powerProto))
+                if (target != null && TargetsSummonedInventory(powerProto))
                     settings.Position = target.RegionLocation.Position;
                 else
                     settings.Position = context.TargetPosition;
             }
 
-            // get offset vector
+            // Apply offset vector
             if (contextProto.SummonOffsetVector != null)
             {
-                var offsetVector = contextProto.SummonOffsetVector.ToVector3();
+                Vector3 offsetVector = contextProto.SummonOffsetVector.ToVector3();
+
                 if (owner != null && owner.IsInWorld)
                 {
                     ref RegionLocation regionLocation = ref owner.RegionLocation;
-                    var transform = Transform3.BuildTransform(regionLocation.Position, regionLocation.Orientation);
+                    Transform3 transform = Transform3.BuildTransform(regionLocation.Position, regionLocation.Orientation);
                     offsetVector = transform * offsetVector;
                 }
+
                 settings.Position += offsetVector;
             }
 
-            // get orientation
-            var toTarget = ShouldOrientToTarget(powerProto);
+            // Orientation
+            bool orientToTarget = ShouldOrientToTarget(powerProto);
             if (owner != null)
             {
-                if (toTarget && owner.IsInWorld)
+                if (orientToTarget && owner.IsInWorld)
                     settings.Orientation = owner.Orientation;
 
                 settings.SourceEntityId = owner.Id;
             }
 
-            // fix orientation
-            if (toTarget == false)
+            if (orientToTarget == false)
                 settings.Orientation = Orientation.FromDeltaVector2D(context.TargetPosition - context.Position);
 
-            // get source position
+            // Source position
             if (powerProto.UseTargetAsSource)
             {
                 if (target != null)
@@ -576,42 +598,46 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            // get summon positions
-            var orientation = settings.Orientation;
-            var summonPositions = GetSummonPositions(owner, powerProto, summonProto, contextProto, region, context.Properties, 
-                settings.Position, ref orientation);
-            if (summonPositions == null) return PowerUseResult.GenericError;
-            settings.Orientation = orientation;
+            // Summon positions
+            using var summonPositionsHandle = ListPool<Vector3>.Instance.Get(out List<Vector3> summonPositions);
 
-            // hotspot size
+            Orientation orientation = settings.Orientation; 
+            bool hasSummonPositions = GetSummonPositions(owner, powerProto, summonProto, contextProto, region, context.Properties,
+                settings.Position, ref orientation, summonPositions);
+
+            if (!Verify.IsTrue(hasSummonPositions)) return PowerUseResult.GenericError;
+
+            settings.Orientation = orientation; // TODO: pass by ref to GetSummonPositions directly if we change EntitySettings to struct?
+
+            // Hotspot size
             float boundsScale = GetAOESizePctModifier(powerProto, ultimateOwner?.Properties);
             if (boundsScale != 1.0f && powerProto.IsHotspotSummoningPower())
                 settings.BoundsScaleOverride = boundsScale;
 
-            // set OptionFlags
+            // OptionFlags
             if (contextProto.SnapToFloor)
                 settings.OptionFlags |= EntitySettingsOptionFlags.HasOverrideSnapToFloor | EntitySettingsOptionFlags.OverrideSnapToFloorValue;
 
             if (contextProto.HideEntityOnSummon)
                 settings.OptionFlags |= EntitySettingsOptionFlags.IsClientEntityHidden;
 
-            // set lifespan
+            // Lifespan
             settings.Lifespan = TimeSpan.FromMilliseconds((int)context.Properties[PropertyEnum.SummonLifespanMS]);
             if (settings.Lifespan > TimeSpan.Zero && powerProto.OmniDurationBonusExclude == false)
             {
-                WorldEntity omni = null;
+                WorldEntity omniDurationBonusSource = null;
                 if (owner != null && owner.Properties.HasProperty(PropertyEnum.OmniDurationBonusPct))
                 {
-                    omni = owner;
+                    omniDurationBonusSource = owner;
                 }
                 else if (ultimateOwner != null && (owner == null || owner.IsTeamUpAgent == false))
                 {
-                    omni = ultimateOwner;
+                    omniDurationBonusSource = ultimateOwner;
                 }
 
-                if (omni != null)
+                if (omniDurationBonusSource != null)
                 {
-                    settings.Lifespan *= 1.0f + (float)omni.Properties[PropertyEnum.OmniDurationBonusPct];
+                    settings.Lifespan *= 1.0f + (float)omniDurationBonusSource.Properties[PropertyEnum.OmniDurationBonusPct];
                     settings.Lifespan = Clock.Max(settings.Lifespan, TimeSpan.FromMilliseconds(1));
                 }
 
@@ -619,39 +645,40 @@ namespace MHServerEmu.Games.Powers
                     settings.Lifespan *= 1.0f + (float)context.Properties[PropertyEnum.PetLifetimeChangePct];
             }
 
-            // set inventory
+            // InventoryLocation
             if (powerProto.TrackInInventory)
             {
-                Inventory inventory = null;
-                ulong conteinerId = Entity.InvalidId;
+                ulong containerId;
+                Inventory inventory;
+
                 if (powerProto.AttachSummonsToTarget)
                 {
-                    if (target != null)
-                    {
-                        conteinerId = target.Id;
-                        inventory = target.SummonedInventory;
-                    }
-                    else return PowerUseResult.TargetIsMissing;
+                    if (target == null)
+                        return PowerUseResult.TargetIsMissing;
+
+                    containerId = target.Id;
+                    inventory = target.SummonedInventory;
                 }
                 else
                 {
-                    if (owner != null)
-                    {
-                        conteinerId = owner.Id;
-                        inventory = owner.SummonedInventory;
-                    }
+                    if (owner == null)
+                        return PowerUseResult.GenericError;
+
+                    containerId = owner.Id;
+                    inventory = owner.SummonedInventory;
                 }
 
-                if (inventory == null || conteinerId == Entity.InvalidId) return PowerUseResult.GenericError;
+                if (!Verify.IsNotNull(inventory)) return PowerUseResult.GenericError;
+                if (!Verify.IsTrue(containerId != Entity.InvalidId)) return PowerUseResult.GenericError;
 
-                settings.InventoryLocation = new(conteinerId, inventory.PrototypeDataRef, Inventory.InvalidSlot);
+                settings.InventoryLocation = new(containerId, inventory.PrototypeDataRef, Inventory.InvalidSlot);
             }
 
-            // set properties
+            // Properties
             using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
-            SetSummonProperties(properties, context, summonProto, contextProto, owner, ultimateOwner, contextIndex);
+            SetSummonProperties(properties, ref context, summonProto, contextProto, owner, ultimateOwner, contextIndex);
 
-            // check EvalOnSummon
+            // EvalOnSummon
             if (contextProto.EvalOnSummon.HasValue())
             {
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
@@ -661,14 +688,21 @@ namespace MHServerEmu.Games.Powers
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, context.Properties);
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, ultimateOwner);
 
-                foreach (var evalProto in contextProto.EvalOnSummon)
-                    if (Eval.RunBool(evalProto, evalContext) == false)
-                        return PowerUseResult.GenericError;
+                bool evalSuccess = true;
+
+                foreach (EvalPrototype evalProto in contextProto.EvalOnSummon)
+                {
+                    bool curEvalSucceeded = Eval.RunBool(evalProto, evalContext);
+                    evalSuccess &= curEvalSucceeded;
+                    Verify.IsTrue(curEvalSucceeded, $"The following EvalOnSummon Eval in a power failed:\nEval: [{evalProto.ExpressionString()}]\nPower: [{powerProto}]");
+                }
+
+                if (!Verify.IsTrue(evalSuccess)) return PowerUseResult.GenericError;
             }
 
             settings.Properties = properties;
 
-            // kill previous
+            // KillPrevious
             int summonsCount = summonPositions.Count;
             if (summonsCount > 1)
             {
@@ -683,44 +717,46 @@ namespace MHServerEmu.Games.Powers
             if (owner != null && context.KillPrevious)
                 KillPreviousSummons(owner, powerProto, summonsCount);
 
-            // create entity
-            var populationManager = region.PopulationManager;
-            var spawnGroupId = context.Properties[PropertyEnum.SpawnGroupId];
-            foreach (var summonPos in summonPositions)
+            // At long last we can finally create the summoned entity.
+            PopulationManager populationManager = region.PopulationManager;
+            ulong spawnGroupId = context.Properties[PropertyEnum.SpawnGroupId];
+
+            foreach (Vector3 summonPos in summonPositions)
             {
                 settings.Position = summonPos;
 
-                SpawnGroup group = null;
-                if (owner != null)
-                {
-                    group = owner.SpawnGroup;
-                }
-                else if (powerProto.SummonAsPopulation)
-                {
-                    group = populationManager.GetSpawnGroup(spawnGroupId);
-                }
+                SpawnGroup spawnGroup = null;
 
-                if (group != null && powerProto.SummonAsPopulation)
+                if (owner != null)
+                    spawnGroup = owner.SpawnGroup;
+                else if (powerProto.SummonAsPopulation)
+                    spawnGroup = populationManager.GetSpawnGroup(spawnGroupId);
+
+                if (spawnGroup != null && powerProto.SummonAsPopulation)
                 {
-                    var spec = populationManager.CreateSpawnSpec(group);
-                    spec.EntityRef = settings.EntityRef;
-                    spec.Transform = Transform3.BuildTransform(settings.Position - group.Transform.Translation, settings.Orientation);
-                    spec.Properties.FlattenCopyFrom(settings.Properties, false);
-                    spec.Spawn();
+                    SpawnSpec spawnSpec = populationManager.CreateSpawnSpec(spawnGroup);
+                    spawnSpec.EntityRef = settings.EntityRef;
+                    spawnSpec.Transform = Transform3.BuildTransform(settings.Position - spawnGroup.Transform.Translation, settings.Orientation);
+                    spawnSpec.Properties.FlattenCopyFrom(settings.Properties, false);
+                    spawnSpec.Spawn();
                 }
                 else
                 {
-                    if (manager.CreateEntity(settings) is not WorldEntity summoned) continue;
+                    if (entityManager.CreateEntity(settings) is not WorldEntity summoned)
+                        continue;
 
                     if (powerProto.AttachSummonsToCaster || powerProto.AttachSummonsToTarget)
-                        summoned.AttachToEntity(target);
+                    {
+                        if (target != null && target.IsInWorld && target.TestStatus(EntityStatus.ExitingWorld) == false)
+                            summoned.AttachToEntity(target);
+                    }
 
                     if (contextProto.VisibleWhileAttached == false)
                         summoned.SetVisible(false);
 
                     if (owner != null && owner.IsInWorld)
                     {
-                        var power = owner.GetPower(powerProto.DataRef);
+                        Power power = owner.GetPower(powerProto.DataRef);
                         power?.HandleTriggerPowerEventOnSummonEntity(summoned.Id);
 
                         if (powerProto.IsPetSummoningPower())
@@ -738,23 +774,30 @@ namespace MHServerEmu.Games.Powers
         private int DestroySummoned(bool exitWorld)
         {
             int count = 0;
-            var powerProto = SummonPowerPrototype;
 
-            var inventory = Owner.SummonedInventory;
-            if (inventory == null) return count;
+            WorldEntity owner = Owner;
+            if (!Verify.IsNotNull(owner)) return count;
+
+            SummonPowerPrototype powerProto = SummonPowerPrototype;
+            if (!Verify.IsNotNull(powerProto)) return count;
+
+            Inventory inventory = Owner.SummonedInventory;
+            if (inventory == null)
+                return count;
 
             using var summonsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> summons);
 
-            foreach (var summoned in new SummonedEntityIterator(Owner))
+            foreach (WorldEntity summoned in new SummonedEntityIterator(Owner))
             {
-                if (summoned.IsDead) continue;
+                if (summoned.IsDead)
+                    continue;
 
                 PrototypeId powerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
                 if (powerRef == powerProto.DataRef)
                     summons.Add(summoned);
             }
 
-            foreach (var summoned in summons)
+            foreach (WorldEntity summoned in summons)
             {
                 if (exitWorld && summoned.Properties[PropertyEnum.SummonedEntityIsRegionPersisted])
                 {
@@ -776,36 +819,37 @@ namespace MHServerEmu.Games.Powers
 
         private static void KillPreviousSummons(WorldEntity owner, SummonPowerPrototype powerProto, int summonsCount)
         {
-            var inventory = owner.SummonedInventory;
-            if (inventory == null) return;
+            Inventory inventory = owner.SummonedInventory;
+            if (!Verify.IsNotNull(inventory)) return;
             
-            using var summonsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> summons);
+            using var killListHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> killList);
 
-            foreach (var summoned in new SummonedEntityIterator(owner))
+            foreach (WorldEntity summoned in new SummonedEntityIterator(owner))
             {
-                if (summoned.IsDead) continue;
+                if (summoned.IsDead)
+                    continue;
 
                 PrototypeId powerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
                 if (powerRef == powerProto.DataRef || powerProto.InSummonMaxCountWithOthers(powerRef))
-                    summons.Add(summoned);
+                    killList.Add(summoned);
             }
             
-            summons.Sort((a, b) => a.Id.CompareTo(b.Id));
-            if (summons.Count > summonsCount)
-                summons = summons.Take(summonsCount).ToList();
-
-            foreach (var summoned in summons)
-                KillSummoned(summoned, owner);
+            // Oldest summoned entities will have lowest entity ids.
+            killList.Sort(static (a, b) => a.Id.CompareTo(b.Id));
+            for (int i = 0; i < killList.Count && i < summonsCount; i++)
+                KillSummoned(killList[i], owner);
         }
 
-        private static List<Vector3> GetSummonPositions(WorldEntity owner, SummonPowerPrototype powerProto, WorldEntityPrototype summonProto, SummonEntityContextPrototype contextProto, 
-            Region region, PropertyCollection properties, Vector3 position, ref Orientation orientation)
+        private static bool GetSummonPositions(WorldEntity owner, SummonPowerPrototype powerProto, WorldEntityPrototype summonProto, SummonEntityContextPrototype contextProto, 
+            Region region, PropertyCollection properties, Vector3 position, ref Orientation orientation, List<Vector3> resultPositions)
         {
-            var boundsProto = summonProto.Bounds;
-            if (boundsProto == null || position == Vector3.Zero) return null;
+            BoundsPrototype boundsProto = summonProto.Bounds;
+            if (!Verify.IsNotNull(boundsProto)) return false;
+
+            Verify.IsTrue(position != Vector3.Zero);
 
             float radius = 0.0f;
-            var resultPosition = position;
+            Vector3 resultPosition = position;
 
             Bounds bounds = new(boundsProto, position);
 
@@ -820,19 +864,20 @@ namespace MHServerEmu.Games.Powers
                         radius = bounds.Radius;
                         break;
                     default:
-                        return null;
+                        Verify.IsTrue(false);
+                        return false;
                 }
             }
 
-            var pathFlags = Region.GetPathFlagsForEntity(summonProto);
+            PathFlags pathFlags = Region.GetPathFlagsForEntity(summonProto);
             if (contextProto.PathFilterOverride != LocomotorMethod.None)
                 pathFlags = Locomotor.GetPathFlags(contextProto.PathFilterOverride);
 
-            var posFlags = PositionCheckFlags.None;
-            var blockingFlags = BlockingCheckFlags.None;
+            PositionCheckFlags posFlags = PositionCheckFlags.None;
+            BlockingCheckFlags blockingFlags = BlockingCheckFlags.None;
 
-            if ((bounds.CollisionType == BoundsCollisionType.Blocking && contextProto.IgnoreBlockingOnSpawn == false) 
-                || contextProto.ForceBlockingCollisionForSpawn)
+            if ((bounds.CollisionType == BoundsCollisionType.Blocking && contextProto.IgnoreBlockingOnSpawn == false) ||
+                contextProto.ForceBlockingCollisionForSpawn)
             {
                 posFlags = PositionCheckFlags.CanBeBlockedEntity | PositionCheckFlags.CanPathToEntities | PositionCheckFlags.PreferNoEntity;
                 if (contextProto.ForceBlockingCollisionForSpawn)
@@ -843,76 +888,78 @@ namespace MHServerEmu.Games.Powers
             {
                 float summonRadius = contextProto.SummonRadius;
                 float maxRadius = Segment.IsNearZero(summonRadius) ? powerProto.Radius : summonRadius;
-                if (region.ChooseRandomPositionNearPoint(ref bounds, pathFlags, posFlags, blockingFlags, 0, maxRadius, out resultPosition) == false)
-                    return null;
+
+                if (!Verify.IsTrue(region.ChooseRandomPositionNearPoint(ref bounds, pathFlags, posFlags, blockingFlags, 0, maxRadius, out resultPosition)))
+                    return false;
             }
             else if (pathFlags != PathFlags.None && region.IsLocationClear(ref bounds, pathFlags, posFlags, blockingFlags) == false)
             {
-                if (contextProto.EnforceExactSummonPos == false)
-                {
-                    bool foundPosition = false;
-                    if (owner != null)
-                    {
-                        var ownerPosition = owner.RegionLocation.Position;
-                        foundPosition = region.NaviMesh.FindPointOnLineToOccupy(ref resultPosition, ownerPosition, bounds.Center,
-                            Vector3.Distance2D(ownerPosition, bounds.Center), ref bounds, pathFlags, blockingFlags, true) != PointOnLineResult.Failed;
-                    }
+                if (!Verify.IsTrue(contextProto.EnforceExactSummonPos == false)) return false;
 
-                    if (foundPosition == false)
-                    {
-                        float maxRadius = MathF.Max(radius * 2.0f, contextProto.SummonRadius);
-                        if (region.ChooseRandomPositionNearPoint(ref bounds, pathFlags, posFlags, blockingFlags, 0, maxRadius, out resultPosition) == false)
-                            return null;
-                    }
+                bool foundPosition = false;
+
+                if (owner != null)
+                {
+                    Vector3 ownerPosition = owner.RegionLocation.Position;
+                    foundPosition = region.NaviMesh.FindPointOnLineToOccupy(ref resultPosition, ownerPosition, bounds.Center,
+                        Vector3.Distance2D(ownerPosition, bounds.Center), ref bounds, pathFlags, blockingFlags, true) != PointOnLineResult.Failed;
                 }
-                else return null;
+
+                if (foundPosition == false)
+                {
+                    float maxRadius = MathF.Max(radius * 2.0f, contextProto.SummonRadius);
+
+                    if (!Verify.IsTrue(region.ChooseRandomPositionNearPoint(ref bounds, pathFlags, posFlags, blockingFlags, 0, maxRadius, out resultPosition)))
+                        return false;
+                }
             }
 
-            if (region.GetCellAtPosition(resultPosition) == null) return null;
+            if (!Verify.IsNotNull(region.GetCellAtPosition(resultPosition))) return false;
 
             float summonWidthMax = properties[PropertyEnum.SummonWidthMax];
             if (summonWidthMax > 0.0f)
             {
+                // Multiple positions
                 bounds.Center = resultPosition;
-                return GenerateSummonPositions(ref bounds, summonWidthMax, ref orientation, contextProto.SummonOffsetAngle, region, pathFlags, posFlags);
+                return GetSummonPositionsAlongLine(ref bounds, summonWidthMax, ref orientation, contextProto.SummonOffsetAngle, region, pathFlags, posFlags, resultPositions);
             }
+            else
+            {
+                // Single position
+                if (Segment.IsNearZero(contextProto.SummonOffsetAngle) == false)
+                    orientation.Yaw += MathHelper.ToRadians(contextProto.SummonOffsetAngle);
 
-            if (Segment.IsNearZero(contextProto.SummonOffsetAngle) == false)
-                orientation.Yaw += MathHelper.ToRadians(contextProto.SummonOffsetAngle);
-
-            List<Vector3> positionList = [];
-            positionList.Add(resultPosition);
-            return positionList;
+                resultPositions.Add(resultPosition);
+                return true;
+            }
         }
 
-        private static List<Vector3> GenerateSummonPositions(ref Bounds bounds, float summonWidthMax, ref Orientation orientation, float summonOffsetAngle, 
-            Region region, PathFlags pathFlags, PositionCheckFlags posFlags)
+        private static bool GetSummonPositionsAlongLine(ref Bounds bounds, float summonWidthMax, ref Orientation orientation, float summonOffsetAngle, 
+            Region region, PathFlags pathFlags, PositionCheckFlags posFlags, List<Vector3> resultPositions)
         {
-            var position = bounds.Center;
-            var radius = bounds.GetRadius();
-            var offsetAngle = MathHelper.ToRadians(summonOffsetAngle);
-            var angleDir = orientation.GetMatrix3() * Vector3.Forward;
-            var rotate = Vector3.AxisAngleRotate(angleDir, Vector3.Up, offsetAngle);
-            var halfWidth = summonWidthMax / 2.0f;
+            Vector3 position = bounds.Center;
+            float radius = bounds.GetRadius();
+            float offsetAngle = MathHelper.ToRadians(summonOffsetAngle);
+            Vector3 angleDir = orientation.GetMatrix3() * Vector3.Forward;
+            Vector3 rotate = Vector3.AxisAngleRotate(angleDir, Vector3.Up, offsetAngle);
+            float halfWidth = summonWidthMax / 2.0f;
 
-            Vector3? sweetL = position - rotate * halfWidth;
-            Vector3? sweetR = position + rotate * halfWidth;
+            Vector3? sweepL = position - rotate * halfWidth;
+            Vector3? sweepR = position + rotate * halfWidth;
             Vector3? normal = null;
 
-            var navi = region.NaviMesh;
-            navi.Sweep(position, sweetL.Value, radius, pathFlags, ref sweetL, ref normal);
-            navi.Sweep(position, sweetR.Value, radius, pathFlags, ref sweetR, ref normal);
+            NaviMesh navi = region.NaviMesh;
+            navi.Sweep(position, sweepL.Value, radius, pathFlags, ref sweepL, ref normal);
+            navi.Sweep(position, sweepR.Value, radius, pathFlags, ref sweepR, ref normal);
 
-            var dir = sweetR.Value - sweetL.Value;
+            Vector3 dir = sweepR.Value - sweepL.Value;
             orientation.Yaw = MathF.Atan2(dir.Y, dir.X);
 
-            List<Vector3> resultPositions = [];
-
-            var centerPos = sweetL.Value + dir / 2.0f;
+            Vector3 centerPos = sweepL.Value + dir / 2.0f;
             resultPositions.Add(centerPos);
 
-            var length = Vector3.Distance2D(sweetL.Value, sweetR.Value);
-            var width = radius * 2.0f;
+            float length = Vector3.Distance2D(sweepL.Value, sweepR.Value);
+            float width = radius * 2.0f;
 
             bool blockedL = false;
             bool blockedR = false;
@@ -920,14 +967,14 @@ namespace MHServerEmu.Games.Powers
 
             for (int i = 0; i < steps; i++)
             {
-                var distance = (i + 1) * width;
-                var leftPos = centerPos + rotate * distance;
-                var rightPos = centerPos - rotate * distance;
+                float distance = (i + 1) * width;
+                Vector3 leftPos = centerPos + rotate * distance;
+                Vector3 rightPos = centerPos - rotate * distance;
 
                 bounds.Center = leftPos;
                 if (blockedL == false)
                 {
-                    if (region.IsLocationClear(ref bounds, pathFlags, posFlags) == true)
+                    if (region.IsLocationClear(ref bounds, pathFlags, posFlags))
                         resultPositions.Add(leftPos);
                     else
                         blockedL = true;
@@ -936,20 +983,22 @@ namespace MHServerEmu.Games.Powers
                 bounds.Center = rightPos;
                 if (blockedR == false)
                 {
-                    if (region.IsLocationClear(ref bounds, pathFlags, posFlags) == true)
+                    if (region.IsLocationClear(ref bounds, pathFlags, posFlags))
                         resultPositions.Add(rightPos);
                     else
                         blockedR = true;
                 }
             }
 
-            return resultPositions;
+            return true;
         }
 
-        private static void SetSummonProperties(PropertyCollection properties, SummonContext context, WorldEntityPrototype summonProto, SummonEntityContextPrototype contextProto, 
+        private static void SetSummonProperties(PropertyCollection properties, ref SummonContext context, WorldEntityPrototype summonProto, SummonEntityContextPrototype contextProto, 
             WorldEntity owner, WorldEntity ultimateOwner, int contextIndex)
         {
-            var powerProto = context.PowerProto;
+            // NOTE: This is similar to SetExtraProperties in MissilePower.
+
+            SummonPowerPrototype powerProto = context.PowerProto;
 
             properties[PropertyEnum.SummonedByPower] = true;
 
@@ -1000,24 +1049,27 @@ namespace MHServerEmu.Games.Powers
             properties[PropertyEnum.CreatorPowerPrototype] = powerProto.DataRef;
             properties[PropertyEnum.DetachOnContainerDestroyed] = true;
 
-            var regionManager = context.Game.RegionManager;
-            if (regionManager != null)
+            RegionManager regionManager = context.Game.RegionManager;
+            if (Verify.IsNotNull(regionManager))
             {
-                var region = regionManager.GetRegion(context.RegionId);
+                Region region = regionManager.GetRegion(context.RegionId);
                 properties[PropertyEnum.NumOfPlayersInSameRegion] = ComputeNearbyPlayers(region, context.TargetPosition, 1);
             }
 
-            if (summonProto.IsVacuumable == false && context.OwnerAlliance != null)
+            if (summonProto.IsVacuumable == false && Verify.IsNotNull(context.OwnerAlliance))
                 properties[PropertyEnum.AllianceOverride] = context.OwnerAlliance.DataRef;
 
             if (summonProto.ModifiersGuaranteed.HasValue())
-                foreach (var boostRef in summonProto.ModifiersGuaranteed) 
+            {
+                foreach (PrototypeId boostRef in summonProto.ModifiersGuaranteed)
                     properties[PropertyEnum.EnemyBoost, boostRef] = true;
+            }
 
             if (summonProto.Properties != null && summonProto.Properties[PropertyEnum.RestrictedToPlayer])
             {
-                var player = owner?.GetOwnerOfType<Player>();
-                if (player == null) return;
+                Player player = owner?.GetOwnerOfType<Player>();
+                if (!Verify.IsNotNull(player)) return;
+
                 properties[PropertyEnum.RestrictedToPlayerGuid] = player.DatabaseUniqueId;
             }
 
@@ -1030,22 +1082,42 @@ namespace MHServerEmu.Games.Powers
 
         private void ScheduleSummonInterval(int index)
         {
-            var summonPowerProto = SummonPowerPrototype;
-            if (summonPowerProto.SummonIntervalMS <= 0) return;
+            SummonPowerPrototype summonPowerProto = SummonPowerPrototype;
+            if (summonPowerProto.SummonIntervalMS <= 0)
+                return;
 
-            var scheduler = Game?.GameEventScheduler;
-            if (scheduler == null) return;
+            EventScheduler scheduler = Game?.GameEventScheduler;
+            if (!Verify.IsNotNull(scheduler)) return;
 
-            if (_summonIntervalEvent.IsValid) scheduler.CancelEvent(_summonIntervalEvent);
+            if (_summonIntervalEvent.IsValid)
+                scheduler.CancelEvent(_summonIntervalEvent);
 
-            var timeOffset = TimeSpan.FromMilliseconds(summonPowerProto.SummonIntervalMS);
-            scheduler.ScheduleEvent(_summonIntervalEvent, timeOffset, _pendingEvents);
+            TimeSpan summonInterval = TimeSpan.FromMilliseconds(summonPowerProto.SummonIntervalMS);
+            scheduler.ScheduleEvent(_summonIntervalEvent, summonInterval, _pendingEvents);
             _summonIntervalEvent.Get().Initialize(this, index);
+        }
+
+        private struct SummonContext
+        {
+            public Game Game;
+            public WorldEntity Target;
+            public SummonPowerPrototype PowerProto;
+            public ulong RegionId;
+            public Vector3 Position;
+            public Vector3 TargetPosition;
+            public ulong PowerOwnerId;
+            public ulong UltimateOwnerId;
+            public AlliancePrototype OwnerAlliance;
+            public TimeSpan VariableActivationTime;
+            public AssetId EntityAsset;
+            public PropertyCollection Properties;
+            public int MaxSummons;
+            public bool KillPrevious;
         }
 
         private class SummonIntervalEvent : CallMethodEventParam1<SummonPower, int>
         {
-            protected override CallbackDelegate GetCallback() => (t, p1) => t.SummonEntityIndex(p1);
+            protected override CallbackDelegate GetCallback() => (t, p1) => t.SummonIntervalCallback(p1);
         }
     }
 }

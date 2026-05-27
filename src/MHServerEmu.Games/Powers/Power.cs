@@ -2637,7 +2637,7 @@ namespace MHServerEmu.Games.Powers
             return reachProto.Melee;
         }
 
-        public static bool IsSummoned(PowerPrototype powerProto)
+        public static bool TargetsSummonedInventory(PowerPrototype powerProto)
         {
             TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
             if (!Verify.IsNotNull(reachProto)) return false;

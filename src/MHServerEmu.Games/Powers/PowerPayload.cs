@@ -24,6 +24,11 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Powers
 {
+    public interface IPowerPayloadDeliverCallback
+    {
+        public void OnDeliverPayload(PowerPayload payload);
+    }
+
     /// <summary>
     /// Snapshots the state of a <see cref="Power"/> and its owner and calculates effects to be applied as <see cref="PowerResults"/>.
     /// </summary>
@@ -56,7 +61,7 @@ namespace MHServerEmu.Games.Powers
         public ulong RegionId { get; private set; }
         public AlliancePrototype OwnerAlliance { get; private set; }
         public TimeSpan ExecutionTime { get; private set; }
-        public Action<PowerPayload> DeliverAction { get; set; }
+        public IPowerPayloadDeliverCallback DeliverCallback { get; set; }
         public EventGroup PendingEvents { get; } = new();
 
         public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; }
@@ -248,7 +253,7 @@ namespace MHServerEmu.Games.Powers
 
         public void OnDeliverPayload()
         {
-            DeliverAction?.Invoke(this);
+            DeliverCallback?.OnDeliverPayload(this);
         }
 
         /// <summary>
