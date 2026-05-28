@@ -821,7 +821,7 @@ namespace MHServerEmu.Games.Powers
                 return;
 
             Power triggeringPower = powerCollection.GetPower(settings.TriggeringPowerRef);
-            if (!Verify.IsNotNull(triggeredPower, $"Triggering power for power [{this}] could not be found in the power collection that does not set to RescheduleActivationInSeconds event type."))
+            if (!Verify.IsNotNull(triggeringPower, $"Triggering power for power [{this}] could not be found in the power collection that does not set to RescheduleActivationInSeconds event type."))
                 return;
 
             TimeSpan delay = TimeSpan.Zero;
