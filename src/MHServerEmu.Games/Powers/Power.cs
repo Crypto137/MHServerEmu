@@ -4045,19 +4045,23 @@ namespace MHServerEmu.Games.Powers
         {
             actualTargetPosition = originalTargetPosition;
 
-            if (Game == null || Owner == null) return;
-            var style = TargetingStylePrototype;
-            if (style == null) return;
+            if (!Verify.IsNotNull(Game)) return;
+            if (!Verify.IsNotNull(Owner)) return;
+
+            TargetingStylePrototype style = TargetingStylePrototype;
+            if (!Verify.IsNotNull(style)) return;
 
             Vector3 ownerPosition = Owner.RegionLocation.Position;
 
             if (Prototype is MovementPowerPrototype movementPowerProto)
             {
-                var target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+
                 if (movementPowerProto.CustomBehavior != null)
                 {
-                    var context = new MovementBehaviorPrototype.Context(this, Owner, target, originalTargetPosition);
-                    if (movementPowerProto.CustomBehavior.GenerateTargetPosition(context, ref actualTargetPosition)) return;
+                    MovementBehaviorPrototype.Context context = new(this, Owner, target, originalTargetPosition);
+                    if (movementPowerProto.CustomBehavior.GenerateTargetPosition(context, ref actualTargetPosition))
+                        return;
                 }
 
                 if (movementPowerProto.TeleportMethod == TeleportMethodType.Teleport && Owner.Properties.HasProperty(PropertyEnum.TeleportLockdown))
@@ -4070,12 +4074,12 @@ namespace MHServerEmu.Games.Powers
 
                 if (movementPowerProto.MoveToOppositeEdgeOfTarget && target != null)
                 {
-                    if (movementPowerProto.MoveToExactTargetLocation == false) return;
+                    if (!Verify.IsTrue(movementPowerProto.MoveToExactTargetLocation)) return;
 
                     Vector3 targetPosition = target.RegionLocation.Position;
                     direction = targetPosition - ownerPosition;
 
-                    if (!Vector3.IsNearZero(direction))
+                    if (Vector3.IsNearZero(direction) == false)
                     {
                         direction = Vector3.Normalize(direction);
                         float radius = target.Bounds.Radius + Owner.Bounds.Radius;
@@ -4083,7 +4087,9 @@ namespace MHServerEmu.Games.Powers
                         actualTargetPosition += direction * movementPowerProto.AdditionalTargetPosOffset;
                     }
                     else
+                    {
                         actualTargetPosition = targetPosition;
+                    }
                 }
                 else if (movementPowerProto.MoveToExactTargetLocation)
                 {
@@ -4093,9 +4099,11 @@ namespace MHServerEmu.Games.Powers
                             direction = originalTargetPosition - target.RegionLocation.Position;
                     }
                     else
+                    {
                         direction = originalTargetPosition - ownerPosition;
+                    }
 
-                    if (!Vector3.IsNearZero(direction))
+                    if (Vector3.IsNearZero(direction) == false)
                     {
                         direction = Vector3.Normalize(direction);
 
@@ -4105,7 +4113,7 @@ namespace MHServerEmu.Games.Powers
                         Vector3 offset = direction * movementPowerProto.AdditionalTargetPosOffset;
                         Vector3 offsetDirection = actualTargetPosition + offset - ownerPosition;
 
-                        if (!Vector3.IsNearZero(offsetDirection))
+                        if (Vector3.IsNearZero(offsetDirection) == false)
                         {
                             offsetDirection = Vector3.Normalize(offsetDirection);
                             if (Vector3.Dot(direction, offsetDirection) >= 0f)
@@ -4135,15 +4143,16 @@ namespace MHServerEmu.Games.Powers
 
                 bool isBlocked = false;
                 float rangeOverride = 0.0f;
-                if (movementPowerProto.TeleportMethod != TeleportMethodType.None && !movementPowerProto.IgnoreTeleportBlockers)
+                if (movementPowerProto.TeleportMethod != TeleportMethodType.None && movementPowerProto.IgnoreTeleportBlockers == false)
                 {
-                    var region = Owner.Region;
-                    if (region == null) return;
+                    Region region = Owner.Region;
+                    if (!Verify.IsNotNull(region)) return;
 
                     Vector3? collisionPosition = Vector3.Zero;
                     Vector3 sweepVelocity = Vector3.Normalize(actualTargetPosition - ownerPosition) * GetRange();
-                    var firstHitEntity = region.SweepToFirstHitEntity(ref Owner.Bounds, sweepVelocity, ref collisionPosition,
+                    WorldEntity firstHitEntity = region.SweepToFirstHitEntity(ref Owner.Bounds, sweepVelocity, ref collisionPosition,
                         new MovementPowerEntityCollideFunc(1 << (int)BoundsMovementPowerBlockType.All));
+
                     if (firstHitEntity != null)
                     {
                         rangeOverride = Vector3.Distance2D(ownerPosition, collisionPosition.Value);
@@ -4164,7 +4173,7 @@ namespace MHServerEmu.Games.Powers
                 if (movementPowerProto.MoveFullDistance == false || movementPowerProto.TeleportMethod != TeleportMethodType.None)
                 {
                     Vector3? resultPostion = actualTargetPosition;
-                    var result = PowerPositionSweep(ref Owner.RegionLocation, actualTargetPosition, targetId, ref resultPostion, isBlocked, rangeOverride);
+                    PowerPositionSweepResult result = PowerPositionSweep(ref Owner.RegionLocation, actualTargetPosition, targetId, ref resultPostion, isBlocked, rangeOverride);
                     actualTargetPosition = resultPostion.Value;
 
                     if (Verify.IsTrue(result != PowerPositionSweepResult.Error && result != PowerPositionSweepResult.TargetPositionInvalid,
@@ -4184,12 +4193,14 @@ namespace MHServerEmu.Games.Powers
             {
                 if (style.AOESelfCentered)
                 {
-                    if (style.TargetingShape == TargetingShapeType.CircleArea
-                        || (style.TargetingShape == TargetingShapeType.WedgeArea
-                        || style.TargetingShape == TargetingShapeType.ArcArea
-                        || style.TargetingShape == TargetingShapeType.BeamSweep)
-                        && Vector3.LengthSqr(originalTargetPosition - ownerPosition) < 400.0f)
+                    if (style.TargetingShape == TargetingShapeType.CircleArea ||
+                        ((style.TargetingShape == TargetingShapeType.WedgeArea ||
+                        style.TargetingShape == TargetingShapeType.ArcArea ||
+                        style.TargetingShape == TargetingShapeType.BeamSweep) &&
+                        Vector3.LengthSqr(originalTargetPosition - ownerPosition) < 400.0f))
+                    {
                         actualTargetPosition = ownerPosition;
+                    }
                 }
 
                 if (style.RandomPositionRadius > 0)

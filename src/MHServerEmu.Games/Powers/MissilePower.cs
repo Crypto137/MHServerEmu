@@ -142,6 +142,32 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
+        protected override void GenerateActualTargetPosition(ulong targetId, Vector3 originalTargetPosition, out Vector3 actualTargetPosition, ref PowerActivationSettings settings)
+        {
+            actualTargetPosition = originalTargetPosition;
+
+            if (!Verify.IsNotNull(Owner)) return;
+
+            MissilePowerPrototype missilePowerProto = MissilePowerPrototype;
+            if (!Verify.IsNotNull(missilePowerProto)) return;
+
+            if (missilePowerProto.MissileUsesActualTargetPos)
+                return;
+
+            Vector3 ownerPosition = Owner.RegionLocation.Position;
+            Vector3 direction = originalTargetPosition - ownerPosition;
+
+            if ((targetId == Entity.InvalidId && Vector3.LengthSquared(direction) < 400f) ||
+                (targetId != Entity.InvalidId && Segment.IsNearZero(Vector3.LengthSquared2D(direction))))
+            {
+                direction = Owner.Forward.To2D();
+            }
+
+            direction = Vector3.SafeNormalize(direction, Owner.Forward);
+
+            actualTargetPosition = ownerPosition + direction * GetRange();
+        }
+
         private MissileCreateResult CreateMissileLooper(PowerApplication powerApplication)
         {
             MissilePowerPrototype prototype = MissilePowerPrototype;
