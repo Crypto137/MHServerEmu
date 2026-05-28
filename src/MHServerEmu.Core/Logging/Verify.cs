@@ -178,7 +178,7 @@ namespace MHServerEmu.Core.Logging
             if (isNew)
                 stackTrace = $" StackTrace:\n{Environment.StackTrace}";
 
-            Logger.Log(level, $"Verify failed: {message}\n\tFile:{file} Line:{line} Member:{member}(){stackTrace}");
+            Logger.Log(level, $"Verify failed: {message}\n\tFile:{file} Line:{line} Member:{member}(){stackTrace}", LogChannels.General, LogCategory.Verify);
         }
     }
 }

@@ -35,6 +35,7 @@
         Common,
         Chat,
         MTXStore,
+        Verify,
         NumCategories
     }
 }
