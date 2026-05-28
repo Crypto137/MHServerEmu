@@ -889,12 +889,14 @@ namespace MHServerEmu.Games.Powers
                 float summonRadius = contextProto.SummonRadius;
                 float maxRadius = Segment.IsNearZero(summonRadius) ? powerProto.Radius : summonRadius;
 
-                if (!Verify.IsTrue(region.ChooseRandomPositionNearPoint(ref bounds, pathFlags, posFlags, blockingFlags, 0, maxRadius, out resultPosition)))
+                bool foundPosition = region.ChooseRandomPositionNearPoint(ref bounds, pathFlags, posFlags, blockingFlags, 0, maxRadius, out resultPosition);
+                if (!Verify.IsTrue(foundPosition, $"Failed to find RandomSpawnLocation for summon power.\nPower=[{powerProto}]"))
                     return false;
             }
             else if (pathFlags != PathFlags.None && region.IsLocationClear(ref bounds, pathFlags, posFlags, blockingFlags) == false)
             {
-                if (!Verify.IsTrue(contextProto.EnforceExactSummonPos == false)) return false;
+                if (!Verify.IsTrue(contextProto.EnforceExactSummonPos == false, $"Summon power is flagged as EnforceExactSummonPos, but the location is not clear.\nPower=[{powerProto}]"))
+                    return false;
 
                 bool foundPosition = false;
 
@@ -909,12 +911,14 @@ namespace MHServerEmu.Games.Powers
                 {
                     float maxRadius = MathF.Max(radius * 2.0f, contextProto.SummonRadius);
 
-                    if (!Verify.IsTrue(region.ChooseRandomPositionNearPoint(ref bounds, pathFlags, posFlags, blockingFlags, 0, maxRadius, out resultPosition)))
+                    foundPosition = region.ChooseRandomPositionNearPoint(ref bounds, pathFlags, posFlags, blockingFlags, 0, maxRadius, out resultPosition);
+                    if (!Verify.IsTrue(foundPosition, $"Failed to find fallback position for summon power.\nPower=[{powerProto}]"))
                         return false;
                 }
             }
 
-            if (!Verify.IsNotNull(region.GetCellAtPosition(resultPosition))) return false;
+            if (!Verify.IsNotNull(region.GetCellAtPosition(resultPosition), $"No cell at target position for summon power.\nPower=[{powerProto}]\nRegion=[{region}]\nPosition=[{resultPosition}]"))
+                return false;
 
             float summonWidthMax = properties[PropertyEnum.SummonWidthMax];
             if (summonWidthMax > 0.0f)
