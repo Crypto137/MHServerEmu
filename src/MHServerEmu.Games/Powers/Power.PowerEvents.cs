@@ -749,7 +749,7 @@ namespace MHServerEmu.Games.Powers
             if (!Verify.IsNotNull(ultimateOwner)) return;
 
             // Team-ups should not be able to increment charges
-            if (!Verify.IsTrue(Owner.IsTeamUpAgent == false && ultimateOwner.IsTeamUpAgent == false && Owner is Avatar)) return;
+            if (!Verify.IsTrue(Owner.IsTeamUpAgent == false && ultimateOwner.IsTeamUpAgent == false && ultimateOwner is Avatar)) return;
 
             int delta = (int)triggeredPowerEvent.GetEventParam(Properties, ultimateOwner);
             if (!Verify.IsTrue(delta != 0)) return;
