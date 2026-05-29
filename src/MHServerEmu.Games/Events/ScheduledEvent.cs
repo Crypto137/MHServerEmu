@@ -7,8 +7,6 @@ namespace MHServerEmu.Games.Events
     /// </summary>
     public abstract class ScheduledEvent
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         // We don't need a collection of pointers for this like the client because
         // in practice there is never more than one pointer to an event.
         private IEventPointer _pointer;
@@ -51,26 +49,20 @@ namespace MHServerEmu.Games.Events
         /// Links this <see cref="ScheduledEvent"/> to the provided <see cref="IEventPointer"/> instance.
         /// Returns <see langword="false"/> if already linked to another instance.
         /// </summary>
-        public bool Link(IEventPointer pointer)
+        public void Link(IEventPointer pointer)
         {
-            if (_pointer != null)
-                return Logger.WarnReturn(false, $"Link(): {GetType().Name} is already linked to a pointer");
-
+            if (!Verify.IsTrue(_pointer == null)) return;
             _pointer = pointer;
-            return true;
         }
 
         /// <summary>
         /// Unlinks this <see cref="ScheduledEvent"/> from the provided <see cref="IEventPointer"/> instance.
         /// Returns <see langword="false"/> if not linked to the provided instance.
         /// </summary>
-        public bool Unlink(IEventPointer pointer)
+        public void Unlink(IEventPointer pointer)
         {
-            if (pointer != _pointer)
-                return Logger.WarnReturn(false, $"Unlink(): {GetType().Name} is not linked to the provided pointer");
-
+            if (!Verify.IsTrue(_pointer == pointer)) return;
             _pointer = null;
-            return true;
         }
 
         /// <summary>
@@ -87,15 +79,12 @@ namespace MHServerEmu.Games.Events
         /// <summary>
         /// The callback that runs when this <see cref="ScheduledEvent"/> is triggered by an <see cref="EventScheduler"/>.
         /// </summary>
-        public abstract bool OnTriggered();
+        public abstract void OnTriggered();
 
         /// <summary>
         /// The callback that runs when this <see cref="ScheduledEvent"/> is cancelled.
         /// </summary>
-        public virtual bool OnCancelled()
-        {
-            return true;
-        }
+        public virtual void OnCancelled() { }
 
         /// <summary>
         /// Called when this <see cref="ScheduledEvent"/> is returned to its <see cref="ScheduledEventPool"/>.

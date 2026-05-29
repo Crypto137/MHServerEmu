@@ -13,9 +13,9 @@ namespace MHServerEmu.Games.Events
     {
         private const int MaxEventsPerUpdate = 250000;
 
+#if DEBUG
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-#if DEBUG
         private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
 #endif
 
@@ -63,34 +63,29 @@ namespace MHServerEmu.Games.Events
         /// <summary>
         /// Creates an instance of <typeparamref name="T"/> and links it to the provided <see cref="EventPointer{T}"/>.
         /// </summary>
-        public bool ScheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset, EventGroup eventGroup = null) where T: ScheduledEvent, new()
+        public void ScheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset, EventGroup eventGroup = null) where T: ScheduledEvent, new()
         {
-            if (eventPointer.IsValid) return Logger.WarnReturn(false, $"ScheduleEvent<{typeof(T).Name}>(): eventPointer.IsValid");
+            if (!Verify.IsTrue(eventPointer.IsValid == false)) return;
 
             if (_cancellingAllEvents)
-                return false;
+                return;
 
             T @event = ConstructAndScheduleEvent<T>(timeOffset);
             eventGroup?.Add(@event);
             eventPointer.Set(@event);
-
-            return true;
         }
 
         /// <summary>
         /// Reschedules the <typeparamref name="T"/> instance linked to the provided <see cref="EventPointer{T}"/> to <see cref="CurrentTime"/> + timeOffset.
         /// </summary>
-        public bool RescheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset) where T: ScheduledEvent
+        public void RescheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset) where T: ScheduledEvent
         {
-            if (eventPointer.IsValid == false)
-                return Logger.WarnReturn(false, $"RescheduleEvent<{typeof(T).Name}>: eventPointer.IsValid == false");
+            if (!Verify.IsTrue(eventPointer.IsValid)) return;
 
             if (_cancellingAllEvents)
                 CancelEvent((T)eventPointer);
             else
                 RescheduleEvent((T)eventPointer, timeOffset);
-
-            return true;
         }
 
         /// <summary>
@@ -263,11 +258,8 @@ namespace MHServerEmu.Games.Events
         {
             T @event = _eventPool.Get<T>();
 
-            if (timeOffset < TimeSpan.Zero)
-            {
-                Logger.Warn($"ConstructEvent<{typeof(T).Name}>(): timeOffset < TimeSpan.Zero");
+            if (!Verify.IsTrue(timeOffset >= TimeSpan.Zero))
                 timeOffset = TimeSpan.Zero;
-            }
 
             @event.FireTime = CurrentTime + timeOffset;
             ScheduleEvent(@event);
@@ -327,16 +319,13 @@ namespace MHServerEmu.Games.Events
         /// <summary>
         /// Reschedules the provided <see cref="ScheduledEvent"/> instance by bucket sorting it again using the provided new time offset.
         /// </summary>
-        private bool RescheduleEvent(ScheduledEvent @event, TimeSpan timeOffset)
+        private void RescheduleEvent(ScheduledEvent @event, TimeSpan timeOffset)
         {
-            if (@event.ProcessListNode.List == null)
-                return Logger.WarnReturn(false, $"RescheduleEvent(): Attempting to reschedule a {@event.GetType().Name} that is not currently scheduled");
+            if (!Verify.IsNotNull(@event.ProcessListNode.List, $"Attempting to reschedule a {@event.GetType().Name} that is not currently scheduled"))
+                return;
 
-            if (timeOffset < TimeSpan.Zero)
-            {
-                Logger.Warn($"RescheduleEvent(): timeOffset < TimeSpan.Zero for {@event.GetType().Name}");
+            if (!Verify.IsTrue(timeOffset >= TimeSpan.Zero))
                 timeOffset = TimeSpan.Zero;
-            }
 
             // Calculate frames for times before and after rescheduling and update fire time on the event
             TimeSpan fireTimeBefore = @event.FireTime;
@@ -392,8 +381,6 @@ namespace MHServerEmu.Games.Events
                     }
                 }
             }
-
-            return true;
         }
 
         /// <summary>

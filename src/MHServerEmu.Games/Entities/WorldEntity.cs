@@ -4760,12 +4760,7 @@ namespace MHServerEmu.Games.Entities
         private class ScheduledPowerResultsEvent : CallMethodEventParam1<Entity, PowerResults>
         {
             protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).ApplyPowerResults(p1);
-
-            public override bool OnCancelled()
-            {
-                _param1.Clear();    // Clear to prevent conditions leaking from their pool
-                return true;
-            }
+            public override void OnCancelled() => _param1.Clear();    // Clear to prevent conditions leaking from their pool
         }
 
         private class NegateHotspotsEvent : CallMethodEvent<Entity>
@@ -4781,7 +4776,7 @@ namespace MHServerEmu.Games.Entities
         private class ScheduledWeaponReturnEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => t.Properties[PropertyEnum.WeaponMissing] = false;
-            public override bool OnCancelled() => _eventTarget.Properties[PropertyEnum.WeaponMissing] = false;
+            public override void OnCancelled() => _eventTarget.Properties[PropertyEnum.WeaponMissing] = false;
         }
 
         private class AwardInteractionLootEvent : CallMethodEventParam1<Entity, ulong>

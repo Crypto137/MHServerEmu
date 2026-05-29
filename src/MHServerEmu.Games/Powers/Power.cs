@@ -5453,19 +5453,17 @@ namespace MHServerEmu.Games.Powers
                 _settings = settings;
             }
 
-            public override bool OnTriggered()
+            public override void OnTriggered()
             {
-                if (!Verify.IsNotNull(_eventTarget)) return false;
-                if (!Verify.IsNotNull(_eventTarget.Game)) return false;
+                if (!Verify.IsNotNull(_eventTarget)) return;
+                if (!Verify.IsNotNull(_eventTarget.Game)) return;
                 _eventTarget.ScheduledActivateCallback(_triggeredPowerProtoRef, _triggeredPowerEvent, ref _settings);
-                return true;
             }
 
-            public override bool OnCancelled()
+            public override void OnCancelled()
             {
-                if (!Verify.IsNotNull(_eventTarget)) return false;
-                if (!Verify.IsNotNull(_eventTarget.Game)) return false;
-                return true;
+                if (!Verify.IsNotNull(_eventTarget)) return;
+                if (!Verify.IsNotNull(_eventTarget.Game)) return;
             }
         }
 
@@ -5487,7 +5485,7 @@ namespace MHServerEmu.Games.Powers
         private class StopChannelingEvent : CallMethodEvent<Power>
         {
             protected override CallbackDelegate GetCallback() => (t) => t.StopChanneling();
-            public override bool OnCancelled() => OnTriggered();
+            public override void OnCancelled() => OnTriggered();
         }
 
         private class PowerApplyEvent : ScheduledEvent
@@ -5501,15 +5499,13 @@ namespace MHServerEmu.Games.Powers
                 _powerApplication = powerApplication;
             }
 
-            public override bool OnTriggered()
+            public override void OnTriggered()
             {
-                if (!Verify.IsNotNull(_power)) return false;
-                if (!Verify.IsNotNull(_powerApplication)) return false;
+                if (!Verify.IsNotNull(_power)) return;
+                if (!Verify.IsNotNull(_powerApplication)) return;
 
                 if (_power.Owner.IsSimulated)
                     _power.ApplyPower(_powerApplication);
-
-                return true;
             }
 
             public override void Clear()
@@ -5550,9 +5546,9 @@ namespace MHServerEmu.Games.Powers
                 _payload = payload;
             }
 
-            public override bool OnTriggered()
+            public override void OnTriggered()
             {
-                return DeliverPayload(_payload);
+                DeliverPayload(_payload);
             }
 
             public override void Clear()

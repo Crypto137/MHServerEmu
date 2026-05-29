@@ -656,29 +656,27 @@ namespace MHServerEmu.Games.Powers
                 _powerApplication = powerApplication;
             }
 
-            public override bool OnTriggered()
+            public override void OnTriggered()
             {
-                if (!Verify.IsNotNull(_missilePower)) return false;
+                if (!Verify.IsNotNull(_missilePower)) return;
 
                 WorldEntity owner = _missilePower.Owner;
                 if (owner == null || (owner is Agent && owner.IsDead) || owner.IsInWorld == false)
-                    return false;
+                    return;
 
                 MissilePowerPrototype missilePowerProto = _missilePower.MissilePowerPrototype;
-                if (!Verify.IsNotNull(missilePowerProto)) return false;
+                if (!Verify.IsNotNull(missilePowerProto)) return;
 
                 MissileCreateResult result = _missilePower.CreateMissileLooper(_powerApplication);
                 if (!Verify.IsTrue(result == MissileCreateResult.Success, $"CreateMissileDelayedEvent failed to create all its missiles! Result: {result}  Power: {_missilePower}  Owner: {owner}"))
-                    return false;
+                    return;
 
                 if (_missilePower.ShouldScheduleMoreMissilesForCreation(missilePowerProto))
                 {
                     if (!Verify.IsTrue(_missilePower.ScheduleCreationDelayEvent(_missilePower.CreationDelay, _powerApplication),
                         $"Failed to schedule a missile creation event Power:{_missilePower}"))
-                        return false;
+                        return;
                 }
-
-                return true;
             }
 
             public override void Clear()

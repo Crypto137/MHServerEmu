@@ -8,8 +8,6 @@ namespace MHServerEmu.Games.Events.Templates
     /// </summary>
     public abstract class CallMethodEventParam3<TTarget, TParam1, TParam2, TParam3> : TargetedScheduledEvent<TTarget>
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         protected TParam1 _param1;
         protected TParam2 _param2;
         protected TParam3 _param3;
@@ -27,11 +25,10 @@ namespace MHServerEmu.Games.Events.Templates
             _param3 = param3;
         }
 
-        public override bool OnTriggered()
+        public override void OnTriggered()
         {
-            if (_eventTarget == null) return Logger.WarnReturn(false, "OnTriggered(): _eventTarget == null");
+            if (!Verify.IsTrue(_eventTarget != null)) return;
             GetCallback().Invoke(_eventTarget, _param1, _param2, _param3);
-            return true;
         }
 
         public override void Clear()

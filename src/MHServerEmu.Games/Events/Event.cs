@@ -6,17 +6,16 @@ namespace MHServerEmu.Games.Events
     {
         public const int InfiniteLoopCheckLimit = 100000;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly LinkedList<Action> _actionList = new();
         private readonly Stack<ActionIterator<Action>> _iteratorStack = new();
         private readonly List<ActionIterator<Action>> _activeIteratorList = new();
+
         private int _infiniteLoopCheckCount = 0;
 
         public bool AddActionFront(Action action)
         {
-            if (action == null) return Logger.ErrorReturn(false, "AddActionFront action == null");
-            if (_infiniteLoopCheckCount >= InfiniteLoopCheckLimit) return Logger.ErrorReturn(false, $"AddActionFront {_infiniteLoopCheckCount} >= InfiniteLoopCheckLimit");
+            if (!Verify.IsNotNull(action)) return false;
+            if (!Verify.IsTrue(_infiniteLoopCheckCount < InfiniteLoopCheckLimit)) return false;
 
             _actionList.AddFirst(action);
             return _infiniteLoopCheckCount < InfiniteLoopCheckLimit;
@@ -24,8 +23,8 @@ namespace MHServerEmu.Games.Events
 
         public bool AddActionBack(Action action)
         {
-            if (action == null) return Logger.ErrorReturn(false, "AddActionBack action == null");
-            if (_infiniteLoopCheckCount >= InfiniteLoopCheckLimit) return Logger.ErrorReturn(false, $"AddActionBack {_infiniteLoopCheckCount} >= InfiniteLoopCheckLimit");
+            if (!Verify.IsNotNull(action)) return false;
+            if (!Verify.IsTrue(_infiniteLoopCheckCount < InfiniteLoopCheckLimit)) return false;
 
             LinkedListNode<Action> newNode = _actionList.AddLast(action);
             foreach (ActionIterator<Action> iterator in _activeIteratorList)
@@ -105,19 +104,18 @@ namespace MHServerEmu.Games.Events
 
     public class Event<T> where T: struct, IGameEventData
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly LinkedList<Action> _actionList = new();
         private readonly Stack<ActionIterator<Action>> _iteratorStack = new();
         private readonly List<ActionIterator<Action>> _activeIteratorList = new();
+
         private int _infiniteLoopCheckCount = 0;
 
         public delegate void Action(in T eventData);
 
         public bool AddActionFront(Action action)
         {
-            if (action == null) return Logger.ErrorReturn(false, $"AddActionFront [{typeof(T).Name}]  action == null") ;
-            if (_infiniteLoopCheckCount >= Event.InfiniteLoopCheckLimit) return Logger.ErrorReturn(false, $"AddActionFront [{typeof(T).Name}] {_infiniteLoopCheckCount} >= InfiniteLoopCheckLimit");
+            if (!Verify.IsNotNull(action)) return false;
+            if (!Verify.IsTrue(_infiniteLoopCheckCount < Event.InfiniteLoopCheckLimit)) return false;
 
             _actionList.AddFirst(action);
             return _infiniteLoopCheckCount < Event.InfiniteLoopCheckLimit;
@@ -125,8 +123,8 @@ namespace MHServerEmu.Games.Events
 
         public bool AddActionBack(Action action)
         {
-            if (action == null) return Logger.ErrorReturn(false, $"AddActionBack [{typeof(T).Name}]  action == null");
-            if (_infiniteLoopCheckCount >= Event.InfiniteLoopCheckLimit) return Logger.ErrorReturn(false, $"AddActionBack [{typeof(T).Name}] {_infiniteLoopCheckCount} >= InfiniteLoopCheckLimit");
+            if (!Verify.IsNotNull(action)) return false;
+            if (!Verify.IsTrue(_infiniteLoopCheckCount < Event.InfiniteLoopCheckLimit)) return false;
 
             LinkedListNode<Action> newNode = _actionList.AddLast(action);
             foreach (ActionIterator<Action> iterator in _activeIteratorList)

@@ -8,8 +8,6 @@ namespace MHServerEmu.Games.Events
     /// </summary>
     public class ScheduledEventPool
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Dictionary<Type, Node> _nodeDict = new();
 
         private readonly Stack<LinkedList<ScheduledEvent>> _listStack = new();
@@ -58,16 +56,14 @@ namespace MHServerEmu.Games.Events
         /// <summary>
         /// Returns a <see cref="ScheduledEvent"/> instance to the pool.
         /// </summary>
-        public bool Return(ScheduledEvent @event)
+        public void Return(ScheduledEvent @event)
         {
-            // All events returned to the pool need to be created by the pool. If we don't have a node for this type, this event have been created somewhere else.
+            // All events returned to the pool need to be created by the pool. If we don't have a node for this type, this event must have been created somewhere else.
             Type type = @event.GetType();
-            if (_nodeDict.TryGetValue(type, out Node node) == false)
-                return Logger.WarnReturn(false, $"Return(): Failed to get a node for a scheduled event instance of type {type.Name}");
+            if (!Verify.IsTrue(_nodeDict.TryGetValue(type, out Node node))) return;
 
             node.Return(@event);
             ActiveInstanceCount--;
-            return true;
         }
 
         /// <summary>
@@ -93,14 +89,12 @@ namespace MHServerEmu.Games.Events
         /// <summary>
         /// Returns a <see cref="LinkedList{T}"/> instance to the pool.
         /// </summary>
-        public bool ReturnList(LinkedList<ScheduledEvent> eventList)
+        public void ReturnList(LinkedList<ScheduledEvent> eventList)
         {
             // Here we accept LinkedList instances created elsewhere (e.g. when constructing WindowBuckets)
-            if (eventList.Count != 0)
-                return Logger.WarnReturn(false, "ReturnList(): Attemped to return non-empty LinkedList to the pool");
+            if (!Verify.IsTrue(eventList.Count == 0)) return;
 
             _listStack.Push(eventList);
-            return true;
         }
 
         /// <summary>
