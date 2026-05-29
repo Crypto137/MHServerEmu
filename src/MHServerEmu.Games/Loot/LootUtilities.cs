@@ -14,8 +14,6 @@ namespace MHServerEmu.Games.Loot
 {
     public static class LootUtilities
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public static bool PickValidItem(IItemResolver resolver, Picker<Prototype> basePicker, AgentPrototype teamUpProto, DropFilterArguments filterArgs,
             ref ItemPrototype pickedItemProto, RestrictionTestFlags restrictionFlags, ref PrototypeId? rarityProtoRef)
         {
@@ -30,11 +28,9 @@ namespace MHServerEmu.Games.Loot
 
                 while (iterationPicker.PickRemove(out Prototype proto))
                 {
-                    if (proto is not ItemPrototype itemProto)
-                    {
-                        Logger.Warn("PickValidItem(): itemProto == null");
+                    ItemPrototype itemProto = proto as ItemPrototype;
+                    if (!Verify.IsNotNull(itemProto))
                         continue;
-                    }
 
                     currentArgs.ItemProto = itemProto;
                     currentArgs.RollFor = itemProto.GetRollForAgent(currentArgs.RollFor, teamUpProto);
@@ -55,18 +51,12 @@ namespace MHServerEmu.Games.Loot
                 if (pickedItemProto == null && restrictionFlags.HasFlag(RestrictionTestFlags.Rarity))
                 {
                     RarityPrototype rarityProto = currentArgs.Rarity.As<RarityPrototype>();
-                    if (rarityProto == null)
-                    {
-                        Logger.Warn("PickValidItem(): rarityProto == null");
+                    if (!Verify.IsNotNull(rarityProto))
                         break;
-                    }
 
                     currentArgs.Rarity = rarityProto.DowngradeTo;
-                    if (currentArgs.Rarity == filterArgs.Rarity)
-                    {
-                        Logger.Warn($"PickValidItem(): Rarity loop detected [{currentArgs.Rarity.GetName()}]");
+                    if (!Verify.IsTrue(currentArgs.Rarity != filterArgs.Rarity, $"Rarity loop detected [{currentArgs.Rarity.GetName()}]"))
                         break;
-                    }
                 }
             }
 
@@ -84,8 +74,8 @@ namespace MHServerEmu.Games.Loot
         public static bool BuildInventoryLootPicker(Picker<Prototype> picker, PrototypeId avatarProtoRef, EquipmentInvUISlot slot)
         {
             AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
-            if (avatarProto == null) return Logger.WarnReturn(false, "BuildInventoryLootPicker(): avatarProto == null");
-            if (avatarProto.EquipmentInventories == null) return Logger.WarnReturn(false, "BuildInventoryLootPicker(): avatarProto.EquipmentInventories == null");
+            if (!Verify.IsNotNull(avatarProto)) return false;
+            if (!Verify.IsTrue(avatarProto.EquipmentInventories.HasValue())) return false;
 
             picker.Clear();
 
@@ -95,7 +85,7 @@ namespace MHServerEmu.Games.Loot
                     continue;
 
                 InventoryPrototype invProto = equipInvAssignmentProto.Inventory.As<InventoryPrototype>();
-                if (invProto == null) return Logger.WarnReturn(false, "BuildInventoryLootPicker(): invProto == null");
+                if (!Verify.IsNotNull(invProto)) return false;
 
                 foreach (PrototypeId typeRef in invProto.EntityTypeFilter)
                     GameDataTables.Instance.LootPickingTable.GetConcreteLootPicker(picker, typeRef, avatarProto);
@@ -111,10 +101,9 @@ namespace MHServerEmu.Games.Loot
         public static MutationResults UpdateAffixes(IItemResolver resolver, DropFilterArguments args, AffixCountBehavior affixCountBehavior,
             ItemSpec itemSpec, LootRollSettings settings)
         {
-            // TODO: split this into individual validation checks?
             if (itemSpec.IsValid == false || itemSpec.ItemProtoRef != args.ItemProto.DataRef || itemSpec.RarityProtoRef != args.Rarity)
             {
-                Logger.Warn(string.Format("UpdateAffixes(): Invalid input parameter(s):\n" +
+                Verify.IsTrue(false, string.Format("Invalid input parameter(s) to UpdateAffixes():\n" +
                     "ItemSpec is valid: {0} [{1}]\n" +
                     "rollFor is valid: {2} [{3}]\n" +
                     "ItemSpec item/rarity matches DropFilterArgs: {4}\n" +
@@ -148,7 +137,7 @@ namespace MHServerEmu.Games.Loot
             ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet)
         {
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
-            if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "UpdateAffixesHelper(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return MutationResults.Error;
 
             // Pet affixes are rolled separately
             if (itemProto.IsPetItem)
@@ -230,14 +219,14 @@ namespace MHServerEmu.Games.Loot
         public static MutationResults AddAffixes(IItemResolver resolver, DropFilterArguments args, short affixCountNeeded,
             ItemSpec itemSpec, AffixPosition position, PrototypeId[] categories, AssetId[] keywords, LootRollSettings settings)
         {
-            if (affixCountNeeded <= 0)
-                return Logger.WarnReturn(MutationResults.Error, $"AddAffixes(): Trying to add 0 affixes! args: {args}");
+            if (!Verify.IsTrue(affixCountNeeded > 0, $"Trying to add 0 affixes! args: {args}"))
+                return MutationResults.Error;
 
-            if (itemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, $"AddAffixes(): itemSpec.IsValid == false");
-            if (itemSpec.ItemProtoRef != args.ItemProto.DataRef) return Logger.WarnReturn(MutationResults.Error, $"AddAffixes(): itemSpec.ItemProtoRef != args.ItemProto.DataRef");
+            if (!Verify.IsTrue(itemSpec.IsValid)) return MutationResults.Error;
+            if (!Verify.IsTrue(itemSpec.ItemProtoRef == args.ItemProto.DataRef)) return MutationResults.Error;
 
             ItemPrototype itemProto = args.ItemProto as ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "AddAffixes(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return MutationResults.Error;
 
             if (itemProto.IsPetItem)
                 return ItemPrototype.UpdatePetTechAffixes(resolver.Random, args.RollFor, itemSpec);
@@ -320,7 +309,7 @@ namespace MHServerEmu.Games.Loot
         public static MutationResults DropAffixes(IItemResolver resolver, DropFilterArguments args,
             ItemSpec itemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories)
         {
-            if (itemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, "DropAffixes(): itemSpec.IsValid == false");
+            if (!Verify.IsTrue(itemSpec.IsValid)) return MutationResults.Error;
 
             MutationResults result = DropAffixes(resolver, itemSpec, position, keywords, categories);
             if (result.HasFlag(MutationResults.Error))
@@ -334,12 +323,12 @@ namespace MHServerEmu.Games.Loot
         public static MutationResults CopyAffixes(IItemResolver resolver, DropFilterArguments args, ItemSpec sourceItemSpec,
             ItemSpec destItemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories, bool enforceAffixLimits)
         {
-            if (destItemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, "CopyAffixes(): destItemSpec.IsValid == false");
-            if (args.ItemProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyAffixes(): args.ItemProto == null");
-            if (destItemSpec.ItemProtoRef != args.ItemProto.DataRef) return Logger.WarnReturn(MutationResults.Error, "CopyAffixes(): destItemSpec.ItemProtoRef != args.ItemProto.DataRef");
+            if (!Verify.IsTrue(destItemSpec.IsValid)) return MutationResults.Error;
+            if (!Verify.IsTrue(destItemSpec.ItemProtoRef == args.ItemProto.DataRef)) return MutationResults.Error;
+            if (!Verify.IsNotNull(args.ItemProto)) return MutationResults.Error;
 
             ItemPrototype itemProto = args.ItemProto as ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyAffixes(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return MutationResults.Error;
 
             if (itemProto.IsPetItem)
                 return ItemPrototype.CopyPetTechAffixes(sourceItemSpec, destItemSpec, position);
@@ -352,25 +341,25 @@ namespace MHServerEmu.Games.Loot
             if (GetCurrentAffixStats(resolver, args, destItemSpec, affixCounts, affixSet) == false)
                 return MutationResults.Error | MutationResults.ErrorReasonAffixStats;
 
-            AffixLimitsPrototype affixLimits = null;
+            AffixLimitsPrototype destAffixLimits = null;
             if (enforceAffixLimits)
             {
-                affixLimits = itemProto.GetAffixLimits(args.Rarity, args.LootContext);
-                if (affixLimits == null)
-                    return Logger.WarnReturn(MutationResults.Error, $"CopyAffixes(): Trying to EnforceAffixLimits where there is no affix limits available! args {args}");
+                destAffixLimits = itemProto.GetAffixLimits(args.Rarity, args.LootContext);
+                if (!Verify.IsNotNull(destAffixLimits, $"Trying to EnforceAffixLimits where there is no affix limits available! args {args}"))
+                    return MutationResults.Error;
             }
 
-            return CopyAffixSpecs(resolver, sourceItemSpec, destItemSpec, affixLimits, args.RollFor, keywords, position, categories, affixCounts, affixSet);
+            return CopyAffixSpecs(resolver, sourceItemSpec, destItemSpec, destAffixLimits, args.RollFor, keywords, position, categories, affixCounts, affixSet);
         }
 
         public static MutationResults CopyBuiltinAffixes(IItemResolver resolver, DropFilterArguments args, ItemSpec sourceItemSpec,
             ItemSpec destItemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories, bool enforceAffixLimits)
         {
-            if (destItemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, "CopyBuiltinAffixes(): destItemSpec.IsValid == false");
-            if (destItemSpec.ItemProtoRef != args.ItemProto.DataRef) return Logger.WarnReturn(MutationResults.Error, "CopyBuiltinAffixes(): destItemSpec.ItemProtoRef != args.ItemProto.DataRef");
+            if (!Verify.IsTrue(destItemSpec.IsValid)) return MutationResults.Error;
+            if (!Verify.IsTrue(destItemSpec.ItemProtoRef == args.ItemProto.DataRef)) return MutationResults.Error;
 
             ItemPrototype destItemProto = args.ItemProto as ItemPrototype;
-            if (destItemProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyBuiltinAffixes(): destItemProto == null");
+            if (!Verify.IsNotNull(destItemProto)) return MutationResults.Error;
 
             using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
             using var affixCountsHandle = ListPool<AffixCountData>.Instance.Get(out List<AffixCountData> affixCounts);
@@ -383,7 +372,7 @@ namespace MHServerEmu.Games.Loot
                 return MutationResults.Error | MutationResults.ErrorReasonAffixStats;
 
             ItemPrototype sourceItemProto = sourceItemSpec.ItemProtoRef.As<ItemPrototype>();
-            if (sourceItemProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyBuiltinAffixes(): sourceItemProto == null");
+            if (!Verify.IsNotNull(sourceItemProto)) return MutationResults.Error;
 
             sourceItemProto.GenerateBuiltInAffixDetails(sourceItemSpec, builtInAffixDetailsList);
 
@@ -393,18 +382,12 @@ namespace MHServerEmu.Games.Loot
             foreach (BuiltInAffixDetails builtInAffixDetails in builtInAffixDetailsList)
             {
                 AffixEntryPrototype affixEntryProto = builtInAffixDetails.AffixEntryProto;
-                if (affixEntryProto == null)
-                {
-                    Logger.Warn("CopyBuiltinAffixes(): affixEntryProto == null");
+                if (!Verify.IsNotNull(affixEntryProto))
                     continue;
-                }
 
                 AffixPrototype affixProto = affixEntryProto.Affix.As<AffixPrototype>();
-                if (affixProto == null)
-                {
-                    Logger.Warn("CopyBuiltinAffixes(): affixProto == null");
+                if (!Verify.IsNotNull(affixProto))
                     continue;
-                }
 
                 AffixSpec affixSpec = new(affixProto, affixEntryProto.Power, builtInAffixDetails.Seed);
                 builtInAffixSpecs.Add(affixSpec);
@@ -413,22 +396,21 @@ namespace MHServerEmu.Games.Loot
             // This will remove any externally applied affixes (which we don't care about here)
             sourceItemSpec.SetAffixes(builtInAffixSpecs);
 
-            AffixLimitsPrototype affixLimits = null;
+            AffixLimitsPrototype destAffixLimits = null;
             if (enforceAffixLimits)
             {
-                affixLimits = destItemProto.GetAffixLimits(args.Rarity, args.LootContext);
-                if (affixLimits == null)
-                    return Logger.WarnReturn(MutationResults.Error, $"CopyBuiltinAffixes(): Trying to EnforceAffixLimits where there is no affix limits available! args {args}");
-
+                destAffixLimits = destItemProto.GetAffixLimits(args.Rarity, args.LootContext);
+                if (!Verify.IsNotNull(destAffixLimits, $"Trying to EnforceAffixLimits where there is no affix limits available! args {args}"))
+                    return MutationResults.Error;
             }
 
-            return CopyAffixSpecs(resolver, sourceItemSpec, destItemSpec, affixLimits, args.RollFor, keywords, position, categories, affixCounts, affixSet);
+            return CopyAffixSpecs(resolver, sourceItemSpec, destItemSpec, destAffixLimits, args.RollFor, keywords, position, categories, affixCounts, affixSet);
         }
 
         public static MutationResults ReplaceAffixes(IItemResolver resolver, DropFilterArguments args, ItemSpec sourceItemSpec,
             ItemSpec destItemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories, bool enforceAffixLimits)
         {
-            if (destItemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, "ReplaceAffixes(): destItemSpec.IsValid == false");
+            if (!Verify.IsTrue(destItemSpec.IsValid)) return MutationResults.Error;
 
             MutationResults result = DropAffixes(resolver, destItemSpec, position, keywords, categories);
             if (result.HasFlag(MutationResults.Error))
@@ -452,16 +434,13 @@ namespace MHServerEmu.Games.Loot
                     continue;
 
                 IReadOnlyList<AffixPrototype> affixes = GameDataTables.Instance.LootPickingTable.GetAffixesByPosition(position);
-                if (affixes == null) return Logger.WarnReturn(0u, "BuildAffixPickers(): affixes == null");
+                if (!Verify.IsNotNull(affixes)) return 0;
 
                 for (int i = 0; i < affixes.Count; i++)
                 {
                     AffixPrototype affixProtoIt = affixes[i];
-                    if (affixProtoIt == null)
-                    {
-                        Logger.Warn("BuildAffixPickers(): affixProtoIt == null");
+                    if (!Verify.IsNotNull(affixProtoIt))
                         continue;
-                    }
 
                     if (affixProtoIt.AllowAttachment(args) == false || affixProtoIt.HasKeywords(keywords, true) == false)
                         continue;
@@ -485,14 +464,12 @@ namespace MHServerEmu.Games.Loot
         private static MutationResults AddCategorizedAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixCategoryPrototype categoryProto, 
             int affixCountNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, AssetId[] keywords = null)
         {
-            //Logger.Trace($"AddCategorizedAffixesToItemSpec(): {categoryProto} (x{numAffixesNeeded})");
-
-            IReadOnlyList<AffixPrototype> affixPool = GameDataTables.Instance.LootPickingTable.GetAffixesByCategory(categoryProto);
-            if (affixPool == null)
-                return Logger.WarnReturn(MutationResults.Error, $"AddCategorizedAffixesToItemSpec(): Failed to get available affixes in category: {categoryProto}.");
+            IReadOnlyList<AffixPrototype> affixes = GameDataTables.Instance.LootPickingTable.GetAffixesByCategory(categoryProto);
+            if (!Verify.IsNotNull(affixes, $"Failed to get available affixes in category: {categoryProto}."))
+                return MutationResults.Error;
 
             Picker<AffixPrototype> affixPicker = new(resolver.Random);
-            TryAddAffixesToPicker(args, null, keywords, resolver.Region, affixPool, affixPicker);
+            TryAddAffixesToPicker(args, null, keywords, resolver.Region, affixes, affixPicker);
 
             MutationResults result = MutationResults.None;
             int affixCountAdded = 0;
@@ -521,11 +498,8 @@ namespace MHServerEmu.Games.Loot
             foreach (PrototypeId categoryProtoRef in categories)
             {
                 AffixCategoryPrototype categoryIt = categoryProtoRef.As<AffixCategoryPrototype>();
-                if (categoryIt == null)
-                {
-                    Logger.Warn("AddCategorizedAffixesToItemSpec(): categoryIt == null");
+                if (!Verify.IsNotNull(categoryIt))
                     continue;
-                }
 
                 result |= AddCategorizedAffixesToItemSpec(resolver, args, categoryIt, affixCountNeeded, itemSpec, affixSet, keywords);
             }
@@ -536,14 +510,12 @@ namespace MHServerEmu.Games.Loot
         private static MutationResults AddPositionAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixPosition affixPosition,
             int affixCountNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, AssetId[] keywords = null, PrototypeId[] categories = null)
         {
-            //Logger.Trace($"AddPositionAffixesToItemSpec(): {affixPosition} (x{numAffixesNeeded})");
-
-            IReadOnlyList<AffixPrototype> affixPool = GameDataTables.Instance.LootPickingTable.GetAffixesByPosition(affixPosition);
-            if (affixPool == null)
-                return Logger.WarnReturn(MutationResults.Error, $"AddCategorizedAffixesToItemSpec(): Failed to get available affixes in position: {affixPosition}.");
+            IReadOnlyList<AffixPrototype> affixes = GameDataTables.Instance.LootPickingTable.GetAffixesByPosition(affixPosition);
+            if (!Verify.IsNotNull(affixes, $"Failed to get available affixes in position: {affixPosition}."))
+                return MutationResults.Error;
 
             Picker<AffixPrototype> affixPicker = new(resolver.Random);
-            TryAddAffixesToPicker(args, categories, keywords, resolver.Region, affixPool, affixPicker);
+            TryAddAffixesToPicker(args, categories, keywords, resolver.Region, affixes, affixPicker);
 
             MutationResults result = MutationResults.None;
             int affixCountAdded = 0;
@@ -571,11 +543,11 @@ namespace MHServerEmu.Games.Loot
 
             foreach (AssetId keywordIt in keywords)
             {
-                IReadOnlyList<AffixPrototype> affixPool = GameDataTables.Instance.LootPickingTable.GetAffixesByKeyword(keywordIt);
-                if (affixPool == null)
-                    return Logger.WarnReturn(MutationResults.Error, $"AddKeywordAffixesToItemSpec(): Failed to get available affixes for keyword: {keywordIt.GetName()}.");
+                IReadOnlyList<AffixPrototype> affixes = GameDataTables.Instance.LootPickingTable.GetAffixesByKeyword(keywordIt);
+                if (!Verify.IsNotNull(affixes, $"Failed to get available affixes for keyword: {keywordIt.GetName()}."))
+                    return MutationResults.Error;
 
-                TryAddAffixesToPicker(args, null, keywords, resolver.Region, affixPool, affixPicker);
+                TryAddAffixesToPicker(args, null, keywords, resolver.Region, affixes, affixPicker);
             }
 
             MutationResults result = MutationResults.None;
@@ -633,8 +605,7 @@ namespace MHServerEmu.Games.Loot
             // Most of the arguments in this function are unused in the client, so we have just a simple
             // needed / added count check.
 
-            if (affixCountNeeded != affixCountAdded)
-                Logger.Warn($"ValidateAddAffixCount(): The pool of affixes is too small for these parameters! affixCountAdded={affixCountAdded}, affixCountNeeded={affixCountNeeded}");
+            Verify.IsTrue(affixCountAdded == affixCountNeeded, $"The pool of affixes is too small for these parameters! affixCountAdded={affixCountAdded}, affixCountNeeded={affixCountNeeded}");
         }
 
         private static MutationResults DropAffixes(IItemResolver resolver, ItemSpec itemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories)
@@ -652,13 +623,8 @@ namespace MHServerEmu.Games.Loot
             for (int i = 0; i < affixSpecs.Count; i++)
             {
                 AffixSpec affixSpec = affixSpecs[i];
-                
-                if (affixSpec.IsValid == false)
-                {
-                    Logger.Warn($"DropAffixes(): Invalid affix prototype in item!\nItem: {itemSpec}\nResolver: {resolver}");
-                    result = MutationResults.Error;
-                    break;
-                }
+                if (!Verify.IsNotNull(affixSpec.AffixProto, $"Invalid affix prototype in item!\nItem: {itemSpec}\nResolver: {resolver}"))
+                    return MutationResults.Error;
 
                 bool shouldDrop = true;
 
@@ -685,10 +651,7 @@ namespace MHServerEmu.Games.Loot
                     filteredAffixSpecs.Add(affixSpec);
             }
 
-            // Overwrite affixes with our filtered list if everything is okay
-            if (result.HasFlag(MutationResults.Error) == false)
-                itemSpec.SetAffixes(filteredAffixSpecs);
-
+            itemSpec.SetAffixes(filteredAffixSpecs);
             return result;
         }
 
@@ -712,8 +675,7 @@ namespace MHServerEmu.Games.Loot
             {
                 AffixSpec sourceAffixSpecIt = sourceAffixSpecs[i];
                 AffixPrototype affixProto = sourceAffixSpecIt.AffixProto;
-
-                if (affixProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyAffixSpecs(): affixProto == null");
+                if (!Verify.IsNotNull(affixProto)) return MutationResults.Error;
 
                 // Filter affixes by provided position / keywords / categories
                 if (position != AffixPosition.None && affixProto.Position != position)
@@ -752,7 +714,7 @@ namespace MHServerEmu.Games.Loot
 
                         case DuplicateHandlingBehavior.Overwrite:
                         case DuplicateHandlingBehavior.Append:
-                            Logger.Warn($"CopyAffixSpecs(): Invalid DuplicateHandlingBehavior {affixProto.DuplicateHandlingBehavior} for {affixProto}");
+                            Verify.IsTrue(false, $"Invalid DuplicateHandlingBehavior {affixProto.DuplicateHandlingBehavior} for {affixProto}");
                             result |= MutationResults.Error;
                             break;
                     }
@@ -824,22 +786,20 @@ namespace MHServerEmu.Games.Loot
             bool hasVisualAffix = false;
 
             GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
+            if (!Verify.IsNotNull(globalsProto)) return false;
 
             for (int i = 0; i < itemSpec.AffixSpecs.Count; i++)
             {
                 AffixSpec affixSpecIt = itemSpec.AffixSpecs[i];
-                if (affixSpecIt.IsValid == false)
-                    return Logger.WarnReturn(false, $"GetCurrentAffixStats(): Invalid affix spec: affixSpec=[{affixSpecIt}] args=[{args}] itemSpec=[{itemSpec}]");
+                if (!Verify.IsTrue(affixSpecIt.IsValid, $"invalid affix spec: affixSpec=[{affixSpecIt}] args=[{args}] itemSpec=[{itemSpec}]"))
+                    return false;
 
                 affixSet.Add(new(affixSpecIt.AffixProto.DataRef, affixSpecIt.ScopeProtoRef));
 
                 AffixPosition affixPos = affixSpecIt.AffixProto.Position;
                 int affixPosIndex = (int)affixPos;
-                if (affixPosIndex < 0 || affixPosIndex >= affixCounts.Count)
-                {
-                    Logger.Warn($"GetCurrentAffixStats(): Invalid affix position on item! itemSpec=[{itemSpec}]");
+                if (!Verify.IsTrue(affixPosIndex >= 0 && affixPosIndex < affixCounts.Count, $"Invalid affix position on item! itemSpec=[{itemSpec}]"))
                     continue;
-                }
 
                 switch (affixPos)
                 {
@@ -860,7 +820,10 @@ namespace MHServerEmu.Games.Loot
             }
 
             if (hasVisualAffix && hasNoVisualsAffix)
-                return Logger.WarnReturn(false, $"GetCurrentAffixStats(): Item has both an externally applied visual affix and the no-visuals metadata affix! itemSpec: {itemSpec}");
+            {
+                Verify.IsTrue(false, $"item has both an externally applied visual affix and the no-visuals metadata affix! itemSpec: {itemSpec}");
+                return false;
+            }
 
             return true;
         }
@@ -880,12 +843,10 @@ namespace MHServerEmu.Games.Loot
             TimeSpan currentTime24Hr = new(0, currentTime.Hours, currentTime.Minutes, currentTime.Seconds, currentTime.Milliseconds);
 
             Weekday currentWeekday = GetCurrentWeekday(false);
-            if (currentWeekday == Weekday.All) return Logger.WarnReturn(false, "GetLastLootCooldownRolloverWallTime(): weekday == Weekday.All");
+            if (!Verify.IsTrue(currentWeekday != Weekday.All)) return false;
 
             PropertyList.Iterator itRolloverTimeProp = properties.IteratePropertyRange(PropertyEnum.LootCooldownRolloverWallTime);
-
-            if (itRolloverTimeProp.GetEnumerator().MoveNext() == false)
-                return Logger.WarnReturn(false, "GetLastLootCooldownRolloverWallTime(): No properties to iterate");
+            if (!Verify.IsTrue(itRolloverTimeProp.GetEnumerator().MoveNext())) return false;
 
             TimeSpan lastRolloverTimeDelta = TimeSpan.FromDays(7 + 1);  // 7 days per week + 1, a rollover must have happened within period
 

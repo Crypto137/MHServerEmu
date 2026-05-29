@@ -14,8 +14,6 @@ namespace MHServerEmu.Games.Loot
     /// </summary>
     public class LootResultSummary : IPoolable, IDisposable
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public LootType Types { get; private set; }
         public bool HasAnyResult { get => Types != LootType.None; }
 
@@ -121,7 +119,7 @@ namespace MHServerEmu.Games.Loot
                     break;
 
                 default:
-                    Logger.Warn($"Add(): Unimplemented LootType {lootResult.Type}");
+                    Verify.IsTrue(false, $"Unimplemented LootType {lootResult.Type}");
                     break;
             }
         }

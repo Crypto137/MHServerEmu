@@ -26,8 +26,6 @@ namespace MHServerEmu.Games.Loot
         public const int GridCenter = GridSize / 2;
         public const float MaxSpiralRadius = 960f;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Game _game;
         private readonly CellState[] _cells = new CellState[GridSize * GridSize];
 
@@ -46,7 +44,7 @@ namespace MHServerEmu.Games.Loot
 
         public bool SetContext(Region region, Vector3 position, WorldEntity sourceEntity = null)
         {
-            if (region == null) return Logger.WarnReturn(false, "SetContext(): region == null");
+            if (!Verify.IsNotNull(region)) return false;
 
             // Make sure the new context is different
             Context newContext = new(region, position, sourceEntity);

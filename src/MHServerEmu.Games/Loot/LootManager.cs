@@ -141,10 +141,10 @@ namespace MHServerEmu.Games.Loot
             WorldEntity sourceEntity = inputSettings.SourceEntity;
 
             WorldEntity recipient = player?.CurrentAvatar;
-            if (recipient == null) return Logger.WarnReturn(false, "SpawnLootFromSummary(): recipient == null");
+            if (!Verify.IsNotNull(recipient)) return false;
 
             Region region = recipient.Region;
-            if (region == null) return Logger.WarnReturn(false, "SpawnLootFromSummary(): region == null");
+            if (!Verify.IsNotNull(region)) return false;
 
             // Trigger callbacks
             if (lootTypes.HasFlag(LootType.CallbackNode))
@@ -257,7 +257,7 @@ namespace MHServerEmu.Games.Loot
                     }
                     else
                     {
-                        Logger.Warn($"SpawnLootFromSummary(): Unsupported currency entity type for {currencySpec.AgentOrItemProtoRef.GetName()}");
+                        Verify.IsTrue(false, $"Unsupported currency entity type for {currencySpec.AgentOrItemProtoRef.GetName()}");
                     }
 
                     properties.RemovePropertyRange(PropertyEnum.ItemCurrency);
@@ -300,11 +300,9 @@ namespace MHServerEmu.Games.Loot
                     settings.ItemSpec = itemSpec;
 
                     Item item = entityManager.CreateEntity(settings) as Item;
-                    if (item == null)
+                    if (!Verify.IsNotNull(item, $"Failed to create item, aborting\nItemSpec: {itemSpec}"))
                     {
                         // Something went terribly terribly wrong, abandon ship
-                        Logger.Warn($"GiveLootFromSummary(): Failed to create item, aborting\nItemSpec: {itemSpec}");
-                        
                         foreach (Item itemToDestroy in itemList)
                             itemToDestroy.Destroy();
 
@@ -337,11 +335,9 @@ namespace MHServerEmu.Games.Loot
                             settings.OptionFlags &= ~EntitySettingsOptionFlags.EnterGame;
 
                         Item item = entityManager.CreateEntity(settings) as Item;
-                        if (item == null)
+                        if (!Verify.IsNotNull(item, $"Failed to create currency item, aborting\nItemSpec: {itemSpec}\nCurrencySpec: {currencySpec}"))
                         {
                             // Something went terribly terribly wrong, abandon ship
-                            Logger.Warn($"GiveLootFromSummary(): Failed to create currency item, aborting\nItemSpec: {itemSpec}\nCurrencySpec: {currencySpec}");
-
                             foreach (Item itemToDestroy in itemList)
                                 itemToDestroy.Destroy();
 
@@ -365,11 +361,9 @@ namespace MHServerEmu.Games.Loot
             foreach (Item item in itemList)
             {
                 InventoryResult result = player.AcquireItem(item, inventoryProtoRef);
-                if (result != InventoryResult.Success)
+                if (!Verify.IsTrue(result == InventoryResult.Success, $"Failed to give item, aborting\nItem: {item}"))
                 {
                     // Something went terribly terribly wrong, abandon ship
-                    Logger.Warn($"GiveLootFromSummary(): Failed to give item, aborting\nItem: {item}");
-
                     foreach (Item itemToDestroy in itemList)
                         itemToDestroy.Destroy();
 
@@ -423,33 +417,22 @@ namespace MHServerEmu.Games.Loot
                     if ((lootTypes & (LootType.HealthBonus | LootType.EnduranceBonus | LootType.PowerPoints)) != 0)
                     {
                         // Property rewards should always be for the first completion only.
-                        if (MissionManager.HasReceivedRewardsForMission(player, avatar, missionProtoRef) == false)
+                        if (Verify.IsTrue(MissionManager.HasReceivedRewardsForMission(player, avatar, missionProtoRef) == false))
                         {
                             if (lootTypes.HasFlag(LootType.HealthBonus))
-                            {
-                                if (avatar.AdjustMissionRewardProperty(PropertyEnum.HealthAddBonus, lootResultSummary.HealthBonus, missionProtoRef) == false)
-                                    Logger.Warn($"GiveLootFromSummary(): Failed to give HealthBonus reward to avatar [{avatar}]");
-                            }
+                                Verify.IsTrue(avatar.AdjustMissionRewardProperty(PropertyEnum.HealthAddBonus, lootResultSummary.HealthBonus, missionProtoRef));
 
                             if (lootTypes.HasFlag(LootType.EnduranceBonus))
                             {
                                 foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in avatar.GetPrimaryResourceManaBehaviors())
                                 {
                                     ManaType manaType = primaryManaBehaviorProto.ManaType;
-                                    if (avatar.AdjustMissionRewardProperty(new(PropertyEnum.EnduranceAddBonus, manaType), (float)lootResultSummary.EnduranceBonus, missionProtoRef) == false)
-                                        Logger.Warn($"GiveLootFromSummary(): Failed to give EnduranceBonus reward for mana type {manaType} to avatar [{avatar}]");
+                                    Verify.IsTrue(avatar.AdjustMissionRewardProperty(new(PropertyEnum.EnduranceAddBonus, manaType), (float)lootResultSummary.EnduranceBonus, missionProtoRef));
                                 }
                             }
 
                             if (lootTypes.HasFlag(LootType.PowerPoints))
-                            {
-                                if (avatar.AdjustMissionRewardProperty(PropertyEnum.AvatarPowerPointsBonus, lootResultSummary.PowerPoints, missionProtoRef) == false)
-                                    Logger.Warn($"GiveLootFromSummary(): Failed to give PowerPoints reward to avatar [{avatar}]");
-                            }
-                        }
-                        else
-                        {
-                            Logger.Warn($"GiveLootFromSummary(): Avatar [{avatar}] rolled property mission reward for non-first mission completion");
+                                Verify.IsTrue(avatar.AdjustMissionRewardProperty(PropertyEnum.AvatarPowerPointsBonus, lootResultSummary.PowerPoints, missionProtoRef));
                         }
                     }
                 }
@@ -460,8 +443,7 @@ namespace MHServerEmu.Games.Loot
             }
             else
             {
-                if ((lootTypes & (MissionLootTypes)) != 0)
-                    Logger.Warn($"GiveLootFromSummary(): Mission-only loot types found in a non-mission summary, Types=[{lootResultSummary.Types}]");
+                Verify.IsTrue((lootTypes & (MissionLootTypes)) == 0, $"Mission-only loot types found in a non-mission summary, Types=[{lootResultSummary.Types}]");
             }
 
             return true;
@@ -470,8 +452,8 @@ namespace MHServerEmu.Games.Loot
         public bool SpawnItem(PrototypeId itemProtoRef, LootContext lootContext, Player player, WorldEntity sourceEntity)
         {
             ItemSpec itemSpec = CreateItemSpec(itemProtoRef, lootContext, player);
-            if (itemSpec == null)
-                return Logger.WarnReturn(false, $"SpawnItem(): Failed to create an ItemSpec for {itemProtoRef.GetName()}");
+            if (!Verify.IsNotNull(itemSpec, $"Failed to create an ItemSpec! itemProto=[{itemProtoRef.GetName()}], lootContext=[{lootContext}], player=[{player}]"))
+                return false;
 
             using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
             inputSettings.Initialize(LootContext.Drop, player, sourceEntity);
@@ -489,8 +471,8 @@ namespace MHServerEmu.Games.Loot
         public bool GiveItem(PrototypeId itemProtoRef, LootContext lootContext, Player player)
         {
             ItemSpec itemSpec = CreateItemSpec(itemProtoRef, lootContext, player);
-            if (itemSpec == null)
-                return Logger.WarnReturn(false, $"GiveItem(): Failed to create an ItemSpec for {itemProtoRef.GetName()}");
+            if (!Verify.IsNotNull(itemSpec, $"Failed to create an ItemSpec! itemProto=[{itemProtoRef.GetName()}], lootContext=[{lootContext}], player=[{player}]"))
+                return false;
 
             using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
             LootResult lootResult = new(itemSpec);
@@ -513,11 +495,10 @@ namespace MHServerEmu.Games.Loot
         public ItemSpec CreateItemSpec(PrototypeId itemProtoRef, LootContext lootContext, Player player, int level = 1)
         {
             ItemPrototype itemProto = itemProtoRef.As<ItemPrototype>();
-            if (itemProto == null)
-                return Logger.WarnReturn<ItemSpec>(null, "CreateItemSpec(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return null;
 
-            if (DataDirectory.Instance.PrototypeIsAbstract(itemProtoRef))
-                return Logger.WarnReturn<ItemSpec>(null, $"CreateItemSpec(): {itemProtoRef.GetName()} is abstract, which is currently not supported for this");
+            if (!Verify.IsTrue(DataDirectory.Instance.PrototypeIsAbstract(itemProtoRef) == false, $"Cannot create ItemSpec for abstract item prototype {itemProtoRef.GetName()}"))
+                return null;
 
             _resolver.SetContext(lootContext, player);
 
@@ -530,15 +511,16 @@ namespace MHServerEmu.Games.Loot
             filterArgs.Rarity = _resolver.ResolveRarity(null, level, itemProto);
             filterArgs.Slot = itemProto.GetInventorySlotForAgent(avatarProto);
 
-            if (itemProto.MakeRestrictionsDroppable(filterArgs, RestrictionTestFlags.All, out _) == false)
-                return Logger.WarnReturn<ItemSpec>(null, $"CreateItemSpec(): Failed to make item {itemProto} droppable");
+            if (!Verify.IsTrue(itemProto.MakeRestrictionsDroppable(filterArgs, RestrictionTestFlags.All, out _), $"Failed to make item {itemProto} droppable"))
+                return null;
 
             // Finalize spec
             ItemSpec itemSpec = new(filterArgs.ItemProto.DataRef, filterArgs.Rarity, filterArgs.Level, 0,
                 Array.Empty<AffixSpec>(), _resolver.Random.Next());
 
-            if (LootUtilities.UpdateAffixes(_resolver, filterArgs, AffixCountBehavior.Roll, itemSpec, null).HasFlag(MutationResults.Error))
-                return Logger.WarnReturn<ItemSpec>(null, $"CreateItemSpec(): Failed to update affixes for {itemProto}");
+            MutationResults mutationResults = LootUtilities.UpdateAffixes(_resolver, filterArgs, AffixCountBehavior.Roll, itemSpec, null);
+            if (!Verify.IsTrue(mutationResults.HasFlag(MutationResults.Error) == false, $"Failed to update affixes for {itemProto}"))
+                return null;
 
             return itemSpec;
         }
@@ -549,7 +531,7 @@ namespace MHServerEmu.Games.Loot
         private bool RollLootTable(PrototypeId lootTableProtoRef, LootInputSettings inputSettings, LootResultSummary lootResultSummary)
         {
             LootTablePrototype lootTableProto = lootTableProtoRef.As<LootTablePrototype>();
-            if (lootTableProto == null) return Logger.WarnReturn(false, "RollLootTable(): lootTableProto == null");
+            if (!Verify.IsNotNull(lootTableProto)) return false;
 
             _resolver.SetContext(inputSettings.LootContext, inputSettings.Player, inputSettings.SourceEntity);
 
@@ -566,7 +548,7 @@ namespace MHServerEmu.Games.Loot
         private bool SpawnItemInternal(ItemSpec itemSpec, Player player, ulong regionId, Vector3 position, ulong sourceEntityId, Vector3 sourcePosition, PropertyCollection properties)
         {
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
-            if (itemProto == null) return Logger.WarnReturn(false, "SpawnItemInternal(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             if (itemProto.IsLiveTuningEnabled() == false)
                 return false;
@@ -593,7 +575,7 @@ namespace MHServerEmu.Games.Loot
             properties.RemoveProperty(PropertyEnum.InventoryStackCount);
             properties.RemoveProperty(PropertyEnum.RestrictedToPlayerGuid);
 
-            if (item == null) return Logger.WarnReturn(false, "SpawnItemInternal(): item == null");
+            if (!Verify.IsNotNull(item)) return false;
 
             return true;
         }
@@ -609,14 +591,14 @@ namespace MHServerEmu.Games.Loot
         {
             // Used when "giving" rewards
             AgentPrototype agentProto = agentSpec.AgentProtoRef.As<AgentPrototype>();
-            if (agentProto == null) return Logger.WarnReturn(false, "SpawnAgentForPlayer(): agentProto == null");
+            if (!Verify.IsNotNull(agentProto)) return false;
 
             // We need a valid avatar that is in the world to spawn something for a player
             Avatar avatar = player.CurrentAvatar;
-            if (avatar == null) return Logger.WarnReturn(false, "SpawnAgentForPlayer(): avatar == null");
+            if (!Verify.IsNotNull(avatar)) return false;
 
             Region region = avatar.Region;
-            if (region == null) return Logger.WarnReturn(false, "SpawnAgentForPlayer(): region == null");
+            if (!Verify.IsNotNull(region)) return false;
 
             _lootSpawnGrid.SetContext(region, avatar.RegionLocation.Position, null);
             Vector3 dropPosition = FindDropPosition(agentProto, avatar, ref avatar.Bounds, 1);
@@ -629,7 +611,7 @@ namespace MHServerEmu.Games.Loot
             // TODO: figure out a way to move functionality shared with SpawnItemInternal to a separate method?
 
             WorldEntityPrototype agentProto = agentSpec.AgentProtoRef.As<WorldEntityPrototype>();
-            if (agentProto == null) return Logger.WarnReturn(false, "SpawnAgentInternal(): agentProto == null");
+            if (!Verify.IsNotNull(agentProto)) return false;
 
             if (agentProto.IsLiveTuningEnabled() == false)
                 return false;
@@ -670,7 +652,7 @@ namespace MHServerEmu.Games.Loot
             properties.RemoveProperty(PropertyEnum.RestrictedToPlayerGuid);
             properties.RemovePropertyRange(PropertyEnum.XPAwardRequiredDbGuid);
 
-            if (agent == null) return Logger.WarnReturn(false, "SpawnAgentInternal(): agent == null");
+            if (!Verify.IsNotNull(agent)) return false;
 
             return true;
         }
@@ -699,8 +681,7 @@ namespace MHServerEmu.Games.Loot
         private Vector3 FindDropPosition(ItemSpec itemSpec, WorldEntity recipient, ref Bounds bounds, int recipientId)
         {
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
-            if (itemProto == null)
-                return Logger.WarnReturn(bounds.Center, "FindDropPosition(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return bounds.Center;
 
             return FindDropPosition(itemProto, recipient, ref bounds, recipientId);
         }
@@ -710,8 +691,7 @@ namespace MHServerEmu.Games.Loot
             // NOTE: Some loot tables (e.g. InanimateObjectsCh03GarbageBags) spawn destructible props. They are not agents,
             // but they still go through here, which means we have to use WorldEntityPrototype instead of AgentPrototype.
             WorldEntityPrototype agentProto = agentSpec.AgentProtoRef.As<WorldEntityPrototype>();
-            if (agentProto == null)
-                return Logger.WarnReturn(bounds.Center, $"FindDropPosition(): Failed to retrieve prototype for AgentSpec [{agentSpec}]");
+            if (!Verify.IsNotNull(agentProto)) return bounds.Center;
 
             return FindDropPosition(agentProto, recipient, ref bounds, recipientId);
         }
@@ -719,8 +699,7 @@ namespace MHServerEmu.Games.Loot
         private Vector3 FindDropPosition(in CurrencySpec currencySpec, WorldEntity recipient, ref Bounds bounds, int recipientId)
         {
             WorldEntityPrototype worldEntityProto = currencySpec.AgentOrItemProtoRef.As<WorldEntityPrototype>();
-            if (worldEntityProto == null)
-                return Logger.WarnReturn(bounds.Center, "FindDropPosition(): worldEntityProto == null");
+            if (!Verify.IsNotNull(worldEntityProto)) return bounds.Center;
 
             return FindDropPosition(worldEntityProto, recipient, ref bounds, recipientId);
         }
@@ -731,17 +710,17 @@ namespace MHServerEmu.Games.Loot
             Vector3 sourcePosition = bounds.Center;
 
             // TODO: Dropping without a recipient? It seems to be optional for LootLocationTable
-            if (recipient == null) return Logger.WarnReturn(sourcePosition, "FindDropPosition(): recipient == null");
+            if (!Verify.IsNotNull(recipient)) return sourcePosition;
 
             Region region = recipient.Region;
-            if (region == null) return Logger.WarnReturn(sourcePosition, "FindDropPosition(): region == null");
+            if (!Verify.IsNotNull(region)) return sourcePosition;
 
             // Get the loot location table for this drop
             PrototypeId lootLocationTableProtoRef = dropEntityProto.Properties[PropertyEnum.LootSpawnPrototype];
-            if (lootLocationTableProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(sourcePosition, "FindDropPosition(): lootLocationTableProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(lootLocationTableProtoRef != PrototypeId.Invalid)) return sourcePosition;
 
-            var lootLocationTableProto = lootLocationTableProtoRef.As<LootLocationTablePrototype>();
-            if (lootLocationTableProto == null) return Logger.WarnReturn(sourcePosition, "FindDropPosition(): lootLocationTable == null");
+            LootLocationTablePrototype lootLocationTableProto = lootLocationTableProtoRef.As<LootLocationTablePrototype>();
+            if (!Verify.IsNotNull(lootLocationTableProto)) return sourcePosition;
 
             // Roll it
             using LootLocationData lootLocationData = ObjectPoolManager.Instance.Get<LootLocationData>();

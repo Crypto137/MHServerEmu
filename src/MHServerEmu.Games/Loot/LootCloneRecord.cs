@@ -10,8 +10,6 @@ namespace MHServerEmu.Games.Loot
     {
         // LootCloneRecord is effectively a fully mutable version of ItemSpec used for cloning and mutating
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         // Because LootCloneRecord is intended to be mutable, we expose the full List instead of just IReadOnlyList
         public List<AffixRecord> AffixRecords { get; } = new();
 
@@ -44,7 +42,7 @@ namespace MHServerEmu.Games.Loot
             args.EquippableBy = itemSpec.EquippableBy;
 
             ItemPrototype itemProto = proto as ItemPrototype;
-            if (itemProto == null) { Logger.Warn("Initialize(): itemProto == null"); return; }
+            if (!Verify.IsNotNull(itemProto)) return;
 
             args.Rank = itemProto.GetRank(lootContext);
 

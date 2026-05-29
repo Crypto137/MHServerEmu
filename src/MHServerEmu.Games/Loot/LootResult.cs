@@ -13,8 +13,6 @@ namespace MHServerEmu.Games.Loot
     [StructLayout(LayoutKind.Explicit)]
     public readonly struct LootResult
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         [FieldOffset(0)]
         private readonly LootType _type = default;
 
@@ -93,15 +91,12 @@ namespace MHServerEmu.Games.Loot
                     break;
 
                 default:
-                    Logger.Warn($"LootResult(): Unsupported LootType {type} for the amount-based constructor");
+                    Verify.IsTrue(false, $"Unsupported LootType {type} for the amount-based constructor");
                     return;
             }
 
-            if (amount < 0)
-            {
-                Logger.Warn($"LootResult(): Invalid amount {amount} for LootType {type}");
+            if (!Verify.IsTrue(amount >= 0, $"Invalid amount {amount} for LootType {type}"))
                 return;
-            }
 
             _type = type;
             _amount = amount;

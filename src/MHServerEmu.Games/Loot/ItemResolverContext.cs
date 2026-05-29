@@ -21,8 +21,6 @@ namespace MHServerEmu.Games.Loot
     /// </summary>
     public class ItemResolverContext
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly HashSet<PrototypeId> _allowedCooldownDrops = new();     // Drops that have already passed cooldown checks for this roll
 
         private LootBonusData _lootBonusData = new();
@@ -57,15 +55,15 @@ namespace MHServerEmu.Games.Loot
         public float GetDropChance(LootRollSettings settings, float noDropPercent)
         {
             // Do not drop if there are any hard restrictions (this should have already been handled when selecting the loot table node)
-            if (settings.IsRestrictedByLootDropChanceModifier())
-                return Logger.WarnReturn(0f, $"GetDropChance(): Restricted by loot drop chance modifiers [{settings.DropChanceModifiers}]");
+            if (!Verify.IsTrue(settings.IsRestrictedByLootDropChanceModifier() == false, $"Restricted by loot drop chance modifiers [{settings.DropChanceModifiers}]"))
+                return 0f;
 
             if (settings.HasCooldownLootDropChanceModifier() &&
                 settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) == false)
             {
                 // If this roll requires a cooldown, make sure we have a valid cooldown origin
-                if (_cooldownData.OriginProtoRef == PrototypeId.Invalid)
-                    return Logger.WarnReturn(0f, "GetDropChance(): Failed to determine cooldown origin");
+                if (!Verify.IsTrue(_cooldownData.OriginProtoRef != PrototypeId.Invalid))
+                    return 0f;
 
                 // Cooldowns can be per-account or per-avatar
                 bool cooldownActive = settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PerAccount)
@@ -249,7 +247,7 @@ namespace MHServerEmu.Games.Loot
             }
             else if (LootContext == LootContext.MissionReward)
             {
-                if (Player == null) return Logger.WarnReturn(false, "InitializeLootBonusData(): Player == null");
+                if (!Verify.IsNotNull(Player)) return false;
 
                 // This a risky addition so close to 1.0, comment this block out if it causes unintended issues.
                 Avatar avatar = Player.CurrentAvatar;
@@ -269,7 +267,7 @@ namespace MHServerEmu.Games.Loot
 
         private float CalculateMissionXPMult(Mission mission)
         {
-            if (Player == null) return Logger.WarnReturn(0f, "CalculateMissionXPMult(): Player == null");
+            if (!Verify.IsNotNull(Player)) return 0f;
 
             if (mission == null)
                 return 1f;
@@ -283,7 +281,7 @@ namespace MHServerEmu.Games.Loot
                 return 1f;
 
             TuningTable tuningTable = region.TuningTable;
-            if (tuningTable == null) return Logger.WarnReturn(1f, "CalculateMissionXPMult(): tuningTable == null");
+            if (!Verify.IsNotNull(tuningTable)) return 1f;
 
             return avatar.GetMissionXPMultiplier(tuningTable, mission.GetLootLevel(avatar));
         }
@@ -300,13 +298,13 @@ namespace MHServerEmu.Games.Loot
                 return false;
 
             Player player = Player;
-            if (player == null) return Logger.WarnReturn(false, "InitializeCooldownData(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             if (cooldownType == LootCooldownType.ByChannel)
             {
                 // For channel-based cooldowns use the prototype to initialize cooldown data
                 LootCooldownChannelPrototype lootCooldownChannelProto = _cooldownData.OriginProtoRef.As<LootCooldownChannelPrototype>();
-                if (lootCooldownChannelProto == null) return Logger.WarnReturn(false, "InitializeCooldownData(): lootCooldownChannelProto == null");
+                if (!Verify.IsNotNull(lootCooldownChannelProto)) return false;
 
                 lootCooldownChannelProto.GetCooldownSettings(player,
                     out _cooldownData.PropertyEnum, out _cooldownData.ActiveOnPlayer, out _cooldownData.ActiveOnAvatar, out _cooldownData.Time);
@@ -325,35 +323,25 @@ namespace MHServerEmu.Games.Loot
                     _cooldownData.ActiveOnPlayer = timeHours > _cooldownData.Time - player.Properties[cooldownProperty];
 
                     Avatar avatar = player.CurrentAvatar;
-                    if (avatar != null)
-                    {
+                    if (Verify.IsNotNull(avatar))
                         _cooldownData.ActiveOnAvatar = timeHours > _cooldownData.Time - avatar.Properties[cooldownProperty];
-                    }
                     else
-                    {
-                        Logger.Warn("InitializeCooldownData(): avatar == null");
                         _cooldownData.ActiveOnAvatar = true;
-                    }
                 }
                 else if (cooldownType == LootCooldownType.RolloverWallTime)
                 {
                     _cooldownData.Time = Clock.UnixTime;            // Use Unix time for rollover cooldowns
 
-                    if (LootUtilities.GetLastLootCooldownRolloverWallTime(sourceEntity.Properties, _cooldownData.Time, out TimeSpan lastRolloverTime) == false)
-                        return Logger.WarnReturn(false, "InitializeCooldownData(): Failed to get last loot cooldown rollover wall time");
+                    if (!Verify.IsTrue(LootUtilities.GetLastLootCooldownRolloverWallTime(sourceEntity.Properties, _cooldownData.Time, out TimeSpan lastRolloverTime)))
+                        return false;
 
                     _cooldownData.ActiveOnPlayer = player.Properties[cooldownProperty] > lastRolloverTime;
 
                     Avatar avatar = player.CurrentAvatar;
-                    if (avatar != null)
-                    {
+                    if (Verify.IsNotNull(avatar))
                         _cooldownData.ActiveOnAvatar = avatar.Properties[cooldownProperty] > lastRolloverTime;
-                    }
                     else
-                    {
-                        Logger.Warn("InitializeCooldownData(): avatar == null");
                         _cooldownData.ActiveOnAvatar = true;
-                    }
                 }
             }
 
@@ -418,10 +406,10 @@ namespace MHServerEmu.Games.Loot
                 ? Player?.Properties
                 : Player?.CurrentAvatar?.Properties;
 
-            if (properties == null) return Logger.WarnReturn(false, "SetDropChanceCooldown(): properties == null");
+            if (!Verify.IsNotNull(properties)) return false;
 
             PropertyId cooldownProperty = _cooldownData.GetCooldownProperty();
-            if (cooldownProperty.Enum == PropertyEnum.Invalid) return Logger.WarnReturn(false, "SetDropChanceCooldown(): cooldownProperty.Enum == PropertyEnum.Invalid");
+            if (!Verify.IsTrue(cooldownProperty.Enum != PropertyEnum.Invalid)) return false;
 
             properties[cooldownProperty] = _cooldownData.Time;
 
@@ -484,11 +472,8 @@ namespace MHServerEmu.Games.Loot
                 foreach (PrototypeId currencyProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CurrencyPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                 {
                     CurrencyPrototype currencyProto = currencyProtoRef.As<CurrencyPrototype>();
-                    if (currencyProto == null)
-                    {
-                        Logger.Warn("ApplyCurrencyProperties(): currencyProto == null");
+                    if (!Verify.IsNotNull(currencyProto))
                         continue;
-                    }
 
                     CurrencyMultDict[currencyProtoRef] += Avatar.GetStackingCurrencyBonusPct(properties, currencyProto);
                     CurrencyFlatDict[currencyProtoRef] += Avatar.GetStackingFlatCurrencyBonus(properties, currencyProto);
@@ -497,16 +482,16 @@ namespace MHServerEmu.Games.Loot
 
             public readonly float GetCurrencyMult(PrototypeId currencyProtoRef)
             {
-                if (CurrencyMultDict.TryGetValue(currencyProtoRef, out float mult) == false)
-                    return Logger.WarnReturn(1f, $"GetCurrencyMult(): Invalid currency ref {currencyProtoRef.GetName()}");
+                if (!Verify.IsTrue(CurrencyMultDict.TryGetValue(currencyProtoRef, out float mult), $"Invalid currency ref {currencyProtoRef.GetName()}") == false)
+                    return 1f;
 
                 return mult;
             }
 
             public readonly int GetCurrencyFlat(PrototypeId currencyProtoRef)
             {
-                if (CurrencyFlatDict.TryGetValue(currencyProtoRef, out int flat) == false)
-                    return Logger.WarnReturn(0, $"GetCurrencyFlat(): Invalid currency ref {currencyProtoRef.GetName()}");
+                if (!Verify.IsTrue(CurrencyFlatDict.TryGetValue(currencyProtoRef, out int flat), $"Invalid currency ref {currencyProtoRef.GetName()}"))
+                    return 0;
 
                 return flat;
             }

@@ -20,8 +20,6 @@ namespace MHServerEmu.Games.Loot
     /// </summary>
     public static class LootVaporizer
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         /// <summary>
         /// Returns <see langword="true"/> if the provided <see cref="LootResult"/> should be vaporized.
         /// </summary>
@@ -42,7 +40,7 @@ namespace MHServerEmu.Games.Loot
                         return false;
 
                     AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
-                    if (avatarProto == null) return Logger.WarnReturn(false, "ShouldVaporize(): avatarProto == null");
+                    if (!Verify.IsNotNull(avatarProto)) return false;
 
                     EquipmentInvUISlot slot = GameDataTables.Instance.EquipmentSlotTable.EquipmentUISlotForAvatar(armorProto, avatarProto);
                     PrototypeId vaporizeThresholdRarityProtoRef = player.GameplayOptions.GetArmorRarityVaporizeThreshold(slot);
@@ -50,10 +48,10 @@ namespace MHServerEmu.Games.Loot
                         return false;
 
                     RarityPrototype rarityProto = lootResult.ItemSpec.RarityProtoRef.As<RarityPrototype>();
-                    if (rarityProto == null) return Logger.WarnReturn(false, "ShouldVaporize(): rarityProto == null");
+                    if (!Verify.IsNotNull(rarityProto)) return false;
 
                     RarityPrototype vaporizeThresholdRarityProto = vaporizeThresholdRarityProtoRef.As<RarityPrototype>();
-                    if (vaporizeThresholdRarityProto == null) return Logger.WarnReturn(false, "ShouldVaporize(): vaporizeThresholdRarityProto == null");
+                    if (!Verify.IsNotNull(vaporizeThresholdRarityProto)) return false;
 
                     return rarityProto.Tier <= vaporizeThresholdRarityProto.Tier;
 
@@ -105,14 +103,14 @@ namespace MHServerEmu.Games.Loot
         private static bool VaporizeItemSpec(Player player, ItemSpec itemSpec)
         {
             Avatar avatar = player.CurrentAvatar;
-            if (avatar == null) return Logger.WarnReturn(false, "VaporizeItemSpec(): avatar == null");
+            if (!Verify.IsNotNull(avatar)) return false;
 
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
-            if (itemProto == null) return Logger.WarnReturn(false, "VaporizeItemSpec(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             // Donate to PetTech if possible
             Inventory petItemInv = avatar.GetInventory(InventoryConvenienceLabel.PetItem);
-            if (petItemInv == null) return Logger.WarnReturn(false, "VaporizeItemSpec(): petItemInv == null");
+            if (!Verify.IsNotNull(petItemInv)) return false;
 
             Item petTechItem = player.Game.EntityManager.GetEntity<Item>(petItemInv.GetEntityInSlot(0));
             if (petTechItem != null)

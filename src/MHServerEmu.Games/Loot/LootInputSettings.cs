@@ -10,8 +10,6 @@ namespace MHServerEmu.Games.Loot
 {
     public class LootInputSettings : IPoolable, IDisposable
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public LootContext LootContext { get; private set; }
         public Player Player { get; private set; }
         public WorldEntity SourceEntity { get; private set; }
@@ -92,10 +90,8 @@ namespace MHServerEmu.Games.Loot
         {
             ObjectPoolManager pool = ObjectPoolManager.Instance;
 
-            if (LootRollSettings != null)
+            if (Verify.IsNotNull(LootRollSettings))
                 pool.Return(LootRollSettings);
-            else
-                Logger.Warn("Dispose(): LootRollSettings == null");
 
             pool.Return(this);
         }

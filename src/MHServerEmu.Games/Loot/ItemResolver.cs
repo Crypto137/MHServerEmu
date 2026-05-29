@@ -20,8 +20,6 @@ namespace MHServerEmu.Games.Loot
     /// </summary>
     public class ItemResolver : IItemResolver, IPoolable, IDisposable
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly int _itemLevelMin;
         private readonly int _itemLevelMax;
 
@@ -286,7 +284,8 @@ namespace MHServerEmu.Games.Loot
             }
             else
             {
-                return Logger.WarnReturn(LootRollResult.Failure, $"PushCurrency(): Unsupported currency entity prototype {worldEntityProto}");
+                Verify.IsTrue(false, $"Unsupported currency entity prototype {worldEntityProto}");
+                return LootRollResult.Failure;
             }
 
             if (worldEntityProto.GetCurrency(out PrototypeId currencyRef, out int amount) == false)
@@ -355,11 +354,8 @@ namespace MHServerEmu.Games.Loot
                 }
 
                 RarityPrototype rarityProto = rarityProtoRef.As<RarityPrototype>();
-                if (rarityProto == null)
-                {
-                    Logger.Warn("ResolveRarity(): rarityProto == null");
+                if (!Verify.IsNotNull(rarityProto))
                     continue;
-                }
 
                 RarityEntry entry = new(rarityProto, level);
                 weightSum += entry.Weight;
@@ -392,7 +388,7 @@ namespace MHServerEmu.Games.Loot
         public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2 = false, int stackCount = 1)
         {
             ItemPrototype itemProto = filterArgs.ItemProto as ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, $"CheckItem(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             if (itemProto.ApprovedForUse() == false)
                 return false;
@@ -438,7 +434,7 @@ namespace MHServerEmu.Games.Loot
             // Live tuning is also checked later when we spawn, but if we also check here
             // we can allow PickWeightTryAll loot tables pick something else.
             WorldEntityPrototype agentProto = agentProtoRef.As<WorldEntityPrototype>();
-            if (agentProto == null) return Logger.WarnReturn(false, "CheckAgent(): agentProto == null");
+            if (!Verify.IsNotNull(agentProto)) return false;
 
             if (agentProto.IsLiveTuningEnabled() == false)
                 return false;
@@ -459,8 +455,7 @@ namespace MHServerEmu.Games.Loot
                 return false;
 
             ItemSpec cloneSource = _cloneSourceList[index];
-            if (cloneSource == null)    // If this check triggers, we probably need to replace nulls with dummy specs (see SetCloneSource() below)
-                return Logger.WarnReturn(false, "InitializeRecordFromCloneSource(): cloneSource == null");
+            if (!Verify.IsNotNull(cloneSource)) return false;   // If this check triggers, we probably need to replace nulls with dummy specs (see SetCloneSource() below)
 
             LootCloneRecord.Initialize(lootCloneRecord, LootContext, cloneSource, PrototypeId.Invalid);
             return true;
@@ -510,9 +505,8 @@ namespace MHServerEmu.Games.Loot
                                 LootCloneRecord.Initialize(affixArgs, context, itemSpec, pendingItem.RollFor);
 
                                 MutationResults affixResult = LootUtilities.UpdateAffixes(this, affixArgs, AffixCountBehavior.Roll, itemSpec, settings);
-
-                                if (affixResult.HasFlag(MutationResults.Error))
-                                    return Logger.WarnReturn(false, $"ProcessPending(): Error when rolling affixes, result={affixResult}");
+                                if (!Verify.IsTrue(affixResult.HasFlag(MutationResults.Error) == false, $"Error when rolling affixes, result={affixResult}"))
+                                    return false;
                             }
 
                             // Apply mutations (if any)
@@ -526,17 +520,15 @@ namespace MHServerEmu.Games.Loot
                                 foreach (LootMutationPrototype lootMutationProto in pendingItem.Mutations)
                                 {
                                     mutationResult |= lootMutationProto.Mutate(settings, this, mutationArgs);
-                                    if (mutationResult.HasFlag(MutationResults.Error))
-                                        return Logger.WarnReturn(false, $"ProcessPending(): Error when applying mutations, result={mutationResult}");
+                                    if (!Verify.IsTrue(mutationResult.HasFlag(MutationResults.Error) == false, $"Error when applying mutations, result={mutationResult}"))
+                                        return false;
                                 }
 
                                 // Replace the item spec if any mutations were applied
                                 if (mutationResult != MutationResults.None)
                                 {
-                                    if (CheckItem(mutationArgs, mutationArgs.RestrictionFlags))
+                                    if (Verify.IsTrue(CheckItem(mutationArgs, mutationArgs.RestrictionFlags)))
                                         itemSpec.Set(mutationArgs);
-                                    else
-                                        return Logger.WarnReturn(false, "ProcessPending(): Mutations failed to pass CheckItem()");
                                 }
                             }
 

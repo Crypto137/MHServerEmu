@@ -9,8 +9,6 @@ namespace MHServerEmu.Games.Loot
 
     public class AffixPickerTable
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Picker<AffixPrototype>[] _pickers = new Picker<AffixPrototype>[(int)AffixPosition.NumPositions];
 
         public AffixPickerTable()
@@ -34,14 +32,15 @@ namespace MHServerEmu.Games.Loot
 
         public Picker<AffixPrototype> GetPicker(int affixPos)
         {
-            if (affixPos < 0) return Logger.WarnReturn<Picker<AffixPrototype>>(null, "GetPicker(): affixPos < 0");
-            if (affixPos >= _pickers.Length) return Logger.WarnReturn<Picker<AffixPrototype>>(null, "GetPicker(): affixPos >= _pickers.Length");
-
+            if (!Verify.IsTrue(affixPos >= 0)) return null;
+            if (!Verify.IsTrue(affixPos < _pickers.Length)) return null;
             return _pickers[affixPos];
         }
 
         public Picker<AffixPrototype> GetPicker(AffixPosition affixPos)
         {
+            if (!Verify.IsTrue(affixPos >= 0)) return null;
+            if (!Verify.IsTrue((int)affixPos < _pickers.Length)) return null;
             return GetPicker((int)affixPos);
         }
     }
