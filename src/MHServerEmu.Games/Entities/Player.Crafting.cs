@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.Entities
                 if (!Verify.IsTrue(recipeItemId != InvalidId)) return CraftingResult.CraftingFailed;
 
                 Item recraftItem = Game.EntityManager.GetEntity<Item>(recraftItemId);
-                if (!Verify.IsNotNull(recipeItem)) return CraftingResult.CraftingFailed;
+                if (!Verify.IsNotNull(recraftItem)) return CraftingResult.CraftingFailed;
 
                 uint recraftFreeSlot = resultsInv.GetFreeSlot(recraftItem, false, false);
                 if (!Verify.IsTrue(recraftFreeSlot != Inventory.InvalidSlot)) return CraftingResult.CraftingFailed;
