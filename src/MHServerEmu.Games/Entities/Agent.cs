@@ -265,11 +265,11 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld)
             {
                 // Activate resurrection power
-                if (AgentPrototype.OnResurrectedPower != PrototypeId.Invalid)
+                if (AgentPrototype.OnResurrectedPower != null)
                 {
                     PowerActivationSettings settings = new(Id, RegionLocation.Position, RegionLocation.Position);
                     settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
-                    ActivatePower(AgentPrototype.OnResurrectedPower, ref settings);
+                    ActivatePower(AgentPrototype.OnResurrectedPower.DataRef, ref settings);
                 }
 
                 // Reactivate passive and toggled powers
@@ -2148,7 +2148,7 @@ namespace MHServerEmu.Games.Entities
             base.OnEnteredWorld(settings);
 
             // Assign on resurrected power
-            PrototypeId onResurrectedPowerRef = AgentPrototype.OnResurrectedPower;
+            PrototypeId onResurrectedPowerRef = AgentPrototype.OnResurrectedPower.DataRef;
             if (onResurrectedPowerRef != PrototypeId.Invalid)
             {
                 PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
@@ -2454,8 +2454,8 @@ namespace MHServerEmu.Games.Entities
             base.OnNegativeStatusEffectApplied(conditionId);
 
             // Apply CCReactCondition (if this agent has one)
-            PrototypeId ccReactConditionProtoRef = AgentPrototype.CCReactCondition;
-            if (ccReactConditionProtoRef == PrototypeId.Invalid)
+            ConditionPrototype ccReactConditionProto = AgentPrototype.CCReactCondition;
+            if (ccReactConditionProto == null)
                 return;
 
             Condition negativeStatusCondition = ConditionCollection.GetCondition(conditionId);
@@ -2468,9 +2468,6 @@ namespace MHServerEmu.Games.Entities
             // Skip self-applied conditions
             if (negativeStatusCondition.ConditionPrototype.Scope == ConditionScopeType.User)
                 return;
-
-            ConditionPrototype ccReactConditionProto = ccReactConditionProtoRef.As<ConditionPrototype>();
-            if (!Verify.IsNotNull(ccReactConditionProto)) return;
 
             using var negativeStatusListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> negativeStatusList);
             if (!Verify.IsTrue(negativeStatusCondition.IsANegativeStatusEffect(negativeStatusList))) return;

@@ -2675,7 +2675,7 @@ namespace MHServerEmu.Games.Powers
             // All checks passed, now we add the hit reaction condition
 
             // agentProto should have already been validated in Power.CanCauseHitReact()
-            ConditionPrototype conditionProto = targetAgent.AgentPrototype.HitReactCondition.As<ConditionPrototype>();
+            ConditionPrototype conditionProto = targetAgent.AgentPrototype.HitReactCondition;
             if (!Verify.IsNotNull(conditionProto)) return;
 
             ConditionCollection conditionCollection = targetAgent.ConditionCollection;

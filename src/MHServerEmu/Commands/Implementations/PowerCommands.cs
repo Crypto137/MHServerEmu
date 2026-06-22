@@ -87,9 +87,8 @@ namespace MHServerEmu.Commands.Implementations
                 return "No stealable powers available for the current avatar.";
 
             int count = 0;
-            foreach (PrototypeId stealablePowerInfoRef in avatarProto.StealablePowersAllowed)
+            foreach (StealablePowerInfoPrototype stealablePowerInfoProto in avatarProto.StealablePowersAllowed)
             {
-                StealablePowerInfoPrototype stealablePowerInfoProto = stealablePowerInfoRef.As<StealablePowerInfoPrototype>();
                 PrototypeId stolenPowerRef = stealablePowerInfoProto.Power;
 
                 if (avatar.IsStolenPowerAvailable(stolenPowerRef))
@@ -125,7 +124,7 @@ namespace MHServerEmu.Commands.Implementations
                 if (currentAvatarProto.StealablePowersAllowed.Contains(avatarProto.StealablePower) == false)
                     continue;
 
-                StealablePowerInfoPrototype stealablePowerInfoProto = avatarProto.StealablePower.As<StealablePowerInfoPrototype>();
+                StealablePowerInfoPrototype stealablePowerInfoProto = avatarProto.StealablePower;
                 if (stealablePowerInfoProto == null)
                     continue;
 
@@ -158,9 +157,8 @@ namespace MHServerEmu.Commands.Implementations
                 return "No stealable powers available for the current avatar.";
 
             int count = 0;
-            foreach (PrototypeId stealablePowerInfoRef in avatarProto.StealablePowersAllowed)
+            foreach (StealablePowerInfoPrototype stealablePowerInfoProto in avatarProto.StealablePowersAllowed)
             {
-                StealablePowerInfoPrototype stealablePowerInfoProto = stealablePowerInfoRef.As<StealablePowerInfoPrototype>();
                 PrototypeId stolenPowerRef = stealablePowerInfoProto.Power;
 
                 if (avatar.IsStolenPowerAvailable(stolenPowerRef) == false)

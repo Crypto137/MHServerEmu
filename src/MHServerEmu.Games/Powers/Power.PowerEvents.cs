@@ -1269,7 +1269,7 @@ namespace MHServerEmu.Games.Powers
             if (!Verify.IsNotNull(agentProto)) return;
 
             // Check if there is a power to steal
-            StealablePowerInfoPrototype stealablePowerInfoProto = agentProto.StealablePower.As<StealablePowerInfoPrototype>();
+            StealablePowerInfoPrototype stealablePowerInfoProto = agentProto.StealablePower;
             if (stealablePowerInfoProto == null)
                 return;
 

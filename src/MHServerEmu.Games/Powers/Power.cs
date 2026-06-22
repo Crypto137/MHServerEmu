@@ -3339,7 +3339,7 @@ namespace MHServerEmu.Games.Powers
             AgentPrototype agentProto = target.AgentPrototype;
             if (!Verify.IsNotNull(agentProto)) return false;
 
-            if (agentProto.HitReactCondition == PrototypeId.Invalid)
+            if (agentProto.HitReactCondition == null)
                 return false;
 
             if (target.IsHitReactionOnCooldown())

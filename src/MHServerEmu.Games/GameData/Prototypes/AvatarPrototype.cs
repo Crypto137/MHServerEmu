@@ -39,7 +39,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] SuperteamMemberships { get; protected set; }
         public PrototypeId[] CharacterSelectPowers { get; protected set; }
         public PrototypeId[] PrimaryResourceBehaviors { get; protected set; }     // VectorPrototypeRefPtr PrimaryResourceManaBehaviorPrototype
-        public PrototypeId[] StealablePowersAllowed { get; protected set; }       // VectorPrototypeRefPtr StealablePowerInfoPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public StealablePowerInfoPrototype[] StealablePowersAllowed { get; protected set; }
         public bool ShowInRosterIfLocked { get; protected set; }
         public LocaleStringId CharacterVideoUrl { get; protected set; }
         public AssetId CharacterSelectIconPortraitSmall { get; protected set; }
