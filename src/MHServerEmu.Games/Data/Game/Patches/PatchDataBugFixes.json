@@ -84,7 +84,7 @@
         "Prototype": "Entity/Characters/Mobs/Moloids/MoloidCrawlerBase.prototype",
         "Path": "StealablePower",
         "Description": "Add Mole Man Power for Moloid Crawler",
-        "ValueType": "PrototypeId",
+        "ValueType": "PrototypeRefPtr",
         "Value": 10167535038344338060
     },
     {

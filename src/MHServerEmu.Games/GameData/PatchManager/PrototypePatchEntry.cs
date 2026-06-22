@@ -111,6 +111,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 ValueType.PrototypeDataRefArray => new ArrayValue<PrototypeId>(jsonElement, valueType, x => (PrototypeId)x.GetUInt64()),
                 ValueType.Prototype => new SimpleValue<Prototype>(ParseJsonPrototype(jsonElement), valueType),
                 ValueType.PrototypeArray => new ArrayValue<Prototype>(jsonElement, valueType, ParseJsonPrototype),
+                ValueType.PrototypeRefPtr => new SimpleValue<Prototype>(GameDatabase.GetPrototype<Prototype>((PrototypeId)jsonElement.GetUInt64()), valueType),
                 ValueType.Vector3 => new SimpleValue<Vector3>(ParseJsonVector3(jsonElement), valueType),
                 ValueType.Properties => new SimpleValue<PropertyCollection>(ParseJsonProperties(jsonElement), valueType),
                 _ => throw new NotSupportedException($"Type {valueType} not support.")
@@ -325,6 +326,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
         PrototypeDataRefArray,
         Prototype,
         PrototypeArray,
+        PrototypeRefPtr,
         Vector3,
         Properties
     }
