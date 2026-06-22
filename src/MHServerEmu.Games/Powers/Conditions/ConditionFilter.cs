@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.Powers.Conditions
                 return false;
 
             return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnPowerUse) &&
-                (conditionProto.CancelOnPowerUseKeyword == PrototypeId.Invalid || powerProto.HasKeyword(conditionProto.CancelOnPowerUseKeyword.As<KeywordPrototype>()));
+                (conditionProto.CancelOnPowerUseKeyword == null || powerProto.HasKeyword(conditionProto.CancelOnPowerUseKeyword));
         }
 
         private static bool IsConditionCancelOnIntraRegionTeleport(Condition condition)
@@ -88,7 +88,7 @@ namespace MHServerEmu.Games.Powers.Conditions
                 return false;
 
             return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnPowerUsePost) &&
-                (conditionProto.CancelOnPowerUseKeyword == PrototypeId.Invalid || powerProto.HasKeyword(conditionProto.CancelOnPowerUseKeyword.As<KeywordPrototype>()));
+                (conditionProto.CancelOnPowerUseKeyword == null || powerProto.HasKeyword(conditionProto.CancelOnPowerUseKeyword));
         }
 
         private static bool IsConditionWithPrototype(Condition condition, PrototypeId protoRef)

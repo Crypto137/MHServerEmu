@@ -111,6 +111,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool AllowChatPanelTab { get; protected set; }
         public LanguageType Language { get; protected set; }
 
+        //---
+
         public override bool ApprovedForUse()
         {
             return GameDatabase.DesignStateOk(DesignState);
