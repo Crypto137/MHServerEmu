@@ -377,7 +377,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId ExperienceBonusLevel60Synergy { get; protected set; }
         public int TeamUpPowersPerTier { get; protected set; }
         public CurveId TeamUpPowerTiersCurve { get; protected set; }
-        public PrototypeId[] OmegaBonusSets { get; protected set; }   // VectorPrototypeRefPtr OmegaBonusSetPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public OmegaBonusSetPrototype[] OmegaBonusSets { get; protected set; }
         public int OmegaPointsCap { get; protected set; }
         public int OmegaSystemLevelUnlock { get; protected set; }
         public PetTechAffixInfoPrototype[] PetTechAffixInfo { get; protected set; }
@@ -390,7 +391,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId PctXPFromLevelDeltaCurve { get; protected set; }
         public int InfinitySystemUnlockLevel { get; protected set; }
         public long InfinityPointsCapPerGem { get; protected set; }
-        public PrototypeId[] InfinityGemSets { get; protected set; }  // VectorPrototypeRefPtr InfinityGemSetPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public InfinityGemSetPrototype[] InfinityGemSets { get; protected set; }
         public long InfinityXPCap { get; protected set; }
         public int TravelPowerUnlockLevel { get; protected set; }
         public float ExperienceBonusCoop { get; protected set; }

@@ -683,7 +683,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 {
                     builtInAffixDetails.ScopeProtoRef = affixEntryProto.Power;
                 }
-                else if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
+                else if (affixPowerModifierProto.PowerKeywordFilter != null)
                 {
                     builtInAffixDetails.ScopeProtoRef = PrototypeId.Invalid;
                 }

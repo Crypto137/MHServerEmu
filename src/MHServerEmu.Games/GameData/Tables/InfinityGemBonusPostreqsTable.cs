@@ -21,14 +21,10 @@ namespace MHServerEmu.Games.GameData.Tables
             AdvancementGlobalsPrototype advGlobalsProto = GameDatabase.AdvancementGlobalsPrototype;
             if (!Verify.IsNotNull(advGlobalsProto)) return;
 
-            foreach (PrototypeId infinityGemSetRef in advGlobalsProto.InfinityGemSets)
+            foreach (InfinityGemSetPrototype infinityGemSetProto in advGlobalsProto.InfinityGemSets)
             {
-                InfinityGemSetPrototype infinityGemSetProto = infinityGemSetRef.As<InfinityGemSetPrototype>();
-
-                foreach (PrototypeId gemBonusRef in infinityGemSetProto.Bonuses)
+                foreach (InfinityGemBonusPrototype gemBonusProto in infinityGemSetProto.Bonuses)
                 {
-                    InfinityGemBonusPrototype gemBonusProto = gemBonusRef.As<InfinityGemBonusPrototype>();
-
                     foreach (PrototypeId gemBonusPrereqRef in gemBonusProto.Prerequisites)
                     {
                         if (_infinityGemBonusPostreqs.TryGetValue(gemBonusPrereqRef, out List<PrototypeId> gemBonusPostreqs) == false)

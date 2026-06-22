@@ -212,13 +212,8 @@ namespace MHServerEmu.Games.Entities.Items
                 if (affixSet.Contains(new(powerAffixProto.DataRef, powerProto.DataRef)))
                     continue;
 
-                if (powerAffixProto.PowerKeywordFilter != PrototypeId.Invalid)
-                {
-                    KeywordPrototype keywordProto = powerAffixProto.PowerKeywordFilter.As<KeywordPrototype>();
-
-                    if (powerProto.HasKeyword(keywordProto) == false)
-                        continue;
-                }
+                if (powerAffixProto.PowerKeywordFilter != null && powerProto.HasKeyword(powerAffixProto.PowerKeywordFilter) == false)
+                    continue;
 
                 if (entryProto.Antirequisites.HasValue())
                 {
@@ -275,7 +270,7 @@ namespace MHServerEmu.Games.Entities.Items
         {
             if (!Verify.IsTrue(powerAffixProto.IsForSinglePowerOnly == false)) return MutationResults.Error;
 
-            if (powerAffixProto.PowerKeywordFilter != PrototypeId.Invalid)
+            if (powerAffixProto.PowerKeywordFilter != null)
             {
                 // Keyword scope (applies to powers that match the keyword filter)
 

@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (table != null)
                 foreach (var entry in table)
                     if (entry.Weight > 0 && (noAffixes || entry.GetMaxAffixes() > 0))
-                        picker.Add(entry.Rank.As<RankPrototype>(), entry.Weight);
+                        picker.Add(entry.Rank, entry.Weight);
 
             return picker;
         }
@@ -135,7 +135,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (table != null)
                 foreach (var entry in table)
                 {
-                    var entryRank = entry.Rank.As<RankPrototype>();
+                    var entryRank = entry.Rank;
                     if (entryRank != null && entryRank.Rank == rankProto.Rank)
                         return entry;
                 }

@@ -531,7 +531,7 @@ namespace MHServerEmu.Games.Populations
 
                         if (slots[slot] == PrototypeId.Invalid)
                             foreach (var overrideRef in overrides)
-                                if (affixProto.AffixTable == PrototypeId.Invalid || affixProto.AffixTablePrototype.Contains(overrideRef))
+                                if (affixProto.AffixTable == null || affixProto.AffixTable.Contains(overrideRef))
                                 {
                                     slots[slot] = overrideRef;
                                     overrides.Remove(overrideRef);
