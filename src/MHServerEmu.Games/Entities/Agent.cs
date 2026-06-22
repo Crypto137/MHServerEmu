@@ -2147,8 +2147,11 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnEnteredWorld(settings);
 
+            AgentPrototype agentProto = AgentPrototype;
+            if (!Verify.IsNotNull(agentProto)) return;
+
             // Assign on resurrected power
-            PrototypeId onResurrectedPowerRef = AgentPrototype.OnResurrectedPower.DataRef;
+            PrototypeId onResurrectedPowerRef = agentProto.OnResurrectedPower != null ? agentProto.OnResurrectedPower.DataRef : PrototypeId.Invalid;
             if (onResurrectedPowerRef != PrototypeId.Invalid)
             {
                 PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
@@ -2161,7 +2164,7 @@ namespace MHServerEmu.Games.Entities
             // AI
             // if (TestAI() == false) return;
 
-            var behaviorProfile = AgentPrototype?.BehaviorProfile;
+            var behaviorProfile = agentProto.BehaviorProfile;
 
             if (AIController != null)
             {                

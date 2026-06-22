@@ -3723,14 +3723,14 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public PrimaryResourceManaBehaviorPrototype[] GetPrimaryResourceManaBehaviors()
         {
-            PrimaryResourceManaBehaviorPrototype[] behaviors = AvatarPrototype?.PrimaryResourceBehaviorsCache;
+            PrimaryResourceManaBehaviorPrototype[] behaviors = AvatarPrototype?.PrimaryResourceBehaviors;
             if (!Verify.IsTrue(behaviors.HasValue())) return Array.Empty<PrimaryResourceManaBehaviorPrototype>();
             return behaviors;
         }
 
         private PrimaryResourceManaBehaviorPrototype GetPrimaryResourceManaBehavior(ManaType manaType)
         {
-            PrimaryResourceManaBehaviorPrototype[] behaviors = AvatarPrototype?.PrimaryResourceBehaviorsCache;
+            PrimaryResourceManaBehaviorPrototype[] behaviors = AvatarPrototype?.PrimaryResourceBehaviors;
             if (!Verify.IsTrue(behaviors.HasValue())) return null;
 
             foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in behaviors)
@@ -3748,7 +3748,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (secondaryResourceOverrideProtoRef != PrototypeId.Invalid)
                 return secondaryResourceOverrideProtoRef.As<SecondaryResourceManaBehaviorPrototype>();
 
-            return AvatarPrototype?.SecondaryResourceBehaviorCache;
+            return AvatarPrototype?.SecondaryResourceBehavior;
         }
 
         private float GetEnduranceMax(ManaType manaType)
@@ -6649,7 +6649,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     else
                     {
                         // Clear default behavior (if any)
-                        SecondaryResourceManaBehaviorPrototype defaultManaBehaviorProto = AvatarPrototype?.SecondaryResourceBehaviorCache;
+                        SecondaryResourceManaBehaviorPrototype defaultManaBehaviorProto = AvatarPrototype?.SecondaryResourceBehavior;
                         if (defaultManaBehaviorProto != null)
                             UnassignManaBehaviorPowers(defaultManaBehaviorProto);
                     }

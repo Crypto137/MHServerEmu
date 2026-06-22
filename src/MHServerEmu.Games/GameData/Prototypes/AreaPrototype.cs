@@ -40,6 +40,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public RespawnCellOverridePrototype[] RespawnCellOverrides { get; protected set; }
         public PrototypeId PlayerCameraSettingsOrbis { get; protected set; }
 
+        //---
+
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; protected set; }
 

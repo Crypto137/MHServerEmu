@@ -193,7 +193,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agentProto is not AvatarPrototype avatarProto)
                 return false;
 
-            return this == avatarProto.CostumeCore.As<CostumeCorePrototype>();
+            return this == avatarProto.CostumeCore;
         }
 
         public override bool IsUsableByAgent(AgentPrototype agentProto)
@@ -204,7 +204,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agentProto is not AvatarPrototype avatarProto)
                 return false;
 
-            return this == avatarProto.CostumeCore.As<CostumeCorePrototype>();
+            return this == avatarProto.CostumeCore;
         }
     }
 
