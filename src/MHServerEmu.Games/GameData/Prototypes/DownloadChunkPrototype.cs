@@ -19,9 +19,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     #endregion
 
+    // There isn't much point to using VectorPrototypeRefPtr for these server-side,
+    // but it's what the client does, so whatever. Authenticity FTW.
+
     public class DownloadChunkRegionsPrototype : Prototype
     {
-        public PrototypeId[] Regions { get; protected set; }  // VectorPrototypeRefPtr RegionPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public RegionPrototype[] Regions { get; protected set; }
         public Platforms Platform { get; protected set; }
     }
 
@@ -34,8 +38,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class DownloadChunksPrototype : Prototype
     {
-        public PrototypeId[] ChunksPC { get; protected set; }      // VectorPrototypeRefPtr DownloadChunkPrototype
-        public PrototypeId[] ChunksPS4 { get; protected set; }     // VectorPrototypeRefPtr DownloadChunkPrototype
-        public PrototypeId[] ChunksXboxOne { get; protected set; } // VectorPrototypeRefPtr DownloadChunkPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public DownloadChunkPrototype[] ChunksPC { get; protected set; }
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public DownloadChunkPrototype[] ChunksPS4 { get; protected set; }
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public DownloadChunkPrototype[] ChunksXboxOne { get; protected set; }
     }
 }
