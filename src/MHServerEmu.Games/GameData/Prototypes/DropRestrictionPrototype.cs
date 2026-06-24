@@ -2,7 +2,6 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Loot;
 
@@ -140,8 +139,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
             if (AllowedTypes.IsNullOrEmpty())
@@ -151,17 +148,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return true;
 
             Prototype itemProto = filterArgs.ItemProto;
-            if (itemProto == null) return Logger.WarnReturn(false, "Allow(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             DataDirectory dataDirectory = DataDirectory.Instance;
             foreach (PrototypeId allowedTypeRef in AllowedTypes)
             {
                 Blueprint blueprint = dataDirectory.GetBlueprint((BlueprintId)allowedTypeRef);
-                if (blueprint == null)
-                {
-                    Logger.Warn("Allow(): blueprint == null");
+                if (!Verify.IsNotNull(blueprint))
                     continue;
-                }
 
                 if (dataDirectory.PrototypeIsChildOfBlueprint(itemProto.DataRef, blueprint.BlueprintDataRef))
                     return true;
@@ -177,8 +171,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
             if (AllowedParents.IsNullOrEmpty())
@@ -188,7 +180,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return true;
 
             Prototype itemProto = filterArgs.ItemProto;
-            if (itemProto == null) return Logger.WarnReturn(false, "Allow(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             DataDirectory dataDirectory = DataDirectory.Instance;
             foreach (PrototypeId allowedTypeRef in AllowedParents)
@@ -207,11 +199,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
-            return Logger.WarnReturn(false, "Allow(): HasAffixInPosition DropRestriction is only supported in CraftingInput right-hand structs!");
+            Verify.IsTrue(false, "HasAffixInPosition DropRestriction is only supported in CraftingInput right-hand structs!");
+            return false;
         }
 
         public override bool AllowAsCraftingInput(LootCloneRecord lootCloneRecord, RestrictionTestFlags restrictionTestFlags)
@@ -220,11 +211,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             foreach (AffixRecord affixRecord in lootCloneRecord.AffixRecords)
             {
                 AffixPrototype affixProto = affixRecord.AffixProtoRef.As<AffixPrototype>();
-                if (affixProto == null)
-                {
-                    Logger.Warn("AllowAsCraftingInput(): affixProto == null");
+                if (!Verify.IsNotNull(affixProto))
                     continue;
-                }
 
                 if (affixProto.Position == Position)
                     return true;
@@ -232,18 +220,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             // Check built-in affixes
             ItemPrototype itemProto = lootCloneRecord.ItemProto as ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "AllowAsCraftingInput(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             if (itemProto.AffixesBuiltIn.HasValue())
             {
                 foreach (AffixEntryPrototype affixEntryProto in itemProto.AffixesBuiltIn)
                 {
                     AffixPrototype affixProto = affixEntryProto.Affix.As<AffixPrototype>();
-                    if (affixProto == null)
-                    {
-                        Logger.Warn("AllowAsCraftingInput(): affixProto == null");
+                    if (!Verify.IsNotNull(affixProto))
                         continue;
-                    }
 
                     if (affixProto.Position == Position)
                         return true;
@@ -261,11 +246,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
-            return Logger.WarnReturn(false, "Allow(): HasVisualAffix DropRestriction is only supported in CraftingInput right-hand structs!");
+            Verify.IsTrue(false, "HasVisualAffix DropRestriction is only supported in CraftingInput right-hand structs!");
+            return false;
         }
 
         public override bool AllowAsCraftingInput(LootCloneRecord lootCloneRecord, RestrictionTestFlags restrictionTestFlags)
@@ -288,11 +272,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 else if (hasVisualAffix == false)
                 {
                     AffixPrototype affixProto = record.AffixProtoRef.As<AffixPrototype>();
-                    if (affixProto == null)
-                    {
-                        Logger.Warn("AllowAsCraftingInput(): affixProto == null");
+                    if (!Verify.IsNotNull(affixProto))
                         continue;
-                    }
 
                     if (affixProto.Position == AffixPosition.Visual)
                         hasVisualAffix = true;
@@ -303,18 +284,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (hasVisualAffix == false && hasNoVisualsAffix == false)
             {
                 ItemPrototype itemProto = lootCloneRecord.ItemProto as ItemPrototype;
-                if (itemProto == null) return Logger.WarnReturn(false, "AllowAsCraftingInput(): itemProto == null");
+                if (!Verify.IsNotNull(itemProto)) return false;
 
                 if (itemProto.AffixesBuiltIn.HasValue())
                 {
                     foreach (AffixEntryPrototype affixEntryProto in itemProto.AffixesBuiltIn)
                     {
                         AffixPrototype affixProto = affixEntryProto.Affix.As<AffixPrototype>();
-                        if (affixProto == null)
-                        {
-                            Logger.Warn("AllowAsCraftingInput(): affixProto == null");
+                        if (!Verify.IsNotNull(affixProto))
                             continue;
-                        }
 
                         if (affixProto.Position == AffixPosition.Visual)
                         {
@@ -481,8 +459,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override void PostProcess()
         {
             base.PostProcess();
@@ -580,7 +556,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return false;
         }
-
     }
 
     public class RankRestrictionPrototype : DropRestrictionPrototype
@@ -685,8 +660,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
             if (Avatars.IsNullOrEmpty())
@@ -702,12 +675,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
             else
             {
-                if (filterArgs.RollFor == PrototypeId.Invalid)
-                    Logger.Warn($"Allow(): RollFor is invalid, but context is not Crafting! RestrictionTestFlags=[{restrictionFlags}] Args=[{filterArgs}]");
+                Verify.IsTrue(filterArgs.RollFor != PrototypeId.Invalid,
+                    $"UsableByRestriction: RollFor is invalid, but context is not Crafting! RestrictionTestFlags=[{restrictionFlags}] Args=[{filterArgs}]");
             }
 
             ItemPrototype itemProto = filterArgs.ItemProto as ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "Allow(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             foreach (PrototypeId avatarProtoRef in Avatars)
             {
@@ -724,15 +697,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
             if (Segment.IsNearZero(filterArgs.DropDistanceSq))
                 return true;
 
             LootGlobalsPrototype lootGlobalsProto = GameDatabase.LootGlobalsPrototype;
-            if (lootGlobalsProto == null) return Logger.WarnReturn(false, "Allow(): lootGlobalsProto == null");
+            if (!Verify.IsNotNull(lootGlobalsProto)) return false;
 
             float dropDistanceThresholdSq = lootGlobalsProto.DropDistanceThreshold * lootGlobalsProto.DropDistanceThreshold;
             return dropDistanceThresholdSq > filterArgs.DropDistanceSq;
