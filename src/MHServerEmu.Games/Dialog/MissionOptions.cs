@@ -442,11 +442,11 @@ namespace MHServerEmu.Games.Dialog
 
         public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, HashSet<InteractionOption> checkList)
         {
-            if (Proto != null && Proto.ConnectionTarget != PrototypeId.Invalid)
+            if (Proto != null && Proto.ConnectionTarget != null)
             {
                 if (entity is Transition transition)
                 {
-                    PrototypeId targetRef = Proto.ConnectionTarget;
+                    PrototypeId targetRef = Proto.ConnectionTarget.DataRef;
                     for (int i = 0; i < transition.Destinations.Count; i++)
                     {
                         TransitionDestination destination = transition.Destinations[i];

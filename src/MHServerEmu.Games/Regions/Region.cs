@@ -1814,7 +1814,7 @@ namespace MHServerEmu.Games.Regions
             Eval.RunBool(evalProto, evalContext);
         }
 
-        public void GetUnuqueSelectorIndex(ref int index, int size, PrototypeId dataRef)
+        public void GetUniqueSelectorIndex(ref int index, int size, PrototypeId dataRef)
         {
             if (_uniqueSelectorIndexes.TryGetValue(dataRef, out ulong mask) == false) return;
             int start = index;
@@ -1826,7 +1826,7 @@ namespace MHServerEmu.Games.Regions
             while (index != start);
         }
 
-        public void SetUnuqueSelectorIndex(int index, bool setUnique, PrototypeId dataRef)
+        public void SetUniqueSelectorIndex(int index, bool setUnique, PrototypeId dataRef)
         {
             if (_uniqueSelectorIndexes.ContainsKey(dataRef) == false) return;
 

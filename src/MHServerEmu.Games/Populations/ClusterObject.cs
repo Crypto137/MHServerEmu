@@ -614,7 +614,7 @@ namespace MHServerEmu.Games.Populations
                         }
 
                     if (twinBoss)
-                        if (entity.EntityProto.Rank != PrototypeId.Invalid && entity.EntityProto.RankPrototype.IsRankBoss)
+                        if (entity.EntityProto.Rank != null && entity.EntityProto.Rank.IsRankBoss)
                         {
                             var newEntity = CreateClusterEntity(entity.EntityRef);
                             if (newEntity != null)
@@ -933,12 +933,12 @@ namespace MHServerEmu.Games.Populations
                 // Spawner have not Bounds
             }
 
-            if (AlliancePrototype.IsHostileToPlayerAlliance(EntityProto.AlliancePrototype))
+            if (AlliancePrototype.IsHostileToPlayerAlliance(EntityProto.Alliance))
                 Flags |= ClusterObjectFlag.Hostile;
 
             PathFlags = Locomotor.GetPathFlags(EntityProto.NaviMethod);
 
-            RankProto = EntityProto.RankPrototype;
+            RankProto = EntityProto.Rank;
             
             if (Parent != null)
             {

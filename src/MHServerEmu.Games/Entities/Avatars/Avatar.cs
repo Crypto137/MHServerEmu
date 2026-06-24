@@ -828,12 +828,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             WorldEntityPrototype targetProto = target.WorldEntityPrototype;
             if (!Verify.IsNotNull(targetProto)) return false;
 
-            PrototypeId powerRef = targetProto.PreInteractPower;
-            if (powerRef == PrototypeId.Invalid)
+            PowerPrototype powerProto = targetProto.PreInteractPower;
+            if (powerProto == null)
                 return false;
 
-            PowerPrototype powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
-            if (!Verify.IsNotNull(powerProto)) return false;
+            PrototypeId powerRef = powerProto.DataRef;
 
             if (HasPowerInPowerCollection(powerRef) == false)
             {
@@ -4188,7 +4187,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             WorldEntityPrototype objectProto = interactableObject.WorldEntityPrototype;
-            if (objectProto.PreInteractPower != PrototypeId.Invalid)
+            if (objectProto.PreInteractPower != null)
             {
                 ulong targetId = player.Properties[PropertyEnum.InteractReadyForTargetId];
                 player.Properties.RemoveProperty(PropertyEnum.InteractReadyForTargetId);

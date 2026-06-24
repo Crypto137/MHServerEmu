@@ -128,8 +128,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId[] HostileTo { get; protected set; }
         public PrototypeId[] FriendlyTo { get; protected set; }
-        public PrototypeId WhileConfused { get; protected set; }
-        public PrototypeId WhileControlled { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AlliancePrototype WhileConfused { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AlliancePrototype WhileControlled { get; protected set; }
 
         [DoNotCopy]
         public int EnumValue { get; private set; }

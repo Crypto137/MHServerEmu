@@ -370,7 +370,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             WorldEntityPrototype worldEntityProto = entity.WorldEntityPrototype;
             if (!Verify.IsNotNull(worldEntityProto)) return false;
 
-            AlliancePrototype allianceProto = worldEntityProto.Alliance.As<AlliancePrototype>();
+            AlliancePrototype allianceProto = worldEntityProto.Alliance;
             if (allianceProto == null)
             {
                 PrototypeId allianceOverrideRef = entity.Properties[PropertyEnum.AllianceOverride];
