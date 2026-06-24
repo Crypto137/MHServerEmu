@@ -12,7 +12,7 @@
         "Prototype": "Missions/Prototypes/Story/CH04EastSide/TreasureRooms/CH04TR07Basement.prototype",
         "Path": "Objectives[1].SuccessConditions.Conditions[0].TargetFilter.Filters[0].Keyword",
         "Description": "Fix Chest mission Keyword to Mob",
-        "ValueType": "PrototypeId",
+        "ValueType": "PrototypeRefPtr",
         "Value": 6870096780498112679
     },
     {

@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool HasPowerProgressionTables { get => PowerProgressionTables.HasValue(); }
 
         [DoNotCopy]
-        public int SynergyUnlockLevel { get; private set; } = int.MaxValue;
+        public int SynergyUnlockLevel { get; private set; }
 
         public override bool ApprovedForUse()
         {
@@ -132,6 +132,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
 
+            SynergyUnlockLevel = int.MaxValue;
             if (SynergyTable.HasValue())
             {
                 Array.Sort(SynergyTable, static (a, b) => a.Level.CompareTo(b.Level));
