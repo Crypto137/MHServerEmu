@@ -1220,7 +1220,7 @@ namespace MHServerEmu.Games.Powers
             }
 
             // Check if our potentially stealthed entity is actually stealthed
-            KeywordPrototype stealthPowerKeyword = GameDatabase.KeywordGlobalsPrototype.StealthPowerKeywordPrototype;
+            KeywordPrototype stealthPowerKeyword = GameDatabase.KeywordGlobalsPrototype.StealthPowerKeyword;
             if (stealthedEntity.HasConditionWithKeyword(stealthPowerKeyword) == false)
                 return false;
 

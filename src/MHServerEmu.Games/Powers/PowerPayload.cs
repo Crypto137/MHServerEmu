@@ -1285,7 +1285,7 @@ namespace MHServerEmu.Games.Powers
             if (!Verify.IsNotNull(powerProto)) return;
 
             // This bonus applies only to powers keyworded as ranged
-            if (powerProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.RangedPowerKeywordPrototype) == false)
+            if (powerProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.RangedPowerKeyword) == false)
                 return;
 
             float damagePct = 0f;
@@ -2662,7 +2662,7 @@ namespace MHServerEmu.Games.Powers
                 return;
 
             // Check eval
-            EvalPrototype interruptChanceFormula = GameDatabase.CombatGlobalsPrototype.EvalInterruptChanceFormulaPrototype; 
+            EvalPrototype interruptChanceFormula = GameDatabase.CombatGlobalsPrototype.EvalInterruptChanceFormula; 
 
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);

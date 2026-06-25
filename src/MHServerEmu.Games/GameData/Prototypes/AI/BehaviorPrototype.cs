@@ -148,10 +148,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (allianceProto == null
                 || GameDatabase.GlobalsPrototype == null 
-                || GameDatabase.GlobalsPrototype.PlayerAlliance == PrototypeId.Invalid)
+                || GameDatabase.GlobalsPrototype.PlayerAlliance == null)
                 return false;
 
-            AlliancePrototype playerAlliance = GameDatabase.GlobalsPrototype.PlayerAlliancePrototype;
+            AlliancePrototype playerAlliance = GameDatabase.GlobalsPrototype.PlayerAlliance;
             return playerAlliance.IsHostileTo(allianceProto);
         }
 

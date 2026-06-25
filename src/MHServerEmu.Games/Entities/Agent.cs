@@ -922,7 +922,7 @@ namespace MHServerEmu.Games.Entities
 
                 if (keywords.HasValue())
                 {
-                    PrototypeId ultimatePowerKeyword = GameDatabase.KeywordGlobalsPrototype.UltimatePowerKeyword;
+                    PrototypeId ultimatePowerKeyword = GameDatabase.KeywordGlobalsPrototype.UltimatePowerKeyword.DataRef;
 
                     foreach (PrototypeId keywordProtoRef in keywords)
                     {
@@ -1292,7 +1292,7 @@ namespace MHServerEmu.Games.Entities
                 Player player = GetOwnerOfType<Player>();
                 if (!Verify.IsNotNull(player)) return false;
 
-                player.ShowHUDTutorial(GameDatabase.UIGlobalsPrototype.PowerGrantItemTutorialTip.As<HUDTutorialPrototype>());
+                player.ShowHUDTutorial(GameDatabase.UIGlobalsPrototype.PowerGrantItemTutorialTip);
             }
 
             return true;
@@ -2514,8 +2514,9 @@ namespace MHServerEmu.Games.Entities
             // Cancel the power
             activePower.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Interrupting);
 
-            // Apply channel interrupt condition (hit reaction)
-            ConditionPrototype conditionProto = GameDatabase.CombatGlobalsPrototype.ChannelInterruptConditionPrototype;
+            // Apply channel interrupt condition (hit react)
+            ConditionPrototype conditionProto = GameDatabase.CombatGlobalsPrototype.ChannelInterruptCondition.As<ConditionPrototype>();
+            if (!Verify.IsNotNull(conditionProto)) return;
 
             ulong creatorId = powerResults.PowerOwnerId;
             ulong ultimateCreatorId = powerResults.UltimateOwnerId;

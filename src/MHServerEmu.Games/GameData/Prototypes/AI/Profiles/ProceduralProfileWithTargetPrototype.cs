@@ -631,7 +631,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 agent.AIController.AttemptActivatePower(EffectPower, avatar.Id, avatar.RegionLocation.Position);
 
             // Run OnOrbPickup procs
-            KeywordPrototype orbEntityKeywordProto = GameDatabase.KeywordGlobalsPrototype.OrbEntityKeywordPrototype;
+            KeywordPrototype orbEntityKeywordProto = GameDatabase.KeywordGlobalsPrototype.OrbEntityKeyword;
             if (orbProto.HasKeyword(orbEntityKeywordProto))
                 avatar.TryActivateOnOrbPickupProcs(agent);
 

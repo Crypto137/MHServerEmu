@@ -1071,7 +1071,7 @@ namespace MHServerEmu.Games.Powers
             KeywordGlobalsPrototype keywordGlobals = GameDatabase.KeywordGlobalsPrototype;
             if (!Verify.IsNotNull(keywordGlobals)) return;
 
-            KeywordPrototype controlPowerKeywordProto = keywordGlobals.ControlPowerKeywordPrototype.As<KeywordPrototype>();
+            KeywordPrototype controlPowerKeywordProto = keywordGlobals.ControlPowerKeywordPrototype;
             if (!Verify.IsNotNull(controlPowerKeywordProto)) return;
 
             Avatar masterAvatar = null;

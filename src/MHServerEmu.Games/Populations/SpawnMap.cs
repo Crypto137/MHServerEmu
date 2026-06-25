@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.Populations
             HeatReturnPerSecond = populationProto.SpawnMapHeatReturnPerSecond;
             HeatReturnPerSecondEval = populationProto.SpawnMapHeatReturnPerSecondEval;
 
-            var globalsProto = GameDatabase.GlobalsPrototype.PopulationGlobalsPrototype;
+            var globalsProto = GameDatabase.GlobalsPrototype.PopulationGlobals;
             if (globalsProto == null) return;
 
             Horizon = globalsProto.SpawnMapHorizon;

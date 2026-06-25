@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Never roll XP for capped starter avatars
             Player player = settings.Player;
             Avatar avatar = player?.CurrentAvatar;
-            if (avatar != null && player.HasAvatarAsCappedStarter(avatar) && agentProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.OrbExperienceEntityKeywordPrototype))
+            if (avatar != null && player.HasAvatarAsCappedStarter(avatar) && agentProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.OrbExperienceEntityKeyword))
                 return result;
 
             RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All;

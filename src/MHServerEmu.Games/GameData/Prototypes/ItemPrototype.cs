@@ -387,9 +387,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             AdvancementGlobalsPrototype advGlobalsProto = GameDatabase.AdvancementGlobalsPrototype;
 
             PrototypeId rarityProtoRef = itemSpecToDonate.RarityProtoRef;
-
-            if (rarityProtoRef == PrototypeId.Invalid)
-                return Logger.WarnReturn(false, $"CanDonateItemToPetTech(): Item without a rarity! \nItem:{itemSpecToDonate}");
+            if (!Verify.IsTrue(rarityProtoRef != PrototypeId.Invalid, $"Item without a rarity! \nItem:{itemSpecToDonate}"))
+                return false;
 
             // Item must be flagged with PetTechDonationItem blueprint to be donatable
             DataDirectory dataDirectory = DataDirectory.Instance;
@@ -400,12 +399,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Look for available affix position (this is a bit of a mess)
             bool result = false;
 
+            RarityPrototype itemToDonateRarityProto = itemSpecToDonate.RarityProtoRef.As<RarityPrototype>();
+            if (!Verify.IsNotNull(itemToDonateRarityProto)) return false;
+
             for (AffixPosition positionIt = AffixPosition.PetTech5; positionIt >= AffixPosition.PetTech1; positionIt--)
             {
                 PetTechAffixInfoPrototype rarityMatchedAffixInfoProto = advGlobalsProto.GetPetTechAffixInfoPrototype(positionIt);
                 if (rarityMatchedAffixInfoProto == null) return Logger.WarnReturn(false, "CanDonateItemToPetTech(): rarityMatchedAffixInfoProto == null");
 
-                if (rarityMatchedAffixInfoProto.ItemRarityToConsume != rarityProtoRef)
+                if (rarityMatchedAffixInfoProto.ItemRarityToConsume != itemToDonateRarityProto)
                     continue;
 
                 if (petTechItem.HasAffixInPosition(positionIt) == false)

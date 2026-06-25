@@ -230,7 +230,7 @@ namespace MHServerEmu.Games.Entities
             // Default loading screen before we start loading into a region
             QueueLoadingScreen(PrototypeId.Invalid);
 
-            var popProto = GameDatabase.GlobalsPrototype.PopulationGlobalsPrototype;
+            var popProto = GameDatabase.GlobalsPrototype.PopulationGlobals;
             if (popProto == null) return false;
             _spawnGimbal = new (popProto.SpawnMapGimbalRadius, popProto.SpawnMapHorizon);
 

@@ -2149,7 +2149,7 @@ namespace MHServerEmu.Games.Network
             PrototypeId vanityTitleProtoRef = (PrototypeId)vanityTitleSelect.VanityTitlePrototypeId;
             if (!Verify.IsTrue(vanityTitleProtoRef != PrototypeId.Invalid)) return;
 
-            if (vanityTitleProtoRef != GameDatabase.UIGlobalsPrototype.VanityTitleNoTitle)
+            if (vanityTitleProtoRef != GameDatabase.UIGlobalsPrototype.VanityTitleNoTitle.DataRef)
                 Verify.IsTrue(avatar.SelectVanityTitle(vanityTitleProtoRef));
             else
                 avatar.Properties.RemoveProperty(PropertyEnum.AvatarVanityTitle);

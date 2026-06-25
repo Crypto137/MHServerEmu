@@ -353,8 +353,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
 
             KeywordGlobalsPrototype keywordGlobalsProto = GameDatabase.KeywordGlobalsPrototype;
-            IsControlPower = HasKeyword(keywordGlobalsProto.ControlPowerKeywordPrototype.As<KeywordPrototype>());
-            IsStealingPower = HasKeyword(keywordGlobalsProto.StealingPowerKeyword.As<KeywordPrototype>());
+            IsControlPower = HasKeyword(keywordGlobalsProto.ControlPowerKeywordPrototype);
+            IsStealingPower = HasKeyword(keywordGlobalsProto.StealingPowerKeyword);
 
             PowerPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetPowerBlueprintDataRef());
 

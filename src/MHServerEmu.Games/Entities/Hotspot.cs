@@ -147,8 +147,7 @@ namespace MHServerEmu.Games.Entities
 
             if (hotspotProto.AppliesPowers.HasValue() || hotspotProto.AppliesIntervalPowers.HasValue())
             {
-                var clusterRef = GameDatabase.GlobalsPrototype.ClusterConfigurationGlobals;
-                var clusterProto = GameDatabase.GetPrototype<ClusterConfigurationGlobalsPrototype>(clusterRef);
+                var clusterProto = GameDatabase.GlobalsPrototype.ClusterConfigurationGlobals;
                 var isInTown = IsInTown();
                 _checkLOS = isInTown == false || clusterProto.HotspotCheckLOSInTown;
                 _targetInvervalMS = isInTown ? clusterProto.HotspotCheckTargetTownIntervalMS : clusterProto.HotspotCheckTargetIntervalMS; 
@@ -359,7 +358,7 @@ namespace MHServerEmu.Games.Entities
             var manager = Game.EntityManager;
             if (manager == null) return;
 
-            var entityKeywordRef = GameDatabase.KeywordGlobalsPrototype.EntityKeywordPrototype;
+            var entityKeywordRef = GameDatabase.KeywordGlobalsPrototype.EntityKeywordPrototype.DataRef;
             if (keywordRef != entityKeywordRef && HasKeyword(keywordRef) == false) return;
 
             if (users != 0)

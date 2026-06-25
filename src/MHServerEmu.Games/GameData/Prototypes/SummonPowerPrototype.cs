@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             var keywordGlobalsProto = GameDatabase.KeywordGlobalsPrototype;
             if (keywordGlobalsProto != null)
-                return HasKeyword(keywordGlobalsProto.PetPowerKeywordPrototype);
+                return HasKeyword(keywordGlobalsProto.PetPowerKeyword);
             return false;
         }
 

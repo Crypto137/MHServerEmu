@@ -1804,7 +1804,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
             evalContext.SetReadOnlyVar_ProtoRefVectorPtr(EvalContext.Var1, Keywords);
 
-            return Eval.RunInt(GameDatabase.AdvancementGlobalsPrototype.AvatarThrowabilityEvalPrototype, evalContext);
+            return Eval.RunInt(GameDatabase.AdvancementGlobalsPrototype.AvatarThrowabilityEval, evalContext);
         }
 
         private bool FixupPendingActivateSettings(Power power, ref PowerActivationSettings settings)
@@ -2739,7 +2739,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (powerProto.PowerCategory == PowerCategoryType.HiddenPassivePower)
                 return true;
 
-            if (powerProto.Activation == PowerActivationType.Passive && powerProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.TeamUpAwayPowerKeywordPrototype))
+            if (powerProto.Activation == PowerActivationType.Passive && powerProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.TeamUpAwayPowerKeyword))
                 return true;
 
             PrototypeId[] allowedPowers = avatarProto.GetAllowedPowersForTransformMode(transformModeRef);
@@ -5328,7 +5328,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             foreach (WorldEntity summoned in new SummonedEntityIterator(this))
             {
-                if (summoned is Agent pet && pet.HasKeyword(keywordGlobals.VanityPetKeywordPrototype))
+                if (summoned is Agent pet && pet.HasKeyword(keywordGlobals.VanityPetKeyword))
                     return pet;
             }
 
@@ -5547,7 +5547,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             controlled.CancelDestroyEvent();
 
             var keywordSummonDuration = GameDatabase.KeywordGlobalsPrototype.ControlledSummonDurationKeyword;
-            if (keywordSummonDuration == PrototypeId.Invalid) return false;
+            if (keywordSummonDuration == null) return false;
 
             bool hasSummonDuration = controlled.HasConditionWithKeyword(keywordSummonDuration);
 

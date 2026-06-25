@@ -167,7 +167,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsWeaponMissing { get => Properties[PropertyEnum.WeaponMissing]; }
         public bool IsGlobalEventVendor { get => GetVendorGlobalEvent() != PrototypeId.Invalid; }
         public bool IsHighFlying { get => Locomotor?.IsHighFlying ?? false; }
-        public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeywordPrototype); }
+        public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword); }
         public bool IsDestroyProtectedEntity { get => IsControlledEntity || IsTeamUpAgent || this is Avatar; }  // Persistent entities cannot be easily destroyed
         public bool IsDiscoverable { get => CompatibleReplicationChannels.HasFlag(AOINetworkPolicyValues.AOIChannelDiscovery); }
         public bool IsTrackable { get => WorldEntityPrototype?.TrackingDisabled == false; }
@@ -535,7 +535,7 @@ namespace MHServerEmu.Games.Entities
 
             if (summoner is not Avatar avatar) return;
             
-            var vanityKeyword = GameDatabase.KeywordGlobalsPrototype.VanityPetKeywordPrototype;
+            var vanityKeyword = GameDatabase.KeywordGlobalsPrototype.VanityPetKeyword;
             if (HasKeyword(vanityKeyword))
             {
                 var player = avatar.GetOwnerOfType<Player>();
@@ -1787,7 +1787,7 @@ namespace MHServerEmu.Games.Entities
 
         public float GetNegStatusResistPercent(int ccResistScore, PropertyCollection otherProperties)
         {
-            EvalPrototype evalNegStatusResistPctFormula = GameDatabase.CombatGlobalsPrototype?.EvalNegStatusResistPctFormulaPrototype;
+            EvalPrototype evalNegStatusResistPctFormula = GameDatabase.CombatGlobalsPrototype?.EvalNegStatusResistPctFormula;
             if (!Verify.IsNotNull(evalNegStatusResistPctFormula)) return 0f;
 
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
@@ -3144,7 +3144,7 @@ namespace MHServerEmu.Games.Entities
         {
             var globalProto = GameDatabase.GlobalsPrototype;
             if (globalProto == null) return false;
-            return IsHostileTo(globalProto.PlayerAlliancePrototype);
+            return IsHostileTo(globalProto.PlayerAlliance);
         }
 
         public bool IsHostileTo(AlliancePrototype otherAllianceProto, AlliancePrototype allianceOverrideProto = null)

@@ -329,7 +329,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
 
-            var keywordVacuumable = GameDatabase.KeywordGlobalsPrototype.VacuumableKeyword.As<KeywordPrototype>();
+            KeywordPrototype keywordVacuumable = GameDatabase.KeywordGlobalsPrototype.VacuumableKeyword;
             IsVacuumable = keywordVacuumable != null && HasKeyword(keywordVacuumable);
 
             // hack for Mutants CivilianFemaleMutantV01 CivilianMaleMutantV01 CivilianMaleMutantV02
