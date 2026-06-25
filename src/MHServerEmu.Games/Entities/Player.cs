@@ -783,13 +783,13 @@ namespace MHServerEmu.Games.Entities
 
             foreach (EntityInventoryAssignmentPrototype invAssignmentProto in playerProto.StashInventories)
             {
-                if (!Verify.IsTrue(invAssignmentProto.Inventory != PrototypeId.Invalid))
+                if (!Verify.IsNotNull(invAssignmentProto.Inventory))
                     continue;
 
-                bool isLocked = GetInventoryByRef(invAssignmentProto.Inventory) == null;
+                bool isLocked = GetInventoryByRef(invAssignmentProto.Inventory.DataRef) == null;
 
                 if (isLocked && getLocked || isLocked == false && getUnlocked)
-                    stashInvRefs.Add(invAssignmentProto.Inventory);
+                    stashInvRefs.Add(invAssignmentProto.Inventory.DataRef);
             }
 
             return true;
@@ -1593,12 +1593,12 @@ namespace MHServerEmu.Games.Entities
 
             foreach (EntityInventoryAssignmentPrototype invEntryProto in playerProto.StashInventories)
             {
-                if (!Verify.IsTrue(invEntryProto.Inventory != PrototypeId.Invalid))
+                if (!Verify.IsNotNull(invEntryProto.Inventory))
                     continue;
 
-                Verify.IsTrue(invEntryProto.LootTable == PrototypeId.Invalid, $"The StashInventories entry for the following stash page inventory in the Player blueprint specifies a LootTable, which is not going to be used!\n[{invEntryProto.Inventory.GetName()}]");
+                Verify.IsTrue(invEntryProto.LootTable == null, $"The StashInventories entry for the following stash page inventory in the Player blueprint specifies a LootTable, which is not going to be used!\n[{invEntryProto.Inventory}]");
 
-                PlayerStashInventoryPrototype stashInvProto = invEntryProto.Inventory.As<PlayerStashInventoryPrototype>();
+                PlayerStashInventoryPrototype stashInvProto = invEntryProto.Inventory as PlayerStashInventoryPrototype;
                 if (!Verify.IsNotNull(stashInvProto))
                     continue;
 
@@ -1606,7 +1606,7 @@ namespace MHServerEmu.Games.Entities
                     continue;
 
                 if (stashInvProto.LockedByDefault == false)
-                    success &= Verify.IsTrue(AddInventory(invEntryProto.Inventory));
+                    success &= Verify.IsTrue(AddInventory(invEntryProto.Inventory.DataRef));
             }
 
             return success;

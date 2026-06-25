@@ -4287,7 +4287,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (!Verify.IsNotNull(equipInvEntryProto))
                     continue;
 
-                if (equipInvEntryProto.Inventory == invProtoRef)
+                if (equipInvEntryProto.Inventory.DataRef == invProtoRef)
                 {
                     if (CharacterLevel < equipInvEntryProto.UnlocksAtCharacterLevel)
                         return InventoryResult.InvalidEquipmentInventoryNotUnlocked;
@@ -4464,7 +4464,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (Verify.IsTrue(avatarProto.EquipmentInventories.HasValue()))
             {
                 foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in avatarProto.EquipmentInventories)
-                    success &= Verify.IsTrue(AddInventory(equipInvAssignment.Inventory, populate ? equipInvAssignment.LootTable : PrototypeId.Invalid));
+                    success &= Verify.IsTrue(AddInventory(equipInvAssignment.Inventory.DataRef, populate ? equipInvAssignment.LootTable.DataRef : PrototypeId.Invalid));
             }
 
             return success;

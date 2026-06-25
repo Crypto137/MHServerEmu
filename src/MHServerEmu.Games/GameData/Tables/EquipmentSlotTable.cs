@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.GameData.Tables
 
             foreach (AvatarEquipInventoryAssignmentPrototype assignmentProto in avatarProto.EquipmentInventories)
             {
-                InventoryPrototype invProto = assignmentProto.Inventory.As<InventoryPrototype>();
+                InventoryPrototype invProto = assignmentProto.Inventory;
                 if (!Verify.IsNotNull(invProto))
                     continue;
 

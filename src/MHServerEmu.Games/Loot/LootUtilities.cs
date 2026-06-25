@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Loot
                 if (equipInvAssignmentProto.UISlot != slot)
                     continue;
 
-                InventoryPrototype invProto = equipInvAssignmentProto.Inventory.As<InventoryPrototype>();
+                InventoryPrototype invProto = equipInvAssignmentProto.Inventory;
                 if (!Verify.IsNotNull(invProto)) return false;
 
                 foreach (PrototypeId typeRef in invProto.EntityTypeFilter)

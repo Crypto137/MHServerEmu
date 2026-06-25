@@ -1216,7 +1216,7 @@ namespace MHServerEmu.Games.Entities
             if (entityPrototype.Inventories.HasValue())
             {
                 foreach (EntityInventoryAssignmentPrototype invAssignmentProto in entityPrototype.Inventories)
-                    success &= Verify.IsTrue(AddInventory(invAssignmentProto.Inventory, populate ? invAssignmentProto.LootTable : PrototypeId.Invalid));
+                    success &= Verify.IsTrue(AddInventory(invAssignmentProto.Inventory.DataRef, populate ? invAssignmentProto.LootTable.DataRef : PrototypeId.Invalid));
             }
 
             return success;

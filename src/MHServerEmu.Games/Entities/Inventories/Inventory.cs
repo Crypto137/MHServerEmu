@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Avatars;
@@ -222,20 +223,24 @@ namespace MHServerEmu.Games.Entities.Inventories
             if (nSoftCap < 0)
                 return MaxCapacity;
 
-            if (!Verify.IsNotNull(Owner)) return MaxCapacity;
+            Entity owner = Owner;
+            if (!Verify.IsNotNull(owner)) return MaxCapacity;
 
-            foreach (PrototypeId slotGroupRef in inventoryPrototype.GetSoftCapacitySlotGroups())
+            InventoryExtraSlotsGroupPrototype[] slotGroups = inventoryPrototype.GetSoftCapacitySlotGroups();
+            if (slotGroups.HasValue())
             {
-                var slotGroup = slotGroupRef.As<InventoryExtraSlotsGroupPrototype>();
-                int extraSlots = Owner.Properties[PropertyEnum.InventoryExtraSlotsAvailable, slotGroup.DataRef];
+                foreach (InventoryExtraSlotsGroupPrototype slotGroup in slotGroups)
+                {
+                    int extraSlots = owner.Properties[PropertyEnum.InventoryExtraSlotsAvailable, slotGroup.DataRef];
 
-                if (slotGroup.MaxExtraSlotCount > 0)
-                    extraSlots = Math.Min(extraSlots, slotGroup.MaxExtraSlotCount);
+                    if (slotGroup.MaxExtraSlotCount > 0)
+                        extraSlots = Math.Min(extraSlots, slotGroup.MaxExtraSlotCount);
 
-                nSoftCap += extraSlots;
+                    nSoftCap += extraSlots;
+                }
             }
 
-            Verify.IsTrue(nSoftCap <= MaxCapacity, $"Inventory softcap over max inventory limit. INVENTORY={this} OWNER={Owner}");
+            Verify.IsTrue(nSoftCap <= MaxCapacity, $"Inventory softcap over max inventory limit. INVENTORY={this} OWNER={owner}");
             return Math.Min(nSoftCap, MaxCapacity);
         }
 

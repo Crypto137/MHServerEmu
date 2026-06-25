@@ -1864,7 +1864,7 @@ namespace MHServerEmu.Games.Entities
                 if (Verify.IsTrue(teamUpAgentProto.EquipmentInventories.HasValue()))
                 {
                     foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in teamUpAgentProto.EquipmentInventories)
-                        success &= Verify.IsTrue(AddInventory(equipInvAssignment.Inventory, populate ? equipInvAssignment.LootTable : PrototypeId.Invalid));
+                        success &= Verify.IsTrue(AddInventory(equipInvAssignment.Inventory.DataRef, populate ? equipInvAssignment.LootTable.DataRef : PrototypeId.Invalid));
                 }
             }
 
