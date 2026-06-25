@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -53,11 +54,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ItemCostCreditsPrototype : ItemCostComponentPrototype
     {
         public EvalPrototype Number { get; protected set; }
-        public PrototypeId Currency { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public CurrencyPrototype Currency { get; protected set; }
 
         //---
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override bool CanAffordItem(Player player, Item item)
         {
@@ -83,17 +83,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             float floatPrice = price;
 
             GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
-            if (globalsProto?.ItemPriceMultiplierBuyFromVendor == null)
-                return Logger.WarnReturn(price, "GetBuyPrice(): globalsProto?.ItemPriceMultiplierBuyFromVendor == null");
+            if (!Verify.IsNotNull(globalsProto?.ItemPriceMultiplierBuyFromVendor)) return price;
 
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, item.Properties);
             float globalItemBuyPriceMultiplier = Eval.RunFloat(globalsProto.ItemPriceMultiplierBuyFromVendor, evalContext);
 
-            if (globalItemBuyPriceMultiplier >= 0f)
+            if (Verify.IsTrue(globalItemBuyPriceMultiplier >= 0f))
                 floatPrice *= globalItemBuyPriceMultiplier;
-            else
-                Logger.Warn("GetBuyPrice(): globalItemBuyPriceMultiplier < 0f");
 
             floatPrice *= LiveTuningManager.GetLiveGlobalTuningVar(Gazillion.GlobalTuningVar.eGTV_VendorBuyPrice);
 
@@ -102,7 +99,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool PayItemCost(Player player, Item item)
         {
-            if (CanAffordItem(player, item) == false) return Logger.WarnReturn(false, "PayItemCost(): CanAffordItem(player, item) == false");
+            if (!Verify.IsTrue(CanAffordItem(player, item))) return false;
 
             int price = GetBuyPrice(player, item);
             PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
@@ -129,17 +126,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int itemLevel = item != null ? item.Properties[PropertyEnum.ItemLevel] : itemSpec.ItemLevel;
 
             GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
-            if (globalsProto?.ItemPriceMultiplierSellToVendor == null)
-                return Logger.WarnReturn(price, "GetNoStackSellPrice(): globalsProto?.ItemPriceMultiplierSellToVendor == null");
+            if (!Verify.IsNotNull(globalsProto?.ItemPriceMultiplierSellToVendor)) return price;
 
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetVar_Int(EvalContext.Var1, itemLevel);
             float globalItemSellPriceMultiplier = Eval.RunFloat(globalsProto.ItemPriceMultiplierSellToVendor, evalContext);
 
-            if (globalItemSellPriceMultiplier >= 0f)
+            if (Verify.IsTrue(globalItemSellPriceMultiplier >= 0f))
                 floatPrice *= globalItemSellPriceMultiplier;
-            else
-                Logger.Warn("GetNoStackSellPrice(): globalItemSellPriceMultiplier < 0f");
 
             floatPrice *= LiveTuningManager.GetLiveGlobalTuningVar(Gazillion.GlobalTuningVar.eGTV_VendorSellPrice);
 
@@ -170,8 +164,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override bool CanAffordItem(Player player, Item item)
         {
             int count = GetCount(player, item);
@@ -186,7 +178,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool PayItemCost(Player player, Item item)
         {
-            if (CanAffordItem(player, item) == false) return Logger.WarnReturn(false, "PayItemCost(): CanAffordItem(player, item) == false");
+            if (!Verify.IsTrue(CanAffordItem(player, item))) return false;
 
             int price = GetCount(player, item);
             PrototypeId legendaryMarksProtoRef = GameDatabase.CurrencyGlobalsPrototype.LegendaryMarks;
@@ -231,8 +223,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override bool CanAffordItem(Player player, Item item)
         {
             int count = GetCount(player, item);
@@ -246,7 +236,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool PayItemCost(Player player, Item item)
         {
-            if (CanAffordItem(player, item) == false) return Logger.WarnReturn(false, "PayItemCost(): CanAffordItem(player, item) == false");
+            if (!Verify.IsTrue(CanAffordItem(player, item))) return false;
 
             int count = GetCount(player, item);
             player.Properties.AdjustProperty(-count, PropertyEnum.RunestonesAmount);
@@ -286,8 +276,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override bool CanAffordItem(Player player, Item item)
         {
             int price = GetBuyPrice(player, item);
@@ -315,7 +303,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool PayItemCost(Player player, Item item)
         {
-            if (CanAffordItem(player, item) == false) return Logger.WarnReturn(false, "PayItemCost(): CanAffordItem(player, item) == false");
+            if (!Verify.IsTrue(CanAffordItem(player, item))) return false;
 
             int price = GetBuyPrice(player, item);
 
@@ -329,19 +317,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
             foreach (ulong currencyItemId in currencyItemList)
             {
                 Item currencyItem = entityManager.GetEntity<Item>(currencyItemId);
-                if (currencyItem == null)
-                {
-                    Logger.Warn("PayItemCost(): currencyItem == null");
+                if (!Verify.IsNotNull(currencyItem))
                     continue;
-                }
 
                 int numToSpend = Math.Min(remaining, currencyItem.CurrentStackSize);
                 remaining -= numToSpend;
                 currencyItem.DecrementStack(numToSpend);
             }
 
-            if (remaining != 0)
-                return Logger.WarnReturn(false, $"PayItemCost(): Player [{player}] was not able to spend enough currency item {CurrencyItem.GetName()} to pay for [{item}]");
+            if (!Verify.IsTrue(remaining == 0, $"Player [{player}] was not able to spend enough currency item {CurrencyItem.GetName()} to pay for [{item}]"))
+                return false;
 
             // Event ItemSpent
             player.OnScoringEvent(new(ScoringEventType.ItemSpent, item.Prototype, price));
@@ -352,19 +337,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemCostCurrencyPrototype : ItemCostComponentPrototype
     {
-        public PrototypeId Currency { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public CurrencyPrototype Currency { get; protected set; }
         public EvalPrototype Amount { get; protected set; }
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override bool CanAffordItem(Player player, Item item)
         {
-            if (Currency == PrototypeId.Invalid) return Logger.WarnReturn(false, "CanAffordItem(): Currency == PrototypeId.Invalid");
+            if (!Verify.IsNotNull(Currency)) return false;
 
             int price = GetBuyPrice(player, item);
-            return player.Properties[PropertyEnum.Currency, Currency] >= price;
+            return player.Properties[PropertyEnum.Currency, Currency.DataRef] >= price;
         }
 
         public override int GetBuyPrice(Player player, Item item)
@@ -375,7 +359,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int numAffixes = itemSpec.AffixSpecs.Count;
 
             // Check for live tuning price override
-            if (item.ItemPrototype != null && Currency == GameDatabase.CurrencyGlobalsPrototype.EternitySplinters)
+            if (item.ItemPrototype != null && Currency.DataRef == GameDatabase.CurrencyGlobalsPrototype.EternitySplinters)
             {
                 int liveTuneCost = item.ItemPrototype.LiveTuneEternitySplinterCost;
                 if (liveTuneCost != 1)
@@ -393,11 +377,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool PayItemCost(Player player, Item item)
         {
-            if (Currency == PrototypeId.Invalid) return Logger.WarnReturn(false, "PayItemCost(): Currency == PrototypeId.Invalid");
-            if (CanAffordItem(player, item) == false) return Logger.WarnReturn(false, "PayItemCost(): CanAffordItem(player, item) == false");
+            if (!Verify.IsNotNull(Currency)) return false;
+            if (!Verify.IsTrue(CanAffordItem(player, item))) return false;
 
             int price = GetBuyPrice(player, item);
-            player.Properties.AdjustProperty(-price, new(PropertyEnum.Currency, Currency));
+            player.Properties.AdjustProperty(-price, new(PropertyEnum.Currency, Currency.DataRef));
 
             return true;
         }
@@ -477,7 +461,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (componentProto is not ItemCostCurrencyPrototype currencyComponentProto)
                     continue;
 
-                if (currencyComponentProto.Currency == eternitySplintersProtoRef)
+                if (currencyComponentProto.Currency.DataRef == eternitySplintersProtoRef)
                     return true;
             }
 
@@ -498,7 +482,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (componentProto is not ItemCostCurrencyPrototype currencyComponentProto)
                     continue;
 
-                if (currencyComponentProto.Currency == eternitySplintersProtoRef)
+                if (currencyComponentProto.Currency.DataRef == eternitySplintersProtoRef)
                     price += currencyComponentProto.GetBuyPrice(player, item);
             }
 
