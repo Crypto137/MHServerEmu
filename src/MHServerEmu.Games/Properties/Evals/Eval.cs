@@ -2935,7 +2935,7 @@ namespace MHServerEmu.Games.Properties.Evals
 
             if (!Verify.IsNotNull(entityHasKeywordProto)) return evalVar;
 
-            if (!Verify.IsTrue(entityHasKeywordProto.Keyword != PrototypeId.Invalid, "EntityHasKeyword Eval doesn't have a valid Keyword to check!"))
+            if (!Verify.IsNotNull(entityHasKeywordProto.Keyword, "EntityHasKeyword Eval doesn't have a valid Keyword to check!"))
                 return evalVar;
 
             EvalVar contextVar = data.ContextVars[(int)entityHasKeywordProto.Context].Var;
