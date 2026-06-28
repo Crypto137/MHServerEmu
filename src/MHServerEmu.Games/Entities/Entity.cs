@@ -1216,13 +1216,13 @@ namespace MHServerEmu.Games.Entities
             if (entityPrototype.Inventories.HasValue())
             {
                 foreach (EntityInventoryAssignmentPrototype invAssignmentProto in entityPrototype.Inventories)
-                    success &= Verify.IsTrue(AddInventory(invAssignmentProto.Inventory.DataRef, populate ? invAssignmentProto.LootTable.DataRef : PrototypeId.Invalid));
+                    success &= Verify.IsTrue(AddInventory(invAssignmentProto.Inventory.DataRef, populate ? invAssignmentProto.LootTable?.DataRef : PrototypeId.Invalid));
             }
 
             return success;
         }
 
-        protected bool AddInventory(PrototypeId invProtoRef, PrototypeId lootTableRef = PrototypeId.Invalid)
+        protected bool AddInventory(PrototypeId invProtoRef, PrototypeId? lootTableRef = PrototypeId.Invalid)
         {
             // lootTableRef seems to be unused
             return InventoryCollection.CreateAndAddInventory(invProtoRef);
