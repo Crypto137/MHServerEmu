@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Loot;
-using MHServerEmu.Games.Loot.Visitors;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -53,8 +52,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         // - Loot/Tables/Test/TestUniques41to100.prototype
         // - Loot/Tables/Test/TestUniquesAll.prototype
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
             LootRollResult result = LootRollResult.NoRoll;
@@ -66,11 +63,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             foreach (PrototypeId avatarProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
-                if (avatarProto == null)
-                {
-                    Logger.Warn("Roll(): avatarProto == null");
+                if (!Verify.IsNotNull(avatarProto))
                     continue;
-                }
 
                 // NOTE: This will skip disabled heroes
                 if (avatarProto.ShowInRosterIfLocked == false)

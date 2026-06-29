@@ -25,6 +25,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId IsAKeyword { get; protected set; }
 
+        //---
+
         private int _bitIndex = -1;
         private KeywordsMask _bitMask = new();
 
@@ -40,6 +42,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     keywordProto?.GetBitMask(ref result);
                 }
             }
+
             return result;
         }
 
@@ -61,9 +64,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (_bitIndex == -1)
             {
                 CacheBitMaskInfo();
-                if (_bitMask.Any() == false) return;
+                if (_bitMask.Any() == false)
+                    return;
                 
             }
+
             keywordMask = GBitArray.Or(keywordMask, _bitMask);
         }
 
@@ -72,15 +77,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (_bitIndex == -1)
             {
                 CacheBitMaskInfo();
-                if (_bitIndex == -1) return 0;
+                if (_bitIndex == -1)
+                    return 0;
 
             }
+
             return _bitIndex;
         }
 
         private void CacheBitMaskInfo()
         {
             BlueprintId keywordBlueprintRef = GameDatabase.DataDirectory.KeywordBlueprint;
+
             if (keywordBlueprintRef != BlueprintId.Invalid)
             {
                 _bitIndex = GameDatabase.DataDirectory.GetPrototypeEnumValue(DataRef, keywordBlueprintRef);
@@ -142,5 +150,4 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class FulfillablePrototype : Prototype
     {
     }
-
 }
