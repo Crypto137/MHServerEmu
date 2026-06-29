@@ -60,7 +60,7 @@
         "Prototype": "Loot/Tables/Test/testAimGunbotSpawnTable.prototype",
         "Path": "Choices[0].Agent",
         "Description": "ExperienceOrbDiscoveryReward for 1 Orb Reward",
-        "ValueType": "PrototypeRefPtr",
+        "ValueType": "PrototypeId",
         "Value": 17153689258362476876
     },
     {

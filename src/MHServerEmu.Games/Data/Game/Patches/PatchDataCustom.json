@@ -28,7 +28,7 @@
     "Prototype": "Loot/Tables/Achievements/StarkTechPowerCube.prototype",
     "Path": "Choices[0].Item",
     "Description": "Set Bifrost Visual in LootTable",
-    "ValueType": "PrototypeRefPtr",
+    "ValueType": "PrototypeId",
     "Value": 12620726227893559387
   }
 ]
