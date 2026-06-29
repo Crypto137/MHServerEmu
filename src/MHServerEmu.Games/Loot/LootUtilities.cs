@@ -157,7 +157,7 @@ namespace MHServerEmu.Games.Loot
                 if (affixLimits != null)
                 {
                     foreach (CategorizedAffixEntryPrototype entry in affixLimits.CategorizedAffixes)
-                        affixCategoryDict.GetValueRefOrAddDefault(entry.Category) += entry.MinAffixes;
+                        affixCategoryDict.GetValueRefOrAddDefault(entry.Category.DataRef) += entry.MinAffixes;
                 }
 
                 // Apply modifiers from loot roll settings

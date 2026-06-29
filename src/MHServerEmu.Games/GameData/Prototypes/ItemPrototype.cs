@@ -76,7 +76,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public DropRestrictionPrototype[] LootDropRestrictions { get; protected set; }
         public ItemBindingSettingsPrototype BindingSettings { get; protected set; }
         public AffixLimitsPrototype[] AffixLimits { get; protected set; }
-        public PrototypeId TextStyleOverride { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleOverride { get; protected set; }
         public ItemAbilitySettingsPrototype AbilitySettings { get; protected set; }
         public AssetId StoreIconPath { get; protected set; }
         public bool ClonedWhenPurchasedFromVendor { get; protected set; }
@@ -104,8 +105,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         // ---
 
         private const int PetTechAffixPositions = 5;
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         [DoNotCopy]
         public bool IsPetItem { get => IsChildBlueprintOf(GameDatabase.GlobalsPrototype.PetItemBlueprint); }
@@ -145,11 +144,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (connectionTargetProto == null)
                         continue;
 
-                    if (connectionTargetProto.Region == PrototypeId.Invalid)
-                    {
-                        Logger.Warn("GetPortalTarget(): connectionTargetProto.Region == PrototypeId.Invalid");
+                    if (!Verify.IsTrue(connectionTargetProto.Region != PrototypeId.Invalid))
                         continue;
-                    }
 
                     return connectionTargetProto.Region;
                 }
@@ -161,7 +157,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool OnApplyItemSpec(Item item, ItemSpec itemSpec)
         {
             ItemPrototype itemProto = item.ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "OnApplyItemSpec(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return false;
 
             if (itemProto.IsPetItem == false)
                 return true;
@@ -218,12 +214,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 {
                     AffixSpec affixIt = affixSpecs[j];
                     AffixPrototype affixProto = affixIt.AffixProto;
-
-                    if (affixProto == null)
-                    {
-                        Logger.Warn("UpdatePetTechAffixes(): affixProto == null");
+                    if (!Verify.IsNotNull(affixProto))
                         continue;
-                    }
 
                     affixes[affixProto.Position] = affixIt;
 
@@ -242,8 +234,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
                     result |= affixSpec.RollAffix(random, rollFor, itemSpec, affixPickers[i], affixSet);
 
-                    if (result.HasFlag(MutationResults.AffixChange) == false)
-                        Logger.Warn("UpdatePetTechAffixes(): result.HasFlag(MutationResults.AffixChange) == false");
+                    Verify.IsTrue(result.HasFlag(MutationResults.AffixChange));
                 }
             }
 
@@ -265,21 +256,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public static MutationResults CopyPetTechAffixes(ItemSpec sourceItemSpec, ItemSpec destItemSpec, AffixPosition position)
         {
             ItemPrototype destItemProto = destItemSpec.ItemProtoRef.As<ItemPrototype>();
-            if (destItemProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyPetTechAffixes(): destItemProto == null");
-            if (destItemProto.IsPetItem == false) return Logger.WarnReturn(MutationResults.Error, "CopyPetTechAffixes(): destItemProto.IsPetItem == false");
-
-            if (position < AffixPosition.PetTech1 || position > AffixPosition.PetTech5) return Logger.WarnReturn(MutationResults.Error, "CopyPetTechAffixes(): position < AffixPosition.PetTech1 || position > AffixPosition.PetTech5");
+            if (!Verify.IsNotNull(destItemProto)) return MutationResults.Error;
+            if (!Verify.IsTrue(destItemProto.IsPetItem)) return MutationResults.Error;
+            if (!Verify.IsTrue(position >= AffixPosition.PetTech1 && position <= AffixPosition.PetTech5)) return MutationResults.Error;
 
             IReadOnlyList<AffixSpec> sourceAffixSpecs = sourceItemSpec.AffixSpecs;
             for (int i = 0; i < sourceAffixSpecs.Count; i++)
             {
                 AffixSpec sourceAffixSpec = sourceAffixSpecs[i];
                 AffixPrototype sourceAffixProto = sourceAffixSpec.AffixProto;
-                if (sourceAffixProto == null)
-                {
-                    Logger.Warn("CopyPetTechAffixes(): sourceAffixProto == null");
+                if (!Verify.IsNotNull(sourceAffixProto))
                     continue;
-                }
 
                 if (sourceAffixProto.Position != position)
                     continue;
@@ -292,11 +279,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 {
                     AffixSpec destAffixSpec = destAffixSpecs[j];
                     AffixPrototype destAffixProto = destAffixSpec.AffixProto;
-                    if (destAffixProto == null)
-                    {
-                        Logger.Warn("CopyPetTechAffixes(): destAffixProto == null");
+                    if (!Verify.IsNotNull(destAffixProto))
                         continue;
-                    }
 
                     if (destAffixProto.Position != position)
                         continue;
@@ -320,12 +304,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public static bool IsPetTechAffixUnlocked(Item petTechItem, AffixPosition affixPos)
         {
-            if (petTechItem.IsPetItem == false) return Logger.WarnReturn(false, "IsPetTechAffixUnlocked(): petTechItem.IsPetItem == false");
+            if (!Verify.IsTrue(petTechItem.IsPetItem)) return false;
 
             AdvancementGlobalsPrototype advGlobalsProto = GameDatabase.AdvancementGlobalsPrototype;
+            if (!Verify.IsNotNull(advGlobalsProto)) return false;
 
             PetTechAffixInfoPrototype petTechAffixInfoProto = advGlobalsProto.GetPetTechAffixInfoPrototype(affixPos);
-            if (petTechAffixInfoProto == null) return Logger.WarnReturn(false, "IsPetTechAffixUnlocked(): petTechAffixInfoProto == null");
+            if (!Verify.IsNotNull(petTechAffixInfoProto)) return false;
 
             int donationCount = petTechItem.Properties[PropertyEnum.PetItemDonationCount, (int)affixPos];
             return donationCount >= petTechAffixInfoProto.ItemsRequiredToUnlock;
@@ -333,16 +318,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public static bool IsPetTechAffixUnlocked(Item petTechItem, PropertyId propertyId)
         {
-            if (petTechItem.IsPetItem == false) return Logger.WarnReturn(false, "IsPetTechAffixUnlocked(): petTechItem.IsPetItem == false");
+            if (!Verify.IsTrue(petTechItem.IsPetItem)) return false;
 
             AdvancementGlobalsPrototype advGlobalsProto = GameDatabase.AdvancementGlobalsPrototype;
 
             Property.FromParam(propertyId, 0, out int affixPosValue);
             AffixPosition affixPos = (AffixPosition)affixPosValue;
-            if (affixPos < AffixPosition.PetTech1 || affixPos > AffixPosition.PetTech5) return Logger.WarnReturn(false, "IsPetTechAffixUnlocked(): affixPos < AffixPosition.PetTech1 || affixPos > AffixPosition.PetTech5");
+            if (!Verify.IsTrue(affixPos >= AffixPosition.PetTech1 && affixPos <= AffixPosition.PetTech5)) return false;
 
             PetTechAffixInfoPrototype petTechAffixInfoProto = advGlobalsProto.GetPetTechAffixInfoPrototype(affixPos);
-            if (petTechAffixInfoProto == null) return Logger.WarnReturn(false, "IsPetTechAffixUnlocked(): petTechAffixInfoProto == null");
+            if (!Verify.IsNotNull(petTechAffixInfoProto)) return false;
 
             int donationCount = petTechItem.Properties[PropertyEnum.PetItemDonationCount, (int)affixPos];
             return donationCount >= petTechAffixInfoProto.ItemsRequiredToUnlock;
@@ -352,9 +337,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             availableAffixPosition = AffixPosition.None;
 
-            if (petTechItem.IsPetItem == false) return Logger.WarnReturn(false, "CanDonateItemToPetTech(): petTechItem.IsPetItem == false");
-            if (itemSpecToDonate == null) return Logger.WarnReturn(false, "CanDonateItemToPetTech(): itemSpecToDonate == null");
-            if (itemSpecToDonate.ItemProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "CanDonateItemToPetTech(): itemSpecToDonate.ItemProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(petTechItem.IsPetItem)) return false;
+            if (!Verify.IsNotNull(itemSpecToDonate)) return false;
+            if (!Verify.IsTrue(itemSpecToDonate.ItemProtoRef != PrototypeId.Invalid)) return false;
 
             // Validate the item entity if we have one (i.e. there is no item entity in vaporization)
             if (itemToDonate != null)
@@ -364,8 +349,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 if (itemToDonate.IsInWorld)
                 {
-                    if (itemToDonate.GetOwner() != null)
-                        return Logger.WarnReturn(false, "CanDonateItemToPetTech(): An item on the ground cannot be in any inventory!");
+                    if (!Verify.IsTrue(itemToDonate.GetOwner() == null, "PetTech: An item on the ground cannot be in any inventory!"))
+                        return false;
                 }
                 else
                 {
@@ -405,7 +390,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             for (AffixPosition positionIt = AffixPosition.PetTech5; positionIt >= AffixPosition.PetTech1; positionIt--)
             {
                 PetTechAffixInfoPrototype rarityMatchedAffixInfoProto = advGlobalsProto.GetPetTechAffixInfoPrototype(positionIt);
-                if (rarityMatchedAffixInfoProto == null) return Logger.WarnReturn(false, "CanDonateItemToPetTech(): rarityMatchedAffixInfoProto == null");
+                if (!Verify.IsNotNull(rarityMatchedAffixInfoProto)) return false;
 
                 if (rarityMatchedAffixInfoProto.ItemRarityToConsume != itemToDonateRarityProto)
                     continue;
@@ -416,7 +401,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 for (AffixPosition subPositionIt = positionIt; subPositionIt >= AffixPosition.PetTech1; subPositionIt--)
                 {
                     rarityMatchedAffixInfoProto = advGlobalsProto.GetPetTechAffixInfoPrototype(subPositionIt);
-                    if (rarityMatchedAffixInfoProto == null) return Logger.WarnReturn(false, "CanDonateItemToPetTech(): rarityMatchedAffixInfoProto == null");
+                    if (!Verify.IsNotNull(rarityMatchedAffixInfoProto)) return false;
 
                     int donationCount = petTechItem.Properties[PropertyEnum.PetItemDonationCount, (int)subPositionIt];
                     if (donationCount < rarityMatchedAffixInfoProto.ItemsRequiredToUnlock && petTechItem.HasAffixInPosition(subPositionIt))
@@ -440,9 +425,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // - AoE donations of items on the ground via the vacuum power.
             // - Vaporization, which happens automatically before the item is fully generated. In this case we are going to have only an ItemSpec and not a full entity.
 
-            // Validate
-            if (petTechItem.IsPetItem == false) return Logger.WarnReturn(false, "DonateItemToPetTech(): petTechItem.IsPetItem == false");
-            if (itemToDonate != null && itemToDonate.ItemSpec != itemSpecToDonate) return Logger.WarnReturn(false, "DonateItemToPetTech(): itemToDonate != null && itemToDonate.ItemSpec != itemSpecToDonate");
+            if (!Verify.IsTrue(petTechItem.IsPetItem)) return false;
+            if (!Verify.IsTrue(itemToDonate == null || itemToDonate.ItemSpec == itemSpecToDonate)) return false;
 
             if (CanDonateItemToPetTech(petTechItem, itemSpecToDonate, itemToDonate, out AffixPosition availableAffixPosition) == false)
                 return false;
@@ -465,12 +449,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public TimeSpan GetExpirationTime(PrototypeId rarityProtoRef)
         {
-            if (EvalExpirationTimeMS == null) return Logger.WarnReturn(TimeSpan.Zero, "GetExpirationTime(): EvalExpirationTimeMS == null");
+            if (EvalExpirationTimeMS == null)
+                return TimeSpan.Zero;
 
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetReadOnlyVar_ProtoRef(EvalContext.Var1, rarityProtoRef);
 
             int expirationTimeMS = Eval.RunInt(EvalExpirationTimeMS, evalContext);
+            if (!Verify.IsTrue(expirationTimeMS >= 0)) return TimeSpan.Zero;
+
             return TimeSpan.FromMilliseconds(expirationTimeMS);
         }
 
@@ -586,11 +573,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 foreach (AffixEntryPrototype affixEntryProto in affixEntryList)
                 {
-                    if (affixEntryProto == null || affixEntryProto.Affix == PrototypeId.Invalid)
-                    {
-                        Logger.Warn("affixEntryProto == null || affixEntryProto.Affix == PrototypeId.Invalid");
+                    if (!Verify.IsTrue(affixEntryProto != null && affixEntryProto.Affix != PrototypeId.Invalid))
                         continue;
-                    }
 
                     BuiltInAffixDetails builtInAffixDetails = new(affixEntryProto);
 
@@ -610,10 +594,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             // This is an Item:: static function in the client, but it makes more sense for it to be here
 
-            if (rarityProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "GetBuiltInAffixEntries(): rarityProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(rarityProtoRef != PrototypeId.Invalid)) return false;
 
             RarityPrototype rarityProto = rarityProtoRef.As<RarityPrototype>();
-            if (rarityProto == null) return Logger.WarnReturn(false, "GetBuiltInAffixEntries(): rarityProto == null");
+            if (!Verify.IsNotNull(rarityProto)) return false;
 
             if (AffixesBuiltIn.HasValue())
             {
@@ -654,14 +638,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static bool GeneratePowerModifierRefFromBuiltInAffix(AffixEntryPrototype affixEntryProto, ItemSpec itemSpec, ref BuiltInAffixDetails builtInAffixDetails)
         {
-            if (affixEntryProto.Affix == PrototypeId.Invalid)
-                return Logger.WarnReturn(false, "GeneratePowerModifierRefFromBuiltInAffix(): affixEntryProto.Affix == PrototypeId.Invalid");
+            if (!Verify.IsTrue(affixEntryProto.Affix != PrototypeId.Invalid)) return false;
 
             builtInAffixDetails.LevelRequirement = affixEntryProto.LevelRequirement;
             if (builtInAffixDetails.LevelRequirement < 0)
             {
-                return Logger.WarnReturn(false, "GeneratePowerModifierRefFromBuiltInAffix(): Could not add a builtin Affix with a level requirement " +
-                    $"to an Item because of data errors: Item=[{itemSpec.ItemProtoRef.GetName()}], Affix=[{affixEntryProto.Affix.GetName()}]");
+                Verify.IsTrue(false, $"Could not add a builtin Affix with a level requirement to an Item because of data errors: Item=[{itemSpec.ItemProtoRef.GetName()}], Affix=[{affixEntryProto.Affix.GetName()}]");
+                return false;
             }
 
             AffixPowerModifierPrototype affixPowerModifierProto = affixEntryProto.Affix.As<AffixPowerModifierPrototype>();
@@ -673,12 +656,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 if (affixEntryProto.Avatar != PrototypeId.Invalid && affixEntryProto.Avatar != itemSpec.EquippableBy)
                 {
-                    return Logger.WarnReturn(false, string.Format("GeneratePowerModifierRefFromBuiltInAffix(): An item has an ItemSpec.equippableBy that is different " +
-                        "than one of its built-in Affix entry Avatar settings!\nItem: {0}\nAffix: {1}\nEquippableBy: {2}\nRequired Avatar for Affix: {3}",
-                        itemSpec.ItemProtoRef.GetName(),
-                        affixEntryProto.Affix.GetName(),
-                        itemSpec.EquippableBy.GetName(),
-                        affixEntryProto.Avatar.GetName()));
+                    if (!Verify.IsTrue(affixEntryProto.Avatar == itemSpec.EquippableBy,
+                        $"An item has an ItemSpec.equippableBy that is different than one of its built-in Affix entry Avatar settings!\nItem: {itemSpec.ItemProtoRef.GetName()}\nAffix: {affixEntryProto.Affix.GetName()}\nEquippableBy: {itemSpec.EquippableBy.GetName()}\nRequired Avatar for Affix: {affixEntryProto.Avatar.GetName()}"))
+                        return false;
                 }
 
                 if (affixPowerModifierProto.IsForSinglePowerOnly)
@@ -720,11 +700,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             foreach (ItemActionBasePrototype actionBaseProto in actionSetProto.Choices)
             {
-                if (actionBaseProto is not ItemActionPrototype actionProto)
-                {
-                    Logger.Warn("GetTriggeredPower(): actionBaseProto is not ItemActionPrototype actionProto");
+                ItemActionPrototype actionProto = actionBaseProto as ItemActionPrototype;
+                if (!Verify.IsNotNull(actionProto))
                     continue;
-                }
 
                 if (actionProto.TriggeringEvent != eventType)
                     continue;
@@ -897,7 +875,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class CategorizedAffixEntryPrototype : Prototype
     {
-        public PrototypeId Category { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AffixCategoryPrototype Category { get; protected set; }
         public short MinAffixes { get; protected set; }
     }
 
@@ -928,8 +907,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CategorizedAffixEntryPrototype[] CategorizedAffixes { get; protected set; }
 
         // ---
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         private LootContext _lootContextFlags;
 
@@ -977,7 +954,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             foreach (CategorizedAffixEntryPrototype entry in CategorizedAffixes)
             {
-                if (entry.Category != affixCategoryProtoRef)
+                if (entry.Category != affixCategoryProto)
                     continue;
 
                 short numAffixes = entry.MinAffixes;
@@ -1020,7 +997,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 case AffixPosition.PetTech5:    break;  // Keep limit at 0
 
                 default:
-                    return Logger.WarnReturn<short>(0, $"GetLimit(): Unsupported AffixPosition [{affixPosition}]");
+                    Verify.IsTrue(false, $"AffixLimitsPrototype GetMax on unsupported AffixPosition [{affixPosition}]");
+                    return 0;
             }
 
             if (settings != null)
@@ -1048,6 +1026,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EquipRestrictionPrototype : Prototype
     {
+        //---
+
         public virtual bool IsEquippableByAgent(AgentPrototype agentProto)
         {
             return true;
@@ -1057,6 +1037,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class EquipRestrictionSuperteamPrototype : EquipRestrictionPrototype
     {
         public PrototypeId SuperteamEquippableBy { get; protected set; }
+
+        //---
 
         public override bool IsEquippableByAgent(AgentPrototype agentProto)
         {
@@ -1072,17 +1054,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EquipRestrictionAgentPrototype : EquipRestrictionPrototype
     {
-        public PrototypeId Agent { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AgentPrototype Agent { get; protected set; }
+
+        //---
 
         public override bool IsEquippableByAgent(AgentPrototype agentProto)
         {
             if (base.IsEquippableByAgent(agentProto) == false)
                 return false;
 
-            if (agentProto == null || Agent == PrototypeId.Invalid)
+            if (agentProto == null || Agent == null)
                 return true;
 
-            return agentProto.DataRef == Agent;
+            return agentProto.DataRef == Agent.DataRef;
         }
     }
 
@@ -1099,6 +1084,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ArmorPrototype : ItemPrototype
     {
+        //---
+
         public override bool IsUsableByAgent(AgentPrototype agentProto)
         {
             return AvatarUsesEquipmentType(this, agentProto);
@@ -1120,8 +1107,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CharacterTokenType TokenType { get; protected set; }
 
         //--
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         [DoNotCopy]
         public bool GrantsCharacterUnlock { get => TokenType == CharacterTokenType.UnlockCharacterOnly || TokenType == CharacterTokenType.UnlockCharOrUpgradeUlt; }
@@ -1153,14 +1138,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool HasUnlockedCharacter(Player player)
         {
             Prototype characterProto = Character.As<Prototype>();
-            if (characterProto == null) return Logger.WarnReturn(false, "HasUnlockedCharacter(): characterProto == null");
+            if (!Verify.IsNotNull(characterProto)) return false;
 
             if (characterProto is AvatarPrototype)
                 return player.HasAvatarFullyUnlocked(Character);
 
             return player.IsTeamUpAgentUnlocked(Character);
         }
-
     }
 
     public class InventoryStashTokenPrototype : ItemPrototype
@@ -1176,8 +1160,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class CostumePrototype : ItemPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public AssetId CostumeUnrealClass { get; protected set; }
         public AssetId FullBodyIconPath { get; protected set; }
         public PrototypeId UsableBy { get; protected set; }
@@ -1194,15 +1176,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId PortraitIconPathHiRes { get; protected set; }
         public PrototypeId FulfillmentDuplicateItem { get; protected set; }
 
+        //---
+
         public override bool ApprovedForUse()
         {
-            if (base.ApprovedForUse() == false) return false;
+            if (base.ApprovedForUse() == false)
+                return false;
 
             AvatarPrototype avatar = GameDatabase.GetPrototype<AvatarPrototype>(UsableBy);
-            if (avatar == null) return Logger.WarnReturn(false, $"ApprovedForUse(): avatar == null");
+            if (!Verify.IsNotNull(avatar)) return false;
 
             ItemPrototype itemProto = GameDatabase.GetPrototype<ItemPrototype>(FulfillmentDuplicateItem);
-            if (itemProto == null || itemProto == this) Logger.WarnReturn(false, "ApprovedForUse(): itemProto == null || itemProto == this");
+            if (!Verify.IsTrue(itemProto != null && itemProto != this)) return false;
 
             return avatar.ApprovedForUse() && itemProto.ApprovedForUse();
         }
@@ -1220,6 +1205,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MedalPrototype : ItemPrototype
     {
+        //---
+
         public override bool IsUsableByAgent(AgentPrototype agentProto)
         {
             return AvatarUsesEquipmentType(this, agentProto);
@@ -1238,6 +1225,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TeamUpGearPrototype : ItemPrototype
     {
+        //---
+
         public override bool IsDroppableForAgent(AgentPrototype agentProto)
         {
             if (agentProto is AvatarPrototype)
