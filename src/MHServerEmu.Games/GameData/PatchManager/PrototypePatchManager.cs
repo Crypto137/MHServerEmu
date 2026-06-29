@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using System.ComponentModel;
 using System.Reflection;
@@ -153,6 +154,9 @@ namespace MHServerEmu.Games.GameData.PatchManager
         {
             if (targetType.IsInstanceOfType(rawValue))
                 return rawValue;
+
+            if (rawValue is ulong dataId && targetType.IsSubclassOf(typeof(Prototype)))
+                return GameDatabase.GetPrototype<Prototype>((PrototypeId)dataId);
 
             TypeConverter converter = TypeDescriptor.GetConverter(targetType);
             if (converter != null && converter.CanConvertFrom(rawValue.GetType()))

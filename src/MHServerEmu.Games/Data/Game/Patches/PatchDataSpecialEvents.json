@@ -422,7 +422,7 @@
     "Prototype": "Loot/Tables/Vendor/SpecialEvent/SpecialEventBeast.prototype",
     "Path": "Choices[1].Item",
     "Description": "[Guardians of the Galaxy] replace BountyHunterBoxGroot with LeviathanCraftingBox in SpecialEventBeast.",
-    "ValueType": "PrototypeDataRef",
+    "ValueType": "PrototypeRefPtr",
     "Value": 16090292140337929967
   },
   {

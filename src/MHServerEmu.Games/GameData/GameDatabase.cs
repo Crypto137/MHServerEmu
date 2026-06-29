@@ -97,14 +97,14 @@ namespace MHServerEmu.Games.GameData
             PropertyInfoTable = new();
             PropertyInfoTable.Initialize();
 
-            // Initialize PrototypePatchManager
-            PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
-
             // Load globals
             PrototypeId globalsProtoRef = GetPrototypeRefByName("Globals/Globals.defaults");
             GlobalsPrototype = GetPrototype<GlobalsPrototype>(globalsProtoRef);
 
             // initializeKeywordPrototypes
+
+            // Initialize PrototypePatchManager
+            PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
 
             // Preload all prototypes if needed
             if (config.LoadAllPrototypes)
