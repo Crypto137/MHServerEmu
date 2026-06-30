@@ -149,21 +149,21 @@ namespace MHServerEmu.Games.Loot
 
             // Apply affixes by category
             if ((affixLimits != null && affixLimits.CategorizedAffixes.HasValue()) ||
-                (settings != null && settings.AffixLimitByCategoryModifierDict.Count > 0))
+                (settings != null && settings.AffixLimitByCategoryModifiers.Count > 0))
             {
-                using var affixCategoryDictHandle = DictionaryPool<PrototypeId, short>.Instance.Get(out Dictionary<PrototypeId, short> affixCategoryDict);
+                using var affixCategoryDictHandle = DictionaryPool<AffixCategoryPrototype, short>.Instance.Get(out Dictionary<AffixCategoryPrototype, short> affixCategoryDict);
 
                 // Get category limits from the prototype
                 if (affixLimits != null)
                 {
                     foreach (CategorizedAffixEntryPrototype entry in affixLimits.CategorizedAffixes)
-                        affixCategoryDict.GetValueRefOrAddDefault(entry.Category.DataRef) += entry.MinAffixes;
+                        affixCategoryDict.GetValueRefOrAddDefault(entry.Category) += entry.MinAffixes;
                 }
 
                 // Apply modifiers from loot roll settings
                 if (settings != null)
                 {
-                    foreach (var kvp in settings.AffixLimitByCategoryModifierDict)
+                    foreach (var kvp in settings.AffixLimitByCategoryModifiers)
                     {
                         ref short numAffixes = ref affixCategoryDict.GetValueRefOrAddDefault(kvp.Key);
                         numAffixes = (short)Math.Max(0, numAffixes + kvp.Value);
@@ -173,7 +173,7 @@ namespace MHServerEmu.Games.Loot
                 // Add categorized affixes
                 foreach (var kvp in affixCategoryDict)
                 {
-                    AffixCategoryPrototype categoryProto = kvp.Key.As<AffixCategoryPrototype>();
+                    AffixCategoryPrototype categoryProto = kvp.Key;
 
                     short numAffixesCurrent = itemSpec.NumAffixesOfCategory(categoryProto);
                     int numAffixesNeeded = kvp.Value - numAffixesCurrent;

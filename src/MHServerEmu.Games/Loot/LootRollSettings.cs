@@ -37,9 +37,9 @@ namespace MHServerEmu.Games.Loot
         public KeywordsMask RegionKeywords { get; set; } = KeywordsMask.Empty;
 
         // LootRollModifyAffixLimitsPrototype
-        public Dictionary<AffixPosition, short> AffixLimitMinByPositionModifierDict { get; } = new();   // Modifies the minimum number of affixes for position
-        public Dictionary<AffixPosition, short> AffixLimitMaxByPositionModifierDict { get; } = new();   // Modifies the maximum number of affixes for position
-        public Dictionary<PrototypeId, short> AffixLimitByCategoryModifierDict { get; } = new();
+        public Dictionary<AffixPosition, short> AffixLimitMinByPositionModifiers { get; } = new();   // Modifies the minimum number of affixes for position
+        public Dictionary<AffixPosition, short> AffixLimitMaxByPositionModifiers { get; } = new();   // Modifies the maximum number of affixes for position
+        public Dictionary<AffixCategoryPrototype, short> AffixLimitByCategoryModifiers { get; } = new();
         public PrototypeId MissionRef { get; set; }
 
         public bool IsInPool { get; set; }
@@ -83,25 +83,25 @@ namespace MHServerEmu.Games.Loot
             AvatarConditionKeywords = other.AvatarConditionKeywords;
             RegionKeywords = other.RegionKeywords;
 
-            AffixLimitMinByPositionModifierDict.Clear();
-            if (other.AffixLimitMinByPositionModifierDict.Count > 0)
+            AffixLimitMinByPositionModifiers.Clear();
+            if (other.AffixLimitMinByPositionModifiers.Count > 0)
             {
-                foreach (var kvp in other.AffixLimitMinByPositionModifierDict)
-                    AffixLimitMinByPositionModifierDict.Add(kvp.Key, kvp.Value);
+                foreach (var kvp in other.AffixLimitMinByPositionModifiers)
+                    AffixLimitMinByPositionModifiers.Add(kvp.Key, kvp.Value);
             }
 
-            AffixLimitMaxByPositionModifierDict.Clear();
-            if (other.AffixLimitMaxByPositionModifierDict.Count > 0)
+            AffixLimitMaxByPositionModifiers.Clear();
+            if (other.AffixLimitMaxByPositionModifiers.Count > 0)
             {
-                foreach (var kvp in other.AffixLimitMaxByPositionModifierDict)
-                    AffixLimitMaxByPositionModifierDict.Add(kvp.Key, kvp.Value);
+                foreach (var kvp in other.AffixLimitMaxByPositionModifiers)
+                    AffixLimitMaxByPositionModifiers.Add(kvp.Key, kvp.Value);
             }
 
-            AffixLimitByCategoryModifierDict.Clear();
-            if (other.AffixLimitByCategoryModifierDict.Count > 0)
+            AffixLimitByCategoryModifiers.Clear();
+            if (other.AffixLimitByCategoryModifiers.Count > 0)
             {
-                foreach (var kvp in other.AffixLimitByCategoryModifierDict)
-                    AffixLimitByCategoryModifierDict.Add(kvp.Key, kvp.Value);
+                foreach (var kvp in other.AffixLimitByCategoryModifiers)
+                    AffixLimitByCategoryModifiers.Add(kvp.Key, kvp.Value);
             }
         }
 
@@ -137,9 +137,9 @@ namespace MHServerEmu.Games.Loot
             AvatarConditionKeywords = KeywordsMask.Empty;
             RegionKeywords = KeywordsMask.Empty;
 
-            AffixLimitMinByPositionModifierDict.Clear();
-            AffixLimitMaxByPositionModifierDict.Clear();
-            AffixLimitByCategoryModifierDict.Clear();
+            AffixLimitMinByPositionModifiers.Clear();
+            AffixLimitMaxByPositionModifiers.Clear();
+            AffixLimitByCategoryModifiers.Clear();
         }
 
         public void Dispose()

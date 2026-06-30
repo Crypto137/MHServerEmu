@@ -950,8 +950,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (CategorizedAffixes.IsNullOrEmpty())
                 return short.MaxValue;
 
-            PrototypeId affixCategoryProtoRef = affixCategoryProto.DataRef;
-
             foreach (CategorizedAffixEntryPrototype entry in CategorizedAffixes)
             {
                 if (entry.Category != affixCategoryProto)
@@ -959,7 +957,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 short numAffixes = entry.MinAffixes;
 
-                if (settings != null && settings.AffixLimitByCategoryModifierDict.TryGetValue(affixCategoryProtoRef, out short mod))
+                if (settings != null && settings.AffixLimitByCategoryModifiers.TryGetValue(affixCategoryProto, out short mod))
                     numAffixes += mod;
 
                 return numAffixes;
@@ -1005,12 +1003,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 if (getMax)
                 {
-                    if (settings.AffixLimitMaxByPositionModifierDict.TryGetValue(affixPosition, out short maxMod))
+                    if (settings.AffixLimitMaxByPositionModifiers.TryGetValue(affixPosition, out short maxMod))
                         limit += maxMod;
                 }
                 else
                 {
-                    if (settings.AffixLimitMinByPositionModifierDict.TryGetValue(affixPosition, out short minMod))
+                    if (settings.AffixLimitMinByPositionModifiers.TryGetValue(affixPosition, out short minMod))
                         limit += minMod;
                 }
             }
