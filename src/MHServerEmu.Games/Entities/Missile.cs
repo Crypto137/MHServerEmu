@@ -281,8 +281,8 @@ namespace MHServerEmu.Games.Entities
             foreach (MissilePowerContextPrototype missilePowerContext in creationContext.PowerList)
             {
                 if (!Verify.IsNotNull(missilePowerContext)) return false;
-                if (!Verify.IsTrue(missilePowerContext.Power != PrototypeId.Invalid)) return false;
-                if (!Verify.IsNotNull(CreateMissilePower(missilePowerContext.Power))) return false;
+                if (!Verify.IsNotNull(missilePowerContext.Power)) return false;
+                if (!Verify.IsNotNull(CreateMissilePower(missilePowerContext.Power.DataRef))) return false;
             }
 
             return true;
@@ -832,10 +832,10 @@ namespace MHServerEmu.Games.Entities
                 {
                     if (missilePowerContext.GetPercentChanceToActivate(Properties) >= Random.NextFloat())
                     {
-                        if (!Verify.IsTrue(missilePowerContext.Power != PrototypeId.Invalid)) return;
+                        if (!Verify.IsNotNull(missilePowerContext.Power)) return;
 
-                        Power missilePower = GetPower(missilePowerContext.Power);
-                        if (!Verify.IsNotNull(missilePower, $"GetMissilePowersWithActivationEvent attempting to get power {missilePowerContext.Power.GetName()} from the missile but the power instance was not found.\n  Missile: {this}"))
+                        Power missilePower = GetPower(missilePowerContext.Power.DataRef);
+                        if (!Verify.IsNotNull(missilePower, $"GetMissilePowersWithActivationEvent attempting to get power {missilePowerContext.Power} from the missile but the power instance was not found.\n  Missile: {this}"))
                             return;
 
                         if (target == null || missilePower.IsValidTarget(target))

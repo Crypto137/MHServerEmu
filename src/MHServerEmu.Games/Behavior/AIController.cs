@@ -641,7 +641,7 @@ namespace MHServerEmu.Games.Behavior
 
             foreach (var context in powerProto.MissileCreationContexts)
             {
-                var boundsProto = context?.Entity.As<MissilePrototype>()?.Bounds;
+                var boundsProto = context?.Entity?.Bounds;
                 if (boundsProto == null) return;
 
                 maxRadius = MathF.Max(boundsProto.GetSphereRadius(), maxRadius);
