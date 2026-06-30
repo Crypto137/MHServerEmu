@@ -3,14 +3,13 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    // TODO: Add pooling for temporary ItemSpec instances if it creates a problem with garbage collection.
-
     public class LootMutationPrototype : Prototype
     {
         //---
@@ -44,7 +43,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId[] Keywords { get; protected set; }
         public short Count { get; protected set; }
         public AffixPosition Position { get; protected set; }
-        public PrototypeId[] Categories { get; protected set; }       // VectorPrototypeRefPtr AffixCategoryPrototype 
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public AffixCategoryPrototype[] Categories { get; protected set; }
 
         //---
 
@@ -167,7 +167,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SourceIndex { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
-        public PrototypeId[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public AffixCategoryPrototype[] Categories { get; protected set; }
 
         //---
 
@@ -197,7 +198,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SourceIndex { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
-        public PrototypeId[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public AffixCategoryPrototype[] Categories { get; protected set; }
 
         //---
 
@@ -248,7 +250,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public AssetId[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
-        public PrototypeId[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public AffixCategoryPrototype[] Categories { get; protected set; }
 
         //---
 
@@ -274,8 +277,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
             const uint PositionMask = (1u << (int)AffixPosition.Prefix) |
@@ -299,11 +300,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             for (int i = 0; i < affixRecords.Count; i++)
             {
                 AffixPrototype affixProto = affixRecords[i].AffixProtoRef.As<AffixPrototype>();
-                if (affixProto == null)
-                {
-                    Logger.Warn("Mutate(): affixProto == null");
+                if (!Verify.IsNotNull(affixProto))
                     continue;
-                }
 
                 if (affixProto.HasKeywords(OldItemKeywords, OnlyReplaceIfAllMatched) == false)
                     continue;
@@ -328,8 +326,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootMutateAvatarPrototype : LootMutationPrototype
     {
         //---
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
@@ -383,12 +379,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             for (int i = 0; i < itemSpec.AffixSpecs.Count; i++)
             {
                 AffixSpec itAffixSpec = itemSpec.AffixSpecs[i];
-
-                if (itAffixSpec.AffixProto == null || itAffixSpec.Seed == 0)
-                {
-                    Logger.Warn($"CreateItemForAvatar(): Invalid affix spec: affixSpec=[{itAffixSpec}], args=[{destItem}], itemSpec=[{itemSpec}]");
+                if (!Verify.IsTrue(itAffixSpec != null && itAffixSpec.Seed != 0, $"LootMutateAvatarPrototype: invalid affix spec: affixSpec=[{itAffixSpec}], args=[{destItem}], itemSpec=[{itemSpec}]"))
                     continue;
-                }
 
                 if (itAffixSpec.AffixProto.IsGemAffix)
                     continue;
@@ -585,11 +577,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public AssetId[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
-        public PrototypeId[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public AffixCategoryPrototype[] Categories { get; protected set; }
 
         //---
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
@@ -601,7 +592,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 AffixRecord affixRecord = lootCloneRecord.AffixRecords[i];
 
                 AffixPrototype affixProto = affixRecord.AffixProtoRef.As<AffixPrototype>();
-                if (affixProto == null) return Logger.WarnReturn(MutationResults.Error, "Mutate(): affixProto == null");
+                if (!Verify.IsNotNull(affixProto)) return MutationResults.Error;
 
                 if (affixProto.Position == AffixPosition.Metadata)
                     continue;
@@ -628,7 +619,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
-        public PrototypeId[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public AffixCategoryPrototype[] Categories { get; protected set; }
 
         //---
 
@@ -705,15 +697,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
             if (Eval == null)
                 return MutationResults.None;
 
-            if (resolver.PushCraftingCallback(this) == LootRollResult.NoRoll)
-                return Logger.WarnReturn(MutationResults.Error, "Mutate(): resolver.PushCraftingCallback(this) == LootRollResult.NoRoll");
+            if (!Verify.IsTrue(resolver.PushCraftingCallback(this) != LootRollResult.NoRoll)) return MutationResults.Error;
 
             return MutationResults.EvalChange;
         }
@@ -726,8 +715,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, item?.Properties);
 
-            if (Properties.Evals.Eval.RunBool(Eval, evalContext) == false)
-                Logger.Warn($"OnItemCreated(): The LootEvalPrototype Eval failed:\n: [{Eval.ExpressionString()}]");
+            Verify.IsTrue(Properties.Evals.Eval.RunBool(Eval, evalContext), $"The LootEvalPrototype Eval failed:\n: [{Eval.ExpressionString()}]");
         }
     }
 }

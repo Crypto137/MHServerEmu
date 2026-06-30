@@ -164,12 +164,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return KeywordPrototype.TestKeywordBit(_categoryKeywordsMask, affixCategoryProto);
         }
 
-        public AffixCategoryPrototype GetFirstCategoryMatch(PrototypeId[] affixCategoryProtos)
+        public AffixCategoryPrototype GetFirstCategoryMatch(AffixCategoryPrototype[] affixCategoryProtos)
         {
-            foreach (PrototypeId affixCategoryProtoRef in affixCategoryProtos)
+            foreach (AffixCategoryPrototype affixCategoryProto in affixCategoryProtos)
             {
-                AffixCategoryPrototype affixCategoryProto = affixCategoryProtoRef.As<AffixCategoryPrototype>();
-
                 if (HasCategory(affixCategoryProto))
                     return affixCategoryProto;
             }
@@ -177,7 +175,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return null;
         }
 
-        public bool HasAnyCategory(PrototypeId[] affixCategoryProtos)
+        public bool HasAnyCategory(AffixCategoryPrototype[] affixCategoryProtos)
         {
             if (affixCategoryProtos.IsNullOrEmpty())
                 return true;
