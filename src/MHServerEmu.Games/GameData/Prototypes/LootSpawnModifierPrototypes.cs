@@ -69,6 +69,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public bool Check { get; protected set; }
 
+        //---
+
         public override void Apply(LootLocationData lootLocationData)
         {
             base.Apply(lootLocationData);
