@@ -36,6 +36,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public Vector3 Position { get; protected set; }
 
+        //---
+
         public void Deserialize(BinaryReader reader)
         {
             Position = reader.Read<Vector3>();
