@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -28,7 +29,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MetaState { get; protected set; }
         public MetaStateChallengeTierEnum ChallengeTier { get; protected set; }
         public int AdditionalLevels { get; protected set; }
-        public PrototypeId Category { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public RegionAffixCategoryPrototype Category { get; protected set; }
         public PrototypeId[] RestrictsAffixes { get; protected set; }
         public int UISortOrder { get; protected set; }
         public PrototypeId[] KeywordsBlacklist { get; protected set; }
@@ -37,31 +39,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] AffixRarityRestrictions { get; protected set; }
         public EvalPrototype Eval { get; protected set; }
 
-        [DoNotCopy]
-        public KeywordsMask KeywordsBlackMask { get; protected set; }
-        [DoNotCopy]
-        public KeywordsMask KeywordsWhiteMask { get; protected set; }
+        //---
+
+        private KeywordsMask _keywordsBlacklistMask;
+        private KeywordsMask _keywordsWhitelistMask;
 
         public override void PostProcess()
         {
             base.PostProcess();
 
-            KeywordsBlackMask = KeywordPrototype.GetBitMaskForKeywordList(KeywordsBlacklist);
-            KeywordsWhiteMask = KeywordPrototype.GetBitMaskForKeywordList(KeywordsWhitelist);
+            _keywordsBlacklistMask = KeywordPrototype.GetBitMaskForKeywordList(KeywordsBlacklist);
+            _keywordsWhitelistMask = KeywordPrototype.GetBitMaskForKeywordList(KeywordsWhitelist);
         }
 
         public bool CanApplyToRegion(Region region)
         {
             if (KeywordsBlacklist.HasValue())
-                foreach (var area in region.Areas.Values)
-                    if (area.Prototype.KeywordsMask.TestAny(KeywordsBlackMask))
+            {
+                foreach (Area area in region.Areas.Values)
+                {
+                    if (area.GetKeywordsMask().TestAny(_keywordsBlacklistMask))
                         return false;
+                }
+            }
 
             if (KeywordsWhitelist.HasValue())
             {
-                foreach (var area in region.Areas.Values)
-                    if (area.Prototype.KeywordsMask.TestAny(KeywordsWhiteMask))
+                foreach (Area area in region.Areas.Values)
+                {
+                    if (area.GetKeywordsMask().TestAny(_keywordsWhitelistMask))
                         return true;
+                }
 
                 return false;
             }
@@ -91,13 +99,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public RegionAffixTableTierEntryPrototype[] Tiers { get; protected set; }
         public AssetId LootSource { get; protected set; }
 
+        //---
+
         public RegionAffixTableTierEntryPrototype GetByTier(int affixTier)
         {
-            if (Tiers.IsNullOrEmpty()) return null;
+            if (Tiers.IsNullOrEmpty())
+                return null;
 
-            foreach (var entry in Tiers)
-                if (entry != null && entry.Tier == affixTier)
+            foreach (RegionAffixTableTierEntryPrototype entry in Tiers)
+            {
+                if (!Verify.IsNotNull(entry))
+                    continue;
+
+                if (entry.Tier == affixTier)
                     return entry;
+            }
 
             return null;
         }

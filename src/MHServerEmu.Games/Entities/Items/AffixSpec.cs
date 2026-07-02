@@ -336,16 +336,17 @@ namespace MHServerEmu.Games.Entities.Items
         /// </summary>
         private MutationResults SetAffixScopeRegionAffix(GRandom random, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet)
         {
-            // TODO: Reuse this dictionary?
-            Dictionary<RegionAffixCategoryPrototype, int> regionAffixCategoryPickDict = new();
+            using var regionAffixCategoryPicksHandle = DictionaryPool<RegionAffixCategoryPrototype, int>.Instance.Get(
+                out Dictionary<RegionAffixCategoryPrototype, int> regionAffixCategoryPicks);
+            
             foreach (PrototypeId regionAffixCategoryProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RegionAffixCategoryPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
-                var regionAffixCategoryProto = regionAffixCategoryProtoRef.As<RegionAffixCategoryPrototype>();
-                regionAffixCategoryPickDict[regionAffixCategoryProto] = 0;
+                RegionAffixCategoryPrototype regionAffixCategoryProto = regionAffixCategoryProtoRef.As<RegionAffixCategoryPrototype>();
+                regionAffixCategoryPicks.Add(regionAffixCategoryProto, 0);
             }
 
             // Filter out scopes that are already in use or mutually exclusive with existing ones
-            HashSet<PrototypeId> scopeFilter = new();
+            using var scopeFilterHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> scopeFilter);
             foreach (ScopedAffixRef scopedAffixRef in affixSet)
             {
                 if (AffixProto.DataRef != scopedAffixRef.AffixProtoRef)
@@ -363,32 +364,29 @@ namespace MHServerEmu.Games.Entities.Items
                         scopeFilter.Add(restrictedAffixRef);
                 }
 
-                if (Verify.IsTrue(regionAffixProto.Category != PrototypeId.Invalid))
-                {
-                    var affixCategoryProto = regionAffixProto.Category.As<RegionAffixCategoryPrototype>();
-                    regionAffixCategoryPickDict[affixCategoryProto]++;
-                }
+                if (Verify.IsNotNull(regionAffixProto.Category))
+                    regionAffixCategoryPicks[regionAffixProto.Category]++;
             }
 
             // Pick categories to use
-            List<PrototypeId> essentialCategoryList = new();
-            List<PrototypeId> extraCategoryList = new();
+            using var essentialCategoriesHandle = ListPool<RegionAffixCategoryPrototype>.Instance.Get(out List<RegionAffixCategoryPrototype> essentialCategories);
+            using var extraCategoriesHandle = ListPool<RegionAffixCategoryPrototype>.Instance.Get(out List<RegionAffixCategoryPrototype> extraCategories);
 
-            foreach (var kvp in regionAffixCategoryPickDict)
+            foreach (var kvp in regionAffixCategoryPicks)
             {
                 RegionAffixCategoryPrototype categoryProto = kvp.Key;
                 int numPicks = kvp.Value;
 
                 if (numPicks < categoryProto.MinPicks)
-                    essentialCategoryList.Add(categoryProto.DataRef);
+                    essentialCategories.Add(categoryProto);
                 else if (numPicks < categoryProto.MaxPicks || categoryProto.MaxPicks == 0)
-                    extraCategoryList.Add(categoryProto.DataRef);
+                    extraCategories.Add(categoryProto);
             }
 
             // Prioritize essential categories
-            List<PrototypeId> categoryListForPicking = essentialCategoryList.Count != 0
-                ? essentialCategoryList
-                : extraCategoryList;
+            List<RegionAffixCategoryPrototype> pickCategories = essentialCategories.Count != 0
+                ? essentialCategories
+                : extraCategories;
 
             // Validation
             if (!Verify.IsNotNull(AffixProto)) return MutationResults.Error;
@@ -417,7 +415,7 @@ namespace MHServerEmu.Games.Entities.Items
 
                 var regionAffixProto = entryProto.Affix.As<RegionAffixPrototype>();
 
-                if (categoryListForPicking.Contains(regionAffixProto.Category) == false)
+                if (pickCategories.Contains(regionAffixProto.Category) == false)
                     continue;
 
                 if (regionAffixProto.AffixRarityRestrictions != null && regionAffixProto.AffixRarityRestrictions.Contains(itemSpec.RarityProtoRef))
