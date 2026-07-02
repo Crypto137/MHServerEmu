@@ -1208,9 +1208,8 @@ namespace MHServerEmu.Games.Entities
 
             if (powerProto.ConditionsByRef.HasValue())
             {
-                foreach (PrototypeId conditionRef in powerProto.ConditionsByRef)
+                foreach (ConditionPrototype conditionProto in powerProto.ConditionsByRef)
                 {
-                    ConditionPrototype conditionProto = conditionRef.As<ConditionPrototype>();
                     if (!Verify.IsNotNull(conditionProto))
                         continue;
 

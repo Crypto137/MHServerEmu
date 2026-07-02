@@ -578,7 +578,7 @@ namespace MHServerEmu.Games.Powers
                 } 
                 else
                 {
-                    TargetingStylePrototype style = TargetingStylePrototype;
+                    TargetingStylePrototype style = GetTargetingStylePrototype();
 
                     ulong targetId = powerApplication.TargetEntityId;
                     if (targetId != Entity.InvalidId &&

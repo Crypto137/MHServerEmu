@@ -294,8 +294,8 @@ namespace MHServerEmu.Games.Entities
 
         public IsInPositionForPowerResult IsInPositionForPower(Power power, WorldEntity target, Vector3 targetPosition)
         {
-            var targetingProto = power.TargetingStylePrototype;
-            if (targetingProto == null) return IsInPositionForPowerResult.Error;
+            TargetingStylePrototype targetingProto = power.GetTargetingStylePrototype();
+            if (!Verify.IsNotNull(targetingProto)) return IsInPositionForPowerResult.Error;
 
             if (targetingProto.TargetingShape == TargetingShapeType.Self)
                 return IsInPositionForPowerResult.Success;

@@ -2135,9 +2135,8 @@ namespace MHServerEmu.Games.Powers
 
                 if (PowerPrototype.ConditionsByRef.HasValue())
                 {
-                    foreach (PrototypeId conditionProtoRef in PowerPrototype.ConditionsByRef)
+                    foreach (ConditionPrototype conditionByRefProto in PowerPrototype.ConditionsByRef)
                     {
-                        ConditionPrototype conditionByRefProto = conditionProtoRef.As<ConditionPrototype>();
                         if (!Verify.IsNotNull(conditionByRefProto))
                             continue;
 

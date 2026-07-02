@@ -205,7 +205,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     {
                         targetIdForPower = Entity.InvalidId;
 
-                        var targetingReachProto = powerProto.TargetingReach.As<TargetingReachPrototype>();
+                        var targetingReachProto = powerProto.TargetingReach;
                         if (targetingReachProto == null) return genericErrorResult;
 
                         var volume = new Sphere(regionLocation.Position, powerProto.Radius);

@@ -2550,7 +2550,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (!Verify.IsNotNull(restrictionProto))
                     continue;
 
-                KeywordPrototype keywordProto = restrictionProto.RestrictionKeywordPrototype;
+                KeywordPrototype keywordProto = restrictionProto.RestrictionKeyword;
 
                 if (keywordProto == null || restrictionProto.RestrictionKeywordCount <= 0)
                     continue;
