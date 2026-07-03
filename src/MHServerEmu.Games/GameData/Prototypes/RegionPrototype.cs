@@ -140,7 +140,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ObjectiveGraphSettingsPrototype ObjectiveGraph { get; protected set; }
         public DividedStartLocationPrototype[] DividedStartLocations { get; protected set; }
         public RegionMusicBehavior MusicBehavior { get; protected set; }
-        public PrototypeId AvatarObjectiveInfoOverride { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public ObjectiveInfoPrototype AvatarObjectiveInfoOverride { get; protected set; }
         public RegionDifficultySettingsPrototype DifficultySettings { get; protected set; }
         public bool LevelOverridesCharacterLevel { get; protected set; }
         public bool LevelUseAreaOffset { get; protected set; }
@@ -152,7 +153,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsNPE { get; protected set; }
         public LocaleStringId PresenceStatusText { get; protected set; }
         public PrototypeId[] AccessDifficulties { get; protected set; }
-        public PrototypeId Tuning { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TuningPrototype Tuning { get; protected set; }
         public int BonusItemFindMultiplier { get; protected set; }
         public PrototypeId PlayerCameraSettingsOrbis { get; protected set; }
         public PrototypeId[] LoadingScreensConsole { get; protected set; }
@@ -160,7 +162,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        private readonly Dictionary<AssetId, List<LootTableAssignmentPrototype>> _lootTableMap = new();
 
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; private set; }
@@ -191,12 +193,110 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public TimeSpan Lifetime { get; private set; }
 
-        private Dictionary<AssetId, List<LootTableAssignmentPrototype>> _lootTableMap = new();
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            DifficultyTierMask = DifficultyTierMask.None;
+
+            if (AccessDifficulties.HasValue())
+            {
+                foreach (PrototypeId difficultyTierRef in AccessDifficulties)
+                {
+                    DifficultyTierPrototype difficultyTierProto = difficultyTierRef.As<DifficultyTierPrototype>();
+                    if (!Verify.IsNotNull(difficultyTierProto))
+                        continue;
+
+                    DifficultyTierMask |= (DifficultyTierMask)(1 << (int)difficultyTierProto.Tier);
+                }
+            }
+            else
+            {
+                DifficultyTierMask = DifficultyTierMask.Green | DifficultyTierMask.Red | DifficultyTierMask.Cosmic;
+            }
+
+            if (RegionQueueStates.HasValue())
+            {
+                for (int i = 0; i < RegionQueueStates.Length; i++)
+                {
+                    RegionQueueStateEntryPrototype entryProto = RegionQueueStates[i];
+                    if (!Verify.IsNotNull(entryProto))
+                        continue;
+
+                    entryProto.Index = i;
+                }
+            }
+
+            HasPvPMetaGame = false;
+            HasScoreSchema = false;
+
+            if (MetaGames.HasValue())
+            {
+                foreach (PrototypeId metaGameRef in MetaGames)
+                {
+                    if (!Verify.IsTrue(metaGameRef != PrototypeId.Invalid))
+                        continue;
+
+                    PvPPrototype metaGameProto = GameDatabase.GetPrototype<PvPPrototype>(metaGameRef);
+                    if (metaGameProto != null)
+                    {
+                        if (metaGameProto.IsPvP)
+                            HasPvPMetaGame = true;
+
+                        if (metaGameProto.ScoreSchemaPlayer != PrototypeId.Invalid || metaGameProto.ScoreSchemaRegion != PrototypeId.Invalid)
+                            HasScoreSchema = true;
+
+                        break;
+                    }
+                }
+            }
+
+            KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+
+            // GetLevelAccessRestrictionMinMax - client only?
+
+            if (LootTables.HasValue())
+            {
+                foreach (LootTableAssignmentPrototype lootTableAssignmentProto in LootTables)
+                {
+                    if (lootTableAssignmentProto.Name == AssetId.Invalid)
+                        continue;
+
+                    if (_lootTableMap.TryGetValue(lootTableAssignmentProto.Name, out List<LootTableAssignmentPrototype> table) == false)
+                    {
+                        table = new();
+                        _lootTableMap.Add(lootTableAssignmentProto.Name, table);
+                    }
+
+                    table.Add(lootTableAssignmentProto);
+                }
+            }
+
+            RegionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetRegionBlueprintDataRef());
+
+            if (AreasInGenerator == null)
+            {
+                AreasInGenerator = new();
+                HashSet<PrototypeId> regions = new();
+                GetAreasInGenerator(this, AreasInGenerator, regions);
+            }
+
+            // ClientMapOverrides client only
+
+            Lifetime = TimeSpan.FromMinutes(LifetimeInMinutes);
+
+            TeamLimits = GetTeamLimits();
+            QueueGroupLimit = GetQueueGroupLimit();
+        }
 
         public static bool Equivalent(RegionPrototype regionA, RegionPrototype regionB)
         {
-            if (regionA == null || regionB == null) return false;
-            if (regionA == regionB) return true;
+            if (regionA == null || regionB == null)
+                return false;
+
+            if (regionA == regionB)
+                return true;
+
             return regionA.HasAltRegion(regionB.DataRef);
         }
 
@@ -220,106 +320,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (StartTarget != PrototypeId.Invalid)
             {
-                var target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(StartTarget);
-                if (target != null)
+                RegionConnectionTargetPrototype target = StartTarget.As<RegionConnectionTargetPrototype>();
+                if (Verify.IsNotNull(target))
                     defaultArea = target.Area;
             }
 
             if (RegionGenerator != null && defaultArea == PrototypeId.Invalid)
-                return RegionGenerator.GetStartAreaRef(region); // TODO check return
+                return RegionGenerator.GetStartAreaRef(region);
 
             return defaultArea;
         }
 
         public RegionDifficultySettingsPrototype GetDifficultySettings()
         {
-            if (DifficultySettings != null) return DifficultySettings;
+            if (DifficultySettings != null)
+                return DifficultySettings;
 
-            var difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
-            if (difficultyGlobals == null) return null;
+            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
+            if (!Verify.IsNotNull(difficultyGlobals)) return null;
 
             if (Behavior == RegionBehavior.PublicCombatZone && difficultyGlobals.RegionSettingsDefaultPCZ != null)
                 return difficultyGlobals.RegionSettingsDefaultPCZ;
 
             return difficultyGlobals.RegionSettingsDefault;
-        }
-
-        public override void PostProcess()
-        {
-            base.PostProcess();
-
-            DifficultyTierMask = DifficultyTierMask.None;
-
-            if (AccessDifficulties.HasValue())
-            {
-                foreach (var difficultyTierRef in AccessDifficulties)
-                {
-                    var difficultyTierProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(difficultyTierRef);
-                    if (difficultyTierProto == null) continue;
-                    DifficultyTierMask |= (DifficultyTierMask)(1 << (int)difficultyTierProto.Tier);
-                }
-            }
-            else
-                DifficultyTierMask = DifficultyTierMask.Green | DifficultyTierMask.Red | DifficultyTierMask.Cosmic;
-
-            if (RegionQueueStates.HasValue())
-            {
-                int index = 0;
-                foreach (var entryProto in RegionQueueStates)
-                {
-                    if (entryProto != null) entryProto.Index = index;
-                    index++;
-                }
-            }
-
-            HasPvPMetaGame = false;
-            HasScoreSchema = false;
-
-            if (MetaGames.HasValue())
-                foreach (var metaGameRef in MetaGames)
-                {
-                    if (metaGameRef == PrototypeId.Invalid) continue;
-                    var metaPvP = GameDatabase.GetPrototype<PvPPrototype>(metaGameRef);
-                    if (metaPvP != null)
-                    {
-                        if (metaPvP.IsPvP) HasPvPMetaGame = true;
-                        if (metaPvP.ScoreSchemaPlayer != PrototypeId.Invalid || metaPvP.ScoreSchemaRegion != PrototypeId.Invalid)
-                            HasScoreSchema = true;
-                        break;
-                    }
-                }
-
-            KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
-
-            // GetLevelAccessRestrictionMinMax client only?
-
-            if (LootTables.HasValue())
-                foreach (var lootTable in LootTables)
-                {
-                    if (lootTable.Name == AssetId.Invalid) continue;
-                    if (_lootTableMap.TryGetValue(lootTable.Name, out var table) == false)
-                    {
-                        table = new();
-                        _lootTableMap[lootTable.Name] = table;
-                    }
-                    table?.Add(lootTable);
-                }
-
-            RegionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetRegionBlueprintDataRef());
-
-            if (AreasInGenerator == null)
-            {
-                AreasInGenerator = new();
-                HashSet<PrototypeId> regions = new();
-                GetAreasInGenerator(this, AreasInGenerator, regions);
-            }
-
-            // ClientMapOverrides client only
-
-            Lifetime = TimeSpan.FromMinutes(LifetimeInMinutes);
-
-            TeamLimits = GetTeamLimits();
-            QueueGroupLimit = GetQueueGroupLimit();
         }
 
         private int[] GetTeamLimits()
@@ -331,11 +354,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (PrototypeId metaGameProtoRef in MetaGames)
                 {
                     MetaGamePrototype metaGameProto = metaGameProtoRef.As<MetaGamePrototype>();
-                    if (metaGameProto == null)
-                    {
-                        Logger.Warn("FindMatchTeams(): metaGameProto == null");
+                    if (!Verify.IsNotNull(metaGameProto))
                         continue;
-                    }
 
                     if (metaGameProto.Teams.IsNullOrEmpty())
                         continue;
@@ -343,11 +363,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     foreach (PrototypeId teamProtoRef in metaGameProto.Teams)
                     {
                         MetaGameTeamPrototype teamProto = teamProtoRef.As<MetaGameTeamPrototype>();
-                        if (teamProto == null)
-                        {
-                            Logger.Warn("FindMatchTeams(): teamProto == null");
+                        if (!Verify.IsNotNull(teamProto))
                             continue;
-                        }
 
                         teamLimits ??= new();
                         teamLimits.Add(teamProto.MaxPlayers);
@@ -439,8 +456,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool AllowRaids()
         {
-            var globalsProto = GameDatabase.GlobalsPrototype;
-            if (globalsProto == null) return false;
+            GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
+            if (!Verify.IsNotNull(globalsProto)) return false;
+
             switch (Behavior)
             {
                 case RegionBehavior.Town:
@@ -458,8 +476,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         return PlayerLimit >= globalsProto.PlayerRaidMaxSize;
                     break;
                 default:
+                    Verify.IsTrue(false);
                     return false;
             }
+
             return false;
         }
 
@@ -471,58 +491,80 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private int GetLargestTeamSize()
         {
             int largestTeamSize = 0;
-            if(MetaGames.HasValue())
-                foreach (var metaGameRef in MetaGames)
+
+            if (MetaGames.HasValue())
+            {
+                foreach (PrototypeId metaGameRef in MetaGames)
                 {
-                    var metaGameProto = GameDatabase.GetPrototype<MetaGamePrototype>(metaGameRef);
+                    MetaGamePrototype metaGameProto = metaGameRef.As<MetaGamePrototype>();
                     if (metaGameProto != null && metaGameProto.Teams.HasValue())
-                        foreach (var teamRef in metaGameProto.Teams)
+                    {
+                        foreach (PrototypeId teamRef in metaGameProto.Teams)
                         {
-                            var teamProto = GameDatabase.GetPrototype<MetaGameTeamPrototype>(teamRef);
+                            MetaGameTeamPrototype teamProto = teamRef.As<MetaGameTeamPrototype>();
                             if (teamProto != null)
                                 largestTeamSize = Math.Max(largestTeamSize, teamProto.MaxPlayers);
                         }
+                    }
                 }
+            }
+
             return largestTeamSize;
         }
 
         public static void BuildRegionsFromFilters(HashSet<PrototypeId> regions, PrototypeId[] includeRegions, bool includeChildren, PrototypeId[] excludeRegions)
         {
             if (includeRegions.HasValue())
-                foreach (var regionRef in includeRegions)
-                    if (regionRef != PrototypeId.Invalid) regions.Add(regionRef);
+            {
+                foreach (PrototypeId regionRef in includeRegions)
+                {
+                    if (regionRef != PrototypeId.Invalid)
+                        regions.Add(regionRef);
+                }
+            }
 
             if (includeChildren)
             {
                 using var parentRegionsHandle = ListPool<PrototypeId>.Instance.Get(regions, out List<PrototypeId> parentRegions);
-                foreach (var childRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<RegionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-                    foreach (var parentRef in parentRegions)
+                foreach (PrototypeId childRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<RegionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    foreach (PrototypeId parentRef in parentRegions)
+                    {
                         if (GameDatabase.DataDirectory.PrototypeIsAPrototype(childRef, parentRef))
                         {
                             regions.Add(childRef);
                             break;
                         }
+                    }
+                }
             }
 
             if (excludeRegions.HasValue())
-                foreach (var regionRef in excludeRegions)
+            {
+                foreach (PrototypeId regionRef in excludeRegions)
                     regions.Remove(regionRef);
+            }
 
             using var altRegionsHandle = ListPool<PrototypeId>.Instance.Get(regions, out List<PrototypeId> altRegions);
-            foreach (var regionRef in altRegions)
+            foreach (PrototypeId regionRef in altRegions)
             {
-                var regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
+                RegionPrototype regionProto = regionRef.As<RegionPrototype>();
                 if (regionProto != null && regionProto.AltRegions.HasValue())
-                    foreach (var altRegionRef in regionProto.AltRegions)
+                {
+                    foreach (PrototypeId altRegionRef in regionProto.AltRegions)
                         regions.Add(altRegionRef);
+                }
             }
         }
 
         public static void GetAreasInGenerator(PrototypeId regionRef, HashSet<PrototypeId> areas)
         {
-            if (regionRef == PrototypeId.Invalid) return;
-            var regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
-            if (regionProto == null) return;
+            if (regionRef == PrototypeId.Invalid)
+                return;
+            
+            RegionPrototype regionProto = regionRef.As<RegionPrototype>();
+            if (regionProto == null)
+                return;
 
             if (regionProto.AreasInGenerator == null)
             {
@@ -537,51 +579,73 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static void GetAreasInGenerator(RegionPrototype regionProto, HashSet<PrototypeId> areas, HashSet<PrototypeId> regions)
         {
-            if (regionProto == null) return;
-            if (regions.Contains(regionProto.DataRef)) return;
+            if (!Verify.IsNotNull(regionProto)) return;
+
+            if (regions.Contains(regionProto.DataRef))
+                return;
+
             regions.Add(regionProto.DataRef);
 
             if (regionProto.AltRegions.HasValue())
-                foreach (var altRegionRef in regionProto.AltRegions)
+            {
+                foreach (PrototypeId altRegionRef in regionProto.AltRegions)
                 {
-                    var altRegionProto = GameDatabase.GetPrototype<RegionPrototype>(altRegionRef);
-                    if (altRegionProto != null) GetAreasInGenerator(altRegionProto, areas, regions);
+                    RegionPrototype altRegionProto = altRegionRef.As<RegionPrototype>();
+                    if (altRegionProto != null)
+                        GetAreasInGenerator(altRegionProto, areas, regions);
                 }
+            }
 
             regionProto.RegionGenerator?.GetAreasInGenerator(areas);
         }
 
         public bool FilterRegion(PrototypeId filterRef, bool includeChildren, PrototypeId[] regionsExclude)
         {
-            if (regionsExclude.HasValue())
-                if (regionsExclude.Contains(DataRef)) return false;
+            if (regionsExclude.HasValue() && regionsExclude.Contains(DataRef))
+                return false;
 
-            if (filterRef == PrototypeId.Invalid) return false;
-            var filterProto = GameDatabase.GetPrototype<RegionPrototype>(filterRef);
+            if (filterRef == PrototypeId.Invalid)
+                return false;
+
+            RegionPrototype filterProto = filterRef.As<RegionPrototype>();
+
             if (filterProto != null)
             {
-                if (filterProto == this) return true;
-                if (includeChildren && GameDatabase.DataDirectory.PrototypeIsAPrototype(DataRef, filterRef)) return true;
-                if (filterProto.HasAltRegion(DataRef)) return true;
+                if (filterProto == this)
+                    return true;
+
+                if (includeChildren && GameDatabase.DataDirectory.PrototypeIsAPrototype(DataRef, filterRef))
+                    return true;
+
+                if (filterProto.HasAltRegion(DataRef))
+                    return true;
             }
+
             return false;
         }
 
         public RegionQueueStateEntryPrototype GetRegionQueueStateEntry(PrototypeId gameStateRef)
         {
             if (RegionQueueStates.HasValue())
-                foreach (var entryProto in RegionQueueStates)
+            {
+                foreach (RegionQueueStateEntryPrototype entryProto in RegionQueueStates)
                 {
-                    if (entryProto == null) continue;
+                    if (!Verify.IsNotNull(entryProto))
+                        continue;
+
                     if (entryProto.State == gameStateRef)
                         return entryProto;
                 }
+            }
+
             return null;
         }
 
         public PrototypeId GetMetagame()
         {
-            if (MetaGames.HasValue()) return MetaGames[0];
+            if (MetaGames.HasValue())
+                return MetaGames[0];
+
             return PrototypeId.Invalid;
         }
 
@@ -606,13 +670,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
 
-            return Logger.WarnReturn(PrototypeId.Invalid, $"GetLootTableOverride(): Region [{this}] has no overrides for source=[{source}], lootEvent=[{lootEvent}] requested by entity [{worldEntity}]");
+            Verify.IsTrue(false, $"Region [{this}] has no overrides for source=[{source}], lootEvent=[{lootEvent}] requested by entity [{worldEntity}]");
+            return PrototypeId.Invalid;
         }
 
         public bool RunEvalAccessRestriction(Player player, Avatar avatar, PrototypeId difficultyProtoRef)
         {
             // Default to true if no valid avatar
-            if (avatar == null) return Logger.WarnReturn(true, "RunEvalAccessRestriction(): avatar == null");
+            if (!Verify.IsNotNull(avatar)) return true;
 
             bool success = true;
 
@@ -620,11 +685,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 foreach (RegionAccessCheckPrototype checkProto in AccessChecks)
                 {
-                    if (checkProto == null)
-                    {
-                        Logger.Warn("RunEvalAccessRestriction(): checkProto == null");
+                    if (!Verify.IsNotNull(checkProto))
                         continue;
-                    }
 
                     if (checkProto.NoAccessOnFail == false)
                         continue;
@@ -697,12 +759,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override bool Check(Player player, Avatar avatar)
         {
-            if (player == null) return Logger.WarnReturn(false, "Check(): player == null");
-            if (avatar == null) return Logger.WarnReturn(false, "Check(): avatar == null");
+            if (!Verify.IsNotNull(player)) return false;
+            if (!Verify.IsNotNull(avatar)) return false;
 
             int avatarLevel = avatar.CharacterLevel;
 
