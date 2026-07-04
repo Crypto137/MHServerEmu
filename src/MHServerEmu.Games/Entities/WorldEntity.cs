@@ -438,7 +438,7 @@ namespace MHServerEmu.Games.Entities
             var summonProto = GetSummonEntityContext();
             if (summonProto == null) return;
 
-            var conditionProto = GameDatabase.GetPrototype<ConditionPrototype>(summonProto.TrackInInventoryOwnerCondition);
+            var conditionProto = summonProto.TrackInInventoryOwnerCondition;
             if (conditionProto == null) return;
 
             var summoner = Game.EntityManager.GetEntity<WorldEntity>(summonerId);

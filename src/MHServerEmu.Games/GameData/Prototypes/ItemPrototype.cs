@@ -131,11 +131,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 // Search for transitions in summon contexts for this summon power action
                 foreach (SummonEntityContextPrototype summonContextProto in summonPowerProto.SummonEntityContexts)
                 {
-                    if (summonContextProto.SummonEntity == PrototypeId.Invalid)
+                    if (summonContextProto.SummonEntity == null)
                         continue;
 
                     // Skip summon contexts that do not summon a transition entity
-                    TransitionPrototype transitionProto = summonContextProto.SummonEntity.As<TransitionPrototype>();
+                    TransitionPrototype transitionProto = summonContextProto.SummonEntity as TransitionPrototype;
                     if (transitionProto == null || transitionProto.DirectTarget == PrototypeId.Invalid)
                         continue;
 
