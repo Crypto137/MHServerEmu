@@ -482,7 +482,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ReputationDisplayInfoPrototype : Prototype
     {
         public LocaleStringId DisplayName { get; protected set; }
-        public PrototypeId[] ReputationLevels { get; protected set; }     // VectorPrototypeRefPtr ReputationLevelDisplayInfoPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public ReputationLevelDisplayInfoPrototype[] ReputationLevels { get; protected set; }
     }
 
     public class UISystemLockPrototype : Prototype
@@ -688,10 +689,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int FlashDelayMS { get; protected set; }
         public bool ShowOncePerAccount { get; protected set; }
 
+        //---
+
         public bool ShouldShowTip(Player player)
         {
-            if (ShowOncePerAccount == false) return true;
-            else return player.Properties[PropertyEnum.TutorialHasSeenTip, DataRef] == false;
+            if (ShowOncePerAccount)
+                return player.Properties[PropertyEnum.TutorialHasSeenTip, DataRef] == false;
+
+            return true;
         }
     }
 

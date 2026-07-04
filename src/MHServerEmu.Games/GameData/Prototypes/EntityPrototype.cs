@@ -484,6 +484,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+    public class LocomotorPrototype : Prototype
+    {
+        public float Height { get; protected set; }
+        public float Speed { get; protected set; }
+        public float RotationSpeed { get; protected set; }
+        public bool WalkEnabled { get; protected set; }
+        public float WalkSpeed { get; protected set; }
+        public bool Immobile { get; protected set; }
+        public bool DisableOrientationForSyncMove { get; protected set; }
+    }
+
     public class StateChangePrototype : Prototype
     {
     }

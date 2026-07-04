@@ -706,6 +706,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+    public class FormationTypePrototype : Prototype
+    {
+        public FormationFacing Facing { get; protected set; }
+        public float Spacing { get; protected set; }
+    }
+
     public class BoxFormationTypePrototype : FormationTypePrototype
     {
     }
