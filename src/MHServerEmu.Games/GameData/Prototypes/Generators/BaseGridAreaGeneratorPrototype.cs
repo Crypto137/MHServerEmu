@@ -51,6 +51,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public RoadGeneratorPrototype Roads { get; protected set; }
         public IPoint2Prototype[] AllowedConnections { get; protected set; }
 
+        //---
+
         public bool RequiresCell(PrototypeId cellRef)
         {
             if (RequiredSuperCells != null)
@@ -60,7 +62,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (entry != null && entry.SuperCell != 0)
                     {
                         SuperCellPrototype superCellP = GameDatabase.GetPrototype<SuperCellPrototype>(entry.SuperCell);
-                        if (superCellP != null && superCellP.ContainsCell(cellRef)) return true;
+                        if (superCellP != null && superCellP.ContainsCell(cellRef))
+                            return true;
                     }
                 }
             }
@@ -69,9 +72,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 foreach (RequiredCellPrototype requiredCell in RequiredCells)
                 {
-                    if (requiredCell != null && GameDatabase.GetDataRefByAsset(requiredCell.Cell) == cellRef) return true;
+                    if (requiredCell != null && GameDatabase.GetDataRefByAsset(requiredCell.Cell) == cellRef)
+                        return true;
                 }
             }
+
             return false;
         }
     }
@@ -87,12 +92,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float RoomKillPct { get; protected set; }
     }
 
-
-
     #region RequiredCellRestrictBasePrototype
 
     public class RequiredCellRestrictBasePrototype : Prototype
     {
+        //---
+
         public virtual bool CheckPoint(int x, int y, int width, int height) => false;
     }
 
@@ -102,6 +107,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int StartY { get; protected set; }
         public int EndX { get; protected set; }
         public int EndY { get; protected set; }
+
+        //---
 
         public override bool CheckPoint(int x, int y, int width, int height)
         {
@@ -119,6 +126,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public Cell.Type Edge { get; protected set; }
 
+        //---
+
         public override bool CheckPoint(int x, int y, int width, int height)
         {
             return Edge.HasFlag(Cell.Type.N) && x == width - 1 ||
@@ -126,7 +135,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
                    Edge.HasFlag(Cell.Type.S) && x == 0 ||
                    Edge.HasFlag(Cell.Type.W) && y == 0;
         }
-
     }
 
     public class RequiredCellRestrictPosPrototype : RequiredCellRestrictBasePrototype
@@ -134,7 +142,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int X { get; protected set; }
         public int Y { get; protected set; }
 
-        public override bool CheckPoint(int x, int y, int width, int height) => X == x && Y == y;
+        //---
+
+        public override bool CheckPoint(int x, int y, int width, int height)
+        {
+            return X == x && Y == y;
+        }
     }
 
     #endregion
@@ -153,6 +166,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId Cell { get; protected set; }
         public int Num { get; protected set; }
         public bool Destination { get; protected set; }
+
+        //---
+
         public override string ToString()
         {
             return GameDatabase.GetFormattedPrototypeName(GameDatabase.GetDataRefByAsset(Cell));
@@ -176,6 +192,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class RequiredSuperCellEntryPrototype : RequiredCellBasePrototype
     {
         public PrototypeId SuperCell { get; protected set; }
+
+        //---
 
         public override string ToString()
         {
