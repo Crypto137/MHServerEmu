@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.MetaGames.MetaStates;
@@ -42,16 +43,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
 
+        //---
+
         public virtual bool CanApplyState()
         {
-            var designState = DesignState;
-            /*
-              if (GameDatabase.Settings.TargetingPS4Data)
-                  designState = DesignStatePS4;
-              else if (GameDatabase.Settings.TargetingXboxOneData)
-                  designState = DesignStateXboxOne;*/
+            DesignWorkflowState designState = DesignState;
 
-            return designState == DesignWorkflowState.Live;//GameDatabase.DesignStateOk(designState);
+            /*
+            if (GameDatabase.Settings.TargetingPS4Data)
+                designState = DesignStatePS4;
+            else if (GameDatabase.Settings.TargetingXboxOneData)
+                designState = DesignStateXboxOne;
+            */
+
+            return GameDatabase.DesignStateOk(designState);
         }
 
         public virtual MetaState AllocateState(MetaGame metaGame)
@@ -70,15 +75,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] OnMissionCompletedApplyStates { get; protected set; }
         public PrototypeId[] OnMissionFailedApplyStates { get; protected set; }
 
+        //---
+
         public override bool CanApplyState()
         {
             bool canApply = base.CanApplyState();
+
             if (canApply)
             {
-                var missionProto = GameDatabase.GetPrototype<MissionPrototype>(Mission);
+                MissionPrototype missionProto = Mission.As<MissionPrototype>();
                 if (missionProto != null)
                     canApply &= missionProto.ApprovedForUse() && missionProto.IsLiveTuningEnabled();
             }
+
             return canApply;
         }
 
@@ -106,16 +115,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SequenceAdvanceDelayMS { get; protected set; }
         public PrototypeId OnSequenceCompleteSetMode { get; protected set; }
 
+        //---
+
         public override bool CanApplyState()
         {
             bool canApply = base.CanApplyState();
-            if (canApply && Sequence.HasValue())
-                foreach (var entryProto in Sequence)
+
+            if (canApply)
+            {
+                if (Sequence.HasValue())
                 {
-                    var missionProto = GameDatabase.GetPrototype<MissionPrototype>(entryProto.Mission);
-                    if (missionProto != null)
-                        canApply &= missionProto.ApprovedForUse() && missionProto.IsLiveTuningEnabled();
+                    foreach (MetaMissionEntryPrototype entryProto in Sequence)
+                    {
+                        if (!Verify.IsNotNull(entryProto))
+                            continue;
+
+                        MissionPrototype missionProto = entryProto.Mission.As<MissionPrototype>();
+                        if (missionProto != null)
+                            canApply &= missionProto.ApprovedForUse() && missionProto.IsLiveTuningEnabled();
+                    }
                 }
+                else
+                {
+                    canApply = false;
+                }
+            }
+
             return canApply;
         }
 
@@ -137,6 +162,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public WeightedPrototypeDataRefPrototype[] StatesWeighted { get; protected set; }
         public int StatePickIntervalMS { get; protected set; }
 
+        //---
+
         public override MetaState AllocateState(MetaGame metaGame)
         {
             return new MetaStateWaveInstance(metaGame, this);
@@ -146,6 +173,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MetaStateScoringEventTimerEndPrototype : MetaStatePrototype
     {
         public PrototypeId Timer { get; protected set; }
+
+        //---
 
         public override MetaState AllocateState(MetaGame metaGame)
         {
@@ -157,6 +186,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Timer { get; protected set; }
 
+        //---
+
         public override MetaState AllocateState(MetaGame metaGame)
         {
             return new MetaStateScoringEventTimerStart(metaGame, this);
@@ -166,6 +197,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MetaStateScoringEventTimerStopPrototype : MetaStatePrototype
     {
         public PrototypeId Timer { get; protected set; }
+
+        //---
 
         public override MetaState AllocateState(MetaGame metaGame)
         {
@@ -184,6 +217,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool StayInModeOnFail { get; protected set; }
         public bool UseRegionDeathCount { get; protected set; }
 
+        //---
+
         public override MetaState AllocateState(MetaGame metaGame)
         {
             return new MetaStateLimitPlayerDeaths(metaGame, this);
@@ -192,6 +227,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MetaStateLimitPlayerDeathsPerMissionPrototype : MetaStateLimitPlayerDeathsPrototype
     {
+        //---
+
         public override MetaState AllocateState(MetaGame metaGame)
         {
             return new MetaStateLimitPlayerDeathsPerMission(metaGame, this);
@@ -208,6 +245,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId TeleportButtonWidget { get; protected set; }
         public PrototypeId ReadyCheckWidget { get; protected set; }
 
+        //---
+
         public override MetaState AllocateState(MetaGame metaGame)
         {
             return new MetaStateShutdown(metaGame, this);
@@ -223,6 +262,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool Respawn { get; protected set; }
         public bool RemovePopObjectsOnSpawnFail { get; protected set; }
 
+        //---
+
         public override MetaState AllocateState(MetaGame metaGame)
         {
             return new MetaStatePopulationMaintain(metaGame, this);
@@ -236,6 +277,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] FailMissions { get; protected set; }
         public int FailMode { get; protected set; }
 
+        //---
+
         public override MetaState AllocateState(MetaGame metaGame)
         {
             return new MetaStateMissionStateListener(metaGame, this);
@@ -247,6 +290,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public EvalPrototype Eval { get; protected set; }
 
+        //---
+
         public override MetaState AllocateState(MetaGame metaGame)
         {
             return new MetaStateEntityModifier(metaGame, this);
@@ -256,6 +301,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MetaStateEntityEventCounterPrototype : MetaStatePrototype
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
+
+        //---
 
         public override MetaState AllocateState(MetaGame metaGame)
         {
@@ -271,18 +318,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public long ProgressionStateTimeoutSecs { get; protected set; }
         public bool SaveProgressionStateToDb { get; protected set; }
 
+        //---
+
         public PrototypeId NextState(PrototypeId stateRef)
         {
-            if (StatesProgression.IsNullOrEmpty()) return PrototypeId.Invalid;
-            if (stateRef == PrototypeId.Invalid) return StatesProgression[0];
+            if (!Verify.IsTrue(StatesProgression.HasValue())) return PrototypeId.Invalid;
+
+            if (stateRef == PrototypeId.Invalid)
+                return StatesProgression[0];
 
             for (int i = 0; i < StatesProgression.Length; i++)
+            {
                 if (StatesProgression[i] == stateRef)
                 {
-                    if (i + 1 < StatesProgression.Length) 
+                    if (i + 1 < StatesProgression.Length)
                         return StatesProgression[i + 1];
-                    else break;
                 }
+            }
+
             return PrototypeId.Invalid;
         }
 
@@ -297,6 +350,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public RegionPlayerAccess Access { get; protected set; }
         public EvalPrototype EvalTrigger { get; protected set; }
 
+        //---
+
         public override MetaState AllocateState(MetaGame metaGame)
         {
             return new MetaStateRegionPlayerAccess(metaGame, this);
@@ -308,6 +363,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool OnRemoveClearOverride { get; protected set; }
         public PrototypeId StartTarget { get; protected set; }
 
+        //---
+
         public override MetaState AllocateState(MetaGame metaGame)
         {
             return new MetaStateStartTargetOverride(metaGame, this);
@@ -318,6 +375,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public bool UnlockOnCombatExit { get; protected set; }
+
+        //---
 
         public override MetaState AllocateState(MetaGame metaGame)
         {
@@ -337,6 +396,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool RemoveStateOnScoreThreshold { get; protected set; }
         public PrototypeId[] OnScoreThresholdApplyStates { get; protected set; }
         public PrototypeId[] OnScoreThresholdRemoveStates { get; protected set; }
+
+        //---
 
         public override MetaState AllocateState(MetaGame metaGame)
         {
@@ -360,6 +421,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public MetaStateTimedBonusEntryPrototype[] Entries { get; protected set; }
 
+        //---
+
         public override MetaState AllocateState(MetaGame metaGame)
         {
             return new MetaStateTimedBonus(metaGame, this);
@@ -369,6 +432,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MetaStateMissionRestartPrototype : MetaStatePrototype
     {
         public PrototypeId[] MissionsToRestart { get; protected set; }
+
+        //---
 
         public override MetaState AllocateState(MetaGame metaGame)
         {
