@@ -57,12 +57,12 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (MissionProtoRef != PrototypeId.Invalid)
                 return MissionProtoRef == missionRef;
 
-            if (_proto.MissionKeyword != PrototypeId.Invalid)
+            if (_proto.MissionKeyword != null)
             {
                 var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
                 if (missionProto == null) return false;
-                var missionKeyword = GameDatabase.GetPrototype<KeywordPrototype>(_proto.MissionKeyword);
-                return missionProto.HasKeyword(missionKeyword);
+
+                return missionProto.HasKeyword(_proto.MissionKeyword);
             }
 
             return false;

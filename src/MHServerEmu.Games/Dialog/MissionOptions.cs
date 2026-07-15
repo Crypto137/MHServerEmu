@@ -320,12 +320,12 @@ namespace MHServerEmu.Games.Dialog
             if (missionCompleteRef != PrototypeId.Invalid)
                 CompleteMissionRefs.Add(missionCompleteRef);
 
-            if (missionComplete.MissionKeyword != PrototypeId.Invalid)
+            if (missionComplete.MissionKeyword != null)
             {
                 foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                 {
                     MissionPrototype mission = missionRef.As<MissionPrototype>();
-                    if (mission != null && mission.Keywords.HasValue() && mission.Keywords.Contains(missionComplete.MissionKeyword))
+                    if (mission != null && mission.Keywords.HasValue() && mission.Keywords.Contains(missionComplete.MissionKeyword.DataRef))
                         CompleteMissionRefs.Add(missionRef);
                 }
             }

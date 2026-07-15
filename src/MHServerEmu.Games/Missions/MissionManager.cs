@@ -189,7 +189,7 @@ namespace MHServerEmu.Games.Missions
             if (mission.Prototype is LegendaryMissionPrototype legendaryProto)
                 categoryRef = legendaryProto.Category;
             else if (mission.Prototype is AdvancedMissionPrototype AdvancedProto)
-                categoryRef = AdvancedProto.CategoryType;
+                categoryRef = AdvancedProto.CategoryType.DataRef;
 
             if (categoryRef == PrototypeId.Invalid) return;
 
@@ -490,12 +490,11 @@ namespace MHServerEmu.Games.Missions
         {
             if (categoryProto == null) return PrototypeId.Invalid;
 
-            var categoryRef = categoryProto.DataRef;
             Picker<AdvancedMissionPrototype> picker = new(Game.Random);
             foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AdvancedMissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 var missionProto = GameDatabase.GetPrototype<AdvancedMissionPrototype>(missionRef);
-                if (missionProto.CategoryType == categoryRef)
+                if (missionProto.CategoryType == categoryProto)
                     picker.Add(missionProto);
             }
 
@@ -518,7 +517,7 @@ namespace MHServerEmu.Games.Missions
             foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AdvancedMissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 var missionProto = GameDatabase.GetPrototype<AdvancedMissionPrototype>(missionRef);
-                var category = missionProto.CategoryProto;
+                var category = missionProto.CategoryType;
                 if (AdvancedMissionsHasCategory(category) == false)
                     AdvancedMissionReroll(category);
             }
@@ -530,7 +529,7 @@ namespace MHServerEmu.Games.Missions
 
             foreach (var mission in _missionDict.Values)
                 if (mission.Prototype is AdvancedMissionPrototype advancedProto)
-                    if (advancedProto.CategoryProto == categoryProto && mission.State != MissionState.Invalid)
+                    if (advancedProto.CategoryType == categoryProto && mission.State != MissionState.Invalid)
                         return true;
 
             return false;
@@ -543,7 +542,7 @@ namespace MHServerEmu.Games.Missions
             foreach (var mission in _missionDict.Values)
                 if (mission.Prototype is AdvancedMissionPrototype advancedProto)
                 {
-                    var categoryProto = advancedProto.CategoryProto;
+                    var categoryProto = advancedProto.CategoryType;
                     if (categoryProto == null) continue;
 
                     bool reset = false;
@@ -844,7 +843,7 @@ namespace MHServerEmu.Games.Missions
             {
                 LegendaryMissionBlackListAdd(mission);
 
-                var categoryProto = advancedProto.CategoryProto;
+                var categoryProto = advancedProto.CategoryType;
                 if (categoryProto == null) return;
 
                 if (categoryProto.MissionType == AdvancedMissionFrequencyType.Repeatable)
@@ -870,7 +869,7 @@ namespace MHServerEmu.Games.Missions
             }
             else if (mission.Prototype is AdvancedMissionPrototype advancedProto)
             {
-                var categoryProto = advancedProto.CategoryProto;
+                var categoryProto = advancedProto.CategoryType;
                 if (categoryProto == null) return;
 
                 if (categoryProto.MissionType == AdvancedMissionFrequencyType.Repeatable)

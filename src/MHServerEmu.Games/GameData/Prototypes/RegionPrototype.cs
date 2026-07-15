@@ -512,14 +512,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return largestTeamSize;
         }
 
-        public static void BuildRegionsFromFilters(HashSet<PrototypeId> regions, PrototypeId[] includeRegions, bool includeChildren, PrototypeId[] excludeRegions)
+        public static void BuildRegionsFromFilters(HashSet<PrototypeId> regions, RegionPrototype[] includeRegions, bool includeChildren, RegionPrototype[] excludeRegions)
         {
             if (includeRegions.HasValue())
             {
-                foreach (PrototypeId regionRef in includeRegions)
+                foreach (RegionPrototype regionProto in includeRegions)
                 {
-                    if (regionRef != PrototypeId.Invalid)
-                        regions.Add(regionRef);
+                    if (regionProto != null)
+                        regions.Add(regionProto.DataRef);
                 }
             }
 
@@ -541,8 +541,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (excludeRegions.HasValue())
             {
-                foreach (PrototypeId regionRef in excludeRegions)
-                    regions.Remove(regionRef);
+                foreach (RegionPrototype regionProto in excludeRegions)
+                    regions.Remove(regionProto.DataRef);
             }
 
             using var altRegionsHandle = ListPool<PrototypeId>.Instance.Get(regions, out List<PrototypeId> altRegions);
@@ -599,22 +599,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             regionProto.RegionGenerator?.GetAreasInGenerator(areas);
         }
 
-        public bool FilterRegion(PrototypeId filterRef, bool includeChildren, PrototypeId[] regionsExclude)
+        public bool FilterRegion(RegionPrototype filterProto, bool includeChildren, RegionPrototype[] regionsExclude)
         {
-            if (regionsExclude.HasValue() && regionsExclude.Contains(DataRef))
+            if (regionsExclude.HasValue() && regionsExclude.Contains(this))
                 return false;
 
-            if (filterRef == PrototypeId.Invalid)
+            if (filterProto == null)
                 return false;
-
-            RegionPrototype filterProto = filterRef.As<RegionPrototype>();
 
             if (filterProto != null)
             {
                 if (filterProto == this)
                     return true;
 
-                if (includeChildren && GameDatabase.DataDirectory.PrototypeIsAPrototype(DataRef, filterRef))
+                if (includeChildren && GameDatabase.DataDirectory.PrototypeIsAPrototype(DataRef, filterProto.DataRef))
                     return true;
 
                 if (filterProto.HasAltRegion(DataRef))

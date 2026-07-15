@@ -245,7 +245,7 @@ namespace MHServerEmu.Games.Missions
 
             var missionProto = Prototype;
 
-            if (missionProto.ResetsWithRegion != PrototypeId.Invalid)
+            if (missionProto.ResetsWithRegion != null)
             {
                 ulong resetsWithRegionId = ResetsWithRegionId;
                 success &= Serializer.Transfer(archive, ref resetsWithRegionId);
@@ -916,7 +916,7 @@ namespace MHServerEmu.Games.Missions
             UpdateLootSeed();
 
             var region = Region;
-            if (reset && missionProto.ResetsWithRegion != PrototypeId.Invalid)
+            if (reset && missionProto.ResetsWithRegion != null)
                 if (region != null && region.FilterRegion(missionProto.ResetsWithRegion))
                     ResetsWithRegionId = region.Id;
 
@@ -1197,7 +1197,7 @@ namespace MHServerEmu.Games.Missions
         {
             if (MissionManager.IsInitialized == false) return false;
 
-            bool suspended = Prototype.SuspendedMissionState(Region);
+            bool suspended = Prototype.ShouldBeSuspended(Region);
             SetSuspendedState(suspended);
 
             if (_creationState == MissionCreationState.Initialized) return true;
@@ -2716,7 +2716,7 @@ namespace MHServerEmu.Games.Missions
             var missionProto = Prototype;
             if (missionProto == null) return false;
 
-            if (missionProto.ResetsWithRegion == PrototypeId.Invalid) return false;
+            if (missionProto.ResetsWithRegion == null) return false;
 
             if (State == MissionState.Active || State == MissionState.Completed || State == MissionState.Failed)
             {

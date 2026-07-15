@@ -47,7 +47,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (_proto.WithinAreas.HasValue())
             {
                 var spawnArea = spawnGroup.GetArea();
-                if (spawnArea == null || _proto.WithinAreas.Contains(spawnArea.PrototypeDataRef) == false) return false;
+                if (spawnArea == null || _proto.WithinAreas.Contains(spawnArea.Prototype) == false) return false;
             }
 
             if (_proto.SpecificClusters.HasValue())
