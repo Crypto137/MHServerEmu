@@ -47,8 +47,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             var powerContext = powerToAdd?.PowerContext;
             if (powerContext == null
-                || powerContext.Power == PrototypeId.Invalid
-                || startedPowerRef != powerContext.Power) return false;
+                || powerContext.Power == null
+                || startedPowerRef != powerContext.Power.DataRef) return false;
 
             ownerController.AddPowersToPicker(powerPicker, powerToAdd);
             return true;
@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         ProceduralAI.Logger.Warn($"powerContextProto is NULL! agent=[{agent}]");
                         return StaticBehaviorReturnType.Failed;
                     }
-                    if (powerContextProto.Power != PrototypeId.Invalid && powerStartedRef == powerContextProto.Power)
+                    if (powerContextProto.Power != null && powerStartedRef == powerContextProto.Power.DataRef)
                     {
                         powerContextProtoToRun = powerContextProto;
                         break;
@@ -116,12 +116,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
                             return StaticBehaviorReturnType.Failed;
                         }
                         powerContextProtoToRun = proceduralUsePowerProto.PowerContext;
-                        if (powerContextProtoToRun == null || powerContextProtoToRun.Power == PrototypeId.Invalid)
+                        if (powerContextProtoToRun == null || powerContextProtoToRun.Power == null)
                         {
                             ProceduralAI.Logger.Warn($"powerContextProtoToRun or Power is NULL! agent=[{agent}]");
                             return StaticBehaviorReturnType.Failed;
                         }
-                        if (powerContextProtoToRun.Power != powerStartedRef)
+                        if (powerContextProtoToRun.Power.DataRef != powerStartedRef)
                         {
                             ProceduralAI.Logger.Warn($"SyncPower doesn't match power running!\n AI: {agent}\n Power Running: {GameDatabase.GetFormattedPrototypeName(powerStartedRef)}");
                             return StaticBehaviorReturnType.Failed;
@@ -163,7 +163,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     else
                     {
                         UsePowerContextPrototype randomPowerContextProto = randomProceduralPowerProto.PowerContext;
-                        if (randomPowerContextProto == null || randomPowerContextProto.Power == PrototypeId.Invalid)
+                        if (randomPowerContextProto == null || randomPowerContextProto.Power == null)
                         {
                             ProceduralAI.Logger.Warn($"Agent [{agent}] has a NULL PowerContext or PowerContext.Power");
                             return StaticBehaviorReturnType.Failed;
@@ -190,10 +190,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
             long currentTime, UsePowerContextPrototype powerContext, ProceduralUsePowerContextPrototype proceduralPowerContext)
         {
             var collection = ownerController.Blackboard.PropertyCollection;
-            long agroTime = (long)collection[PropertyEnum.AIAggroTime] + (long)collection[PropertyEnum.AIInitialCooldownMSForPower, powerContext.Power];
+            long agroTime = (long)collection[PropertyEnum.AIAggroTime] + (long)collection[PropertyEnum.AIInitialCooldownMSForPower, powerContext.Power.DataRef];
             if (currentTime >= agroTime)
             {
-                if (currentTime >= collection[PropertyEnum.AIProceduralPowerSpecificCDTime, powerContext.Power])
+                if (currentTime >= collection[PropertyEnum.AIProceduralPowerSpecificCDTime, powerContext.Power.DataRef])
                 {
                     if (OnPowerPicked(ownerController, proceduralPowerContext))
                     {
@@ -243,15 +243,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         protected static bool IsProceduralPowerContextOnCooldown(BehaviorBlackboard blackboard, ProceduralUsePowerContextPrototype powerContext, long currentTime)
         {
             if (powerContext.PowerContext == null
-                || powerContext.PowerContext.Power == PrototypeId.Invalid) return false;
+                || powerContext.PowerContext.Power == null) return false;
 
-            var specificTimeProp = new PropertyId(PropertyEnum.AIProceduralPowerSpecificCDTime, powerContext.PowerContext.Power);
+            var specificTimeProp = new PropertyId(PropertyEnum.AIProceduralPowerSpecificCDTime, powerContext.PowerContext.Power.DataRef);
             var collection = blackboard.PropertyCollection;
             if (collection.HasProperty(specificTimeProp))
                 return currentTime < collection[specificTimeProp];
             else
             {
-                int agroTime = collection[PropertyEnum.AIAggroTime] + collection[PropertyEnum.AIInitialCooldownMSForPower, powerContext.PowerContext.Power];
+                int agroTime = collection[PropertyEnum.AIAggroTime] + collection[PropertyEnum.AIInitialCooldownMSForPower, powerContext.PowerContext.Power.DataRef];
                 return currentTime < agroTime;
             }
         }
@@ -824,8 +824,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 && proceduralAI.PartialOverrideBehavior == null) return;
 
             var powerContext = HidePower?.PowerContext;
-            if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
-            Power hidePower = agent.GetPower(powerContext.Power);
+            if (powerContext == null || powerContext.Power == null) return;
+            Power hidePower = agent.GetPower(powerContext.Power.DataRef);
             if (hidePower == null) return;
 
             BehaviorBlackboard blackboard = ownerController.Blackboard;
@@ -953,8 +953,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] == 1)
                 {
-                    if (SpeedRemovalPower == null || SpeedRemovalPower.Power == PrototypeId.Invalid) return;
-                    ownerController.AttemptActivatePower(SpeedRemovalPower.Power, agent.Id, agent.RegionLocation.Position);
+                    if (SpeedRemovalPower == null || SpeedRemovalPower.Power == null) return;
+                    ownerController.AttemptActivatePower(SpeedRemovalPower.Power.DataRef, agent.Id, agent.RegionLocation.Position);
                     blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 0;
                 }
             }
@@ -968,8 +968,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                     if (distabceFromTargetSq > DistanceFromTargetForSpeedBonus)
                     {
-                        if (ExtraSpeedPower == null || ExtraSpeedPower.Power == PrototypeId.Invalid) return;
-                        ownerController.AttemptActivatePower(ExtraSpeedPower.Power, agent.Id, agent.RegionLocation.Position);
+                        if (ExtraSpeedPower == null || ExtraSpeedPower.Power == null) return;
+                        ownerController.AttemptActivatePower(ExtraSpeedPower.Power.DataRef, agent.Id, agent.RegionLocation.Position);
                         blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
                     }
                 }
@@ -1137,7 +1137,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (MeleePower == null) return;
             UsePowerContextPrototype meleePowerContext = MeleePower.PowerContext;
             if (meleePowerContext == null) return;
-            PrototypeId meleePowerRef = meleePowerContext.Power;
+            PrototypeId meleePowerRef = meleePowerContext.Power.DataRef;
             if (meleePowerRef == PrototypeId.Invalid) return;
             bool startedMeleePower = meleePowerRef == startedPowerRef;
 
@@ -1642,8 +1642,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             var collection = ownerController.Blackboard.PropertyCollection;
 
-            if (PowerDropWeapon?.PowerContext == null || PowerDropWeapon.PowerContext.Power == PrototypeId.Invalid) return;
-            if (PowerPickupWeapon?.PowerContext == null || PowerPickupWeapon.PowerContext.Power == PrototypeId.Invalid) return;
+            if (PowerDropWeapon?.PowerContext == null || PowerDropWeapon.PowerContext.Power == null) return;
+            if (PowerPickupWeapon?.PowerContext == null || PowerPickupWeapon.PowerContext.Power == null) return;
 
             State state = (State)(int)collection[PropertyEnum.AICustomStateVal1];
             bool weaponSwap = true;
@@ -1652,16 +1652,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (state != State.NoWeapon)
             {
-                PropertyId dropWeaponCooldownTimeId = new (PropertyEnum.AIProceduralPowerSpecificCDTime, PowerDropWeapon.PowerContext.Power);
+                PropertyId dropWeaponCooldownTimeId = new (PropertyEnum.AIProceduralPowerSpecificCDTime, PowerDropWeapon.PowerContext.Power.DataRef);
                 if (collection.HasProperty(dropWeaponCooldownTimeId))
                 {                
                     long dropWeaponCooldownTime = collection[dropWeaponCooldownTimeId];
-                    long pickupWeaponCooldownTime = collection[PropertyEnum.AIProceduralPowerSpecificCDTime, PowerPickupWeapon.PowerContext.Power];
+                    long pickupWeaponCooldownTime = collection[PropertyEnum.AIProceduralPowerSpecificCDTime, PowerPickupWeapon.PowerContext.Power.DataRef];
                     weaponSwap = currentTime < Math.Max(dropWeaponCooldownTime, pickupWeaponCooldownTime);
                 }
                 else if (target != null)
                 {
-                    long initialDropCooldownTime = collection[PropertyEnum.AIInitialCooldownMSForPower, PowerDropWeapon.PowerContext.Power];
+                    long initialDropCooldownTime = collection[PropertyEnum.AIInitialCooldownMSForPower, PowerDropWeapon.PowerContext.Power.DataRef];
                     weaponSwap = currentTime < collection[PropertyEnum.AIAggroTime] + initialDropCooldownTime;
                 }
             }
@@ -1873,8 +1873,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 PrototypeId activePower = ownerController.ActivePowerRef;
                 if (activePower == PrototypeId.Invalid) return;
                 var powerContext = HotspotPower?.PowerContext;
-                if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
-                if (activePower == powerContext.Power)
+                if (powerContext == null || powerContext.Power == null) return;
+                if (activePower == powerContext.Power.DataRef)
                 {
                     proceduralAI.PushSubstate();
                     HandleContext(proceduralAI, ownerController, HotspotDroppingMovement);
@@ -1985,9 +1985,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (var proceduralPower in TeamUpPowerProgressionPowers)
                 {
                     var powerContext = proceduralPower?.PowerContext;
-                    if (powerContext == null || powerContext.Power == PrototypeId.Invalid) continue;
+                    if (powerContext == null || powerContext.Power == null) continue;
 
-                    PrototypeId powerRef = proceduralPower.PowerContext.Power;
+                    PrototypeId powerRef = proceduralPower.PowerContext.Power.DataRef;
                     var rank = agent.GetPowerRank(powerRef);
                     bool isActivePower = activePowerRef != PrototypeId.Invalid && powerRef == activePowerRef;
                     if (rank > 0 || isActivePower)

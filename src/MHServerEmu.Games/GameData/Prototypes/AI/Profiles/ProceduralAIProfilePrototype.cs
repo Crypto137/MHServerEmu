@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
@@ -150,14 +151,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 var game = agent.Game;
                 if (game == null) return;
                 int cooldown = game.Random.Next(proceduralPower.InitialCooldownMinMS, proceduralPower.InitialCooldownMaxMS);
-                ownerController.Blackboard.PropertyCollection[PropertyEnum.AIInitialCooldownMSForPower, proceduralPower.PowerContext.Power] = cooldown;
+                ownerController.Blackboard.PropertyCollection[PropertyEnum.AIInitialCooldownMSForPower, proceduralPower.PowerContext.Power.DataRef] = cooldown;
             }
         }
 
         protected static void InitPower(Agent agent, UsePowerContextPrototype powerContext)
         {
             if (powerContext == null) return;
-            InitPower(agent, powerContext.Power);
+            PrototypeId powerProtoRef = powerContext.Power != null ? powerContext.Power.DataRef : PrototypeId.Invalid;
+            InitPower(agent, powerProtoRef);
         }
 
         protected static void InitPower(Agent agent, PrototypeId power)
@@ -851,10 +853,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             var powerContext = Fidget?.PowerContext;
-            if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
+            if (powerContext == null || powerContext.Power == null) return;
 
             BehaviorBlackboard blackboard = ownerController.Blackboard;
-            if (blackboard.PropertyCollection.HasProperty(new PropertyId(PropertyEnum.AIPowerStarted, powerContext.Power)))
+            if (blackboard.PropertyCollection.HasProperty(new PropertyId(PropertyEnum.AIPowerStarted, powerContext.Power.DataRef)))
                 ownerController.AddPowersToPicker(powerPicker, Fidget);
             else
                 base.PopulatePowerPicker(ownerController, powerPicker);
@@ -1070,12 +1072,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private ProceduralUsePowerContextPrototype GetDirectedPowerUseContext(PrototypeId directedPowerDataRef)
         {
             if (DirectedPowers.HasValue())
-                foreach (var directedPower in DirectedPowers)
+            {
+                foreach (ProceduralUsePowerContextPrototype proceduralPowerContext in DirectedPowers)
                 {
-                    var powerContext = directedPower?.PowerContext;
-                    if (powerContext != null && powerContext.Power == directedPowerDataRef)
-                        return directedPower;
+                    if (!Verify.IsNotNull(proceduralPowerContext))
+                        continue;
+
+                    if (!Verify.IsNotNull(proceduralPowerContext.PowerContext))
+                        continue;
+
+                    if (!Verify.IsNotNull(proceduralPowerContext.PowerContext.Power))
+                        continue;
+
+                    if (proceduralPowerContext.PowerContext.Power.DataRef == directedPowerDataRef)
+                        return proceduralPowerContext;
                 }
+            }
+
             return null;
         }
 
@@ -1083,13 +1096,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.OnPowerEnded(ownerController, proceduralPowerContext);
             var powerContext = proceduralPowerContext.PowerContext;
-            if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
+            if (powerContext == null || powerContext.Power == null) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             var powerQueue = blackboard.CustomPowerQueue;
             if (powerQueue != null && powerQueue.Count > 0)
             {
                 PrototypeId customPowerDataRef = powerQueue.Peek().PowerRef;
-                if (powerContext.Power != customPowerDataRef) return;
+                if (powerContext.Power.DataRef != customPowerDataRef) return;
                 powerQueue.Dequeue();
                 if (powerQueue.Count == 0)
                     blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomThinkRateMS);               
@@ -1153,10 +1166,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
                             if (syncAttack.TargetEntity == targetAgent.PrototypeDataRef)
                             {
                                 InitPower(agent, syncAttack.LeaderPower);
-                                InitPower(targetAgent, syncAttack.TargetEntityPower.As<ProceduralUsePowerContextPrototype>());
+                                InitPower(targetAgent, syncAttack.TargetEntityPower);
                                 var targetController = targetAgent.AIController;
                                 if (targetController != null)
-                                    targetController.Blackboard.PropertyCollection[PropertyEnum.AISyncAttackTargetPower] = syncAttack.TargetEntityPower;
+                                    targetController.Blackboard.PropertyCollection[PropertyEnum.AISyncAttackTargetPower] = syncAttack.TargetEntityPower.DataRef;
                                 collection[IDProperties[index]] = targetAgent.Id;
                             }
                         }
@@ -1177,49 +1190,59 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             base.PopulatePowerPicker(ownerController, powerPicker);
+
             PrototypeId startedPowerRef = ownerController.ActivePowerRef;
             if (startedPowerRef != PrototypeId.Invalid)
-                foreach (var syncAttack in SyncAttacks)
+            {
+                foreach (ProceduralSyncAttackContextPrototype itSyncAttackProto in SyncAttacks)
                 {
-                    var powerContext = syncAttack?.LeaderPower?.PowerContext;
-                    if (powerContext != null && powerContext.Power == startedPowerRef)
+                    if (!Verify.IsTrue(itSyncAttackProto != null && itSyncAttackProto.LeaderPower != null && itSyncAttackProto.LeaderPower.PowerContext != null))
+                        continue;
+
+                    UsePowerContextPrototype powerContext = itSyncAttackProto.LeaderPower.PowerContext;
+                    if (powerContext.Power.DataRef == startedPowerRef)
                     {
-                        ownerController.AddPowersToPicker(powerPicker, syncAttack.LeaderPower);
+                        ownerController.AddPowersToPicker(powerPicker, itSyncAttackProto.LeaderPower);
                         return;
                     }
                 }
+            }
 
             Agent leader = ownerController.Owner;
-            if (leader == null) return;
+            if (!Verify.IsNotNull(leader)) return;
+
             Game game = leader.Game;
-            if (game == null) return;
-            var blackboard = ownerController.Blackboard;
+            if (!Verify.IsNotNull(game)) return;
 
-            int syncAttackIndex = GetRandomSyncAttackIndex(blackboard, game);
-            if (syncAttackIndex < 0 || syncAttackIndex >= IDPropertiesLength) return;
+            BehaviorBlackboard ownerBlackboard = ownerController.Blackboard;
 
-            ulong targetId = blackboard.PropertyCollection[IDProperties[syncAttackIndex]];            
-            var target = game.EntityManager.GetEntity<Agent>(targetId);
-            if (target == null) return;
+            int syncAttackIndex = GetRandomSyncAttackIndex(ownerBlackboard, game);
+            if (!Verify.IsTrue(syncAttackIndex >= 0 && syncAttackIndex < IDPropertiesLength)) return;
 
-            var syncAttackProto = SyncAttacks[syncAttackIndex];
-            if (syncAttackProto == null) return;
+            ulong targetId = ownerBlackboard.PropertyCollection[IDProperties[syncAttackIndex]];            
+            Agent target = game.EntityManager.GetEntity<Agent>(targetId);
+            if (!Verify.IsNotNull(target)) return;
 
-            var targetController = target.AIController;
-            if (targetController == null) return;
+            ProceduralSyncAttackContextPrototype syncAttackProto = SyncAttacks[syncAttackIndex];
+            if (!Verify.IsNotNull(syncAttackProto)) return;
 
-            var targetBlackboard = targetController.Blackboard;
-            if (targetController.Brain is not ProceduralAI targetAI) return;
+            AIController targetController = target.AIController;
+            if (!Verify.IsNotNull(targetController)) return;
+
+            BehaviorBlackboard targetBlackboard = targetController.Blackboard;
+
+            ProceduralAI targetAI = targetController.Brain;
+            if (!Verify.IsNotNull(targetAI)) return;
 
             ulong tempEntityId = targetBlackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID];
             targetBlackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] = leader.Id;
 
-            var targetEntityPowerProto = syncAttackProto.TargetEntityPower.As<ProceduralUsePowerContextPrototype>();
-            if (ValidateUsePowerContext(targetController, targetAI, targetEntityPowerProto.PowerContext))
+            if (ValidateUsePowerContext(targetController, targetAI, syncAttackProto.TargetEntityPower.PowerContext))
             {
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = syncAttackIndex;
+                ownerBlackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = syncAttackIndex;
                 ownerController.AddPowersToPicker(powerPicker, syncAttackProto.LeaderPower);
             }
+
             targetBlackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] = tempEntityId;
         }
 
@@ -1287,17 +1310,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (targetAI == null) return;
 
             targetController.SetTargetEntity(leader);
-            var targetEntityPowerProto = syncAttackProto.TargetEntityPower.As<ProceduralUsePowerContextPrototype>();
-            if (targetEntityPowerProto?.PowerContext == null || targetEntityPowerProto.PowerContext.Power == PrototypeId.Invalid)
+            var targetEntityPowerProto = syncAttackProto.TargetEntityPower;
+            if (targetEntityPowerProto?.PowerContext == null || targetEntityPowerProto.PowerContext.Power == null)
                 return;
 
-            var targetEntityPower = target.GetPower(targetEntityPowerProto.PowerContext.Power);
+            var targetEntityPower = target.GetPower(targetEntityPowerProto.PowerContext.Power.DataRef);
             if (targetEntityPower == null)
             {
                 ProceduralAI.Logger.Warn($"SyncAttack target doesn't have TargetEntityPower assigned! \n" +
                     $" Target: {target}\n" +
                     $" Leader: {leader}\n" +
-                    $" Power: {GameDatabase.GetPrototypeName(targetEntityPowerProto.PowerContext.Power)}");
+                    $" Power: {targetEntityPowerProto.PowerContext.Power}");
                 return;
             }
 
@@ -1365,9 +1388,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             Power activePower = agent.ActivePower;
             var powerContext = LOSChannelPower?.PowerContext;
-            if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
+            if (powerContext == null || powerContext.Power == null) return;
 
-            if (activePower != null && activePower.PrototypeDataRef == powerContext.Power)
+            if (activePower != null && activePower.PrototypeDataRef == powerContext.Power.DataRef)
             {
                 WorldEntity target = ownerController.TargetEntity;
                 if (target == null || activePower.IsInRange(target, RangeCheckType.Application) == false || agent.LineOfSightTo(target) == false)

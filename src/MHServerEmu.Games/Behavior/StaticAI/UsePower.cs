@@ -564,7 +564,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             ForceCheckTargetRegionLocation = proto.ForceCheckTargetRegionLocation;
             OffsetVarianceMagnitude = proto.OffsetVarianceMagnitude;
             OwnerOffset = proto.OwnerOffset;
-            Power = proto.Power;
+            Power = proto.Power != null ? proto.Power.DataRef : PrototypeId.Invalid;
             RequireOriPriorToActivate = proto.RequireOriPriorToActivate;
             OrientationThreshold = proto.OrientationThreshold;
             TargetAngleOffset = proto.TargetAngleOffset;

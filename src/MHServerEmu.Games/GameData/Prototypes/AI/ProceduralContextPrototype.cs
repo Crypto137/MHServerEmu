@@ -67,7 +67,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (proceduralProfile is not ProceduralProfileWithAttackPrototype attackProto) return;
 
             attackProto.OnPowerEnded(ownerController, this);
-            if (PowerContext == null || PowerContext.Power == PrototypeId.Invalid) return;
+            if (PowerContext == null || PowerContext.Power == null) return;
 
             var collection = ownerController.Blackboard.PropertyCollection;
             var game = ownerController.Game;
@@ -75,7 +75,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             long cooldownTime = currentTime + game.Random.Next(MinCooldownMS, MaxCooldownMS);
-            collection[PropertyEnum.AIProceduralPowerSpecificCDTime, PowerContext.Power] = cooldownTime;
+            collection[PropertyEnum.AIProceduralPowerSpecificCDTime, PowerContext.Power.DataRef] = cooldownTime;
         }
     }
 
@@ -160,7 +160,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ProceduralSyncAttackContextPrototype : Prototype
     {
         public PrototypeId TargetEntity { get; protected set; }
-        public PrototypeId TargetEntityPower { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public ProceduralUsePowerContextPrototype TargetEntityPower { get; protected set; }
         public ProceduralUsePowerContextPrototype LeaderPower { get; protected set; }
     }
 

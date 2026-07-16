@@ -866,7 +866,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (game == null) return;
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
-            if (Power == null || Power.Power == PrototypeId.Invalid) return;
+            if (Power == null || Power.Power == null) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             WorldEntity target = ownerController.TargetEntity;
             CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
@@ -879,7 +879,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
                 else
                 {
-                    long powerStartTime = agent.Properties[PropertyEnum.PowerCooldownStartTime, Power.Power];
+                    long powerStartTime = agent.Properties[PropertyEnum.PowerCooldownStartTime, Power.Power.DataRef];
                     if (currentTime > (powerStartTime + PowerChangeTargetIntervalMS * changeTargetCount))
                     {
                         var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);

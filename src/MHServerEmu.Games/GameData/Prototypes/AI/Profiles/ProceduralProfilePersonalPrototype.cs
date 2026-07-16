@@ -217,8 +217,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 BehaviorBlackboard blackboard = ownerController.Blackboard;
                 PrototypeId activePowerRef = blackboard.PropertyCollection[PropertyEnum.AILastPowerActivated];
 
-                if (SpecialPower?.PowerContext == null || SpecialPower.PowerContext.Power == PrototypeId.Invalid) return;
-                if (activePowerRef == PrototypeId.Invalid || SpecialPower.PowerContext.Power != activePowerRef) return;                
+                if (SpecialPower?.PowerContext == null || SpecialPower.PowerContext.Power == null) return;
+                if (activePowerRef == PrototypeId.Invalid || SpecialPower.PowerContext.Power.DataRef != activePowerRef) return;                
                 if (powerResult == StaticBehaviorReturnType.Running)
                 {
                     int changeTargetCount = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
@@ -263,10 +263,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             Agent agent = ownerController.Owner;
             var powerContext = HealingPower?.PowerContext;
-            if (agent == null || powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
+            if (agent == null || powerContext == null || powerContext.Power == null) return;
 
             BehaviorBlackboard blackboard = ownerController.Blackboard;
-            if (blackboard.PropertyCollection.HasProperty(new PropertyId(PropertyEnum.AIPowerStarted, powerContext.Power)))
+            if (blackboard.PropertyCollection.HasProperty(new PropertyId(PropertyEnum.AIPowerStarted, powerContext.Power.DataRef)))
                 ownerController.AddPowersToPicker(powerPicker, HealingPower);
             else
             {
@@ -322,8 +322,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 PrototypeId lastPowerRef = blackboard.PropertyCollection[PropertyEnum.AILastPowerActivated];
                 UsePowerContextPrototype chasePowerContext = ChasePower?.PowerContext;
 
-                if (chasePowerContext == null || chasePowerContext.Power == PrototypeId.Invalid) return;
-                if (lastPowerRef != chasePowerContext.Power || target == null) return;
+                if (chasePowerContext == null || chasePowerContext.Power == null) return;
+                if (lastPowerRef != chasePowerContext.Power.DataRef || target == null) return;
                 
                 ulong targetId = target.Id;
                 Locomotor locomotor = agent.Locomotor;
@@ -572,7 +572,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (toadSummoned == false)
                 {
                     UsePowerContextPrototype summonToadPowerContext = SummonToadPower.PowerContext;
-                    if (summonToadPowerContext == null || summonToadPowerContext.Power == PrototypeId.Invalid) return;
+                    if (summonToadPowerContext == null || summonToadPowerContext.Power == null) return;
                     long cooldownTime = currentTime + game.Random.Next(SummonToadPower.MinCooldownMS, SummonToadPower.MaxCooldownMS);
                     blackboard.PropertyCollection[PropertyEnum.AIProceduralPowerSpecificCDTime] = cooldownTime;
                     blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.NoToad;
@@ -659,12 +659,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (proceduralAI.GetState(0) == UsePower.Instance)
                 {
                     var powerStartedRef = ownerController.ActivePowerRef;
-                    if (SummonDoombotFlyers == null || SummonDoombotFlyers.Power == PrototypeId.Invalid
-                        || SummonDoombotBlockades == null || SummonDoombotBlockades.Power == PrototypeId.Invalid
-                        || SummonDoombotInfernos == null || SummonDoombotInfernos.Power == PrototypeId.Invalid) return;
-                    if (powerStartedRef != SummonDoombotFlyers.Power 
-                        && powerStartedRef != SummonDoombotBlockades.Power 
-                        && powerStartedRef != SummonDoombotInfernos.Power)
+                    if (SummonDoombotFlyers == null || SummonDoombotFlyers.Power == null
+                        || SummonDoombotBlockades == null || SummonDoombotBlockades.Power == null
+                        || SummonDoombotInfernos == null || SummonDoombotInfernos.Power == null) return;
+                    if (powerStartedRef != SummonDoombotFlyers.Power.DataRef 
+                        && powerStartedRef != SummonDoombotBlockades.Power.DataRef 
+                        && powerStartedRef != SummonDoombotInfernos.Power.DataRef)
                         summonDoombot = false;
                 }
                 if (summonDoombot)
@@ -1137,9 +1137,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (locomotor.Method != LocomotorMethod.Ground) locomotor.SetMethod(LocomotorMethod.Ground);
 
             Power activePower = agent.ActivePower;
-            var lowHealthPowerRef = LowHealthPower.PowerContext.Power;
+            var lowHealthPowerProto = LowHealthPower.PowerContext.Power;
 
-            if (activePower != null && activePower.PrototypeDataRef == lowHealthPowerRef)
+            if (activePower != null && activePower.PrototypeDataRef == lowHealthPowerProto.DataRef)
             {
                 if (target == null 
                     || target.IsInWorld == false 
@@ -1243,9 +1243,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         foreach (var context in SequencePowers)
                         {
                             var powerContext = context?.PowerContext;
-                            if (powerContext == null || powerContext.Power == PrototypeId.Invalid) continue;
+                            if (powerContext == null || powerContext.Power == null) continue;
 
-                            if (lastPowerRef == powerContext.Power)
+                            if (lastPowerRef == powerContext.Power.DataRef)
                             {
                                 int powerIndex = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
                                 powerIndex = ++powerIndex % numPowers;
@@ -1407,8 +1407,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 BehaviorBlackboard blackboard = ownerController.Blackboard;
                 PrototypeId activePowerRef = blackboard.PropertyCollection[PropertyEnum.AILastPowerActivated];
 
-                if (SpecialPower?.PowerContext == null || SpecialPower.PowerContext.Power == PrototypeId.Invalid) return;
-                if (activePowerRef == PrototypeId.Invalid || SpecialPower.PowerContext.Power != activePowerRef) return;
+                if (SpecialPower?.PowerContext == null || SpecialPower.PowerContext.Power == null) return;
+                if (activePowerRef == PrototypeId.Invalid || SpecialPower.PowerContext.Power.DataRef != activePowerRef) return;
                 if (powerResult == StaticBehaviorReturnType.Running)
                 {
                     int changeTargetCount = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3];
@@ -1589,7 +1589,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
             else
             {
-                if (ownerController.ActivePowerRef == VenomMad.Power)
+                if (ownerController.ActivePowerRef == VenomMad.Power.DataRef)
                 {
                     var powerResult = HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, VenomMad);
                     if (powerResult == StaticBehaviorReturnType.Running) return;
@@ -1726,7 +1726,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if(activePowerRef != PrototypeId.Invalid)
                 {
                     var powerContext = StoneGaze?.PowerContext;
-                    if (powerContext != null && powerContext.Power == activePowerRef)
+                    if (powerContext != null && powerContext.Power.DataRef == activePowerRef)
                     {
                         proceduralAI.PushSubstate();
                         HandleContext(proceduralAI, ownerController, RotateInStoneGaze);
@@ -1783,7 +1783,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (activePowerRef == PrototypeId.Invalid) return;
                 
                 var powerContext = MarkForDeath?.PowerContext;
-                if (powerContext != null && powerContext.Power == activePowerRef)
+                if (powerContext != null && powerContext.Power.DataRef == activePowerRef)
                 {
                     if (target == null 
                         || target.IsInWorld == false
@@ -2263,7 +2263,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (var projectionPower in ProjectionPowers)
                 {
                     var powerContext = projectionPower?.PowerContext;
-                    if (powerContext != null && powerContext.Power == projectionPowerDataRef)
+                    if (powerContext != null && powerContext.Power.DataRef == projectionPowerDataRef)
                         return projectionPower;
                 }
             return null;
@@ -2273,13 +2273,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.OnPowerEnded(ownerController, proceduralPowerContext);
             var powerContext = proceduralPowerContext.PowerContext;
-            if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
+            if (powerContext == null || powerContext.Power == null) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             var powerQueue = blackboard.CustomPowerQueue;
             if (powerQueue != null && powerQueue.Count > 0)
             {
                 PrototypeId customPowerDataRef = powerQueue.Peek().PowerRef;
-                if (powerContext.Power != customPowerDataRef) return;
+                if (powerContext.Power.DataRef != customPowerDataRef) return;
                 powerQueue.Dequeue();
                 if (powerQueue.Count == 0)
                     blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomThinkRateMS);
@@ -2675,7 +2675,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 if (ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] == 1)
                 {
-                    if (BombDancePower?.PowerContext == null || BombDancePower.PowerContext.Power == PrototypeId.Invalid) return;
+                    if (BombDancePower?.PowerContext == null || BombDancePower.PowerContext.Power == null) return;
                     HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, BombDancePower.PowerContext, BombDancePower);
                 }
                 else
@@ -3316,8 +3316,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     else
                     {
                         var hulkBusterUsePowerContext = ActivateHulkBusterAnimOnly?.PowerContext;
-                        if (hulkBusterUsePowerContext == null || hulkBusterUsePowerContext.Power == PrototypeId.Invalid) return;
-                        if (hulkBusterUsePowerContext.Power != ownerController.ActivePowerRef) 
+                        if (hulkBusterUsePowerContext == null || hulkBusterUsePowerContext.Power == null) return;
+                        if (hulkBusterUsePowerContext.Power.DataRef != ownerController.ActivePowerRef) 
                         {
                             ProceduralAI.Logger.Warn($"Red Skull {agent} should be activating his Hulk Buster power but is currently activating another power [{GameDatabase.GetPrototypeName(ownerController.ActivePowerRef)}]!");
                             return; 
@@ -3366,7 +3366,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     int weaponCrateIndex = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3];
                     var weaponsCrateUsePowerContext = GetWeaponCrateAnimPowerByIndex(ownerController, weaponCrateIndex);
                     var weaponsCratePowerContext = weaponsCrateUsePowerContext?.PowerContext;
-                    if (weaponsCratePowerContext == null || weaponsCratePowerContext.Power == PrototypeId.Invalid) return;
+                    if (weaponsCratePowerContext == null || weaponsCratePowerContext.Power == null) return;
 
                     if (proceduralAI.GetState(0) != UsePower.Instance)
                     {
@@ -3379,7 +3379,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     }
                     else
                     {
-                        if (weaponsCratePowerContext.Power != ownerController.ActivePowerRef)
+                        if (weaponsCratePowerContext.Power.DataRef != ownerController.ActivePowerRef)
                         {
                             ProceduralAI.Logger.Warn($"Red Skull {agent} should be activating his Weapons Crate power but is currently activating another power [{GameDatabase.GetPrototypeName(ownerController.ActivePowerRef)}]!");
                             return;
@@ -3746,22 +3746,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
             var blackboard = ownerController.Blackboard;
             if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1])
             {
-                if (SymbiotePower1.PowerContext == null || SymbiotePower1.PowerContext.Power == PrototypeId.Invalid) return;
-                var symbiotePower = agent.GetPower(SymbiotePower1.PowerContext.Power);
+                if (SymbiotePower1.PowerContext == null || SymbiotePower1.PowerContext.Power == null) return;
+                var symbiotePower = agent.GetPower(SymbiotePower1.PowerContext.Power.DataRef);
                 symbiotePower?.EndPower(EndPowerFlags.Force | EndPowerFlags.ExplicitCancel);
                 blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = 0;
             }
             else if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2])
             {
-                if (SymbiotePower2.PowerContext == null || SymbiotePower2.PowerContext.Power == PrototypeId.Invalid) return;
-                var symbiotePower = agent.GetPower(SymbiotePower2.PowerContext.Power);
+                if (SymbiotePower2.PowerContext == null || SymbiotePower2.PowerContext.Power == null) return;
+                var symbiotePower = agent.GetPower(SymbiotePower2.PowerContext.Power.DataRef);
                 symbiotePower?.EndPower(EndPowerFlags.Force | EndPowerFlags.ExplicitCancel);
                 blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] = 0;
             }
             else if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3])
             {
-                if (SymbiotePower3.PowerContext == null || SymbiotePower3.PowerContext.Power == PrototypeId.Invalid) return;
-                var symbiotePower = agent.GetPower(SymbiotePower3.PowerContext.Power);
+                if (SymbiotePower3.PowerContext == null || SymbiotePower3.PowerContext.Power == null) return;
+                var symbiotePower = agent.GetPower(SymbiotePower3.PowerContext.Power.DataRef);
                 symbiotePower?.EndPower(EndPowerFlags.Force | EndPowerFlags.ExplicitCancel);
                 blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] = 0;
             }
@@ -4284,7 +4284,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             } 
             else if(deadEvent.Defender.PrototypeDataRef == NullifierAntiShield)
             {
-                agent.ConditionCollection.RemoveConditionsOfPower(BeamPower.PowerContext.Power);
+                agent.ConditionCollection.RemoveConditionsOfPower(BeamPower.PowerContext.Power.DataRef);
                 SetNullifierEntityState(ownerController, false);
                 ProceduralAI proceduralAI = ownerController.Brain;
                 if (proceduralAI == null) return;
@@ -4810,20 +4810,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             PrototypeId activePowerRef = blackboard.PropertyCollection[PropertyEnum.AILastPowerActivated];
 
-            if (SummonElektra?.PowerContext == null || SummonElektra.PowerContext.Power == PrototypeId.Invalid)
+            if (SummonElektra?.PowerContext == null || SummonElektra.PowerContext.Power == null)
             {
                 ProceduralAI.Logger.Warn("SummonElektra or its context/power is null.");
                 return;
             }
-            if (SummonBullseye?.PowerContext == null || SummonBullseye.PowerContext.Power == PrototypeId.Invalid)
+            if (SummonBullseye?.PowerContext == null || SummonBullseye.PowerContext.Power == null)
             {
                 ProceduralAI.Logger.Warn("SummonBullseye or its context/power is null.");
                 return;
             }
 
             if (proceduralAI.GetState(0) != UsePower.Instance
-                || activePowerRef == SummonElektra.PowerContext.Power 
-                || activePowerRef == SummonBullseye.PowerContext.Power)
+                || activePowerRef == SummonElektra.PowerContext.Power.DataRef 
+                || activePowerRef == SummonBullseye.PowerContext.Power.DataRef)
             {
                 long health = agent.Properties[PropertyEnum.Health];
                 long maxHealth = agent.Properties[PropertyEnum.HealthMax];
@@ -5114,8 +5114,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 var agent = ownerController.Owner;
                 if (agent == null) return;
                 var conditions = agent.ConditionCollection;
-                conditions.RemoveConditionsOfPower(OpenRocketCratePower.PowerContext.Power);
-                conditions.RemoveConditionsOfPower(OpenMinigunCratePower.PowerContext.Power);
+                conditions.RemoveConditionsOfPower(OpenRocketCratePower.PowerContext.Power.DataRef);
+                conditions.RemoveConditionsOfPower(OpenMinigunCratePower.PowerContext.Power.DataRef);
                 blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
             }
             else if (powerContext == CommandTurretPower)
@@ -5372,13 +5372,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             PrototypeId activePowerRef = blackboard.PropertyCollection[PropertyEnum.AILastPowerActivated];
 
             if (HotspotSpawners.IsNullOrEmpty() 
-                || FalseDeathPower?.PowerContext == null || FalseDeathPower.PowerContext.Power == PrototypeId.Invalid 
-                || HealFinalFormPower?.PowerContext == null || HealFinalFormPower.PowerContext.Power == PrototypeId.Invalid) return;
+                || FalseDeathPower?.PowerContext == null || FalseDeathPower.PowerContext.Power == null 
+                || HealFinalFormPower?.PowerContext == null || HealFinalFormPower.PowerContext.Power == null) return;
 
             long health = agent.Properties[PropertyEnum.Health];
             long maxHealth = agent.Properties[PropertyEnum.HealthMax];
 
-            if (activePowerRef == FalseDeathPower.PowerContext.Power)
+            if (activePowerRef == FalseDeathPower.PowerContext.Power.DataRef)
             {
                 if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] == (int)State.DeathPreventer)
                 {
@@ -5392,7 +5392,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] == (int)State.Default)
             {
                 if (proceduralAI.GetState(0) != UsePower.Instance ||
-                    activePowerRef == DeathPreventerPower.PowerContext.Power)
+                    activePowerRef == DeathPreventerPower.PowerContext.Power.DataRef)
                 {
                     var powerResult = HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, DeathPreventerPower.PowerContext, DeathPreventerPower);
                     if (powerResult == StaticBehaviorReturnType.Running) return;
@@ -5402,7 +5402,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
             else if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] == (int)State.HotspotSpawners)
             {
-                if ((proceduralAI.GetState(0) != UsePower.Instance || activePowerRef == FalseDeathPower.PowerContext.Power) 
+                if ((proceduralAI.GetState(0) != UsePower.Instance || activePowerRef == FalseDeathPower.PowerContext.Power.DataRef) 
                     && MathHelper.IsBelowOrEqual(health, maxHealth, FalseDeathPower.HealthThreshold))
                 {
                     var powerResult = HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, FalseDeathPower.PowerContext, FalseDeathPower);
@@ -5436,14 +5436,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     }
                 }
             }
-            else if ((proceduralAI.GetState(0) != UsePower.Instance || activePowerRef == HealFinalFormPower.PowerContext.Power)
+            else if ((proceduralAI.GetState(0) != UsePower.Instance || activePowerRef == HealFinalFormPower.PowerContext.Power.DataRef)
                 && blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] == (int)State.DeathPreventer)
             {
                 var powerResult = HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, HealFinalFormPower.PowerContext, HealFinalFormPower);
                 if (powerResult == StaticBehaviorReturnType.Running) return;
                 if (powerResult != StaticBehaviorReturnType.Completed)
                     agent.Properties[PropertyEnum.Health] = agent.Properties[PropertyEnum.HealthMax];
-                agent.UnassignPower(DeathPreventerPower.PowerContext.Power);
+                agent.UnassignPower(DeathPreventerPower.PowerContext.Power.DataRef);
                 blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = (int)State.FinalForm;
             }
 
