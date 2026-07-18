@@ -498,7 +498,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             agent.Properties[PropertyEnum.AICustomTimeVal1] = game.CurrentTime;
 
-            InitPower(agent, EffectPower);
+            if (EffectPower != PrototypeId.Invalid)
+                InitPower(agent, EffectPower);
         }
 
         public override void Think(AIController ownerController)

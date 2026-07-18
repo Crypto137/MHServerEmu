@@ -43,15 +43,14 @@ namespace MHServerEmu.Games.Common
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static List<WorldEntity> GetTargetsInRange(Agent aggressor, float rangeMax, float rangeMin, CombatTargetType targetType,
+        public static void GetTargetsInRange(Agent aggressor, List<WorldEntity> targets, float rangeMax, float rangeMin, CombatTargetType targetType,
             CombatTargetFlags flags, AIEntityAttributePrototype[] attributes)
         {
-            List<WorldEntity> targets = new();
-            if (aggressor == null) return targets;
+            if (aggressor == null) return;
             if (aggressor.Region == null)
             {
                 Logger.Warn($"GetTargetsInRange(): Agent not in region when trying to count targets in range! Agent: {aggressor}");
-                return targets;
+                return;
             }
 
             Sphere volume = new(aggressor.RegionLocation.Position, rangeMax + aggressor.Bounds.GetRadius());
@@ -63,8 +62,6 @@ namespace MHServerEmu.Games.Common
                     && (rangeMin == 0f || aggressor.GetDistanceTo(target, true) >= rangeMin))
                     targets.Add(target);
             }
-
-            return targets;
         }
 
         public static int GetNumTargetsInRange(Agent aggressor, float rangeMax, float rangeMin, CombatTargetType targetType,

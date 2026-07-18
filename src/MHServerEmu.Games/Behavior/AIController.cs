@@ -57,6 +57,11 @@ namespace MHServerEmu.Games.Behavior
             MissileReturnAction = OnAIMissileReturn;
         }
 
+        public override string ToString()
+        {
+            return $"AIController: {Owner}";
+        }
+
         public bool Initialize(BehaviorProfilePrototype profile, SpawnSpec spec, PropertyCollection collection)
         {
             Senses.Initialize(this, profile, spec);
@@ -475,11 +480,6 @@ namespace MHServerEmu.Games.Behavior
             if (Owner == null) return;
             ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(0), false, false);
             Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
-        }
-
-        public override string ToString()
-        {
-            return $"AIController: {Owner}";
         }
 
         public void OnAIDeallocate()
