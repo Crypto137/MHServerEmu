@@ -5342,7 +5342,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (var hotspotSpawner in HotspotSpawners)
                 {
                     if (hotspotSpawner.InitTargets(agent, firstSpawner == hotspotSpawner) == false) return;
-                    InitPower(agent, hotspotSpawner.PowerToUse);
+                    InitPower(agent, hotspotSpawner.PowerToUse.DataRef);
                 }
             }
         }
@@ -5461,7 +5461,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (leftMarkerId != 0)
             {
                 var leftMarker = manager.GetEntity<WorldEntity>(leftMarkerId);
-                if (leftMarker != null && ownerController.AttemptActivatePower(power.PowerToUse, 0, leftMarker.RegionLocation.Position) == false)
+                if (leftMarker != null && ownerController.AttemptActivatePower(power.PowerToUse.DataRef, 0, leftMarker.RegionLocation.Position) == false)
                     ProceduralAI.Logger.Warn("Kaecilius's hotspot spawner has failed for the first marker.");
             }
 
@@ -5469,7 +5469,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (centerMarkerId !=0)
             {
                 var centerMarker = manager.GetEntity<WorldEntity>(centerMarkerId);
-                if (centerMarker != null && ownerController.AttemptActivatePower(power.PowerToUse, 0, centerMarker.RegionLocation.Position) == false)
+                if (centerMarker != null && ownerController.AttemptActivatePower(power.PowerToUse.DataRef, 0, centerMarker.RegionLocation.Position) == false)
                     ProceduralAI.Logger.Warn("Kaecilius's hotspot spawner has failed for the second platform.");
             }
 
@@ -5477,7 +5477,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (rightMarkerId != 0)
             {
                 var rightMarker = manager.GetEntity<WorldEntity>(rightMarkerId);
-                if (rightMarker != null && ownerController.AttemptActivatePower(power.PowerToUse, 0, rightMarker.RegionLocation.Position) == false)
+                if (rightMarker != null && ownerController.AttemptActivatePower(power.PowerToUse.DataRef, 0, rightMarker.RegionLocation.Position) == false)
                     ProceduralAI.Logger.Warn("Kaecilius's hotspot spawner has failed for the third platform.");
             }
         }
