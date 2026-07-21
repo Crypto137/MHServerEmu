@@ -13,10 +13,10 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-
     public class ProceduralProfileWithAttackPrototype : ProceduralProfileWithTargetPrototype
     {
         public int AttackRateMaxMS { get; protected set; }
@@ -24,17 +24,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype[] GenericProceduralPowers { get; protected set; }
         public ProceduralUseAffixPowerContextPrototype AffixSettings { get; protected set; }
 
+        //---
+
         public override void Init(Agent agent)
         {
             base.Init(agent);
+            
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
             AIController ownerController = agent.AIController;
-            if (ownerController == null) return;
+            if (!Verify.IsNotNull(ownerController)) return;
 
             long nextAttackThinkTime = (long)game.CurrentTime.TotalMilliseconds + game.Random.Next(AttackRateMinMS, AttackRateMaxMS);
             ownerController.Blackboard.PropertyCollection[PropertyEnum.AIProceduralNextAttackTime] = nextAttackThinkTime;
             InitPowers(agent, GenericProceduralPowers);
+        }
+
+        public override void ProcessInterrupts(AIController ownerController, BehaviorInterruptType interrupt)
+        {
+            if (interrupt.HasFlag(BehaviorInterruptType.Alerted))
+            {
+                ProceduralAI proceduralAI = ownerController.Brain;
+                if (!Verify.IsNotNull(proceduralAI)) return;
+
+                if (ownerController.Senses.GetCurrentTarget() != null)
+                    proceduralAI.ClearOverrideBehavior(OverrideType.Full);
+            }
         }
 
         public virtual void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
@@ -45,10 +60,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         protected static bool AddPowerToPickerIfStartedPowerIsContextPower(AIController ownerController,
             ProceduralUsePowerContextPrototype powerToAdd, PrototypeId startedPowerRef, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
-            var powerContext = powerToAdd?.PowerContext;
-            if (powerContext == null
-                || powerContext.Power == null
-                || startedPowerRef != powerContext.Power.DataRef) return false;
+            if (!Verify.IsNotNull(powerToAdd)) return false;
+            if (!Verify.IsNotNull(powerToAdd.PowerContext)) return false;
+
+            PowerPrototype powerProto = powerToAdd.PowerContext.Power;
+            if (powerProto == null || startedPowerRef != powerProto.DataRef)
+                return false;
 
             ownerController.AddPowersToPicker(powerPicker, powerToAdd);
             return true;
@@ -58,45 +75,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
             long currentTime, Picker<ProceduralUsePowerContextPrototype> powerPicker, bool affixPower = true)
         {
             Agent agent = ownerController.Owner;
-            if (agent == null)
-            {
-                ProceduralAI.Logger.Warn($"[{agent}]");
-                return StaticBehaviorReturnType.None;
-            }
+            if (!Verify.IsNotNull(agent, $"[{agent}]")) return StaticBehaviorReturnType.Failed;
 
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            PropertyCollection properties = ownerController.Blackboard.PropertyCollection;
             StaticBehaviorReturnType contextResult = StaticBehaviorReturnType.None;
 
             if (proceduralAI.GetState(0) == UsePower.Instance)
             {
                 PrototypeId powerStartedRef = ownerController.ActivePowerRef;
-                if (powerStartedRef == PrototypeId.Invalid)
-                {
-                    ProceduralAI.Logger.Warn($"In UsePower state, but no power was recorded as started! agent=[{agent}]");
+                if (!Verify.IsTrue(powerStartedRef != PrototypeId.Invalid, $"In UsePower state, but no power was recorded as started! agent=[{agent}]"))
                     return StaticBehaviorReturnType.Failed;
-                }
 
                 ProceduralUsePowerContextPrototype proceduralUsePowerProto = null;
                 UsePowerContextPrototype powerContextProtoToRun = null;
+
                 int numPowers = powerPicker.GetNumElements();
                 for (int i = 0; i < numPowers; ++i)
                 {
-                    if (powerPicker.GetElementAt(i, out proceduralUsePowerProto) == false)
-                    {
-                        ProceduralAI.Logger.Warn($"failed to GetElementAt i=[{i}] agent=[{agent}]");
+                    if (!Verify.IsTrue(powerPicker.GetElementAt(i, out proceduralUsePowerProto), $"failed to GetElementAt i=[{i}] agent=[{agent}]"))
                         return StaticBehaviorReturnType.Failed;
-                    }
-                    if (proceduralUsePowerProto == null)
-                    {
-                        ProceduralAI.Logger.Warn($"proceduralUsePowerProto is NULL! agent=[{agent}]");
+
+                    if (!Verify.IsNotNull(proceduralUsePowerProto, $"proceduralUsePowerProto is NULL! agent=[{agent}]"))
                         return StaticBehaviorReturnType.Failed;
-                    }
+
                     UsePowerContextPrototype powerContextProto = proceduralUsePowerProto.PowerContext;
-                    if (powerContextProto == null)
-                    {
-                        ProceduralAI.Logger.Warn($"powerContextProto is NULL! agent=[{agent}]");
+                    if (!Verify.IsNotNull(powerContextProto, $"powerContextProto is NULL! agent=[{agent}]"))
                         return StaticBehaviorReturnType.Failed;
-                    }
+
                     if (powerContextProto.Power != null && powerStartedRef == powerContextProto.Power.DataRef)
                     {
                         powerContextProtoToRun = powerContextProto;
@@ -106,34 +111,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 if (powerContextProtoToRun == null)
                 {
-                    PrototypeId syncPowerRef = blackboard.PropertyCollection[PropertyEnum.AISyncAttackTargetPower];
+                    PrototypeId syncPowerRef = properties[PropertyEnum.AISyncAttackTargetPower];
                     if (syncPowerRef != PrototypeId.Invalid)
                     {
                         proceduralUsePowerProto = GameDatabase.GetPrototype<ProceduralUsePowerContextPrototype>(syncPowerRef);
-                        if (proceduralUsePowerProto == null)
-                        {
-                            ProceduralAI.Logger.Warn($"proceduralUsePowerProto is NULL! agent=[{agent}]");
+                        if (!Verify.IsNotNull(proceduralUsePowerProto, $"proceduralUsePowerProto is NULL! agent=[{agent}]"))
                             return StaticBehaviorReturnType.Failed;
-                        }
+
                         powerContextProtoToRun = proceduralUsePowerProto.PowerContext;
-                        if (powerContextProtoToRun == null || powerContextProtoToRun.Power == null)
-                        {
-                            ProceduralAI.Logger.Warn($"powerContextProtoToRun or Power is NULL! agent=[{agent}]");
+                        if (!Verify.IsTrue(powerContextProtoToRun?.Power != null, $"powerContextProtoToRun or Power is NULL! agent=[{agent}]"))
                             return StaticBehaviorReturnType.Failed;
-                        }
-                        if (powerContextProtoToRun.Power.DataRef != powerStartedRef)
-                        {
-                            ProceduralAI.Logger.Warn($"SyncPower doesn't match power running!\n AI: {agent}\n Power Running: {GameDatabase.GetFormattedPrototypeName(powerStartedRef)}");
+
+                        if (!Verify.IsTrue(powerContextProtoToRun.Power.DataRef == powerStartedRef, $"SyncPower doesn't match power running!\n AI: {agent}\n Power Running: {powerStartedRef.GetNameFormatted()}"))
                             return StaticBehaviorReturnType.Failed;
-                        }
                     }
                 }
 
-                if (proceduralUsePowerProto == null || powerContextProtoToRun == null)
-                {
-                    ProceduralAI.Logger.Warn($"proceduralUsePowerProto or powerContextProtoToRun is NULL! powerStartedRef=[{powerStartedRef}] numPowers=[{numPowers}] agent=[{agent}]");
+                if (!Verify.IsNotNull(proceduralUsePowerProto, $"proceduralUsePowerProto is NULL! powerStartedRef=[{powerStartedRef}] numPowers=[{numPowers}] agent=[{agent}]"))
                     return StaticBehaviorReturnType.Failed;
-                }
+
+                if (!Verify.IsNotNull(powerContextProtoToRun, $"powerContextProtoToRun is NULL! powerStartedRef=[{powerStartedRef}] numPowers=[{numPowers}] agent=[{agent}]"))
+                    return StaticBehaviorReturnType.Failed;
 
                 contextResult = HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, powerContextProtoToRun, proceduralUsePowerProto);
             }
@@ -141,15 +139,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 contextResult = HandleUseAffixPowerContext(ownerController, proceduralAI, random, currentTime);
             }
-            else if (currentTime >= blackboard.PropertyCollection[PropertyEnum.AIProceduralNextAttackTime])
+            else if (currentTime >= properties[PropertyEnum.AIProceduralNextAttackTime])
             {
                 if (affixPower && agent.Properties.HasProperty(PropertyEnum.EnemyBoost))
                 {
-                    if (AffixSettings == null)
-                    {
-                        ProceduralAI.Logger.Warn($"Agent [{agent}] has enemy affix(es), but no AffixSettings data in its procedural profile!");
+                    if (!Verify.IsNotNull(AffixSettings, $"Agent [{agent}] has enemy affix(es), but no AffixSettings data in its procedural profile!"))
                         return StaticBehaviorReturnType.Failed;
-                    }
+
                     powerPicker.Add(null, AffixSettings.PickWeight);
                 }
 
@@ -163,11 +159,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     else
                     {
                         UsePowerContextPrototype randomPowerContextProto = randomProceduralPowerProto.PowerContext;
-                        if (randomPowerContextProto == null || randomPowerContextProto.Power == null)
-                        {
-                            ProceduralAI.Logger.Warn($"Agent [{agent}] has a NULL PowerContext or PowerContext.Power");
+                        if (!Verify.IsNotNull(randomPowerContextProto, $"Agent [{agent}] has a NULL PowerContext"))
                             return StaticBehaviorReturnType.Failed;
-                        }
+
+                        if (!Verify.IsNotNull(randomPowerContextProto.Power, $"Agent [{agent}] has a NULL PowerContext.Power"))
+                            return StaticBehaviorReturnType.Failed;
 
                         if (randomPowerContextProto.HasDifficultyTierRestriction((PrototypeId)agent.Properties[PropertyEnum.DifficultyTier]))
                             continue;
@@ -186,7 +182,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return contextResult;
         }
 
-        public StaticBehaviorReturnType HandleUsePowerCheckCooldown(AIController ownerController, ProceduralAI proceduralAI, GRandom random,
+        protected StaticBehaviorReturnType HandleUsePowerCheckCooldown(AIController ownerController, ProceduralAI proceduralAI, GRandom random,
             long currentTime, UsePowerContextPrototype powerContext, ProceduralUsePowerContextPrototype proceduralPowerContext)
         {
             var collection = ownerController.Blackboard.PropertyCollection;
@@ -206,11 +202,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return StaticBehaviorReturnType.Failed;
         }
        
-        public StaticBehaviorReturnType HandleUseAffixPowerContext(AIController ownerController, ProceduralAI proceduralAI, GRandom random, long currentTime)
+        protected StaticBehaviorReturnType HandleUseAffixPowerContext(AIController ownerController, ProceduralAI proceduralAI, GRandom random, long currentTime)
         {
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             IStateContext useAffixPowerContext = new UseAffixPowerContext(ownerController, null);
-            var contextResult = proceduralAI.HandleContext(UseAffixPower.Instance, useAffixPowerContext, AffixSettings);
+            StaticBehaviorReturnType contextResult = proceduralAI.HandleContext(UseAffixPower.Instance, useAffixPowerContext, AffixSettings);
             UpdateNextAttackThinkTime(blackboard, random, currentTime, contextResult);
             return contextResult;
         }
@@ -218,20 +214,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         protected override StaticBehaviorReturnType HandleUsePowerContext(AIController ownerController, ProceduralAI proceduralAI, GRandom random,
             long currentTime, UsePowerContextPrototype powerContext, ProceduralContextPrototype proceduralContext = null)
         {
-            var contextResult = base.HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, powerContext, proceduralContext);
+            StaticBehaviorReturnType contextResult = base.HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, powerContext, proceduralContext);
             UpdateNextAttackThinkTime(ownerController.Blackboard, random, currentTime, contextResult);
             return contextResult;
         }
 
-        public override void ProcessInterrupts(AIController ownerController, BehaviorInterruptType interrupt)
+        protected static bool IsProceduralPowerContextOnCooldown(BehaviorBlackboard blackboard, ProceduralUsePowerContextPrototype powerContext, long currentTime)
         {
-            if (interrupt.HasFlag(BehaviorInterruptType.Alerted))
-            {
-                var proceduralAI = ownerController.Brain;
-                if (proceduralAI == null) return;
-                if (ownerController.Senses.GetCurrentTarget() != null)
-                    proceduralAI.ClearOverrideBehavior(OverrideType.Full);
-            }
+            if (!Verify.IsNotNull(powerContext.PowerContext)) return false;
+            if (!Verify.IsNotNull(powerContext.PowerContext.Power)) return false;
+
+            PropertyCollection properties = blackboard.PropertyCollection;
+
+            PropertyId specificTimeProp = new(PropertyEnum.AIProceduralPowerSpecificCDTime, powerContext.PowerContext.Power.DataRef);
+            if (properties.HasProperty(specificTimeProp))
+                return currentTime < properties[specificTimeProp];
+
+            int aggroTime = properties[PropertyEnum.AIAggroTime] + properties[PropertyEnum.AIInitialCooldownMSForPower, powerContext.PowerContext.Power.DataRef];
+            return currentTime < aggroTime;
         }
 
         private void UpdateNextAttackThinkTime(BehaviorBlackboard blackboard, GRandom random, long currentTime, StaticBehaviorReturnType contextResult)
@@ -240,33 +240,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 blackboard.PropertyCollection[PropertyEnum.AIProceduralNextAttackTime] = currentTime + random.Next(AttackRateMinMS, AttackRateMaxMS);
         }
 
-        protected static bool IsProceduralPowerContextOnCooldown(BehaviorBlackboard blackboard, ProceduralUsePowerContextPrototype powerContext, long currentTime)
-        {
-            if (powerContext.PowerContext == null
-                || powerContext.PowerContext.Power == null) return false;
-
-            var specificTimeProp = new PropertyId(PropertyEnum.AIProceduralPowerSpecificCDTime, powerContext.PowerContext.Power.DataRef);
-            var collection = blackboard.PropertyCollection;
-            if (collection.HasProperty(specificTimeProp))
-                return currentTime < collection[specificTimeProp];
-            else
-            {
-                int agroTime = collection[PropertyEnum.AIAggroTime] + collection[PropertyEnum.AIInitialCooldownMSForPower, powerContext.PowerContext.Power.DataRef];
-                return currentTime < agroTime;
-            }
-        }
-
         public virtual bool OnPowerPicked(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
         {
             if (powerContext.TargetSwitch != null)
             {
-                var selectionContext = new SelectEntity.SelectEntityContext(ownerController, powerContext.TargetSwitch.SelectTarget);
+                SelectEntity.SelectEntityContext selectionContext = new(ownerController, powerContext.TargetSwitch.SelectTarget);
                 WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                 if (selectedEntity == null)
-                {
-                    if (powerContext.TargetSwitch.UsePowerOnCurTargetIfSwitchFails) return true;
-                    return false;
-                }
+                    return powerContext.TargetSwitch.UsePowerOnCurTargetIfSwitchFails;
 
                 if (powerContext.TargetSwitch.SwitchPermanently == false)
                 {
@@ -275,7 +256,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         ownerController.Blackboard.PropertyCollection[PropertyEnum.AIProceduralPowerPrevTargetId] = targetEntity.Id;
                 }
 
-                if (SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType) == false)
+                if (!Verify.IsTrue(SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType)))
                     return false;
             }
 
@@ -283,20 +264,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
 
         public virtual void OnPowerAttempted(AIController ownerController, ProceduralUsePowerContextPrototype powerContext, StaticBehaviorReturnType contextResult) { }
+        
         public virtual void OnPowerStarted(AIController ownerController, ProceduralUsePowerContextPrototype powerContext) { }
+        
         public virtual void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
         {
             if (powerContext.TargetSwitch != null && powerContext.TargetSwitch.SwitchPermanently == false)
             {
-                var selectTargetContext = powerContext.TargetSwitch.SelectTarget;
-                if (selectTargetContext == null) return;
+                SelectEntityContextPrototype selectTargetContext = powerContext.TargetSwitch.SelectTarget;
+                if (!Verify.IsNotNull(selectTargetContext)) return;
 
-                var blackboard = ownerController.Blackboard;
-                var prevTargetId = blackboard.PropertyCollection[PropertyEnum.AIProceduralPowerPrevTargetId];
-                var prevTarget = ownerController.Game.EntityManager.GetEntity<WorldEntity>(prevTargetId);
-                if (prevTarget == null) return;
+                ulong prevTargetId = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIProceduralPowerPrevTargetId];
+                WorldEntity prevTarget = ownerController.Game.EntityManager.GetEntity<WorldEntity>(prevTargetId);
+                if (prevTarget == null)
+                    return;
 
-                var targetType = CombatTargetType.Hostile;
+                CombatTargetType targetType = CombatTargetType.Hostile;
                 switch (selectTargetContext.PoolType)
                 {
                     case SelectEntityPoolType.PotentialEnemiesOfAgent:
@@ -308,12 +291,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
 
                 if (Combat.ValidTarget(ownerController.Game, ownerController.Owner, prevTarget, targetType, false))
-                    SelectEntity.RegisterSelectedEntity(ownerController, prevTarget, selectTargetContext.SelectEntityType);
+                     Verify.IsTrue(SelectEntity.RegisterSelectedEntity(ownerController, prevTarget, selectTargetContext.SelectEntityType));
             }
         }
 
         public virtual void OnPowerEnded(AIController ownerController, ProceduralUseAffixPowerContextPrototype powerContext) { }
-
     }
 
     public class ProceduralProfileStationaryTurretPrototype : ProceduralProfileWithAttackPrototype
