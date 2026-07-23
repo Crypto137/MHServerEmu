@@ -16,6 +16,7 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -940,7 +941,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
             if (blackboardProps[PropertyEnum.AICustomStateVal1] == 0)
             {
-                if (!Verify.IsTrue(ownerController.AttemptActivatePower(StarryExpanseAnimOnly, agent.Id, agent.RegionLocation.Position))) return;
+                if (!Verify.IsTrue(ownerController.AttemptActivatePower(StarryExpanseAnimOnly, agent.Id, agent.RegionLocation.Position)))
+                    return;
 
                 StaticBehaviorReturnType result = HandleContext(proceduralAI, ownerController, SpawnStarryExpanseAreas);
                 if (!Verify.IsTrue(result == StaticBehaviorReturnType.Completed)) return;
@@ -1018,7 +1020,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
             if (blackboardProps[PropertyEnum.AICustomStateVal1] == 0)
             {
-                if (!Verify.IsTrue(ownerController.AttemptActivatePower(StarryExpanseAnimOnly, agent.Id, agent.RegionLocation.Position))) return;
+                if (!Verify.IsTrue(ownerController.AttemptActivatePower(StarryExpanseAnimOnly, agent.Id, agent.RegionLocation.Position)))
+                    return;
 
                 StaticBehaviorReturnType result = HandleContext(proceduralAI, ownerController, SpawnStarryExpanseAreas);
                 if (!Verify.IsTrue(result == StaticBehaviorReturnType.Completed)) return;
@@ -2908,18 +2911,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileMonolithPrototype : ProceduralProfileWithEnragePrototype
     {
-        public PrototypeId ObeliskKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype ObeliskKeyword { get; protected set; }
         public PrototypeId[] ObeliskDamageMonolithPowers { get; protected set; }
         public PrototypeId DisableShield { get; protected set; }
+
+        //---
 
         public override void Init(Agent agent)
         {
             base.Init(agent);
 
             AIController ownerController = agent.AIController;
-            if (ownerController == null) return;
+            if (!Verify.IsNotNull(ownerController)) return;
             Region region = agent.Region;
-            if (region == null) return;
+            if (!Verify.IsNotNull(region)) return;
+
             ownerController.RegisterForAIBroadcastBlackboardEvents(region, true);
 
             InitPower(agent, DisableShield);
@@ -2929,21 +2936,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             HandleEnrage(ownerController);
 
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
-            EnrageState state = (EnrageState)(int)blackboard.PropertyCollection[PropertyEnum.AIEnrageState];
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            EnrageState state = (EnrageState)(int)blackboardProps[PropertyEnum.AIEnrageState];
             if (state != EnrageState.Enraging)
             {
                 WorldEntity target = ownerController.TargetEntity;
-                if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
+                if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
+                    return;
 
                 GRandom random = game.Random;
                 Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
@@ -2954,31 +2963,38 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
-            if (broadcastEvent.Broadcaster == null) return;
-            var agent = ownerController.Owner;
-            if (agent == null) return;
-            var broadcaster = broadcastEvent.Broadcaster;
-            if (broadcaster == null) return;
-            var broadcasterBlackboard = broadcastEvent.Blackboard;
-            if (broadcasterBlackboard == null) return;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
+            WorldEntity broadcaster = broadcastEvent.Broadcaster;
+            if (!Verify.IsNotNull(broadcaster)) return;
+            BehaviorBlackboard broadcasterBlackboard = broadcastEvent.Blackboard;
+            if (!Verify.IsNotNull(broadcasterBlackboard)) return;
 
-            int obeliskState = broadcasterBlackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
-            if (broadcaster.HasKeyword(ObeliskKeyword.As<KeywordPrototype>()) && obeliskState == 1)
+            PropertyCollection broadcasterBlackboardProps = broadcasterBlackboard.PropertyCollection;
+
+            int obeliskState = broadcasterBlackboardProps[PropertyEnum.AICustomStateVal1];
+            if (broadcaster.HasKeyword(ObeliskKeyword) && obeliskState == 1)
             {
-                var blackboard = ownerController.Blackboard;
-                int powersActivated = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+                PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+                int powersActivated = blackboardProps[PropertyEnum.AICustomStateVal1];
 
                 if (ObeliskDamageMonolithPowers.HasValue())
                 {
-                    int damagePowers = ObeliskDamageMonolithPowers.Length;
-                    if (damagePowers > 0 && powersActivated < damagePowers)
+                    int numDamagePowers = ObeliskDamageMonolithPowers.Length;
+                    if (numDamagePowers > 0 && powersActivated < numDamagePowers)
                     {
-                        var obeliskPowerRef = ObeliskDamageMonolithPowers[Math.Min(powersActivated, damagePowers - 1)];
-                        if (ownerController.AttemptActivatePower(obeliskPowerRef, agent.Id, agent.RegionLocation.Position) == false) return;
-                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = powersActivated + 1;
+                        PrototypeId obeliskPowerRef = ObeliskDamageMonolithPowers[Math.Min(powersActivated, numDamagePowers - 1)];
 
-                        if (powersActivated + 1 >= damagePowers)
-                            ownerController.AttemptActivatePower(DisableShield, agent.Id, agent.RegionLocation.Position);
+                        if (!Verify.IsTrue(ownerController.AttemptActivatePower(obeliskPowerRef, agent.Id, agent.RegionLocation.Position)))
+                            return;
+
+                        blackboardProps[PropertyEnum.AICustomStateVal1] = powersActivated + 1;
+
+                        if (powersActivated + 1 >= numDamagePowers)
+                        {
+                            if (!Verify.IsTrue(ownerController.AttemptActivatePower(DisableShield, agent.Id, agent.RegionLocation.Position)))
+                                return;
+                        }
                     }
                 }
             }
@@ -2997,47 +3013,56 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float SpecialPowerMaxRadius { get; protected set; }
         public float SpecialPowerMinRadius { get; protected set; }
 
+        //---
+
         public override void Init(Agent agent)
         {
             base.Init(agent);
+
             InitPower(agent, PrimaryPower);
             InitPower(agent, SpecialPower);
             InitPower(agent, SpecialSummonPower);
 
             AIController ownerController = agent.AIController;
-            if (ownerController == null) return;
+            if (!Verify.IsNotNull(ownerController)) return;
             Region region = agent.Region;
-            if (region == null) return;
+            if (!Verify.IsNotNull(region)) return;
+
             ownerController.RegisterForEntityAggroedEvents(region, true);
         }
 
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
-            if (HandleOverrideBehavior(ownerController)) return;
+            if (HandleOverrideBehavior(ownerController))
+                return;
 
             HandleEnrage(ownerController);
 
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
-            EnrageState state = (EnrageState)(int)blackboard.PropertyCollection[PropertyEnum.AIEnrageState];
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            EnrageState state = (EnrageState)(int)blackboardProps[PropertyEnum.AIEnrageState];
             if (state != EnrageState.Enraging)
             {
                 WorldEntity target = ownerController.TargetEntity;
-                if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
-                    && proceduralAI.PartialOverrideBehavior == null) return;
+                if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false &&
+                    proceduralAI.PartialOverrideBehavior == null)
+                {
+                    return;
+                }
 
                 GRandom random = game.Random;
                 Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
                 PopulatePowerPicker(ownerController, powerPicker);
-                StaticBehaviorReturnType powerResult = HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
-                if (powerResult == StaticBehaviorReturnType.Running) return;
+                if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running)
+                    return;
 
                 DefaultRangedFlankerMovement(proceduralAI, ownerController, agent, target, currentTime, MoveToTarget, FlankTarget);
             }
@@ -3046,6 +3071,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             base.PopulatePowerPicker(ownerController, powerPicker);
+
             ownerController.AddPowersToPicker(powerPicker, PrimaryPower);
             ownerController.AddPowersToPicker(powerPicker, SpecialPower);
         }
@@ -3055,39 +3081,45 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (powerContext == SpecialPower)
             {
                 Agent agent = ownerController.Owner;
-                if (agent == null) return;
+                if (!Verify.IsNotNull(agent)) return;
 
                 Region region = agent.Region;
-                if (region == null) return;
+                if (!Verify.IsNotNull(region)) return;
 
                 const int MaxTargets = 32;
-                List<WorldEntity> validTargets = new(MaxTargets);
+                using var validTargetsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> validTargets);
 
-                var volume = new Sphere(agent.RegionLocation.Position, SpecialPowerMaxRadius);
-                foreach (var targetInSphere in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
+                Sphere volume = new(agent.RegionLocation.Position, SpecialPowerMaxRadius);
+                foreach (WorldEntity targetInSphere in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
                 {
-                    if (validTargets.Count >= MaxTargets) break;
-                    if (targetInSphere == null) continue;
+                    if (!Verify.IsNotNull(targetInSphere))
+                        continue;
 
                     if (Combat.ValidTarget(agent.Game, agent, targetInSphere, CombatTargetType.Hostile, false, CombatTargetFlags.IgnoreAggroDistance))
                         validTargets.Add(targetInSphere);
-                }
 
-                int targetSummoned = 0;
-                foreach (var validTarget in validTargets)
-                {
-                    if (validTarget == null) return;
-
-                    ref RegionLocation targetRegionLoc = ref validTarget.RegionLocation;
-                    if (ownerController.AttemptActivatePower(SpecialSummonPower, validTarget.Id, targetRegionLoc.ProjectToFloor()) == false) return;
-
-                    targetSummoned++;
-                    if (targetSummoned >= SpecialPowerNumSummons)
+                    if (validTargets.Count >= MaxTargets)
                         break;
                 }
 
-                if (targetSummoned < SpecialPowerNumSummons)
-                    for (int j = targetSummoned; j < SpecialPowerNumSummons; ++j)
+                int targetsSummoned = 0;
+                foreach (WorldEntity validTarget in validTargets)
+                {
+                    if (!Verify.IsNotNull(validTarget))
+                        continue;
+
+                    ref RegionLocation targetRegionLoc = ref validTarget.RegionLocation;
+                    if (!Verify.IsTrue(ownerController.AttemptActivatePower(SpecialSummonPower, validTarget.Id, targetRegionLoc.ProjectToFloor())))
+                        return;
+
+                    targetsSummoned++;
+                    if (targetsSummoned >= SpecialPowerNumSummons)
+                        break;
+                }
+
+                if (targetsSummoned < SpecialPowerNumSummons)
+                {
+                    for (int i = targetsSummoned; i < SpecialPowerNumSummons; i++)
                     {
                         Bounds bounds = agent.Bounds;  // copy
                         bounds.Center = agent.RegionLocation.ProjectToFloor();
@@ -3100,21 +3132,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
                             SpecialPowerMinRadius,
                             SpecialPowerMaxRadius,
                             out Vector3 randomPosition);
-                        if (ownerController.AttemptActivatePower(SpecialSummonPower, 0, randomPosition) == false) return;
+
+                        if (!Verify.IsTrue(ownerController.AttemptActivatePower(SpecialSummonPower, 0, randomPosition)))
+                            return;
                     }
+                }
             }
         }
 
         public override void OnEntityAggroedEvent(AIController ownerController, in EntityAggroedGameEvent aggroedEvent)
         {
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
-            if (aggroedEvent.AggroEntity is not Agent aggroAgent) return;
-            if (aggroAgent.PrototypeDataRef == BrimstoneProtoRef)
-                if (agent.Properties.HasProperty(PropertyEnum.EnrageStartTime) == false)
-                    agent.Properties[PropertyEnum.EnrageStartTime] = game.CurrentTime + TimeSpan.FromMinutes(EnrageTimerInMinutes);
+            if (!Verify.IsNotNull(game)) return;
+
+            Agent aggroAgent = aggroedEvent.AggroEntity as Agent;
+            if (!Verify.IsNotNull(aggroAgent)) return;
+
+            if (aggroAgent.PrototypeDataRef == BrimstoneProtoRef && agent.Properties.HasProperty(PropertyEnum.EnrageStartTime) == false)
+                agent.Properties[PropertyEnum.EnrageStartTime] = game.CurrentTime + TimeSpan.FromMinutes(EnrageTimerInMinutes);
         }
     }
 
@@ -3124,33 +3161,40 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public ProceduralUsePowerContextPrototype BombDancePower { get; protected set; }
 
+        //---
+
         public override void Init(Agent agent)
         {
             base.Init(agent);
+
             InitPower(agent, BombDancePower);
         }
 
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
-            if (HandleOverrideBehavior(ownerController)) return;
+            if (HandleOverrideBehavior(ownerController))
+                return;
 
             HandleEnrage(ownerController);
 
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
-            EnrageState state = (EnrageState)(int)blackboard.PropertyCollection[PropertyEnum.AIEnrageState];
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            EnrageState state = (EnrageState)(int)blackboardProps[PropertyEnum.AIEnrageState];
             if (state != EnrageState.Enraging)
             {
-                if (ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] == 1)
+                if (blackboardProps[PropertyEnum.AICustomStateVal1] == 1)
                 {
-                    if (BombDancePower?.PowerContext == null || BombDancePower.PowerContext.Power == null) return;
+                    if (!Verify.IsNotNull(BombDancePower.PowerContext)) return;
+                    if (!Verify.IsNotNull(BombDancePower.PowerContext.Power)) return;
+
                     HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, BombDancePower.PowerContext, BombDancePower);
                 }
                 else
@@ -3161,8 +3205,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     GRandom random = game.Random;
                     Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
                     PopulatePowerPicker(ownerController, powerPicker);
-                    StaticBehaviorReturnType powerResult = HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
-                    if (powerResult == StaticBehaviorReturnType.Running) return;
+                    if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running)
+                        return;
 
                     DefaultRangedFlankerMovement(proceduralAI, ownerController, agent, target, currentTime, MoveToTarget, FlankTarget);
                 }
@@ -3170,47 +3214,54 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             long totalHealth = agent.Properties[PropertyEnum.Health];
             int numTargets = 1;
-            var conditions = agent.ConditionCollection;
-            if (conditions == null) return;
+            ConditionCollection conditions = agent.ConditionCollection;
+            if (!Verify.IsNotNull(conditions)) return;
 
-            var entityManager = game.EntityManager;
+            EntityManager entityManager = game.EntityManager;
 
-            foreach (var condition in conditions.IterateConditions(true))
+            foreach (Condition condition in conditions.IterateConditions(true))
             {
-                if (condition == null) return;
-                var transferId = condition.Properties[PropertyEnum.DamageTransferID];
+                if (!Verify.IsNotNull(condition)) return;
+
+                ulong transferId = condition.Properties[PropertyEnum.DamageTransferID];
                 if (transferId != Entity.InvalidId)
                 {
-                    var transfer = entityManager.GetEntity<WorldEntity>(transferId);
-                    if (transfer != null)
+                    WorldEntity transferEntity = entityManager.GetEntity<WorldEntity>(transferId);
+                    if (transferEntity != null)
                     {
                         ++numTargets;
-                        totalHealth += transfer.Properties[PropertyEnum.Health];
+                        totalHealth += transferEntity.Properties[PropertyEnum.Health];
                     }
                 }
             }
 
+            // Math.Max() is needed here because directly setting health to 0 will skip Kill() / OnKilled() and turn the boss into a "zombie".
             if (numTargets > 1)
                 agent.Properties[PropertyEnum.Health] = Math.Max(totalHealth / numTargets, 1);
-        }
-
-        public override bool OnPowerPicked(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
-        {
-            if (base.OnPowerPicked(ownerController, powerContext) == false) return false;
-            if (powerContext == BombDancePower)
-                ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
-            return true;
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             base.PopulatePowerPicker(ownerController, powerPicker);
+
             ownerController.AddPowersToPicker(powerPicker, BombDancePower);
+        }
+
+        public override bool OnPowerPicked(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            if (base.OnPowerPicked(ownerController, powerContext) == false)
+                return false;
+
+            if (powerContext == BombDancePower)
+                ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
+
+            return true;
         }
 
         public override void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
         {
             base.OnPowerEnded(ownerController, powerContext);
+
             if (powerContext == BombDancePower)
                 ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 0;
         }
@@ -3239,19 +3290,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MiniBossMonolith { get; protected set; }
         public PrototypeId MiniBossSlag { get; protected set; }
 
+        //---
+
         public override void Init(Agent agent)
         {
             base.Init(agent);
+
             InitPower(agent, FirePillarPower);
 
             AIController ownerController = agent.AIController;
-            if (ownerController == null) return;
+            if (!Verify.IsNotNull(ownerController)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             Region region = agent.Region;
-            if (region == null) return;
+            if (!Verify.IsNotNull(region)) return;
+
             ownerController.RegisterForEntityDeadEvents(region, true);
 
             long cooldown = currentTime + game.Random.Next(FirePillarMinCooldownMS, FirePillarMaxCooldownMS);
@@ -3261,24 +3317,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             HandleEnrage(ownerController);
 
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
-            EnrageState state = (EnrageState)(int)blackboard.PropertyCollection[PropertyEnum.AIEnrageState];
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            EnrageState state = (EnrageState)(int)blackboardProps[PropertyEnum.AIEnrageState];
             if (state != EnrageState.Enraging)
             {
                 AttemptFirePillarPower(ownerController, currentTime);
 
                 WorldEntity target = ownerController.TargetEntity;
-                if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
-                    && proceduralAI.PartialOverrideBehavior == null) return;
+                if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false &&
+                    proceduralAI.PartialOverrideBehavior == null)
+                {
+                    return;
+                }
 
                 GRandom random = game.Random;
                 Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
@@ -3290,103 +3350,112 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private void AttemptFirePillarPower(AIController ownerController, long currentTime)
         {
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
 
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
 
-            long cooldown = blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1];
+            long cooldown = blackboardProps[PropertyEnum.AICustomTimeVal1];
             if (agent.Properties[PropertyEnum.SinglePowerLock, FirePillarPower] == false && currentTime > cooldown)
             {
                 Game game = ownerController.Game;
-                if (game == null) return;
+                if (!Verify.IsNotNull(game)) return;
+
                 Region region = agent.Region;
-                if (region == null)
-                {
-                    ProceduralAI.Logger.Warn($"Entity is not in a valid region! Entity: {agent}");
+                if (!Verify.IsNotNull(region, $"Entity is not in a valid region! Entity: {agent}"))
                     return;
-                }
 
                 TuningPrototype difficultyProto = region.TuningTable?.Prototype;
-                if (difficultyProto == null) return;
-                var volume = new Sphere(agent.RegionLocation.Position, difficultyProto.PlayerNearbyRange);
+                if (!Verify.IsNotNull(difficultyProto)) return;
 
-                Dictionary<float, WorldEntity> targets = new ();
+                Sphere volume = new(agent.RegionLocation.Position, difficultyProto.PlayerNearbyRange);
+                using var targetsHandle = ListPool<(float, WorldEntity)>.Instance.Get(out List<(float, WorldEntity)> targets);
                 foreach (WorldEntity target in region.IterateAvatarsInVolume(volume))
                 {
-                    if (target == null) continue;
+                    if (target == null)
+                        continue;
+
                     float distanceToTarget = agent.GetDistanceTo(target, true);
-                    targets[distanceToTarget] = target;
+                    targets.Add((distanceToTarget, target));
                 }
 
+                // NOTE: Using a list will theoretically allow two targets at the exact same distance to be both affected by FirePillar,
+                // which was not possible with the original map-based C++ implementation, but seems to be the intention.
+                targets.Sort((a, b) => b.Item1.CompareTo(a.Item1));
+
                 int numTargets = 0;
-                foreach (var kvp in targets.OrderByDescending(kvp => kvp.Key))
+                foreach ((_, WorldEntity target) in targets)
                 {
-                    var target = kvp.Value;
-                    if (numTargets > FirePillarPowerMaxTargets) break;
-                    if (target == null) continue;
+                    if (numTargets > FirePillarPowerMaxTargets)
+                        break;
+
+                    if (!Verify.IsNotNull(target))
+                        continue;
+
                     ownerController.AttemptActivatePower(FirePillarPower, target.Id, target.RegionLocation.Position);
                     numTargets++;
                 }
 
                 cooldown = currentTime + game.Random.Next(FirePillarMinCooldownMS, FirePillarMaxCooldownMS);
-                blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = cooldown;
+                blackboardProps[PropertyEnum.AICustomTimeVal1] = cooldown;
             }
         }
 
         public override void OnEntityDeadEvent(AIController ownerController, in EntityDeadGameEvent deadEvent)
         {
-            if (deadEvent.Defender == null) return;
-            var agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(deadEvent.Defender)) return;
 
-            var defender = deadEvent.Defender.PrototypeDataRef;
-            var blackboard = ownerController.Blackboard;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
 
-            if (defender == MiniBossBrimstone)
+            PrototypeId defenderRef = deadEvent.Defender.PrototypeDataRef;
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+
+            if (defenderRef == MiniBossBrimstone)
             {
                 agent.Properties[PropertyEnum.SinglePowerLock, PowerUnlockBrimstone] = false;
-                blackboard.PropertyCollection.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
+                blackboardProps.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
             }
-            else if (defender == MiniBossHellfire)
+            else if (defenderRef == MiniBossHellfire)
             {
                 agent.Properties[PropertyEnum.SinglePowerLock, PowerUnlockHellfire] = false;
-                blackboard.PropertyCollection.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
+                blackboardProps.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
             }
-            else if (defender == MiniBossMistress)
+            else if (defenderRef == MiniBossMistress)
             {
                 agent.Properties[PropertyEnum.SinglePowerLock, PowerUnlockMistress] = false;
-                blackboard.PropertyCollection.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
+                blackboardProps.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
             }
-            else if (defender == MiniBossMonolith)
+            else if (defenderRef == MiniBossMonolith)
             {
                 agent.Properties[PropertyEnum.SinglePowerLock, PowerUnlockMonolith] = false;
-                blackboard.PropertyCollection.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
+                blackboardProps.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
             }
-            else if (defender == MiniBossSlag)
+            else if (defenderRef == MiniBossSlag)
             {
                 agent.Properties[PropertyEnum.SinglePowerLock, PowerUnlockSlag] = false;
-                blackboard.PropertyCollection.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
+                blackboardProps.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
             }
 
-            if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] >= 5)
+            if (blackboardProps[PropertyEnum.AICustomStateVal1] >= 5)
             {
-                var region = agent.Region;
-                if (region == null) return;
+                Region region = agent.Region;
+                if (!Verify.IsNotNull(region)) return;
 
                 ownerController.RegisterForEntityDeadEvents(region, false);
             }
         }
-
     }
 
     public class ProceduralProfileSurturPortalPrototype : ProceduralProfileNoMoveNoSensePrototype
     {
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
+            // No base call here, same as the client.
+
             if (GenericProceduralPowers.HasValue())
             {
                 int index = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
-                if (index >= 0 && index < GenericProceduralPowers.Length)
+                if (Verify.IsTrue(index >= 0 && index < GenericProceduralPowers.Length))
                     ownerController.AddPowersToPicker(powerPicker, GenericProceduralPowers[index]);
             }
         }
@@ -3401,103 +3470,116 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId[] ObeliskTargets { get; protected set; }
 
+        //---
+
         private enum State
         {
             TargetObelisk,
             MoveToObelisk,
             HealObelisk,
-            AllObelisksHealed
+            AllObelisksHealed,
         }
 
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
-            if (agent.IsDormant) return;
+            if (agent.IsDormant)
+                return;
 
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
-            int stateVal = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
-            int obelixHealed = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2];
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            int stateVal = blackboardProps[PropertyEnum.AICustomStateVal1];
+            int obeliskHealed = blackboardProps[PropertyEnum.AICustomStateVal2];
             switch ((State)stateVal)
             {
                 case State.TargetObelisk:
-
                     bool obeliskTargetFound = false;
                     if (ObeliskTargets.HasValue())
                     {
-                        var obeliskDataRef = ObeliskTargets[Math.Min(obelixHealed, ObeliskTargets.Length - 1)];
-                        if (obeliskDataRef == PrototypeId.Invalid) return;
-                        var region = agent.Region;
-                        if (region == null) return;
+                        PrototypeId obeliskDataRef = ObeliskTargets[Math.Min(obeliskHealed, ObeliskTargets.Length - 1)];
+                        if (!Verify.IsTrue(obeliskDataRef != PrototypeId.Invalid)) return;
 
-                        var volume = new Sphere(agent.RegionLocation.Position, 3200.0f);
-                        foreach (var targetEntity in region.IterateEntitiesInVolume(volume, new (EntityRegionSPContextFlags.PrimaryPartition)))
+                        Region region = agent.Region;
+                        if (!Verify.IsNotNull(region)) return;
+
+                        Sphere volume = new(agent.RegionLocation.Position, 3200.0f);
+                        foreach (WorldEntity targetEntity in region.IterateEntitiesInVolume(volume, new (EntityRegionSPContextFlags.PrimaryPartition)))
+                        {
                             if (targetEntity != null && targetEntity.PrototypeDataRef == obeliskDataRef)
                             {
-                                blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = targetEntity.Id;
+                                blackboardProps[PropertyEnum.AIAssistedEntityID] = targetEntity.Id;
                                 ownerController.SetTargetEntity(targetEntity);
                                 obeliskTargetFound = true;
-                                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.MoveToObelisk;
+                                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.MoveToObelisk;
                                 break;
-                            }                
+                            }
+                        }             
                     }
 
-                    if (obeliskTargetFound == false)
-                        ProceduralAI.Logger.Warn($"The obelisk healer cannot find an obelisk to heal! {agent}");
-
+                    Verify.IsTrue(obeliskTargetFound, $"The obelisk healer cannot find an obelisk to heal! {agent}");
                     break;
 
                 case State.MoveToObelisk:
-
-                    var obeliskTarget = ownerController.AssistedEntity;
+                    WorldEntity obeliskTarget = ownerController.AssistedEntity;
                     if (obeliskTarget != null)
                     {
-                        var contextResult = HandleContext(proceduralAI, ownerController, MoveToTarget);
+                        StaticBehaviorReturnType contextResult = HandleContext(proceduralAI, ownerController, MoveToTarget);
+                        Verify.IsTrue(contextResult != StaticBehaviorReturnType.Failed && contextResult != StaticBehaviorReturnType.Interrupted,
+                            $"The obelisk healer {agent} cannot move to an obelisk {obeliskTarget} to heal!");
+
                         if (contextResult == StaticBehaviorReturnType.Completed)
-                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.HealObelisk;
-                        else if (contextResult == StaticBehaviorReturnType.Failed || contextResult == StaticBehaviorReturnType.Interrupted)
-                            ProceduralAI.Logger.Warn($"The obelisk healer {agent} cannot move to an obelisk {obeliskTarget} to heal!");
+                            blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.HealObelisk;
+                        else if (contextResult == StaticBehaviorReturnType.Running)
+                            return;
                     }
                     else
-                        ProceduralAI.Logger.Warn($"The obelisk healer cannot find an obelisk to move to because its AssistedEntity is NULL! {agent}");
+                    {
+                        Verify.IsTrue(false, $"The obelisk healer cannot find an obelisk to move to because its AssistedEntity is NULL! {agent}");
+                    }
 
                     break;
 
                 case State.HealObelisk:
+                    WorldEntity target = ownerController.TargetEntity;
+                    WorldEntity assistedEntity = ownerController.AssistedEntity;
 
-                    var target = ownerController.TargetEntity;
-                    var assistedEntity = ownerController.AssistedEntity;
-                    if (target == null || assistedEntity == null || target != assistedEntity) return;
+                    Verify.IsNotNull(target);
+                    Verify.IsNotNull(assistedEntity);
+                    Verify.IsTrue(target == assistedEntity, $"The obelisk healer's target {target} is not the same as it's assisted entity {assistedEntity}!");
 
                     GRandom random = game.Random;
                     Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
                     PopulatePowerPicker(ownerController, powerPicker);
-                    var proceduralPowerResult = HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+                    StaticBehaviorReturnType proceduralPowerResult = HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+
+                    Verify.IsTrue(proceduralPowerResult != StaticBehaviorReturnType.Failed && proceduralPowerResult != StaticBehaviorReturnType.Interrupted,
+                        $"The obelisk healer's power failed or was interrupted when trying to heal the obelisk!\nResult: {proceduralPowerResult}\nHealer: {agent}\nObelisk: {assistedEntity}");
+                    
                     if (proceduralPowerResult == StaticBehaviorReturnType.Completed)
                     {
                         long health = assistedEntity.Properties[PropertyEnum.Health];
                         long maxHealth = assistedEntity.Properties[PropertyEnum.HealthMaxOther];
                         if (health == maxHealth)
                         {
-                            obelixHealed = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2];
-                            if (obelixHealed == ObeliskTargets.Length)
-                                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.AllObelisksHealed;
+                            obeliskHealed = blackboardProps[PropertyEnum.AICustomStateVal2];
+                            if (obeliskHealed == ObeliskTargets.Length)
+                            {
+                                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.AllObelisksHealed;
+                            }
                             else
                             {
-                                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.TargetObelisk;
-                                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = obelixHealed + 1;
+                                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.TargetObelisk;
+                                blackboardProps[PropertyEnum.AICustomStateVal2] = obeliskHealed + 1;
                             }
                         }
                     }
-                    //else if (proceduralPowerResult == StaticBehaviorReturnType.Failed || proceduralPowerResult == StaticBehaviorReturnType.Interrupted)
-                    //    ProceduralAI.Logger.Warn($"The obelisk healer's power failed or was interrupted when trying to heal the obelisk!\nResult: {proceduralPowerResult}\n" +
-                    //        $"Healer: {agent}\nObelisk: {assistedEntity}");
 
                     break;
             }
@@ -3510,55 +3592,70 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DetonateIslandPower { get; protected set; }
         public PrototypeId FullyHealedPower { get; protected set; }
 
+        //---
+
         public override void Init(Agent agent)
         {
             base.Init(agent);
+
             InitPower(agent, DetonateIslandPower);
             InitPower(agent, FullyHealedPower);
 
             Region region = agent.Region;
-            if (region == null) return;
+            if (!Verify.IsNotNull(region)) return;
             AIController ownerController = agent.AIController;
-            if (ownerController == null) return;
+            if (!Verify.IsNotNull(ownerController)) return;
+
             ownerController.RegisterForEntityDeadEvents(region, true);
         }
 
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
-            if (agent.IsDormant) return;
+            if (agent.IsDormant)
+                return;
 
             BehaviorBlackboard blackboard = ownerController.Blackboard;
+            PropertyCollection blackboardProps = blackboard.PropertyCollection;
             int stateVal = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
             if (stateVal == 0)
             {
                 WorldEntity target = ownerController.TargetEntity;
-                if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
-                    && proceduralAI.PartialOverrideBehavior == null) return;
+                if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false &&
+                    proceduralAI.PartialOverrideBehavior == null)
+                {
+                    return;
+                }
 
                 GRandom random = game.Random;
                 Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
                 PopulatePowerPicker(ownerController, powerPicker);
-                if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+                if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running)
+                    return;
 
                 long health = agent.Properties[PropertyEnum.Health];
                 long maxHealth = agent.Properties[PropertyEnum.HealthMaxOther];
 
                 if (health == maxHealth)
                 {
-                    if (ownerController.AttemptActivatePower(FullyHealedPower, agent.Id, agent.RegionLocation.Position) == false) return;
-                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
+                    if (!Verify.IsTrue(ownerController.AttemptActivatePower(FullyHealedPower, agent.Id, agent.RegionLocation.Position)))
+                        return;
+
+                    blackboardProps[PropertyEnum.AICustomStateVal1] = 1;
 
                     Region region = agent.Region;
-                    if (region == null) return;
+                    if (!Verify.IsNotNull(region)) return;
+
                     ownerController.RegisterForEntityDeadEvents(region, false);
+                    
                     AIBroadcastBlackboardGameEvent evt = new(agent, blackboard);
                     region.AIBroadcastBlackboardEvent.Invoke(evt);
                 }
@@ -3567,18 +3664,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void OnEntityDeadEvent(AIController ownerController, in EntityDeadGameEvent deadEvent)
         {
-            if (deadEvent.Defender == null) return;
-            var agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(deadEvent.Defender)) return;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
 
-            var defender = deadEvent.Defender.PrototypeDataRef;
-            var blackboard = ownerController.Blackboard;
-            int stateVal = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
-            if (stateVal != 1 && defender == DeadEntityForDetonateIslandPower)
+            PrototypeId defenderRef = deadEvent.Defender.PrototypeDataRef;
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+
+            int stateVal = blackboardProps[PropertyEnum.AICustomStateVal1];
+            if (stateVal != 1 && defenderRef == DeadEntityForDetonateIslandPower)
             {
                 WorldEntity deadArcher = deadEvent.Defender;
-                if (deadArcher == null) return;
-                ownerController.AttemptActivatePower(DetonateIslandPower, deadArcher.Id, deadArcher.RegionLocation.Position);
+                if (!Verify.IsNotNull(deadArcher)) return;
+
+                Verify.IsTrue(ownerController.AttemptActivatePower(DetonateIslandPower, deadArcher.Id, deadArcher.RegionLocation.Position));
             }
         }
     }
@@ -3588,9 +3687,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype MarkTargetPower { get; protected set; }
         public PrototypeId MarkTargetVFXRemoval { get; protected set; }
 
+        //---
+
         public override void Init(Agent agent)
         {
             base.Init(agent);
+
             InitPower(agent, MarkTargetPower);
             InitPower(agent, MarkTargetVFXRemoval);
         }
@@ -3598,27 +3700,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
-            if (HandleOverrideBehavior(ownerController)) return;
+            if (HandleOverrideBehavior(ownerController))
+                return;
 
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             int stateVal = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
             if (stateVal == 0)
             {
                 WorldEntity target = ownerController.TargetEntity;
-                if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
-                    && proceduralAI.PartialOverrideBehavior == null) return;
+                if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false &&
+                    proceduralAI.PartialOverrideBehavior == null)
+                {
+                    return;
+                }
 
                 GRandom random = game.Random;
                 Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
                 PopulatePowerPicker(ownerController, powerPicker);
-                if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+                if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running)
+                    return;
 
                 DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
             }
@@ -3627,7 +3735,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 GRandom random = game.Random;
                 Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
                 PopulatePowerPicker(ownerController, powerPicker);
-                if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+                if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running)
+                    return;
 
                 HandleContext(proceduralAI, ownerController, MoveToTarget);
             }
@@ -3636,15 +3745,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             base.PopulatePowerPicker(ownerController, powerPicker);
+
             ownerController.AddPowersToPicker(powerPicker, PrimaryPower);
             ownerController.AddPowersToPicker(powerPicker, MarkTargetPower);
         }
 
         public override bool OnPowerPicked(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
         {
-            if (base.OnPowerPicked(ownerController, powerContext) == false) return false;
+            if (base.OnPowerPicked(ownerController, powerContext) == false)
+                return false;
+
             if (powerContext == MarkTargetPower)
                 ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
+
             return true;
         }
 
@@ -3652,7 +3765,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             WorldEntity target = ownerController.TargetEntity;
             if (target != null)
-                ownerController.AttemptActivatePower(MarkTargetVFXRemoval, target.Id, target.RegionLocation.Position);
+                Verify.IsTrue(ownerController.AttemptActivatePower(MarkTargetVFXRemoval, target.Id, target.RegionLocation.Position));
         }
     }
 
@@ -3674,26 +3787,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
 
-        public override void Init(Agent agent)
-        {
-            base.Init(agent);
-            InitPower(agent, ActivateHulkBusterAnimOnly);
-            InitPowers(agent, WeaponsCratesAnimOnlyPowers);
-
-            AIController ownerController = agent.AIController;
-            if (ownerController == null) return;
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
-            if (WeaponsCrate == PrototypeId.Invalid) return;
-
-            Region region = agent.Region;
-            if (region == null) return;
-            Sphere volume = new(agent.RegionLocation.Position, ownerController.AggroRangeHostile);
-            foreach(WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
-            {
-                if (target != null && target.PrototypeDataRef == WeaponsCrate)
-                    blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = target.Id;
-            }
-        }
+        //---
 
         private enum State
         {
@@ -3703,60 +3797,93 @@ namespace MHServerEmu.Games.GameData.Prototypes
             UseWeaponCrate,
         }
 
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+
+            InitPower(agent, ActivateHulkBusterAnimOnly);
+            InitPowers(agent, WeaponsCratesAnimOnlyPowers);
+
+            AIController ownerController = agent.AIController;
+            if (!Verify.IsNotNull(ownerController)) return;
+
+            Region region = agent.Region;
+            if (!Verify.IsNotNull(region)) return;
+
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+
+            if (!Verify.IsTrue(WeaponsCrate != PrototypeId.Invalid)) return;
+
+            Sphere volume = new(agent.RegionLocation.Position, ownerController.AggroRangeHostile);
+            foreach (WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
+            {
+                if (target != null && target.PrototypeDataRef == WeaponsCrate)
+                {
+                    blackboardProps[PropertyEnum.AIAssistedEntityID] = target.Id;
+                    break;
+                }
+            }
+        }
+
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
-            if (agent.IsDormant) return;
+            if (agent.IsDormant)
+                return;
             
-            var blackboard = ownerController.Blackboard;
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            PropertyCollection blackboardProps = blackboard.PropertyCollection;
             int state = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
             switch ((State)state)
             {
                 case State.Default:
-
                     if (proceduralAI.GetState(0) != UsePower.Instance)
                     {
-                        int hulkBusterState = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2];
-                        var health = agent.Properties[PropertyEnum.Health];
-                        var maxHealth = agent.Properties[PropertyEnum.HealthMax];
+                        int hulkBusterState = blackboardProps[PropertyEnum.AICustomStateVal2];
+                        long health = agent.Properties[PropertyEnum.Health];
+                        long maxHealth = agent.Properties[PropertyEnum.HealthMax];
 
                         if (MathHelper.IsBelowOrEqual(health, maxHealth, HulkBusterHealthThreshold1) && hulkBusterState < 1)
-                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = 1;
+                            blackboardProps[PropertyEnum.AICustomStateVal2] = 1;
                         else if (MathHelper.IsBelowOrEqual(health, maxHealth, HulkBusterHealthThreshold2) && hulkBusterState < 2)
-                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = 2;
+                            blackboardProps[PropertyEnum.AICustomStateVal2] = 2;
                         else if (MathHelper.IsBelowOrEqual(health, maxHealth, HulkBusterHealthThreshold3) && hulkBusterState < 3)
-                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = 3;
+                            blackboardProps[PropertyEnum.AICustomStateVal2] = 3;
                         else if (MathHelper.IsBelowOrEqual(health, maxHealth, HulkBusterHealthThreshold4) && hulkBusterState < 4)
-                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = 4;
+                            blackboardProps[PropertyEnum.AICustomStateVal2] = 4;
 
-                        if (hulkBusterState != blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2])
+                        if (hulkBusterState != blackboardProps[PropertyEnum.AICustomStateVal2])
                         {
-                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.ActivateHulkBuster;
+                            blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.ActivateHulkBuster;
                             return;
                         }
                     }
 
                     WorldEntity target = ownerController.TargetEntity;
-                    if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
-                        && proceduralAI.PartialOverrideBehavior == null) return;
+                    if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false &&
+                        proceduralAI.PartialOverrideBehavior == null)
+                    {
+                        return;
+                    }
 
                     GRandom random = game.Random;
                     Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
                     PopulatePowerPicker(ownerController, powerPicker);
-                    if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+                    if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running)
+                        return;
 
                     DefaultRangedFlankerMovement(proceduralAI, ownerController, agent, target, currentTime, MoveToTarget, FlankTarget);
                     break;
 
                 case State.ActivateHulkBuster:
-
                     if (proceduralAI.GetState(0) != UsePower.Instance)
                     {
                         if (HulkBustersToActivate.HasValue())
@@ -3765,129 +3892,146 @@ namespace MHServerEmu.Games.GameData.Prototypes
                             if (numHulkBusters > 0)
                             {
                                 int hulkBusterIndex = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] - 1;
-                                if (hulkBusterIndex < 0 || hulkBusterIndex > numHulkBusters - 1) {
-                                    ProceduralAI.Logger.Warn($"Red Skull {agent} is trying to activate a Hulk Buster outside the bounds of his HulkBustersToActivate list {hulkBusterIndex}!");
-                                    return; 
+                                if (!Verify.IsTrue(hulkBusterIndex >= 0 && hulkBusterIndex <= numHulkBusters - 1,
+                                    $"Red Skull {agent} is trying to activate a Hulk Buster outside the bounds of his HulkBustersToActivate list {hulkBusterIndex}!"))
+                                {
+                                    return;
                                 }
-                                var hulkBusterDataRef = HulkBustersToActivate[Math.Min(hulkBusterIndex, numHulkBusters - 1)];
-                                if (hulkBusterDataRef == PrototypeId.Invalid) return;
+
+                                PrototypeId hulkBusterDataRef = HulkBustersToActivate[Math.Min(hulkBusterIndex, numHulkBusters - 1)];
+                                if (!Verify.IsTrue(hulkBusterDataRef != PrototypeId.Invalid)) return;
+
                                 blackboard.PropertyCollection[PropertyEnum.AICustomProtoRef1] = hulkBusterDataRef;
 
-                                var region = agent.Region;
-                                if (region == null) return;
-                                AIBroadcastBlackboardGameEvent evt = new (agent,blackboard);
+                                Region region = agent.Region;
+                                if (!Verify.IsNotNull(region)) return;
+
+                                AIBroadcastBlackboardGameEvent evt = new(agent, blackboard);
                                 region.AIBroadcastBlackboardEvent.Invoke(evt);
                             }
                         }
 
-                        var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, ActivateHulkBusterAnimOnly.PowerContext, ActivateHulkBusterAnimOnly);
+                        StaticBehaviorReturnType powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, ActivateHulkBusterAnimOnly.PowerContext, ActivateHulkBusterAnimOnly);
                         if (powerResult == StaticBehaviorReturnType.Failed || powerResult == StaticBehaviorReturnType.Interrupted)
                         {
-                            ProceduralAI.Logger.Warn($"Red Skull failed to play his ActivateHulkBusterAnimOnly power! Reason: {powerResult}  RedSkull: {agent}");
+                            Verify.IsTrue(false, $"Red Skull failed to play his ActivateHulkBusterAnimOnly power! Reason: {powerResult}  RedSkull: {agent}");
                             blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.MoveToCrate;
                             return;
                         }
                     }
                     else
                     {
-                        var hulkBusterUsePowerContext = ActivateHulkBusterAnimOnly?.PowerContext;
-                        if (hulkBusterUsePowerContext == null || hulkBusterUsePowerContext.Power == null) return;
-                        if (hulkBusterUsePowerContext.Power.DataRef != ownerController.ActivePowerRef) 
+                        if (!Verify.IsNotNull(ActivateHulkBusterAnimOnly)) return;
+
+                        UsePowerContextPrototype hulkBusterUsePowerContext = ActivateHulkBusterAnimOnly.PowerContext;
+                        if (!Verify.IsNotNull(hulkBusterUsePowerContext)) return;
+
+                        PowerPrototype hulkBusterPowerProto = hulkBusterUsePowerContext.Power;
+                        if (!Verify.IsNotNull(hulkBusterPowerProto)) return;
+                        if (!Verify.IsTrue(hulkBusterPowerProto.DataRef != PrototypeId.Invalid)) return;
+
+                        if (!Verify.IsTrue(hulkBusterPowerProto.DataRef == ownerController.ActivePowerRef,
+                            $"Red Skull {agent} should be activating his Hulk Buster power but is currently activating another power [{ownerController.ActivePowerRef.GetName()}]!"))
                         {
-                            ProceduralAI.Logger.Warn($"Red Skull {agent} should be activating his Hulk Buster power but is currently activating another power [{GameDatabase.GetPrototypeName(ownerController.ActivePowerRef)}]!");
-                            return; 
+                            return;
                         }
-                        var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, hulkBusterUsePowerContext, ActivateHulkBusterAnimOnly);
-                        if (powerResult == StaticBehaviorReturnType.Running) return;
+
+                        StaticBehaviorReturnType powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, hulkBusterUsePowerContext, ActivateHulkBusterAnimOnly);
+                        if (powerResult == StaticBehaviorReturnType.Running)
+                            return;
                     }
 
                     break;
 
                 case State.MoveToCrate:
-
-                    var weaponsCrateTarget = ownerController.AssistedEntity;
+                    WorldEntity weaponsCrateTarget = ownerController.AssistedEntity;
                     if (weaponsCrateTarget == null)
                     {
-                        ProceduralAI.Logger.Warn($"Red Skull {agent} cannot find a weapon crate!");
+                        Verify.IsTrue(false, $"Red Skull {agent} cannot find a weapon crate!");
                         blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.UseWeaponCrate;
                         return;
                     }
+
                     ownerController.SetTargetEntity(weaponsCrateTarget);
 
-                    var contextResult = HandleContext(proceduralAI, ownerController, MoveToWeaponsCrate);
-                    if (contextResult == StaticBehaviorReturnType.Failed || contextResult == StaticBehaviorReturnType.Interrupted)
-                    {
-                        ProceduralAI.Logger.Warn($"Red Skull cannot move to a weapon crate! Reason: {contextResult}  RedSkull: [{agent}]  WeaponCrate: [{weaponsCrateTarget}]");
-                        return;
-                    }
-                    if (contextResult != StaticBehaviorReturnType.Running) 
-                    { 
-                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.UseWeaponCrate;
-                        return; 
-                    }
+                    StaticBehaviorReturnType contextResult = HandleContext(proceduralAI, ownerController, MoveToWeaponsCrate);
+                    Verify.IsTrue(contextResult != StaticBehaviorReturnType.Failed && contextResult != StaticBehaviorReturnType.Interrupted,
+                        $"Red Skull cannot move to a weapon crate! Reason: {contextResult}  RedSkull: [{agent}]  WeaponCrate: [{weaponsCrateTarget}]");
 
-                    break;
+                    if (contextResult != StaticBehaviorReturnType.Running) 
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.UseWeaponCrate;
+
+                    return;
 
                 case State.UseWeaponCrate:
-
                     weaponsCrateTarget = ownerController.AssistedEntity;
                     if (weaponsCrateTarget == null)
                     {
-                        ProceduralAI.Logger.Warn($"Red Skull {agent} is trying to play his WeaponsCratesAnimOnly when he doesn't have a target crate!");
+                        Verify.IsTrue(false, $"Red Skull {agent} is trying to play his WeaponsCratesAnimOnly when he doesn't have a target crate!");
                         OnActivatedWeaponCrate(ownerController);
                         return;
                     }
 
                     int weaponCrateIndex = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3];
-                    var weaponsCrateUsePowerContext = GetWeaponCrateAnimPowerByIndex(ownerController, weaponCrateIndex);
-                    var weaponsCratePowerContext = weaponsCrateUsePowerContext?.PowerContext;
-                    if (weaponsCratePowerContext == null || weaponsCratePowerContext.Power == null) return;
+                    ProceduralUsePowerContextPrototype weaponsCrateUsePowerContext = GetWeaponCrateAnimPowerByIndex(ownerController, weaponCrateIndex);
+
+                    if (!Verify.IsNotNull(weaponsCrateUsePowerContext)) return;
+                    if (!Verify.IsNotNull(weaponsCrateUsePowerContext.PowerContext)) return;
+                    if (!Verify.IsNotNull(weaponsCrateUsePowerContext.PowerContext.Power)) return;
 
                     if (proceduralAI.GetState(0) != UsePower.Instance)
                     {
-                        var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, weaponsCratePowerContext, weaponsCrateUsePowerContext);
+                        StaticBehaviorReturnType powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, weaponsCrateUsePowerContext.PowerContext, weaponsCrateUsePowerContext);
                         if (powerResult == StaticBehaviorReturnType.Failed || powerResult == StaticBehaviorReturnType.Interrupted)
                         {
-                            ProceduralAI.Logger.Warn($"Red Skull {agent} failed to play his WeaponsCratesAnimOnly power on a crate {weaponsCrateTarget}!");
+                            Verify.IsTrue(false, $"Red Skull {agent} failed to play his WeaponsCratesAnimOnly power on a crate {weaponsCrateTarget}!");
                             OnActivatedWeaponCrate(ownerController);
                         }
                     }
                     else
                     {
-                        if (weaponsCratePowerContext.Power.DataRef != ownerController.ActivePowerRef)
+                        PowerPrototype weaponsCratePowerProto = weaponsCrateUsePowerContext.PowerContext.Power;
+                        if (!Verify.IsNotNull(weaponsCratePowerProto)) return;
+                        if (!Verify.IsTrue(weaponsCratePowerProto.DataRef != PrototypeId.Invalid)) return;
+
+                        if (!Verify.IsTrue(weaponsCratePowerProto.DataRef == ownerController.ActivePowerRef,
+                            $"Red Skull {agent} should be activating his Weapons Crate power but is currently activating another power [{ownerController.ActivePowerRef.GetName()}]!"))
                         {
-                            ProceduralAI.Logger.Warn($"Red Skull {agent} should be activating his Weapons Crate power but is currently activating another power [{GameDatabase.GetPrototypeName(ownerController.ActivePowerRef)}]!");
                             return;
                         }
-                        HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, weaponsCratePowerContext, weaponsCrateUsePowerContext);
+
+                        HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, weaponsCrateUsePowerContext.PowerContext, weaponsCrateUsePowerContext);
                     }
+
                     break;
             }            
         }
 
         private ProceduralUsePowerContextPrototype GetWeaponCrateAnimPowerByIndex(AIController ownerController, int index)
         {
-            var agent = ownerController.Owner;
-            if (agent == null) return null;
-            if (WeaponsCratesAnimOnlyPowers.IsNullOrEmpty()) return null;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return null;
+
+            if (!Verify.IsTrue(WeaponsCratesAnimOnlyPowers.HasValue())) return null;
+
             int numPowers = WeaponsCratesAnimOnlyPowers.Length;
-            if (index < 0 || index >= numPowers) return null;
+            if (!Verify.IsTrue(numPowers > 0)) return null;
+            if (!Verify.IsTrue(index >= 0 && index <= numPowers - 1)) return null;
+
             return WeaponsCratesAnimOnlyPowers[index];
         }
 
         private void OnActivatedWeaponCrate(AIController ownerController)
         {
-            var agent = ownerController.Owner;
-            if (agent == null) return;
-            var blackboard = ownerController.Blackboard;
-            var weaponsCrateTarget = ownerController.AssistedEntity;
-            if (weaponsCrateTarget == null)
-            {
-                ProceduralAI.Logger.Warn($"Red Skull {agent} is trying to unlock a new power but when he doesn't have a target crate!");
-                return;
-            }
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
 
-            int weaponsUnlockIndex = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3];
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+
+            WorldEntity weaponsCrateTarget = ownerController.AssistedEntity;
+            Verify.IsNotNull(weaponsCrateTarget, $"Red Skull {agent} is trying to unlock a new power but when he doesn't have a target crate!");
+
+            int weaponsUnlockIndex = blackboardProps[PropertyEnum.AICustomStateVal3];
             switch (weaponsUnlockIndex)
             {
                 case 0:
@@ -3903,28 +4047,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     agent.Properties[PropertyEnum.SinglePowerLock, WeaponCrate4UnlockPower] = false;
                     break;
                 default:
-                    ProceduralAI.Logger.Warn($"Red Skull {agent} is trying to unlock a new power with an invalid index {weaponsUnlockIndex}!");
+                    // NOTE: When weaponsUnlockIndex is 4, nothing will happen and there won't be a verify fail. This is client-accurate.
+                    Verify.IsTrue(weaponsUnlockIndex <= 4, $"Red Skull {agent} is trying to unlock a new power with an invalid index {weaponsUnlockIndex}!");
                     break;
             }
-            blackboard.PropertyCollection.AdjustProperty(1, PropertyEnum.AICustomStateVal3);
-            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
+
+            blackboardProps.AdjustProperty(1, PropertyEnum.AICustomStateVal3);
+            blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.Default;
         }
 
         public override void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
         {
-            var agent = ownerController.Owner;
-            if (agent == null) return;
-            var blackboard = ownerController.Blackboard;
-            int state = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
+
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            int state = blackboardProps[PropertyEnum.AICustomStateVal1];
 
             base.OnPowerEnded(ownerController, powerContext);
 
             if (powerContext == ActivateHulkBusterAnimOnly)
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.MoveToCrate;
+            {
+                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.MoveToCrate;
+            }
             else if (state == (int)State.UseWeaponCrate)
             {
-                int index = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3];
-                var weaponsCrateUsePowerContext = GetWeaponCrateAnimPowerByIndex(ownerController, index);
+                int index = blackboardProps[PropertyEnum.AICustomStateVal3];
+                ProceduralUsePowerContextPrototype weaponsCrateUsePowerContext = GetWeaponCrateAnimPowerByIndex(ownerController, index);
                 if (powerContext == weaponsCrateUsePowerContext)
                     OnActivatedWeaponCrate(ownerController);
             }
@@ -3940,19 +4089,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype DeactivatedAnimOnly { get; protected set; }
         public ProceduralUsePowerContextPrototype ActivatingAnimOnly { get; protected set; }
 
-        public override void Init(Agent agent)
-        {
-            base.Init(agent);
-            InitPower(agent, ShieldRedSkull);
-            InitPower(agent, DeactivatedAnimOnly);
-            InitPower(agent, ActivatingAnimOnly);
-
-            AIController ownerController = agent.AIController;
-            if (ownerController == null) return;
-            Region region = agent.Region;
-            if (region == null) return;
-            ownerController.RegisterForAIBroadcastBlackboardEvents(region, true);
-        }
+        //---
 
         private enum State
         {
@@ -3960,39 +4097,58 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Deactivated,
             Activating,
             ShieldRedSkull,
-            MoveToTarget
+            MoveToTarget,
+        }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+
+            InitPower(agent, ShieldRedSkull);
+            InitPower(agent, DeactivatedAnimOnly);
+            InitPower(agent, ActivatingAnimOnly);
+
+            AIController ownerController = agent.AIController;
+            if (!Verify.IsNotNull(ownerController)) return;
+            Region region = agent.Region;
+            if (!Verify.IsNotNull(region)) return;
+
+            ownerController.RegisterForAIBroadcastBlackboardEvents(region, true);
         }
 
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
-            if (agent.IsDormant) return;
+            if (agent.IsDormant)
+                return;
 
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
-            int state = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            int state = blackboardProps[PropertyEnum.AICustomStateVal1];
             switch ((State)state)
             {
                 case State.Default:
-                    var region = agent.Region;
-                    if (region == null)
-                    {
-                        ProceduralAI.Logger.Warn($"Entity is not in a valid region! Entity: {agent}");
+                    Region region = agent.Region;
+                    if (!Verify.IsNotNull(region, $"Entity is not in a valid region! Entity: {agent}"))
                         return;
-                    }
+
                     Sphere volume = new(agent.RegionLocation.Position, 2500.0f);
-                    foreach (var nearbyAvatar in region.IterateAvatarsInVolume(volume))
+                    foreach (Avatar nearbyAvatar in region.IterateAvatarsInVolume(volume))
+                    {
                         if (nearbyAvatar != null && nearbyAvatar.IsAliveInWorld)
                         {
-                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Deactivated;
+                            blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.Deactivated;
                             break;
                         }
+                    }
+
                     break;
 
                 case State.Deactivated:
@@ -4005,30 +4161,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 case State.ShieldRedSkull:
                     WorldEntity redSkull = ownerController.TargetEntity;
-                    if (redSkull == null)
-                    {
-                        ProceduralAI.Logger.Warn($"Hulk Buster {agent} pending target is NULL!");
+                    if (!Verify.IsNotNull(redSkull, $"Hulk Buster {agent} pending target is NULL!"))
                         return;
-                    }
-                    if (redSkull.PrototypeDataRef != RedSkullAxis)
-                    {
-                        ProceduralAI.Logger.Warn($"Hulk Buster {agent} pending target is not RedSkull, it's {redSkull}!");
+
+                    if (!Verify.IsTrue(redSkull.PrototypeDataRef == RedSkullAxis, $"Hulk Buster {agent} pending target is not RedSkull, it's {redSkull}!"))
                         return;
-                    }
+
                     HandleRotateToTarget(agent, redSkull);
                     HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, ShieldRedSkull.PowerContext, ShieldRedSkull);
                     break;
 
                 case State.MoveToTarget:
-
                     WorldEntity target = ownerController.TargetEntity;
-                    if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
-                        && proceduralAI.PartialOverrideBehavior == null) return;
+                    if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false &&
+                        proceduralAI.PartialOverrideBehavior == null)
+                    {
+                        return;
+                    }
 
                     GRandom random = game.Random;
                     Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
                     PopulatePowerPicker(ownerController, powerPicker);
-                    if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+                    if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running)
+                        return;
 
                     DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
                     break;
@@ -4037,57 +4192,57 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype proceduralPowerContext)
         {
-            var agent = ownerController.Owner;
-            if (agent == null) return;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
 
             base.OnPowerEnded(ownerController, proceduralPowerContext);
 
-            var blackboard = ownerController.Blackboard;
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
             if (proceduralPowerContext == ActivatingAnimOnly)
             {
-                var game = ownerController.Game;
-                if (game == null) return;
+                Game game = ownerController.Game;
+                if (!Verify.IsNotNull(game)) return;
 
-                var redSkullId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1];
-                var redSkull = game.EntityManager.GetEntity<WorldEntity>(redSkullId);
-                if (redSkull == null)
-                {
-                    ProceduralAI.Logger.Warn($"Hulk Buster {agent} pending target is NULL!");
+                ulong redSkullId = blackboardProps[PropertyEnum.AICustomEntityId1];
+                WorldEntity redSkull = game.EntityManager.GetEntity<WorldEntity>(redSkullId);
+                if (!Verify.IsNotNull(redSkull, $"Hulk Buster {agent} pending target is NULL!"))
                     return;
-                }
-                if (redSkull.PrototypeDataRef != RedSkullAxis)
-                {
-                    ProceduralAI.Logger.Warn($"Hulk Buster {agent} pending target is not RedSkull, it's {redSkull}!");
+
+                if (!Verify.IsTrue(redSkull.PrototypeDataRef == RedSkullAxis, $"Hulk Buster {agent} pending target is not RedSkull, it's {redSkull}!"))
                     return;
-                }
+
                 ownerController.SetTargetEntity(redSkull);
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.ShieldRedSkull;
+
+                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.ShieldRedSkull;
             }
             else if (proceduralPowerContext == ShieldRedSkull)
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.MoveToTarget;
+            {
+                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.MoveToTarget;
+            }
         }
 
         public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
-            if (broadcastEvent.Broadcaster == null) return;
-            var agent = ownerController.Owner;
-            if (agent == null) return;
-            var broadcaster = broadcastEvent.Broadcaster;
-            var broadcasterBlackboard = broadcastEvent.Blackboard;
-            if (broadcasterBlackboard == null) return;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
+            WorldEntity broadcaster = broadcastEvent.Broadcaster;
+            if (!Verify.IsNotNull(broadcaster)) return;
+            BehaviorBlackboard broadcasterBlackboard = broadcastEvent.Blackboard;
+            if (!Verify.IsNotNull(broadcasterBlackboard)) return;
 
-            if (broadcaster.PrototypeDataRef == RedSkullAxis 
-                && broadcasterBlackboard.PropertyCollection[PropertyEnum.AICustomProtoRef1] == agent.PrototypeDataRef)
+            if (broadcaster.PrototypeDataRef == RedSkullAxis &&
+                broadcasterBlackboard.PropertyCollection[PropertyEnum.AICustomProtoRef1] == agent.PrototypeDataRef)
             {
-                BehaviorBlackboard blackboard = ownerController.Blackboard;
-                ProceduralAI proceduralAI = ownerController.Brain;
-                if (proceduralAI == null) return;
-                proceduralAI.SwitchProceduralState(null, null, StaticBehaviorReturnType.Interrupted);
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = broadcaster.Id;
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Activating;
-            }
-        }   
+                PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
 
+                ProceduralAI proceduralAI = ownerController.Brain;
+                if (!Verify.IsNotNull(proceduralAI)) return;
+
+                proceduralAI.SwitchProceduralState(null, null, StaticBehaviorReturnType.Interrupted);
+                blackboardProps[PropertyEnum.AICustomEntityId1] = broadcaster.Id;
+                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.Activating;
+            }
+        }
     }
 
     public class ProceduralProfileSymbioteDrainPrototype : ProceduralProfileWithAttackPrototype
@@ -4096,112 +4251,124 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype SymbiotePower2 { get; protected set; }
         public ProceduralUsePowerContextPrototype SymbiotePower3 { get; protected set; }
 
+        //---
+
         public override void Init(Agent agent)
         {
             base.Init(agent);
+
             InitPower(agent, SymbiotePower1);
             InitPower(agent, SymbiotePower2);
             InitPower(agent, SymbiotePower3);
 
             Region region = agent.Region;
-            if (region == null) return;
+            if (!Verify.IsNotNull(region)) return;
             AIController ownerController = agent.AIController;
-            if (ownerController == null) return;
+            if (!Verify.IsNotNull(ownerController)) return;
+
             ownerController.RegisterForEntityDeadEvents(region, true);
         }
 
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
 
-            var blackboard = ownerController.Blackboard;
-            ulong targetId1 = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1];
-            ulong targetId2 = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2];
-            ulong targetId3 = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3];
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            ulong targetId1 = blackboardProps[PropertyEnum.AICustomEntityId1];
+            ulong targetId2 = blackboardProps[PropertyEnum.AICustomEntityId2];
+            ulong targetId3 = blackboardProps[PropertyEnum.AICustomEntityId3];
 
-            if (targetId1 == 0)
+            if (targetId1 == Entity.InvalidId)
             {
                 ulong targetId = GetSymbioteTargetId(ownerController);
-                if (targetId != 0)
+                if (targetId != Entity.InvalidId)
                 {
-                    var powerResult = ActivateSymbiotePowerOnTarget(ownerController, SymbiotePower1, targetId);
+                    StaticBehaviorReturnType powerResult = ActivateSymbiotePowerOnTarget(ownerController, SymbiotePower1, targetId);
                     if (powerResult == StaticBehaviorReturnType.Running || powerResult == StaticBehaviorReturnType.Completed)
-                        blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = targetId;
+                        blackboardProps[PropertyEnum.AICustomEntityId1] = targetId;
                 }
             }
 
-            if (targetId2 == 0)
+            if (targetId2 == Entity.InvalidId)
             {
                 ulong targetId = GetSymbioteTargetId(ownerController);
-                if (targetId != 0)
+                if (targetId != Entity.InvalidId)
                 {
-                    var powerResult = ActivateSymbiotePowerOnTarget(ownerController, SymbiotePower2, targetId);
+                    StaticBehaviorReturnType powerResult = ActivateSymbiotePowerOnTarget(ownerController, SymbiotePower2, targetId);
                     if (powerResult == StaticBehaviorReturnType.Running || powerResult == StaticBehaviorReturnType.Completed)
-                        blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] = targetId;
+                        blackboardProps[PropertyEnum.AICustomEntityId2] = targetId;
                 }
             }
 
-            if (targetId3 == 0)
+            if (targetId3 == Entity.InvalidId)
             {
                 ulong targetId = GetSymbioteTargetId(ownerController);
-                if (targetId != 0)
+                if (targetId != Entity.InvalidId)
                 {
-                    var powerResult = ActivateSymbiotePowerOnTarget(ownerController, SymbiotePower3, targetId);
+                    StaticBehaviorReturnType powerResult = ActivateSymbiotePowerOnTarget(ownerController, SymbiotePower3, targetId);
                     if (powerResult == StaticBehaviorReturnType.Running || powerResult == StaticBehaviorReturnType.Completed)
-                        blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] = targetId;
+                        blackboardProps[PropertyEnum.AICustomEntityId3] = targetId;
                 }
             }
         }
 
         private StaticBehaviorReturnType ActivateSymbiotePowerOnTarget(AIController ownerController, ProceduralUsePowerContextPrototype symboitePower, ulong targetId)
         {
-            var powerResult = StaticBehaviorReturnType.Failed;
-            var agent = ownerController.Owner;
-            if (agent == null || symboitePower == null) return powerResult;
-            var game = ownerController.Game;
-            if (game == null) return powerResult;
-            var proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return powerResult;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return StaticBehaviorReturnType.Failed;
+
+            if (!Verify.IsNotNull(symboitePower)) return StaticBehaviorReturnType.Failed;
+
+            Game game = ownerController.Game;
+            if (!Verify.IsNotNull(game)) return StaticBehaviorReturnType.Failed;
+
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (!Verify.IsNotNull(proceduralAI)) return StaticBehaviorReturnType.Failed;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             ownerController.Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] = targetId;
-            powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, symboitePower.PowerContext, symboitePower);
-            return powerResult;
+
+            return HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, symboitePower.PowerContext, symboitePower);
         }
 
         private static ulong GetSymbioteTargetId(AIController ownerController)
         {
-            ulong targetId = 0;
-            var agent = ownerController.Owner;
-            if (agent == null) return targetId;
+            ulong targetId = Entity.InvalidId;
 
-            var blackboard = ownerController.Blackboard;
-            var region = agent.Region;
-            if (region == null) return targetId;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return targetId;
 
-            var game = ownerController.Game;
-            if (game == null) return targetId;
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
 
-            var manager = game.EntityManager;
-            var target1 = manager.GetEntity<WorldEntity>(blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1]);
-            var target2 = manager.GetEntity<WorldEntity>(blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2]);
-            var target3 = manager.GetEntity<WorldEntity>(blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3]);
+            Region region = agent.Region;
+            if (!Verify.IsNotNull(region)) return Entity.InvalidId;
 
-            Sphere volume = new (agent.RegionLocation.Position, ownerController.AggroRangeHostile);
-            Picker<ulong> targetPicker = new (game.Random);
+            Game game = ownerController.Game;
+            if (!Verify.IsNotNull(game)) return Entity.InvalidId;
 
-            foreach (var target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
-                if (target != null && target.IsHostileTo(agent) && target.IsDead == false 
-                    && target != target1 && target != target2 && target != target3)
+            EntityManager entityManager = game.EntityManager;
+            WorldEntity target1 = entityManager.GetEntity<WorldEntity>(blackboardProps[PropertyEnum.AICustomEntityId1]);
+            WorldEntity target2 = entityManager.GetEntity<WorldEntity>(blackboardProps[PropertyEnum.AICustomEntityId2]);
+            WorldEntity target3 = entityManager.GetEntity<WorldEntity>(blackboardProps[PropertyEnum.AICustomEntityId3]);
+
+            Picker<ulong> targetPicker = new(game.Random);
+            Sphere volume = new(agent.RegionLocation.Position, ownerController.AggroRangeHostile);
+            foreach (WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
+            {
+                if (target != null && target.IsHostileTo(agent) && target.IsDead == false &&
+                    target != target1 && target != target2 && target != target3)
                 {
                     targetPicker.Add(target.Id);
-                    if (targetPicker.GetNumElements() >= 20) break;
+                    if (targetPicker.GetNumElements() >= 20)
+                        break;
                 }
+            }
 
             if (targetPicker.Empty() == false)
                 targetPicker.Pick(out targetId);
@@ -4211,37 +4378,44 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void OnEntityDeadEvent(AIController ownerController, in EntityDeadGameEvent deadEvent)
         {
-            if (deadEvent.Defender == null) return;
-            var agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(deadEvent.Defender)) return;
+            
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
 
             ulong deadEntityId = deadEvent.Defender.Id;
-            if (deadEntityId == 0) return;
+            if (!Verify.IsTrue(deadEntityId != Entity.InvalidId)) return;
 
-            var blackboard = ownerController.Blackboard;
-            if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1])
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+
+            if (deadEntityId == blackboardProps[PropertyEnum.AICustomEntityId1])
             {
-                if (SymbiotePower1.PowerContext == null || SymbiotePower1.PowerContext.Power == null) return;
-                var symbiotePower = agent.GetPower(SymbiotePower1.PowerContext.Power.DataRef);
+                if (!Verify.IsNotNull(SymbiotePower1.PowerContext)) return;
+                if (!Verify.IsNotNull(SymbiotePower1.PowerContext.Power)) return;
+
+                Power symbiotePower = agent.GetPower(SymbiotePower1.PowerContext.Power.DataRef);
                 symbiotePower?.EndPower(EndPowerFlags.Force | EndPowerFlags.ExplicitCancel);
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = 0;
+                blackboardProps[PropertyEnum.AICustomEntityId1] = 0;
             }
-            else if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2])
+            else if (deadEntityId == blackboardProps[PropertyEnum.AICustomEntityId2])
             {
-                if (SymbiotePower2.PowerContext == null || SymbiotePower2.PowerContext.Power == null) return;
-                var symbiotePower = agent.GetPower(SymbiotePower2.PowerContext.Power.DataRef);
+                if (!Verify.IsNotNull(SymbiotePower2.PowerContext)) return;
+                if (!Verify.IsNotNull(SymbiotePower2.PowerContext.Power)) return;
+
+                Power symbiotePower = agent.GetPower(SymbiotePower2.PowerContext.Power.DataRef);
                 symbiotePower?.EndPower(EndPowerFlags.Force | EndPowerFlags.ExplicitCancel);
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] = 0;
+                blackboardProps[PropertyEnum.AICustomEntityId2] = 0;
             }
-            else if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3])
+            else if (deadEntityId == blackboardProps[PropertyEnum.AICustomEntityId3])
             {
-                if (SymbiotePower3.PowerContext == null || SymbiotePower3.PowerContext.Power == null) return;
-                var symbiotePower = agent.GetPower(SymbiotePower3.PowerContext.Power.DataRef);
+                if (!Verify.IsNotNull(SymbiotePower3.PowerContext)) return;
+                if (!Verify.IsNotNull(SymbiotePower3.PowerContext.Power)) return;
+
+                Power symbiotePower = agent.GetPower(SymbiotePower3.PowerContext.Power.DataRef);
                 symbiotePower?.EndPower(EndPowerFlags.Force | EndPowerFlags.ExplicitCancel);
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] = 0;
+                blackboardProps[PropertyEnum.AICustomEntityId3] = 0;
             }
         }
-
     }
 
     public class ProceduralProfileOnslaughtPrototype : ProceduralProfileWithEnragePrototype
@@ -4264,22 +4438,36 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype PrisonBeamPowerRight { get; protected set; }
         public ProceduralUsePowerContextPrototype PrisonPowerLeft { get; protected set; }
         public ProceduralUsePowerContextPrototype PrisonPowerRight { get; protected set; }
-        public PrototypeId PrisonKeyword { get; protected set; }
-        public PrototypeId CenterPlatformKeyword { get; protected set; }
-        public PrototypeId RightPlatformKeyword { get; protected set; }
-        public PrototypeId LeftPlatformKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype PrisonKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype CenterPlatformKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype RightPlatformKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype LeftPlatformKeyword { get; protected set; }
+
+        //---
 
         private enum PlatformEnum
         {
             Left,
             Right,
             Center,
-            None
+            None,
+        }
+
+        private enum State
+        {
+            Default,
+            SpikeDance,
+            SpikeDanceSingle,
         }
 
         public override void Init(Agent agent)
         {
             base.Init(agent);
+
             InitPower(agent, PsionicBlastLeft);
             InitPower(agent, PsionicBlastCenter);
             InitPower(agent, PsionicBlastRight);
@@ -4294,79 +4482,79 @@ namespace MHServerEmu.Games.GameData.Prototypes
             InitPower(agent, PrisonPowerLeft);
             InitPower(agent, PrisonPowerRight);
 
-            if (PlatformMarkerLeft == PrototypeId.Invalid 
-                || PlatformMarkerCenter == PrototypeId.Invalid 
-                || PlatformMarkerRight == PrototypeId.Invalid) return;
+            if (!Verify.IsTrue(PlatformMarkerLeft != PrototypeId.Invalid)) return;
+            if (!Verify.IsTrue(PlatformMarkerCenter != PrototypeId.Invalid)) return;
+            if (!Verify.IsTrue(PlatformMarkerRight != PrototypeId.Invalid)) return;
 
             AIController ownerController = agent.AIController;
-            if (ownerController == null) return;
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            if (!Verify.IsNotNull(ownerController)) return;
+
             Region region = agent.Region;
-            if (region == null) return;
+            if (!Verify.IsNotNull(region)) return;
+
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
 
             Sphere volume = new(agent.RegionLocation.Position, ownerController.AggroRangeHostile);
             foreach (WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
             {
-                if (target == null) continue;
-                if (target.PrototypeDataRef == PlatformMarkerLeft)
-                    blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = target.Id;
-                else if (target.PrototypeDataRef == PlatformMarkerCenter)
-                    blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] = target.Id;
-                else if (target.PrototypeDataRef == PlatformMarkerRight)
-                    blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] = target.Id;
-            }
-        }
+                if (target == null)
+                    continue;
 
-        private enum State
-        {
-            Default,
-            SpikeDance,
-            SpikeDanceSingle
+                if (target.PrototypeDataRef == PlatformMarkerLeft)
+                    blackboardProps[PropertyEnum.AICustomEntityId1] = target.Id;
+                else if (target.PrototypeDataRef == PlatformMarkerCenter)
+                    blackboardProps[PropertyEnum.AICustomEntityId2] = target.Id;
+                else if (target.PrototypeDataRef == PlatformMarkerRight)
+                    blackboardProps[PropertyEnum.AICustomEntityId3] = target.Id;
+            }
         }
 
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             HandleEnrage(ownerController);
 
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
-            EnrageState enrageState = (EnrageState)(int)blackboard.PropertyCollection[PropertyEnum.AIEnrageState];
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            EnrageState enrageState = (EnrageState)(int)blackboardProps[PropertyEnum.AIEnrageState];
             if (enrageState != EnrageState.Enraging)
             {
                 long health = agent.Properties[PropertyEnum.Health];
                 long maxHealth = agent.Properties[PropertyEnum.HealthMax];
                 if (MathHelper.IsBelowOrEqual(health, maxHealth, SummonPowerThreshold1))
                 {
-                    if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3] < 1)
+                    if (blackboardProps[PropertyEnum.AICustomStateVal3] < 1)
                     {
                         AttemptCallSentinelPower(ownerController);
-                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3] = 1;                       
+                        blackboardProps[PropertyEnum.AICustomStateVal3] = 1;                       
                     }
                     else if (MathHelper.IsBelowOrEqual(health, maxHealth, SummonPowerThreshold2))
                     {
-                        if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3] < 2)
+                        if (blackboardProps[PropertyEnum.AICustomStateVal3] < 2)
                         {
                             AttemptCallSentinelPower(ownerController);
-                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3] = 2;
+                            blackboardProps[PropertyEnum.AICustomStateVal3] = 2;
                         }
                     }
                 }
           
-                int state = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+                int state = blackboardProps[PropertyEnum.AICustomStateVal1];
                 switch ((State)state)
                 {
                     case State.Default:
-
                         WorldEntity target = ownerController.TargetEntity;
-                        if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
-                            && proceduralAI.PartialOverrideBehavior == null) return;
+                        if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false &&
+                            proceduralAI.PartialOverrideBehavior == null)
+                        {
+                            return;
+                        }
 
                         GRandom random = game.Random;
                         Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
@@ -4375,17 +4563,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         break;
 
                     case State.SpikeDance:
-
                         StaticBehaviorReturnType powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, SpikeDanceVFXOnly.PowerContext, SpikeDanceVFXOnly);
                         if (powerResult != StaticBehaviorReturnType.Running)
-                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
+                            blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.Default;
                         break;
 
                     case State.SpikeDanceSingle:
-
                         powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, SpikeDanceSingleVFXOnly.PowerContext, SpikeDanceSingleVFXOnly);
                         if (powerResult != StaticBehaviorReturnType.Running)
-                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
+                            blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.Default;
                         break;
                 }
             }
@@ -4393,82 +4579,68 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private void AttemptCallSentinelPower(AIController ownerController)
         {
-            var agent = ownerController.Owner;
-            if (agent == null) return;
-            var blackboard = ownerController.Blackboard;
-            var game = ownerController.Game;
-            if (game == null) return;
-            var manager = game.EntityManager;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
 
-            if (ownerController.AttemptActivatePower(CallSentinelPowerVFXOnly, agent.Id, agent.RegionLocation.Position) == false)
-            {
-                ProceduralAI.Logger.Warn($"Onslaught's CallSentinelPowerVFXOnly has failed.");
-                return;
-            }
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
 
-            ulong leftPlatformMarkerId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1];
-            if (leftPlatformMarkerId == 0)
-            {
-                ProceduralAI.Logger.Warn($"Onslaught does not have a left platform marker.");
-                return;
-            }
-            var leftMarker = manager.GetEntity<WorldEntity>(leftPlatformMarkerId);
-            if (leftMarker == null)
-            {
-                ProceduralAI.Logger.Warn($"Onslaught's left platform marker doesn't exist.");
-                return;
-            }
+            Game game = ownerController.Game;
+            if (!Verify.IsNotNull(game)) return;
 
-            ulong centerPlatformMarkerId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2];
-            if (centerPlatformMarkerId == 0)
-            {
-                ProceduralAI.Logger.Warn($"Onslaught does not have a center platform marker.");
-                return;
-            }
-            var centerMarker = manager.GetEntity<WorldEntity>(centerPlatformMarkerId);
-            if (centerMarker == null)
-            {
-                ProceduralAI.Logger.Warn($"Onslaught's center platform marker doesn't exist.");
-                return;
-            }
+            EntityManager entityManager = game.EntityManager;
 
-            ulong rightPlatformMarkerId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3];
-            if (rightPlatformMarkerId == 0)
-            {
-                ProceduralAI.Logger.Warn($"Onslaught does not have a right platform marker.");
+            Verify.IsTrue(ownerController.AttemptActivatePower(CallSentinelPowerVFXOnly, agent.Id, agent.RegionLocation.Position),
+                $"Onslaught's CallSentinelPowerVFXOnly has failed.");
+
+            ulong leftPlatformMarkerId = blackboardProps[PropertyEnum.AICustomEntityId1];
+            if (!Verify.IsTrue(leftPlatformMarkerId != Entity.InvalidId, "Onslaught does not have a left platform marker."))
                 return;
-            }
-            var rightMarker = manager.GetEntity<WorldEntity>(rightPlatformMarkerId);
-            if (rightMarker == null)
-            {
-                ProceduralAI.Logger.Warn($"Onslaught's right platform marker doesn't exist.");
+
+            WorldEntity leftMarker = entityManager.GetEntity<WorldEntity>(leftPlatformMarkerId);
+            if (!Verify.IsNotNull(leftMarker, "Onslaught's left platform marker doesn't exist."))
                 return;
-            }
 
-            if (ownerController.AttemptActivatePower(CallSentinelPower, 0, leftMarker.RegionLocation.Position) == false)
-                ProceduralAI.Logger.Warn($"Onslaught's CallSentinelPower has failed for the left platform.");
+            ulong centerPlatformMarkerId = blackboardProps[PropertyEnum.AICustomEntityId2];
+            if (!Verify.IsTrue(centerPlatformMarkerId != Entity.InvalidId, "Onslaught does not have a center platform marker."))
+                return;
 
-            if (ownerController.AttemptActivatePower(CallSentinelPower, 0, centerMarker.RegionLocation.Position) == false)
-                ProceduralAI.Logger.Warn($"Onslaught's CallSentinelPower has failed for the center platform.");
+            WorldEntity centerMarker = entityManager.GetEntity<WorldEntity>(centerPlatformMarkerId);
+            if (!Verify.IsNotNull(centerMarker, "Onslaught's center platform marker doesn't exist."))
+                return;
 
-            if (ownerController.AttemptActivatePower(CallSentinelPower, 0, rightMarker.RegionLocation.Position) == false)
-                ProceduralAI.Logger.Warn($"Onslaught's CallSentinelPower has failed for the right platform.");
+            ulong rightPlatformMarkerId = blackboardProps[PropertyEnum.AICustomEntityId3];
+            if (!Verify.IsTrue(rightPlatformMarkerId != Entity.InvalidId, "Onslaught does not have a right platform marker."))
+                return;
+
+            WorldEntity rightMarker = entityManager.GetEntity<WorldEntity>(rightPlatformMarkerId);
+            if (!Verify.IsNotNull(rightMarker, "Onslaught's right platform marker doesn't exist."))
+                return;
+
+            Verify.IsTrue(ownerController.AttemptActivatePower(CallSentinelPower, 0, leftMarker.RegionLocation.Position),
+                "Onslaught's CallSentinelPower has failed for the left platform.");
+
+            Verify.IsTrue(ownerController.AttemptActivatePower(CallSentinelPower, 0, centerMarker.RegionLocation.Position),
+                "Onslaught's CallSentinelPower has failed for the center platform.");
+
+            Verify.IsTrue(ownerController.AttemptActivatePower(CallSentinelPower, 0, rightMarker.RegionLocation.Position),
+                "Onslaught's CallSentinelPower has failed for the right platform.");
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             base.PopulatePowerPicker(ownerController, powerPicker);
+
             ownerController.AddPowersToPicker(powerPicker, PsionicBlastLeft);
             ownerController.AddPowersToPicker(powerPicker, PsionicBlastCenter);
             ownerController.AddPowersToPicker(powerPicker, PsionicBlastRight);
             ownerController.AddPowersToPicker(powerPicker, SpikeDanceVFXOnly);
             ownerController.AddPowersToPicker(powerPicker, SpikeDanceSingleVFXOnly);
 
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
-            ulong entityId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId4];
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            ulong entityId = blackboardProps[PropertyEnum.AICustomEntityId4];
             if (entityId != 0)
             {
-                PlatformEnum randomPlatformIndex = (PlatformEnum)(int)blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2];
+                PlatformEnum randomPlatformIndex = (PlatformEnum)(int)blackboardProps[PropertyEnum.AICustomStateVal2];
                 switch (randomPlatformIndex)
                 {
                     case PlatformEnum.Left:
@@ -4481,7 +4653,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         ownerController.AddPowersToPicker(powerPicker, PrisonBeamPowerCenter);
                         break;
                     default:
-                        ProceduralAI.Logger.Warn($"Onslaught has an invalid platform enum stored in AICustomStateVal2: Index = {randomPlatformIndex}");
+                        Verify.IsTrue(false, $"Onslaught has an invalid platform enum stored in AICustomStateVal2: Index = {randomPlatformIndex}");
                         break;
                 }
             }
@@ -4495,67 +4667,87 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool OnPowerPicked(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
         {
-            if (base.OnPowerPicked(ownerController, powerContext) == false) return false;
+            if (base.OnPowerPicked(ownerController, powerContext) == false)
+                return false;
 
-            var blackboard = ownerController.Blackboard;
-            var agent = ownerController.Owner;
-            if (agent == null) return false;
-            var region = agent.Region;
-            if (region == null) return false;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return false;
+            Region region = agent.Region;
+            if (!Verify.IsNotNull(region)) return false;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            PropertyCollection blackboardProps = blackboard.PropertyCollection;
+
             WorldEntity targetAvatar;
 
             if (powerContext == PsionicBlastLeft)
             {
                 targetAvatar = GetRandomAvatarNearPlatformMarker(ownerController, PlatformEnum.Left);
-                if (targetAvatar == null) return false;
+                if (targetAvatar == null)
+                    return false;
+
                 ownerController.SetTargetEntity(targetAvatar);
             }
             else if (powerContext == PsionicBlastCenter)
             {
                 targetAvatar = GetRandomAvatarNearPlatformMarker(ownerController, PlatformEnum.Center);
-                if (targetAvatar == null) return false;
+                if (targetAvatar == null)
+                    return false;
+
                 ownerController.SetTargetEntity(targetAvatar);
             }
             else if (powerContext == PsionicBlastRight)
             {
                 targetAvatar = GetRandomAvatarNearPlatformMarker(ownerController, PlatformEnum.Right);
-                if (targetAvatar == null) return false;
+                if (targetAvatar == null)
+                    return false;
+
                 ownerController.SetTargetEntity(targetAvatar);
             }
             else if (powerContext == SpikeDanceVFXOnly)
             {
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.SpikeDance;
-                var evt = new AIBroadcastBlackboardGameEvent(agent, blackboard);
+                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.SpikeDance;
+                AIBroadcastBlackboardGameEvent evt = new(agent, blackboard);
                 region.AIBroadcastBlackboardEvent.Invoke(evt);
             }
             else if (powerContext == SpikeDanceSingleVFXOnly)
             {
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.SpikeDanceSingle;
-                var evt = new AIBroadcastBlackboardGameEvent(agent, blackboard);
+                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.SpikeDanceSingle;
+                AIBroadcastBlackboardGameEvent evt = new(agent, blackboard);
                 region.AIBroadcastBlackboardEvent.Invoke(evt);
             }
             else if (powerContext == PrisonPowerCenter || powerContext == PrisonPowerLeft || powerContext == PrisonPowerRight)
             {
                 PlatformEnum platform = PlatformEnum.None;
-                if (powerContext == PrisonPowerLeft) platform = PlatformEnum.Left;
-                else if (powerContext == PrisonPowerCenter) platform = PlatformEnum.Center;
-                else if (powerContext == PrisonPowerRight) platform = PlatformEnum.Right;
+                if (powerContext == PrisonPowerLeft)
+                    platform = PlatformEnum.Left;
+                else if (powerContext == PrisonPowerCenter)
+                    platform = PlatformEnum.Center;
+                else if (powerContext == PrisonPowerRight)
+                    platform = PlatformEnum.Right;
 
                 targetAvatar = GetRandomAvatarNearPlatformMarker(ownerController, platform);
-                if (targetAvatar == null) return false;
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = (int)platform;
+                if (targetAvatar == null)
+                    return false;
+
+                blackboardProps[PropertyEnum.AICustomStateVal2] = (int)platform;
                 ownerController.SetTargetEntity(targetAvatar);
             }
             else if (powerContext == PrisonBeamPowerCenter || powerContext == PrisonBeamPowerLeft || powerContext == PrisonBeamPowerRight)
             {
                 PlatformEnum platform = PlatformEnum.None;
-                if (powerContext == PrisonBeamPowerLeft) platform = PlatformEnum.Left;
-                else if (powerContext == PrisonBeamPowerCenter) platform = PlatformEnum.Center;
-                else if (powerContext == PrisonBeamPowerRight) platform = PlatformEnum.Right;
+                if (powerContext == PrisonBeamPowerLeft)
+                    platform = PlatformEnum.Left;
+                else if (powerContext == PrisonBeamPowerCenter)
+                    platform = PlatformEnum.Center;
+                else if (powerContext == PrisonBeamPowerRight)
+                    platform = PlatformEnum.Right;
 
-                ulong prisonId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId4];
+                ulong prisonId = blackboardProps[PropertyEnum.AICustomEntityId4];
                 targetAvatar = GetRandomAvatarNearPlatformMarker(ownerController, platform, prisonId);
-                if (targetAvatar == null) return false;
+                if (targetAvatar == null)
+                    return false;
+
                 ownerController.SetTargetEntity(targetAvatar);
             }
 
@@ -4564,17 +4756,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private WorldEntity GetRandomAvatarNearPlatformMarker(AIController ownerController, PlatformEnum platform, ulong ignoreId = 0)
         {
-            var agent = ownerController.Owner;
-            if (agent == null) return null;
-            var region = agent.Region;
-            if (region == null) return null;
-            var game = ownerController.Game;
-            if (game == null) return null;
+            WorldEntity agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return null;
+            Region region = agent.Region;
+            if (!Verify.IsNotNull(region)) return null;
+            Game game = ownerController.Game;
+            if (!Verify.IsNotNull(game)) return null;
 
             WorldEntity target = null;
             Picker<WorldEntity> targetPicker = new (game.Random);
-            Sphere volume = new (agent.RegionLocation.Position, 3000.0f);
+            Sphere volume = new(agent.RegionLocation.Position, 3000.0f);
             foreach (WorldEntity targetAvatar in region.IterateAvatarsInVolume(volume))
+            {
                 if (targetAvatar != null && targetAvatar.IsDead == false && targetAvatar.Id != ignoreId)
                 {
                     bool onPlatform;
@@ -4590,13 +4783,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
                             onPlatform = targetAvatar.HasConditionWithKeyword(CenterPlatformKeyword) == false;
                             break;
                         default:
-                            ProceduralAI.Logger.Warn($"invalid platform enum passed into GetRandomAvatarNearPlatformMarker: Enum = {platform}");
+                            Verify.IsTrue(false, $"invalid platform enum passed into GetRandomAvatarNearPlatformMarker: Enum = {platform}");
                             return null;
                     }
 
                     if (onPlatform)
                         targetPicker.Add(targetAvatar);
                 }
+            }
 
             if (targetPicker.Empty() == false)
                 targetPicker.Pick(out target);
@@ -4606,24 +4800,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
         {
-            var blackboard = ownerController.Blackboard;
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+
             if (powerContext == PrisonPowerCenter || powerContext == PrisonPowerLeft || powerContext == PrisonPowerRight)
             {
-                var target = ownerController.TargetEntity;
-                if (target == null) return;
+                WorldEntity target = ownerController.TargetEntity;
+                if (!Verify.IsNotNull(target)) return;
+
                 if (target.HasConditionWithKeyword(PrisonKeyword))
-                    blackboard.PropertyCollection[PropertyEnum.AICustomEntityId4] = target.Id;
+                    blackboardProps[PropertyEnum.AICustomEntityId4] = target.Id;
                 else
-                    blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomStateVal2);
+                    blackboardProps.RemoveProperty(PropertyEnum.AICustomStateVal2);
             }
             else if (powerContext == PrisonBeamPowerCenter || powerContext == PrisonBeamPowerLeft || powerContext == PrisonBeamPowerRight)
             {
-                ulong prisonId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId4];
-                var prisoner = ownerController.Game.EntityManager.GetEntity<WorldEntity>(prisonId);
+                ulong prisonId = blackboardProps[PropertyEnum.AICustomEntityId4];
+                WorldEntity prisoner = ownerController.Game.EntityManager.GetEntity<WorldEntity>(prisonId);
                 if (prisoner == null || prisoner.IsInWorld == false || prisoner.HasConditionWithKeyword(PrisonKeyword) == false)
                 {
-                    blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomEntityId4);
-                    blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomStateVal2);
+                    blackboardProps.RemoveProperty(PropertyEnum.AICustomEntityId4);
+                    blackboardProps.RemoveProperty(PropertyEnum.AICustomStateVal2);
                 }
             }
         }
@@ -4631,70 +4827,79 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileNullifierPrototype : ProceduralProfileNoMoveNoSensePrototype
     {
-        public PrototypeId ShieldEngineerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype ShieldEngineerKeyword { get; protected set; }
         public ProceduralUsePowerContextPrototype BeamPower { get; protected set; }
         public PrototypeId NullifierAntiShield { get; protected set; }
 
-        public override void Init(Agent agent)
-        {
-            base.Init(agent);
-            InitPower(agent, BeamPower);
-
-            AIController ownerController = agent.AIController;
-            if (ownerController == null) return;
-            Region region = agent.Region;
-            if (region == null) return;
-            ownerController.RegisterForAIBroadcastBlackboardEvents(region, true);
-            ownerController.RegisterForEntityDeadEvents(region, true);
-            ownerController.RegisterForPlayerInteractEvents(region, true);
-        }
+        //---
 
         private enum State
         {
             Default,
             Charging,
             Ready,
-            Beam
+            Beam,
+        }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+
+            InitPower(agent, BeamPower);
+
+            AIController ownerController = agent.AIController;
+            if (!Verify.IsNotNull(ownerController)) return;
+            Region region = agent.Region;
+            if (!Verify.IsNotNull(region)) return;
+
+            ownerController.RegisterForAIBroadcastBlackboardEvents(region, true);
+            ownerController.RegisterForEntityDeadEvents(region, true);
+            ownerController.RegisterForPlayerInteractEvents(region, true);
         }
 
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (ownerController.TargetEntity == null)
                 SelectEntity.RegisterSelectedEntity(ownerController, agent, SelectEntityType.SelectTarget);
 
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
-            int state = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+           PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            int state = blackboardProps[PropertyEnum.AICustomStateVal1];
             switch ((State)state)
             {
                 case State.Charging:
-
                     long health = agent.Properties[PropertyEnum.Health];
                     long maxHealth = agent.Properties[PropertyEnum.HealthMaxOther];
+
                     if (health == maxHealth)
                     {
-                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Ready;
+                        blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.Ready;
                         agent.Properties[PropertyEnum.Interactable] = true;
                         SetNullifierEntityState(ownerController, true);
                     }
+
                     break;
 
                 case State.Beam:
-                    var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, BeamPower.PowerContext, BeamPower);
+                    StaticBehaviorReturnType powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, BeamPower.PowerContext, BeamPower);
                     if (powerResult != StaticBehaviorReturnType.Running)
                     {
                         if (powerResult == StaticBehaviorReturnType.Failed)
-                            ProceduralAI.Logger.Warn($"The nullifier failed activating his BeamPower {agent}");
+                            Verify.IsTrue(false, $"The nullifier failed activating his BeamPower {agent}");
+
                         agent.Properties[PropertyEnum.Health] = 1;
-                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Charging; 
+                        blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.Charging; 
                     }
+
                     break;
             }
 
@@ -4702,68 +4907,83 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static void SetNullifierEntityState(AIController ownerController, bool enabled)
         {
-            var agent = ownerController.Owner;
-            if (agent == null) return;
-            var transitionGlobalsProto = GameDatabase.TransitionGlobalsPrototype;
-            if (transitionGlobalsProto == null) return;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
+
+            TransitionGlobalsPrototype transitionGlobalsProto = GameDatabase.TransitionGlobalsPrototype;
+            Verify.IsNotNull(transitionGlobalsProto);
 
             if (enabled)
             {
-                if (transitionGlobalsProto.EnabledState != PrototypeId.Invalid)
-                    agent.Properties[PropertyEnum.EntityState] = transitionGlobalsProto.EnabledState;
+                Verify.IsTrue(transitionGlobalsProto.EnabledState != PrototypeId.Invalid);
+                agent.Properties[PropertyEnum.EntityState] = transitionGlobalsProto.EnabledState;
             }
             else
             {
-                if (transitionGlobalsProto.DisabledState != PrototypeId.Invalid)
-                    agent.Properties[PropertyEnum.EntityState] = transitionGlobalsProto.DisabledState;
+                Verify.IsTrue(transitionGlobalsProto.DisabledState != PrototypeId.Invalid);
+                agent.Properties[PropertyEnum.EntityState] = transitionGlobalsProto.DisabledState;
             }
         }
 
         public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
-            if (broadcastEvent.Broadcaster == null) return;
-            var agent = ownerController.Owner;
-            if (agent == null) return;
-            var broadcaster = broadcastEvent.Broadcaster;
-            var broadcasterBlackboard = broadcastEvent.Blackboard;
-            if (broadcasterBlackboard == null) return;
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
+            WorldEntity broadcaster = broadcastEvent.Broadcaster;
+            if (!Verify.IsNotNull(broadcaster)) return;
+            BehaviorBlackboard broadcasterBlackboard = broadcastEvent.Blackboard;
+            if (!Verify.IsNotNull(broadcasterBlackboard)) return;
 
             ulong engineerId = broadcaster.Properties[PropertyEnum.AICustomEntityId1];
             ulong nullifierId = broadcasterBlackboard.PropertyCollection[PropertyEnum.AICustomEntityId1];
 
             if (engineerId == Entity.InvalidId && nullifierId == agent.Id && broadcaster.HasKeyword(ShieldEngineerKeyword))
             {
-                if (broadcaster.Id == Entity.InvalidId) return;
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Charging;
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = broadcaster.Id;
+                if (!Verify.IsTrue(broadcaster.Id != Entity.InvalidId)) return;
+
+                PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.Charging;
+                blackboardProps[PropertyEnum.AICustomEntityId1] = broadcaster.Id;
             }
         }
 
         public override void OnEntityDeadEvent(AIController ownerController, in EntityDeadGameEvent deadEvent)
         {
-            if (deadEvent.Defender == null) return;
-            var agent = ownerController.Owner;
-            if (agent == null) return;
-            ulong deadEntityId = deadEvent.Defender.Id;
-            if (deadEntityId == Entity.InvalidId) return;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
 
-            var blackboard = ownerController.Blackboard;
-            if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1])
+            if (!Verify.IsNotNull(deadEvent.Defender)) return;
+
+            ulong deadEntityId = deadEvent.Defender.Id;
+            if (!Verify.IsTrue(deadEntityId != Entity.InvalidId)) return;
+
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+
+            if (deadEntityId == blackboardProps[PropertyEnum.AICustomEntityId1])
             {
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = Entity.InvalidId;
+                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.Default;
+                blackboardProps[PropertyEnum.AICustomEntityId1] = Entity.InvalidId;
+
                 agent.Properties[PropertyEnum.Interactable] = false;
                 agent.Properties[PropertyEnum.Enabled] = false;
+
                 SetNullifierEntityState(ownerController, false);
             } 
-            else if(deadEvent.Defender.PrototypeDataRef == NullifierAntiShield)
+            else if (deadEvent.Defender.PrototypeDataRef == NullifierAntiShield)
             {
+                if (!Verify.IsNotNull(BeamPower)) return;
+                if (!Verify.IsNotNull(BeamPower.PowerContext)) return;
+                if (!Verify.IsNotNull(BeamPower.PowerContext.Power)) return;
+
                 agent.ConditionCollection.RemoveConditionsOfPower(BeamPower.PowerContext.Power.DataRef);
+
                 SetNullifierEntityState(ownerController, false);
+
                 ProceduralAI proceduralAI = ownerController.Brain;
-                if (proceduralAI == null) return;
+                if (!Verify.IsNotNull(proceduralAI)) return;
+
                 proceduralAI.SwitchProceduralState(null, null, StaticBehaviorReturnType.Interrupted);
+
                 agent.Properties[PropertyEnum.Interactable] = false;
                 agent.Properties[PropertyEnum.Enabled] = false;
                 agent.Properties[PropertyEnum.Untargetable] = true;
@@ -4773,117 +4993,129 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void OnPlayerInteractEvent(AIController ownerController, in PlayerInteractGameEvent interactEvent)
         {
             Agent agent = ownerController.Owner;
-            if (agent == null || interactEvent.InteractableObject is not Agent interactableAgent) return;
+            if (!Verify.IsNotNull(agent)) return;
+
+            if (interactEvent.InteractableObject is not Agent interactableAgent)
+                return;
 
             if (interactableAgent == agent)
             {
                 BehaviorBlackboard blackboard = ownerController.Blackboard;
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Beam;
+                PropertyCollection blackboardProps = blackboard.PropertyCollection;
+
+                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.Beam;
                 agent.Properties[PropertyEnum.Interactable] = false;
+
                 SetNullifierEntityState(ownerController, false);
 
                 Region region = agent.Region;
-                if (region == null) return;
-                var evt = new AIBroadcastBlackboardGameEvent(agent, blackboard);
+                if (!Verify.IsNotNull(region)) return;
+
+                AIBroadcastBlackboardGameEvent evt = new(agent, blackboard);
                 region.AIBroadcastBlackboardEvent.Invoke(evt);
             }
         }
-
     }
 
     public class ProceduralProfileShieldEngineerPrototype : ProceduralProfileMissionAllyPrototype
     {
-        public PrototypeId[] PsychicNullifierTargets { get; protected set; }   // VectorPrototypeRefPtr AgentPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public AgentPrototype[] PsychicNullifierTargets { get; protected set; }
         public ProceduralUsePowerContextPrototype ChargeNullifierPower { get; protected set; }
         public float NullifierSearchRadius { get; protected set; }
         public PrototypeId NullifierAntiShield { get; protected set; }
 
-        public override void Init(Agent agent)
-        {
-            base.Init(agent);
-            InitPower(agent, ChargeNullifierPower);
-
-            AIController ownerController = agent.AIController;
-            if (ownerController == null) return;
-            BehaviorBlackboard blackboard = ownerController.Blackboard;
-            long currentTime = (long)ownerController.Game.CurrentTime.TotalMilliseconds;
-            blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal2] = currentTime + 3000;
-
-            Region region = agent.Region;
-            if (region == null) return;
-            ownerController.RegisterForAIBroadcastBlackboardEvents(region, true);
-        }
+        //---
 
         private enum State
         {
             Default,
             MoveToNullifier,
             Charging,
-            Ready
+            Ready,
+        }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+
+            InitPower(agent, ChargeNullifierPower);
+
+            AIController ownerController = agent.AIController;
+            if (!Verify.IsNotNull(ownerController)) return;
+
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            long currentTime = (long)ownerController.Game.CurrentTime.TotalMilliseconds;
+            blackboardProps[PropertyEnum.AICustomTimeVal2] = currentTime + 3000;
+
+            Region region = agent.Region;
+            if (!Verify.IsNotNull(region)) return;
+
+            ownerController.RegisterForAIBroadcastBlackboardEvents(region, true);
         }
 
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
-            if (proceduralAI == null) return;
+            if (!Verify.IsNotNull(proceduralAI)) return;
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
             Game game = agent.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(game)) return;
+
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
-            var blackboard = ownerController.Blackboard;
-            State state = (State)(int)blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+            State state = (State)(int)blackboardProps[PropertyEnum.AICustomStateVal1];
 
-            var lastTime = blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal2];
+            long lastTime = blackboardProps[PropertyEnum.AICustomTimeVal2];
             if (state == State.Default && lastTime != 0 && currentTime > lastTime)
             {
-                blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal2] = currentTime + 3000;
+                blackboardProps[PropertyEnum.AICustomTimeVal2] = currentTime + 3000;
                 FindNullifierTarget(ownerController);
             }
 
-            state = (State)(int)blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            state = (State)(int)blackboardProps[PropertyEnum.AICustomStateVal1];
             switch (state)
             {
                 case State.Default:
-                    
-                    var lastSearchTime = blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1];
+                    long lastSearchTime = blackboardProps[PropertyEnum.AICustomTimeVal1];
 
-                    var avatarAlly = ownerController.AssistedEntity;
-                    if (avatarAlly == null 
-                        || (lastSearchTime != 0 && currentTime > lastSearchTime) 
-                        || (avatarAlly != null && avatarAlly.IsDead))
+                    WorldEntity avatarAlly = ownerController.AssistedEntity;
+
+                    if (avatarAlly == null || (lastSearchTime != 0 && currentTime > lastSearchTime) || (avatarAlly != null && avatarAlly.IsDead))
                         FindBestAvatarAllyToFollow(ownerController);
                     else if (avatarAlly != null)
                         HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, MoveToAvatarAlly, true, out _);
+
                     break;
                     
                 case State.MoveToNullifier:
-                    
-                    var nullifierTarget = ownerController.TargetEntity;
+                    WorldEntity nullifierTarget = ownerController.TargetEntity;
                     if (nullifierTarget != null)
                     {
                         if (PsychicNullifierTargets.HasValue())
                         {
-                            var psychicNullifierTargets = PsychicNullifierTargets;
-                            if (psychicNullifierTargets.Contains(nullifierTarget.PrototypeDataRef) == false)
-                                ProceduralAI.Logger.Warn($"The shield engineer's target {nullifierTarget} is not a nullifier! {agent}");                                    
+                            AgentPrototype[] psychicNullifierTargets = PsychicNullifierTargets;
+                            Verify.IsTrue(psychicNullifierTargets.Contains(nullifierTarget.Prototype),
+                                $"The shield engineer's target {nullifierTarget} is not a nullifier! {agent}");                                    
 
-                            var contextResult = HandleContext(proceduralAI, ownerController, MoveToTarget);
-                            if (contextResult == StaticBehaviorReturnType.Failed || contextResult == StaticBehaviorReturnType.Interrupted)
-                                ProceduralAI.Logger.Warn($"The shield engineer {agent} cannot move to a nullifier {nullifierTarget} to charge!");
+                            StaticBehaviorReturnType contextResult = HandleContext(proceduralAI, ownerController, MoveToTarget);
+                            Verify.IsTrue(contextResult != StaticBehaviorReturnType.Failed && contextResult != StaticBehaviorReturnType.Interrupted,
+                                $"The shield engineer {agent} cannot move to a nullifier {nullifierTarget} to charge!");
 
                             if (contextResult == StaticBehaviorReturnType.Completed)
-                                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Charging;
+                                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.Charging;
                         }
                     }
                     else
-                        ProceduralAI.Logger.Warn($"The shield engineer cannot find a nullifier to move to because its Target is NULL! {agent}");
+                    {
+                        Verify.IsTrue(false, $"The shield engineer cannot find a nullifier to move to because its Target is NULL! {agent}");
+                    }
 
                     break;
                     
                 case State.Charging:
-                    
                     HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, ChargeNullifierPower.PowerContext, ChargeNullifierPower);
                     break;
             }
@@ -4892,53 +5124,60 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private void FindNullifierTarget(AIController ownerController)
         {
             Agent agent = ownerController.Owner;
-            if (agent == null) return;
+            if (!Verify.IsNotNull(agent)) return;
 
             if (PsychicNullifierTargets.HasValue())
             {
-                BehaviorBlackboard blackboard = ownerController.Blackboard;
                 Region region = agent.Region;
-                if (region == null) return;
+                if (!Verify.IsNotNull(region)) return;
                 Game game = ownerController.Game;
-                if (game == null) return;
+                if (!Verify.IsNotNull(game)) return;
+
+                BehaviorBlackboard blackboard = ownerController.Blackboard;
+                PropertyCollection blackboardProps = blackboard.PropertyCollection;
 
                 Sphere volume = new(agent.RegionLocation.Position, NullifierSearchRadius);
                 foreach (WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
-                    if (target is Agent nullifier && PsychicNullifierTargets.Contains(nullifier.PrototypeDataRef))
+                {
+                    if (target is Agent nullifier && PsychicNullifierTargets.Contains(nullifier.Prototype))
                     {
-                        var nullifierController = nullifier.AIController;
-                        if (nullifierController == null) continue;
+                        AIController nullifierController = nullifier.AIController;
+                        if (!Verify.IsNotNull(nullifierController))
+                            continue;
+
                         BehaviorBlackboard nullifierBlackboard = nullifierController.Blackboard;
-                        if (nullifierBlackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] == 0)
+                        if (nullifierBlackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] == Entity.InvalidId)
                         {
-                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.MoveToNullifier;
-                            blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = nullifier.Id;
+                            blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.MoveToNullifier;
+                            blackboardProps[PropertyEnum.AICustomEntityId1] = nullifier.Id;
+
                             ProceduralAI proceduralAI = ownerController.Brain;
-                            if (proceduralAI == null) return;
+                            if (!Verify.IsNotNull(proceduralAI)) return;
+
                             proceduralAI.SwitchProceduralState(null, null, StaticBehaviorReturnType.Interrupted);
                             ownerController.SetTargetEntity(nullifier);
-                            var evt = new AIBroadcastBlackboardGameEvent(agent, blackboard);
+
+                            AIBroadcastBlackboardGameEvent evt = new(agent, blackboard);
                             region.AIBroadcastBlackboardEvent.Invoke(evt);
                         }
                     }
+                }
             }
         }
 
         public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
-            if (broadcastEvent.Broadcaster == null) return;
-            var agent = ownerController.Owner;
-            if (agent == null) return;
-            var broadcaster = broadcastEvent.Broadcaster;
-            if (broadcaster == null) return;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
+            WorldEntity broadcaster = broadcastEvent.Broadcaster;
+            if (!Verify.IsNotNull(broadcaster)) return;
 
-            if( broadcaster.PrototypeDataRef == NullifierAntiShield)
+            if (broadcaster.PrototypeDataRef == NullifierAntiShield)
             {
-                var blackboard = ownerController.Blackboard;
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Ready;
+                PropertyCollection blackboardProps = ownerController.Blackboard.PropertyCollection;
+                blackboardProps[PropertyEnum.AICustomStateVal1] = (int)State.Ready;
             }
         }
-
     }
 
     public class ProcProfileNullifierAntiShieldPrototype : ProceduralProfileWithEnragePrototype
