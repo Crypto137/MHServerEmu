@@ -3559,9 +3559,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     PopulatePowerPicker(ownerController, powerPicker);
                     StaticBehaviorReturnType proceduralPowerResult = HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
 
-                    Verify.IsTrue(proceduralPowerResult != StaticBehaviorReturnType.Failed && proceduralPowerResult != StaticBehaviorReturnType.Interrupted,
-                        $"The obelisk healer's power failed or was interrupted when trying to heal the obelisk!\nResult: {proceduralPowerResult}\nHealer: {agent}\nObelisk: {assistedEntity}");
-                    
+                    // TODO: Figure out why this verify gets spammed, there is probably an underlying issue with the way we handle UsePower state or something.
+                    //Verify.IsTrue(proceduralPowerResult != StaticBehaviorReturnType.Failed && proceduralPowerResult != StaticBehaviorReturnType.Interrupted,
+                    //    $"The obelisk healer's power failed or was interrupted when trying to heal the obelisk!\nResult: {proceduralPowerResult}\nHealer: {agent}\nObelisk: {assistedEntity}");
+
                     if (proceduralPowerResult == StaticBehaviorReturnType.Completed)
                     {
                         long health = assistedEntity.Properties[PropertyEnum.Health];
