@@ -703,10 +703,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.Init(agent);
 
-            InitPower(agent, LeashReturnHeal);
-            InitPower(agent, LeashReturnImmunity);
-            InitPower(agent, LeashReturnTeleport);
-            InitPower(agent, LeashReturnInvulnerability);
+            if (LeashReturnHeal != PrototypeId.Invalid)
+                InitPower(agent, LeashReturnHeal);
+
+            if (LeashReturnImmunity != PrototypeId.Invalid)
+                InitPower(agent, LeashReturnImmunity);
+
+            if (LeashReturnTeleport != PrototypeId.Invalid)
+                InitPower(agent, LeashReturnTeleport);
+
+            if (LeashReturnInvulnerability != PrototypeId.Invalid)
+                InitPower(agent, LeashReturnInvulnerability);
         }
 
         public override void Think(AIController ownerController)
