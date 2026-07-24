@@ -274,7 +274,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int availableSubscriptions = Math.Min(MaxSubscriptionsPerActivation, MaxSubscriptions - subscriptions);
             int subscribed = 0;
 
-            var potentialTargetsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> potentialTargets);
+            using var potentialTargetsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> potentialTargets);
             Combat.GetTargetsInRange(agent, potentialTargets, Radius, 0.0f, CombatTargetType.Ally, CombatTargetFlags.IgnoreHostile, EnticeeAttributes);
             foreach (WorldEntity potentialTarget in potentialTargets)
             {
