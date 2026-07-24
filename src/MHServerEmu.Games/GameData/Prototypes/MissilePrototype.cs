@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Core.Memory;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -42,7 +44,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissilePrototype : AgentPrototype
     {
-        public PrototypeId SendOrbToPowerUser { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AgentPrototype SendOrbToPowerUser { get; protected set; }
+
+        //---
 
         public TimeSpan GetSeekDelayTime()
         {
@@ -51,6 +56,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (GameDatabase.GetPrototype<BrainPrototype>(BehaviorProfile.Brain) is ProceduralProfileSeekingMissilePrototype profile) 
                     return TimeSpan.FromMilliseconds(profile.SeekDelayMS);
             }
+
             return TimeSpan.Zero;
         }
 
@@ -61,25 +67,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (GameDatabase.GetPrototype<BrainPrototype>(BehaviorProfile.Brain) is ProceduralProfileSeekingMissilePrototype profile)
                     return profile.SeekDelaySpeed;
             }
+
             return 0;
         }
     }
 
     public class MissilePowerContextPrototype : Prototype
     {
-        public PrototypeId Power { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public PowerPrototype Power { get; protected set; }
         public MissilePowerActivationEventType MissilePowerActivationEvent { get; protected set; }
         public EvalPrototype EvalPctChanceToActivate { get; protected set; }
+
+        //---
 
         public float GetPercentChanceToActivate(PropertyCollection properties)
         {
             float pctChanceToActivate = 1.0f;
+
             if (EvalPctChanceToActivate != null)
             {
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
                 pctChanceToActivate = Eval.RunFloat(EvalPctChanceToActivate, evalContext);
             }
+
             return pctChanceToActivate;
         }
     }
@@ -98,7 +110,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsReturningMissile { get; protected set; }
         public bool ReturningMissileExplodeOnCollide { get; protected set; }
         public bool OneShot { get; protected set; }
-        public PrototypeId Entity { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public MissilePrototype Entity { get; protected set; }
         public Vector3Prototype CreationOffset { get; protected set; }
         public float SizeIncreasePerSec { get; protected set; }
         public bool IgnoresPitch { get; protected set; }
@@ -131,6 +144,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool MissileSelectRandomContext { get; protected set; }
         public EvalPrototype EvalSelectMissileContextIndex { get; protected set; }
 
+        //---
+
         [DoNotCopy]
         public float MaximumMissileBoundsSphereRadius { get; protected set; }
 
@@ -139,18 +154,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
 
             MaximumMissileBoundsSphereRadius = -1.0f;
-            foreach (var missileContext in MissileCreationContexts)
+
+            if (!Verify.IsTrue(MissileCreationContexts.HasValue())) return;
+            
+            foreach (MissileCreationContextPrototype missileContext in MissileCreationContexts)
             {
-                if (missileContext == null) return;
+                if (!Verify.IsNotNull(missileContext)) return;
+
                 float radius = missileContext.Radius;
-                if (GameDatabase.DataDirectory.PrototypeIsAbstract(missileContext.Entity) == false)
+
+                if (GameDatabase.DataDirectory.PrototypeIsAbstract(missileContext.Entity.DataRef) == false)
                 {
-                    var missileEntity = missileContext.Entity.As<MissilePrototype>();
-                    if (missileEntity == null) return;
-                    var boundsProto = missileEntity.Bounds;
-                    if (boundsProto == null) return;
+                    MissilePrototype missileEntity = missileContext.Entity;
+                    if (!Verify.IsNotNull(missileEntity)) return;
+
+                    BoundsPrototype boundsProto = missileEntity.Bounds;
+                    if (!Verify.IsNotNull(boundsProto)) return;
+
                     radius = boundsProto.GetSphereRadius();
                 }
+
                 MaximumMissileBoundsSphereRadius = Math.Max(radius, MaximumMissileBoundsSphereRadius);
             }
         }

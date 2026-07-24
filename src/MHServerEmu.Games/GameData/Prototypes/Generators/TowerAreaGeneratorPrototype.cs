@@ -10,6 +10,7 @@
     }
 
     #region TowerAreaEntryPrototype
+
     public class TowerAreaEntryPrototype : Prototype
     {
     }
@@ -26,5 +27,6 @@
         public AssetId Cell { get; protected set; }
         public LocaleStringId Name { get; protected set; }
     }
+
     #endregion
 }

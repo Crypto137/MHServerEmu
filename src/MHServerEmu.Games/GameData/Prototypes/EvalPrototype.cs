@@ -10,11 +10,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class EvalNodeVisitor
     {
+        //---
+
         public virtual void Visit(EvalPrototype visitor) { }
     }
 
     public class EvalPrototype : Prototype
     {
+        //---
+
         [DoNotCopy]
         public EvalOp Op { get; protected set; }
 
@@ -31,6 +35,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ExportErrorPrototype : EvalPrototype
     {
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -48,6 +54,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalContext Context { get; protected set; }
         public PropertyId Prop { get; protected set; }
         public EvalPrototype Eval { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -83,6 +91,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PropertyId Prop { get; protected set; }
         public EvalContext RightContext { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -110,6 +120,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype Param3 { get; protected set; }
         public PrototypeId Prop { get; protected set; }
         public EvalPrototype Eval { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -150,6 +162,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalContext Context { get; protected set; }
         public PropertyId Prop { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -172,6 +186,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalContext Context { get; protected set; }
         public PropertyId Prop { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -196,6 +212,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalContext PropertyCollectionContext { get; protected set; }
         public PrototypeId Prop { get; protected set; }
         public EvalContext PropertyIdContext { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -223,6 +241,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype Param2 { get; protected set; }
         public EvalPrototype Param3 { get; protected set; }
         public PrototypeId Prop { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -260,6 +280,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public bool Value { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -275,6 +297,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LoadIntPrototype : EvalPrototype
     {
         public int Value { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -292,6 +316,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public float Value { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -308,6 +334,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public CurveId Curve { get; protected set; }
         public EvalPrototype Index { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -333,6 +361,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public AssetId Value { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -348,6 +378,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LoadProtoRefPrototype : EvalPrototype
     {
         public PrototypeId Value { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -365,6 +397,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalContext Context { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -380,6 +414,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LoadContextProtoRefPrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -397,6 +433,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalPrototype Arg1 { get; protected set; }
         public EvalPrototype Arg2 { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -424,6 +462,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype Arg1 { get; protected set; }
         public EvalPrototype Arg2 { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -449,6 +489,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalPrototype Arg1 { get; protected set; }
         public EvalPrototype Arg2 { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -476,6 +518,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype Arg1 { get; protected set; }
         public EvalPrototype Arg2 { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -502,6 +546,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype BaseArg { get; protected set; }
         public EvalPrototype ExpArg { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -527,6 +573,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalPrototype[] Scope { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -537,8 +585,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.Visit(visitor);
             if (Scope.HasValue())
-                foreach (var node in Scope)
+            {
+                foreach (EvalPrototype node in Scope)
                     node?.Visit(visitor);
+            }
         }
 
         public override string ExpressionString()
@@ -559,6 +609,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalPrototype Arg1 { get; protected set; }
         public EvalPrototype Arg2 { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -585,6 +637,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalPrototype Arg1 { get; protected set; }
         public EvalPrototype Arg2 { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -613,6 +667,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype Arg2 { get; protected set; }
         public float Epsilon { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -638,6 +694,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalPrototype Arg1 { get; protected set; }
         public EvalPrototype Arg2 { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -665,6 +723,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype Arg1 { get; protected set; }
         public EvalPrototype Arg2 { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -690,6 +750,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalPrototype Arg { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -712,6 +774,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalContext Context { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -729,6 +793,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype Conditional { get; protected set; }
         public EvalPrototype EvalIf { get; protected set; }
         public EvalPrototype EvalElse { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -759,6 +825,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Min { get; protected set; }
         public PrototypeId Max { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -778,6 +846,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalContext Context { get; protected set; }
         public PrototypeId Mission { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -793,6 +863,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class GetCombatLevelPrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -811,6 +883,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalContext Context { get; protected set; }
         public PrototypeId Power { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -828,6 +902,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalContext Context { get; protected set; }
         public PrototypeId Power { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -844,6 +920,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalContext Context { get; protected set; }
         public DamageType VsDamageType { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -863,6 +941,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalContext TargetEntity { get; protected set; }
         public bool EdgeToEdge { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -881,6 +961,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Entity { get; protected set; }
         public InventoryConvenienceLabel Inventory { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -897,6 +979,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalContext Context { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -911,6 +995,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class IsDynamicCombatLevelEnabledPrototype : EvalPrototype
     {
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -928,6 +1014,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalContext Context { get; protected set; }
         public PrototypeId Mission { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -944,6 +1032,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalPrototype Arg1 { get; protected set; }
         public EvalPrototype Arg2 { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -972,6 +1062,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype Arg1 { get; protected set; }
         public EvalPrototype Arg2 { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -997,6 +1089,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalPrototype Arg1 { get; protected set; }
         public EvalPrototype Arg2 { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -1024,6 +1118,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float Max { get; protected set; }
         public float Min { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -1040,6 +1136,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public int Max { get; protected set; }
         public int Min { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -1062,6 +1160,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype PreLoop { get; protected set; }
         public EvalPrototype[] ScopeLoopBody { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -1077,15 +1177,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             PostLoop?.Visit(visitor);
             PreLoop?.Visit(visitor);
             if (ScopeLoopBody.HasValue())
-                foreach (var node in ScopeLoopBody)
+            {
+                foreach (EvalPrototype node in ScopeLoopBody)
                     node?.Visit(visitor);
+            }
         }
 
         public override string ExpressionString()
         {
             StringBuilder sb = new();
 
-            if (ScopeLoopBody != null)
+            if (ScopeLoopBody.HasValue())
             {
                 foreach (EvalPrototype evalProto in ScopeLoopBody)
                     sb.Append($" {evalProto.ExpressionString()};");
@@ -1110,6 +1212,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype LoopConditionPostScope { get; protected set; }
         public EvalContext ConditionCollectionContext { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -1124,15 +1228,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             PostLoop?.Visit(visitor);
             PreLoop?.Visit(visitor);
             if (ScopeLoopBody.HasValue())
-                foreach (var node in ScopeLoopBody)
+            {
+                foreach (EvalPrototype node in ScopeLoopBody)
                     node?.Visit(visitor);
+            }
         }
 
         public override string ExpressionString()
         {
             StringBuilder sb = new();
 
-            if (ScopeLoopBody != null)
+            if (ScopeLoopBody.HasValue())
             {
                 foreach (EvalPrototype evalProto in ScopeLoopBody)
                     sb.Append($" {evalProto.ExpressionString()};");
@@ -1156,6 +1262,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype LoopCondition { get; protected set; }
         public EvalContext ProtoRefListContext { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -1169,15 +1277,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             PostLoop?.Visit(visitor);
             PreLoop?.Visit(visitor);
             if (ScopeLoopBody.HasValue())
-                foreach (var node in ScopeLoopBody)
+            {
+                foreach (EvalPrototype node in ScopeLoopBody)
                     node?.Visit(visitor);
+            }
         }
 
         public override string ExpressionString()
         {
             StringBuilder sb = new();
 
-            if (ScopeLoopBody != null)
+            if (ScopeLoopBody.HasValue())
             {
                 foreach (EvalPrototype evalProto in ScopeLoopBody)
                     sb.Append($" {evalProto.ExpressionString()};");
@@ -1196,6 +1306,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalContext Context { get; protected set; }
         public EvalPrototype EntityId { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -1220,6 +1332,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalContext Context { get; protected set; }
         public EvalPrototype EntityId { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -1241,8 +1355,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class EntityHasKeywordPrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
-        public PrototypeId Keyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype Keyword { get; protected set; }
         public bool ConditionKeywordOnly { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -1252,7 +1369,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override string ExpressionString()
         {
-            return $"EntityHasKeyword(Context=[{Context}], Keyword={{{(Keyword != PrototypeId.Invalid ? GameDatabase.GetPrototypeName(Keyword) : "!NONE!")}}}";
+            return $"EntityHasKeyword(Context=[{Context}], Keyword={{{(Keyword != null ? Keyword.ToString() : "!NONE!")}}}";
         }
     }
 
@@ -1260,6 +1377,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalContext Context { get; protected set; }
         public PrototypeId Talent { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {

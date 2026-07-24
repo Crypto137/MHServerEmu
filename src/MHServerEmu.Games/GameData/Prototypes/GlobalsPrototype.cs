@@ -129,11 +129,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class GlobalsPrototype : Prototype
     {
-        public PrototypeId AdvancementGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AdvancementGlobalsPrototype AdvancementGlobals { get; protected set; }
         public PrototypeId AvatarSwapChannelPower { get; protected set; }
         public PrototypeId ConnectionMarkerPrototype { get; protected set; }
-        public PrototypeId DebugGlobals { get; protected set; }
-        public PrototypeId UIGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public DebugGlobalsPrototype DebugGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public UIGlobalsPrototype UIGlobals { get; protected set; }
         public PrototypeId DefaultPlayer { get; protected set; }
         public PrototypeId DefaultStartTarget { get; protected set; }
         public PrototypeId[] PVPAlliances { get; protected set; }
@@ -144,7 +147,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float MouseHitPowerTargetSearchDist { get; protected set; }
         public float MouseHitPreferredAddition { get; protected set; }
         public float MouseMovementNoPathRadius { get; protected set; }
-        public PrototypeId MissionGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public MissionGlobalsPrototype MissionGlobals { get; protected set; }
         public int TaggingResetDurationMS { get; protected set; }
         public int PlayerPartyMaxSize { get; protected set; }
         public float NaviBudgetBaseCellSizeWidth { get; protected set; }
@@ -171,12 +175,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetTypeId[] FileVerificationAssetTypes { get; protected set; }
         public AssetId LoadingMusic { get; protected set; }
         public LocaleStringId SystemLocalized { get; protected set; }
-        public PrototypeId PopulationGlobals { get; protected set; }
-        public PrototypeId PlayerAlliance { get; protected set; }
-        public PrototypeId ClusterConfigurationGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public PopulationGlobalsPrototype PopulationGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AlliancePrototype PlayerAlliance { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public ClusterConfigurationGlobalsPrototype ClusterConfigurationGlobals { get; protected set; }
         public PrototypeId DownloadChunks { get; protected set; }
         public PrototypeId UIItemInventory { get; protected set; }
-        public PrototypeId AIGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AIGlobalsPrototype AIGlobals { get; protected set; }
         public AssetTypeId MusicAssetType { get; protected set; }
         public PrototypeId ResurrectionDefaultInfo { get; protected set; }
         public PrototypeId PartyJoinPortal { get; protected set; }
@@ -196,7 +204,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId PopulationObjectPrototype { get; protected set; }
         public PrototypeId RegionPrototype { get; protected set; }
         public AssetTypeId AmbientSfxType { get; protected set; }
-        public PrototypeId CombatGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public CombatGlobalsPrototype CombatGlobals { get; protected set; }
         public float OrientForPowerMaxTimeSecs { get; protected set; }
         public PrototypeId KismetSequenceEntityPrototype { get; protected set; }
         public PrototypeId DynamicArea { get; protected set; }
@@ -207,11 +216,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId AvatarSwapInPower { get; protected set; }
         public PrototypeId PlayerStartingFaction { get; protected set; }
         public PrototypeId VendorBuybackInventory { get; protected set; }
-        public PrototypeId AnyAlliancePrototype { get; protected set; }
-        public PrototypeId AnyFriendlyAlliancePrototype { get; protected set; }
-        public PrototypeId AnyHostileAlliancePrototype { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AlliancePrototype AnyAlliancePrototype { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AlliancePrototype AnyFriendlyAlliancePrototype { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AlliancePrototype AnyHostileAlliancePrototype { get; protected set; }
         public CurveId ExperienceBonusCurve { get; protected set; }
-        public PrototypeId TransitionGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TransitionGlobalsPrototype TransitionGlobals { get; protected set; }
         public int PlayerGuildMaxSize { get; protected set; }
         public bool AutoPartyEnabledInitially { get; protected set; }
         public PrototypeId ItemBindingAffix { get; protected set; }
@@ -226,9 +239,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MetaGameTeamDefault { get; protected set; }
         public PrototypeId ItemNoVisualsAffix { get; protected set; }
         public int AvatarSynergyConcurrentLimit { get; protected set; }
-        public PrototypeId LootGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public LootGlobalsPrototype LootGlobals { get; protected set; }
         public PrototypeId MetaGameTeamBase { get; protected set; }
-        public PrototypeId AudioGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AudioGlobalsPrototype AudioGlobals { get; protected set; }
         public int PlayerRaidMaxSize { get; protected set; }
         public int TimeZone { get; protected set; }
         public PrototypeId TeamUpSummonPower { get; protected set; }
@@ -236,9 +251,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId FulfillmentReceiptPrototype { get; protected set; }
         public PrototypeId PetTechVacuumPower { get; protected set; }
         public PrototypeId[] StolenPowerRestrictions { get; protected set; }
-        public PrototypeId PowerVisualsGlobals { get; protected set; }
-        public PrototypeId KeywordGlobals { get; protected set; }
-        public PrototypeId CurrencyGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public PowerVisualsGlobalsPrototype PowerVisualsGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordGlobalsPrototype KeywordGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public CurrencyGlobalsPrototype CurrencyGlobals { get; protected set; }
         public PrototypeId PointerArrowTemplate { get; protected set; }
         public PrototypeId ObjectiveMarkerTemplate { get; protected set; }
         public int VaporizedLootLifespanMS { get; protected set; }
@@ -255,7 +273,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId PetItemBlueprint { get; protected set; }
         public PrototypeId AvatarPrototype { get; protected set; }
         public int ServerBonusUnlockLevel { get; protected set; }
-        public PrototypeId GamepadGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public GamepadGlobalsPrototype GamepadGlobals { get; protected set; }
         public PrototypeId CraftingRecipeLibraryInventory { get; protected set; }
         public PrototypeId ConditionPrototype { get; protected set; }
         public PrototypeId[] LiveTuneServerConditions { get; protected set; }
@@ -263,15 +282,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DefaultStartTargetFallbackRegion { get; protected set; }
         public PrototypeId DefaultStartTargetPrestigeRegion { get; protected set; }
         public PrototypeId DefaultStartTargetStartingRegion { get; protected set; }
-        public PrototypeId DifficultyGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public DifficultyGlobalsPrototype DifficultyGlobals { get; protected set; }
         public PrototypeId PublicEventPrototype { get; protected set; }
         public PrototypeId AvatarCoopStartPower { get; protected set; }
         public PrototypeId AvatarCoopEndPower { get; protected set; }
-        public PrototypeId[] DifficultyTiers { get; protected set; }      // VectorPrototypeRefPtr DifficultyTierPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public DifficultyTierPrototype[] DifficultyTiers { get; protected set; }
         public PrototypeId DefaultLoadingLobbyRegion { get; protected set; }
         public PrototypeId DifficultyTierDefault { get; protected set; }
         public PrototypeId AvatarHealPower { get; protected set; }
-        public PrototypeId ConsoleGlobals { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public ConsoleGlobalsPrototype ConsoleGlobals { get; protected set; }
         public PrototypeId TeamUpSynergyCondition { get; protected set; }
         public PrototypeId MetricsFrequencyPrototype { get; protected set; }
         public PrototypeId ConsumableItemBlueprint { get; protected set; }
@@ -280,15 +302,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
-        private DifficultyTierPrototype[] _difficultyTierProtos;
-
-        [DoNotCopy]
-        public AlliancePrototype PlayerAlliancePrototype { get; protected set; }
-
-        [DoNotCopy]
-        public PopulationGlobalsPrototype PopulationGlobalsPrototype { get; protected set; }
+        private DifficultyTierPrototype[] _difficultyTierEnumToProto;
 
         [DoNotCopy]
         public PrototypeId PrestigeRegionProtoRef { get => DefaultStartTargetPrestigeRegion.As<RegionConnectionTargetPrototype>().Region; }
@@ -299,39 +313,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (DifficultyTiers.HasValue())
             {
-                _difficultyTierProtos = new DifficultyTierPrototype[(int)DifficultyTier.NumTiers];
+                _difficultyTierEnumToProto = new DifficultyTierPrototype[(int)DifficultyTier.NumTiers];
 
-                foreach (PrototypeId difficultyTierProtoRef in DifficultyTiers)
+                foreach (DifficultyTierPrototype tierPtr in DifficultyTiers)
                 {
-                    DifficultyTierPrototype tierPtr = difficultyTierProtoRef.As<DifficultyTierPrototype>();
-                    if (tierPtr == null)
-                    {
-                        Logger.Warn("PostProcess(): tierPtr == null");
+                    if (!Verify.IsNotNull(tierPtr))
                         continue;
-                    }
 
                     int tierAsIndex = (int)tierPtr.Tier;
-                    if (tierAsIndex < 0 || tierAsIndex >= _difficultyTierProtos.Length)
-                    {
-                        Logger.Warn("PostProcess(): tierAsIndex < 0 || tierAsIndex >= _difficultyTierProtos.Length");
+                    if (!Verify.IsTrue(tierAsIndex >= 0 && tierAsIndex < _difficultyTierEnumToProto.Length))
                         continue;
-                    }
 
-                    _difficultyTierProtos[tierAsIndex] = tierPtr;
+                    _difficultyTierEnumToProto[tierAsIndex] = tierPtr;
                 }
             }
-
-            PlayerAlliancePrototype = PlayerAlliance.As<AlliancePrototype>();
-            PopulationGlobalsPrototype = PopulationGlobals.As<PopulationGlobalsPrototype>();
         }
 
         public DifficultyTierPrototype GetDifficultyTierByEnum(DifficultyTier tierEnum)
         {
             int tierAsIndex = (int)tierEnum;
-            if (tierAsIndex < 0 || tierAsIndex >= _difficultyTierProtos.Length)
-                Logger.WarnReturn<DifficultyTierPrototype>(null, "PostProcess(): tierAsIndex < 0 || tierAsIndex >= _difficultyTierProtos.Length");
-
-            return _difficultyTierProtos[tierAsIndex];
+            if (!Verify.IsTrue(tierAsIndex >= 0 && tierAsIndex < _difficultyTierEnumToProto.Length)) return null;
+            return _difficultyTierEnumToProto[tierAsIndex];
         }
     }
 
@@ -345,14 +347,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PrestigeLevelPrototype : Prototype
     {
-        public PrototypeId TextStyle { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyle { get; protected set; }
         public PrototypeId Reward { get; protected set; }
     }
 
     public class PetTechAffixInfoPrototype : Prototype
     {
         public AffixPosition Position { get; protected set; }
-        public PrototypeId ItemRarityToConsume { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public RarityPrototype ItemRarityToConsume { get; protected set; }
         public int ItemsRequiredToUnlock { get; protected set; }
         public LocaleStringId LockedDescriptionText { get; protected set; }
     }
@@ -363,13 +367,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId DeathPenaltyCost { get; protected set; }
         public CurveId ItemEquipRequirementOffset { get; protected set; }
         public CurveId VendorLevelingCurve { get; protected set; }
-        public PrototypeId StatsEval { get; protected set; }
-        public PrototypeId AvatarThrowabilityEval { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public EvalPrototype StatsEval { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public EvalPrototype AvatarThrowabilityEval { get; protected set; }
         public EvalPrototype VendorLevelingEval { get; protected set; }
         public EvalPrototype VendorRollTableLevelEval { get; protected set; }
         public float RestedHealthPerMinMult { get; protected set; }
         public int PowerBoostMax { get; protected set; }
-        public PrototypeId[] PrestigeLevels { get; protected set; }   // VectorPrototypeRefPtr PrestigeLevelPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public PrestigeLevelPrototype[] PrestigeLevels { get; protected set; }
         public CurveId ItemAffixLevelingCurve { get; protected set; }
         public CurveId ExperienceBonusAvatarSynergy { get; protected set; }
         public float ExperienceBonusAvatarSynergyMax { get; protected set; }
@@ -377,7 +384,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId ExperienceBonusLevel60Synergy { get; protected set; }
         public int TeamUpPowersPerTier { get; protected set; }
         public CurveId TeamUpPowerTiersCurve { get; protected set; }
-        public PrototypeId[] OmegaBonusSets { get; protected set; }   // VectorPrototypeRefPtr OmegaBonusSetPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public OmegaBonusSetPrototype[] OmegaBonusSets { get; protected set; }
         public int OmegaPointsCap { get; protected set; }
         public int OmegaSystemLevelUnlock { get; protected set; }
         public PetTechAffixInfoPrototype[] PetTechAffixInfo { get; protected set; }
@@ -390,15 +398,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId PctXPFromLevelDeltaCurve { get; protected set; }
         public int InfinitySystemUnlockLevel { get; protected set; }
         public long InfinityPointsCapPerGem { get; protected set; }
-        public PrototypeId[] InfinityGemSets { get; protected set; }  // VectorPrototypeRefPtr InfinityGemSetPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public InfinityGemSetPrototype[] InfinityGemSets { get; protected set; }
         public long InfinityXPCap { get; protected set; }
         public int TravelPowerUnlockLevel { get; protected set; }
         public float ExperienceBonusCoop { get; protected set; }
         public CurveId CoopInactivityExperienceScalar { get; protected set; }
 
         // ---
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public const long InvalidXPRequirement = -1;
 
@@ -414,22 +421,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MaxPowerSpecIndexForTeamUps { get => Math.Max(0, TeamUpPowerSpecsMax - 1); }
 
         [DoNotCopy]
-        public EvalPrototype AvatarThrowabilityEvalPrototype { get; private set; }
-
-        [DoNotCopy]
         public long InfinityPointsCap { get => InfinityPointsCapPerGem * (int)InfinityGem.NumGems; }
-
-        public override void PostProcess()
-        {
-            base.PostProcess();
-
-            AvatarThrowabilityEvalPrototype = AvatarThrowabilityEval.As<EvalPrototype>();
-        }
 
         public int GetAvatarLevelCap()
         {
             Curve levelingCurve = GetAvatarLevelingCurve();
-            if (levelingCurve == null) return Logger.WarnReturn(0, "GetAvatarLevelCap(): levelingCurve == null");
+            if (!Verify.IsNotNull(levelingCurve)) return 0;
 
             return levelingCurve.MaxPosition;
         }
@@ -437,7 +434,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int GetTeamUpLevelCap()
         {
             Curve levelingCurve = GetTeamUpLevelingCurve();
-            if (levelingCurve == null) return Logger.WarnReturn(0, "GetTeamUpLevelCap(): levelingCurve == null");
+            if (!Verify.IsNotNull(levelingCurve)) return 0;
 
             return levelingCurve.MaxPosition;
         }
@@ -445,28 +442,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int GetItemAffixLevelCap()
         {
             Curve levelingCurve = GetItemAffixLevelingCurve();
-            if (levelingCurve == null) return Logger.WarnReturn(0, "GetItemAffixLevelCap(): levelingCurve == null");
+            if (!Verify.IsNotNull(levelingCurve)) return 0;
 
             return levelingCurve.MaxPosition;
         }
 
         public PetTechAffixInfoPrototype GetPetTechAffixInfoPrototype(AffixPosition position)
         {
-            if (PetTechAffixInfo.IsNullOrEmpty()) return Logger.WarnReturn<PetTechAffixInfoPrototype>(null, "GetPetTechAffixInfoPrototype(): PetTechAffixInfo.IsNullOrEmpty()");
-            if (position < AffixPosition.PetTech1 || position > AffixPosition.PetTech5) return Logger.WarnReturn<PetTechAffixInfoPrototype>(null, "GetPetTechAffixInfoPrototype(): position < AffixPosition.PetTech1 || position > AffixPosition.PetTech5");
+            if (!Verify.IsTrue(PetTechAffixInfo.HasValue())) return null;
+            if (!Verify.IsTrue(position >= AffixPosition.PetTech1 && position <= AffixPosition.PetTech5)) return null;
 
             int index = position - AffixPosition.PetTech1;
-            if (index < 0 || index >= PetTechAffixInfo.Length) return Logger.WarnReturn<PetTechAffixInfoPrototype>(null, "GetPetTechAffixInfoPrototype(): index < 0 || index >= PetTechAffixInfo.Length");
+            if (!Verify.IsTrue(index >= 0 && index < PetTechAffixInfo.Length)) return null;
 
             return PetTechAffixInfo[index];
         }
 
         public PrestigeLevelPrototype GetPrestigeLevelPrototype(int prestigeLevel)
         {
-            if (prestigeLevel < 0 || prestigeLevel > MaxPrestigeLevel) return Logger.WarnReturn<PrestigeLevelPrototype>(null, "GetPrestigeLevelPrototype(): prestigeLevel < 0 || prestigeLevel > MaxPrestigeLevel");
-            if (PrestigeLevels.IsNullOrEmpty()) return Logger.WarnReturn<PrestigeLevelPrototype>(null, "GetPrestigeLevelPrototype(): PrestigeLevels.IsNullOrEmpty()");
+            if (!Verify.IsTrue(prestigeLevel > 0 && prestigeLevel <= MaxPrestigeLevel)) return null;
+            if (!Verify.IsTrue(PrestigeLevels.HasValue())) return null;
 
-            return PrestigeLevels[prestigeLevel - 1].As<PrestigeLevelPrototype>();
+            return PrestigeLevels[prestigeLevel - 1];
         }
 
         public int GetPrestigeLevelIndex(PrestigeLevelPrototype prestigeLevelProto)
@@ -480,7 +477,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             for (int i = 0; i < MaxPrestigeLevel; i++)
             {
-                if (PrestigeLevels[i] == prestigeLevel)
+                if (PrestigeLevels[i].DataRef == prestigeLevel)
                     return i + 1;
             }
 
@@ -493,8 +490,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return InvalidXPRequirement;
 
             Curve levelingCurve = GetAvatarLevelingCurve();
-            if (levelingCurve == null) return Logger.WarnReturn(InvalidXPRequirement, "GetAvatarLevelUpXPRequirement(): levelingCurve == null");
-
+            if (!Verify.IsNotNull(levelingCurve)) return InvalidXPRequirement;
+            
             return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
         }
 
@@ -504,7 +501,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return InvalidXPRequirement;
 
             Curve levelingCurve = GetTeamUpLevelingCurve();
-            if (levelingCurve == null) return Logger.WarnReturn(InvalidXPRequirement, "GetTeamUpLevelUpXPRequirement(): levelingCurve == null");
+            if (!Verify.IsNotNull(levelingCurve)) return InvalidXPRequirement;
 
             return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
         }
@@ -515,7 +512,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return InvalidXPRequirement;
 
             Curve levelingCurve = GetItemAffixLevelingCurve();
-            if (levelingCurve == null) return Logger.WarnReturn(InvalidXPRequirement, "GetItemAffixLevelUpXPRequirement(): levelingCurve == null");
+            if (!Verify.IsNotNull(levelingCurve)) return InvalidXPRequirement;
 
             return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
         }
@@ -555,7 +552,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float OrbAggroRangeMax { get; protected set; }
         public CurveId OrbAggroRangeBonusCurve { get; protected set; }
         public PrototypeId DefaultSimpleNpcBrain { get; protected set; }
-        public PrototypeId CantBeControlledKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype CantBeControlledKeyword { get; protected set; }
         public int ControlledAgentSummonDurationMS { get; protected set; }
     }
 
@@ -626,8 +624,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CoopOp Op { get; protected set; }
         public CoopOpResult Result { get; protected set; }
         public LocaleStringId SystemMessage { get; protected set; }
-        public PrototypeId SystemMessageTemplate { get; protected set; }
-        public PrototypeId BannerMessage { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TranslationPrototype SystemMessageTemplate { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public BannerMessagePrototype BannerMessage { get; protected set; }
     }
 
     public class HelpTextPrototype : Prototype
@@ -674,25 +674,36 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MessageWaypointUnlocked { get; protected set; }
         public PrototypeId MessagePowerUnlocked { get; protected set; }
         public PrototypeId UIMapGlobals { get; protected set; }
-        public PrototypeId TextStyleCurrentlyEquipped { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleCurrentlyEquipped { get; protected set; }
         public int ChatTextFadeOutMS { get; protected set; }
         public int ChatTextHistoryMax { get; protected set; }
-        public PrototypeId KeywordFemale { get; protected set; }
-        public PrototypeId KeywordMale { get; protected set; }
-        public PrototypeId TextStylePowerUpgradeImprovement { get; protected set; }
-        public PrototypeId TextStylePowerUpgradeNoImprovement { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype KeywordFemale { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype KeywordMale { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStylePowerUpgradeImprovement { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStylePowerUpgradeNoImprovement { get; protected set; }
         public PrototypeId LoadingScreenIntraRegion { get; protected set; }
-        public PrototypeId TextStyleVendorPriceCanBuy { get; protected set; }
-        public PrototypeId TextStyleVendorPriceCantBuy { get; protected set; }
-        public PrototypeId TextStyleItemRestrictionFailure { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleVendorPriceCanBuy { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleVendorPriceCantBuy { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleItemRestrictionFailure { get; protected set; }
         public int CostumeClosetNumAvatarsVisible { get; protected set; }
         public int CostumeClosetNumCostumesVisible { get; protected set; }
         public PrototypeId MessagePowerErrorDoNotQueue { get; protected set; }
-        public PrototypeId TextStylePvPShopPurchased { get; protected set; }
-        public PrototypeId TextStylePvPShopUnpurchased { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStylePvPShopPurchased { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStylePvPShopUnpurchased { get; protected set; }
         public PrototypeId MessagePowerPointsAwarded { get; protected set; }
         public PrototypeId MapInfoMissionObjectiveUse { get; protected set; }
-        public PrototypeId TextStyleMissionRewardFloaty { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleMissionRewardFloaty { get; protected set; }
         public PrototypeId PowerTooltipBodyCurRank0Unlkd { get; protected set; }
         public PrototypeId PowerTooltipBodyCurRankLocked { get; protected set; }
         public PrototypeId PowerTooltipBodyCurRank1AndUp { get; protected set; }
@@ -705,12 +716,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId KioskSizzleMovie { get; protected set; }
         public int KioskSizzleMovieStartTimeSec { get; protected set; }
         public PrototypeId MapInfoHealer { get; protected set; }
-        public PrototypeId TextStyleOpenMission { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleOpenMission { get; protected set; }
         public PrototypeId MapInfoPartyMember { get; protected set; }
         public int LoadingScreenTipTimeIntervalMS { get; protected set; }
-        public PrototypeId TextStyleKillRewardFloaty { get; protected set; }
-        public PrototypeId TextStyleAvatarOverheadNormal { get; protected set; }
-        public PrototypeId TextStyleAvatarOverheadParty { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleKillRewardFloaty { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleAvatarOverheadNormal { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleAvatarOverheadParty { get; protected set; }
         public CharacterSheetDetailedStatPrototype[] CharacterSheetDetailedStats { get; protected set; }
         public PrototypeId PowerProgTableTabRefTab1 { get; protected set; }
         public PrototypeId PowerProgTableTabRefTab2 { get; protected set; }
@@ -722,16 +737,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MessagePvPDisabledPortalFail { get; protected set; }
         public PrototypeId MessageStatProgression { get; protected set; }
         public PrototypeId MessagePvPPartyPortalFail { get; protected set; }
-        public PrototypeId TextStyleMissionHudOpenMission { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleMissionHudOpenMission { get; protected set; }
         public PrototypeId MapInfoAvatarDefeated { get; protected set; }
         public PrototypeId MapInfoPartyMemberDefeated { get; protected set; }
         public PrototypeId MessageGuildInvite { get; protected set; }
         public PrototypeId MapInfoMissionObjectiveMob { get; protected set; }
         public PrototypeId MapInfoMissionObjectivePortal { get; protected set; }
         public PrototypeId CinematicsListLoginScreen { get; protected set; }
-        public PrototypeId TextStyleGuildLeader { get; protected set; }
-        public PrototypeId TextStyleGuildOfficer { get; protected set; }
-        public PrototypeId TextStyleGuildMember { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleGuildLeader { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleGuildOfficer { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleGuildMember { get; protected set; }
         public AffixDisplaySlotPrototype[] CostumeAffixDisplaySlots { get; protected set; }
         public PrototypeId MessagePartyError { get; protected set; }
         public PrototypeId MessageRegionRestricted { get; protected set; }
@@ -739,25 +758,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MessageMetaGameDefault { get; protected set; }
         public PrototypeId MessagePartyPvPPortalFail { get; protected set; }
         public int ChatNewMsgDarkenBgMS { get; protected set; }
-        public PrototypeId TextStyleKillZeroRewardFloaty { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleKillZeroRewardFloaty { get; protected set; }
         public PrototypeId MessageAvatarSwitchError { get; protected set; }
-        public PrototypeId TextStyleItemBlessed { get; protected set; }
-        public PrototypeId TextStyleItemAffixLocked { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleItemBlessed { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStyleItemAffixLocked { get; protected set; }
         public PrototypeId MessageAlreadyInQueue { get; protected set; }
         public PrototypeId MessageOnlyPartyLeaderCanQueue { get; protected set; }
         public PrototypeId MessageTeleportTargetIsInMatch { get; protected set; }
-        public PrototypeId PowerGrantItemTutorialTip { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public HUDTutorialPrototype PowerGrantItemTutorialTip { get; protected set; }
         public PrototypeId MessagePrivateDisallowedInRaid { get; protected set; }
         public PrototypeId MessageQueueNotAvailableInRaid { get; protected set; }
         public PrototypeId PowerTooltipBodyNextRank1Antireq { get; protected set; }
-        public PrototypeId CosmicEquippedTutorialTip { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public HUDTutorialPrototype CosmicEquippedTutorialTip { get; protected set; }
         public PrototypeId MessageRegionDisabledPortalFail { get; protected set; }
         public CharacterSheetDetailedStatPrototype[] TeamUpDetailedStats { get; protected set; }
         public PrototypeId MessageOmegaPointsAwarded { get; protected set; }
         public PrototypeId MetaGameWidgetMissionName { get; protected set; }
         public UIConditionType[] BuffPageOrder { get; protected set; }
         public ObjectiveTrackerPageType[] ObjectiveTrackerPageOrder { get; protected set; }
-        public PrototypeId VanityTitleNoTitle { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public VanityTitlePrototype VanityTitleNoTitle { get; protected set; }
         public PrototypeId MessageStealablePowerOccupied { get; protected set; }
         public PrototypeId MessageStolenPowerDuplicate { get; protected set; }
         public PrototypeId[] CurrencyDisplayList { get; protected set; }
@@ -766,33 +791,49 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int LogoffPanelStoryMissionLevelCap { get; protected set; }
         public StoreCategoryPrototype[] MTXStoreCategories { get; protected set; }
         public int GiftingAccessMinPlayerLevel { get; protected set; }
-        public PrototypeId AffixRollRangeTooltipText { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TranslationPrototype AffixRollRangeTooltipText { get; protected set; }
         public PrototypeId[] UISystemLockList { get; protected set; }
         public PrototypeId MessageUISystemUnlocked { get; protected set; }
         public PrototypeId TooltipInsigniaTeamAffiliations { get; protected set; }
         public PrototypeId PowerTooltipBodySpecLocked { get; protected set; }
         public PrototypeId PowerTooltipBodySpecUnlocked { get; protected set; }
-        public PrototypeId PropertyValuePercentFormat { get; protected set; }
-        public PrototypeId AffixStatDiffPositiveStyle { get; protected set; }
-        public PrototypeId AffixStatDiffNegativeStyle { get; protected set; }
-        public PrototypeId AffixStatDiffTooltipText { get; protected set; }
-        public PrototypeId AffixStatDiffNeutralStyle { get; protected set; }
-        public PrototypeId AffixStatFoundAffixStyle { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TranslationPrototype PropertyValuePercentFormat { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype AffixStatDiffPositiveStyle { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype AffixStatDiffNegativeStyle { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TranslationPrototype AffixStatDiffTooltipText { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype AffixStatDiffNeutralStyle { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype AffixStatFoundAffixStyle { get; protected set; }
         public AssetId[] StashTabCustomIcons { get; protected set; }
-        public PrototypeId PropertyValueDefaultFormat { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TranslationPrototype PropertyValueDefaultFormat { get; protected set; }
         public PrototypeId[] ItemSortCategoryList { get; protected set; }
         public PrototypeId[] ItemSortSubCategoryList { get; protected set; }
         public AffixRollQualityPrototype[] AffixRollRangeRollQuality { get; protected set; }
         public PrototypeId[] RadialMenuEntriesList { get; protected set; }
-        public PrototypeId TextStylePowerChargesEmpty { get; protected set; }
-        public PrototypeId TextStylePowerChargesFull { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStylePowerChargesEmpty { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TextStylePrototype TextStylePowerChargesFull { get; protected set; }
         public PrototypeId MessageLeaderboardRewarded { get; protected set; }
-        public PrototypeId GamepadIconDonateAction { get; protected set; }
-        public PrototypeId GamepadIconDropAction { get; protected set; }
-        public PrototypeId GamepadIconEquipAction { get; protected set; }
-        public PrototypeId GamepadIconMoveAction { get; protected set; }
-        public PrototypeId GamepadIconSelectAction { get; protected set; }
-        public PrototypeId GamepadIconSellAction { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TooltipSectionGamepadIconPrototype GamepadIconDonateAction { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TooltipSectionGamepadIconPrototype GamepadIconDropAction { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TooltipSectionGamepadIconPrototype GamepadIconEquipAction { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TooltipSectionGamepadIconPrototype GamepadIconMoveAction { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TooltipSectionGamepadIconPrototype GamepadIconSelectAction { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TooltipSectionGamepadIconPrototype GamepadIconSellAction { get; protected set; }
         public PrototypeId[] ConsoleRadialMenuEntriesList { get; protected set; }
         public CoopOpUIDataEntryPrototype[] CoopOpUIDatas { get; protected set; }
         public PrototypeId MessageOpenMissionEntered { get; protected set; }
@@ -803,8 +844,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId PowerTooltipBodyCurRank1Only { get; protected set; }
         public int InfinityMaxRanksHideThreshold { get; protected set; }
         public PrototypeId MessagePlayingAtLevelCap { get; protected set; }
-        public PrototypeId GamepadIconRankDownAction { get; protected set; }
-        public PrototypeId GamepadIconRankUpAction { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TooltipSectionGamepadIconPrototype GamepadIconRankDownAction { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TooltipSectionGamepadIconPrototype GamepadIconRankUpAction { get; protected set; }
         public PrototypeId MessageTeamUpDisabledCoop { get; protected set; }
         public PrototypeId MessageStolenPowerAvailable { get; protected set; }
         public PrototypeId BIFRewardMessage { get; protected set; }
@@ -897,6 +940,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public float SampleRate { get; protected set; }
 
+        //---
+
         [DoNotCopy]
         public int MetricsFrequencyPrototypeEnumValue { get; private set; }
 
@@ -963,7 +1008,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RankDefaultEntryPrototype : Prototype
     {
-        public PrototypeId Data { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public RankPrototype Data { get; protected set; }
         public Rank Rank { get; protected set; }
     }
 
@@ -988,27 +1034,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId TwinEnemyRank { get; protected set; }
         public RankDefaultEntryPrototype[] RankDefaults { get; protected set; }
 
+        //---
+
         private RankPrototype[] _rankEnumToProto;
 
         public override void PostProcess()
         {
             base.PostProcess();
 
-            if (RankDefaults.IsNullOrEmpty()) return;
-
-            _rankEnumToProto = new RankPrototype[(int)Rank.Max];
-            foreach (var rankEntry in RankDefaults)
+            if (RankDefaults.HasValue())
             {
-                int rankAsIndex = (int)rankEntry.Rank;
-                if (rankAsIndex < 0 || rankAsIndex >= (int)Rank.Max) continue;
-                _rankEnumToProto[rankAsIndex] = rankEntry.Data.As<RankPrototype>();
+                _rankEnumToProto = new RankPrototype[(int)Rank.Max];
+                foreach (RankDefaultEntryPrototype rankEntry in RankDefaults)
+                {
+                    int rankAsIndex = (int)rankEntry.Rank;
+                    if (!Verify.IsTrue(rankAsIndex >= 0 && rankAsIndex < _rankEnumToProto.Length))
+                        continue;
+
+                    _rankEnumToProto[rankAsIndex] = rankEntry.Data;
+                }
             }
         }
 
         public RankPrototype GetRankByEnum(Rank rank)
         {
             int rankAsIndex = (int)rank;
-            if (rankAsIndex < 0 || rankAsIndex >= (int)Rank.Max) return null;
+            if (!Verify.IsTrue(rankAsIndex >= 0 && rankAsIndex < _rankEnumToProto.Length)) return null;
             return _rankEnumToProto[rankAsIndex];
         }
     }
@@ -1033,8 +1084,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float CriticalForceApplicationMag { get; protected set; }
         public float EnduranceCostChangePctMin { get; protected set; }
         public EvalPrototype EvalBlockChanceFormula { get; protected set; }
-        public PrototypeId EvalInterruptChanceFormula { get; protected set; }
-        public PrototypeId EvalNegStatusResistPctFormula { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public EvalPrototype EvalInterruptChanceFormula { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public EvalPrototype EvalNegStatusResistPctFormula { get; protected set; }
         public PrototypeId ChannelInterruptCondition { get; protected set; }
         public EvalPrototype EvalDamageReduction { get; protected set; }
         public EvalPrototype EvalCritChanceFormula { get; protected set; }
@@ -1045,29 +1098,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype EvalDamageReductionDefenseOnly { get; protected set; }
         public EvalPrototype EvalDamageReductionForDisplay { get; protected set; }
         public float TravelPowerMaxSpeed { get; protected set; }
-        public PrototypeId TUSynergyBonusPerLvl { get; protected set; }
-        public PrototypeId TUSynergyBonusPerMaxLvlTU { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public EvalPrototype TUSynergyBonusPerLvl { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public EvalPrototype TUSynergyBonusPerMaxLvlTU { get; protected set; }
 
         //--
-
-        [DoNotCopy]
-        public EvalPrototype EvalInterruptChanceFormulaPrototype { get; private set; }
-
-        [DoNotCopy]
-        public EvalPrototype EvalNegStatusResistPctFormulaPrototype { get; private set; }
-
-        [DoNotCopy]
-        public ConditionPrototype ChannelInterruptConditionPrototype { get; private set; }
-
-        public override void PostProcess()
-        {
-            base.PostProcess();
-
-            EvalInterruptChanceFormulaPrototype = EvalInterruptChanceFormula.As<EvalPrototype>();
-            EvalNegStatusResistPctFormulaPrototype = EvalNegStatusResistPctFormula.As<EvalPrototype>();
-
-            ChannelInterruptConditionPrototype = ChannelInterruptCondition.As<ConditionPrototype>();
-        }
 
         public float GetHardcoreAttenuationFactor(PropertyCollection properties)
         {
@@ -1094,7 +1130,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public CurveId LootBonusRarityCurve { get; protected set; }
         public CurveId LootBonusSpecialCurve { get; protected set; }
-        public PrototypeId LootContainerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype LootContainerKeyword { get; protected set; }
         public float LootDropScalar { get; protected set; }
         public int LootInitializationLevelOffset { get; protected set; }
         public CurveId LootLevelDistribution { get; protected set; }
@@ -1127,7 +1164,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MatchQueueStringEntryPrototype : Prototype
     {
-        public RegionRequestQueueUpdateVarAssetEnum StatusKey { get; protected set; }  // Regions/QueueStatus.type
+        public RegionRequestQueueUpdateVarAssetEnum StatusKey { get; protected set; }
         public LocaleStringId StringLog { get; protected set; }
         public LocaleStringId StringStatus { get; protected set; }
     }
@@ -1161,73 +1198,72 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class KeywordGlobalsPrototype : Prototype
     {
-        public PrototypeId PowerKeywordPrototype { get; protected set; }
-        public PrototypeId DestructibleKeyword { get; protected set; }
-        public PrototypeId PetPowerKeyword { get; protected set; }
-        public PrototypeId VacuumableKeyword { get; protected set; }
-        public PrototypeId EntityKeywordPrototype { get; protected set; }
-        public PrototypeId BodysliderPowerKeyword { get; protected set; }
-        public PrototypeId OrbEntityKeyword { get; protected set; }
-        public PrototypeId UltimatePowerKeyword { get; protected set; }
-        public PrototypeId MeleePowerKeyword { get; protected set; }
-        public PrototypeId RangedPowerKeyword { get; protected set; }
-        public PrototypeId BasicPowerKeyword { get; protected set; }
-        public PrototypeId TeamUpSpecialPowerKeyword { get; protected set; }
-        public PrototypeId TeamUpDefaultPowerKeyword { get; protected set; }
-        public PrototypeId StealthPowerKeyword { get; protected set; }
-        public PrototypeId TeamUpAwayPowerKeyword { get; protected set; }
-        public PrototypeId VanityPetKeyword { get; protected set; }
-        public PrototypeId ControlPowerKeywordPrototype { get; protected set; }
-        public PrototypeId AreaPowerKeyword { get; protected set; }
-        public PrototypeId EnergyPowerKeyword { get; protected set; }
-        public PrototypeId MentalPowerKeyword { get; protected set; }
-        public PrototypeId PhysicalPowerKeyword { get; protected set; }
-        public PrototypeId MedKitKeyword { get; protected set; }
-        public PrototypeId OrbExperienceEntityKeyword { get; protected set; }
-        public PrototypeId TutorialRegionKeyword { get; protected set; }
-        public PrototypeId TeamUpKeyword { get; protected set; }
-        public PrototypeId MovementPowerKeyword { get; protected set; }
-        public PrototypeId ThrownPowerKeyword { get; protected set; }
-        public PrototypeId HoloSimKeyword { get; protected set; }
-        public PrototypeId ControlledSummonDurationKeyword { get; protected set; }
-        public PrototypeId TreasureRoomKeyword { get; protected set; }
-        public PrototypeId DangerRoomKeyword { get; protected set; }
-        public PrototypeId StealingPowerKeyword { get; protected set; }
-        public PrototypeId SummonPowerKeyword { get; protected set; }
-
-        //--
-
-        [DoNotCopy]
-        public KeywordPrototype DestructibleKeywordPrototype { get; private set; }
-        [DoNotCopy]
-        public KeywordPrototype PetPowerKeywordPrototype { get; private set; }
-        [DoNotCopy]
-        public KeywordPrototype OrbEntityKeywordPrototype { get; private set; }
-        [DoNotCopy]
-        public KeywordPrototype RangedPowerKeywordPrototype { get; private set; }
-        [DoNotCopy]
-        public KeywordPrototype StealthPowerKeywordPrototype { get; private set; }
-        [DoNotCopy]
-        public KeywordPrototype TeamUpAwayPowerKeywordPrototype { get; private set; }
-        [DoNotCopy]
-        public KeywordPrototype VanityPetKeywordPrototype { get; private set; }
-        [DoNotCopy]
-        public KeywordPrototype OrbExperienceEntityKeywordPrototype { get; private set; }
-
-        public override void PostProcess()
-        {
-            base.PostProcess();
-
-            // Cache frequently used keyword prototype refs
-            DestructibleKeywordPrototype = DestructibleKeyword.As<KeywordPrototype>();
-            PetPowerKeywordPrototype = PetPowerKeyword.As<KeywordPrototype>();
-            OrbEntityKeywordPrototype = OrbEntityKeyword.As<KeywordPrototype>();
-            RangedPowerKeywordPrototype = RangedPowerKeyword.As<KeywordPrototype>();
-            StealthPowerKeywordPrototype = StealthPowerKeyword.As<KeywordPrototype>();
-            TeamUpAwayPowerKeywordPrototype = TeamUpAwayPowerKeyword.As<KeywordPrototype>();
-            VanityPetKeywordPrototype = VanityPetKeyword.As<KeywordPrototype>();
-            OrbExperienceEntityKeywordPrototype = OrbExperienceEntityKeyword.As<KeywordPrototype>();
-        }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype PowerKeywordPrototype { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype DestructibleKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype PetPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype VacuumableKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype EntityKeywordPrototype { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype BodysliderPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype OrbEntityKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype UltimatePowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype MeleePowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype RangedPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype BasicPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype TeamUpSpecialPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype TeamUpDefaultPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype StealthPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype TeamUpAwayPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype VanityPetKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype ControlPowerKeywordPrototype { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype AreaPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype EnergyPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype MentalPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype PhysicalPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype MedKitKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype OrbExperienceEntityKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype TutorialRegionKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype TeamUpKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype MovementPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype ThrownPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype HoloSimKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype ControlledSummonDurationKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype TreasureRoomKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype DangerRoomKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype StealingPowerKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype SummonPowerKeyword { get; protected set; }
     }
 
     public class CurrencyGlobalsPrototype : Prototype

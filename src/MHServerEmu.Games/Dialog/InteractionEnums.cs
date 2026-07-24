@@ -177,10 +177,10 @@ namespace MHServerEmu.Games.Dialog
             if (entityFilter != null) _entityFilters.Add(entityFilter);
         }
 
-        public void AddRegionPtrs(PrototypeId[] activeInRegions)
+        public void AddRegionPtrs(RegionPrototype[] activeInRegions)
         {
             if (activeInRegions.HasValue()) 
-                foreach(var region in activeInRegions) _regionRefs.Add(region);
+                foreach(var region in activeInRegions) _regionRefs.Add(region.DataRef);
         }
 
         public void AddSpawnedByClusterRefs(PrototypeId[] specificClusters)

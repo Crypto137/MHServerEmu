@@ -119,10 +119,4 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public TranslationPrototype[] NameList { get; protected set; }
         public HUDEntitySettingsPrototype HUDEntitySettingOverride { get; protected set; }
     }
-
-    public class FormationTypePrototype : Prototype
-    {
-        public FormationFacing Facing { get; protected set; }
-        public float Spacing { get; protected set; }
-    }
 }

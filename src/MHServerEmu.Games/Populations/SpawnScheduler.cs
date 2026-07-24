@@ -384,7 +384,7 @@ namespace MHServerEmu.Games.Populations
 
             if (forseSpawn)
             {
-                var popGlobals = GameDatabase.GlobalsPrototype.PopulationGlobalsPrototype;
+                var popGlobals = GameDatabase.GlobalsPrototype.PopulationGlobals;
                 if (popGlobals == null) return;
                 var spawnTime = TimeSpan.FromMilliseconds(popGlobals.DestructiblesForceSpawnMS);
                 var respawnTime = spec.Game.CurrentTime - spec.SpawnedTime;

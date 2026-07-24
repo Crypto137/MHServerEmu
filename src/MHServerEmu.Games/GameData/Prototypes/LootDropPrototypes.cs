@@ -18,7 +18,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class LootDropAgentPrototype : LootDropPrototype
     {
-        public PrototypeId Agent { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public WorldEntityPrototype Agent { get; protected set; }
 
         //---
 
@@ -26,8 +27,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
 
-            if (Agent != PrototypeId.Invalid && GameDatabase.DataDirectory.PrototypeIsAbstract(Agent))
-                Agent = PrototypeId.Invalid;
+            if (Agent != null && GameDatabase.DataDirectory.PrototypeIsAbstract(Agent.DataRef))
+                Agent = null;
         }
 
         public static LootRollResult RollAgent(WorldEntityPrototype agentProto, int numAgents, LootRollSettings settings, IItemResolver resolver)
@@ -52,7 +53,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Never roll XP for capped starter avatars
             Player player = settings.Player;
             Avatar avatar = player?.CurrentAvatar;
-            if (avatar != null && player.HasAvatarAsCappedStarter(avatar) && agentProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.OrbExperienceEntityKeywordPrototype))
+            if (avatar != null && player.HasAvatarAsCappedStarter(avatar) && agentProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.OrbExperienceEntityKeyword))
                 return result;
 
             RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All;
@@ -90,13 +91,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            if (Agent == PrototypeId.Invalid)
+            if (Agent == null)
                 return LootRollResult.NoRoll;
 
-            WorldEntityPrototype agentProto = Agent.As<WorldEntityPrototype>();
             int numAgents = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax + 1);
 
-            return RollAgent(agentProto, numAgents, settings, resolver);
+            return RollAgent(Agent, numAgents, settings, resolver);
         }
     }
 
@@ -108,8 +108,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override void Visit<T>(ref T visitor)
         {
             base.Visit(ref visitor);
@@ -119,8 +117,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            if (FilterType == CharacterFilterType.DropUnownedAvatarOnly && settings.Player == null)
-                return Logger.WarnReturn(LootRollResult.Failure, $"Roll(): No player for filter type {FilterType}");
+            if (FilterType == CharacterFilterType.DropUnownedAvatarOnly)
+            {
+                if (!Verify.IsNotNull(settings.Player)) return LootRollResult.Failure;
+            }
 
             ItemPrototype itemProto = null;
 
@@ -130,6 +130,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             foreach (PrototypeId charTokenProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CharacterTokenPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 CharacterTokenPrototype charTokenProto = charTokenProtoRef.As<CharacterTokenPrototype>();
+                if (!Verify.IsNotNull(charTokenProto))
+                    continue;
 
                 if (charTokenProto.TokenType != AllowedTokenType)
                     continue;
@@ -226,8 +228,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override void PostProcess()
         {
             base.PostProcess();
@@ -306,20 +306,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootDropItemPrototype : LootDropPrototype
     {
-        public PrototypeId Item { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public ItemPrototype Item { get; protected set; }
         public LootMutationPrototype[] Mutations { get; protected set; }
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override void OnResultsEvaluation(Player player, WorldEntity source)
         {
-            if (Item == PrototypeId.Invalid || DataDirectory.Instance.PrototypeIsA<CostumePrototype>(Item) == false)
-            {
-                Logger.Warn($"LootDropItemPrototype::OnResultsEvaluation() is only supported for Costumes!");
+            if (!Verify.IsTrue(Item != null && Item is CostumePrototype, "LootDropItemPrototype::OnResultsEvaluation() is only supported for Costumes!"))
                 return;
-            }
 
             // Unlock costume for costume closet (consoles / 1.53)
             // player.UnlockCostume(Item);
@@ -327,12 +323,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            if (Item == PrototypeId.Invalid)
+            if (Item == null)
                 return LootRollResult.NoRoll;
 
             int numItems = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax + 1);
 
-            return RollItem(Item.As<ItemPrototype>(), numItems, settings, resolver, Mutations);
+            return RollItem(Item, numItems, settings, resolver, Mutations);
         }
     }
 
@@ -340,6 +336,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public short ItemRank { get; protected set; }
         public EquipmentInvUISlot UISlot { get; protected set; }
+
+        //---
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
@@ -474,8 +472,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
             LootRollResult result = LootRollResult.NoRoll;
@@ -490,7 +486,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return result;
 
             Curve xpCurve = CurveDirectory.Instance.GetCurve(XPCurve);
-            if (xpCurve == null) return Logger.WarnReturn(result, "Roll(): xpCurve == null");
+            if (!Verify.IsNotNull(xpCurve)) return result;
 
             int amount = (int)MathF.Ceiling(xpCurve.GetAt(settings.Level));
 
@@ -535,11 +531,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootDropBannerMessagePrototype : LootNodePrototype
     {
-        public PrototypeId BannerMessage { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public BannerMessagePrototype BannerMessage { get; protected set; }
 
         //---
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
@@ -558,15 +553,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            if (dropper == null)
-            {
-                Logger.Warn("OnResultsEvaluation(): dropper == null");
-                return;
-            }
+            if (!Verify.IsNotNull(dropper)) return;
 
             Avatar avatar = player.CurrentAvatar;
             if (avatar == null) return;
@@ -575,16 +564,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (power == null)
             {
                 PowerIndexProperties props = new();
-                if (dropper.AssignPower(Power, props) == null)
-                    Logger.Warn($"OnResultsEvaluation(): Failed to assign power on dropper!\nPower: {Power.GetName()}\nDropper {dropper}:\nNode: {this}");
+                Verify.IsNotNull(dropper.AssignPower(Power, props), $"LootDropUsePowerPrototype: failed to assign power on dropper!\nPower: {Power.GetName()}\nDropper {dropper}:\nNode: {this}");
             }
 
             PowerActivationSettings settings = new(avatar.Id, avatar.RegionLocation.Position, dropper.RegionLocation.Position);
             settings.Flags |= PowerActivationSettingsFlags.SkipRangeCheck;
 
             PowerUseResult result = dropper.ActivatePower(Power, ref settings);
-            if (result != PowerUseResult.Success)
-                Logger.Warn($"OnResultsEvaluation(): Failed to activate power!\nPowerUseResult: {result}\nPower: {Power.GetName()}\nDropper: {dropper}\nNode: {this}");
+            Verify.IsTrue(result == PowerUseResult.Success, $"LootDropUsePowerPrototype: failed to activate power!\nPowerUseResult: {result}\nPower: {Power.GetName()}\nDropper: {dropper}\nNode: {this}");
         }
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
@@ -600,15 +587,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
             Game game = player?.Game;
-            if (game == null) return;
+            if (game == null)
+                return;
 
-            Avatar avatar = player.CurrentAvatar;
-            if (avatar == null) return;
+            Avatar avatar = player?.CurrentAvatar;
+            if (avatar == null)
+                return;
 
             if (RecipientVisualEffect != AssetId.Invalid)
             {
@@ -644,8 +631,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
             ChatManager chatManager = player.Game.ChatManager;
@@ -674,7 +659,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     break;
 
                 default:
-                    Logger.Warn($"OnResultsEvaluation(): Unknown message scope {MessageScope}");
+                    Verify.IsTrue(false, $"Unknown message scope {MessageScope}");
                     return;
             }
 
@@ -689,7 +674,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootDropVanityTitlePrototype : LootNodePrototype
     {
-        public PrototypeId VanityTitle { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public VanityTitlePrototype VanityTitle { get; protected set; }
 
 
         //---
@@ -698,10 +684,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             LootRollResult result = LootRollResult.NoRoll;
 
-            if (VanityTitle == PrototypeId.Invalid)
+            if (VanityTitle == null)
                 return result;
 
-            result = resolver.PushVanityTitle(VanityTitle);
+            result = resolver.PushVanityTitle(VanityTitle.DataRef);
             if (result.HasFlag(LootRollResult.Failure))
             {
                 resolver.ClearPending();
@@ -714,26 +700,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootDropVendorXPPrototype : LootNodePrototype
     {
-        public PrototypeId Vendor { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public VendorTypePrototype Vendor { get; protected set; }
         public int XP { get; protected set; }
 
         //---
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
             LootRollResult result = LootRollResult.NoRoll;
 
             // Validate this drop
-            if (XP <= 0 || Vendor == PrototypeId.Invalid)
+            if (XP <= 0 || Vendor == null)
                 return result;
 
             // Make sure this drop is not on cooldown
             if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly) == false &&
                 settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) == false)
             {
-                if (resolver.CheckDropCooldown(Vendor, XP))
+                if (resolver.CheckDropCooldown(Vendor.DataRef, XP))
                     return result;
             }
 
@@ -741,7 +726,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             VendorXPCapInfoPrototype vendorXPCapInfoProto = null;
             foreach (VendorXPCapInfoPrototype currentInfoProto in GameDatabase.LootGlobalsPrototype.VendorXPCapInfo)
             {
-                if (currentInfoProto.Vendor == Vendor)
+                if (currentInfoProto.Vendor == Vendor.DataRef)
                 {
                     vendorXPCapInfoProto = currentInfoProto;
                     break;
@@ -755,10 +740,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 // This code handles weekly caps for Entity/Characters/Vendors/VendorTypes/VendorRaidGenosha.prototype.
                 Player player = resolver.Player;
-                if (player == null)
-                    return Logger.WarnReturn(LootRollResult.NoRoll, "Roll(): Unable to get player when rewarding VendorXP");
+                if (!Verify.IsNotNull(player, "Unable to get player when rewarded VendorXP!"))
+                    return LootRollResult.NoRoll;
 
-                int vendorXPCapCounter = player.Properties[PropertyEnum.VendorXPCapCounter, Vendor];
+                int vendorXPCapCounter = player.Properties[PropertyEnum.VendorXPCapCounter, Vendor.DataRef];
                 bool shouldAdjustCounter = settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly) == false && player.IsInGame;
                 if (shouldAdjustCounter)
                 {
@@ -771,13 +756,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     xpAmount = Math.Max(0, vendorXPCapInfoProto.Cap - vendorXPCapCounter);
 
                 if (shouldAdjustCounter)
-                    player.Properties.AdjustProperty(xpAmount, new(PropertyEnum.VendorXPCapCounter, Vendor));
+                    player.Properties.AdjustProperty(xpAmount, new(PropertyEnum.VendorXPCapCounter, Vendor.DataRef));
             }
 
             if (xpAmount <= 0)
                 return result;
 
-            result = resolver.PushVendorXP(Vendor, xpAmount);
+            result = resolver.PushVendorXP(Vendor.DataRef, xpAmount);
             if (result.HasFlag(LootRollResult.Failure))
             {
                 resolver.ClearPending();

@@ -81,8 +81,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TooltipSectionItemAffixesPrototype : TooltipSectionPrototype
     {
-        public PrototypeId[] IncludeCategories { get; protected set; }     // VectorPrototypeRefPtr AffixCategoryPrototype
-        public PrototypeId[] ExcludeCategories { get; protected set; }     // VectorPrototypeRefPtr AffixCategoryPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public AffixCategoryPrototype[] IncludeCategories { get; protected set; }
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public AffixCategoryPrototype[] ExcludeCategories { get; protected set; }
     }
 
     public class TooltipSectionBarPrototype : TooltipSectionPrototype

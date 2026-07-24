@@ -31,7 +31,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PopulationPrototype : Prototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
         public PrototypeId RespawnMethod { get; protected set; }
         public float ClusterDensityPct { get; protected set; }
         public float ClusterDensityPeak { get; protected set; }
@@ -51,10 +50,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SpawnMapDistributeSpread { get; protected set; }
         public bool SpawnMapEnabled { get; protected set; }
 
+        //---
+
+        public const float PopulationClusterSq = 3200.0f;
+
         [DoNotCopy]
         public bool UseSpawnMap { get => SpawnMapEnabled || (SpawnMapDensityMin > 0.0 && SpawnMapDensityMax > 0.0f); }
-
-        public const float PopulationClusterSq = 3200.0f; 
 
         public override void PostProcess()
         {
@@ -68,29 +69,44 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float GetEncounterDensity(PrototypeId markerRef)
         {
             if (EncounterDensityOverrides.HasValue())
-                foreach (var entry in EncounterDensityOverrides)
-                    if (entry.MarkerType == markerRef) return entry.Density;            
+            {
+                foreach (EncounterDensityOverrideEntryPrototype entry in EncounterDensityOverrides)
+                {
+                    if (entry.MarkerType == markerRef)
+                        return entry.Density;
+                }
+            }
+        
             return EncounterDensityBase;
         }
 
         public PrototypeId PickTheme(GRandom random)
         {
-            if (Themes == null) return Logger.WarnReturn(PrototypeId.Invalid, $"Population contains no themes.\r\t{this}");
+            if (!Verify.IsNotNull(Themes, $"Population contains no themes.\r\t{this}"))
+                return PrototypeId.Invalid;
 
             Picker<PrototypeId> picker = new(random);
-            foreach (var instance in Themes.List)
+            foreach (PopulationObjectInstancePrototype instance in Themes.List)
             {
-                if (instance == null || instance.Object == PrototypeId.Invalid) continue;
-                var themeProto = GameDatabase.GetPrototype<PopulationThemePrototype>(instance.Object);
-                if (themeProto == null) continue;
+                if (!Verify.IsNotNull(instance))
+                    continue;
+
+                if (!Verify.IsTrue(instance.Object != PrototypeId.Invalid))
+                    continue;
+
+                PopulationThemePrototype themeProto = instance.Object.As<PopulationThemePrototype>();
+                if (!Verify.IsNotNull(themeProto))
+                    continue;
+
                 if (instance.Weight > 0)
                     picker.Add(instance.Object, instance.Weight);
             }
 
-            var pickTheme = PrototypeId.Invalid;
-            if (picker.Empty() == false) picker.Pick(out pickTheme);
+            PrototypeId pickedTheme = PrototypeId.Invalid;
+            if (picker.Empty() == false)
+                picker.Pick(out pickedTheme);
 
-            return pickTheme;
+            return pickedTheme;
         }
     }
 
@@ -139,17 +155,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public short Weight { get; protected set; }
         public PrototypeId Object { get; protected set; }
 
+        //---
+
         public void GetContainedEntities(HashSet<PrototypeId> entities)
         {
             if (Object != PrototypeId.Invalid)
             {
-                var proto = GameDatabase.GetPrototype<Prototype>(Object);
+                Prototype proto = Object.As<Prototype>();
+
                 if (proto is PopulationObjectPrototype populationObject)
                     populationObject.GetContainedEntities(entities);
                 else if (proto is PopulationObjectListPrototype populationObjectList)
                     populationObjectList.GetContainedEntities(entities);
                 else
-                    Console.WriteLine("Unsupported population prototype");
+                    Verify.IsTrue(false, "Unsupported population prototype");
             }
         }
     }
@@ -158,11 +177,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PopulationObjectInstancePrototype[] List { get; protected set; }
 
+        //---
+
         public void GetContainedEntities(HashSet<PrototypeId> entities)
         {
             if (List.HasValue())
-                foreach (var objectInstance in List)
-                    objectInstance?.GetContainedEntities(entities);
+            {
+                foreach (PopulationObjectInstancePrototype objectProto in List)
+                {
+                    if (!Verify.IsNotNull(objectProto))
+                        continue;
+
+                    objectProto.GetContainedEntities(entities);
+                }
+            }
         }
     }
 
@@ -171,6 +199,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PopulationObjectListPrototype Enemies { get; protected set; }
         public int EnemyPicks { get; protected set; }
         public PopulationObjectListPrototype Encounters { get; protected set; }
+
+        //---
 
         public void GetContainedEntities(HashSet<PrototypeId> entities)
         {

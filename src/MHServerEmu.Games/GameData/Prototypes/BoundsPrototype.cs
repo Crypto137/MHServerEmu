@@ -37,6 +37,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IgnoreBlockingWithAvatars { get; protected set; }
         public bool BlockOnlyMyself { get; protected set; }
 
+        //---
+
         public virtual float GetSphereRadius() => 0.0f;
         public virtual float GetBoundHalfHeight() => 0.0f;
         public virtual GeometryType GetGeometryType() => GeometryType.None;
@@ -47,6 +49,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float Radius { get; protected set; }
         public float HeightFromCenter { get; protected set; }
 
+        //---
+
         public override float GetSphereRadius() => Radius + HeightFromCenter;
         public override float GetBoundHalfHeight() => HeightFromCenter;
         public override GeometryType GetGeometryType() => GeometryType.Capsule;
@@ -55,6 +59,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class SphereBoundsPrototype : BoundsPrototype
     {
         public float Radius { get; protected set; }
+
+        //---
 
         public override float GetSphereRadius() => Radius;
         public override float GetBoundHalfHeight() => Radius;
@@ -67,8 +73,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float Length { get; protected set; }
         public float HeightFromCenter { get; protected set; }
 
+        //---
+
         public override float GetBoundHalfHeight() => HeightFromCenter;
         public override GeometryType GetGeometryType() => GeometryType.Triangle;
+
         public override float GetSphereRadius()
         {
             float length = Length / MathF.Cos(MathHelper.ToRadians(AngleDegrees * 0.5f));
@@ -84,6 +93,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float Length { get; protected set; }
         public float HeightFromCenter { get; protected set; }
 
+        //---
+
         public override float GetSphereRadius() => Length;
         public override float GetBoundHalfHeight() => HeightFromCenter;
         public override GeometryType GetGeometryType() => GeometryType.Wedge;
@@ -96,12 +107,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float Height { get; protected set; }
         public bool AxisAligned { get; protected set; }
 
+        //---
+
         public override float GetBoundHalfHeight() => Height * 0.5f;
         public override GeometryType GetGeometryType() => AxisAligned ? GeometryType.AABB : GeometryType.OBB;
+        
         public override float GetSphereRadius()
         {            
             return Vector3.Length(new Vector3(Width * 0.5f, Length * 0.5f, Height * 0.5f));
         }
-
     }
 }

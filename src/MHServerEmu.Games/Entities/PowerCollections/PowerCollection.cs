@@ -527,7 +527,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                         if (!Verify.IsNotNull(contextProto))
                             continue;
 
-                        TransformModePrototype transformModeProto = contextProto.TransformMode.As<TransformModePrototype>();
+                        TransformModePrototype transformModeProto = contextProto.TransformMode;
                         if (!Verify.IsNotNull(transformModeProto))
                             continue;
 
@@ -715,7 +715,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                         if (!Verify.IsNotNull(contextProto))
                             continue;
 
-                        TransformModePrototype transformModeProto = contextProto.TransformMode.As<TransformModePrototype>();
+                        TransformModePrototype transformModeProto = contextProto.TransformMode;
                         if (!Verify.IsNotNull(transformModeProto))
                             continue;
 

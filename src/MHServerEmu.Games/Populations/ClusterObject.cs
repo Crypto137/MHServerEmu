@@ -531,7 +531,7 @@ namespace MHServerEmu.Games.Populations
 
                         if (slots[slot] == PrototypeId.Invalid)
                             foreach (var overrideRef in overrides)
-                                if (affixProto.AffixTable == PrototypeId.Invalid || affixProto.AffixTablePrototype.Contains(overrideRef))
+                                if (affixProto.AffixTable == null || affixProto.AffixTable.Contains(overrideRef))
                                 {
                                     slots[slot] = overrideRef;
                                     overrides.Remove(overrideRef);
@@ -614,7 +614,7 @@ namespace MHServerEmu.Games.Populations
                         }
 
                     if (twinBoss)
-                        if (entity.EntityProto.Rank != PrototypeId.Invalid && entity.EntityProto.RankPrototype.IsRankBoss)
+                        if (entity.EntityProto.Rank != null && entity.EntityProto.Rank.IsRankBoss)
                         {
                             var newEntity = CreateClusterEntity(entity.EntityRef);
                             if (newEntity != null)
@@ -933,12 +933,12 @@ namespace MHServerEmu.Games.Populations
                 // Spawner have not Bounds
             }
 
-            if (AlliancePrototype.IsHostileToPlayerAlliance(EntityProto.AlliancePrototype))
+            if (AlliancePrototype.IsHostileToPlayerAlliance(EntityProto.Alliance))
                 Flags |= ClusterObjectFlag.Hostile;
 
             PathFlags = Locomotor.GetPathFlags(EntityProto.NaviMethod);
 
-            RankProto = EntityProto.RankPrototype;
+            RankProto = EntityProto.Rank;
             
             if (Parent != null)
             {

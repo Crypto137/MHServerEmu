@@ -1,4 +1,6 @@
 ﻿using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Powers;
@@ -7,23 +9,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class MovementBehaviorPrototype : Prototype
     {
-        public virtual void OnEndPower(in Context context) { }
-        public virtual bool GenerateTargetPosition(in Context context, ref Vector3 targetPositionResult) { return false; }
+        //---
 
-        public readonly struct Context
+        public virtual bool GenerateTargetPosition(in Context context, ref Vector3 targetPositionResult)
         {
-            public readonly Power Power;
-            public readonly WorldEntity Owner;
-            public readonly WorldEntity Target;
-            public readonly Vector3 TargetPosition;
+            return false;
+        }
 
-            public Context(Power power, WorldEntity owner, WorldEntity target, Vector3 targetPosition)
-            {
-                Power = power;
-                Owner = owner;
-                Target = target;
-                TargetPosition = targetPosition;
-            }
+        public virtual void OnEndPower(in Context context)
+        {
+        }
+
+        public readonly struct Context(Power power, WorldEntity owner, WorldEntity target, Vector3 targetPosition)
+        {
+            public readonly Power Power = power;
+            public readonly WorldEntity Owner = owner;
+            public readonly WorldEntity Target = target;
+            public readonly Vector3 TargetPosition = targetPosition;
         }
     }
 
@@ -31,18 +33,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public float StrafeDistanceMult { get; protected set; }
 
-        public override void OnEndPower(in Context context)
-        {
-            if (context.Target == null) return;
-            Vector3 userPosition = context.Owner.RegionLocation.Position;
-            Vector3 targetPosition = context.Target.RegionLocation.Position;
-            context.Owner.OrientForPower(context.Power, targetPosition, userPosition);
-        }
+        //---
 
         public override bool GenerateTargetPosition(in Context context, ref Vector3 targetPositionResult)
         {
-            var target = context.Target;
-            var owner = context.Owner;
+            WorldEntity target = context.Target;
+            WorldEntity owner = context.Owner;
             Vector3 ownerPosition = context.Owner.RegionLocation.Position;
 
             if (target == null || target == owner || target.IsInWorld == false)
@@ -53,7 +49,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return true;
             }
 
-            if (target == null) return false;
+            if (!Verify.IsNotNull(target)) return false;
 
             Vector3 toTarget = target.RegionLocation.Position - ownerPosition;
             float side1 = Vector3.Length2D(toTarget);
@@ -72,16 +68,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
             targetPositionResult = ownerPosition + (targetDirection * knockbackDistance);
             return true;
         }
+
+        public override void OnEndPower(in Context context)
+        {
+            if (context.Target == null)
+                return;
+
+            Vector3 userPosition = context.Owner.RegionLocation.Position;
+            Vector3 targetPosition = context.Target.RegionLocation.Position;
+            context.Owner.OrientForPower(context.Power, targetPosition, userPosition);
+        }
     }
 
     public class RandomPositionAroundTargetPrototype : MovementBehaviorPrototype
     {
         public float StrafeAngle { get; protected set; }
 
+        //---
+
         public override bool GenerateTargetPosition(in Context context, ref Vector3 targetPositionResult)
         {
-            var target = context.Target;
-            var owner = context.Owner;
+            WorldEntity target = context.Target;
+            WorldEntity owner = context.Owner;
             Vector3 ownerPosition = owner.RegionLocation.Position;
 
             if (target == null || target == owner || target.IsInWorld == false)
@@ -92,10 +100,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return true;
             }
 
-            var game = owner.Game;
-            if (game == null) return false;
-            var random = game.Random;
-            if (target == null) return false;
+            Game game = owner.Game;
+            if (!Verify.IsNotNull(game)) return false;
+
+            GRandom random = game.Random;
+
+            if (!Verify.IsNotNull(target)) return false;
 
             Vector3 toTarget = target.RegionLocation.Position - ownerPosition;
             float strafeAngle = MathHelper.ToRadians(random.Next() % 2 == 0 ? -StrafeAngle : StrafeAngle);
@@ -113,6 +123,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float PivotAngle { get; protected set; }
         public int MaxPivotTimeMS { get; protected set; }
         public float PostPivotAcceleration { get; protected set; }
+
+        //---
 
         public override bool GenerateTargetPosition(in Context context, ref Vector3 targetPositionResult)
         {

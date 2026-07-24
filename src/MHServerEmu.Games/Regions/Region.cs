@@ -1706,17 +1706,17 @@ namespace MHServerEmu.Games.Regions
             DividedStartLocations.Clear();
         }
 
-        public bool FilterRegion(PrototypeId filterRegionRef, bool includeChildren = false, PrototypeId[] regionsExclude = null)
+        public bool FilterRegion(RegionPrototype filterRegion, bool includeChildren = false, RegionPrototype[] regionsExclude = null)
         {
             if (Prototype == null) return false;
-            return Prototype.FilterRegion(filterRegionRef, includeChildren, regionsExclude);
+            return Prototype.FilterRegion(filterRegion, includeChildren, regionsExclude);
         }
 
-        public bool FilterRegions(PrototypeId[] filterRegions)
+        public bool FilterRegions(RegionPrototype[] filterRegions)
         {
             if (Prototype == null || filterRegions.IsNullOrEmpty()) return false;
-            foreach (var regionRef in filterRegions)
-                if (Prototype.FilterRegion(regionRef, false, null)) return true;
+            foreach (var region in filterRegions)
+                if (Prototype.FilterRegion(region, false, null)) return true;
             return false;
         }
 
@@ -1814,7 +1814,7 @@ namespace MHServerEmu.Games.Regions
             Eval.RunBool(evalProto, evalContext);
         }
 
-        public void GetUnuqueSelectorIndex(ref int index, int size, PrototypeId dataRef)
+        public void GetUniqueSelectorIndex(ref int index, int size, PrototypeId dataRef)
         {
             if (_uniqueSelectorIndexes.TryGetValue(dataRef, out ulong mask) == false) return;
             int start = index;
@@ -1826,7 +1826,7 @@ namespace MHServerEmu.Games.Regions
             while (index != start);
         }
 
-        public void SetUnuqueSelectorIndex(int index, bool setUnique, PrototypeId dataRef)
+        public void SetUniqueSelectorIndex(int index, bool setUnique, PrototypeId dataRef)
         {
             if (_uniqueSelectorIndexes.ContainsKey(dataRef) == false) return;
 

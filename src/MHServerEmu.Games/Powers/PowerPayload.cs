@@ -1285,7 +1285,7 @@ namespace MHServerEmu.Games.Powers
             if (!Verify.IsNotNull(powerProto)) return;
 
             // This bonus applies only to powers keyworded as ranged
-            if (powerProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.RangedPowerKeywordPrototype) == false)
+            if (powerProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.RangedPowerKeyword) == false)
                 return;
 
             float damagePct = 0f;
@@ -2135,9 +2135,8 @@ namespace MHServerEmu.Games.Powers
 
                 if (PowerPrototype.ConditionsByRef.HasValue())
                 {
-                    foreach (PrototypeId conditionProtoRef in PowerPrototype.ConditionsByRef)
+                    foreach (ConditionPrototype conditionByRefProto in PowerPrototype.ConditionsByRef)
                     {
-                        ConditionPrototype conditionByRefProto = conditionProtoRef.As<ConditionPrototype>();
                         if (!Verify.IsNotNull(conditionByRefProto))
                             continue;
 
@@ -2662,7 +2661,7 @@ namespace MHServerEmu.Games.Powers
                 return;
 
             // Check eval
-            EvalPrototype interruptChanceFormula = GameDatabase.CombatGlobalsPrototype.EvalInterruptChanceFormulaPrototype; 
+            EvalPrototype interruptChanceFormula = GameDatabase.CombatGlobalsPrototype.EvalInterruptChanceFormula; 
 
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
@@ -2675,7 +2674,7 @@ namespace MHServerEmu.Games.Powers
             // All checks passed, now we add the hit reaction condition
 
             // agentProto should have already been validated in Power.CanCauseHitReact()
-            ConditionPrototype conditionProto = targetAgent.AgentPrototype.HitReactCondition.As<ConditionPrototype>();
+            ConditionPrototype conditionProto = targetAgent.AgentPrototype.HitReactCondition;
             if (!Verify.IsNotNull(conditionProto)) return;
 
             ConditionCollection conditionCollection = targetAgent.ConditionCollection;

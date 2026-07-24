@@ -154,6 +154,18 @@ namespace MHServerEmu.Games.GameData.PatchManager
             if (targetType.IsInstanceOfType(rawValue))
                 return rawValue;
 
+            if (targetType.IsSubclassOf(typeof(Prototype)))
+            {
+                switch (rawValue)
+                {
+                    case PrototypeId protoRef:
+                        return GameDatabase.GetPrototype<Prototype>(protoRef);
+
+                    case ulong dataId:
+                        return GameDatabase.GetPrototype<Prototype>((PrototypeId)dataId);
+                }
+            }
+
             TypeConverter converter = TypeDescriptor.GetConverter(targetType);
             if (converter != null && converter.CanConvertFrom(rawValue.GetType()))
                 return converter.ConvertFrom(rawValue);

@@ -147,8 +147,7 @@ namespace MHServerEmu.Games.Entities
 
             if (hotspotProto.AppliesPowers.HasValue() || hotspotProto.AppliesIntervalPowers.HasValue())
             {
-                var clusterRef = GameDatabase.GlobalsPrototype.ClusterConfigurationGlobals;
-                var clusterProto = GameDatabase.GetPrototype<ClusterConfigurationGlobalsPrototype>(clusterRef);
+                var clusterProto = GameDatabase.GlobalsPrototype.ClusterConfigurationGlobals;
                 var isInTown = IsInTown();
                 _checkLOS = isInTown == false || clusterProto.HotspotCheckLOSInTown;
                 _targetInvervalMS = isInTown ? clusterProto.HotspotCheckTargetTownIntervalMS : clusterProto.HotspotCheckTargetIntervalMS; 
@@ -180,17 +179,23 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private void AssignPowers(PrototypeId[] powers)
+        private void AssignPowers(PowerPrototype[] powers)
         {
-            var powerCollection = PowerCollection;
-            var indexProps = new PowerIndexProperties(
-                Properties[PropertyEnum.PowerRank], CharacterLevel, CombatLevel,
+            PowerCollection powerCollection = PowerCollection;
+            if (!Verify.IsNotNull(powerCollection)) return;
+
+            PowerIndexProperties indexProps = new(Properties[PropertyEnum.PowerRank], CharacterLevel, CombatLevel,
                 Properties[PropertyEnum.ItemLevel], Properties[PropertyEnum.ItemVariation]);
 
-            foreach (var powerRef in powers)
+            foreach (PowerPrototype powerProto in powers)
             {
-                var powerProto = powerRef.As<PowerPrototype>();
-                if (powerProto == null || powerCollection.ContainsPower(powerRef)) continue;
+                if (!Verify.IsNotNull(powerProto))
+                    continue;
+
+                PrototypeId powerRef = powerProto.DataRef;
+                if (!Verify.IsTrue(powerCollection.ContainsPower(powerRef) == false))
+                    continue;
+
                 powerCollection.AssignPower(powerRef, indexProps);
             }
         }
@@ -353,7 +358,7 @@ namespace MHServerEmu.Games.Entities
             var manager = Game.EntityManager;
             if (manager == null) return;
 
-            var entityKeywordRef = GameDatabase.KeywordGlobalsPrototype.EntityKeywordPrototype;
+            var entityKeywordRef = GameDatabase.KeywordGlobalsPrototype.EntityKeywordPrototype.DataRef;
             if (keywordRef != entityKeywordRef && HasKeyword(keywordRef) == false) return;
 
             if (users != 0)
@@ -572,8 +577,8 @@ namespace MHServerEmu.Games.Entities
                 _notifiedPlayers.Add(player.Id);
             }
 
-            if (hotspotProto.TutorialTip != PrototypeId.Invalid)
-                player.ShowHUDTutorial(hotspotProto.TutorialTip.As<HUDTutorialPrototype>());
+            if (hotspotProto.TutorialTip != null)
+                player.ShowHUDTutorial(hotspotProto.TutorialTip);
 
             if (hotspotProto.KismetSeq != PrototypeId.Invalid)
                 player.PlayKismetSeq(hotspotProto.KismetSeq);
@@ -766,7 +771,7 @@ namespace MHServerEmu.Games.Entities
             {
                 if (powerTarget.ActivePowers[i])
                 {
-                    PowerPrototype powerProto = hotspotProto.AppliesPowers[i].As<PowerPrototype>();
+                    PowerPrototype powerProto = hotspotProto.AppliesPowers[i];
                     if (!Verify.IsNotNull(powerProto)) return;
                     
                     EndPowerForActiveTarget(powerProto.DataRef, target.Id, ref powerTarget, i);
@@ -922,9 +927,8 @@ namespace MHServerEmu.Games.Entities
                 bool? hasLOS = null;
                 ulong prevTargetId = InvalidId;
 
-                foreach (PrototypeId powerRef in hotspotProto.AppliesIntervalPowers)
+                foreach (PowerPrototype powerProto in hotspotProto.AppliesIntervalPowers)
                 {
-                    PowerPrototype powerProto = powerRef.As<PowerPrototype>();
                     if (!Verify.IsNotNull(powerProto))
                         continue;
 
@@ -939,7 +943,7 @@ namespace MHServerEmu.Games.Entities
                         if (targetId != prevTargetId)
                             hasLOS = null;
                         prevTargetId = targetId;
-                        if (ActivateIntervalPowerForTarget(powerRef, targetId, ref hasLOS))
+                        if (ActivateIntervalPowerForTarget(powerProto.DataRef, targetId, ref hasLOS))
                             numTargets--;
                     }
                 }
@@ -952,14 +956,13 @@ namespace MHServerEmu.Games.Entities
                     bool? hasLOS = null;
                     bool activated = false;
 
-                    foreach (PrototypeId powerRef in hotspotProto.AppliesIntervalPowers)
+                    foreach (PowerPrototype powerProto in hotspotProto.AppliesIntervalPowers)
                     {
-                        PowerPrototype powerProto = powerRef.As<PowerPrototype>();
                         if (!Verify.IsNotNull(powerProto))
                             continue;
 
                         ulong targetId = powerTarget.Key;
-                        activated |= ActivateIntervalPowerForTarget(powerRef, targetId, ref hasLOS);
+                        activated |= ActivateIntervalPowerForTarget(powerProto.DataRef, targetId, ref hasLOS);
                     }
 
                     if (activated)
@@ -1074,7 +1077,7 @@ namespace MHServerEmu.Games.Entities
                 if (powerTarget.IgnorePowers[i])
                     continue;
 
-                PowerPrototype powerProto = hotspotProto.AppliesPowers[i].As<PowerPrototype>();
+                PowerPrototype powerProto = hotspotProto.AppliesPowers[i];
                 if (!Verify.IsNotNull(powerProto))
                     continue;
 
@@ -1205,9 +1208,8 @@ namespace MHServerEmu.Games.Entities
 
             if (powerProto.ConditionsByRef.HasValue())
             {
-                foreach (PrototypeId conditionRef in powerProto.ConditionsByRef)
+                foreach (ConditionPrototype conditionProto in powerProto.ConditionsByRef)
                 {
-                    ConditionPrototype conditionProto = conditionRef.As<ConditionPrototype>();
                     if (!Verify.IsNotNull(conditionProto))
                         continue;
 

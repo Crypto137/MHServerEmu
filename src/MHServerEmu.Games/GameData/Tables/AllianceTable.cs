@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.GameData.Tables
 
             // Get the alliance blueprint and figure out the total number of alliances
             GlobalsPrototype globals = GameDatabase.GlobalsPrototype;
-            BlueprintId allianceBlueprintRef = dataDirectory.GetPrototypeBlueprintDataRef(globals.AnyAlliancePrototype);
+            BlueprintId allianceBlueprintRef = dataDirectory.GetPrototypeBlueprintDataRef(globals.AnyAlliancePrototype.DataRef);
             int numAlliances = dataDirectory.GetPrototypeMaxEnumValue(allianceBlueprintRef) + 1;
 
             // Allocate our table for every alliance combination using jagged arrays, the default value for both friendliness and hostility is false.

@@ -57,6 +57,11 @@ namespace MHServerEmu.Games.Behavior
             MissileReturnAction = OnAIMissileReturn;
         }
 
+        public override string ToString()
+        {
+            return $"AIController: {Owner}";
+        }
+
         public bool Initialize(BehaviorProfilePrototype profile, SpawnSpec spec, PropertyCollection collection)
         {
             Senses.Initialize(this, profile, spec);
@@ -477,11 +482,6 @@ namespace MHServerEmu.Games.Behavior
             Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
         }
 
-        public override string ToString()
-        {
-            return $"AIController: {Owner}";
-        }
-
         public void OnAIDeallocate()
         {
             EventScheduler scheduler = Game.GameEventScheduler;
@@ -641,7 +641,7 @@ namespace MHServerEmu.Games.Behavior
 
             foreach (var context in powerProto.MissileCreationContexts)
             {
-                var boundsProto = context?.Entity.As<MissilePrototype>()?.Bounds;
+                var boundsProto = context?.Entity?.Bounds;
                 if (boundsProto == null) return;
 
                 maxRadius = MathF.Max(boundsProto.GetSphereRadius(), maxRadius);

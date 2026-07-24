@@ -15,11 +15,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public virtual void Apply(LootRollSettings settings)
         {
-            Logger.Warn($"Apply(): Not implemented for modifier type {GetType().Name}");
         }
 
         public virtual bool IsValidForNode(LootNodePrototype node)
@@ -139,7 +136,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Apply(LootRollSettings settings)
         {
             LootDropChanceModifiers modifiers = LootDropChanceModifiers.CooldownOncePerXHours;
-            if (PerAccount) modifiers |= LootDropChanceModifiers.PerAccount;
+
+            if (PerAccount)
+                modifiers |= LootDropChanceModifiers.PerAccount;
+
             settings.DropChanceModifiers |= modifiers;
         }
 
@@ -158,7 +158,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Apply(LootRollSettings settings)
         {
             LootDropChanceModifiers modifiers = LootDropChanceModifiers.CooldownOncePerRollover;
-            if (PerAccount) modifiers |= LootDropChanceModifiers.PerAccount;
+
+            if (PerAccount)
+                modifiers |= LootDropChanceModifiers.PerAccount;
+
             settings.DropChanceModifiers |= modifiers;
         }
 
@@ -177,7 +180,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Apply(LootRollSettings settings)
         {
             LootDropChanceModifiers modifiers = LootDropChanceModifiers.CooldownByChannel;
-            if (PerAccount) modifiers |= LootDropChanceModifiers.PerAccount;
+
+            if (PerAccount)
+                modifiers |= LootDropChanceModifiers.PerAccount;
+
             settings.DropChanceModifiers |= modifiers;
         }
 
@@ -221,7 +227,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AffixPosition Position { get; protected set; }
         public short ModifyMinBy { get; protected set; }
         public short ModifyMaxBy { get; protected set; }
-        public PrototypeId Category { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AffixCategoryPrototype Category { get; protected set; }
 
         //---
 
@@ -229,12 +236,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (Position != AffixPosition.None)
             {
-                settings.AffixLimitMinByPositionModifierDict.GetValueRefOrAddDefault(Position) += ModifyMinBy;
-                settings.AffixLimitMaxByPositionModifierDict.GetValueRefOrAddDefault(Position) += ModifyMaxBy;
+                settings.AffixLimitMinByPositionModifiers.GetValueRefOrAddDefault(Position) += ModifyMinBy;
+                settings.AffixLimitMaxByPositionModifiers.GetValueRefOrAddDefault(Position) += ModifyMaxBy;
             }
-            else if (Category != PrototypeId.Invalid)
+            else if (Category != null)
             {
-                settings.AffixLimitByCategoryModifierDict.GetValueRefOrAddDefault(Category) += ModifyMinBy;
+                settings.AffixLimitByCategoryModifiers.GetValueRefOrAddDefault(Category) += ModifyMinBy;
             }
         }
     }
@@ -343,8 +350,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private KeywordsMask _conditionKeywordsMask;
 
         public override void PostProcess()
@@ -376,8 +381,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private KeywordsMask _conditionKeywordsMask;
 
         public override void PostProcess()
@@ -406,8 +409,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] Choices { get; protected set; }
 
         //---
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         private KeywordsMask _conditionKeywordsMask;
 
@@ -440,8 +441,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private KeywordsMask _conditionKeywordsMask;
 
         public override void PostProcess()
@@ -470,8 +469,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] Choices { get; protected set; }
 
         //---
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         private KeywordsMask _conditionKeywordsMask;
 
@@ -503,8 +500,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] Choices { get; protected set; }
 
         //---
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         private KeywordsMask _conditionKeywordsMask;
 
@@ -555,19 +550,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override void Apply(LootRollSettings settings)
         {
             if (KillsRequired <= 0)
                 return;
 
-            if ((settings.DropChanceModifiers &
-                (LootDropChanceModifiers.KillCountRequirementMet | LootDropChanceModifiers.KillCountRestricted)) != LootDropChanceModifiers.None)
-            {
-                Logger.Warn($"Apply(): Kill count requirement already set! Multiple RequireKillCount nodes in a single loot table are not supported.");
+            const LootDropChanceModifiers KillCountModifiers = LootDropChanceModifiers.KillCountRequirementMet | LootDropChanceModifiers.KillCountRestricted;
+            if (!Verify.IsTrue((settings.DropChanceModifiers & KillCountModifiers) == 0,
+                "Kill count requirement already set! Multiple RequireKillCount nodes in a single loot table are not supported."))
                 return;
-            }
 
             if (settings.KillCount >= KillsRequired)
                 settings.DropChanceModifiers |= LootDropChanceModifiers.KillCountRequirementMet;
@@ -587,18 +578,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override void Apply(LootRollSettings settings)
         {
             if (Choices.IsNullOrEmpty())
                 return;
 
-            if (settings.UsableWeekday == Weekday.All)
-            {
-                Logger.Warn("Apply(): Unable to find a valid weekday for loot roll!");
+            if (!Verify.IsTrue(settings.UsableWeekday != Weekday.All, "Unable to find a valid weekday for loot roll!"))
                 return;
-            }
 
             if (Choices.Contains(settings.UsableWeekday))
                 return;
@@ -669,15 +655,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override void Apply(LootRollSettings settings)
         {
-            if (settings.Player == null)
-            {
-                Logger.Warn("Apply(): player == null");
-                return;
-            };
+            if (!Verify.IsNotNull(settings.Player)) return;
 
             if (Missions.IsNullOrEmpty())
                 return;

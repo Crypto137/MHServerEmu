@@ -12,12 +12,10 @@ namespace MHServerEmu.Games.GameData.Tables
             AdvancementGlobalsPrototype advGlobalsProto = GameDatabase.AdvancementGlobalsPrototype;
             if (!Verify.IsNotNull(advGlobalsProto)) return;
 
-            foreach (PrototypeId omegaBonusSetRef in advGlobalsProto.OmegaBonusSets)
+            foreach (OmegaBonusSetPrototype omegaBonusSetProto in advGlobalsProto.OmegaBonusSets)
             {
-                OmegaBonusSetPrototype omegaBonusSetProto = omegaBonusSetRef.As<OmegaBonusSetPrototype>();
-
-                foreach (PrototypeId omegaBonusRef in omegaBonusSetProto.OmegaBonuses)
-                    _omegaBonusSets[omegaBonusRef] = omegaBonusSetProto;
+                foreach (OmegaBonusPrototype omegaBonusProto in omegaBonusSetProto.OmegaBonuses)
+                    _omegaBonusSets[omegaBonusProto.DataRef] = omegaBonusSetProto;
             }
         }
 

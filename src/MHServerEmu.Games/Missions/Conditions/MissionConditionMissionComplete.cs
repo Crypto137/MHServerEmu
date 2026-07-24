@@ -58,12 +58,12 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (MissionProtoRef != PrototypeId.Invalid)
                 return MissionProtoRef == missionRef;
 
-            if (_proto.MissionKeyword != PrototypeId.Invalid)
+            if (_proto.MissionKeyword != null)
             {
                 var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
                 if (missionProto == null) return false;
-                var missionKeyword = GameDatabase.GetPrototype<KeywordPrototype>(_proto.MissionKeyword);
-                return missionProto.HasKeyword(missionKeyword);
+
+                return missionProto.HasKeyword(_proto.MissionKeyword);
             }
 
             return false;
@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (_proto.WithinAreas.HasValue())
             {
                 var area = player.CurrentAvatar?.Area;
-                if (area == null || _proto.WithinAreas.Contains(area.PrototypeDataRef) == false) return false;
+                if (area == null || _proto.WithinAreas.Contains(area.Prototype) == false) return false;
             }
 
             return _proto.CreditTo switch

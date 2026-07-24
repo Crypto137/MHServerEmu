@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities.Inventories;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Loot;
 
@@ -32,11 +33,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ReplicateForTransfer { get; protected set; }
         public PrototypeId[] ItemSortPreferences { get; protected set; }
         public InventoryUIDataPrototype UIData { get; protected set; }
-        public PrototypeId[] SoftCapacitySlotGroupsPC { get; protected set; }       // VectorPrototypeRefPtr InventoryExtraSlotsGroupPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public InventoryExtraSlotsGroupPrototype[] SoftCapacitySlotGroupsPC { get; protected set; }
         public int SoftCapacityDefaultSlotsPC { get; protected set; }
-        public PrototypeId[] SoftCapacitySlotGroupsConsole { get; protected set; }  // VectorPrototypeRefPtr InventoryExtraSlotsGroupPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public InventoryExtraSlotsGroupPrototype[] SoftCapacitySlotGroupsConsole { get; protected set; }
         public int SoftCapacityDefaultSlotsConsole { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
+
+        //---
 
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="InventoryPrototype"/> is for a player stash inventory.
@@ -76,13 +81,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         /// </summary>
         public bool AllowEntity(EntityPrototype entityPrototype)
         {
-            if (EntityTypeFilter == null || EntityTypeFilter.Length == 0) return false;
-
-            foreach (PrototypeId entityTypeRef in EntityTypeFilter)
+            if (EntityTypeFilter.HasValue())
             {
-                BlueprintId entityTypeBlueprintRef = GameDatabase.DataDirectory.GetPrototypeBlueprintDataRef(entityTypeRef);
-                if (GameDatabase.DataDirectory.PrototypeIsChildOfBlueprint(entityPrototype.DataRef, entityTypeBlueprintRef))
-                    return true;
+                DataDirectory dataDirectory = GameDatabase.DataDirectory;
+                foreach (PrototypeId entityTypeRef in EntityTypeFilter)
+                {
+                    BlueprintId entityTypeBlueprintRef = dataDirectory.GetPrototypeBlueprintDataRef(entityTypeRef);
+                    if (dataDirectory.PrototypeIsChildOfBlueprint(entityPrototype.DataRef, entityTypeBlueprintRef))
+                        return true;
+                }
             }
 
             return false;
@@ -94,7 +101,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return SoftCapacityDefaultSlotsPC;
         }
 
-        public IEnumerable<PrototypeId> GetSoftCapacitySlotGroups()
+        public InventoryExtraSlotsGroupPrototype[] GetSoftCapacitySlotGroups()
         {
             // TODO: consoles
             return SoftCapacitySlotGroupsPC;
@@ -121,8 +128,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityInventoryAssignmentPrototype : Prototype
     {
-        public PrototypeId Inventory { get; protected set; }
-        public PrototypeId LootTable { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public InventoryPrototype Inventory { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public LootTablePrototype LootTable { get; protected set; }
     }
 
     public class AvatarEquipInventoryAssignmentPrototype : EntityInventoryAssignmentPrototype
@@ -136,6 +145,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public LocaleStringId DisplayName { get; protected set; }
         public int GrantSlotCount { get; protected set; }
-        public PrototypeId SlotGroup { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public InventoryExtraSlotsGroupPrototype SlotGroup { get; protected set; }
     }
 }

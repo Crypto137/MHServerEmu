@@ -86,13 +86,13 @@ namespace MHServerEmu.Games.Events
         public bool Proto1IncludeChildren { get; set; }
         public bool Proto2IncludeChildren { get; set; }
 
-        public ScoringEventData(ScoringEventPrototype eventProto) : this()
+        public ScoringEventData(ScoringEventPrototype eventProto)
         {
-            Proto0 = eventProto.Proto0 != PrototypeId.Invalid ? eventProto.Proto0.As<Prototype>() : null;
+            Proto0 = eventProto.Proto0;
             Proto0IncludeChildren = eventProto.Proto0IncludeChildren;
-            Proto1 = eventProto.Proto1 != PrototypeId.Invalid ? eventProto.Proto1.As<Prototype>() : null;
+            Proto1 = eventProto.Proto1;
             Proto1IncludeChildren = eventProto.Proto1IncludeChildren;
-            Proto2 = eventProto.Proto2 != PrototypeId.Invalid ? eventProto.Proto2.As<Prototype>() : null;
+            Proto2 = eventProto.Proto2;
             Proto2IncludeChildren = eventProto.Proto2IncludeChildren;
         }
     }
@@ -200,21 +200,21 @@ namespace MHServerEmu.Games.Events
 
         public ScoringEventContext(ScoringEventContextPrototype prototype)
         {
-            if (prototype.ContextRegion != PrototypeId.Invalid)
-                Region = prototype.ContextRegion.As<Prototype>();
-            else if (prototype.ContextRegionKeyword != PrototypeId.Invalid)
-                Region = prototype.ContextRegionKeyword.As<Prototype>();
+            if (prototype.ContextRegion != null)
+                Region = prototype.ContextRegion;
+            else if (prototype.ContextRegionKeyword != null)
+                Region = prototype.ContextRegionKeyword;
 
             RegionIncludeChildren = prototype.ContextRegionIncludeChildren;
 
-            Avatar = prototype.ContextAvatar != PrototypeId.Invalid ? prototype.ContextAvatar.As<Prototype>() : null;
-            Item = prototype.ContextItemEquipped != PrototypeId.Invalid ? prototype.ContextItemEquipped.As<Prototype>() : null;
-            Party = prototype.ContextParty != PrototypeId.Invalid ? prototype.ContextParty.As<Prototype>() : null;
-            Pet = prototype.ContextPet != PrototypeId.Invalid ? prototype.ContextPet.As<Prototype>() : null;
-            DifficultyTierMin = prototype.ContextDifficultyTierMin != PrototypeId.Invalid ? prototype.ContextDifficultyTierMin.As<DifficultyTierPrototype>() : null;
-            DifficultyTierMax = prototype.ContextDifficultyTierMax != PrototypeId.Invalid ? prototype.ContextDifficultyTierMax.As<DifficultyTierPrototype>() : null;
-            TeamUp = prototype.ContextTeamUp != PrototypeId.Invalid ? prototype.ContextTeamUp.As<Prototype>() : null;
-            PublicEventTeam = prototype.ContextPublicEventTeam != PrototypeId.Invalid ? prototype.ContextPublicEventTeam.As<Prototype>() : null;
+            Avatar = prototype.ContextAvatar;
+            Item = prototype.ContextItemEquipped;
+            Party = prototype.ContextParty;
+            Pet = prototype.ContextPet;
+            DifficultyTierMin = prototype.ContextDifficultyTierMin;
+            DifficultyTierMax = prototype.ContextDifficultyTierMax;
+            TeamUp = prototype.ContextTeamUp;
+            PublicEventTeam = prototype.ContextPublicEventTeam;
         }
 
         public ScoringEventContext(Player player)

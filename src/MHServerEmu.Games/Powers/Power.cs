@@ -67,8 +67,6 @@ namespace MHServerEmu.Games.Powers
         public Game Game { get; }
         public PrototypeId PrototypeDataRef { get; }
         public PowerPrototype Prototype { get; }
-        public TargetingStylePrototype TargetingStylePrototype { get; }
-        public GamepadSettingsPrototype GamepadSettingsPrototype { get; }
 
         public WorldEntity Owner { get; private set; }
         public bool IsTeamUpPassivePowerWhileAway { get; private set; }
@@ -96,9 +94,6 @@ namespace MHServerEmu.Games.Powers
             Game = game;
             PrototypeDataRef = prototypeDataRef;
             Prototype = prototypeDataRef.As<PowerPrototype>();
-
-            TargetingStylePrototype = Prototype.TargetingStyle.As<TargetingStylePrototype>();
-            GamepadSettingsPrototype = Prototype.GamepadSettings.As<GamepadSettingsPrototype>();
         }
 
         public override string ToString()
@@ -1220,7 +1215,7 @@ namespace MHServerEmu.Games.Powers
             }
 
             // Check if our potentially stealthed entity is actually stealthed
-            KeywordPrototype stealthPowerKeyword = GameDatabase.KeywordGlobalsPrototype.StealthPowerKeywordPrototype;
+            KeywordPrototype stealthPowerKeyword = GameDatabase.KeywordGlobalsPrototype.StealthPowerKeyword;
             if (stealthedEntity.HasConditionWithKeyword(stealthPowerKeyword) == false)
                 return false;
 
@@ -2348,6 +2343,20 @@ namespace MHServerEmu.Games.Powers
             return GetPowerCategory(powerProto) == PowerCategoryType.ProcEffect;
         }
 
+        public TargetingStylePrototype GetTargetingStylePrototype()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (!Verify.IsNotNull(powerProto)) return null;
+            return powerProto.TargetingStyle;
+        }
+
+        public GamepadSettingsPrototype GetGamepadSettingsPrototype()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (!Verify.IsNotNull(powerProto)) return null;
+            return powerProto.GamepadSettings;
+        }
+
         public bool IsItemPower()
         {
             PowerPrototype powerProto = Prototype;
@@ -2474,7 +2483,7 @@ namespace MHServerEmu.Games.Powers
 
         public bool ShouldOrientToTarget()
         {
-            TargetingStylePrototype stylePrototype = TargetingStylePrototype;
+            TargetingStylePrototype stylePrototype = GetTargetingStylePrototype();
             if (!Verify.IsNotNull(stylePrototype)) return false;
             return stylePrototype.TurnsToFaceTarget;
         }
@@ -2488,7 +2497,7 @@ namespace MHServerEmu.Games.Powers
 
         public bool DisableOrientationWhileActive()
         {
-            TargetingStylePrototype stylePrototype = TargetingStylePrototype;
+            TargetingStylePrototype stylePrototype = GetTargetingStylePrototype();
             if (!Verify.IsNotNull(stylePrototype)) return false;
             return stylePrototype.DisableOrientationDuringPower;
         }
@@ -2646,7 +2655,8 @@ namespace MHServerEmu.Games.Powers
 
         public bool IsGamepadMeleeMoveIntoRangePower()
         {
-            return GamepadSettingsPrototype != null && GamepadSettingsPrototype.MeleeMoveIntoRange;
+            GamepadSettingsPrototype gamepadSettings = GetGamepadSettingsPrototype();
+            return gamepadSettings != null && gamepadSettings.MeleeMoveIntoRange;
         }
 
         public float GetRange()
@@ -2688,10 +2698,8 @@ namespace MHServerEmu.Games.Powers
 
         public float GetGamepadRange()
         {
-            if (GamepadSettingsPrototype == null)
-                return 0f;
-
-            return GamepadSettingsPrototype.Range;
+            GamepadSettingsPrototype gamepadSettings = GetGamepadSettingsPrototype();
+            return gamepadSettings != null && gamepadSettings.Range > 0f ? gamepadSettings.Range : 0f;
         }
 
         public float GetApplicationRange()
@@ -3339,7 +3347,7 @@ namespace MHServerEmu.Games.Powers
             AgentPrototype agentProto = target.AgentPrototype;
             if (!Verify.IsNotNull(agentProto)) return false;
 
-            if (agentProto.HitReactCondition == PrototypeId.Invalid)
+            if (agentProto.HitReactCondition == null)
                 return false;
 
             if (target.IsHitReactionOnCooldown())
@@ -4052,7 +4060,7 @@ namespace MHServerEmu.Games.Powers
             if (!Verify.IsNotNull(Game)) return;
             if (!Verify.IsNotNull(Owner)) return;
 
-            TargetingStylePrototype style = TargetingStylePrototype;
+            TargetingStylePrototype style = GetTargetingStylePrototype();
             if (!Verify.IsNotNull(style)) return;
 
             Vector3 ownerPosition = Owner.RegionLocation.Position;

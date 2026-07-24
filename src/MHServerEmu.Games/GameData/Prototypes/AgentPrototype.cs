@@ -29,7 +29,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public Allegiance Allegiance { get; protected set; }
         [PrototypeField(PrototypeFieldType.Mixin)]
         public LocomotorPrototype Locomotion { get; protected set; }
-        public PrototypeId HitReactCondition { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public ConditionPrototype HitReactCondition { get; protected set; }
         public BehaviorProfilePrototype BehaviorProfile { get; protected set; }
         [PrototypeField(PrototypeFieldType.Mixin)]
         public PopulationInfoPrototype PopulationInfo { get; protected set; }   // This does not seem to be actually used anywhere
@@ -41,22 +42,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int HitReactCooldownMS { get; protected set; }
         public LocaleStringId BriefDescription { get; protected set; }
         public float HealthBarRadius { get; protected set; }
-        public PrototypeId OnResurrectedPower { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public PowerPrototype OnResurrectedPower { get; protected set; }
         public bool WakeStartsVisible { get; protected set; }
         public VOStoryNotificationPrototype[] VOStoryNotifications { get; protected set; }
         public bool HitReactOnClient { get; protected set; }
-        public PrototypeId CCReactCondition { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public ConditionPrototype CCReactCondition { get; protected set; }
         public int InCombatTimerMS { get; protected set; }
         public DramaticEntranceType PlayDramaticEntrance { get; protected set; }
-        public PrototypeId StealablePower { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public StealablePowerInfoPrototype StealablePower { get; protected set; }
         public AssetId BossRewardIconPath { get; protected set; }
         public bool SpawnLootForMissionContributors { get; protected set; }
         public int InteractRangeThrow { get; protected set; }
         public bool DamageMeterEnabled { get; protected set; }
         public CurveId MobHealthBaseCurveDCL { get; protected set; }
 
+        //---
+
         [DoNotCopy]
-        public override LocomotorPrototype Locomotor => Locomotion;
+        public override LocomotorPrototype Locomotor { get => Locomotion; }
     }
 
     public class OrbPrototype : AgentPrototype
@@ -81,6 +87,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProgressionEntryPrototype : Prototype
     {
+        //---
+
         // These are accessors present in the client
         public virtual int GetRequiredLevel() => 0;
         public virtual int GetStartingRank() => 0;
@@ -104,6 +112,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int StartingRank { get; protected set; }
         public float UIPositionPctX { get; protected set; }
         public float UIPositionPctY { get; protected set; }
+
+        //---
 
         public override int GetRequiredLevel() => RequiredLevel;
         public override int GetStartingRank() => StartingRank;

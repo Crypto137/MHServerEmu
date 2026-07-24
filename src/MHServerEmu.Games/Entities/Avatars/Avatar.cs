@@ -828,12 +828,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             WorldEntityPrototype targetProto = target.WorldEntityPrototype;
             if (!Verify.IsNotNull(targetProto)) return false;
 
-            PrototypeId powerRef = targetProto.PreInteractPower;
-            if (powerRef == PrototypeId.Invalid)
+            PowerPrototype powerProto = targetProto.PreInteractPower;
+            if (powerProto == null)
                 return false;
 
-            PowerPrototype powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
-            if (!Verify.IsNotNull(powerProto)) return false;
+            PrototypeId powerRef = powerProto.DataRef;
 
             if (HasPowerInPowerCollection(powerRef) == false)
             {
@@ -1805,7 +1804,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
             evalContext.SetReadOnlyVar_ProtoRefVectorPtr(EvalContext.Var1, Keywords);
 
-            return Eval.RunInt(GameDatabase.AdvancementGlobalsPrototype.AvatarThrowabilityEvalPrototype, evalContext);
+            return Eval.RunInt(GameDatabase.AdvancementGlobalsPrototype.AvatarThrowabilityEval, evalContext);
         }
 
         private bool FixupPendingActivateSettings(Power power, ref PowerActivationSettings settings)
@@ -2551,7 +2550,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (!Verify.IsNotNull(restrictionProto))
                     continue;
 
-                KeywordPrototype keywordProto = restrictionProto.RestrictionKeywordPrototype;
+                KeywordPrototype keywordProto = restrictionProto.RestrictionKeyword;
 
                 if (keywordProto == null || restrictionProto.RestrictionKeywordCount <= 0)
                     continue;
@@ -2740,7 +2739,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (powerProto.PowerCategory == PowerCategoryType.HiddenPassivePower)
                 return true;
 
-            if (powerProto.Activation == PowerActivationType.Passive && powerProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.TeamUpAwayPowerKeywordPrototype))
+            if (powerProto.Activation == PowerActivationType.Passive && powerProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.TeamUpAwayPowerKeyword))
                 return true;
 
             PrototypeId[] allowedPowers = avatarProto.GetAllowedPowersForTransformMode(transformModeRef);
@@ -3723,14 +3722,14 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public PrimaryResourceManaBehaviorPrototype[] GetPrimaryResourceManaBehaviors()
         {
-            PrimaryResourceManaBehaviorPrototype[] behaviors = AvatarPrototype?.PrimaryResourceBehaviorsCache;
+            PrimaryResourceManaBehaviorPrototype[] behaviors = AvatarPrototype?.PrimaryResourceBehaviors;
             if (!Verify.IsTrue(behaviors.HasValue())) return Array.Empty<PrimaryResourceManaBehaviorPrototype>();
             return behaviors;
         }
 
         private PrimaryResourceManaBehaviorPrototype GetPrimaryResourceManaBehavior(ManaType manaType)
         {
-            PrimaryResourceManaBehaviorPrototype[] behaviors = AvatarPrototype?.PrimaryResourceBehaviorsCache;
+            PrimaryResourceManaBehaviorPrototype[] behaviors = AvatarPrototype?.PrimaryResourceBehaviors;
             if (!Verify.IsTrue(behaviors.HasValue())) return null;
 
             foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in behaviors)
@@ -3748,7 +3747,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (secondaryResourceOverrideProtoRef != PrototypeId.Invalid)
                 return secondaryResourceOverrideProtoRef.As<SecondaryResourceManaBehaviorPrototype>();
 
-            return AvatarPrototype?.SecondaryResourceBehaviorCache;
+            return AvatarPrototype?.SecondaryResourceBehavior;
         }
 
         private float GetEnduranceMax(ManaType manaType)
@@ -4188,7 +4187,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             WorldEntityPrototype objectProto = interactableObject.WorldEntityPrototype;
-            if (objectProto.PreInteractPower != PrototypeId.Invalid)
+            if (objectProto.PreInteractPower != null)
             {
                 ulong targetId = player.Properties[PropertyEnum.InteractReadyForTargetId];
                 player.Properties.RemoveProperty(PropertyEnum.InteractReadyForTargetId);
@@ -4288,7 +4287,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (!Verify.IsNotNull(equipInvEntryProto))
                     continue;
 
-                if (equipInvEntryProto.Inventory == invProtoRef)
+                if (equipInvEntryProto.Inventory.DataRef == invProtoRef)
                 {
                     if (CharacterLevel < equipInvEntryProto.UnlocksAtCharacterLevel)
                         return InventoryResult.InvalidEquipmentInventoryNotUnlocked;
@@ -4465,7 +4464,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (Verify.IsTrue(avatarProto.EquipmentInventories.HasValue()))
             {
                 foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in avatarProto.EquipmentInventories)
-                    success &= Verify.IsTrue(AddInventory(equipInvAssignment.Inventory, populate ? equipInvAssignment.LootTable : PrototypeId.Invalid));
+                    success &= Verify.IsTrue(AddInventory(equipInvAssignment.Inventory.DataRef, populate ? equipInvAssignment.LootTable?.DataRef : PrototypeId.Invalid));
             }
 
             return success;
@@ -5329,7 +5328,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             foreach (WorldEntity summoned in new SummonedEntityIterator(this))
             {
-                if (summoned is Agent pet && pet.HasKeyword(keywordGlobals.VanityPetKeywordPrototype))
+                if (summoned is Agent pet && pet.HasKeyword(keywordGlobals.VanityPetKeyword))
                     return pet;
             }
 
@@ -5548,7 +5547,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             controlled.CancelDestroyEvent();
 
             var keywordSummonDuration = GameDatabase.KeywordGlobalsPrototype.ControlledSummonDurationKeyword;
-            if (keywordSummonDuration == PrototypeId.Invalid) return false;
+            if (keywordSummonDuration == null) return false;
 
             bool hasSummonDuration = controlled.HasConditionWithKeyword(keywordSummonDuration);
 
@@ -6649,7 +6648,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     else
                     {
                         // Clear default behavior (if any)
-                        SecondaryResourceManaBehaviorPrototype defaultManaBehaviorProto = AvatarPrototype?.SecondaryResourceBehaviorCache;
+                        SecondaryResourceManaBehaviorPrototype defaultManaBehaviorProto = AvatarPrototype?.SecondaryResourceBehavior;
                         if (defaultManaBehaviorProto != null)
                             UnassignManaBehaviorPowers(defaultManaBehaviorProto);
                     }

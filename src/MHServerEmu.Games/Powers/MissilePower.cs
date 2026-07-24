@@ -243,11 +243,11 @@ namespace MHServerEmu.Games.Powers
             Region region = Owner.Region;
             if (!Verify.IsNotNull(region)) return false;
 
-            MissilePrototype missilePrototype = missileContext.Entity.As<MissilePrototype>();
+            MissilePrototype missilePrototype = missileContext.Entity;
             if (!Verify.IsNotNull(missilePrototype)) return false;
 
             using EntitySettings creationSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
-            creationSettings.EntityRef = missileContext.Entity;
+            creationSettings.EntityRef = missileContext.Entity != null ? missileContext.Entity.DataRef : PrototypeId.Invalid;
             creationSettings.RegionId = region.Id;
             creationSettings.IgnoreNavi = missileContext.Ghost;
 
@@ -578,7 +578,7 @@ namespace MHServerEmu.Games.Powers
                 } 
                 else
                 {
-                    TargetingStylePrototype style = TargetingStylePrototype;
+                    TargetingStylePrototype style = GetTargetingStylePrototype();
 
                     ulong targetId = powerApplication.TargetEntityId;
                     if (targetId != Entity.InvalidId &&

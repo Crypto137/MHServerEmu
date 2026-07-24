@@ -1771,7 +1771,7 @@ namespace MHServerEmu.Games.Entities.Items
                         $"AffixPowerModifier is for PowerProgTableTabRef but scopeProtoRef is not an avatar! Affix=[{affixProto}] Scope=[{scopeProtoRef.GetName()}] Item=[{_itemSpec.ItemProtoRef.GetName()}]"))
                         return false;
                 }
-                else if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
+                else if (affixPowerModifierProto.PowerKeywordFilter != null)
                 {
                     if (!Verify.IsTrue(scopeProtoRef == PrototypeId.Invalid,
                         $"AffixPowerModifier is for PowerKeywordFilter but scopeProtoRef is NOT invalid as expected! Affix=[{affixProto}] Scope=[{scopeProtoRef.GetName()}] Item=[{_itemSpec.ItemProtoRef.GetName()}]"))
@@ -1793,8 +1793,8 @@ namespace MHServerEmu.Games.Entities.Items
 
                     if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
                         affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, affixPowerModifierProto.PowerProgTableTabRef, scopeProtoRef);
-                    else if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
-                        affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, affixPowerModifierProto.PowerKeywordFilter, PrototypeId.Invalid);
+                    else if (affixPowerModifierProto.PowerKeywordFilter != null)
+                        affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, affixPowerModifierProto.PowerKeywordFilter.DataRef, PrototypeId.Invalid);
                     else
                         affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, scopeProtoRef);
 
@@ -1808,8 +1808,8 @@ namespace MHServerEmu.Games.Entities.Items
 
                     if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
                         affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, affixPowerModifierProto.PowerProgTableTabRef, scopeProtoRef);
-                    else if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
-                        affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, affixPowerModifierProto.PowerKeywordFilter, PrototypeId.Invalid);
+                    else if (affixPowerModifierProto.PowerKeywordFilter != null)
+                        affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, affixPowerModifierProto.PowerKeywordFilter.DataRef, PrototypeId.Invalid);
                     else
                         affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, scopeProtoRef);
 

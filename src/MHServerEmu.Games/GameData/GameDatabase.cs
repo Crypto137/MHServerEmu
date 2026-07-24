@@ -50,22 +50,22 @@ namespace MHServerEmu.Games.GameData
 
         // Globals prototypes
         public static GlobalsPrototype GlobalsPrototype { get; private set; }
-        public static AdvancementGlobalsPrototype AdvancementGlobalsPrototype { get; private set; }
-        public static DebugGlobalsPrototype DebugGlobalsPrototype { get; private set; }
-        public static UIGlobalsPrototype UIGlobalsPrototype { get; private set; }
-        public static MissionGlobalsPrototype MissionGlobalsPrototype { get; private set; }
-        public static PopulationGlobalsPrototype PopulationGlobalsPrototype { get; private set; }
-        public static AIGlobalsPrototype AIGlobalsPrototype { get; private set; }
-        public static CombatGlobalsPrototype CombatGlobalsPrototype { get; private set; }
-        public static TransitionGlobalsPrototype TransitionGlobalsPrototype { get; private set; }
-        public static LootGlobalsPrototype LootGlobalsPrototype { get; private set; }
-        public static AudioGlobalsPrototype AudioGlobalsPrototype { get; private set; }
-        public static PowerVisualsGlobalsPrototype PowerVisualsGlobalsPrototype { get; private set; }
-        public static KeywordGlobalsPrototype KeywordGlobalsPrototype { get; private set; }
-        public static CurrencyGlobalsPrototype CurrencyGlobalsPrototype { get; private set; }
-        public static GamepadGlobalsPrototype GamepadGlobalsPrototype { get; private set; }
-        public static DifficultyGlobalsPrototype DifficultyGlobalsPrototype { get; private set; }
-        public static ConsoleGlobalsPrototype ConsoleGlobalsPrototype { get; private set; }
+        public static AdvancementGlobalsPrototype AdvancementGlobalsPrototype { get => GlobalsPrototype?.AdvancementGlobals; }
+        public static DebugGlobalsPrototype DebugGlobalsPrototype { get => GlobalsPrototype?.DebugGlobals; }
+        public static UIGlobalsPrototype UIGlobalsPrototype { get => GlobalsPrototype?.UIGlobals; }
+        public static MissionGlobalsPrototype MissionGlobalsPrototype { get => GlobalsPrototype?.MissionGlobals; }
+        public static PopulationGlobalsPrototype PopulationGlobalsPrototype { get => GlobalsPrototype?.PopulationGlobals; }
+        public static AIGlobalsPrototype AIGlobalsPrototype { get => GlobalsPrototype?.AIGlobals; }
+        public static CombatGlobalsPrototype CombatGlobalsPrototype { get => GlobalsPrototype?.CombatGlobals; }
+        public static TransitionGlobalsPrototype TransitionGlobalsPrototype { get => GlobalsPrototype?.TransitionGlobals; }
+        public static LootGlobalsPrototype LootGlobalsPrototype { get => GlobalsPrototype?.LootGlobals; }
+        public static AudioGlobalsPrototype AudioGlobalsPrototype { get => GlobalsPrototype?.AudioGlobals; }
+        public static PowerVisualsGlobalsPrototype PowerVisualsGlobalsPrototype { get => GlobalsPrototype?.PowerVisualsGlobals; }
+        public static KeywordGlobalsPrototype KeywordGlobalsPrototype { get => GlobalsPrototype?.KeywordGlobals; }
+        public static CurrencyGlobalsPrototype CurrencyGlobalsPrototype { get => GlobalsPrototype?.CurrencyGlobals; }
+        public static GamepadGlobalsPrototype GamepadGlobalsPrototype { get => GlobalsPrototype?.GamepadGlobals; }
+        public static DifficultyGlobalsPrototype DifficultyGlobalsPrototype { get => GlobalsPrototype?.DifficultyGlobals; }
+        public static ConsoleGlobalsPrototype ConsoleGlobalsPrototype { get => GlobalsPrototype?.ConsoleGlobals; }
         
         public static InteractionManager InteractionManager { get; private set; }
 
@@ -97,30 +97,14 @@ namespace MHServerEmu.Games.GameData
             PropertyInfoTable = new();
             PropertyInfoTable.Initialize();
 
-            // Initialize PrototypePatchManager
-            PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
-
-            // Load globals prototypes
-            PrototypeId globalsPrototypeId = GetPrototypeRefByName("Globals/Globals.defaults");
-            GlobalsPrototype = GetPrototype<GlobalsPrototype>(globalsPrototypeId);
-            AdvancementGlobalsPrototype = GetPrototype<AdvancementGlobalsPrototype>(GlobalsPrototype.AdvancementGlobals);
-            DebugGlobalsPrototype = GetPrototype<DebugGlobalsPrototype>(GlobalsPrototype.DebugGlobals);
-            UIGlobalsPrototype = GetPrototype<UIGlobalsPrototype>(GlobalsPrototype.UIGlobals);
-            MissionGlobalsPrototype = GetPrototype<MissionGlobalsPrototype>(GlobalsPrototype.MissionGlobals);
-            PopulationGlobalsPrototype = GetPrototype<PopulationGlobalsPrototype>(GlobalsPrototype.PopulationGlobals);
-            AIGlobalsPrototype = GetPrototype<AIGlobalsPrototype>(GlobalsPrototype.AIGlobals);
-            CombatGlobalsPrototype = GetPrototype<CombatGlobalsPrototype>(GlobalsPrototype.CombatGlobals);
-            TransitionGlobalsPrototype = GetPrototype<TransitionGlobalsPrototype>(GlobalsPrototype.TransitionGlobals);
-            LootGlobalsPrototype = GetPrototype<LootGlobalsPrototype>(GlobalsPrototype.LootGlobals);
-            AudioGlobalsPrototype = GetPrototype<AudioGlobalsPrototype>(GlobalsPrototype.AudioGlobals);
-            PowerVisualsGlobalsPrototype = GetPrototype<PowerVisualsGlobalsPrototype>(GlobalsPrototype.PowerVisualsGlobals);
-            KeywordGlobalsPrototype = GetPrototype<KeywordGlobalsPrototype>(GlobalsPrototype.KeywordGlobals);
-            CurrencyGlobalsPrototype = GetPrototype<CurrencyGlobalsPrototype>(GlobalsPrototype.CurrencyGlobals);
-            GamepadGlobalsPrototype = GetPrototype<GamepadGlobalsPrototype>(GlobalsPrototype.GamepadGlobals);
-            DifficultyGlobalsPrototype = GetPrototype<DifficultyGlobalsPrototype>(GlobalsPrototype.DifficultyGlobals);
-            ConsoleGlobalsPrototype = GetPrototype<ConsoleGlobalsPrototype>(GlobalsPrototype.ConsoleGlobals);
+            // Load globals
+            PrototypeId globalsProtoRef = GetPrototypeRefByName("Globals/Globals.defaults");
+            GlobalsPrototype = GetPrototype<GlobalsPrototype>(globalsProtoRef);
 
             // initializeKeywordPrototypes
+
+            // Initialize PrototypePatchManager
+            PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
 
             // Preload all prototypes if needed
             if (config.LoadAllPrototypes)

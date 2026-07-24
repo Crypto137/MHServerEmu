@@ -249,7 +249,7 @@ namespace MHServerEmu.Games.Entities
             var spawnerProto = SpawnerPrototype;
             if (spawnerProto.DefeatCriteria == SpawnerDefeatCriteria.MaxReachedAndNoHostileMobs && SpawnLifetimeMaxOut())
             {
-                var allianceProto = GameDatabase.GlobalsPrototype.PlayerAlliancePrototype;
+                var allianceProto = GameDatabase.GlobalsPrototype.PlayerAlliance;
                 var filterFlags = SpawnGroupEntityQueryFilterFlags.Hostiles | SpawnGroupEntityQueryFilterFlags.NotDeadDestroyedControlled;
                 if (FilterEntity(filterFlags, null, new(), allianceProto) == false) return true;
             }

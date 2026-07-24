@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.MetaGames
     {
         public PvPTeamPrototype Prototype { get; private set; } = proto;
         public PrototypeId StartTarget { get => Prototype.StartTarget; }
-        public AlliancePrototype Alliance { get; private set; } = proto.Alliance.As<AlliancePrototype>();
+        public AlliancePrototype Alliance { get; private set; } = proto.Alliance;
 
         public override bool AddPlayer(Player player)
         {

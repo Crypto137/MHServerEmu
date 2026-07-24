@@ -1,10 +1,14 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PartyFilterRulePrototype : Prototype
     {
+        //---
+
         public virtual bool Evaluate(AvatarPrototype avatarProto, CostumePrototype costumeProto)
         {
             return true;
@@ -13,7 +17,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PartyFilterRuleHasKeywordPrototype : PartyFilterRulePrototype
     {
-        public PrototypeId Keyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype Keyword { get; protected set; }
+
+        //---
 
         public override bool Evaluate(AvatarPrototype avatarProto, CostumePrototype costumeProto)
         {
@@ -25,6 +32,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Avatar { get; protected set; }
 
+        //---
+
         public override bool Evaluate(AvatarPrototype avatarProto, CostumePrototype costumeProto)
         {
             return avatarProto.DataRef == Avatar;
@@ -35,6 +44,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Superteam { get; protected set; }
 
+        //---
+
         public override bool Evaluate(AvatarPrototype avatarProto, CostumePrototype costumeProto)
         {
             return avatarProto.IsMemberOfSuperteam(Superteam);
@@ -44,6 +55,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class PartyFilterRuleWearingCostumePrototype : PartyFilterRulePrototype
     {
         public PrototypeId Costume { get; protected set; }
+
+        //---
 
         public override bool Evaluate(AvatarPrototype avatarProto, CostumePrototype costumeProto)
         {
@@ -64,8 +77,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool Evaluate(List<AvatarPrototype> members, List<CostumePrototype> costumes, int playerIndex)
         {
             int matches = members.Count;
-            if (matches < NumberRequired || Rules.IsNullOrEmpty() || matches != costumes.Count)
+            if (matches < NumberRequired)
                 return false;
+
+            if (!Verify.IsTrue(Rules.HasValue())) return false;
+            if (!Verify.IsTrue(members.Count == costumes.Count)) return false;
 
             int numMembers = matches;
             int numMatches = 0;
@@ -74,11 +90,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             for (int i = 0; i < numMembers; i++)
             {
-                var avatarProto = members[i];
-                if (avatarProto == null) continue;
+                AvatarPrototype avatarProto = members[i];
+                if (!Verify.IsNotNull(avatarProto))
+                    continue;
 
-                var costumeProto = costumes[i];
-                if (costumeProto == null) continue;
+                CostumePrototype costumeProto = costumes[i];
+                if (!Verify.IsNotNull(costumes))
+                    continue;
 
                 if (EvaluateAvatar(avatarProto, costumeProto))
                 {
@@ -103,21 +121,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
 
-            if (numMatches < NumberRequired) return false;
+            if (!Verify.IsTrue(numMatches >= NumberRequired)) return false;
 
             return true;
         }
 
         public bool EvaluateAvatar(AvatarPrototype avatarProto, CostumePrototype costumeProto)
         {
-            if (Rules.IsNullOrEmpty()) return false;
+            if (!Verify.IsTrue(Rules.HasValue())) return false;
 
-            foreach (var ruleProto in Rules)
-                if (ruleProto != null && ruleProto.Evaluate(avatarProto, costumeProto))
+            foreach (PartyFilterRulePrototype ruleProto in Rules)
+            {
+                if (Verify.IsNotNull(ruleProto) && ruleProto.Evaluate(avatarProto, costumeProto))
                     return true;
+            }
 
             return false;
         }
-
     }
 }

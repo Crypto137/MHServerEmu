@@ -167,7 +167,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsWeaponMissing { get => Properties[PropertyEnum.WeaponMissing]; }
         public bool IsGlobalEventVendor { get => GetVendorGlobalEvent() != PrototypeId.Invalid; }
         public bool IsHighFlying { get => Locomotor?.IsHighFlying ?? false; }
-        public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeywordPrototype); }
+        public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword); }
         public bool IsDestroyProtectedEntity { get => IsControlledEntity || IsTeamUpAgent || this is Avatar; }  // Persistent entities cannot be easily destroyed
         public bool IsDiscoverable { get => CompatibleReplicationChannels.HasFlag(AOINetworkPolicyValues.AOIChannelDiscovery); }
         public bool IsTrackable { get => WorldEntityPrototype?.TrackingDisabled == false; }
@@ -225,8 +225,8 @@ namespace MHServerEmu.Games.Entities
             _conditionCollection = new(this);
             // PowerCollection is allocated on demand when the first power is assigned.
 
-            if (Properties.HasProperty(PropertyEnum.Rank) == false && worldEntityProto.Rank != PrototypeId.Invalid)
-                Properties[PropertyEnum.Rank] = worldEntityProto.Rank;
+            if (Properties.HasProperty(PropertyEnum.Rank) == false && worldEntityProto.Rank != null)
+                Properties[PropertyEnum.Rank] = worldEntityProto.Rank.DataRef;
 
             // LiveTuning MobHealth
             Properties[PropertyEnum.HealthPctBonus] = LiveTuningManager.GetLiveWorldEntityTuningVar(worldEntityProto, WorldEntityTuningVar.eWETV_MobHealth) - 1.0f;
@@ -438,7 +438,7 @@ namespace MHServerEmu.Games.Entities
             var summonProto = GetSummonEntityContext();
             if (summonProto == null) return;
 
-            var conditionProto = GameDatabase.GetPrototype<ConditionPrototype>(summonProto.TrackInInventoryOwnerCondition);
+            var conditionProto = summonProto.TrackInInventoryOwnerCondition;
             if (conditionProto == null) return;
 
             var summoner = Game.EntityManager.GetEntity<WorldEntity>(summonerId);
@@ -535,7 +535,7 @@ namespace MHServerEmu.Games.Entities
 
             if (summoner is not Avatar avatar) return;
             
-            var vanityKeyword = GameDatabase.KeywordGlobalsPrototype.VanityPetKeywordPrototype;
+            var vanityKeyword = GameDatabase.KeywordGlobalsPrototype.VanityPetKeyword;
             if (HasKeyword(vanityKeyword))
             {
                 var player = avatar.GetOwnerOfType<Player>();
@@ -1787,7 +1787,7 @@ namespace MHServerEmu.Games.Entities
 
         public float GetNegStatusResistPercent(int ccResistScore, PropertyCollection otherProperties)
         {
-            EvalPrototype evalNegStatusResistPctFormula = GameDatabase.CombatGlobalsPrototype?.EvalNegStatusResistPctFormulaPrototype;
+            EvalPrototype evalNegStatusResistPctFormula = GameDatabase.CombatGlobalsPrototype?.EvalNegStatusResistPctFormula;
             if (!Verify.IsNotNull(evalNegStatusResistPctFormula)) return 0f;
 
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
@@ -2844,18 +2844,18 @@ namespace MHServerEmu.Games.Entities
 
         public RankPrototype GetRankPrototype()
         {
-            var rankRef = Properties[PropertyEnum.Rank];
+            PrototypeId rankRef = Properties[PropertyEnum.Rank];
             if (rankRef != PrototypeId.Invalid)
             {
-                var rankProto = GameDatabase.GetPrototype<RankPrototype>(rankRef);
-                if (rankProto == null) return null;
+                RankPrototype rankProto = GameDatabase.GetPrototype<RankPrototype>(rankRef);
+                if (!Verify.IsNotNull(rankProto)) return null;
                 return rankProto;
             }
             else
             {
-                var worldEntityProto = WorldEntityPrototype;
-                if (worldEntityProto == null) return null;
-                return GameDatabase.GetPrototype<RankPrototype>(worldEntityProto.Rank);
+                WorldEntityPrototype worldEntityProto = WorldEntityPrototype;
+                if (!Verify.IsNotNull(worldEntityProto)) return null;
+                return worldEntityProto.Rank;
             }
         }
 
@@ -3144,7 +3144,7 @@ namespace MHServerEmu.Games.Entities
         {
             var globalProto = GameDatabase.GlobalsPrototype;
             if (globalProto == null) return false;
-            return IsHostileTo(globalProto.PlayerAlliancePrototype);
+            return IsHostileTo(globalProto.PlayerAlliance);
         }
 
         public bool IsHostileTo(AlliancePrototype otherAllianceProto, AlliancePrototype allianceOverrideProto = null)
@@ -3187,29 +3187,32 @@ namespace MHServerEmu.Games.Entities
         {
             if (allianceRef != PrototypeId.Invalid)
             {
-                var allianceProto = GameDatabase.GetPrototype<AlliancePrototype>(allianceRef);
-                if (allianceProto != null)
-                    _allianceProto = allianceProto;
+                AlliancePrototype allianceProto = GameDatabase.GetPrototype<AlliancePrototype>(allianceRef);
+                if (!Verify.IsNotNull(allianceProto)) return;
+                _allianceProto = allianceProto;
             }
             else
             {
-                var worldEntityProto = WorldEntityPrototype;
-                if (worldEntityProto != null)
-                    _allianceProto = GameDatabase.GetPrototype<AlliancePrototype>(worldEntityProto.Alliance);
+                WorldEntityPrototype worldEntityProto = WorldEntityPrototype;
+                if (!Verify.IsNotNull(worldEntityProto)) return;
+                _allianceProto = worldEntityProto.Alliance;
             }
         }
 
         private AlliancePrototype GetAlliance()
         {
-            if (_allianceProto == null) return null;
+            if (_allianceProto == null)
+                return null;
 
-            PrototypeId allianceRef = _allianceProto.DataRef;
-            if (IsControlledEntity && _allianceProto.WhileControlled != PrototypeId.Invalid)
-                allianceRef = _allianceProto.WhileControlled;
-            if (IsConfused && _allianceProto.WhileConfused != PrototypeId.Invalid)
-                allianceRef = _allianceProto.WhileConfused;
+            AlliancePrototype allianceProto = _allianceProto;
 
-            return GameDatabase.GetPrototype<AlliancePrototype>(allianceRef);
+            if (IsControlledEntity && _allianceProto.WhileControlled != null)
+                allianceProto = _allianceProto.WhileControlled;
+
+            if (IsConfused && _allianceProto.WhileConfused != null)
+                allianceProto = _allianceProto.WhileConfused;
+
+            return allianceProto;
         }
 
         #endregion

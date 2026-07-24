@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
@@ -124,12 +125,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public long Count { get; protected set; }
         public PopulationObjectPrototype Population { get; protected set; }
         public PrototypeId[] RestrictToAreas { get; protected set; }
-        public PrototypeId[] RestrictToRegions { get; protected set; }            // VectorPrototypeRefPtr RegionPrototype
-        public PrototypeId[] RestrictToRegionsExclude { get; protected set; }     // VectorPrototypeRefPtr RegionPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public RegionPrototype[] RestrictToRegions { get; protected set; }
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public RegionPrototype[] RestrictToRegionsExclude { get; protected set; }
         public bool RestrictToRegionsIncludeChildren { get; protected set; }
         public AssetId[] RestrictToCells { get; protected set; }
         public PrototypeId RestrictToDifficultyMin { get; protected set; }
         public PrototypeId RestrictToDifficultyMax { get; protected set; }
+
+        //---
 
         public bool AllowedInDifficulty(PrototypeId difficultyRef)
         {
@@ -138,11 +143,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool FilterRegion(RegionPrototype regionPrototype)
         {
-            if (RestrictToRegions.IsNullOrEmpty()) return true;
+            if (RestrictToRegions.IsNullOrEmpty())
+                return true;
 
-            foreach (var regionRef in RestrictToRegions)
-                if (regionPrototype.FilterRegion(regionRef, RestrictToRegionsIncludeChildren, RestrictToRegionsExclude)) 
+            foreach (RegionPrototype regionProto in RestrictToRegions)
+            {
+                if (regionPrototype.FilterRegion(regionProto, RestrictToRegionsIncludeChildren, RestrictToRegionsExclude))
                     return true;
+            }
 
             return false;
         }
@@ -153,6 +161,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId Text { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public DialogStyle DialogStyle { get; protected set; }
+
+        //---
 
         public void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
         {
@@ -171,6 +181,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype TargetEntity { get; protected set; }
         public PrototypeId TargetArea { get; protected set; }
         public PrototypeId TargetRegion { get; protected set; }
+
+        //---
 
         public void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
         {
@@ -247,6 +259,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool PlayerHUDShowObjsOnEntityAbove { get; protected set; }
         public MissionActionPrototype[] OnAvailableActions { get; protected set; }
 
+        //---
+
         public void EnumerateConditions(ref int index)
         {
             MissionPrototype.EnumerateConditionList(ref index, ActivateConditions);
@@ -308,7 +322,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SortOrder { get; protected set; }
         public MissionConditionListPrototype ActivateNowConditions { get; protected set; }
         public MissionShowInTracker ShowInMissionTracker { get; protected set; }
-        public PrototypeId ResetsWithRegion { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public RegionPrototype ResetsWithRegion { get; protected set; }
         public LocaleStringId MissionLogDescriptionComplete { get; protected set; }
         public bool PlayerHUDShowObjs { get; protected set; }
         public bool PlayerHUDShowObjsOnMap { get; protected set; }
@@ -340,7 +355,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MissionDialogTextPrototype[] DialogTextWhenFailed { get; protected set; }
         public InteractionSpecPrototype[] InteractionsWhenFailed { get; protected set; }
         public bool PlayerHUDShowObjsOnEntityAbove { get; protected set; }
-        public PrototypeId MissionType { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public MissionTypePrototype MissionType { get; protected set; }
         public MissionShowInLog ShowInMissionLog { get; protected set; }
         public bool SuspendIfNoMatchingKeyword { get; protected set; }
         public MissionActionPrototype[] OnAvailableActions { get; protected set; }
@@ -375,10 +391,43 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public int EventInstance { get => (int)LiveTuningManager.GetLiveMissionTuningVar(this, MissionTuningVar.eMTV_EventInstance); }
 
-        private readonly HashSet<PrototypeId> PopulationRegions = new();
-        private readonly HashSet<PrototypeId> PopulationAreas = new();
+        private readonly HashSet<PrototypeId> _populationRegions = new();
+        private readonly HashSet<PrototypeId> _populationAreas = new();
         private KeywordsMask _keywordsMask;
         private KeywordsMask _regionRestrictionKeywordsMask;
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+            _regionRestrictionKeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(RegionRestrictionKeywords);
+
+            EnumerateConditions();
+
+            HotspotConditionList = new List<MissionConditionPrototype>();
+            GetConditionsOfType(typeof(MissionConditionHotspotEnterPrototype), HotspotConditionList);
+            GetConditionsOfType(typeof(MissionConditionHotspotLeavePrototype), HotspotConditionList);
+
+            if (HotspotConditionList.Count == 0)
+                HotspotConditionList = null;
+
+            if (GameDatabase.DataDirectory.PrototypeIsAbstract(DataRef) == false)
+                FirstMarker = FindFirstMarker();
+            else
+                FirstMarker = PrototypeId.Invalid;
+
+            PopulateMissionActionReferencedPowers();
+
+            HasClientInterest = GetHasClientInterest();
+            HasItemDrops = GetHasItemDrops();
+            HasMissionLogRewards = GetHasMissionLogRewards();
+            HasPropertyRewards = GetHasPropertyRewards();
+
+            PopulatePopulationForZoneLookups(_populationRegions, _populationAreas);
+
+            MissionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetMissionBlueprintDataRef());
+        }
 
         public override bool ApprovedForUse()
         {
@@ -399,39 +448,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool HasRegionRestrictionKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_regionRestrictionKeywordsMask, keywordProto);
-        }
-
-        public override void PostProcess()
-        {
-            base.PostProcess();
-
-            _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
-            _regionRestrictionKeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(RegionRestrictionKeywords);
-            
-            EnumerateConditions();
-
-            HotspotConditionList = new List<MissionConditionPrototype>();
-            GetConditionsOfType(typeof(MissionConditionHotspotEnterPrototype), HotspotConditionList);
-            GetConditionsOfType(typeof(MissionConditionHotspotLeavePrototype), HotspotConditionList);
-
-            if (HotspotConditionList.Count == 0)
-                HotspotConditionList = null;
-            
-            if (GameDatabase.DataDirectory.PrototypeIsAbstract(DataRef) == false)
-                FirstMarker = FindFirstMarker();
-            else
-                FirstMarker = PrototypeId.Invalid;
-
-            PopulateMissionActionReferencedPowers();
-            
-            HasClientInterest = GetHasClientInterest();
-            HasItemDrops = GetHasItemDrops();
-            HasMissionLogRewards = GetHasMissionLogRewards();
-            HasPropertyRewards = GetHasPropertyRewards();
-
-            PopulatePopulationForZoneLookups(PopulationRegions, PopulationAreas);
-
-            MissionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetMissionBlueprintDataRef());
         }
 
         private bool GetHasMissionLogRewards()
@@ -470,45 +486,71 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private bool GetHasItemDrops()
         {
             if (Objectives.HasValue())
-                foreach (var objectiveProto in Objectives)
-                    if (objectiveProto.ItemDrops.HasValue()) return true;
+            {
+                foreach (MissionObjectivePrototype objectiveProto in Objectives)
+                {
+                    if (objectiveProto.ItemDrops.HasValue())
+                        return true;
+                }
+            }
 
             return false;
         }
 
         private bool GetHasClientInterest()
         {
-            if (PlayerHUDShowObjs || ShowBannerMessages || ShowInteractIndicators || ShowMapPingOnPortals || ShowNotificationIcon
-                || ShowInMissionLog != MissionShowInLog.Never || ShowInMissionTracker != MissionShowInTracker.Never
-                || InteractionsWhenActive.HasValue() || InteractionsWhenComplete.HasValue() || InteractionsWhenFailed.HasValue()
-                || MusicState != PrototypeId.Invalid) return true;
+            if (PlayerHUDShowObjs || ShowBannerMessages || ShowInteractIndicators || ShowMapPingOnPortals || ShowNotificationIcon ||
+                ShowInMissionLog != MissionShowInLog.Never || ShowInMissionTracker != MissionShowInTracker.Never ||
+                InteractionsWhenActive.HasValue() || InteractionsWhenComplete.HasValue() || InteractionsWhenFailed.HasValue() ||
+                MusicState != PrototypeId.Invalid)
+            {
+                return true;
+            }
 
             if (Objectives.HasValue())
-                foreach (var objectiveProto in Objectives)
-                    if (objectiveProto.InteractionsWhenActive.HasValue() 
-                        || objectiveProto.InteractionsWhenComplete.HasValue()
-                        || objectiveProto.InteractionsWhenFailed.HasValue()
-                        || objectiveProto.MetaGameWidget != PrototypeId.Invalid
-                        || objectiveProto.MetaGameWidgetFail != PrototypeId.Invalid) return true;
+            {
+                foreach (MissionObjectivePrototype objectiveProto in Objectives)
+                {
+                    if (!Verify.IsNotNull(objectiveProto))
+                        continue;
+
+                    if (objectiveProto.InteractionsWhenActive.HasValue() ||
+                        objectiveProto.InteractionsWhenComplete.HasValue() ||
+                        objectiveProto.InteractionsWhenFailed.HasValue() ||
+                        objectiveProto.MetaGameWidget != PrototypeId.Invalid ||
+                        objectiveProto.MetaGameWidgetFail != PrototypeId.Invalid)
+                    {
+                        return true;
+                    }
+                }
+            }
 
             List<MissionConditionPrototype> conditions = new();
             GetConditionsOfType(typeof(MissionConditionEntityInteractPrototype), conditions);
-            if (conditions.Count > 0) return true;
+            if (conditions.Count > 0)
+                return true;
 
-            if (GetHasWaypointInterest()) return true;
+            if (GetHasWaypointInterest())
+                return true;
 
             return false;
         }
 
         private bool GetHasWaypointInterest()
         {
-            foreach (var waypointRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<WaypointPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            foreach (PrototypeId waypointRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<WaypointPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
-                var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(waypointRef);
-                if (waypointProto?.EvalShouldDisplay == null) continue;
-                if (waypointProto.EvalShouldDisplay is MissionIsActivePrototype activeProto && activeProto.Mission == DataRef) return true;
-                if (waypointProto.EvalShouldDisplay is MissionIsCompletePrototype completeProto && completeProto.Mission == DataRef) return true;
+                WaypointPrototype waypointProto = waypointRef.As<WaypointPrototype>();
+                if (Verify.IsNotNull(waypointProto) && waypointProto.EvalShouldDisplay != null)
+                {
+                    if (waypointProto.EvalShouldDisplay is MissionIsActivePrototype activeProto && activeProto.Mission == DataRef)
+                        return true;
+
+                    if (waypointProto.EvalShouldDisplay is MissionIsCompletePrototype completeProto && completeProto.Mission == DataRef)
+                        return true;
+                }
             }
+
             return false;
         }
 
@@ -523,7 +565,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnSuccessActions);
 
             if (Objectives.HasValue())
-                foreach (var objectivePrototype in Objectives)
+            {
+                foreach (MissionObjectivePrototype objectivePrototype in Objectives)
+                {
                     if (objectivePrototype != null)
                     {
                         hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, objectivePrototype.OnAvailableActions);
@@ -531,6 +575,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, objectivePrototype.OnFailActions);
                         hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, objectivePrototype.OnSuccessActions);
                     }
+                }
+            }
 
             if (hasPowers)
                 MissionActionReferencedPowers = new(powers);
@@ -539,34 +585,46 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private bool AddMissionActionEntityPerformPowerPrototypePowerFromList(HashSet<PrototypeId> powers, MissionActionPrototype[] actions)
         {
             bool hasPowers = false;
+
             if (actions.HasValue())
-                foreach (var actionProto in actions)
+            {
+                foreach (MissionActionPrototype actionProto in actions)
                 {
                     if (actionProto is MissionActionEntityPerformPowerPrototype performPowerProto)
                     {
                         if (performPowerProto.PowerPrototype != PrototypeId.Invalid)
                             powers.Add(performPowerProto.PowerPrototype);
+
                         hasPowers |= performPowerProto.MissionReferencedPowerRemove;
                     }
 
                     if (actionProto is MissionActionTimedActionPrototype timedActionProto)
                         hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, timedActionProto.ActionsToPerform);
                 }
+            }
+
             return hasPowers;
         }
 
         private PrototypeId FindFirstMarker()
         {
             if (PopulationSpawns.HasValue())
-                foreach (var missionPopulationProto in PopulationSpawns)
+            {
+                foreach (MissionPopulationEntryPrototype missionPopulationProto in PopulationSpawns)
                 {
-                    if (missionPopulationProto == null) continue;
-                    var population = missionPopulationProto.Population;
-                    if (population == null) continue;
-                    var marker = population.UsePopulationMarker;
-                    if (marker != PrototypeId.Invalid)
-                        return marker;
+                    if (!Verify.IsNotNull(missionPopulationProto))
+                        continue;
+
+                    PopulationObjectPrototype population = missionPopulationProto.Population;
+                    if (!Verify.IsNotNull(population))
+                        continue;
+
+                    PrototypeId markerRef = population.UsePopulationMarker;
+                    if (markerRef != PrototypeId.Invalid)
+                        return markerRef;
                 }
+            }
+
             return PrototypeId.Invalid;
         }
 
@@ -578,8 +636,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             GetConditionsOfTypeFromConditionList(conditionType, conditions, PrereqConditions);
 
             if (Objectives.HasValue())
-                foreach (var missionObjectiveProto in Objectives)
-                    missionObjectiveProto?.GetConditionsOfType(conditionType, conditions);
+            {
+                foreach (MissionObjectivePrototype missionObjectiveProto in Objectives)
+                {
+                    if (!Verify.IsNotNull(missionObjectiveProto))
+                        continue;
+
+                    missionObjectiveProto.GetConditionsOfType(conditionType, conditions);
+                }
+            }
 
             return conditions.Count > 0;
         }
@@ -587,28 +652,45 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public static void GetConditionsOfTypeFromConditionList(Type conditionType, List<MissionConditionPrototype> conditions, MissionConditionListPrototype conditionList)
         {
             if (conditionList != null)
-                foreach (var prototype in conditionList.IteratePrototypes(conditionType))
+            {
+                foreach (MissionConditionPrototype prototype in conditionList.IteratePrototypes(conditionType))
                     conditions.Add(prototype);
+            }
         }
 
         public void EnumerateConditions()
         {
             int index = 0;
+
             EnumerateConditionList(ref index, ActivateConditions);
             EnumerateConditionList(ref index, ActivateNowConditions);
             EnumerateConditionList(ref index, FailureConditions);
             EnumerateConditionList(ref index, PrereqConditions);
 
             if (Objectives.HasValue())
-                foreach (var missionObjectivePrototype in Objectives)
-                    missionObjectivePrototype?.EnumerateConditions(ref index);
+            {
+                foreach (MissionObjectivePrototype missionObjectivePrototype in Objectives)
+                {
+                    if (!Verify.IsNotNull(missionObjectivePrototype))
+                        continue;
+
+                    missionObjectivePrototype.EnumerateConditions(ref index);
+                }
+            }
         }
 
         public static void EnumerateConditionList(ref int index, MissionConditionListPrototype conditionList)
         {
             if (conditionList != null)
-                foreach (var prototype in conditionList.IteratePrototypes())
-                    if (prototype != null) prototype.Index = index++;
+            {
+                foreach (MissionConditionPrototype prototype in conditionList.IteratePrototypes())
+                {
+                    if (!Verify.IsNotNull(prototype))
+                        continue;
+
+                    prototype.Index = index++;
+                }
+            }
         }
 
         public virtual bool HasPopulationInRegion(Region region)
@@ -617,13 +699,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 PrototypeId regionRef = region.PrototypeDataRef;
 
-                if (PopulationRegions.Count > 0)
-                    return PopulationRegions.Contains(regionRef);
+                if (_populationRegions.Count > 0)
+                    return _populationRegions.Contains(regionRef);
 
-                if (PopulationAreas.Count > 0)
-                    foreach (var areaRef in PopulationAreas)
-                        if (region.GetArea(areaRef) != null) return true;
+                if (_populationAreas.Count > 0)
+                {
+                    foreach (PrototypeId areaRef in _populationAreas)
+                    {
+                        if (region.GetArea(areaRef) != null)
+                            return true;
+                    }
+                }
             }
+
             return false;
         }
 
@@ -631,31 +719,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (PopulationSpawns.HasValue())
             {
-                foreach (var entryProto in PopulationSpawns)
+                foreach (MissionPopulationEntryPrototype entryProto in PopulationSpawns)
                 {
-                    if (entryProto == null) continue;                    
+                    if (entryProto == null)
+                        continue;
+
                     if (entryProto.RestrictToRegions.HasValue())
                     {
-                        foreach (var restrictRef in entryProto.RestrictToRegions)
+                        foreach (RegionPrototype regionProto in entryProto.RestrictToRegions)
                         {
-                            if (restrictRef == PrototypeId.Invalid) continue;                            
-                            regions.Add(restrictRef);
+                            if (regionProto == null)
+                                continue;
+                            
+                            regions.Add(regionProto.DataRef);
 
                             if (entryProto.RestrictToRegionsIncludeChildren) 
                             {
-                                foreach (var regionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<RegionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                                foreach (PrototypeId regionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<RegionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                                 {                                        
-                                    if (GameDatabase.DataDirectory.PrototypeIsAPrototype(regionRef, restrictRef))  
+                                    if (GameDatabase.DataDirectory.PrototypeIsAPrototype(regionRef, regionProto.DataRef))  
                                         regions.Add(regionRef);
                                 }
                             }
-                            
                         }
                     }
 
                     if (entryProto.RestrictToAreas.HasValue())
                     {
-                        foreach (var areaRef in entryProto.RestrictToAreas)
+                        foreach (PrototypeId areaRef in entryProto.RestrictToAreas)
                             areas.Add(areaRef);
                     }                    
                 }
@@ -665,10 +756,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     using var regionListHandle = ListPool<PrototypeId>.Instance.Get(regions, out List<PrototypeId> regionList);
                     foreach (PrototypeId regionRef in regionList)
                     {
-                        RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
+                        RegionPrototype regionProto = regionRef.As<RegionPrototype>();
                         if (regionProto != null && regionProto.AltRegions.HasValue())
                         {
-                            foreach (var altRegionRef in regionProto.AltRegions)
+                            foreach (PrototypeId altRegionRef in regionProto.AltRegions)
                                 regions.Add(altRegionRef);
                         }
                     }
@@ -678,22 +769,36 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return regions.Count > 0;
         }
 
-        public bool MatchingKeyword(PrototypeId[] keywords)
+        public bool HasMatchingKeywords(PrototypeId[] keywords)
         {
             if (keywords.HasValue())
-                foreach(var keywordRef in keywords)
-                    if (HasRegionRestrictionKeyword(GameDatabase.GetPrototype<KeywordPrototype>(keywordRef)))
+            {
+                foreach (PrototypeId keywordRef in keywords)
+                {
+                    if (HasRegionRestrictionKeyword(keywordRef.As<KeywordPrototype>()))
                         return true;
+                }
+            }
+
             return false;
         }
 
-        public bool SuspendedMissionState(Region region)
+        public bool ShouldBeSuspended(Region region)
         {
-            if (region == null) return false;
-            if (ResetsWithRegion != PrototypeId.Invalid && region.FilterRegion(ResetsWithRegion) == false) return true;
+            if (!Verify.IsNotNull(region)) return false;
+
+            if (ResetsWithRegion != null && region.FilterRegion(ResetsWithRegion) == false)
+                return true;
+
             if (SuspendIfNoMatchingKeyword && RegionRestrictionKeywords.HasValue())
-                if (MatchingKeyword(region.Prototype.Keywords) == false) return true;
-            if (IsLiveTuningEnabled() == false) return true;
+            {
+                if (HasMatchingKeywords(region.Prototype.Keywords) == false)
+                    return true;
+            }
+
+            if (IsLiveTuningEnabled() == false)
+                return true;
+
             return false;
         }
 
@@ -717,9 +822,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ParticipationBasedOnAreaCell { get; protected set; }
         public OpenMissionRewardEntryPrototype[] RewardsByContribution { get; protected set; }
         public StoryNotificationPrototype StoryNotification { get; protected set; }
-        public PrototypeId[] ActiveInRegions { get; protected set; }          // VectorPrototypeRefPtr RegionPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public RegionPrototype[] ActiveInRegions { get; protected set; }
         public bool ActiveInRegionsIncludeChildren { get; protected set; }
-        public PrototypeId[] ActiveInRegionsExclude { get; protected set; }   // VectorPrototypeRefPtr RegionPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public RegionPrototype[] ActiveInRegionsExclude { get; protected set; }
         public PrototypeId[] ActiveInAreas { get; protected set; }
         public AssetId[] ActiveInCells { get; protected set; }
         public bool ResetWhenUnsimulated { get; protected set; }
@@ -741,7 +848,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
+
             PopulateZoneLookups();
+        }
+
+        public override bool HasPopulationInRegion(Region region)
+        {
+            bool isActive = IsActiveInRegion(region.Prototype);
+            bool hasPopulation = base.HasPopulationInRegion(region);
+
+            return isActive && hasPopulation;
+        }
+
+        public bool IsActiveInRegion(RegionPrototype regionToMatchProto)
+        {
+            if (!Verify.IsNotNull(regionToMatchProto)) return false;
+            return _activeRegions.Contains(regionToMatchProto.DataRef);
+        }
+
+        public bool IsActiveInArea(PrototypeId areaRef)
+        {
+            if (!Verify.IsTrue(areaRef != PrototypeId.Invalid)) return false;
+            return _activeAreas.Contains(areaRef);
+        }
+
+        public bool IsActiveInCell(PrototypeId cellRef)
+        {
+            if (!Verify.IsTrue(cellRef != PrototypeId.Invalid)) return false;
+            return _activeCells.Contains(cellRef);
         }
 
         private void PopulateZoneLookups()
@@ -749,13 +883,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             RegionPrototype.BuildRegionsFromFilters(_activeRegions, ActiveInRegions, ActiveInRegionsIncludeChildren, ActiveInRegionsExclude);
 
             if (ActiveInAreas.HasValue())
-                foreach (var areaRef in ActiveInAreas)
-                    if (areaRef != PrototypeId.Invalid) _activeAreas.Add(areaRef);
+            {
+                foreach (PrototypeId areaRef in ActiveInAreas)
+                {
+                    if (areaRef != PrototypeId.Invalid)
+                        _activeAreas.Add(areaRef);
+                }
+            }
 
             if (_activeAreas.Count == 0)
             {
                 using var activeAreasHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> activeAreas);
-                foreach (var regionRef in _activeRegions)
+                foreach (PrototypeId regionRef in _activeRegions)
                 {
                     activeAreas.Clear();
                     RegionPrototype.GetAreasInGenerator(regionRef, activeAreas);
@@ -765,32 +904,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             // cache for mission active cells
             if (ParticipationBasedOnAreaCell && ActiveInCells.HasValue())
-                foreach (var assetRef in ActiveInCells)
-                    _activeCells.Add(GameDatabase.GetDataRefByAsset(assetRef));
-        }
+            {
+                foreach (AssetId assetRef in ActiveInCells)
+                {
+                    PrototypeId cellRef = GameDatabase.GetDataRefByAsset(assetRef);
+                    if (!Verify.IsTrue(cellRef != PrototypeId.Invalid))
+                        continue;
 
-        public bool IsActiveInRegion(RegionPrototype regionToMatchProto)
-        {
-            if (regionToMatchProto == null) return false;
-            return _activeRegions.Contains(regionToMatchProto.DataRef);
-        }
-
-        public bool IsActiveInArea(PrototypeId areaRef)
-        {
-            return _activeAreas.Contains(areaRef);
-        }
-
-        public bool IsActiveInCell(PrototypeId cellRef)
-        {
-            return _activeCells.Contains(cellRef);
-        }
-
-        public override bool HasPopulationInRegion(Region region)
-        {
-            bool isActive = IsActiveInRegion(region.Prototype);
-            bool hasPopulation = base.HasPopulationInRegion(region);
-
-            return isActive && hasPopulation;
+                    _activeCells.Add(cellRef);
+                }
+            }
         }
     }
 
@@ -824,17 +947,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AdvancedMissionPrototype : MissionPrototype
     {
-        public PrototypeId CategoryType { get; protected set; }
-        public PrototypeId ReputationExperienceType { get; protected set; }
-
-        [DoNotCopy]
-        public AdvancedMissionCategoryPrototype CategoryProto { get; protected set; }
-
-        public override void PostProcess()
-        {
-            base.PostProcess();
-
-            CategoryProto = GameDatabase.GetPrototype<AdvancedMissionCategoryPrototype>(CategoryType);
-        }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AdvancedMissionCategoryPrototype CategoryType { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public VendorTypePrototype ReputationExperienceType { get; protected set; }
     }
 }

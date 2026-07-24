@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -37,18 +38,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId VendorFlavorText { get; protected set; }
         public bool IsRaidVendor { get; protected set; }
         public CurveId VendorLevelingCurve { get; protected set; }
-        public PrototypeId ReputationDisplayInfo { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public ReputationDisplayInfoPrototype ReputationDisplayInfo { get; protected set; }
         public PrototypeId[] CraftingRecipeCategories { get; protected set; }
         public bool IsEnchanter { get; protected set; }
         public LocaleStringId VendorRankTooltip { get; protected set; }
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public bool ContainsInventory(PrototypeId inventoryProtoRef)
         {
-            if (inventoryProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "ContainsInventory(): inventoryProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(inventoryProtoRef != PrototypeId.Invalid)) return false;
 
             if (Inventories.IsNullOrEmpty())
                 return false;

@@ -18,6 +18,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public short Weight { get; protected set; }
         public LootRollModifierPrototype[] Modifiers { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -83,16 +85,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootDropPrototype : LootNodePrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public short NumMin { get; protected set; }
         public short NumMax { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override void PostProcess()
         {
             base.PostProcess();
-            if (NumMin < 0) NumMin = 0;
-            if (NumMax < NumMin) NumMax = NumMin;
+
+            if (NumMin < 0)
+                NumMin = 0;
+
+            if (NumMax < NumMin)
+                NumMax = NumMin;
         }
 
         public LootRollResult RollItem(ItemPrototype itemProto, int numItems, LootRollSettings settings, IItemResolver resolver, LootMutationPrototype[] mutations)
@@ -103,7 +111,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return result;
 
             if (resolver.LootContext == LootContext.MysteryChest && (itemProto is CostumePrototype || itemProto is CharacterTokenPrototype))
-                Logger.Info($"RollItem(): Item: {itemProto} Player: {resolver.Player}");
+                Logger.Trace($"RollItem(): Item: {itemProto} Player: {resolver.Player}");
 
             bool isAbstract = DataDirectory.Instance.PrototypeIsAbstract(itemProto.DataRef);
             AvatarPrototype usableAvatarProto = settings.UsableAvatar;
@@ -201,21 +209,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            Logger.Warn($"Roll(): Unimplemented drop type {GetType().Name}");
             return LootRollResult.NoRoll;
         }
     }
 
     public class LootTablePrototype : LootDropPrototype
     {
-        public const int MaxLootTreeDepth = 50;
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public PickMethod PickMethod { get; protected set; }
         public float NoDropPercent { get; protected set; }
         public LootNodePrototype[] Choices { get; protected set; }
         public LocaleStringId MissionLogRewardsText { get; protected set; }
         public bool LiveTuningDefaultEnabled { get; protected set; }
+
+        //---
+
+        public const int MaxLootTreeDepth = 50;
 
         [DoNotCopy]
         public int LootTablePrototypeEnumValue { get; private set; }
@@ -281,8 +289,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (NumMin < 1 || Choices.IsNullOrEmpty())
                 return LootRollResult.NoRoll;
 
-            if (settings.Depth > MaxLootTreeDepth)
-                return Logger.WarnReturn(LootRollResult.Failure, $"Roll(): Loot Table infinite recursion check failed, max depth of {MaxLootTreeDepth} exceeded [{this}]");
+            if (!Verify.IsTrue(settings.Depth + 1 <= MaxLootTreeDepth, $"Loot Table infinite recursion check failed, max depth of {MaxLootTreeDepth} exceeded [{this}]"))
+                return LootRollResult.Failure;
 
             // Use prototype value if live tuning no drop percent is set to 1f, otherwise use the no drop percent from tuning
             float noDropPercent = MathF.Max(LiveTuningManager.GetLiveLootTableTuningVar(this, LootTableTuningVar.eLTTV_NoDropPercent), 0f);
@@ -311,7 +319,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     break;
 
                 default:
-                    return Logger.WarnReturn(LootRollResult.NoRoll, $"Roll(): Unknown pick method in table [{this}]");
+                    Verify.IsTrue(false, $"Unknown pick method in table [{this}]");
+                    return LootRollResult.NoRoll;
             }
 
             PickLiveTuningNodes(settings, resolver);
@@ -328,8 +337,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private LootRollResult PickWeight(LootRollSettings settings, IItemResolver resolver)
         {
-            if (Choices.IsNullOrEmpty())
-                return Logger.WarnReturn(LootRollResult.NoRoll, $"PickWeight(): LootTable with no choices!\n Loot Table: {this}");
+            if (!Verify.IsTrue(Choices.HasValue(), $"LootTable with no choices!\n Loot Table: {this}"))
+                return LootRollResult.NoRoll;
 
             // Create a picker of possible nodes
             Picker<LootNodePrototype> nodePicker = new(resolver.Random);
@@ -402,11 +411,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             for (int i = 0; i < lootGroup.Count; i++)
             {
                 WorldEntityPrototype entityProto = lootGroup[i];
-                if (entityProto == null)
-                {
-                    Logger.Warn("PickLiveTuningNodes(): entityProto == null");
+                if (!Verify.IsNotNull(entityProto))
                     continue;
-                }
 
                 // Check custom drop chance
                 float noDropPercent = LiveTuningManager.GetLiveWorldEntityTuningVar(entityProto, WorldEntityTuningVar.eWETV_LootNoDropPercent);
@@ -427,7 +433,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         break;
 
                     default:
-                        Logger.Warn($"PickLiveTuningNodes(): None ItemPrototype or AgentPrototype being used in a live-tuning roll!\n Prototype: {entityProto}");
+                        Verify.IsTrue(false, $"Non ItemPrototype or AgentPrototype being used in a live-tuning roll!\n Prototype: {entityProto}");
                         break;
                 }
 

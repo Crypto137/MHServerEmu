@@ -13,14 +13,4 @@
         public EntityInventoryAssignmentPrototype[] StashInventories { get; protected set; }
         public int MaxDroppedItems { get; protected set; }
     }
-
-    public class CohortPrototype : Prototype
-    {
-        public int Weight { get; protected set; }
-    }
-
-    public class CohortExperimentPrototype : Prototype
-    {
-        public PrototypeId[] Cohorts { get; protected set; }      // VectorPrototypeRefPtr CohortPrototype 
-    }
 }

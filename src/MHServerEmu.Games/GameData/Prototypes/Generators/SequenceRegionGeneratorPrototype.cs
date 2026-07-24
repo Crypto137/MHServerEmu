@@ -35,7 +35,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public EndlessThemeEntryPrototype GetEndlessGeneration(int randomSeed, int endlessLevel, int endlessLevelsTotal)
         {
-            if (EndlessThemes == null || endlessLevel <= 0 || endlessLevelsTotal <= 0) return null;
+            if (!Verify.IsTrue(EndlessThemes.HasValue())) return null;
+            if (!Verify.IsTrue(endlessLevel > 0)) return null;
+            if (!Verify.IsTrue(endlessLevelsTotal > 0)) return null;
 
             int totalThemes = EndlessThemes.Length;
             int randomIndex = randomSeed % totalThemes;
@@ -59,37 +61,56 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 HelperGetAreasInGenerator(AreaSequence, areas);
 
             if (SubAreaSequences.HasValue())
-                foreach (var subAreaSequence in SubAreaSequences)
+            {
+                foreach (SubGenerationPrototype subAreaSequence in SubAreaSequences)
+                {
                     if (subAreaSequence != null && subAreaSequence.AreaSequence.HasValue())
                         HelperGetAreasInGenerator(subAreaSequence.AreaSequence, areas);
+                }
+            }
 
             if (EndlessThemes.HasValue())
-                foreach (var endlessTheme in EndlessThemes)
+            {
+                foreach (EndlessThemePrototype endlessProto in EndlessThemes)
                 {
-                    if (endlessTheme == null) continue;
-                    if (endlessTheme.Normal != null && endlessTheme.Normal.AreaSequence.HasValue())
-                        HelperGetAreasInGenerator(endlessTheme.Normal.AreaSequence, areas);
-                    if (endlessTheme.Boss != null && endlessTheme.Boss.AreaSequence.HasValue())
-                        HelperGetAreasInGenerator(endlessTheme.Boss.AreaSequence, areas);
-                    if (endlessTheme.TreasureRoom != null && endlessTheme.TreasureRoom.AreaSequence.HasValue())
-                        HelperGetAreasInGenerator(endlessTheme.TreasureRoom.AreaSequence, areas);
+                    if (!Verify.IsNotNull(endlessProto))
+                        continue;
+
+                    if (endlessProto.Normal != null && endlessProto.Normal.AreaSequence.HasValue())
+                        HelperGetAreasInGenerator(endlessProto.Normal.AreaSequence, areas);
+
+                    if (endlessProto.Boss != null && endlessProto.Boss.AreaSequence.HasValue())
+                        HelperGetAreasInGenerator(endlessProto.Boss.AreaSequence, areas);
+
+                    if (endlessProto.TreasureRoom != null && endlessProto.TreasureRoom.AreaSequence.HasValue())
+                        HelperGetAreasInGenerator(endlessProto.TreasureRoom.AreaSequence, areas);
                 }
+            }
         }
 
         private static void HelperGetAreasInGenerator(AreaSequenceInfoPrototype[] areaSequence, HashSet<PrototypeId> areas)
         {
-            foreach (var areaProto in areaSequence)
+            foreach (AreaSequenceInfoPrototype areaSequenceInfoProto in areaSequence)
             {
-                if (areaProto == null) continue;
-                if (areaProto.AreaChoices.HasValue())
-                    foreach (var weightedArea in areaProto.AreaChoices)
-                    {
-                        if (weightedArea == null || weightedArea.Area == PrototypeId.Invalid) continue;
-                        areas.Add(weightedArea.Area);
-                    }
+                if (!Verify.IsNotNull(areaSequenceInfoProto))
+                    continue;
 
-                if (areaProto.ConnectedTo.HasValue())
-                    HelperGetAreasInGenerator(areaProto.ConnectedTo, areas);
+                if (areaSequenceInfoProto.AreaChoices.HasValue())
+                {
+                    foreach (WeightedAreaPrototype weightedAreaProto in areaSequenceInfoProto.AreaChoices)
+                    {
+                        if (!Verify.IsNotNull(weightedAreaProto))
+                            continue;
+
+                        if (!Verify.IsTrue(weightedAreaProto.Area != PrototypeId.Invalid))
+                            continue;
+
+                        areas.Add(weightedAreaProto.Area);
+                    }
+                }
+
+                if (areaSequenceInfoProto.ConnectedTo.HasValue())
+                    HelperGetAreasInGenerator(areaSequenceInfoProto.ConnectedTo, areas);
             }
         }
     }
@@ -110,35 +131,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EndlessThemeEntryPrototype : Prototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public AreaSequenceInfoPrototype[] AreaSequence { get; protected set; }
         public EndlessStateEntryPrototype[] Challenges { get; protected set; }
 
+        //---
+
         public EndlessStateEntryPrototype GetState(int randomSeed, int endlessLevel, MetaStateChallengeTierEnum missionTier)
         {
-            if (Challenges.IsNullOrEmpty()) return null;
+            if (Challenges.IsNullOrEmpty())
+                return null;
 
             GRandom random = new(randomSeed + endlessLevel);
-            Picker<EndlessStateEntryPrototype> picker = new (random);
+            Picker<EndlessStateEntryPrototype> picker = new(random);
 
-            foreach (var state in Challenges)
+            foreach (EndlessStateEntryPrototype state in Challenges)
             {
-                if (state == null) continue;
-
-                if (missionTier != MetaStateChallengeTierEnum.None && missionTier != state.Tier) continue;
-
-                MetaStatePrototype metaState = GameDatabase.GetPrototype<MetaStatePrototype>(state.MetaState);
-                if (metaState != null && !metaState.CanApplyState())
-                {
-                    Logger.Warn($"EndlessThemeEntryPrototype::GetState() State Disabled.");
+                if (state == null)
                     continue;
-                }
+
+                if (missionTier != MetaStateChallengeTierEnum.None && missionTier != state.Tier)
+                    continue;
 
                 picker.Add(state);
             }
 
-            if (!picker.Empty() && picker.Pick(out EndlessStateEntryPrototype statePicked)) return statePicked;
+            if (picker.Empty() == false && picker.Pick(out EndlessStateEntryPrototype pickedState))
+                return pickedState;
 
             return null;
         }
@@ -170,7 +188,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId RespawnOverride { get; protected set; }
         public bool AlignedToPrevious { get; protected set; }
 
-        public override string ToString() => $"{GameDatabase.GetFormattedPrototypeName(Area)} weight = {Weight}";
+        //---
+
+        public override string ToString()
+        {
+            return $"{GameDatabase.GetFormattedPrototypeName(Area)} weight = {Weight}";
+        }
     }
 
 }

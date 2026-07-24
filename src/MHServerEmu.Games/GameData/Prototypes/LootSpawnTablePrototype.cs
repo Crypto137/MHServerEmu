@@ -28,17 +28,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override void Roll(LootLocationData lootLocationData)
         {
             base.Roll(lootLocationData);
 
-            if (Choices.IsNullOrEmpty())
-            {
-                Logger.Warn($"Roll(): LootSpawnTable has no Choices! {this}");
+            if (!Verify.IsTrue(Choices.HasValue(), $"LootSpawnTable has no Choices! {this}"))
                 return;
-            }
 
             LootLocationNodePrototype pick;
 
@@ -54,11 +49,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (LootLocationNodePrototype choiceProto in Choices)
                     possibleNodes.Add(choiceProto, choiceProto.Weight);
 
-                if (possibleNodes.Empty())
-                {
-                    Logger.Warn($"Roll(): No LootNodePrototypes to pick from! LootSpawnTable: {this}");
+                if (!Verify.IsTrue(possibleNodes.Empty() == false, $"No LootNodePrototypes to pick from! LootSpawnTable: {this}"))
                     return;
-                }
 
                 pick = possibleNodes.Pick();
             }

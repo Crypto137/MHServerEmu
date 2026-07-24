@@ -1029,7 +1029,7 @@ namespace MHServerEmu.Games.Powers
             // Flag that makes endurance costs optional (still requires >0 endurance to trigger)
             bool enduranceCostRequired = Properties[PropertyEnum.EnduranceCostRequired];
 
-            foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in avatarProto.PrimaryResourceBehaviorsCache)
+            foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in avatarProto.PrimaryResourceBehaviors)
             {
                 float endurance = Owner.Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType];
                 float cost = GetEnduranceCost(Properties, primaryManaBehaviorProto.ManaType, powerProto, Owner, true);

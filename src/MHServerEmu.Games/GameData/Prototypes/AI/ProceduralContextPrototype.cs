@@ -27,8 +27,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralContextPrototype : Prototype
     {
-        protected static readonly Logger Logger = LogManager.CreateLogger();
+        //---
+
         public virtual void OnStart(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile) { }
+
         public virtual void OnEnd(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile) { }
     }
 
@@ -51,31 +53,39 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId RestrictToDifficultyMin { get; protected set; }
         public PrototypeId RestrictToDifficultyMax { get; protected set; }
 
-        public bool AllowedInDifficulty(PrototypeId difficultyRef)
-        {
-            return DifficultyTierPrototype.InRange(difficultyRef, RestrictToDifficultyMin, RestrictToDifficultyMax);
-        }
+        //---
 
         public override void OnStart(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
         {
-            if (proceduralProfile is not ProceduralProfileWithAttackPrototype attackProto) return;
+            ProceduralProfileWithAttackPrototype attackProto = proceduralProfile as ProceduralProfileWithAttackPrototype;
+            if (!Verify.IsNotNull(attackProto)) return;
+
             attackProto.OnPowerStarted(ownerController, this);
         }
 
         public override void OnEnd(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
         {
-            if (proceduralProfile is not ProceduralProfileWithAttackPrototype attackProto) return;
+            ProceduralProfileWithAttackPrototype attackProto = proceduralProfile as ProceduralProfileWithAttackPrototype;
+            if (!Verify.IsNotNull(attackProto)) return;
 
             attackProto.OnPowerEnded(ownerController, this);
-            if (PowerContext == null || PowerContext.Power == PrototypeId.Invalid) return;
 
-            var collection = ownerController.Blackboard.PropertyCollection;
-            var game = ownerController.Game;
-            if (game == null) return;
+            if (!Verify.IsNotNull(PowerContext)) return;
+            if (!Verify.IsNotNull(PowerContext.Power)) return;
+
+            PropertyCollection properties = ownerController.Blackboard.PropertyCollection;
+
+            Game game = ownerController.Game;
+            if (!Verify.IsNotNull(game)) return;
 
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             long cooldownTime = currentTime + game.Random.Next(MinCooldownMS, MaxCooldownMS);
-            collection[PropertyEnum.AIProceduralPowerSpecificCDTime, PowerContext.Power] = cooldownTime;
+            properties[PropertyEnum.AIProceduralPowerSpecificCDTime, PowerContext.Power.DataRef] = cooldownTime;
+        }
+
+        public bool AllowedInDifficulty(PrototypeId difficultyRef)
+        {
+            return DifficultyTierPrototype.InRange(difficultyRef, RestrictToDifficultyMin, RestrictToDifficultyMax);
         }
     }
 
@@ -84,29 +94,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public UseAffixPowerContextPrototype AffixContext { get; protected set; }
         public int PickWeight { get; protected set; }
 
+        //---
+
         public override void OnEnd(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
         {
-            if (proceduralProfile is not ProceduralProfileWithAttackPrototype attackProto) return;
+            ProceduralProfileWithAttackPrototype attackProto = proceduralProfile as ProceduralProfileWithAttackPrototype;
+            if (!Verify.IsNotNull(attackProto)) return;
 
             attackProto.OnPowerEnded(ownerController, this);
 
-            var agent = ownerController.Owner;
-            if (agent == null) return;
+            Agent agent = ownerController.Owner;
+            if (!Verify.IsNotNull(agent)) return;
 
-            var blackboard = ownerController.Blackboard;
-            var powerProto = GameDatabase.GetPrototype<PowerPrototype>(blackboard.PropertyCollection[PropertyEnum.AIAffixPowerToActivate]);
+            PropertyCollection properties = ownerController.Blackboard.PropertyCollection;
 
-            if (powerProto == null)
-            {
-                Logger.Warn($"Unable to set cooldown time for affix power on entity! Entity: {agent}");
+            PowerPrototype powerProto = GameDatabase.GetPrototype<PowerPrototype>(properties[PropertyEnum.AIAffixPowerToActivate]);
+            if (!Verify.IsNotNull(powerProto, $"Unable to set cooldown time for affix power on entity! Entity: {agent}"))
                 return;
-            }
 
-            var game = ownerController.Game;
-            if (game == null) return;
+            Game game = ownerController.Game;
+            if (!Verify.IsNotNull(game)) return;
 
-            var cooldownTime = game.CurrentTime + agent.GetAbilityCooldownDuration(powerProto);
-            blackboard.PropertyCollection[PropertyEnum.AIProceduralPowerSpecificCDTime, powerProto.DataRef] = (long)cooldownTime.TotalMilliseconds; 
+            TimeSpan cooldownTime = game.CurrentTime + agent.GetAbilityCooldownDuration(powerProto);
+            properties[PropertyEnum.AIProceduralPowerSpecificCDTime, powerProto.DataRef] = (long)cooldownTime.TotalMilliseconds; 
         }
     }
 
@@ -116,15 +126,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MinFlankCooldownMS { get; protected set; }
         public FlankContextPrototype FlankContext { get; protected set; }
 
+        //---
+
         public override void OnEnd(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
         {
-            var blackboard = ownerController.Blackboard;
-            var game = ownerController.Game;
-            if (game == null) return;
+            PropertyCollection properties = ownerController.Blackboard.PropertyCollection;
+
+            Game game = ownerController.Game;
+            if (!Verify.IsNotNull(game)) return;
 
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             long nextFlankTime = currentTime + game.Random.Next(MinFlankCooldownMS, MaxFlankCooldownMS);
-            blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFlankTime] = nextFlankTime;
+            properties[PropertyEnum.AIProceduralNextFlankTime] = nextFlankTime;
         }
     }
 
@@ -132,9 +145,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public InteractContextPrototype InteractContext { get; protected set; }
 
+        //---
+
         public override void OnEnd(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
         {
-            if (proceduralProfile is not ProceduralProfileWithTargetPrototype attackProto) return;
+            ProceduralProfileWithAttackPrototype attackProto = proceduralProfile as ProceduralProfileWithAttackPrototype;
+            if (!Verify.IsNotNull(attackProto)) return;
+
             attackProto.OnInteractEnded(ownerController, this);
         }
     }
@@ -145,22 +162,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MinFleeCooldownMS { get; protected set; }
         public FleeContextPrototype FleeContext { get; protected set; }
 
+        //---
+
         public override void OnEnd(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
         {
-            var blackboard = ownerController.Blackboard;
-            var game = ownerController.Game;
-            if (game == null) return;
+            PropertyCollection properties = ownerController.Blackboard.PropertyCollection;
+
+            Game game = ownerController.Game;
+            if (!Verify.IsNotNull(game)) return;
 
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             long nextFleeTime = currentTime + game.Random.Next(MinFleeCooldownMS, MaxFleeCooldownMS);
-            blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFleeTime] = nextFleeTime;
+            properties[PropertyEnum.AIProceduralNextFleeTime] = nextFleeTime;
         }
     }
 
     public class ProceduralSyncAttackContextPrototype : Prototype
     {
         public PrototypeId TargetEntity { get; protected set; }
-        public PrototypeId TargetEntityPower { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public ProceduralUsePowerContextPrototype TargetEntityPower { get; protected set; }
         public ProceduralUsePowerContextPrototype LeaderPower { get; protected set; }
     }
 
@@ -172,65 +193,77 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ProceduralPowerWithSpecificTargetsPrototype : Prototype
     {
         public float HealthThreshold { get; protected set; }
-        public PrototypeId PowerToUse { get; protected set; }
-        public PrototypeId[] Targets { get; protected set; }   // VectorPrototypeRefPtr AgentPrototype
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public PowerPrototype PowerToUse { get; protected set; }
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public AgentPrototype[] Targets { get; protected set; }
+
+        //---
 
         public bool InitTargets(Agent agent, bool addToBlackboard)
         {
-            if (Targets.IsNullOrEmpty()) return false;
+            if (!Verify.IsNotNull(agent)) return false;
+            if (!Verify.IsTrue(Targets.HasValue())) return false;
+
             return SearchForTargets(agent, addToBlackboard, false);
         }
 
         public bool SearchForTargets(Agent agent, bool addToBlackboard, bool clearFirst) // ProfileKaecilius only
         {
             AIController ownerController = agent.AIController;
-            if (ownerController == null) return false;
+            if (!Verify.IsNotNull(ownerController)) return false;
+
             BehaviorBlackboard blackboard = ownerController.Blackboard;
+
             Region region = agent.Region;
-            if (region == null) return false;
+            if (!Verify.IsNotNull(region)) return false;
 
             int targetsFound = 0;
-            Sphere volume = new (agent.RegionLocation.Position, ownerController.AggroRangeHostile);
+            Sphere volume = new(agent.RegionLocation.Position, ownerController.AggroRangeHostile);
             foreach (WorldEntity targetEntity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
             {
-                if (targetEntity != null)
-                    foreach (var target in Targets)
+                if (targetEntity == null)
+                    continue;
+
+                foreach (AgentPrototype targetProto in Targets)
+                {
+                    if (targetProto.DataRef == targetEntity.PrototypeDataRef)
                     {
-                        if (target == targetEntity.PrototypeDataRef)
+                        if (addToBlackboard)
                         {
-                            if (addToBlackboard)
-                            {
-                                AddTargetEntityToBlackboard(targetEntity, blackboard, clearFirst);
-                                clearFirst = false;
-                            }
-                            targetsFound++;
-                            break;
+                            AddTargetEntityToBlackboard(targetEntity, blackboard, clearFirst);
+                            clearFirst = false;
                         }
+                        targetsFound++;
+                        break;
                     }
+                }
             }
 
-            return (targetsFound == Targets.Length);
+            return targetsFound == Targets.Length;
         }
 
         private static bool AddTargetEntityToBlackboard(WorldEntity targetEntity, BehaviorBlackboard blackboard, bool clearFirst)
         {
+            PropertyCollection properties = blackboard.PropertyCollection;
+
             if (clearFirst)
             {
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = 0;
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] = 0;
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] = 0;
+                properties[PropertyEnum.AICustomEntityId1] = 0;
+                properties[PropertyEnum.AICustomEntityId2] = 0;
+                properties[PropertyEnum.AICustomEntityId3] = 0;
             }
-            if (blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] == 0)
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = targetEntity.Id;
-            else if (blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] == 0)
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] = targetEntity.Id;
-            else if (blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] == 0)
-                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] = targetEntity.Id;
+
+            if (properties[PropertyEnum.AICustomEntityId1] == 0)
+                properties[PropertyEnum.AICustomEntityId1] = targetEntity.Id;
+            else if (properties[PropertyEnum.AICustomEntityId2] == 0)
+                properties[PropertyEnum.AICustomEntityId2] = targetEntity.Id;
+            else if (properties[PropertyEnum.AICustomEntityId3] == 0)
+                properties[PropertyEnum.AICustomEntityId3] = targetEntity.Id;
             else
                 return false;
+
             return true;
         }
     }
-
-
 }

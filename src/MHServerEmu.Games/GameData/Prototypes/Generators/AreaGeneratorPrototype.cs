@@ -79,5 +79,4 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 
     #endregion
-
 }

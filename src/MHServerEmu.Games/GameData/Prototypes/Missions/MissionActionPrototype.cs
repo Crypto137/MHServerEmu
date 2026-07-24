@@ -37,6 +37,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionPrototype : Prototype
     {
+        //---
+
         public virtual MissionAction AllocateAction(IMissionActionOwner owner) { return null; }
     }
 
@@ -56,6 +58,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public DistributionType ApplyTo { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionAvatarResetUltimateCooldown(owner, this);
@@ -65,6 +69,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionSetActiveChapterPrototype : MissionActionPrototype
     {
         public PrototypeId Chapter { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -78,6 +84,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float Percentage { get; protected set; }
         public ManaType ManaType { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionSetAvatarEndurance(owner, this);
@@ -89,6 +97,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public DistributionType ApplyTo { get; protected set; }
         public float Percentage { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionSetAvatarHealth(owner, this);
@@ -97,6 +107,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionDangerRoomReturnScenarioItemPrototype : MissionActionPrototype
     {
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionDangerRoomReturnScenarioItem(owner, this);
@@ -105,10 +117,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionEncounterSpawnPrototype : MissionActionPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
         public AssetId EncounterResource { get; protected set; }
         public int Phase { get; protected set; }
         public bool MissionSpawnOnly { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -117,18 +130,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public PrototypeId GetEncounterRef()
         {
-            if (EncounterResource == AssetId.Invalid)
-            {
-                Logger.Warn($"{ToString()} has no value in its EncounterResource field.");
+            // NOTE: This is similar to PopulationEncounterPrototype::GetEncounterRef().
+            if (!Verify.IsTrue(EncounterResource != AssetId.Invalid, $"MissionActionEncounterSpawn {this} has no value in its EncounterResource field."))
                 return PrototypeId.Invalid;
-            }
 
             PrototypeId encounterProtoRef = GameDatabase.GetDataRefByAsset(EncounterResource);
-            if (encounterProtoRef == PrototypeId.Invalid)
-            {
-                Logger.Warn($"{ToString()} was unable to find resource for asset {GameDatabase.GetAssetName(EncounterResource)}, check file path and verify file exists.");
+            if (!Verify.IsTrue(encounterProtoRef != PrototypeId.Invalid, $"MissionActionEncounterSpawn {this} was unable to find resource for asset {EncounterResource.GetName()}, check file path and verify file exists."))
                 return PrototypeId.Invalid;
-            }
 
             return encounterProtoRef;
         }
@@ -140,6 +148,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int DifficultyIndex { get; protected set; }
         public PrototypeId DifficultyOverride { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionDifficultyOverride(owner, this);
@@ -149,6 +159,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionRegionScorePrototype : MissionActionPrototype
     {
         public int Amount { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -160,6 +172,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public bool AllowWhenDead { get; protected set; }
+
+        //---
 
         public void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
         {
@@ -173,6 +187,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
+            Verify.IsTrue(false);
             return null;
         }
     }
@@ -180,6 +195,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionEntityCreatePrototype : MissionActionPrototype
     {
         public PrototypeId EntityPrototype { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -189,6 +206,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionEntityDestroyPrototype : MissionActionEntityTargetPrototype
     {
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionEntityDestroy(owner, this);
@@ -200,20 +219,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SpawnLoot { get; protected set; }
         public bool GivePlayerCredit { get; protected set; }
 
-        [DoNotCopy]
-        public KillFlags KillFlags { get; protected set; }
+        //---
 
-        public override MissionAction AllocateAction(IMissionActionOwner owner)
-        {
-            return new MissionActionEntityKill(owner, this);
-        }
+        [DoNotCopy]
+        public KillFlags KillFlags { get; private set; }
 
         public override void PostProcess()
         {
             base.PostProcess();
+
             KillFlags = KillFlags.None;
-            if (GivePlayerCredit == false) KillFlags |= KillFlags.NoDeadEvent;
-            if (SpawnLoot == false) KillFlags |= KillFlags.NoLoot | KillFlags.NoExp;
+            
+            if (GivePlayerCredit == false)
+                KillFlags |= KillFlags.NoDeadEvent;
+            
+            if (SpawnLoot == false)
+                KillFlags |= KillFlags.NoLoot | KillFlags.NoExp;
+        }
+
+        public override MissionAction AllocateAction(IMissionActionOwner owner)
+        {
+            return new MissionActionEntityKill(owner, this);
         }
     }
 
@@ -226,6 +252,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool MissionReferencedPowerRemove { get; protected set; }
         public EvalPrototype EvalProperties { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionEntityPerformPower(owner, this);
@@ -237,6 +265,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId EntityState { get; protected set; }
         public TriBool Interactable { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionEntitySetState(owner, this);
@@ -246,6 +276,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionEventTeamAssignPrototype : MissionActionPrototype
     {
         public PrototypeId Team { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -258,6 +290,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Faction { get; protected set; }
         public DistributionType SendTo { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionFactionSet(owner, this);
@@ -267,6 +301,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionSpawnerTriggerPrototype : MissionActionEntityTargetPrototype
     {
         public EntityTriggerEnum Trigger { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -279,6 +315,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public HUDTutorialPrototype HUDTutorial { get; protected set; }
         public DistributionType SendTo { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionHideHUDTutorial(owner, this);
@@ -289,6 +327,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId AvatarPrototype { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionInventoryGiveAvatar(owner, this);
@@ -298,6 +338,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionInventoryGiveTeamUpPrototype : MissionActionPrototype
     {
         public PrototypeId TeamUpPrototype { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -311,6 +353,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public long Count { get; protected set; }
         public MissionActionPrototype[] OnRemoveActions { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionInventoryRemoveItem(owner, this);
@@ -321,6 +365,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId SetStateProto { get; protected set; }
         public PrototypeId WaveStateProto { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -334,6 +380,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public WeightedMissionEntryPrototype[] WeightedMissionPickList { get; protected set; }
         public bool WeightedMissionPickUseRegionSeed { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionMissionActivate(owner, this);
@@ -344,6 +392,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId RegionPrototype { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionRegionShutdown(owner, this);
@@ -353,6 +403,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionResetAllMissionsPrototype : MissionActionPrototype
     {
         public PrototypeId MissionPrototype { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -366,6 +418,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public double DelayInSeconds { get; protected set; }
         public bool Repeat { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionTimedAction(owner, this);
@@ -376,16 +430,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Timer { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionScoringEventTimerEnd(owner, this);
         }
-
     }
 
     public class MissionActionScoringEventTimerStartPrototype : MissionActionPrototype
     {
         public PrototypeId Timer { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -396,6 +453,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionScoringEventTimerStopPrototype : MissionActionPrototype
     {
         public PrototypeId Timer { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -408,6 +467,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public StoryNotificationPrototype StoryNotification { get; protected set; }
         public DistributionType SendTo { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionStoryNotification(owner, this);
@@ -418,6 +479,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public BannerMessagePrototype BannerMessage { get; protected set; }
         public DistributionType SendTo { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -430,6 +493,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public HUDTutorialPrototype HUDTutorial { get; protected set; }
         public DistributionType SendTo { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionShowHUDTutorial(owner, this);
@@ -440,6 +505,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Waypoint { get; protected set; }
         public DistributionType SendTo { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -452,6 +519,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Waypoint { get; protected set; }
         public DistributionType SendTo { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionHideWaypointNotification(owner, this);
@@ -460,6 +529,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionEnableRegionAvatarSwapPrototype : MissionActionPrototype
     {
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionEnableRegionAvatarSwap(owner, this);
@@ -468,6 +539,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionDisableRegionAvatarSwapPrototype : MissionActionPrototype
     {
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionDisableRegionAvatarSwap(owner, this);
@@ -479,6 +552,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId AvatarPrototype { get; protected set; }
         public bool UseAvatarSwapPowers { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionSwapAvatar(owner, this);
@@ -487,6 +562,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionEnableRegionRestrictedRosterPrototype : MissionActionPrototype
     {
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionEnableRegionRestrictedRoster(owner, this);
@@ -495,6 +572,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionDisableRegionRestrictedRosterPrototype : MissionActionPrototype
     {
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionDisableRegionRestrictedRoster(owner, this);
@@ -504,6 +583,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionUnlockUISystemPrototype : MissionActionPrototype
     {
         public AssetId UISystem { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -517,6 +598,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DownloadChunkOverride { get; protected set; }
         public DistributionType SendTo { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionShowMotionComic(owner, this);
@@ -526,6 +609,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionUpdateMatchPrototype : MissionActionPrototype
     {
         public int MatchPhase { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -538,6 +623,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId DisplayText { get; protected set; }
         public int DurationMS { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionShowOverheadText(owner, this);
@@ -548,6 +635,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId WaypointToUnlock { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionWaypointUnlock(owner, this);
@@ -557,6 +646,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionWaypointLockPrototype : MissionActionPrototype
     {
         public PrototypeId WaypointToLock { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -569,6 +660,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId BanterAsset { get; protected set; }
         public DistributionType SendTo { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionPlayBanter(owner, this);
@@ -579,6 +672,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId KismetSeqPrototype { get; protected set; }
         public DistributionType SendTo { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -591,6 +686,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Power { get; protected set; }
         public DistributionType SendTo { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionParticipantPerformPower(owner, this);
@@ -601,6 +698,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public AssetId PanelName { get; protected set; }
         public DistributionType SendTo { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -613,6 +712,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId TeleportRegionTarget { get; protected set; }
         public DistributionType SendTo { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionPlayerTeleport(owner, this);
@@ -624,6 +725,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Keyword { get; protected set; }
         public DistributionType SendTo { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionRemoveConditionsKwd(owner, this);
@@ -633,6 +736,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionEntSelEvtBroadcastPrototype : MissionActionEntityTargetPrototype
     {
         public EntitySelectorActionEventType EventToBroadcast { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
@@ -644,6 +749,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Alliance { get; protected set; }
 
+        //---
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionAllianceSet(owner, this);
@@ -653,6 +760,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionShowTeamSelectDialogPrototype : MissionActionPrototype
     {
         public PrototypeId PublicEvent { get; protected set; }
+
+        //---
 
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {

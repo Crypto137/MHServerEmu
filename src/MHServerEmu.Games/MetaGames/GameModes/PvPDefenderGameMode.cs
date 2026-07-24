@@ -238,7 +238,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                 var attackerProto = GameDatabase.GetPrototype<WorldEntityPrototype>(entityRef);
                 if (attackerProto == null) continue;
 
-                var allianceRef = attackerProto.Alliance;
+                var allianceRef = attackerProto.Alliance.DataRef;
                 foreach (var alliance in _attackers.Values)
                     if (alliance == allianceRef) count++;
 
@@ -282,7 +282,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                     if (defenderData.Team == teamRef)
                         return defenderData;
                 }
-                else if (defenderProto.Alliance == allianceRef)
+                else if (defenderProto.Alliance.DataRef == allianceRef)
                     return defenderData;
             }
             return null;

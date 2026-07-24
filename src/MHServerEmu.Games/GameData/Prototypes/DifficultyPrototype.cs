@@ -106,39 +106,48 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public TuningDamageByRankPrototype[] TuningDamageByRankDCL { get; protected set; }
         public RankAffixTableByDifficultyEntryPrototype[] RankAffixTableByDifficulty { get; protected set; }
 
-        public Picker<RankPrototype> BuildRankPicker(PrototypeId difficultyTierRef, GRandom random, bool noAffixes)
+        //---
+
+        public void BuildRankPicker(PrototypeId difficultyTierRef, bool noAffixes, Picker<RankPrototype> picker)
         {
-            Picker<RankPrototype> picker = new(random);
-            var table = GetRankAffixTable(difficultyTierRef);
+            RankAffixEntryPrototype[] table = GetRankAffixTable(difficultyTierRef);
+            if (table.IsNullOrEmpty())
+                return;
 
-            if (table != null)
-                foreach (var entry in table)
-                    if (entry.Weight > 0 && (noAffixes || entry.GetMaxAffixes() > 0))
-                        picker.Add(entry.Rank.As<RankPrototype>(), entry.Weight);
-
-            return picker;
+            foreach (RankAffixEntryPrototype entry in table)
+            {
+                if (entry.Weight > 0 && (noAffixes || entry.GetMaxAffixes() > 0))
+                    picker.Add(entry.Rank, entry.Weight);
+            }
         }
 
         public RankAffixEntryPrototype[] GetRankAffixTable(PrototypeId difficultyTierRef)
         {
             if (RankAffixTableByDifficulty.HasValue())
-                foreach (var entry in RankAffixTableByDifficulty)
+            {
+                foreach (RankAffixTableByDifficultyEntryPrototype entry in RankAffixTableByDifficulty)
+                {
                     if (DifficultyTierPrototype.InRange(difficultyTierRef, entry.DifficultyMin, entry.DifficultyMax))
                         return entry.RankAffixTable;
+                }
+            }
 
             return RankAffixTable;
         }
 
         public RankAffixEntryPrototype GetDifficultyRankEntry(PrototypeId difficultyTierRef, RankPrototype rankProto)
         {
-            var table = GetRankAffixTable(difficultyTierRef);
-            if (table != null)
-                foreach (var entry in table)
+            RankAffixEntryPrototype[] table = GetRankAffixTable(difficultyTierRef);
+            if (table.HasValue())
+            {
+                foreach (RankAffixEntryPrototype entry in table)
                 {
-                    var entryRank = entry.Rank.As<RankPrototype>();
+                    RankPrototype entryRank = entry.Rank;
                     if (entryRank != null && entryRank.Rank == rankProto.Rank)
                         return entry;
                 }
+            }
+
             return null;
         }
     }
@@ -168,27 +177,41 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId UIDisplayName { get; protected set; }
         public int BonusItemFindBonusDifficultyMult { get; protected set; }
 
+        //---
+
         public static bool InRange(PrototypeId value, PrototypeId min, PrototypeId max)
         {
-            if (min == PrototypeId.Invalid && max == PrototypeId.Invalid) return true;
+            if (min == PrototypeId.Invalid && max == PrototypeId.Invalid)
+                return true;
 
-            var valueProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(value);
-            if (valueProto == null) return false;
+            DifficultyTierPrototype valueProto = value.As<DifficultyTierPrototype>();
+            if (!Verify.IsNotNull(valueProto)) return false;
 
-            var minProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(min);
-            if (minProto != null && valueProto.Tier < minProto.Tier) return false;
-            var maxProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(max);
-            if (maxProto != null && valueProto.Tier > maxProto.Tier) return false;
+            DifficultyTierPrototype minProto = min.As<DifficultyTierPrototype>();
+            if (minProto != null && valueProto.Tier < minProto.Tier)
+                return false;
+
+            DifficultyTierPrototype maxProto = max.As<DifficultyTierPrototype>();
+            if (maxProto != null && valueProto.Tier > maxProto.Tier)
+                return false;
 
             return true;
         }
 
         public static bool InRange(DifficultyTierPrototype valueProto, DifficultyTierPrototype minProto, DifficultyTierPrototype maxProto)
         {
-            if (valueProto == null) return false;
-            if (minProto == null && maxProto == null) return true;
-            if (minProto != null && valueProto.Tier < minProto.Tier) return false;
-            if (maxProto != null && valueProto.Tier > maxProto.Tier) return false;
+            if (valueProto == null)
+                return false;
+
+            if (minProto == null && maxProto == null)
+                return true;
+
+            if (minProto != null && valueProto.Tier < minProto.Tier)
+                return false;
+
+            if (maxProto != null && valueProto.Tier > maxProto.Tier)
+                return false;
+
             return true;
         }
     }
@@ -214,12 +237,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public float GetTeamUpDamageScalar(int combatLevel)
         {
             Curve teamUpDamageScalarCurve = TeamUpDamageScalarFromLevelCurve.AsCurve();
-            if (teamUpDamageScalarCurve == null) return Logger.WarnReturn(1f, "GetTeamUpDamageScalar(): teamUpDamageScalarCurve == null");
+            if (!Verify.IsNotNull(teamUpDamageScalarCurve)) return 1f;
 
             return teamUpDamageScalarCurve.GetAt(combatLevel);
         }

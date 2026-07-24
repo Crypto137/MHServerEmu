@@ -756,7 +756,7 @@ namespace MHServerEmu.Games.Entities
                 // Keyworded OnKill procs check different keyword sources based on the type of proc of power
                 Power procPower;
 
-                if (dataDirectory.PrototypeIsChildOfBlueprint(procPowerProtoRef, (BlueprintId)keywordGlobals.EntityKeywordPrototype))
+                if (dataDirectory.PrototypeIsChildOfBlueprint(procPowerProtoRef, (BlueprintId)keywordGlobals.EntityKeywordPrototype.DataRef))
                 {
                     if (target == null)
                         continue;

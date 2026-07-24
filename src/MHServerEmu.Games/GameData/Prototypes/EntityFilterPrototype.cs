@@ -3,6 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
@@ -33,71 +34,97 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityFilterPrototype : Prototype
     {
+        //---
+
         public virtual void GetAreaDataRefs(HashSet<PrototypeId> refs) { }
         public virtual void GetEntityDataRefs(HashSet<PrototypeId> refs) { }
         public virtual void GetRegionDataRefs(HashSet<PrototypeId> refs) { }
         public virtual void GetKeywordDataRefs(HashSet<PrototypeId> refs) { }
+
         public virtual bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
             return true;
         }
     }
 
     public class EntityFilterFilterListPrototype : EntityFilterPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
         public EntityFilterPrototype[] Filters { get; protected set; }
+
+        //---
 
         public override void GetAreaDataRefs(HashSet<PrototypeId> refs)
         {
-            if (Filters.IsNullOrEmpty()) return;
-            foreach (var prototype in Filters)
-                prototype?.GetAreaDataRefs(refs);
+            if (!Verify.IsTrue(Filters.HasValue())) return;
+
+            foreach (EntityFilterPrototype prototype in Filters)
+            {
+                if (Verify.IsNotNull(prototype))
+                    prototype.GetAreaDataRefs(refs);
+            }
         }
+
         public override void GetEntityDataRefs(HashSet<PrototypeId> refs)
         {
-            if (Filters.IsNullOrEmpty()) return;
-            foreach (var prototype in Filters)
-                prototype?.GetEntityDataRefs(refs);
+            if (!Verify.IsTrue(Filters.HasValue())) return;
+
+            foreach (EntityFilterPrototype prototype in Filters)
+            {
+                if (Verify.IsNotNull(prototype))
+                    prototype.GetEntityDataRefs(refs);
+            }
         }
+
         public override void GetRegionDataRefs(HashSet<PrototypeId> refs)
         {
-            if (Filters.IsNullOrEmpty()) return;
-            foreach (var prototype in Filters)
-                prototype?.GetRegionDataRefs(refs);
+            if (!Verify.IsTrue(Filters.HasValue())) return;
+
+            foreach (EntityFilterPrototype prototype in Filters)
+            {
+                if (Verify.IsNotNull(prototype))
+                    prototype.GetRegionDataRefs(refs);
+            }
         }
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            Logger.Error("You used a FilterList node in your Entity Filter!\n" +
-                "This is a base class and shouldn't be used; \n" +
-                "use EntityFilter.AND or EntityFilter.OR instead or your filter won't work! \n" +
-                $"(FilterList::Evaluate is being called for Mission {GameDatabase.GetFormattedPrototypeName(context.MissionRef)}.)");
+            Verify.IsTrue(false,
+                $"You used a FilterList node in your Entity Filter!  This is a base class and shouldn't be used; use EntityFilter.AND or EntityFilter.OR instead or your filter won't work!  (FilterList::Evaluate is being called for Mission {context.MissionRef.GetName()}.)");
             return false;
         }
     }
 
     public class EntityFilterAndPrototype : EntityFilterFilterListPrototype
     {
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
-            if (Filters.IsNullOrEmpty()) return true;
-            foreach (var prototype in Filters)
-                if (prototype == null || prototype.Evaluate(entity, context) == false)
+            if (!Verify.IsNotNull(entity)) return false;
+            if (!Verify.IsTrue(Filters.HasValue())) return true;
+
+            foreach (EntityFilterPrototype prototype in Filters)
+            {
+                if (Verify.IsNotNull(prototype) && prototype.Evaluate(entity, context) == false)
                     return false;
+            }
+
             return true;
         }
     }
 
     public class EntityFilterHasAlliancePrototype : EntityFilterPrototype
     {
-        public PrototypeId Alliance { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AlliancePrototype Alliance { get; protected set; }
+
+        //---
 
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null || entity.Alliance == null) return false;
-            return entity.Alliance.DataRef == Alliance;
+            if (!Verify.IsNotNull(entity)) return false;
+            return entity.Alliance == Alliance;
         }
     }
 
@@ -105,35 +132,43 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ScriptRoleKeyEnum ScriptKey { get; protected set; }
 
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
             return entity.GetScriptRoleKey() == ScriptKey;
         }
     }
 
     public class EntityFilterHasKeywordPrototype : EntityFilterPrototype
     {
-        public PrototypeId Keyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype Keyword { get; protected set; }
+
+        //---
 
         public override void GetKeywordDataRefs(HashSet<PrototypeId> refs)
         {
-            if (Keyword != PrototypeId.Invalid) refs.Add(Keyword);
+            if (!Verify.IsNotNull(Keyword)) return;
+            refs.Add(Keyword.DataRef);
         }
 
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
             return entity.HasKeyword(Keyword);
         }
     }
 
     public class EntityFilterHasNegStatusEffectPrototype : EntityFilterPrototype
     {
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
-            var collection = entity.ConditionCollection;
+            if (!Verify.IsNotNull(entity)) return false;
+            ConditionCollection collection = entity.ConditionCollection;
             return collection != null && collection.HasANegativeStatusEffectCondition();
         }
     }
@@ -143,15 +178,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId EntityPrototype { get; protected set; }
         public bool IncludeChildPrototypes { get; protected set; }
 
+        //---
+
         public override void GetEntityDataRefs(HashSet<PrototypeId> refs)
         {
-            if (EntityPrototype != PrototypeId.Invalid && GameDatabase.DataDirectory.PrototypeIsADefaultPrototype(EntityPrototype) == false)
+            if (!Verify.IsTrue(EntityPrototype != PrototypeId.Invalid)) return;
+
+            if (GameDatabase.DataDirectory.PrototypeIsADefaultPrototype(EntityPrototype) == false)
                 refs.Add(EntityPrototype);
         }
 
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
+
             if (IncludeChildPrototypes)
                 return entity.IsAPrototype(EntityPrototype);
             else
@@ -163,14 +203,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId InArea { get; protected set; }
 
+        //---
+
         public override void GetAreaDataRefs(HashSet<PrototypeId> refs)
         {
-            if (InArea != PrototypeId.Invalid) refs.Add(InArea);
+            if (Verify.IsTrue(InArea != PrototypeId.Invalid))
+                refs.Add(InArea);
         }
 
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
 
             PrototypeId areaRef = PrototypeId.Invalid;
 
@@ -189,7 +232,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         areaRef = area.PrototypeDataRef;
                 }
                 else
+                {
                     areaRef = entity.ExitWorldRegionLocation.AreaRef;
+                }
                 
                 if (areaRef == PrototypeId.Invalid)
                     areaRef = entity.Properties[PropertyEnum.ContextAreaRef];
@@ -203,64 +248,79 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public AssetId[] InCells { get; protected set; }
 
-        private readonly List<PrototypeId> CellPrototypes = new();
+        //---
+
+        private readonly List<PrototypeId> _cellPrototypes = new();     // HashSet possibly faster here? Need to measure if it's worth it.
 
         public override void PostProcess()
         {
             base.PostProcess();
+
             if (InCells.HasValue())
-                foreach(var cell in InCells)
+            {
+                foreach (AssetId cell in InCells)
                 {
                     PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cell);
-                    if (cellRef != PrototypeId.Invalid) CellPrototypes.Add(cellRef);
-                }    
+                    if (Verify.IsTrue(cellRef != PrototypeId.Invalid) && _cellPrototypes.Contains(cellRef) == false)
+                        _cellPrototypes.Add(cellRef);
+                }
+            }
         }
 
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
 
             Cell cell = entity.Cell;
-            if (cell == null) return false;
+            if (cell == null)
+                return false;
 
-            return CellPrototypes.Contains(cell.PrototypeDataRef);
+            return _cellPrototypes.Contains(cell.PrototypeDataRef);
         }
     }
 
     public class EntityFilterInLocationWithKeywordPrototype : EntityFilterPrototype
     {
-        public PrototypeId Keyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype Keyword { get; protected set; }
+
+        //---
 
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
-
-            var keywordProto = Keyword.As<KeywordPrototype>();
+            if (!Verify.IsNotNull(entity)) return false;
 
             if (entity.IsInWorld)
-                return entity.RegionLocation.HasKeyword(keywordProto);
+            {
+                return entity.RegionLocation.HasKeyword(Keyword);
+            }
             else
             {
                 ref RegionLocation ownerLocation = ref entity.GetOwnerLocation(out bool hasOwnerLocation);
                 if (hasOwnerLocation)
-                    return ownerLocation.HasKeyword(keywordProto);
+                    return ownerLocation.HasKeyword(Keyword);
                 else
-                    return entity.ExitWorldRegionLocation.HasKeyword(keywordProto);
+                    return entity.ExitWorldRegionLocation.HasKeyword(Keyword);
             }
         }
     }
 
     public class EntityFilterInRegionPrototype : EntityFilterPrototype
     {
-        public PrototypeId InRegion { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public RegionPrototype InRegion { get; protected set; }
+
+        //---
 
         public override void GetRegionDataRefs(HashSet<PrototypeId> refs)
         {
-            if (InRegion != PrototypeId.Invalid) refs.Add(InRegion);
+            if (Verify.IsNotNull(InRegion))
+                refs.Add(InRegion.DataRef);
         }
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
 
             Region region = entity.Region;
             if (region == null)
@@ -271,7 +331,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 else
                     region = entity.ExitWorldRegionLocation.GetRegion();
             }
-            return region != null && RegionPrototype.Equivalent(InRegion.As<RegionPrototype>(), region.Prototype);
+
+            return region != null && RegionPrototype.Equivalent(InRegion, region.Prototype);
         }
     }
 
@@ -279,6 +340,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Mission { get; protected set; }
         public MissionState State { get; protected set; }
+
+        //---
 
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
@@ -298,14 +361,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityFilterIsHostileToPlayersPrototype : EntityFilterPrototype
     {
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
 
-            var worldEntityProto = entity.WorldEntityPrototype;
-            if (worldEntityProto == null) return false;
+            WorldEntityPrototype worldEntityProto = entity.WorldEntityPrototype;
+            if (!Verify.IsNotNull(worldEntityProto)) return false;
 
-            var allianceProto = worldEntityProto.Alliance.As<AlliancePrototype>();
+            AlliancePrototype allianceProto = worldEntityProto.Alliance;
             if (allianceProto == null)
             {
                 PrototypeId allianceOverrideRef = entity.Properties[PropertyEnum.AllianceOverride];
@@ -323,21 +388,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Superteam { get; protected set; }
 
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
+
             if (entity is Avatar avatar)
             {
                 AvatarPrototype avatarProto = avatar.AvatarPrototype;
-                if (avatarProto != null && avatarProto.IsMemberOfSuperteam(Superteam))
+                if (Verify.IsNotNull(avatarProto) && avatarProto.IsMemberOfSuperteam(Superteam))
                     return true;
             }
+
             return false;
         }
     }
 
     public class EntityFilterIsMissionContributorPrototype : EntityFilterPrototype
     {
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
             Player player = null;
@@ -357,6 +428,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityFilterIsMissionParticipantPrototype : EntityFilterPrototype
     {
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
             Player player = null;
@@ -376,26 +449,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityFilterIsPartyMemberPrototype : EntityFilterPrototype
     {
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
             return context.PartyId != 0 && entity.PartyId == context.PartyId;
         }
     }
 
     public class EntityFilterIsPlayerAvatarPrototype : EntityFilterPrototype
     {
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
+            if (!Verify.IsNotNull(entity)) return false;
             return entity is Avatar;
         }
     }
 
     public class EntityFilterIsPowerOwnerPrototype : EntityFilterPrototype
-    {        
+    {
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
             return context.PowerOwnerId != 0 && entity.Id == context.PowerOwnerId;
         }
     }
@@ -404,20 +484,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
 
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (EntityFilter == null) return true;
+            if (!Verify.IsNotNull(EntityFilter)) return true;
             return EntityFilter.Evaluate(entity, context) == false;
         }
     }
 
     public class EntityFilterOrPrototype : EntityFilterFilterListPrototype
     {
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null || Filters.IsNullOrEmpty()) return false;
-            foreach (var filter in Filters)
-                if (filter != null && filter.Evaluate(entity, context)) return true;
+            if (!Verify.IsNotNull(entity)) return false;
+            if (!Verify.IsTrue(Filters.HasValue())) return false;
+
+            foreach (EntityFilterPrototype prototype in Filters)
+            {
+                if (Verify.IsNotNull(prototype) && prototype.Evaluate(entity, context))
+                    return true;
+            }
+
             return false;
         }
     }
@@ -426,11 +516,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public AssetId EncounterResource { get; protected set; }
 
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
+
             if (entity.Properties.HasProperty(PropertyEnum.EncounterResource))
                 return entity.Properties[PropertyEnum.EncounterResource] == GameDatabase.GetDataRefByAsset(EncounterResource);
+
             return false;
         }
     }
@@ -439,10 +533,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId MissionPrototype { get; protected set; }
 
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
-            var missionRef = entity.MissionPrototype;
+            if (!Verify.IsNotNull(entity)) return false;
+
+            PrototypeId missionRef = entity.MissionPrototype;
 
             if (MissionPrototype != PrototypeId.Invalid)
                 return missionRef == MissionPrototype;
@@ -457,18 +554,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId SpawnerPrototype { get; protected set; }
 
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
+
             SpawnGroup spawnGroup = entity.SpawnGroup;
             if (spawnGroup != null && spawnGroup.SpawnerId != 0)
             {
-                var manager = entity.Game?.EntityManager;
-                if (manager == null) return false;
-                var spawner = manager.GetEntity<Spawner>(spawnGroup.SpawnerId);
+                Spawner spawner = entity.Game.EntityManager.GetEntity<Spawner>(spawnGroup.SpawnerId);
                 if (spawner != null && spawner.PrototypeDataRef == SpawnerPrototype)
                     return true;
             }
+
             return false;
         }
     }
@@ -477,26 +576,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId PrestigeLevel { get; protected set; }
 
+        //---
+
         private int _prestigeLevelIndex;
 
         public override void PostProcess()
         {
             _prestigeLevelIndex = int.MaxValue;
+
             if (PrestigeLevel != PrototypeId.Invalid)
             {
-                var advancementGlobalsProto = GameDatabase.AdvancementGlobalsPrototype;
-                var prestigeLevelProto = GameDatabase.GetPrototype<PrestigeLevelPrototype>(PrestigeLevel);
-                if (advancementGlobalsProto != null && prestigeLevelProto != null)
+                AdvancementGlobalsPrototype advancementGlobalsProto = GameDatabase.AdvancementGlobalsPrototype;
+                PrestigeLevelPrototype prestigeLevelProto = GameDatabase.GetPrototype<PrestigeLevelPrototype>(PrestigeLevel);
+
+                if (Verify.IsNotNull(advancementGlobalsProto) && Verify.IsNotNull(prestigeLevelProto))
                     _prestigeLevelIndex = advancementGlobalsProto.GetPrestigeLevelIndex(prestigeLevelProto);
             }
         }
 
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
-            if (entity is Avatar avatar)
-                return avatar.PrestigeLevel == _prestigeLevelIndex;
-            return false;
+            if (!Verify.IsNotNull(entity)) return false;
+            return entity is Avatar avatar && avatar.PrestigeLevel >= _prestigeLevelIndex;
         }
     }
 
@@ -504,11 +605,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId RankPrototype { get; protected set; }
 
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (!Verify.IsNotNull(entity)) return false;
+
             if (RankPrototype != PrototypeId.Invalid)
                 return entity.Properties[PropertyEnum.Rank] == RankPrototype;
+            
             return true;
         }
     }
@@ -517,11 +622,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Rarity { get; protected set; }
 
+        //---
+
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null || Rarity == PrototypeId.Invalid) return false;
+            if (!Verify.IsNotNull(entity)) return false;
+            if (!Verify.IsTrue(Rarity != PrototypeId.Invalid)) return false;
+
             if (entity is Item item)
                 return item.Properties[PropertyEnum.ItemRarity] == Rarity;
+
             return false;
         }
     }

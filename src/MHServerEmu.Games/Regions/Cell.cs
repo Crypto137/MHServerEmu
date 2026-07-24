@@ -403,7 +403,7 @@ namespace MHServerEmu.Games.Regions
             }
 
             var region = Region;
-            var destructibleKeyword = GameDatabase.KeywordGlobalsPrototype.DestructibleKeywordPrototype;            
+            var destructibleKeyword = GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword;            
             if (region.Prototype.RespawnDestructibles && entityProto.HasKeyword(destructibleKeyword))
             {
                 SpawnGroup group = PopulationManager.CreateSpawnGroup();

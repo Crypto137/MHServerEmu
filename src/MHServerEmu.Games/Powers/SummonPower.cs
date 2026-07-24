@@ -488,7 +488,7 @@ namespace MHServerEmu.Games.Powers
             contextProto = powerProto.SummonEntityContexts[contextIndex];
             if (!Verify.IsNotNull(contextProto)) return PowerUseResult.GenericError;
 
-            if (contextProto.SummonEntity == PrototypeId.Invalid)
+            if (contextProto.SummonEntity == null)
             {
                 if (!Verify.IsNotNull(contextProto.SummonEntityRemoval)) return PowerUseResult.GenericError;
                 return PowerUseResult.RestrictiveCondition;

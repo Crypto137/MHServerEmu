@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -65,6 +66,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool NoTrackingOptimization { get; protected set; }
         public long MissionConditionGuid { get; protected set; }
 
+        //---
+
         [DoNotCopy]
         public int Index { get; set; }
 
@@ -79,24 +82,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool PartyMembersGetCredit { get; protected set; }
         public double OpenMissionContributionValue { get; protected set; }
 
-        public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner) { return null; }
+        //---
+
+        public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
+        {
+            Verify.IsTrue(false);
+            return null;
+        }
     }
 
     public class MissionConditionListPrototype : MissionConditionPrototype
     {
         public MissionConditionPrototype[] Conditions { get; protected set; }
 
-        public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner) { return null; }
+        //---
+
+        public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
+        {
+            Verify.IsTrue(false);
+            return null;
+        }
 
         public MissionConditionPrototypeIterator IteratePrototypes(Type conditionType = null)
         {            
-            return new MissionConditionPrototypeIterator(this, conditionType);
+            return new(this, conditionType);
         }
-
     }
 
     public class MissionConditionAndPrototype : MissionConditionListPrototype
     {
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionAnd(mission, owner, this);
@@ -106,6 +122,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionActiveChapterPrototype : MissionPlayerConditionPrototype
     {
         public PrototypeId Chapter { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -118,6 +136,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MinPoints { get; protected set; }
         public int MaxPoints { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionPowerPointsRemaining(mission, owner, this);
@@ -127,6 +147,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionAreaBeginTravelToPrototype : MissionPlayerConditionPrototype
     {
         public PrototypeId AreaPrototype { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -141,6 +163,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int CountMin { get; protected set; }
         public EntityFilterPrototype TargetFilter { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionAreaContains(mission, owner, this);
@@ -152,6 +176,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId RegionPrototype { get; protected set; }
         public PrototypeId AreaPrototype { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionAreaEnter(mission, owner, this);
@@ -159,19 +185,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
         {
-            if (RegionPrototype != PrototypeId.Invalid) refs.Add(RegionPrototype);
+            if (RegionPrototype != PrototypeId.Invalid)
+                refs.Add(RegionPrototype);
         }
 
         public override void SetInterestLocations(HashSet<PrototypeId> regions, HashSet<PrototypeId> areas, HashSet<PrototypeId> cells)
         {
-            if (RegionPrototype != PrototypeId.Invalid) regions.Add(RegionPrototype);
-            if (AreaPrototype != PrototypeId.Invalid) areas.Add(AreaPrototype);
+            if (RegionPrototype != PrototypeId.Invalid)
+                regions.Add(RegionPrototype);
+
+            if (AreaPrototype != PrototypeId.Invalid)
+                areas.Add(AreaPrototype);
         }
     }
 
     public class MissionConditionAreaLeavePrototype : MissionPlayerConditionPrototype
     {
         public PrototypeId AreaPrototype { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -183,16 +215,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId AvatarPrototype { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionAvatarIsActive(mission, owner, this);
         }
-
     }
 
     public class MissionConditionAvatarIsUnlockedPrototype : MissionPlayerConditionPrototype
     {
         public PrototypeId AvatarPrototype { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -204,6 +239,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId AvatarPrototype { get; protected set; }
         public long Level { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -222,6 +259,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype TargetFilter { get; protected set; }
         public int WithinSeconds { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionAvatarUsedPower(mission, owner, this);
@@ -237,32 +276,44 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private readonly HashSet<PrototypeId> _cells = new();
 
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            if (Cells.HasValue())
+            {
+                foreach (AssetId cell in Cells)
+                {
+                    PrototypeId cellDataRef = GameDatabase.GetDataRefByAsset(cell);
+                    if (!Verify.IsTrue(cellDataRef != PrototypeId.Invalid))
+                        continue;
+
+                    _cells.Add(cellDataRef);
+                }
+            }
+        }
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionCellEnter(mission, owner, this);
         }
 
-        public override void PostProcess()
-        {
-            base.PostProcess();
-            if (Cells.HasValue())
-                foreach(var cell in Cells)
-                {
-                    var cellRef = GameDatabase.GetDataRefByAsset(cell);
-                    if (cellRef != PrototypeId.Invalid) _cells.Add(cellRef);
-                }
-        }
-
         public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
         {
             if (Regions.HasValue())
-                foreach (var region in Regions) refs.Add(region);
+            {
+                foreach (PrototypeId regionRef in Regions)
+                    refs.Add(regionRef);
+            }
         }
 
         public override void SetInterestLocations(HashSet<PrototypeId> regions, HashSet<PrototypeId> areas, HashSet<PrototypeId> cells)
         {
             if (Regions.HasValue())
-                foreach (var region in Regions) regions.Add(region);
+            {
+                foreach (PrototypeId regionRef in Regions)
+                    regions.Add(regionRef);
+            }
 
             foreach (PrototypeId cellProtoRef in _cells)
                 cells.Add(cellProtoRef);
@@ -282,20 +333,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private readonly HashSet<PrototypeId> _cells = new();
 
-        public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
-        {
-            return new MissionConditionCellLeave(mission, owner, this);
-        }
-
         public override void PostProcess()
         {
             base.PostProcess();
+
             if (Cells.HasValue())
-                foreach (var cell in Cells)
+            {
+                foreach (AssetId cell in Cells)
                 {
-                    var cellRef = GameDatabase.GetDataRefByAsset(cell);
-                    if (cellRef != PrototypeId.Invalid) _cells.Add(cellRef);
+                    PrototypeId cellDataRef = GameDatabase.GetDataRefByAsset(cell);
+                    if (!Verify.IsTrue(cellDataRef != PrototypeId.Invalid))
+                        continue;
+
+                    _cells.Add(cellDataRef);
                 }
+            }
+        }
+
+        public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
+        {
+            return new MissionConditionCellLeave(mission, owner, this);
         }
 
         public bool Contains(PrototypeId cellRef)
@@ -309,6 +366,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId CohortPrototype { get; protected set; }
         public PrototypeId ExperimentPrototype { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionCohort(mission, owner, this);
@@ -318,6 +377,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionCountPrototype : MissionConditionListPrototype
     {
         public long Count { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -329,6 +390,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public long AmountRequired { get; protected set; }
         public PrototypeId CurrencyType { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -344,6 +407,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype ObserverFilter { get; protected set; }
         public int ObserverRadius { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionEmotePerformed(mission, owner, this);
@@ -353,6 +418,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionEntityAggroPrototype : MissionPlayerConditionPrototype
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -382,6 +449,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId EncounterResource { get; protected set; }
         public bool LimitToDamageFromPlayerOMOnly { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionEntityDamaged(mission, owner, this);
@@ -399,7 +468,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (EncounterResource != AssetId.Invalid)
             {
                 PrototypeId encounterRef = GameDatabase.GetDataRefByAsset(EncounterResource);
-                var encounterProto = GameDatabase.GetPrototype<EncounterResourcePrototype>(encounterRef);
+                EncounterResourcePrototype encounterProto = encounterRef.As<EncounterResourcePrototype>();
                 encounterProto?.MarkerSet.GetContainedEntities(refs);
             }
         }
@@ -410,7 +479,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             entityFilter.AddEntityFilter(EntityFilter);
             entityFilter.AddEncounterResource(EncounterResource);
         }
-
     }
 
     public class MissionConditionEntityDeathPrototype : MissionPlayerConditionPrototype
@@ -425,6 +493,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int WithinSeconds { get; protected set; }
         public bool MustBeTaggedByPlayer { get; protected set; }
         public HUDEntitySettingsPrototype EntityHUDSettingOverride { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -443,7 +513,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (EncounterResource != AssetId.Invalid)
             {
                 PrototypeId encounterRef = GameDatabase.GetDataRefByAsset(EncounterResource);
-                var encounterProto = GameDatabase.GetPrototype<EncounterResourcePrototype>(encounterRef);
+                EncounterResourcePrototype encounterProto = encounterRef.As<EncounterResourcePrototype>();
                 encounterProto?.MarkerSet.GetContainedEntities(refs);
             }
         }
@@ -460,17 +530,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (EntityFilter != null)
             {
                 using var refsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> refs);
+
                 EntityFilter.GetRegionDataRefs(refs);
-                foreach (var region in refs)
-                    regions.Add(region);
+                foreach (PrototypeId regionRef in refs)
+                    regions.Add(regionRef);
 
                 refs.Clear();
                 EntityFilter.GetAreaDataRefs(refs);
-                foreach (var area in refs)
-                    areas.Add(area);
+                foreach (PrototypeId areaRef in refs)
+                    areas.Add(areaRef);
             }
         }
-
     }
 
     public class MissionConditionEntityInteractPrototype : MissionPlayerConditionPrototype
@@ -495,6 +565,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public HUDEntitySettingsPrototype EntityHUDSettingOverride { get; protected set; }
         public bool ShowRewards { get; protected set; }
         public VOCategory VoiceoverCategory { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -523,6 +595,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Faction { get; protected set; }
         public bool EventOnly { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionFaction(mission, owner, this);
@@ -533,6 +607,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Event { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionGlobalEventComplete(mission, owner, this);
@@ -542,6 +618,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionMemberOfEventTeamPrototype : MissionPlayerConditionPrototype
     {
         public PrototypeId Team { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -554,6 +632,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MetaGame { get; protected set; }
         public MetaGameCompleteType CompleteType { get; protected set; }
         public int Count { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -570,6 +650,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int WaveNum { get; protected set; }
         public int Count { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionMetaStateComplete(mission, owner, this);
@@ -581,6 +663,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MetaState { get; protected set; }
         public int Count { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionMetaStateDeathLimitHit(mission, owner, this);
@@ -591,6 +675,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Event { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionPublicEventIsActive(mission, owner, this);
@@ -599,6 +685,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionConditionLogicFalsePrototype : MissionConditionPrototype
     {
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionLogicFalse(mission, owner, this);
@@ -607,6 +695,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionConditionLogicTruePrototype : MissionConditionPrototype
     {
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionLogicTrue(mission, owner, this);
@@ -618,12 +708,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MissionPrototype { get; protected set; }
         public long Count { get; protected set; }
         public DistributionType CreditTo { get; protected set; }
-        public PrototypeId MissionKeyword { get; protected set; }
-        public PrototypeId[] WithinRegions { get; protected set; }        // VectorPrototypeRefPtr RegionPrototype
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype MissionKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public RegionPrototype[] WithinRegions { get; protected set; }
         public bool EvaluateOnRegionEnter { get; protected set; }
         public bool EvaluateOnReset { get; protected set; }
-        public PrototypeId[] WithinAreas { get; protected set; }          // VectorPrototypeRefPtr AreaPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public AreaPrototype[] WithinAreas { get; protected set; }
         public MissionShowObjsSettings ShowObjs { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -636,10 +731,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MissionPrototype { get; protected set; }
         public long Count { get; protected set; }
         public DistributionType CreditTo { get; protected set; }
-        public PrototypeId MissionKeyword { get; protected set; }
-        public PrototypeId[] WithinRegions { get; protected set; }    // VectorPrototypeRefPtr RegionPrototype
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype MissionKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public RegionPrototype[] WithinRegions { get; protected set; }
         public bool EvaluateOnRegionEnter { get; protected set; }
         public bool EvaluateOnReset { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -657,6 +756,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool EvaluateOnRegionEnter { get; protected set; }
         public bool ShowCountFromTargetObjective { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionObjectiveComplete(mission, owner, this);
@@ -667,6 +768,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public long Count { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -692,6 +795,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionConditionOrPrototype : MissionConditionListPrototype
     {
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionOr(mission, owner, this);
@@ -702,6 +807,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public int Count { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -730,6 +837,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public double HealthMinPct { get; protected set; }
         public double HealthMaxPct { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -760,6 +869,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public EntityFilterPrototype TargetFilter { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionHotspotContains(mission, owner, this);
@@ -787,6 +898,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype TargetFilter { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionHotspotEnter(mission, owner, this);
@@ -813,6 +926,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EntityFilterPrototype TargetFilter { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -844,6 +959,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool DestroyOnPickup { get; protected set; }
         public bool CountItemsOnMissionStart { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionItemCollect(mission, owner, this);
@@ -870,6 +987,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId ItemPrototype { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionItemEquip(mission, owner, this);
@@ -881,6 +1000,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId InventoryPrototype { get; protected set; }
         public int SlotsRemaining { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionInventoryCapacity(mission, owner, this);
@@ -891,6 +1012,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId KismetSeqPrototype { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionKismetSeqFinished(mission, owner, this);
@@ -900,6 +1023,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionPowerEquipPrototype : MissionPlayerConditionPrototype
     {
         public PrototypeId PowerPrototype { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -912,6 +1037,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MaxSize { get; protected set; }
         public int MinSize { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionPartySize(mission, owner, this);
@@ -922,6 +1049,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId RegionPrototype { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionRegionBeginTravelTo(mission, owner, this);
@@ -929,12 +1058,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
         {
-            if (RegionPrototype != PrototypeId.Invalid) refs.Add(RegionPrototype);
+            if (RegionPrototype != PrototypeId.Invalid)
+                refs.Add(RegionPrototype);
         }
 
         public override void SetInterestLocations(HashSet<PrototypeId> regions, HashSet<PrototypeId> areas, HashSet<PrototypeId> cells)
         {
-            if (RegionPrototype != PrototypeId.Invalid) regions.Add(RegionPrototype);
+            if (RegionPrototype != PrototypeId.Invalid)
+                regions.Add(RegionPrototype);
         }
     }
 
@@ -942,10 +1073,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public int CountMax { get; protected set; }
         public int CountMin { get; protected set; }
-        public PrototypeId Region { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public RegionPrototype Region { get; protected set; }
         public EntityFilterPrototype TargetFilter { get; protected set; }
         public bool RegionIncludeChildren { get; protected set; }
-        public PrototypeId[] RegionsExclude { get; protected set; }   // VectorPrototypeRefPtr RegionPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public RegionPrototype[] RegionsExclude { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -955,10 +1090,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionConditionRegionEnterPrototype : MissionPlayerConditionPrototype
     {
-        public PrototypeId RegionPrototype { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public RegionPrototype RegionPrototype { get; protected set; }
         public bool WaitForCinematicFinished { get; protected set; }
-        public PrototypeId[] Keywords { get; protected set; }  // VectorPrototypeRefPtr RegionKeywordPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public RegionKeywordPrototype[] Keywords { get; protected set; }
         public bool RegionIncludeChildren { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -967,17 +1106,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
         {
-            if (RegionPrototype != PrototypeId.Invalid) refs.Add(RegionPrototype);
+            if (RegionPrototype != null)
+                refs.Add(RegionPrototype.DataRef);
         }
 
         public override void SetInterestLocations(HashSet<PrototypeId> regions, HashSet<PrototypeId> areas, HashSet<PrototypeId> cells)
         {
-            if (RegionPrototype != PrototypeId.Invalid) regions.Add(RegionPrototype);
+            if (RegionPrototype != null)
+                regions.Add(RegionPrototype.DataRef);
         }
     }
 
     public class MissionConditionRegionHasMatchPrototype : MissionPlayerConditionPrototype
     {
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionRegionHasMatch(mission, owner, this);
@@ -986,8 +1129,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionConditionRegionLeavePrototype : MissionPlayerConditionPrototype
     {
-        public PrototypeId RegionPrototype { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public RegionPrototype RegionPrototype { get; protected set; }
         public bool RegionIncludeChildren { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -996,7 +1142,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
         {
-            if (RegionPrototype != PrototypeId.Invalid) refs.Add(RegionPrototype);
+            if (RegionPrototype != null)
+                refs.Add(RegionPrototype.DataRef);
         }
     }
 
@@ -1006,6 +1153,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId WorldEntityPrototype { get; protected set; }
         public GameNotificationType NotificationType { get; protected set; }
         public AssetId VOTrigger { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -1017,6 +1166,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId TeamUpPrototype { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionTeamUpIsActive(mission, owner, this);
@@ -1027,6 +1178,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId TeamUpPrototype { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionTeamUpIsUnlocked(mission, owner, this);
@@ -1036,6 +1189,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionThrowablePickUpPrototype : MissionPlayerConditionPrototype
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -1054,6 +1209,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public long Count { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionItemBuy(mission, owner, this);
@@ -1064,6 +1221,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public long Count { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -1077,6 +1236,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public PrototypeId UsingRecipe { get; protected set; }
 
+        //---
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionItemCraft(mission, owner, this);
@@ -1089,9 +1250,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool OnlyCountMissionClusters { get; protected set; }
         public PrototypeId[] SpawnedByMission { get; protected set; }
         public PrototypeId[] SpecificClusters { get; protected set; }
-        public PrototypeId[] WithinRegions { get; protected set; }    // VectorPrototypeRefPtr RegionPrototype
-        public PrototypeId[] WithinAreas { get; protected set; }      // VectorPrototypeRefPtr AreaPrototype
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public RegionPrototype[] WithinRegions { get; protected set; }
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public AreaPrototype[] WithinAreas { get; protected set; }
         public bool PlayerKillerRequired { get; protected set; }
+
+        //---
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -1101,15 +1266,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
         {
             if (SpecificClusters.HasValue())
-                foreach (var clusterRef in SpecificClusters)
+            {
+                foreach (PrototypeId clusterRef in SpecificClusters)
                 {
-                    var objectProto = GameDatabase.GetPrototype<PopulationObjectPrototype>(clusterRef);
-                    objectProto?.GetContainedEntities(refs, true);
+                    PopulationObjectPrototype objectProto = clusterRef.As<PopulationObjectPrototype>();
+                    if (!Verify.IsNotNull(objectProto))
+                        continue;
+
+                    objectProto.GetContainedEntities(refs, true);
                 }
+            }
 
             if (WithinRegions.HasValue())
-                foreach (var region in WithinRegions)
-                    refs.Add(region);
+            {
+                foreach (RegionPrototype regionProto in WithinRegions)
+                    refs.Add(regionProto.DataRef);
+            }
         }
 
         public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
@@ -1123,6 +1295,5 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             entityFilter.FilterContextMissionRef = contextMissionRef;
         }
-
     }
 }

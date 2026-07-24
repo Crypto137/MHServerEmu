@@ -357,7 +357,7 @@ namespace MHServerEmu.Games.Populations
         public bool FilterEntity(SpawnGroupEntityQueryFilterFlags filterFlag, WorldEntity skipEntity,
             EntityFilterPrototype entityFilter, EntityFilterContext entityFilterContext, AlliancePrototype allianceProto = null)
         {
-            allianceProto ??= GameDatabase.GlobalsPrototype.PlayerAlliancePrototype;
+            allianceProto ??= GameDatabase.GlobalsPrototype.PlayerAlliance;
 
             foreach (var spec in Specs)
             {

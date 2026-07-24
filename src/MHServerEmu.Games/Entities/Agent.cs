@@ -265,11 +265,11 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld)
             {
                 // Activate resurrection power
-                if (AgentPrototype.OnResurrectedPower != PrototypeId.Invalid)
+                if (AgentPrototype.OnResurrectedPower != null)
                 {
                     PowerActivationSettings settings = new(Id, RegionLocation.Position, RegionLocation.Position);
                     settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
-                    ActivatePower(AgentPrototype.OnResurrectedPower, ref settings);
+                    ActivatePower(AgentPrototype.OnResurrectedPower.DataRef, ref settings);
                 }
 
                 // Reactivate passive and toggled powers
@@ -294,8 +294,8 @@ namespace MHServerEmu.Games.Entities
 
         public IsInPositionForPowerResult IsInPositionForPower(Power power, WorldEntity target, Vector3 targetPosition)
         {
-            var targetingProto = power.TargetingStylePrototype;
-            if (targetingProto == null) return IsInPositionForPowerResult.Error;
+            TargetingStylePrototype targetingProto = power.GetTargetingStylePrototype();
+            if (!Verify.IsNotNull(targetingProto)) return IsInPositionForPowerResult.Error;
 
             if (targetingProto.TargetingShape == TargetingShapeType.Self)
                 return IsInPositionForPowerResult.Success;
@@ -922,7 +922,7 @@ namespace MHServerEmu.Games.Entities
 
                 if (keywords.HasValue())
                 {
-                    PrototypeId ultimatePowerKeyword = GameDatabase.KeywordGlobalsPrototype.UltimatePowerKeyword;
+                    PrototypeId ultimatePowerKeyword = GameDatabase.KeywordGlobalsPrototype.UltimatePowerKeyword.DataRef;
 
                     foreach (PrototypeId keywordProtoRef in keywords)
                     {
@@ -1292,7 +1292,7 @@ namespace MHServerEmu.Games.Entities
                 Player player = GetOwnerOfType<Player>();
                 if (!Verify.IsNotNull(player)) return false;
 
-                player.ShowHUDTutorial(GameDatabase.UIGlobalsPrototype.PowerGrantItemTutorialTip.As<HUDTutorialPrototype>());
+                player.ShowHUDTutorial(GameDatabase.UIGlobalsPrototype.PowerGrantItemTutorialTip);
             }
 
             return true;
@@ -1864,7 +1864,7 @@ namespace MHServerEmu.Games.Entities
                 if (Verify.IsTrue(teamUpAgentProto.EquipmentInventories.HasValue()))
                 {
                     foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in teamUpAgentProto.EquipmentInventories)
-                        success &= Verify.IsTrue(AddInventory(equipInvAssignment.Inventory, populate ? equipInvAssignment.LootTable : PrototypeId.Invalid));
+                        success &= Verify.IsTrue(AddInventory(equipInvAssignment.Inventory.DataRef, populate ? equipInvAssignment.LootTable?.DataRef : PrototypeId.Invalid));
                 }
             }
 
@@ -2147,8 +2147,11 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnEnteredWorld(settings);
 
+            AgentPrototype agentProto = AgentPrototype;
+            if (!Verify.IsNotNull(agentProto)) return;
+
             // Assign on resurrected power
-            PrototypeId onResurrectedPowerRef = AgentPrototype.OnResurrectedPower;
+            PrototypeId onResurrectedPowerRef = agentProto.OnResurrectedPower != null ? agentProto.OnResurrectedPower.DataRef : PrototypeId.Invalid;
             if (onResurrectedPowerRef != PrototypeId.Invalid)
             {
                 PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
@@ -2161,7 +2164,7 @@ namespace MHServerEmu.Games.Entities
             // AI
             // if (TestAI() == false) return;
 
-            var behaviorProfile = AgentPrototype?.BehaviorProfile;
+            var behaviorProfile = agentProto.BehaviorProfile;
 
             if (AIController != null)
             {                
@@ -2454,8 +2457,8 @@ namespace MHServerEmu.Games.Entities
             base.OnNegativeStatusEffectApplied(conditionId);
 
             // Apply CCReactCondition (if this agent has one)
-            PrototypeId ccReactConditionProtoRef = AgentPrototype.CCReactCondition;
-            if (ccReactConditionProtoRef == PrototypeId.Invalid)
+            ConditionPrototype ccReactConditionProto = AgentPrototype.CCReactCondition;
+            if (ccReactConditionProto == null)
                 return;
 
             Condition negativeStatusCondition = ConditionCollection.GetCondition(conditionId);
@@ -2468,9 +2471,6 @@ namespace MHServerEmu.Games.Entities
             // Skip self-applied conditions
             if (negativeStatusCondition.ConditionPrototype.Scope == ConditionScopeType.User)
                 return;
-
-            ConditionPrototype ccReactConditionProto = ccReactConditionProtoRef.As<ConditionPrototype>();
-            if (!Verify.IsNotNull(ccReactConditionProto)) return;
 
             using var negativeStatusListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> negativeStatusList);
             if (!Verify.IsTrue(negativeStatusCondition.IsANegativeStatusEffect(negativeStatusList))) return;
@@ -2514,8 +2514,9 @@ namespace MHServerEmu.Games.Entities
             // Cancel the power
             activePower.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Interrupting);
 
-            // Apply channel interrupt condition (hit reaction)
-            ConditionPrototype conditionProto = GameDatabase.CombatGlobalsPrototype.ChannelInterruptConditionPrototype;
+            // Apply channel interrupt condition (hit react)
+            ConditionPrototype conditionProto = GameDatabase.CombatGlobalsPrototype.ChannelInterruptCondition.As<ConditionPrototype>();
+            if (!Verify.IsNotNull(conditionProto)) return;
 
             ulong creatorId = powerResults.PowerOwnerId;
             ulong ultimateCreatorId = powerResults.UltimateOwnerId;

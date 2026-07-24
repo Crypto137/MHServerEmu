@@ -1,5 +1,7 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -25,31 +27,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool KillPreviousSummons { get; protected set; }
         public bool SummonAsPopulation { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
 
-            if (GameDatabase.DataDirectory.PrototypeIsAbstract(DataRef)) return;
+            if (GameDatabase.DataDirectory.PrototypeIsAbstract(DataRef))
+                return;
 
-            var targetingStyleProto = GetTargetingStyle();
-            if (targetingStyleProto == null) return;
+            TargetingStylePrototype targetingStyleProto = GetTargetingStyle();
+            if (!Verify.IsNotNull(targetingStyleProto)) return;
 
             float maxRadius = 0f;
 
-            if (SummonEntityContexts.IsNullOrEmpty()) return;
+            if (SummonEntityContexts.IsNullOrEmpty())
+                return;
 
-            foreach (var context in SummonEntityContexts)
+            foreach (SummonEntityContextPrototype context in SummonEntityContexts)
             {
-                if (context == null) return;
+                if (!Verify.IsNotNull(context)) return;
 
-                var summonEntityProto = context.SummonEntity.As<WorldEntityPrototype>();
-                if (summonEntityProto == null && context.SummonEntityRemoval == null) return;
+                WorldEntityPrototype summonEntityProto = context.SummonEntity;
+                if (!Verify.IsTrue(summonEntityProto != null || context.SummonEntityRemoval != null)) return;
 
                 if (summonEntityProto is HotspotPrototype hotspotProto && hotspotProto.Bounds != null)
                 {
                     if (targetingStyleProto.TargetingShape == TargetingShapeType.CircleArea)
                     {
-                        var bounds = hotspotProto.Bounds;
+                        BoundsPrototype bounds = hotspotProto.Bounds;
                         if (bounds is CapsuleBoundsPrototype capsuleBounds)
                         {
                             if (capsuleBounds.Radius > maxRadius)
@@ -64,56 +70,78 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
 
-            if (maxRadius > 0) Radius = maxRadius;
+            if (maxRadius > 0)
+                Radius = maxRadius;
         }
 
         public bool IsPetSummoningPower()
         {
-            var keywordGlobalsProto = GameDatabase.KeywordGlobalsPrototype;
-            if (keywordGlobalsProto != null)
-                return HasKeyword(keywordGlobalsProto.PetPowerKeywordPrototype);
-            return false;
+            KeywordGlobalsPrototype keywordGlobalsProto = GameDatabase.KeywordGlobalsPrototype;
+            if (!Verify.IsNotNull(keywordGlobalsProto)) return false;
+
+            return HasKeyword(keywordGlobalsProto.PetPowerKeyword);
         }
 
         public bool IsHotspotSummoningPower()
         {
-            if (SummonEntityContexts.IsNullOrEmpty()) return false;
-            foreach (var context in SummonEntityContexts)
+            if (SummonEntityContexts.IsNullOrEmpty())
+                return false;
+
+            foreach (SummonEntityContextPrototype context in SummonEntityContexts)
             {
-                if (context == null) return false;
-                var summonEntityProto = context.SummonEntity.As<WorldEntityPrototype>();
-                if (summonEntityProto is HotspotPrototype)
+                if (!Verify.IsNotNull(context)) return false;
+
+                if (context.SummonEntity == null)
+                    continue;
+
+                if (context.SummonEntity is HotspotPrototype)
                     return true;
             }
+
             return false;
         }
 
         public WorldEntityPrototype GetSummonEntity(int contextIndex, AssetId entityRef)
         {
-            var context = GetSummonEntityContext(contextIndex);
-            if (context == null || context.SummonEntity == PrototypeId.Invalid) return null;
-            if (PowerUnrealOverrides.HasValue())
-                foreach (var powerOverride in PowerUnrealOverrides)
-                    if (powerOverride is SummonPowerOverridePrototype summonPowerOverride && summonPowerOverride.EntityArt == entityRef)
-                    {
-                        var summonEntity = summonPowerOverride.SummonEntity.As<WorldEntityPrototype>();
-                        if (summonEntity != null)
-                            return summonEntity;
-                    }
+            SummonEntityContextPrototype context = GetSummonEntityContext(contextIndex);
+            if (!Verify.IsNotNull(context)) return null;
+            if (!Verify.IsNotNull(context.SummonEntity)) return null;
 
-            return context.SummonEntity.As<WorldEntityPrototype>();
+            if (PowerUnrealOverrides.HasValue())
+            {
+                foreach (PowerUnrealOverridePrototype powerOverride in PowerUnrealOverrides)
+                {
+                    if (powerOverride is not SummonPowerOverridePrototype summonPowerOverride)
+                        continue;
+
+                    if (summonPowerOverride.EntityArt != entityRef)
+                        continue;
+
+                    if (summonPowerOverride.SummonEntity == null)
+                        continue;
+
+                    return summonPowerOverride.SummonEntity;
+                }
+            }
+
+            return context.SummonEntity;
         }
 
         public SummonEntityContextPrototype GetSummonEntityContext(int contextIndex)
         {
-            if (SummonEntityContexts.IsNullOrEmpty()) return null;
-            if (contextIndex < 0 || contextIndex >= SummonEntityContexts.Length) return null;
-            var context = SummonEntityContexts[contextIndex];
+            if (!Verify.IsTrue(SummonEntityContexts.HasValue())) return null;
+            if (!Verify.IsTrue(contextIndex >= 0 && contextIndex < SummonEntityContexts.Length)) return null;
+
+            SummonEntityContextPrototype context = SummonEntityContexts[contextIndex];
+            if (!Verify.IsNotNull(context)) return null;
+
             return context;
         }
 
         public int GetMaxNumSimultaneousSummons(PropertyCollection properties)
         {
+            if (!Verify.IsNotNull(SummonMaxSimultaneous)) return 0;
+
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
             return Eval.RunInt(SummonMaxSimultaneous, evalContext);
@@ -121,6 +149,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public int GetMaxNumSummons(PropertyCollection properties)
         {
+            if (!Verify.IsNotNull(SummonMax)) return 0;
+
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
             return Eval.RunInt(SummonMax, evalContext);
@@ -128,14 +158,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool InSummonMaxCountWithOthers(PropertyValue powerRef)
         {
-            if (SummonMaxCountWithOthers.IsNullOrEmpty()) return false;
-            return SummonMaxCountWithOthers.Contains(powerRef);
+            return SummonMaxCountWithOthers.HasValue() && SummonMaxCountWithOthers.Contains(powerRef);
         }
     }
 
     public class SummonPowerOverridePrototype : PowerUnrealOverridePrototype
     {
-        public PrototypeId SummonEntity { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public WorldEntityPrototype SummonEntity { get; protected set; }
     }
 
     public class SummonRemovalPrototype : Prototype
@@ -146,7 +176,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class SummonEntityContextPrototype : Prototype
     {
-        public PrototypeId SummonEntity { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public WorldEntityPrototype SummonEntity { get; protected set; }
         public LocomotorMethod PathFilterOverride { get; protected set; }
         public bool RandomSpawnLocation { get; protected set; }
         public bool IgnoreBlockingOnSpawn { get; protected set; }
@@ -166,6 +197,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PowerPrototype[] PowersToAssignToOwnerOnKilled { get; protected set; }
         public PowerPrototype[] PowersToUnassignFromOwnerOnEnter { get; protected set; }
         public EvalPrototype EvalCanSummon { get; protected set; }
-        public PrototypeId TrackInInventoryOwnerCondition { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public ConditionPrototype TrackInInventoryOwnerCondition { get; protected set; }
     }
 }
