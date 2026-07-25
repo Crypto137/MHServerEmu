@@ -18,12 +18,23 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
         public static PrototypePatchManager Instance { get; } = new();
 
-        public void Initialize(bool enablePatchManager)
+        /// <summary>
+        /// Loads patches before Globals are loaded.
+        /// </summary>
+        public void PreInitialize(bool enablePatchManager)
         {
-            if (enablePatchManager) _initialized = LoadPatchDataFromDisk();
+            if (enablePatchManager) _initialized |= LoadPatchDataFromDisk("PrePatchData");
         }
 
-        private bool LoadPatchDataFromDisk()
+        /// <summary>
+        /// Loads patches after Globals are loaded.
+        /// </summary>
+        public void Initialize(bool enablePatchManager)
+        {
+            if (enablePatchManager) _initialized |= LoadPatchDataFromDisk("PatchData");
+        }
+
+        private bool LoadPatchDataFromDisk(string prefix)
         {
             string patchDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "Patches");
             if (Directory.Exists(patchDirectory) == false)
@@ -32,8 +43,8 @@ namespace MHServerEmu.Games.GameData.PatchManager
             int count = 0;
             var options = new JsonSerializerOptions { Converters = { new PatchEntryConverter() } };
 
-            // Read all .json files that start with PatchData
-            foreach (string filePath in FileHelper.GetFilesWithPrefix(patchDirectory, "PatchData", "json"))
+            // Read all .json files that start with the specified prefix
+            foreach (string filePath in FileHelper.GetFilesWithPrefix(patchDirectory, prefix, "json"))
             {
                 string fileName = Path.GetFileName(filePath);
 
@@ -56,7 +67,10 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 Logger.Trace($"Parsed patch data from {fileName}");
             }
 
-            return Logger.InfoReturn(true, $"Loaded {count} patches");
+            if (count > 0)
+                Logger.Info($"Loaded {count} {prefix} patches");
+
+            return true;
         }
 
         private void AddPatchValue(PrototypeId prototypeId, in PrototypePatchEntry value)
