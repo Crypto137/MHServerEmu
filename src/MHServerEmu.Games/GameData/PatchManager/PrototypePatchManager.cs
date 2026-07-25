@@ -67,9 +67,10 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 Logger.Trace($"Parsed patch data from {fileName}");
             }
 
-            if (count > 0)
-                Logger.Info($"Loaded {count} {prefix} patches");
+            if (count == 0)
+                return false;
 
+            Logger.Info($"Loaded {count} {prefix} patches");
             return true;
         }
 
