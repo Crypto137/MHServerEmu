@@ -100,7 +100,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId SortCategory { get; protected set; }
         public PrototypeId SortSubCategory { get; protected set; }
         public ItemInstrumentedDropGroup InstrumentedDropGroup { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool IsContainer { get; protected set; }
+#endif
 
         // ---
 
@@ -840,6 +842,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override ItemActionType ActionType { get => ItemActionType.UsePower; }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class ItemActionUnlockPermaBuffPrototype : ItemActionPrototype
     {
         public PrototypeId PermaBuff { get; protected set; }
@@ -848,6 +851,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override ItemActionType ActionType { get => ItemActionType.UnlockPermaBuff; }
     }
+#endif
 
     public class ItemActionAwardTeamUpXPPrototype : ItemActionPrototype
     {
@@ -873,19 +877,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override ItemActionType ActionType { get => ItemActionType.OpenUIPanel; }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class CategorizedAffixEntryPrototype : Prototype
     {
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public AffixCategoryPrototype Category { get; protected set; }
         public short MinAffixes { get; protected set; }
     }
+#endif
 
     public class AffixLimitsPrototype : Prototype
     {
         public LootContext[] AllowedContexts { get; protected set; }
         public PrototypeId ItemRarity { get; protected set; }
+#if GAME_VERSION_1_48
+        public short MaxPrefixPlusSuffixTotal { get; protected set; }
+#endif
         public short MaxPrefixes { get; protected set; }
         public short MaxSuffixes { get; protected set; }
+#if GAME_VERSION_1_48
+        public short MinPrefixPlusSuffixTotal { get; protected set; }
+#endif
         public short MinPrefixes { get; protected set; }
         public short MinSuffixes { get; protected set; }
         public short NumCosmics { get; protected set; }
@@ -904,7 +916,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int RegionDifficultyIndex { get; protected set; }
         public float DamageRegionMobToPlayer { get; protected set; }
         public float DamageRegionPlayerToMob { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public CategorizedAffixEntryPrototype[] CategorizedAffixes { get; protected set; }
+#endif
 
         // ---
 
@@ -945,6 +959,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return GetLimit(affixPosition, true, settings);
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public short GetMax(AffixCategoryPrototype affixCategoryProto, LootRollSettings settings)
         {
             if (CategorizedAffixes.IsNullOrEmpty())
@@ -965,6 +980,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return short.MaxValue;
         }
+#endif
 
         public short GetLimit(AffixPosition affixPosition, bool getMax, LootRollSettings settings)
         {
@@ -1172,7 +1188,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId AvatarDisplayNameShort { get; protected set; }
         public bool EquipTriggersVO { get; protected set; }
         public AssetId PortraitIconPathHiRes { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId FulfillmentDuplicateItem { get; protected set; }
+#endif
 
         //---
 
@@ -1184,10 +1202,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             AvatarPrototype avatar = GameDatabase.GetPrototype<AvatarPrototype>(UsableBy);
             if (!Verify.IsNotNull(avatar)) return false;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             ItemPrototype itemProto = GameDatabase.GetPrototype<ItemPrototype>(FulfillmentDuplicateItem);
             if (!Verify.IsTrue(itemProto != null && itemProto != this)) return false;
 
             return avatar.ApprovedForUse() && itemProto.ApprovedForUse();
+#else
+            return avatar.ApprovedForUse();
+#endif
         }
 
         public override bool IsUsableByAgent(AgentPrototype agentProto)

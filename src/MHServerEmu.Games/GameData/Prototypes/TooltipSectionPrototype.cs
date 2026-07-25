@@ -34,11 +34,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Value { get; protected set; }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class PowerTooltipSectionOverridePrototype : PowerTooltipSectionPrototype
     {
         public LocaleStringId DescTokenSourcePrefixOverride { get; protected set; }
         public LocaleStringId ValueTokenSourcePrefixOverride { get; protected set; }
     }
+#endif
 
     public class PowerTooltipEntryPrototype : Prototype
     {
@@ -69,16 +71,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ShowIconQualityLayer { get; protected set; }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class TooltipSectionProceduralPrototype : TooltipSectionPrototype
     {
         public TooltipSectionKey Key { get; protected set; }
     }
+#endif
 
     public class TooltipSectionGamepadIconPrototype : TooltipSectionPrototype
     {
         public GamepadInput Input { get; protected set; }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class TooltipSectionItemAffixesPrototype : TooltipSectionPrototype
     {
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
@@ -86,6 +91,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public AffixCategoryPrototype[] ExcludeCategories { get; protected set; }
     }
+#endif
 
     public class TooltipSectionBarPrototype : TooltipSectionPrototype
     {

@@ -286,7 +286,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId SlotBackgroundIcon { get; protected set; }
         public LocaleStringId InventoryItemDisplayName { get; protected set; }
         public bool HintSlots { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId SlotBackgroundIconHiRes { get; protected set; }
+#endif
     }
 
     public class OfferingInventoryUIDataPrototype : Prototype
@@ -301,15 +303,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public LocaleStringId Entry { get; protected set; }
         public int Weight { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool SkipIfOnPC { get; protected set; }
         public bool SkipIfOnPS4 { get; protected set; }
         public bool SkipIfOnXBox { get; protected set; }
+#endif
     }
 
     public class TipEntryCollectionPrototype : Prototype
     {
         public TipEntryPrototype[] TipEntries { get; protected set; }
     }
+
+#if GAME_VERSION_1_48
+    public class TipPrototype : Prototype
+    {
+        public LocaleStringId Header { get; protected set; }
+        public AssetId ScreenPosition { get; protected set; }
+        public LocaleStringId Text { get; protected set; }
+        public bool SendToChat { get; protected set; }
+        public bool ShowForEachAvatar { get; protected set; }
+        public bool AlwaysShow { get; protected set; }
+
+        //---
+
+        // V48_TODO: TutorialSystem::ShouldShowTip()
+    }
+#endif
 
     public class GenericTipEntryCollectionPrototype : TipEntryCollectionPrototype
     {
@@ -345,7 +365,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId SynergyActiveValue { get; protected set; }
         public PrototypeId SynergyInactiveValue { get; protected set; }
         public LocaleStringId TooltipTextForList { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconPathHiRes { get; protected set; }
+#endif
     }
 
     public class MetaGameDataPrototype : Prototype
@@ -356,7 +378,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId IconHeader { get; protected set; }
         public int Justification { get; protected set; }
         public AssetId WidgetMovieClipOverride { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconHeaderHiRes { get; protected set; }
+#endif
     }
 
     public class UIWidgetGenericFractionPrototype : MetaGameDataPrototype
@@ -364,8 +388,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId IconComplete { get; protected set; }
         public AssetId IconIncomplete { get; protected set; }
         public int IconSpacing { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconCompleteHiRes { get; protected set; }
         public AssetId IconIncompleteHiRes { get; protected set; }
+#endif
     }
 
     public class UIWidgetEntityIconsEntryPrototype : Prototype
@@ -377,8 +403,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Descriptor { get; protected set; }
         public AssetId IconDead { get; protected set; }
         public int IconSpacing { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconHiRes { get; protected set; }
         public AssetId IconDeadHiRes { get; protected set; }
+#endif
     }
 
     public class UIWidgetEnrageEntryPrototype : UIWidgetEntityIconsEntryPrototype
@@ -391,7 +419,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId Descriptor { get; protected set; }
         public AssetId Icon { get; protected set; }
         public EvalPrototype PropertyEval { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconHiRes { get; protected set; }
+#endif
     }
 
     public class UIWidgetEntityPropertyEntryPrototype : UIWidgetEntityIconsEntryPrototype
@@ -420,7 +450,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int HealthPercent { get; protected set; }
         public AssetId Icon { get; protected set; }
         public PrototypeId Descriptor { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconHiRes { get; protected set; }
+#endif
     }
 
     public class UIWidgetHealthPercentEntryPrototype : UIWidgetEntityIconsEntryPrototype
@@ -509,6 +541,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId ImageSelected { get; protected set; }
         public PrototypeId LocalizedName { get; protected set; }
         public AssetId Panel { get; protected set; }
+#if GAME_VERSION_1_48
+        public AssetId Position { get; protected set; }
+#endif
     }
 
     public class InputBindingPrototype : Prototype
@@ -520,6 +555,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId ControlScheme { get; protected set; }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class PanelLoaderTabPrototype : Prototype
     {
         public LocaleStringId Context { get; protected set; }
@@ -530,13 +566,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId Icon { get; protected set; }
         public bool ShowLocalPlayerName { get; protected set; }
     }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class PanelLoaderTabListPrototype : Prototype
     {
         public PrototypeId[] Tabs { get; protected set; }
         public bool IsSubTabList { get; protected set; }
     }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class ConsoleRadialMenuEntryPrototype : Prototype
     {
         public PrototypeId DisplayName { get; protected set; }
@@ -544,6 +584,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId ImageSelected { get; protected set; }
         public PrototypeId TabList { get; protected set; }
     }
+#endif
 
     public class DialogPrototype : Prototype
     {
@@ -554,6 +595,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ButtonStyle Button2Style { get; protected set; }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class MissionTrackerFilterPrototype : Prototype
     {
         public UIMissionTrackerFilterTypeEnum FilterType { get; protected set; }
@@ -561,12 +603,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool DisplayByDefault { get; protected set; }
         public int DisplayOrder { get; protected set; }
     }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class LocalizedTextAndImagePrototype : Prototype
     {
         public AssetId Image { get; protected set; }
         public LocaleStringId Text { get; protected set; }
     }
+#endif
 
     public class TextStylePrototype : Prototype
     {
@@ -577,7 +622,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int FontSize { get; protected set; }
         public AssetId Alignment { get; protected set; }
         public bool Hidden { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public int FontSizeConsole { get; protected set; }
+#endif
 
         //--
 
@@ -646,6 +693,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public StoryNotificationPrototype StoryNotification { get; protected set; }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class ConsoleHUDNotificationPrototype : Prototype
     {
         public PrototypeId DisplayName { get; protected set; }
@@ -654,6 +702,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId OpensPanel { get; protected set; }
         public LocaleStringId PanelContext { get; protected set; }
     }
+#endif
 
     public class HUDTutorialPrototype : UINotificationPrototype
     {
@@ -682,15 +731,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SkipIfOnPC { get; protected set; }
         public bool SkipIfUsingGamepad { get; protected set; }
         public bool SkipIfUsingKeyboardMouse { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public float ScreenPositionConsoleX { get; protected set; }
         public float ScreenPositionConsoleY { get; protected set; }
         public float ScreenPositionX { get; protected set; }
         public float ScreenPositionY { get; protected set; }
+#endif
         public int FlashDelayMS { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool ShowOncePerAccount { get; protected set; }
+#endif
 
         //---
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool ShouldShowTip(Player player)
         {
             if (ShowOncePerAccount)
@@ -698,12 +752,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return true;
         }
+#endif
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class SessionImagePrototype : Prototype
     {
         public AssetId SessionImageAsset { get; protected set; }
     }
+#endif
 
     public class CurrencyDisplayPrototype : Prototype
     {
@@ -714,11 +771,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId TooltipText { get; protected set; }
         public bool UseGsBalance { get; protected set; }
         public PrototypeId CurrencyToDisplay { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconPathHiRes { get; protected set; }
         public sbyte CategoryIndex { get; protected set; }
         public LocaleStringId CategoryName { get; protected set; }
         public bool HideIfOnConsole { get; protected set; }
         public bool HideIfOnPC { get; protected set; }
+#endif
     }
 
     public class UICinematicsListPrototype : Prototype

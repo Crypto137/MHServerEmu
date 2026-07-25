@@ -12,7 +12,9 @@ namespace MHServerEmu.Games.GameData.Tables
         // even though in affix prototypes keywords are stored as AssetRefs. Is this a mistake?
         private readonly Dictionary<AssetId, List<AffixPrototype>> _affixKeywordDict = new();
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private readonly Dictionary<PrototypeId, List<AffixPrototype>> _affixCategoryDict = new();
+#endif
 
         private readonly Dictionary<LootPickingPair, List<PickerElement>> _pickerDict = new();
 
@@ -49,6 +51,7 @@ namespace MHServerEmu.Games.GameData.Tables
                 }
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             // Populate category -> AffixPrototype collection lookup
             LootGlobalsPrototype lootGlobalsProto = GameDatabase.LootGlobalsPrototype;
             foreach (AffixCategoryTableEntryPrototype affixCategoryTableEntry in lootGlobalsProto.AffixCategoryTable)
@@ -63,6 +66,7 @@ namespace MHServerEmu.Games.GameData.Tables
                     categoryAffixList.Add(affixProto);
                 }
             }
+#endif
         }
 
         public IReadOnlyList<AffixPrototype> GetAffixesByPosition(AffixPosition position)
@@ -81,6 +85,7 @@ namespace MHServerEmu.Games.GameData.Tables
             return affixList;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public IReadOnlyList<AffixPrototype> GetAffixesByCategory(AffixCategoryPrototype categoryProto)
         {
             if (_affixCategoryDict.TryGetValue(categoryProto.DataRef, out List<AffixPrototype> affixList) == false)
@@ -88,6 +93,7 @@ namespace MHServerEmu.Games.GameData.Tables
 
             return affixList;
         }
+#endif
 
         public void GetConcreteLootPicker(Picker<Prototype> pickerToFill, PrototypeId lootTypeProtoRef, AgentPrototype agentProto)
         {

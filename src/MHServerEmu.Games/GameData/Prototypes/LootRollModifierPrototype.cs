@@ -227,8 +227,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AffixPosition Position { get; protected set; }
         public short ModifyMinBy { get; protected set; }
         public short ModifyMaxBy { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public AffixCategoryPrototype Category { get; protected set; }
+#endif
 
         //---
 
@@ -239,10 +241,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 settings.AffixLimitMinByPositionModifiers.GetValueRefOrAddDefault(Position) += ModifyMinBy;
                 settings.AffixLimitMaxByPositionModifiers.GetValueRefOrAddDefault(Position) += ModifyMaxBy;
             }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             else if (Category != null)
             {
                 settings.AffixLimitByCategoryModifiers.GetValueRefOrAddDefault(Category) += ModifyMinBy;
             }
+#endif
         }
     }
 
@@ -313,6 +317,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class LootRollModifyDropByDifficultyTierPrototype : LootRollModifierPrototype
     {
         public CurveId ModifierCurve { get; protected set; }
@@ -343,6 +348,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return node is LootTablePrototype;
         }
     }
+#endif
 
     public class LootRollRequireConditionKeywordPrototype : LootRollModifierPrototype
     {
@@ -633,6 +639,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class LootRollIncludeCurrencyBonusPrototype : LootRollModifierPrototype
     {
         //---
@@ -647,7 +654,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return node is LootDropPrototype || node is LootTablePrototype;
         }
     }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class LootRollMissionStateRequiredPrototype : LootRollModifierPrototype
     {
         public PrototypeId[] Missions { get; protected set; }
@@ -675,4 +684,5 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
     }
+#endif
 }

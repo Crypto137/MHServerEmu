@@ -152,6 +152,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] AvatarPowers { get; protected set; }
         public bool IsNPE { get; protected set; }
         public LocaleStringId PresenceStatusText { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId[] AccessDifficulties { get; protected set; }
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public TuningPrototype Tuning { get; protected set; }
@@ -159,6 +160,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId PlayerCameraSettingsOrbis { get; protected set; }
         public PrototypeId[] LoadingScreensConsole { get; protected set; }
         public bool AllowLocalCoopMode { get; protected set; }
+#endif
 
         //---
 
@@ -168,8 +170,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public KeywordsMask KeywordsMask { get; private set; }
         [DoNotCopy]
         public bool HasKeywords { get => Keywords.HasValue(); }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [DoNotCopy]
         public DifficultyTierMask DifficultyTierMask { get; private set; }
+#endif
         [DoNotCopy]
         public bool HasPvPMetaGame { get; private set; }
         [DoNotCopy]
@@ -197,6 +201,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             DifficultyTierMask = DifficultyTierMask.None;
 
             if (AccessDifficulties.HasValue())
@@ -214,6 +219,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 DifficultyTierMask = DifficultyTierMask.Green | DifficultyTierMask.Red | DifficultyTierMask.Cosmic;
             }
+#endif
 
             if (RegionQueueStates.HasValue())
             {
@@ -406,6 +412,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public static PrototypeId ConstrainDifficulty(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
         {
             return ConstrainDifficulty(regionProtoRef.As<RegionPrototype>(), difficultyTierProtoRef.As<DifficultyTierPrototype>());
@@ -442,6 +449,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // No available difficulty
             return PrototypeId.Invalid;
         }
+#endif
 
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
@@ -672,7 +680,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return PrototypeId.Invalid;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool RunEvalAccessRestriction(Player player, Avatar avatar, PrototypeId difficultyProtoRef)
+#else
+        public bool RunEvalAccessRestriction(Player player, Avatar avatar)
+#endif
         {
             // Default to true if no valid avatar
             if (!Verify.IsNotNull(avatar)) return true;
@@ -693,14 +705,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             DifficultyTierPrototype difficultyProto = difficultyProtoRef.As<DifficultyTierPrototype>();
             if (success && difficultyProto != null)
                 success &= avatar.CharacterLevel >= difficultyProto.UnlockLevel;
+#endif
 
             if (success && EvalAccessRestriction != null)
             {
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 evalContext.SetReadOnlyVar_ProtoRef(EvalContext.Var1, difficultyProtoRef);
+#endif
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, avatar);
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Other, player);
                 success = Eval.RunBool(EvalAccessRestriction, evalContext);
@@ -771,11 +787,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (party != null)
                 {
                     CommunityMember communityMember = party.GetCommunityMemberForLeader(player);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     if (communityMember != null)
                     {
                         AvatarSlotInfo avatarSlotInfo = communityMember.GetAvatarSlotInfo();
                         avatarLevel = avatarSlotInfo != null ? avatarSlotInfo.Level : 0;
                     }
+#else
+                    avatarLevel = communityMember != null ? communityMember.CharacterLevel : 0;
+#endif
                 }
             }
 

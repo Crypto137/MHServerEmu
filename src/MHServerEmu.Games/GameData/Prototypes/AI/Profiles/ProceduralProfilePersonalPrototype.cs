@@ -1930,6 +1930,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype DisappearPower { get; protected set; }
         public int LifeTimeMinMS { get; protected set; }
         public int LifeTimeMaxMS { get; protected set; }
+#if GAME_VERSION_1_48
+        public WanderContextPrototype WanderWhenFleeFails { get; protected set; }
+        public float DisappearTimerAvatarSearchRadius { get; protected set; }
+#endif
 
         //---
 
@@ -3364,7 +3368,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (!Verify.IsNotNull(region, $"Entity is not in a valid region! Entity: {agent}"))
                     return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 TuningPrototype difficultyProto = region.TuningTable?.Prototype;
+#else
+                DifficultyPrototype difficultyProto = region.TuningTable?.Prototype;
+#endif
                 if (!Verify.IsNotNull(difficultyProto)) return;
 
                 Sphere volume = new(agent.RegionLocation.Position, difficultyProto.PlayerNearbyRange);
@@ -6349,6 +6357,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class ProceduralProfileVulturePrototype : ProceduralProfileWithAttackPrototype
     {
         public MoveToContextPrototype MoveToTarget { get; protected set; }
@@ -6440,6 +6449,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
     }
+#endif
 
     public class ProceduralProfileSquirrelGirlSquirrelPrototype : ProceduralProfilePetPrototype
     {

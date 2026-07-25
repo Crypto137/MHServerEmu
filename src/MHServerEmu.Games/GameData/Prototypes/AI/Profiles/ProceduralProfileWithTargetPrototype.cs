@@ -407,13 +407,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public DelayContextPrototype DelayAfterWander { get; protected set; }
         public WanderContextPrototype Wander { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public WanderContextPrototype WanderInPlace { get; protected set; }
+#endif
 
         //---
 
         private enum State
         {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             WanderInPlace,
+#endif
             Delay,
             Wander,
         }
@@ -437,6 +441,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (!Verify.IsNotNull(targetProfile, $"Agent {ownerController.Owner} has {baseProfile} which contains an invalid select target. Make sure {baseProfile} derives from ProceduralProfileWithTargetPrototype"))
                     return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 SelectEntity.SelectEntityContext selectionContext = new(ownerController, targetProfile.SelectTarget);
                 WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                 if (selectedEntity != null && proceduralAI.GetState(0) != UsePower.Instance)
@@ -447,17 +452,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     proceduralAI.ClearOverrideBehavior(OverrideType.Full);
                     return;
                 }
+#endif
             }
 
             StaticBehaviorReturnType contextResult;
             int stateVal = blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal];
             switch ((State)stateVal)
             {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case State.WanderInPlace:
                     contextResult = HandleContext(proceduralAI, ownerController, WanderInPlace);
                     if (contextResult == StaticBehaviorReturnType.Completed)
                         blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.Delay;
                     break;
+#endif
 
                 case State.Delay:
                     contextResult = HandleContext(proceduralAI, ownerController, DelayAfterWander);
@@ -704,6 +712,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             // Alternate advancement experience
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (avatar.Game.InfinitySystemEnabled)
             {
                 long infinityXP = agent.Properties[PropertyEnum.InfinityXP];
@@ -711,6 +720,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     player.AwardInfinityXP(infinityXP, true);
             }
             else
+#endif
             {
                 long omegaXP = agent.Properties[PropertyEnum.OmegaXP];
                 if (omegaXP > 0)
@@ -795,8 +805,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent.GetXPAwarded(out _, out _, false))
                 return false;
 
-            if (properties.HasProperty(PropertyEnum.OmegaXP) || properties.HasProperty(PropertyEnum.InfinityXP))
+            if (properties.HasProperty(PropertyEnum.OmegaXP))
                 return false;
+
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            if (properties.HasProperty(PropertyEnum.InfinityXP))
+                return false;
+#endif
 
             // Do not destroy currency
             if (properties.HasProperty(PropertyEnum.ItemCurrency) || properties.HasProperty(PropertyEnum.RunestonesAmount))

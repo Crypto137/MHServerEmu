@@ -18,10 +18,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ContextRegionIncludeChildren { get; protected set; }
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public RegionKeywordPrototype ContextRegionKeyword { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public DifficultyTierPrototype ContextDifficultyTierMin { get; protected set; }
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public DifficultyTierPrototype ContextDifficultyTierMax { get; protected set; }
+#endif
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public AgentTeamUpPrototype ContextTeamUp { get; protected set; }
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]

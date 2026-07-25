@@ -26,9 +26,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId Tooltip { get; protected set; }
         public AssetId IconSmall { get; protected set; }
         public int MaxAmount { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconHiRes { get; protected set; }
         public CurveId LootBonusFlatCurve { get; protected set; }
         public CurveId LootBonusPctCurve { get; protected set; }
+#endif
     }
 
     public class ItemCostComponentPrototype : Prototype
@@ -54,8 +56,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ItemCostCreditsPrototype : ItemCostComponentPrototype
     {
         public EvalPrototype Number { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public CurrencyPrototype Currency { get; protected set; }
+#endif
 
         //---
 

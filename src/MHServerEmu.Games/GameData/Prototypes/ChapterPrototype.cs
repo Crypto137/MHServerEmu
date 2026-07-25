@@ -17,9 +17,11 @@
         public AssetId MapImage { get; protected set; }
         public int RecommendedLevelMax { get; protected set; }
         public int RecommendedLevelMin { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId MapImageConsole { get; protected set; }
         public AssetId LocationImageConsole { get; protected set; }
         public LocaleStringId ConsoleDescription { get; protected set; }
+#endif
     }
 
     public class StoryWarpPrototype : Prototype

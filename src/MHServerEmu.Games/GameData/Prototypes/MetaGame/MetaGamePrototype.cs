@@ -167,7 +167,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId StartTarget { get; protected set; }
         public AssetId IconPath { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconPathHiRes { get; protected set; }
+#endif
     }
 
     public class PvPMiniMapIconsPrototype : Prototype

@@ -143,9 +143,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class AffixCategoryPrototype : KeywordPrototype
     {
     }
+#endif
 
     public class FulfillablePrototype : Prototype
     {

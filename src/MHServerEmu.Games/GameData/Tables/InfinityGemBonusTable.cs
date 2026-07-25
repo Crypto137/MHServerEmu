@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.Tables
 {
@@ -42,3 +43,4 @@ namespace MHServerEmu.Games.GameData.Tables
         }
     }
 }
+#endif

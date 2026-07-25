@@ -665,11 +665,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class FleeContextPrototype : Prototype
     {
         public float FleeTime { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public float FleeTimeVariance { get; protected set; }
         public float FleeHalfAngle { get; protected set; }
         public float FleeDistanceMin { get; protected set; }
         public bool FleeTowardAllies { get; protected set; }
         public float FleeTowardAlliesPercentChance { get; protected set; }
+#endif
     }
 
     public class FlockContextPrototype : Prototype

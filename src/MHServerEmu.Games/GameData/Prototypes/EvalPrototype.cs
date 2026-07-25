@@ -1373,6 +1373,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class EntityHasTalentPrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
@@ -1391,4 +1392,5 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return $"EntityHasTalent(Context=[{Context}], Talent={{{(Talent != PrototypeId.Invalid ? GameDatabase.GetPrototypeName(Talent) : "!NONE!")}}})";
         }
     }
+#endif
 }
