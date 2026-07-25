@@ -330,11 +330,11 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // Apply PvP upgrade bonuses
                 using var pvpUpgradeListHandle = ListPool<(PrototypeId, int)>.Instance.Get(out List<(PrototypeId, int)> pvpUpgradeList);
 
-                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.OmegaRank))
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PvPUpgrades))
                 {
-                    Property.FromParam(kvp.Key, 0, out PrototypeId omegaBonusProtoRef);
+                    Property.FromParam(kvp.Key, 0, out PrototypeId pvpUpgradeProtoRef);
                     int rank = kvp.Value;
-                    pvpUpgradeList.Add((omegaBonusProtoRef, rank));
+                    pvpUpgradeList.Add((pvpUpgradeProtoRef, rank));
                 }
 
                 foreach (var pvpUpgrade in pvpUpgradeList)
