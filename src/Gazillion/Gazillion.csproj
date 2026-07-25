@@ -67,7 +67,7 @@
 	
   <ItemGroup Condition="'$(AssemblyVersion)'=='1.53.0.203'">
     <Compile Remove="1.48.0.1712\*.cs" />
-    <Compile Remove="1.53.0.203\*.cs" />
+    <Compile Remove="1.52.0.1700\*.cs" />
   </ItemGroup>
 	
 </Project>
