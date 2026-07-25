@@ -638,7 +638,9 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAkEvent:                           OnAkEvent(message); break;
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;
+#if !GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessageTryMoveInventoryContentsToGeneral: OnTryMoveInventoryContentsToGeneral(message); break;
+#endif
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;
                 case ClientToGameServerMessage.NetMessageTeleportToPartyMember:             OnTeleportToPartyMember(message); break;
                 case ClientToGameServerMessage.NetMessageRegionRequestQueueCommandClient:   OnRegionRequestQueueCommandClient(message); break;
@@ -658,8 +660,10 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageInfinityPointAllocationCommit:     OnInfinityPointAllocationCommit(message); break;
                 case ClientToGameServerMessage.NetMessageRespecInfinity:                    OnRespecInfinity(message); break;
 #endif
+#if !GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;
                 case ClientToGameServerMessage.NetMessageRespecOmegaBonus:                  OnRespecOmegaBonus(message); break;
+#endif
                 // case ClientToGameServerMessage.NetMessageRespecPowerSpec:                OnRespecPowerSpec(message); break;
                 case ClientToGameServerMessage.NetMessageNewItemGlintPlayed:                OnNewItemGlintPlayed(message); break;
                 case ClientToGameServerMessage.NetMessageNewItemHighlightCleared:           OnNewItemHighlightCleared(message); break;
@@ -1118,7 +1122,11 @@ namespace MHServerEmu.Games.Network
             ulong containerId = tryInventoryMove.ToInventoryOwnerId;
             PrototypeId inventoryProtoRef = (PrototypeId)tryInventoryMove.ToInventoryPrototype;
             uint slot = tryInventoryMove.ToSlot;
+#if GAME_VERSION_1_53
+            bool isStackSplit = tryInventoryMove.StackSplitSize != 0;   // V53_FIXME
+#else
             bool isStackSplit = tryInventoryMove.HasIsStackSplit && tryInventoryMove.IsStackSplit;
+#endif
 
             if (isStackSplit)
                 Player.TryInventoryStackSplit(itemId, containerId, inventoryProtoRef, slot);
@@ -1828,6 +1836,7 @@ namespace MHServerEmu.Games.Network
                 Player.ShowHUDTutorial(null);
         }
 
+#if !GAME_VERSION_1_53
         private void OnTryMoveInventoryContentsToGeneral(in MailboxMessage message)
         {
             var tryMoveInventoryContentsToGeneral = message.As<NetMessageTryMoveInventoryContentsToGeneral>();
@@ -1866,6 +1875,7 @@ namespace MHServerEmu.Games.Network
                     return;
             }
         }
+#endif
 
         private void OnSetPlayerGameplayOptions(in MailboxMessage message)
         {
@@ -2099,6 +2109,7 @@ namespace MHServerEmu.Games.Network
         }
 #endif
 
+#if !GAME_VERSION_1_53
         private void OnOmegaBonusAllocationCommit(in MailboxMessage message)
         {
             var omegaBonusAllocationCommit = message.As<NetMessageOmegaBonusAllocationCommit>();
@@ -2115,7 +2126,9 @@ namespace MHServerEmu.Games.Network
 
             avatar.OmegaPointAllocationCommit(omegaBonusAllocationCommit);
         }
+#endif
 
+#if !GAME_VERSION_1_53
         private void OnRespecOmegaBonus(in MailboxMessage message)
         {
             var respecOmegaBonus = message.As<NetMessageRespecOmegaBonus>();
@@ -2132,6 +2145,7 @@ namespace MHServerEmu.Games.Network
 
             avatar.RespecOmegaBonus();
         }
+#endif
 
         private void OnNewItemGlintPlayed(in MailboxMessage message)
         {

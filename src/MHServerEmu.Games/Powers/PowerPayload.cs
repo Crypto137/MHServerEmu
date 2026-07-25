@@ -1365,7 +1365,8 @@ namespace MHServerEmu.Games.Powers
             boostPct += pvpProto.GetDamageBoostForNoobs(avatarProps[PropertyEnum.PvPMatchCount]);
             boostPct += pvpProto.GetDamageBoostForWinPct(avatarProps[PropertyEnum.PvPRecentWinLossRatio]);
 
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if !GAME_VERSION_1_53
+#if GAME_VERSION_1_52
             if (Game.InfinitySystemEnabled == false)
 #endif
             {
@@ -1376,6 +1377,7 @@ namespace MHServerEmu.Games.Powers
                     boostPct += pvpProto.GetDamageBoostForOmegaPct(omegaPct);
                 }
             }
+#endif
 
             ApplyDamageMultiplier(results.Properties, boostPct);
         }
@@ -1861,7 +1863,8 @@ namespace MHServerEmu.Games.Powers
             damageReduction *= pvpProto.GetDamageReductionForNoobs(avatarProps[PropertyEnum.PvPMatchCount]);
             damageReduction *= pvpProto.GetDamageReductionForWinPct(avatarProps[PropertyEnum.PvPRecentWinLossRatio]);
 
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if !GAME_VERSION_1_53
+#if GAME_VERSION_1_52
             if (Game.InfinitySystemEnabled == false)
 #endif
             {
@@ -1872,6 +1875,7 @@ namespace MHServerEmu.Games.Powers
                     damageReduction *= pvpProto.GetDamageReductionForOmegaPct(omegaPct);
                 }
             }
+#endif
 
             ApplyDamageMultiplier(results.Properties, damageReduction);
         }
@@ -2709,7 +2713,7 @@ namespace MHServerEmu.Games.Powers
             targetAgent.StartHitReactionCooldown();
         }
 
-        #endregion
+#endregion
 
         #region Helper Methods
 

@@ -177,7 +177,9 @@ namespace MHServerEmu.Games.Entities
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public long InfinityXP { get => Properties[PropertyEnum.InfinityXP]; }
 #endif
+#if !GAME_VERSION_1_53
         public long OmegaXP { get => Properties[PropertyEnum.OmegaXP]; }
+#endif
         public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
         public int PowerSpecIndexUnlocked { get => Properties[PropertyEnum.PowerSpecIndexUnlocked]; }
         public ulong TeamUpSynergyConditionId { get; set; }
@@ -1431,7 +1433,12 @@ namespace MHServerEmu.Games.Entities
 
             SendMessage(NetMessageGrantGToPlayerNotification.CreateBuilder()
                 .SetDidSucceed(true)
+#if GAME_VERSION_1_53
+                .SetBalance(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
+                    .SetCurrencyBalance(balance))
+#else
                 .SetCurrentCurrencyBalance(balance)
+#endif
                 .Build());
 
             return true;
@@ -2495,7 +2502,7 @@ namespace MHServerEmu.Games.Entities
             return Math.Min(points, GameDatabase.AdvancementGlobalsPrototype.InfinityPointsCap);
         }
 #endif
-
+#if !GAME_VERSION_1_53
         public long GetOmegaPoints()
         {
             return Properties[PropertyEnum.OmegaPoints];
@@ -2506,7 +2513,7 @@ namespace MHServerEmu.Games.Entities
             if (amount <= 0)
                 return;
 
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if GAME_VERSION_1_52
             long omegaXP = Math.Min(OmegaXP + amount, GameDatabase.AdvancementGlobalsPrototype.InfinityXPCap);
 #else
             long omegaXP = OmegaXP + amount;    // V48_FIXME: OmegaXPCap?
@@ -2545,6 +2552,7 @@ namespace MHServerEmu.Games.Entities
             int points = MathHelper.RoundToInt(Math.Sqrt(xp / AdvancementGlobalsPrototype.OmegaXPFactor));
             return Math.Min(points, GameDatabase.AdvancementGlobalsPrototype.OmegaPointsCap);
         }
+#endif
 
         #endregion
 

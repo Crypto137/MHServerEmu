@@ -729,10 +729,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             else
 #endif
             {
+#if !GAME_VERSION_1_53
                 long omegaXP = agent.Properties[PropertyEnum.OmegaXP];
                 if (omegaXP > 0)
                     player.AwardOmegaXP(omegaXP, true);
+#endif
             }
+
 
             // Credits / currency
             if (player.AcquireCurrencyItem(agent))
@@ -812,8 +815,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent.GetXPAwarded(out _, out _, false))
                 return false;
 
+#if !GAME_VERSION_1_53
             if (properties.HasProperty(PropertyEnum.OmegaXP))
                 return false;
+#endif
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (properties.HasProperty(PropertyEnum.InfinityXP))

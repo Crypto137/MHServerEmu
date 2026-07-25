@@ -343,12 +343,16 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // Apply alternate advancement (infinity / omega) bonuses
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 if (Game.InfinitySystemEnabled)
+                {
                     ApplyInfinityBonuses();
+                }
                 else
-                    ApplyOmegaBonuses();
-#else
-                ApplyOmegaBonuses();    // Pre-BUE is Omega only
 #endif
+                {
+#if !GAME_VERSION_1_53
+                    ApplyOmegaBonuses();
+#endif
+                }
             }
 
             return result;
@@ -3987,11 +3991,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             else
 #endif
             {
+#if !GAME_VERSION_1_53
                 float omegaLiveTuningMult = 1f;
                 if (LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForOmegaXP) == 0f || player.CanUseLiveTuneBonuses())
                     omegaLiveTuningMult = Math.Max(LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_OmegaXPPct), 0f);
 
                 player.AwardOmegaXP((long)(amount * omegaLiveTuningMult), true);
+#endif
             }
 
             // Award XP to the equipped legendary item if there is one
@@ -6172,6 +6178,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Alternate Advancement
 
+#if !GAME_VERSION_1_53
         // Omega
 
         public bool IsOmegaSystemUnlocked()
@@ -6382,6 +6389,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             Properties[PropertyEnum.OmegaPointsSpent] = pointsSpent;
         }
+#endif
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         // Infinity
@@ -6682,7 +6690,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                     break;
 
+#if !GAME_VERSION_1_53
                 case PropertyEnum.OmegaRank:
+#endif
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case PropertyEnum.InfinityGemBonusRank:
 #endif
@@ -7101,10 +7111,16 @@ namespace MHServerEmu.Games.Entities.Avatars
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (Game.InfinitySystemEnabled)
+            {
                 InitializeInfinityBonuses();
+            }
             else
 #endif
+            {
+#if !GAME_VERSION_1_53
                 InitializeOmegaBonuses();
+#endif
+            }
 
             OnEnteredWorldSetTransformMode();
 

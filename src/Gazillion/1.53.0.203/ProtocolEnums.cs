@@ -1,6 +1,6 @@
 namespace Gazillion
 {
-    public enum AuthMessagesMessage : uint
+    public enum AuthMessage : uint
     {
         AuthRequiredDoc,
         AuthTicket,
@@ -259,7 +259,7 @@ namespace Gazillion
         GetPlayerInfoByName,
     }
 
-    public enum CommonMessagesMessage : uint
+    public enum CommonMessage : uint
     {
         NetStructPoint3,
         NetStructIPoint3,

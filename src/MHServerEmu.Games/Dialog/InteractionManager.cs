@@ -1168,8 +1168,10 @@ namespace MHServerEmu.Games.Dialog
                     CreateOptionInList<TrainerOption>(optionsList);
                 if (properties[PropertyEnum.HealerNPC])
                     CreateOptionInList<HealOption>(optionsList);
+#if !GAME_VERSION_1_53
                 if (properties[PropertyEnum.OpenStoryWarpPanel])
                     CreateOptionInList<StoryWarpOption>(optionsList);
+#endif
             }
 
             if (entityPrototype.DialogText != 0 || entityPrototype.DialogTextList.HasValue())

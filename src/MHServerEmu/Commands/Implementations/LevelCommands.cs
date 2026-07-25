@@ -108,7 +108,7 @@ namespace MHServerEmu.Commands.Implementations
         }
 #endif
 
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if GAME_VERSION_1_52
         [Command("maxomega")]
         [CommandDescription("Maxes out Omega experience.")]
         [CommandUsage("level maxomega")]
@@ -129,7 +129,7 @@ namespace MHServerEmu.Commands.Implementations
         }
 #endif
 
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if GAME_VERSION_1_52
         [Command("resetomega")]
         [CommandDescription("Removes all Omega progression.")]
         [CommandUsage("level resetomega")]

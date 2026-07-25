@@ -3044,9 +3044,10 @@ namespace MHServerEmu.Games.Entities
                     if (modProto is InfinityGemBonusPrototype)
                         indexProperties.CopyPropertyRange(Properties, PropertyEnum.InfinityGemBonusRank);
 #endif
-
+#if !GAME_VERSION_1_53
                     if (modProto is OmegaBonusPrototype)
                         indexProperties.CopyPropertyRange(Properties, PropertyEnum.OmegaRank);
+#endif
 
                     AttachProperties(modProto.Type, modRef, 0, modProto.Properties, indexProperties, rank, true);
                 }

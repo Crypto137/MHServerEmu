@@ -99,7 +99,12 @@ namespace MHServerEmu.Games.MTXStore
 
             player.SendMessage(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
                 .SetDidSucceed(result == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
+#if GAME_VERSION_1_53
+                .SetBalance(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
+                    .SetCurrencyBalance(player.GazillioniteBalance))
+#else
                 .SetCurrentCurrencyBalance(player.GazillioniteBalance)
+#endif
                 .SetErrorcode(result)
                 .SetSkuId(skuId)
                 .Build());
@@ -139,13 +144,16 @@ namespace MHServerEmu.Games.MTXStore
             else
 #endif
             {
+#if !GAME_VERSION_1_53
                 if (_giftingOmegaLevelRequired > 0 && buyer.GetOmegaPoints() < _giftingOmegaLevelRequired)
                 {
                     SendBuyGiftForOtherPlayerResponse(buyer, skuId, BuyItemResultErrorCodes.BUY_RESULT_ERROR_GIFTING_UNAVAILABLE);
                     game.ChatManager.SendChatFromCustomSystem(buyer, $"Omega level {_giftingOmegaLevelRequired} is required to send gifts.");
                     return false;
                 }
+#endif
             }
+
 
             if (giftMessage != null && giftMessage.Length > GiftMessageMaxLength)
             {
@@ -199,7 +207,12 @@ namespace MHServerEmu.Games.MTXStore
         {
             buyer.SendMessage(NetMessageBuyGiftForOtherPlayerResponse.CreateBuilder()
                 .SetDidSucceed(result == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
+#if GAME_VERSION_1_53
+                .SetBalance(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
+                    .SetCurrencyBalance(buyer.GazillioniteBalance))
+#else
                 .SetCurrentCurrencyBalance(buyer.GazillioniteBalance)
+#endif
                 .SetErrorcode(result)
                 .SetSkuid(skuId)
                 .Build());

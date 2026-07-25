@@ -12,8 +12,10 @@
 #endif
         public LootPickingTable LootPickingTable { get; } = new();
         public PowerOwnerTable PowerOwnerTable { get; } = new();
+#if !GAME_VERSION_1_53
         public OmegaBonusSetTable OmegaBonusSetTable { get; } = new();
         public OmegaBonusPostreqsTable OmegaBonusPostreqsTable { get; } = new();
+#endif
         public LootCooldownTable LootCooldownTable { get; } = new();
 
         private GameDataTables() { }
