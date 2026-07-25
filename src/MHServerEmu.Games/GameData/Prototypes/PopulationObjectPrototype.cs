@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override string ToString()
         {
             HashSet<PrototypeId> entities = new();
-            GetContainedEntities(entities);
+            InternalGetContainedEntities(entities);
 
             StringBuilder sb = new();
             sb.AppendLine($"[{GetType().Name}]");
@@ -67,14 +67,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public virtual void GetContainedEntities(HashSet<PrototypeId> entities, bool unwrapEntitySelectors = false)
         {
-            if (Riders.HasValue())
-            {
-                foreach (PopulationRiderPrototype rider in Riders)
-                {
-                    if (rider is PopulationRiderEntityPrototype riderEntityProto && riderEntityProto.Entity != PrototypeId.Invalid)
-                        entities.Add(riderEntityProto.Entity);
-                }
-            }
+            InternalGetContainedEntities(entities);
         }
 
         public FormationTypePrototype GetFormation()
@@ -123,6 +116,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             return count;
+        }
+
+        private void InternalGetContainedEntities(HashSet<PrototypeId> entities)
+        {
+            if (Riders.HasValue())
+            {
+                foreach (PopulationRiderPrototype rider in Riders)
+                {
+                    if (rider is PopulationRiderEntityPrototype riderEntityProto && riderEntityProto.Entity != PrototypeId.Invalid)
+                        entities.Add(riderEntityProto.Entity);
+                }
+            }
         }
     }
 
