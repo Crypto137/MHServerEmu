@@ -120,11 +120,13 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
                     return (int)publicEventTuningVar;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case "eMFTV":
                     if (Enum.TryParse(tuningVarEnum, out MetricsFrequencyTuningVar metricsFrequencyTuningVar) == false)
                         return -1;
 
                     return (int)metricsFrequencyTuningVar;
+#endif
 
                 default:
                     return -1;

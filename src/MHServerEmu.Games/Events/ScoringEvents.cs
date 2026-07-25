@@ -191,9 +191,11 @@ namespace MHServerEmu.Games.Events
         public Prototype Pet { get; set; }
         public Prototype Region { get; set; }
         public bool RegionIncludeChildren { get; set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public DifficultyTierPrototype DifficultyTier { get; set; }
         public DifficultyTierPrototype DifficultyTierMin { get; set; }
         public DifficultyTierPrototype DifficultyTierMax { get; set; }
+#endif
         public Prototype TeamUp { get; set; }
         public Prototype PublicEventTeam { get; set; }
         public List<PrototypeId> PartyFilters { get; set; }
@@ -211,8 +213,10 @@ namespace MHServerEmu.Games.Events
             Item = prototype.ContextItemEquipped;
             Party = prototype.ContextParty;
             Pet = prototype.ContextPet;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             DifficultyTierMin = prototype.ContextDifficultyTierMin;
             DifficultyTierMax = prototype.ContextDifficultyTierMax;
+#endif
             TeamUp = prototype.ContextTeamUp;
             PublicEventTeam = prototype.ContextPublicEventTeam;
         }
@@ -237,7 +241,9 @@ namespace MHServerEmu.Games.Events
             if (region != null)
             {
                 Region = region.Prototype;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 DifficultyTier = region.DifficultyTierRef.As<DifficultyTierPrototype>();
+#endif
             }
 
             PublicEventTeam = player.GetPublicEventTeamPrototype();
@@ -247,8 +253,10 @@ namespace MHServerEmu.Games.Events
 
         public bool HasContext()
         {
-            return Avatar != null || Region != null || Item != null || Pet != null || TeamUp != null 
+            return Avatar != null || Region != null || Item != null || Pet != null || TeamUp != null
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 || DifficultyTierMin != null || DifficultyTierMax != null 
+#endif
                 || Party != null || PublicEventTeam != null;
         }
 
@@ -259,7 +267,9 @@ namespace MHServerEmu.Games.Events
                 && ScoringEvents.FilterPrototype(Pet, ownerContext.Pet, false)
                 && ScoringEvents.FilterPrototype(TeamUp, ownerContext.TeamUp, false)
                 && FilterOwnerItem(owner)
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 && FilterDifficultyTier(ownerContext.DifficultyTier)
+#endif
                 && FilterParty(ownerContext.PartyFilters)
                 && FilterPublicEventTeam(ownerContext.PublicEventTeam);
         }
@@ -277,11 +287,13 @@ namespace MHServerEmu.Games.Events
             return partyFilters.Contains(Party.DataRef);
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private bool FilterDifficultyTier(DifficultyTierPrototype difficultyTier)
         {
             if (DifficultyTierMin == null && DifficultyTierMax == null) return true;
             return DifficultyTierPrototype.InRange(difficultyTier, DifficultyTierMin, DifficultyTierMax);
         }
+#endif
 
         private bool FilterOwnerItem(Player owner)
         {

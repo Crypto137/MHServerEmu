@@ -73,6 +73,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"All cooldowns and charges have been reset.";
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [Command("stealpowers")]
         [CommandDescription("Unlocks all stolen powers.")]
         [CommandUsage("power stealpowers")]
@@ -103,7 +104,9 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Unlocked {count} stolen powers.";
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [Command("stealavatarpowers")]
         [CommandDescription("Unlocks avatar stolen powers.")]
         [CommandUsage("power stealavatarpowers")]
@@ -142,7 +145,9 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Unlocked {count} stolen powers.";
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [Command("forgetstolenpowers")]
         [CommandDescription("Locks all unlocked stolen powers.")]
         [CommandUsage("power forgetstolenpowers")]
@@ -176,5 +181,6 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Forgotten {count} stolen powers.";
         }
+#endif
     }
 }

@@ -63,9 +63,15 @@ namespace MHServerEmu.Games.GameData
         public static PowerVisualsGlobalsPrototype PowerVisualsGlobalsPrototype { get => GlobalsPrototype?.PowerVisualsGlobals; }
         public static KeywordGlobalsPrototype KeywordGlobalsPrototype { get => GlobalsPrototype?.KeywordGlobals; }
         public static CurrencyGlobalsPrototype CurrencyGlobalsPrototype { get => GlobalsPrototype?.CurrencyGlobals; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public static GamepadGlobalsPrototype GamepadGlobalsPrototype { get => GlobalsPrototype?.GamepadGlobals; }
+#else
+        public static ControllerGlobalsPrototype ControllerGlobalsPrototype { get => GlobalsPrototype?.ControllerGlobals; }
+#endif
         public static DifficultyGlobalsPrototype DifficultyGlobalsPrototype { get => GlobalsPrototype?.DifficultyGlobals; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public static ConsoleGlobalsPrototype ConsoleGlobalsPrototype { get => GlobalsPrototype?.ConsoleGlobals; }
+#endif
         
         public static InteractionManager InteractionManager { get; private set; }
 
@@ -97,8 +103,10 @@ namespace MHServerEmu.Games.GameData
             PropertyInfoTable = new();
             PropertyInfoTable.Initialize();
 
+#if GAME_VERSION_1_52
             // Load patches that should apply to globals (limited RefPtr support)
             PrototypePatchManager.Instance.PreInitialize(config.EnablePatchManager);
+#endif
 
             // Load globals
             PrototypeId globalsProtoRef = GetPrototypeRefByName("Globals/Globals.defaults");
@@ -106,8 +114,10 @@ namespace MHServerEmu.Games.GameData
 
             // initializeKeywordPrototypes
 
+#if GAME_VERSION_1_52
             // Load regular patches
             PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
+#endif
 
             // Preload all prototypes if needed
             if (config.LoadAllPrototypes)

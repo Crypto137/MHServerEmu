@@ -45,6 +45,8 @@ namespace MHServerEmu.Games.Social.Parties
             return _members.GetEnumerator();
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        // V48_FIXME
         public void SetFromMessage(Gazillion.PartyInfo protobuf)
         {
             LeaderId = protobuf.LeaderDbId;
@@ -80,6 +82,7 @@ namespace MHServerEmu.Games.Social.Parties
 
             return true;
         }
+#endif
 
         public bool RemoveMember(ulong memberId, Gazillion.GroupLeaveReason reason)
         {
@@ -102,6 +105,8 @@ namespace MHServerEmu.Games.Social.Parties
             return true;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        // V48_FIXME
         public bool UpdateMember(Gazillion.PartyMemberInfo protobuf)
         {
             ulong playerDbId = protobuf.PlayerDbId;
@@ -115,6 +120,7 @@ namespace MHServerEmu.Games.Social.Parties
 
             return true;
         }
+#endif
 
         public PartyMemberInfo GetMemberInfo(ulong memberId)
         {

@@ -114,7 +114,11 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             switch (failure)
             {
                 case RegionTransferFailure.eRTF_Full:
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     status = RegionRequestQueueUpdateVar.eRRQ_PartyTooLarge;
+#else
+                    status = RegionRequestQueueUpdateVar.eRRQ_RaidNotAllowed;   // V48_FIXME?
+#endif
                     break;
 
                 case RegionTransferFailure.eRTF_RaidsNotAllowed:

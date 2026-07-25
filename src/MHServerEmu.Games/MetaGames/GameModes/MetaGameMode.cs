@@ -296,15 +296,19 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             var region = Region;
             if (region == null) return;
 
-            int dificultyIndex = region.TuningTable.DifficultyIndex;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            int difficultyIndex = region.TuningTable.DifficultyIndex;
+#else
+            int difficultyIndex = region.DifficultyTable.DifficultyIndex;
+#endif
             if (player != null)
             {
-                player.SendRegionDifficultyChange(dificultyIndex);
+                player.SendRegionDifficultyChange(difficultyIndex);
             }
             else
             {
                 foreach (var regionPlayer in MetaGame.Players)
-                    regionPlayer.SendRegionDifficultyChange(dificultyIndex);
+                    regionPlayer.SendRegionDifficultyChange(difficultyIndex);
             }
         }
 

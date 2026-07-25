@@ -30,10 +30,14 @@ namespace MHServerEmu.Commands.Implementations
                 return $"You cannot teleport right now ({result}).";
 
             player.Properties[PropertyEnum.PowerCooldownStartTime, GameDatabase.GlobalsPrototype.ReturnToHubPower] = player.Game.CurrentTime;
-            
+
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             // Apparently people somehow get into instances with no difficulty tier specified when using this command.
             // Force the default difficulty tier just in case.
             Teleporter.DebugTeleportToTarget(player, AvengersTowerHUBEntryTarget, GameDatabase.GlobalsPrototype.DifficultyTierDefault);
+#else
+            Teleporter.DebugTeleportToTarget(player, AvengersTowerHUBEntryTarget);
+#endif
 
             return "Teleporting to Avengers Tower (original).";
         }

@@ -315,6 +315,7 @@ namespace MHServerEmu.Games.Achievements
 
             var state = AchievementState;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             // clear completed achievement tracker
             foreach (var kvp in Owner.Properties.IteratePropertyRange(PropertyEnum.MissionTrackerAchievements).ToArray())
             {
@@ -322,6 +323,7 @@ namespace MHServerEmu.Games.Achievements
                 if (state.GetAchievementProgress((uint)id).IsComplete)
                     Owner.Properties.RemoveProperty(new PropertyId(PropertyEnum.MissionTrackerAchievements, (PropertyParam)id));
             }
+#endif
 
             foreach (var info in AchievementDatabase.Instance.AchievementInfoMap)
             {

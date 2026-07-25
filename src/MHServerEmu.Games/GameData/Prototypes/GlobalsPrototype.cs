@@ -1410,9 +1410,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #endif
         public int UltimateActivationTimeoutMS { get; protected set; }
         public GamepadInputAssetPrototype[] InputAssets { get; protected set; }
-#if GAME_VERSION_1_48
-        public PrototypeId GamepadTeleportToTarget { get; protected set; }
-#else
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public float GamepadInteractionHalfAngle { get; protected set; }
         public float DisableInteractDangerRadius { get; protected set; }
         public int GamepadInteractRange { get; protected set; }
@@ -1429,6 +1427,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float GamepadDestructTargetDeflctCost { get; protected set; }
         public float GamepadDestructTargetHalfAngle { get; protected set; }
         public float GamepadDestructTargetRange { get; protected set; }
+#else
+        public PrototypeId GamepadTeleportToTarget { get; protected set; }
 #endif
     }
 

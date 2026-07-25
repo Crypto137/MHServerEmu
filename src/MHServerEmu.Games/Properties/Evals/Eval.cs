@@ -498,12 +498,14 @@ namespace MHServerEmu.Games.Properties.Evals
                         }
                         break;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     case EvalOp.EntityHasTalent:
                         {
                             EntityHasTalentPrototype typedProto = (EntityHasTalentPrototype)evalProto;
                             resultContexts.Add(typedProto.Context);
                         }
                         break;
+#endif
 
                     case EvalOp.GetCombatLevel:
                         {
@@ -1194,7 +1196,9 @@ namespace MHServerEmu.Games.Properties.Evals
                 case EvalOp.LoadEntityToContextVar: return RunLoadEntityToContextVar((LoadEntityToContextVarPrototype)evalProto, data);
                 case EvalOp.LoadConditionCollectionToContext: return RunLoadConditionCollectionToContext((LoadConditionCollectionToContextPrototype)evalProto, data);
                 case EvalOp.EntityHasKeyword: return RunEntityHasKeyword((EntityHasKeywordPrototype)evalProto, data);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case EvalOp.EntityHasTalent: return RunEntityHasTalent((EntityHasTalentPrototype)evalProto, data);
+#endif
                 case EvalOp.GetCombatLevel: return RunGetCombatLevel((GetCombatLevelPrototype)evalProto, data);
                 case EvalOp.GetPowerRank: return RunGetPowerRank((GetPowerRankPrototype)evalProto, data);
                 case EvalOp.CalcPowerRank: return RunCalcPowerRank((CalcPowerRankPrototype)evalProto, data);
@@ -2956,6 +2960,7 @@ namespace MHServerEmu.Games.Properties.Evals
             return evalVar;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private static EvalVar RunEntityHasTalent(EntityHasTalentPrototype entityHasTalentProto, EvalContextData data)
         {
             EvalVar evalVar = new();
@@ -2977,6 +2982,7 @@ namespace MHServerEmu.Games.Properties.Evals
 
             return evalVar;
         }
+#endif
 
         private static EvalVar RunGetCombatLevel(GetCombatLevelPrototype getCombatLevelProto, EvalContextData data)
         {
@@ -3137,7 +3143,7 @@ namespace MHServerEmu.Games.Properties.Evals
             EvalVar evalVar = new();
             evalVar.SetError();
 
-            // NOTE: Get Game from context data and check the DCL flag in AdminCommandManager for pre-BUE versions of the game.
+            // V48_TODO: Get Game from context data and check the DCL flag in AdminCommandManager for pre-BUE versions of the game.
             evalVar.SetBool(true);
 
             return evalVar;

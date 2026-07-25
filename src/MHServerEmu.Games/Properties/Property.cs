@@ -148,7 +148,9 @@ namespace MHServerEmu.Games.Properties
             PropertyEnum.BodySliderRegionId,
             PropertyEnum.BodySliderRegionPos,
             PropertyEnum.BodySliderRegionRef,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             PropertyEnum.BodySliderDifficultyRef,
+#endif
             PropertyEnum.BodySliderRegionSeed
         };
 

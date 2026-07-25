@@ -38,9 +38,11 @@ namespace MHServerEmu.WebFrontend.Handlers
                     await OnLoginDataPB(context, loginDataPB);
                     break;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case PrecacheHeaders precacheHeaders:
                     await OnPrecacheHeaders(context, precacheHeaders);
                     break;
+#endif
 
                 default:
                     Logger.Warn($"Post(): Unhandled protobuf {message?.DescriptorForType.Name}");
@@ -86,10 +88,12 @@ namespace MHServerEmu.WebFrontend.Handlers
             await context.SendAsync(authTicket);
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private static async Task OnPrecacheHeaders(WebRequestContext context, PrecacheHeaders precacheHeaders)
         {
             Logger.Trace("Received PrecacheHeaders message");
             await context.SendAsync(PrecacheHeadersMessageResponse.DefaultInstance);
         }
+#endif
     }
 }

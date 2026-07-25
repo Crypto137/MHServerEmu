@@ -326,7 +326,9 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             NetStructCreateRegionParams createRegionParams = NetStructCreateRegionParams.CreateBuilder()
                 .SetLevel(0)
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 .SetDifficultyTierProtoId((ulong)QueueParams.DifficultyTierRef)
+#endif
                 .SetGameStateId((ulong)QueueParams.MetaStateRef)
                 .SetMatchNumber(Id)
                 .Build();

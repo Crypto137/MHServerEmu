@@ -86,7 +86,11 @@ namespace MHServerEmu.Games.Regions
         public int RandomSeed { get; private set; }
         public ulong MatchNumber { get => Settings.MatchNumber; }
         public int RegionLevel { get; private set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId DifficultyTierRef { get => Properties[PropertyEnum.DifficultyTier]; }
+#else
+        public PrototypeId DifficultyTierRef { get => DifficultyTable?.Prototype != null ? DifficultyTable.Prototype.Tier : PrototypeId.Invalid; }
+#endif
 
         public RegionPrototype Prototype { get; private set; }
         public PrototypeId PrototypeDataRef { get => Prototype != null ? Prototype.DataRef : PrototypeId.Invalid; }
@@ -136,7 +140,11 @@ namespace MHServerEmu.Games.Regions
         public PopulationManager PopulationManager { get; private set; }
         public SpawnMarkerRegistry SpawnMarkerRegistry { get; private set; }
         public EntityTracker EntityTracker { get; private set; }
-        public TuningTable TuningTable { get; private set; }    // Difficulty table
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        public TuningTable TuningTable { get; private set; }
+#else
+        public DifficultyTable DifficultyTable { get; private set; }
+#endif
         public bool IsFirstLoaded { get; private set; }
         public int PlayerDeaths { get => _playerDeaths; set => SetPlayerDeaths(value); }
 
@@ -242,7 +250,11 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             return $"{PrototypeDataRef.GetName()}, ID=0x{Id:X} ({Id}), DIFF={Settings.DifficultyTierRef.GetNameFormatted()}[{RegionLevel}], SEED={RandomSeed}, GAMEID={Game}";
+#else
+            return $"{PrototypeDataRef.GetName()}, ID=0x{Id:X} ({Id}), SEED={RandomSeed}, GAMEID={Game}";
+#endif
         }
 
         public bool Initialize(RegionSettings settings)
@@ -286,6 +298,7 @@ namespace MHServerEmu.Games.Regions
             if (globals == null)
                 return Logger.ErrorReturn(false, "Initialize(): Unable to get globals prototype for region initialize");
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             TuningTable = new(this);
 
             RegionDifficultySettingsPrototype difficultySettings = regionProto.GetDifficultySettings();
@@ -296,6 +309,18 @@ namespace MHServerEmu.Games.Regions
                 if (Properties.HasProperty(PropertyEnum.DifficultyIndex))
                     TuningTable.SetDifficultyIndex(Properties[PropertyEnum.DifficultyIndex], false);
             }
+#else
+            DifficultyTable = new(this);
+
+            RegionDifficultySettingsPrototype difficultySettings = regionProto.GetDifficultySettings();
+            if (difficultySettings != null)
+            {
+                DifficultyTable.SetDifficultyTable(difficultySettings.DifficultyTable);
+
+                if (Properties.HasProperty(PropertyEnum.DifficultyIndex))
+                    DifficultyTable.SetDifficultyIndex(Properties[PropertyEnum.DifficultyIndex], false);
+            }
+#endif
 
             // NOTE: Divided start locations are used only in the Age of Ultron game mode
             if (regionProto.DividedStartLocations.HasValue())
@@ -341,10 +366,12 @@ namespace MHServerEmu.Games.Regions
                 }
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (settings.DifficultyTierRef != PrototypeId.Invalid)
                 Properties[PropertyEnum.DifficultyTier] = settings.DifficultyTierRef;
             else
                 Logger.Warn("Initialize(): settings.DifficultyTierRef == PrototypeId.Invalid");
+#endif
 
             Targets = RegionTransition.BuildConnectionEdges(settings.RegionDataRef); // For Teleport system
 
@@ -441,7 +468,9 @@ namespace MHServerEmu.Games.Regions
                 }
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             ApplyDifficultyTierProperties(settings.DifficultyTierRef);
+#endif
 
             IsGenerated = true;
             CreatedTime = Clock.UnixTime;
@@ -917,6 +946,7 @@ namespace MHServerEmu.Games.Regions
                 Logger.Error("RegionLevel <= 0");
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void ApplyDifficultyTierProperties(PrototypeId difficultyTierProtoRef)
         {
             DifficultyTierPrototype difficultyTierProto = difficultyTierProtoRef.As<DifficultyTierPrototype>();
@@ -933,6 +963,7 @@ namespace MHServerEmu.Games.Regions
             Properties[PropertyEnum.DamageRegionMobToPlayer] *= difficultyTierProto.DamageMobToPlayerPct;
             Properties[PropertyEnum.DamageRegionPlayerToMob] *= difficultyTierProto.DamagePlayerToMobPct;
         }
+#endif
 
         #endregion
 
@@ -1672,12 +1703,14 @@ namespace MHServerEmu.Games.Regions
                 : avatarOnKilledInfo;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public int GetBonusItemFindMultiplier()
         {
             int difficultyMult = Properties[PropertyEnum.BonusItemFindBonusDifficultyMult];
             int liveTuningMult = (int)LiveTuningManager.GetLiveRegionTuningVar(Prototype, RegionTuningVar.eRT_BonusItemFindMultiplier);
             return Prototype.BonusItemFindMultiplier * difficultyMult * liveTuningMult;
         }
+#endif
 
         public bool PausesBoostConditions()
         {

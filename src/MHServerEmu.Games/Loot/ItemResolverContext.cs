@@ -207,15 +207,25 @@ namespace MHServerEmu.Games.Loot
                 {
                     _lootBonusData.ApplyProperties(region.Properties);
 
-                    // NOTE: Tuning table bonuses seem to exist only for EndGameWave.prototype (X-Defense / Holo-Sim) in 1.52,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+                    // NOTE: Tuning table bonuses seem to exist only for EndGameWave.prototype (X-Defense / Holo-Sim) in 1.52
                     TuningTable tuningTable = region.TuningTable;
                     TuningPrototype tuningProto = tuningTable?.Prototype;
                     if (tuningProto != null)
                     {
-                        // NOTE: Level delta curves appear to be unused, most likely as a result of DCL. Implement them for older versions later if needed.
                         Curve curve = CurveDirectory.Instance.GetCurve(tuningProto.LootFindByDifficultyIndexCurve);
                         _lootBonusData.RarityMult *= curve.GetAt(tuningTable.DifficultyIndex);
                     }
+#else
+                    DifficultyTable difficultyTable = region.DifficultyTable;
+                    DifficultyPrototype difficultyProto = difficultyTable?.Prototype;
+                    if (difficultyProto != null)
+                    {
+                        // NOTE: Level delta curves appear to be unused, most likely as a result of DCL. Implement them for older versions later if needed.
+                        Curve curve = CurveDirectory.Instance.GetCurve(difficultyProto.LootFindByDifficultyIndexCurve);
+                        _lootBonusData.RarityMult *= curve.GetAt(difficultyTable.DifficultyIndex);
+                    }
+#endif
                 }
 
                 // Avatar bonuses
@@ -258,7 +268,9 @@ namespace MHServerEmu.Games.Loot
                     _lootBonusData.XPMult = CalculateMissionXPMult(mission) * contributionRewardMultiplier;
                     _lootBonusData.CreditsMult = contributionRewardMultiplier;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     _lootBonusData.ApplyCurrencyProperties(avatar.Properties);
+#endif
                 }
             }
 
@@ -280,10 +292,17 @@ namespace MHServerEmu.Games.Loot
             if (region == null)
                 return 1f;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             TuningTable tuningTable = region.TuningTable;
             if (!Verify.IsNotNull(tuningTable)) return 1f;
 
             return avatar.GetMissionXPMultiplier(tuningTable, mission.GetLootLevel(avatar));
+#else
+            DifficultyTable difficultyTable = region.DifficultyTable;
+            if (!Verify.IsNotNull(difficultyTable)) return 1f;
+
+            return avatar.GetMissionXPMultiplier(difficultyTable, mission.GetLootLevel(avatar));
+#endif
         }
 
         private bool InitializeCooldownData(WorldEntity sourceEntity, Mission mission = null)
@@ -464,9 +483,12 @@ namespace MHServerEmu.Games.Loot
                 CreditsMult += properties[PropertyEnum.LootBonusCreditsPct];
                 CreditsFlat += Avatar.GetFlatCreditsBonus(properties);
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 ApplyCurrencyProperties(properties);
+#endif
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             public void ApplyCurrencyProperties(PropertyCollection properties)
             {
                 foreach (PrototypeId currencyProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CurrencyPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
@@ -479,6 +501,7 @@ namespace MHServerEmu.Games.Loot
                     CurrencyFlatDict[currencyProtoRef] += Avatar.GetStackingFlatCurrencyBonus(properties, currencyProto);
                 }
             }
+#endif
 
             public readonly float GetCurrencyMult(PrototypeId currencyProtoRef)
             {

@@ -56,7 +56,11 @@ namespace MHServerEmu.Games.Loot
                     return rarityProto.Tier <= vaporizeThresholdRarityProto.Tier;
 
                 case LootType.Credits:
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     return player.GameplayOptions.GetOptionSetting(GameplayOptionSetting.EnableVaporizeCredits) == 1;
+#else
+                    return player.GameplayOptions.GetOptionSetting(GameplayOptionSetting.EnableVaporizeCredits);
+#endif
 
                 default:
                     return false;

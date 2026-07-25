@@ -159,6 +159,15 @@ namespace MHServerEmu
         /// </summary>
         private void PrintBanner()
         {
+#if GAME_VERSION_1_48
+            Console.WriteLine(@"  __  __ _    _  _____                          ______                 ___   ___  __   __  ");
+            Console.WriteLine(@" |  \/  | |  | |/ ____|                        |  ____|               |__ \ / _ \/_ | / /  ");
+            Console.WriteLine(@" | \  / | |__| | (___   ___ _ ____   _____ _ __| |__   _ __ ___  _   _   ) | | | || |/ /_  ");
+            Console.WriteLine(@" | |\/| |  __  |\___ \ / _ \ '__\ \ / / _ \ '__|  __| | '_ ` _ \| | | | / /| | | || | '_ \ ");
+            Console.WriteLine(@" | |  | | |  | |____) |  __/ |   \ V /  __/ |  | |____| | | | | | |_| |/ /_| |_| || | (_) |");
+            Console.WriteLine(@" |_|  |_|_|  |_|_____/ \___|_|    \_/ \___|_|  |______|_| |_| |_|\__,_|____|\___/ |_|\___/ ");
+            Console.WriteLine();
+#else
             Console.WriteLine(@"  __  __ _    _  _____                          ______                 ");
             Console.WriteLine(@" |  \/  | |  | |/ ____|                        |  ____|                ");
             Console.WriteLine(@" | \  / | |__| | (___   ___ _ ____   _____ _ __| |__   _ __ ___  _   _ ");
@@ -166,6 +175,7 @@ namespace MHServerEmu
             Console.WriteLine(@" | |  | | |  | |____) |  __/ |   \ V /  __/ |  | |____| | | | | | |_| |");
             Console.WriteLine(@" |_|  |_|_|  |_|_____/ \___|_|    \_/ \___|_|  |______|_| |_| |_|\__,_|");
             Console.WriteLine();
+#endif
         }
 
         /// <summary>

@@ -274,17 +274,21 @@ namespace MHServerEmu.Games.Entities
                     // Initialize new endless region data 
                     teleporter.EndlessLevel = 1;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     PrototypeId difficultyTierRef = Properties[PropertyEnum.DifficultyTier];
                     if (difficultyTierRef != PrototypeId.Invalid)
                         teleporter.DifficultyTierRef = difficultyTierRef;
+#endif
                 }
             }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             else
             {
                 // Keep difficulty tier consistent outside of towns
                 if (region.Behavior != RegionBehavior.Town)
                     teleporter.DifficultyTierRef = region.DifficultyTierRef;
             }
+#endif
 
             if (destinationRegionProto.UsePrevRegionPlayerDeathCount)
                 teleporter.PlayerDeaths = region.PlayerDeaths;

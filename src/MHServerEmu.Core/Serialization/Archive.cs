@@ -43,7 +43,15 @@ namespace MHServerEmu.Core.Serialization
         _1_52_0_1700 = 479899,
         _1_53_0_203  = 493640,
 
-        Current = _1_52_0_1700
+#if GAME_VERSION_1_48
+        Current = _1_48_0_1712,
+#elif GAME_VERSION_1_52
+        Current = _1_52_0_1700,
+#elif GAME_VERSION_1_53
+        Current = _1_53_0_203,
+#else
+        Current = Invalid,
+#endif
     }
 
     /// <summary>

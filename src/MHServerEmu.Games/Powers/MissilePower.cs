@@ -336,6 +336,7 @@ namespace MHServerEmu.Games.Powers
             if (region.GetCellAtPosition(creationSettings.Position) == null && region.ProjectBoundsIntoRegion(ref bounds, direction))
                 creationSettings.Position = bounds.Center;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (missileContext.CreationOffsetCheckLOS && missileContext.CreationOffset != null && missileContext.CreationOffset.IsZero() == false)
             {
                 float offsetSq = Vector3.DistanceSquared2D(ownerPosition, creationSettings.Position);
@@ -343,6 +344,7 @@ namespace MHServerEmu.Games.Powers
                 if (offsetSq > boundsSq && Owner.LineOfSightTo(creationSettings.Position) == false)
                     return false;
             }
+#endif
 
             creationSettings.VariationSeed = powerApplication.FXRandomSeed;
             creationSettings.LocomotorHeightOverride = Math.Max(missileContext.Radius, creationSettings.Position.Z - RegionLocation.ProjectToFloor(region, creationSettings.Position).Z);
@@ -377,7 +379,9 @@ namespace MHServerEmu.Games.Powers
             else
             {
                 extraProperties[PropertyEnum.MissileCreatorId] = Owner.Id;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 extraProperties[PropertyEnum.MissileOwnedByPlayer] = Owner.CanBePlayerOwned();
+#endif
                 extraProperties[PropertyEnum.PowerUserOverrideID] = Owner.Id;
             }
 

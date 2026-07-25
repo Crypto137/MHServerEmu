@@ -28,6 +28,7 @@ namespace MHServerEmu.Games.Missions.Actions
                         if (avatar != null && player.CurrentHUDTutorial != null)
                             avatar.TryRestoreThrowable();
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                         if (_proto.UseAvatarSwapPowers)
                             player.BeginAvatarSwitch(_proto.AvatarPrototype);
                         else
@@ -35,6 +36,9 @@ namespace MHServerEmu.Games.Missions.Actions
                             player.Properties[PropertyEnum.AvatarSwitchPending, _proto.AvatarPrototype] = true;
                             player.SwitchAvatar();
                         }
+#else
+                        player.BeginAvatarSwitch(_proto.AvatarPrototype); // V48_TODO: Find out which behavior should be used.
+#endif
                     }
                 }
             }

@@ -89,7 +89,12 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             foreach(var player in MetaGame.Players)
             {
                 var avatar = player.CurrentAvatar;
-                if (avatar != null) MetaGame.SaveMetaStateProgress(avatar, region.PrototypeDataRef, region.DifficultyTierRef, stateRef);
+                if (avatar != null)
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+                    MetaGame.SaveMetaStateProgress(avatar, region.PrototypeDataRef, region.DifficultyTierRef, stateRef);
+#else
+                    MetaGame.SaveMetaStateProgress(avatar, region.PrototypeDataRef, stateRef);
+#endif
             }
         }
 

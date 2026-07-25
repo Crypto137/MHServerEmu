@@ -22,7 +22,9 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public ulong Id { get; }
         public GroupType Type { get; private set; } = GroupType.GroupType_Party;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId DifficultyTierProtoRef { get; private set; }
+#endif
         public PlayerHandle Leader { get; private set; }
 
         public WorldView WorldView { get; } = new();
@@ -33,7 +35,9 @@ namespace MHServerEmu.PlayerManagement.Social
         public MasterParty(ulong id, PlayerHandle creator)
         {
             Id = id;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             DifficultyTierProtoRef = creator.DifficultyTierPreference;
+#endif
 
             WorldView.AddRegionsFrom(creator.WorldView);
 
@@ -87,8 +91,11 @@ namespace MHServerEmu.PlayerManagement.Social
 
             if (_members.Contains(player) == false)
             {
+                // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 // Send update to existing players (the player we are adding will get this in the party info sync below)
                 SendPartyMemberInfoUpdate(player, PartyMemberEvent.ePME_Add, _members);
+#endif
 
                 _pendingMembers.Remove(player);
                 player.PendingParty = null;
@@ -113,8 +120,11 @@ namespace MHServerEmu.PlayerManagement.Social
         {
             if (player == null) return Logger.WarnReturn(false, "RemoveMember(): player == null");
 
+            // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             // Send this before removing so that the player we are removing gets the message as well.
             SendPartyMemberInfoUpdate(player, PartyMemberEvent.ePME_Remove, _members);
+#endif
 
             if (_members.Remove(player) == false)
                 return false;
@@ -163,7 +173,10 @@ namespace MHServerEmu.PlayerManagement.Social
             if (HasMember(player) == false)
                 return Logger.WarnReturn(false, $"UpdateMember(): Attempting to update player [{player}] who is not a member of party [{this}]");
 
+            // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             SendPartyMemberInfoUpdate(player, PartyMemberEvent.ePME_Update, _members);
+#endif
             return true;
         }
 
@@ -202,6 +215,7 @@ namespace MHServerEmu.PlayerManagement.Social
             return true;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool SetDifficultyTier(PrototypeId difficultyTierProtoRef)
         {
             if (difficultyTierProtoRef == DifficultyTierProtoRef)
@@ -212,6 +226,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
             return true;
         }
+#endif
 
         public bool HasInvite(PlayerHandle player)
         {
@@ -246,6 +261,8 @@ namespace MHServerEmu.PlayerManagement.Social
                 if (player.CurrentGame == null)
                     continue;
 
+                // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 var request = PartyOperationPayload.CreateBuilder()
                     .SetRequestingPlayerDbId(player.PlayerDbId)
                     .SetRequestingPlayerName(player.PlayerName)
@@ -255,6 +272,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 ServiceMessage.PartyOperationRequestServerResult message = new(player.CurrentGame.Id, player.PlayerDbId,
                     request, GroupingOperationResult.eGOPR_PendingPartyDisbanded);
                 ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+#endif
             }
 
             _pendingMembers.Clear();
@@ -269,6 +287,8 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void SendPartyInfo(bool includeMemberInfo, List<PlayerHandle> recipients)
         {
+            // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (recipients.Count == 0)
                 return;
 
@@ -297,8 +317,11 @@ namespace MHServerEmu.PlayerManagement.Social
                 ServiceMessage.PartyInfoServerUpdate message = new(player.CurrentGame.Id, player.PlayerDbId, Id, partyInfo);
                 ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
             }
+#endif
         }
 
+        // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void SendPartyMemberInfoUpdate(PlayerHandle member, PartyMemberEvent memberEvent, List<PlayerHandle> recipients)
         {
             // This is valid (e.g. when adding the first member)
@@ -319,7 +342,10 @@ namespace MHServerEmu.PlayerManagement.Social
                 ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
             }
         }
+#endif
 
+        // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private static PartyMemberInfo BuildPartyMemberInfo(PlayerHandle member)
         {
             var builder = PartyMemberInfo.CreateBuilder()
@@ -330,5 +356,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
             return builder.Build();
         }
+#endif
     }
 }

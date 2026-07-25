@@ -2220,12 +2220,14 @@ namespace MHServerEmu.Games.Entities.Items
                         if (containerAvatar?.IsInWorld != true)
                             return InteractionValidateResult.UnknownFailure;
                     }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     else if (convenienceLabel == InventoryConvenienceLabel.DeliveryBox)
                     {
                         // Only containers can be used from the delivery box
                         if (itemProto.IsContainer == false)
                             return InteractionValidateResult.UnknownFailure;
                     }
+#endif
                     else
                     {
                         // Using items from other inventory types is not allowed

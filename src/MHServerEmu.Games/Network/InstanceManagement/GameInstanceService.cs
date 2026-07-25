@@ -93,6 +93,8 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                         GameManager.BroadcastServiceMessageToGames(communityBroadcastBatch);
                     break;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+                // V48_FIXME
                 case ServiceMessage.PartyOperationRequestServerResult partyOperationRequestServerResult:
                     RouteMessageToGame(partyOperationRequestServerResult.GameId, partyOperationRequestServerResult);
                     break;
@@ -104,6 +106,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                 case ServiceMessage.PartyMemberInfoServerUpdate partyMemberInfoServerUpdate:
                     RouteMessageToGame(partyMemberInfoServerUpdate.GameId, partyMemberInfoServerUpdate);
                     break;
+#endif
 
                 case ServiceMessage.PartyKickGracePeriod partyKickGracePeriod:
                     RouteMessageToGame(partyKickGracePeriod.GameId, partyKickGracePeriod);

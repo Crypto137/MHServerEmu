@@ -3371,7 +3371,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 TuningPrototype difficultyProto = region.TuningTable?.Prototype;
 #else
-                DifficultyPrototype difficultyProto = region.TuningTable?.Prototype;
+                DifficultyPrototype difficultyProto = region.DifficultyTable?.Prototype;
 #endif
                 if (!Verify.IsNotNull(difficultyProto)) return;
 

@@ -441,31 +441,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (!Verify.IsNotNull(targetProfile, $"Agent {ownerController.Owner} has {baseProfile} which contains an invalid select target. Make sure {baseProfile} derives from ProceduralProfileWithTargetPrototype"))
                     return;
 
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 SelectEntity.SelectEntityContext selectionContext = new(ownerController, targetProfile.SelectTarget);
                 WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                 if (selectedEntity != null && proceduralAI.GetState(0) != UsePower.Instance)
                 {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.WanderInPlace;
+#endif
                     SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
                     senses.NotifyAlliesOnTargetAquired();
                     proceduralAI.ClearOverrideBehavior(OverrideType.Full);
                     return;
                 }
-#endif
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             StaticBehaviorReturnType contextResult;
             int stateVal = blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal];
             switch ((State)stateVal)
             {
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case State.WanderInPlace:
                     contextResult = HandleContext(proceduralAI, ownerController, WanderInPlace);
                     if (contextResult == StaticBehaviorReturnType.Completed)
                         blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.Delay;
                     break;
-#endif
 
                 case State.Delay:
                     contextResult = HandleContext(proceduralAI, ownerController, DelayAfterWander);
@@ -480,6 +479,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.Delay;
                     break;
             }
+#else
+            // V48_FIXME: Wander/Delay
+#endif
         }
 
     }
@@ -694,8 +696,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int expLevel = Math.Max(avatar.CharacterLevel + levelDelta, 1);
             if (orbProto.GetXPAwarded(expLevel, out long xp, out long minXP, player.CanUseLiveTuneBonuses()))
             {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 TuningTable tuningTable = orbProto.IgnoreRegionDifficultyForXPCalc == false ? agent.Region?.TuningTable : null;
                 xp = avatar.ApplyXPModifiers(xp, false, tuningTable);
+#else
+                DifficultyTable difficultyTable = orbProto.IgnoreRegionDifficultyForXPCalc == false ? agent.Region?.DifficultyTable : null;
+                xp = avatar.ApplyXPModifiers(xp, false, difficultyTable);
+#endif
 
                 // Set xp to 1 if this is not the avatar this was intended for
                 if (orbProto.XPAwardRestrictedToAvatar)

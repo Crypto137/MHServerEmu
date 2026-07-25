@@ -169,7 +169,11 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         private bool ApplyMetaState(PrototypeId stateRef, bool skipCooldown = false)
         {
             if (stateRef == PrototypeId.Invalid) return false;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             var table = Region?.TuningTable;
+#else
+            var table = Region?.DifficultyTable;
+#endif
             if (table == null) return false;
 
             if (MetaGame.ApplyMetaState(stateRef, skipCooldown) == false) return false;

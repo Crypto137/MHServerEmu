@@ -23,6 +23,8 @@ namespace MHServerEmu.Games.Social.Parties
             return $"{PlayerName}, PlayerDbGuid=0x{PlayerDbId:X}";
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        // V48_FIXME
         public void SetFromMsg(Gazillion.PartyMemberInfo protobuf)
         {
             PlayerDbId = protobuf.PlayerDbId;
@@ -44,5 +46,6 @@ namespace MHServerEmu.Games.Social.Parties
                 Boosts.Add(boostRef);
             }
         }
+#endif
     }
 }

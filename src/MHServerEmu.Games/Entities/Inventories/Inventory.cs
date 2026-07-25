@@ -219,6 +219,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             InventoryPrototype inventoryPrototype = Prototype;
             if (!Verify.IsNotNull(inventoryPrototype)) return 0;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             int nSoftCap = inventoryPrototype.GetSoftCapacityDefaultSlots();
             if (nSoftCap < 0)
                 return MaxCapacity;
@@ -242,6 +243,9 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             Verify.IsTrue(nSoftCap <= MaxCapacity, $"Inventory softcap over max inventory limit. INVENTORY={this} OWNER={owner}");
             return Math.Min(nSoftCap, MaxCapacity);
+#else
+            return MaxCapacity;
+#endif
         }
 
         public bool IsSlotFree(uint slot)

@@ -212,6 +212,7 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [Command("difficulty")]
         [CommandDescription("Shows information about the current difficulty level.")]
         [CommandInvokerType(CommandInvokerType.Client)]
@@ -232,6 +233,7 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Region={region.Prototype}, TuningTable={tuningTable.Prototype}, playerToMob={playerToMob}, mobToPlayer={mobToPlayer}";
         }
+#endif
 
         [Command("geteventpoolreport")]
         [CommandDescription("Returns a report representing the state of the ScheduledEventPool in the current game.")]

@@ -34,7 +34,9 @@ namespace MHServerEmu.Games.Regions
         // Additional region creation data (see NetStructCreateRegionParams), used primarily for Danger Room and bonus level (Cow/Doop) regions
         public int Level { get; set; }
         public bool Cheat { get; set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId DifficultyTierRef { get; set; }
+#endif
         public int EndlessLevel { get; set; }
         public int Seed { get; set; }
         public ulong ParentRegionId { get; set; }
@@ -61,7 +63,9 @@ namespace MHServerEmu.Games.Regions
 
             Level = default;
             Cheat = default;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             DifficultyTierRef = default;
+#endif
             EndlessLevel = default;
             Seed = default;
             ParentRegionId = default;
@@ -131,7 +135,10 @@ namespace MHServerEmu.Games.Regions
 
             RegionSettings settings = region.Settings;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             DifficultyTierRef = settings.DifficultyTierRef;
+#endif
+
             EndlessLevel = settings.EndlessLevel;
             if (incrementEndlessLevel)
                 EndlessLevel++;
@@ -203,6 +210,7 @@ namespace MHServerEmu.Games.Regions
                     EndlessLevel = 1;
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             // Keep difficulty consistent for teleports that are expected to be local (e.g. resurrect, Surtur raid teleport).
             if (DifficultyTierRef == PrototypeId.Invalid)
             {
@@ -218,6 +226,7 @@ namespace MHServerEmu.Games.Regions
 
             // Clamp target region's difficulty to the available range
             DifficultyTierRef = Player.GetDifficultyTierForRegion(regionProtoRef, DifficultyTierRef);
+#endif
 
             if (IsLocalTeleport(region, destinationRegionProto))
             {
@@ -225,8 +234,13 @@ namespace MHServerEmu.Games.Regions
             }
             else
             {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 if (Player.CanEnterRegion(regionProtoRef, DifficultyTierRef, false) == false)
                     return false;
+#else
+                if (Player.CanEnterRegion(regionProtoRef, false) == false)
+                    return false;
+#endif
 
                 if (destinationRegionProto.IsQueueRegion)
                     return BeginTeleportToQueueTarget(regionProtoRef);
@@ -251,7 +265,11 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
+#if GAME_VERSION_1_48
+        public bool TeleportToWaypoint(PrototypeId waypointProtoRef, PrototypeId regionOverrideProtoRef)
+#else
         public bool TeleportToWaypoint(PrototypeId waypointProtoRef, PrototypeId regionOverrideProtoRef, PrototypeId difficultyProtoRef)
+#endif
         {
             if (CanTeleport() == false)
                 return false;
@@ -262,7 +280,9 @@ namespace MHServerEmu.Games.Regions
             RegionConnectionTargetPrototype targetProto = waypointProto.Destination.As<RegionConnectionTargetPrototype>();
             if (targetProto == null) return Logger.WarnReturn(false, "TeleportToWaypoint(): targetProto == null");
 
+#if !GAME_VERSION_1_48
             DifficultyTierRef = difficultyProtoRef;
+#endif
 
             PrototypeId regionProtoRef = regionOverrideProtoRef != PrototypeId.Invalid ? regionOverrideProtoRef : targetProto.Region;
             PrototypeId areaProtoRef = targetProto.Area;
@@ -337,7 +357,9 @@ namespace MHServerEmu.Games.Regions
         {
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Debug);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             teleporter.DifficultyTierRef = difficultyTierRef;
+#endif
             teleporter.TeleportToTarget(targetProtoRef);
         }
 
@@ -389,13 +411,22 @@ namespace MHServerEmu.Games.Regions
             // Queue up straight away if there is nothing to choose (queue bypass is not allowed and we are not in a party).
             if (destinationRegionProto.AllowsQueueBypass == false && party == null)
             {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 Player.SendRegionRequestQueueCommandToPlayerManager(regionProtoRef, DifficultyTierRef, RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo);
+#else
+                Player.SendRegionRequestQueueCommandToPlayerManager(regionProtoRef, PrototypeId.Invalid, RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo);
+#endif
                 return true;
             }
 
             // Ask the player to choose whether to queue solo or not.
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             Player.SendMatchQueueUpdate(Player.DatabaseUniqueId, regionProtoRef, DifficultyTierRef, 0,
                 RegionRequestQueueUpdateVar.eRRQ_SelectQueueMethod, Player.GetName());
+#else
+            Player.SendMatchQueueUpdate(Player.DatabaseUniqueId, regionProtoRef, PrototypeId.Invalid, 0,
+                RegionRequestQueueUpdateVar.eRRQ_SelectQueueMethod, Player.GetName());
+#endif
 
             return true;
         }
@@ -431,9 +462,11 @@ namespace MHServerEmu.Games.Regions
             if (RegionPrototype.Equivalent(destinationRegionProto, currentRegionProto) == false)
                 return false;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             // DifficultyTier
             if (DifficultyTierRef != PrototypeId.Invalid && currentRegion.DifficultyTierRef != DifficultyTierRef)
                 return false;
+#endif
 
             // EndlessLevel
             if (destinationRegionProto.HasEndlessTheme() && currentRegionProto.HasEndlessTheme() && EndlessLevel != currentRegion.Settings.EndlessLevel)
@@ -485,7 +518,9 @@ namespace MHServerEmu.Games.Regions
                 .SetLevel((uint)Level)
                 // origin
                 .SetCheat(Cheat)
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 .SetDifficultyTierProtoId((ulong)DifficultyTierRef)
+#endif
                 .SetEndlessLevel((uint)EndlessLevel)
                 // gameStateId
                 // matchNumber

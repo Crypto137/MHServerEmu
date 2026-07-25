@@ -47,7 +47,9 @@ namespace MHServerEmu.PlayerManagement.Regions
                 GameId = region.Game.Id;
                 RegionId = region.Id;
                 Name = region.RegionProtoRef.GetNameFormatted();
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 DifficultyTier = region.DifficultyTierProtoRef.GetNameFormatted();
+#endif
                 Uptime = TimeSpan.FromSeconds((long)region.Uptime.TotalSeconds);
             }
 

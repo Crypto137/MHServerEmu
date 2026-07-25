@@ -114,10 +114,12 @@ namespace MHServerEmu.Games.Achievements
             DependentAchievementId = info.DependentAchievementId;
             UIProgressDisplayOption = GetAchievementUIProgressDisplayOptionFromInt(info.UiProgressDisplayOption);
             PublishedDateUS = new((long)info.PublishedDateUS * TimeSpan.TicksPerSecond);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             IconPathHiResAssetId = (AssetId)info.IconPathHiResAssetId;
             OrbisTrophy = info.OrbisTrophy;
             OrbisTrophyId = info.OrbisTrophyId;
             OrbisTrophyShared = info.OrbisTrophyShared;
+#endif
         }
 
         public void SetContext()
@@ -183,11 +185,14 @@ namespace MHServerEmu.Games.Achievements
                 .SetThreshold(Threshold)
                 .SetDependentAchievementId(DependentAchievementId)
                 .SetUiProgressDisplayOption((uint)UIProgressDisplayOption)
-                .SetPublishedDateUS((ulong)PublishedDateUS.TotalSeconds)
-                .SetIconPathHiResAssetId((ulong)IconPathHiResAssetId);
+                .SetPublishedDateUS((ulong)PublishedDateUS.TotalSeconds);
+
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            builder.SetIconPathHiResAssetId((ulong)IconPathHiResAssetId);
 
             if (OrbisTrophy)
                 builder.SetOrbisTrophy(OrbisTrophy).SetOrbisTrophyId(OrbisTrophyId).SetOrbisTrophyShared(OrbisTrophyShared);
+#endif
 
             return builder.Build();
         }

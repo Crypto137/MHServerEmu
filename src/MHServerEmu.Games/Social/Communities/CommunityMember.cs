@@ -47,22 +47,42 @@ namespace MHServerEmu.Games.Social.Communities
 
         private ulong _dbId;
         private PrototypeId _regionRef;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private PrototypeId _difficultyRef;
+#endif
 
         private long _lastLogoutTimeAsFileTimeUtc = 0;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private AvatarSlotInfo[] _slots = Array.Empty<AvatarSlotInfo>();
+#else
+        private PrototypeId _avatarRef;
+        private PrototypeId _costumeRef;
+        private int _characterLevel;
+        private int _prestigeLevel;
+#endif
         private CommunityMemberOnlineStatus _isOnline;
         private string _playerName = string.Empty;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private string _secondaryPlayerName = string.Empty;
+#endif
         private readonly BitArray _systemCircles = new((int)CircleId.NumCircles);
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private InlineArray2<ulong> _consoleAccountIds;
+#endif
 
         public Community Community { get; }
 
         public ulong DbId { get => _dbId; }
         public PrototypeId RegionRef { get => _regionRef; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId DifficultyRef { get => _difficultyRef; }
+#else
+        public PrototypeId AvatarRef { get => _avatarRef; }
+        public PrototypeId CostumeRef { get => _costumeRef; }
+        public int CharacterLevel { get => _characterLevel; }
+        public int PrestigeLevel { get => _prestigeLevel; }
+#endif
         public CommunityMemberOnlineStatus IsOnline { get => _isOnline; }
 
         public CommunityMember(Community community, ulong playerDbId, string playerName)
@@ -79,6 +99,7 @@ namespace MHServerEmu.Games.Social.Communities
             if (archive.IsPersistent == false)
             {
                 success &= Serializer.Transfer(archive, ref _regionRef);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 success &= Serializer.Transfer(archive, ref _difficultyRef);
 
                 byte numSlots = 0;
@@ -102,15 +123,22 @@ namespace MHServerEmu.Games.Social.Communities
 
                     success &= Serializer.Transfer(archive, ref _slots[i]);
                 }
+#else
+                success &= Serializer.Transfer(archive, ref _avatarRef);
+                success &= Serializer.Transfer(archive, ref _characterLevel);
+                success &= Serializer.Transfer(archive, ref _prestigeLevel);
+#endif
 
                 int isOnline = (int)_isOnline;
                 success &= Serializer.Transfer(archive, ref isOnline);
                 _isOnline = (CommunityMemberOnlineStatus)isOnline;
 
                 success &= Serializer.Transfer(archive, ref _playerName);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
                 success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
                 success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
+#endif
             }
 
             int numCircles = 0;
@@ -156,6 +184,7 @@ namespace MHServerEmu.Games.Social.Communities
             return success;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public string GetName(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
         {
             if (avatarIndex == PlayerAvatarIndex.Secondary)
@@ -163,7 +192,14 @@ namespace MHServerEmu.Games.Social.Communities
 
             return _playerName;
         }
+#else
+        public string GetName()
+        {
+            return _playerName;
+        }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public void SetName(string name, PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
         {
             if (avatarIndex == PlayerAvatarIndex.Secondary)
@@ -171,7 +207,14 @@ namespace MHServerEmu.Games.Social.Communities
             else
                 _playerName = name;
         }
+#else
+        public void SetName(string name)
+        {
+            _playerName = name;
+        }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public ulong GetConsoleAccountId(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
         {
             if ((avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count) == false)
@@ -179,7 +222,9 @@ namespace MHServerEmu.Games.Social.Communities
 
             return _consoleAccountIds[(int)avatarIndex];
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool SetConsoleAccountId(ulong consoleAccountId, PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
         {
             if ((avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count) == false)
@@ -188,7 +233,9 @@ namespace MHServerEmu.Games.Social.Communities
             _consoleAccountIds[(int)avatarIndex] = consoleAccountId;
             return true;
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AvatarSlotInfo GetAvatarSlotInfo(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
         {
             int index = (int)avatarIndex;
@@ -198,6 +245,7 @@ namespace MHServerEmu.Games.Social.Communities
 
             return null;
         }
+#endif
 
         public bool ShouldArchiveTo(Archive archive)
         {
@@ -296,6 +344,7 @@ namespace MHServerEmu.Games.Social.Communities
                     
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (broadcast.HasCurrentDifficultyRefId)
             {
                 // CommunityMember::updateDifficultyRef()
@@ -307,6 +356,7 @@ namespace MHServerEmu.Games.Social.Communities
                     updateOptions |= CommunityMemberUpdateOptions.DifficultyRef;
                 }  
             }
+#endif
 
             if (broadcast.HasIsOnline)
             {
@@ -326,6 +376,7 @@ namespace MHServerEmu.Games.Social.Communities
                     updateOptions |= CommunityMemberUpdateOptions.LastLogoutTime;
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (broadcast.SlotsCount > 0)
             {
                 // Number of avatars changed
@@ -390,6 +441,51 @@ namespace MHServerEmu.Games.Social.Communities
                         Logger.Warn($"ReceiveBroadcast(): HasOnlineId {slot.OnlineId}");
                 }
             }
+#else
+            if (broadcast.HasCurrentAvatarRefId)
+            {
+                PrototypeId newAvatarRef = (PrototypeId)broadcast.CurrentAvatarRefId;
+
+                if (_avatarRef != newAvatarRef)
+                {
+                    _avatarRef = newAvatarRef;
+                    updateOptions |= CommunityMemberUpdateOptions.AvatarRef;
+                }
+            }
+
+            if (broadcast.HasCurrentCostumeRefId)
+            {
+                PrototypeId newCostumeRef = (PrototypeId)broadcast.CurrentCostumeRefId;
+
+                if (_costumeRef != newCostumeRef)
+                {
+                    _costumeRef = newCostumeRef;
+                    updateOptions |= CommunityMemberUpdateOptions.CostumeRef;
+                }
+            }
+
+            if (broadcast.HasCurrentCharacterLevel)
+            {
+                int newCharacterLevel = (int)broadcast.CurrentCharacterLevel;
+
+                if (_characterLevel != newCharacterLevel)
+                {
+                    _characterLevel = newCharacterLevel;
+                    updateOptions |= CommunityMemberUpdateOptions.Level;
+                }
+            }
+
+            if (broadcast.HasCurrentPrestigeLevel)
+            {
+                int newPrestigeLevel = (int)broadcast.CurrentPrestigeLevel;
+
+                if (_prestigeLevel != newPrestigeLevel)
+                {
+                    _prestigeLevel = newPrestigeLevel;
+                    updateOptions |= CommunityMemberUpdateOptions.PrestigeLevel;
+                }
+            }
+#endif
 
             if (broadcast.HasCurrentPlayerName)
             {
@@ -400,6 +496,7 @@ namespace MHServerEmu.Games.Social.Communities
                 }
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (broadcast.HasSecondaryPlayerName)
             {
                 if (_secondaryPlayerName != broadcast.SecondaryPlayerName)
@@ -417,6 +514,7 @@ namespace MHServerEmu.Games.Social.Communities
                     updateOptions |= CommunityMemberUpdateOptions.SecondaryPlayer;
                 }
             }
+#endif
 
             // Notify circles of member changes
             if (updateOptions != CommunityMemberUpdateOptions.None)
@@ -442,6 +540,7 @@ namespace MHServerEmu.Games.Social.Communities
                 updateOptions |= CommunityMemberUpdateOptions.RegionRef;
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (DifficultyRef != PrototypeId.Invalid)
             {
                 _difficultyRef = PrototypeId.Invalid;
@@ -474,6 +573,31 @@ namespace MHServerEmu.Games.Social.Communities
                     updateOptions |= CommunityMemberUpdateOptions.PrestigeLevel;
                 }
             }
+#else
+            if (AvatarRef != PrototypeId.Invalid)
+            {
+                _avatarRef = PrototypeId.Invalid;
+                updateOptions |= CommunityMemberUpdateOptions.AvatarRef;
+            }
+
+            if (CostumeRef != PrototypeId.Invalid)
+            {
+                _costumeRef = PrototypeId.Invalid;
+                updateOptions |= CommunityMemberUpdateOptions.CostumeRef;
+            }
+
+            if (CharacterLevel != 0)
+            {
+                _characterLevel = 0;
+                updateOptions |= CommunityMemberUpdateOptions.Level;
+            }
+
+            if (PrestigeLevel != 0)
+            {
+                _prestigeLevel = 0;
+                updateOptions |= CommunityMemberUpdateOptions.PrestigeLevel;
+            }
+#endif
 
             return updateOptions;
         }
@@ -497,6 +621,7 @@ namespace MHServerEmu.Games.Social.Communities
             if (updateOptions.HasFlag(CommunityMemberUpdateOptions.RegionRef))
                 broadcastBuilder.SetCurrentRegionRefId((ulong)RegionRef);
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if ((updateOptions & CommunityMemberUpdateOptions.AvatarSlotBits) != 0)
             {
                 foreach (AvatarSlotInfo avatarSlotInfo in _slots)
@@ -518,6 +643,19 @@ namespace MHServerEmu.Games.Social.Communities
                     broadcastBuilder.AddSlots(avatarSlotBuilder.Build());
                 }
             }
+#else
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.AvatarRef))
+                broadcastBuilder.SetCurrentAvatarRefId((ulong)AvatarRef);
+
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.CostumeRef))
+                broadcastBuilder.SetCurrentCostumeRefId((ulong)CostumeRef);
+
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.Level))
+                broadcastBuilder.SetCurrentCharacterLevel((uint)CharacterLevel);
+
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.PrestigeLevel))
+                broadcastBuilder.SetCurrentPrestigeLevel((uint)PrestigeLevel);
+#endif
 
             if (updateOptions.HasFlag(CommunityMemberUpdateOptions.IsOnline))
                 broadcastBuilder.SetIsOnline((int)IsOnline);
@@ -528,8 +666,10 @@ namespace MHServerEmu.Games.Social.Communities
             if (IsOnline != CommunityMemberOnlineStatus.Online && updateOptions.HasFlag(CommunityMemberUpdateOptions.LastLogoutTime))
                 broadcastBuilder.SetLastLogoutTimeAsFileTimeUtc(_lastLogoutTimeAsFileTimeUtc);
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (updateOptions.HasFlag(CommunityMemberUpdateOptions.DifficultyRef))
                 broadcastBuilder.SetCurrentDifficultyRefId((ulong)DifficultyRef);
+#endif
 
             // We don't care about secondary players on PC
 
@@ -564,15 +704,23 @@ namespace MHServerEmu.Games.Social.Communities
             sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
             sb.AppendLine($"{nameof(_dbId)}: 0x{_dbId:X}");
             sb.AppendLine($"{nameof(_regionRef)}: {GameDatabase.GetPrototypeName(_regionRef)}");
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             sb.AppendLine($"{nameof(_difficultyRef)}: {GameDatabase.GetPrototypeName(_difficultyRef)}");
 
             for (int i = 0; i < _slots.Length; i++)
                 sb.AppendLine($"{nameof(_slots)}[{i}]: {_slots[i]}");
-
+#else
+            sb.AppendLine($"{nameof(_avatarRef)}: {GameDatabase.GetPrototypeName(_avatarRef)}");
+            sb.AppendLine($"{nameof(_costumeRef)}: {GameDatabase.GetPrototypeName(_costumeRef)}");
+            sb.AppendLine($"{nameof(_characterLevel)}: {_characterLevel}");
+            sb.AppendLine($"{nameof(_prestigeLevel)}: {_prestigeLevel}");
+#endif
             sb.AppendLine($"{nameof(_isOnline)}: {_isOnline}");
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
+#endif
 
             sb.Append($"{nameof(_systemCircles)}: ");
             for (int i = 0; i < _systemCircles.Count; i++)

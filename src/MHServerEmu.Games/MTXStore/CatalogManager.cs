@@ -126,6 +126,7 @@ namespace MHServerEmu.Games.MTXStore
             }
 
             // CUSTOM: Check Omega/Infinity level requirement
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (game.InfinitySystemEnabled)
             {
                 if (_giftingInfinityLevelRequired > 0 && buyer.GetTotalInfinityPoints() < _giftingInfinityLevelRequired)
@@ -135,7 +136,8 @@ namespace MHServerEmu.Games.MTXStore
                     return false;
                 }
             }
-            else 
+            else
+#endif
             {
                 if (_giftingOmegaLevelRequired > 0 && buyer.GetOmegaPoints() < _giftingOmegaLevelRequired)
                 {

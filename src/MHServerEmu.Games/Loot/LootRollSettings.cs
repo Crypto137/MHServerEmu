@@ -39,7 +39,9 @@ namespace MHServerEmu.Games.Loot
         // LootRollModifyAffixLimitsPrototype
         public Dictionary<AffixPosition, short> AffixLimitMinByPositionModifiers { get; } = new();   // Modifies the minimum number of affixes for position
         public Dictionary<AffixPosition, short> AffixLimitMaxByPositionModifiers { get; } = new();   // Modifies the maximum number of affixes for position
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public Dictionary<AffixCategoryPrototype, short> AffixLimitByCategoryModifiers { get; } = new();
+#endif
         public PrototypeId MissionRef { get; set; }
 
         public bool IsInPool { get; set; }
@@ -97,12 +99,14 @@ namespace MHServerEmu.Games.Loot
                     AffixLimitMaxByPositionModifiers.Add(kvp.Key, kvp.Value);
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             AffixLimitByCategoryModifiers.Clear();
             if (other.AffixLimitByCategoryModifiers.Count > 0)
             {
                 foreach (var kvp in other.AffixLimitByCategoryModifiers)
                     AffixLimitByCategoryModifiers.Add(kvp.Key, kvp.Value);
             }
+#endif
         }
 
         public void ResetForPool()
@@ -139,7 +143,9 @@ namespace MHServerEmu.Games.Loot
 
             AffixLimitMinByPositionModifiers.Clear();
             AffixLimitMaxByPositionModifiers.Clear();
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             AffixLimitByCategoryModifiers.Clear();
+#endif
         }
 
         public void Dispose()

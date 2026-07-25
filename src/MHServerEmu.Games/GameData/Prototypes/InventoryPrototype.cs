@@ -128,6 +128,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId ForAvatar { get; protected set; }
         public AssetId IconPath { get; protected set; }
+#if GAME_VERSION_1_48
+        public LocaleStringId DisplayName { get; protected set; }
+#endif
         public LocaleStringId FulfillmentName { get; protected set; }
         public AssetId[] StashTabCustomIcons { get; protected set; }
     }
