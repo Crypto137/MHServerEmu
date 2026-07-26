@@ -3272,14 +3272,40 @@ namespace MHServerEmu.Games.Powers
             return Prototype.ExtraActivation is SecondaryActivateOnReleasePrototype;
         }
 
+#if GAME_VERSION_1_53
+        public bool IsBasicKeywordPower()
+        {
+            KeywordGlobalsPrototype keywordGlobals = GameDatabase.KeywordGlobalsPrototype;
+            if (!Verify.IsNotNull(keywordGlobals)) return false;
+            KeywordPrototype basicKeyword = keywordGlobals.BasicPowerKeyword;
+            if (!Verify.IsNotNull(basicKeyword)) return false;
+
+            return HasKeyword(basicKeyword);
+        }
+#endif
+
         public bool IsContinuous()
         {
             if (IsToggled())
                 return false;
 
+#if GAME_VERSION_1_53
+            // 1.53 specific edge case for Gladiator Thor's basic powers
+            TimeSpan executionTime = GetFullExecutionTime();
+            if (executionTime.TotalMilliseconds <= 50)
+            {
+                bool isInstantComboBasicPower = executionTime == TimeSpan.Zero &&
+                    IsBasicKeywordPower() &&
+                    TriggersComboPowerOnEvent(PowerEventType.OnPowerEnd);
+
+                if (isInstantComboBasicPower == false)
+                    return false;
+            }
+#else
             // <= 50 ms is too fast to be a continuous power - is this related to game fixed time update time?
             if (GetFullExecutionTime().TotalMilliseconds <= 50)
                 return false;
+#endif
 
             if (GetCooldownDuration() > TimeSpan.Zero)
                 return false;
