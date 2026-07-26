@@ -33,6 +33,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class DownloadChunkPrototype : Prototype
     {
+#if GAME_VERSION_1_48
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public RegionPrototype[] Regions { get; protected set; }
+#endif
         public PrototypeId Chapter { get; protected set; }
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId[] Data { get; protected set; }
