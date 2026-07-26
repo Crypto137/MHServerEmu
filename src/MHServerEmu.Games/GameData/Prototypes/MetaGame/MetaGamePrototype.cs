@@ -26,29 +26,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
     [AssetEnum((int)None)]
     public enum GameNotificationType
     {
-        None = 0,
-        PartyInvite = 1,
-        GuildInvite = 2,
-        PowerPointsAwarded = 3,
-        ServerMessage = 4,
-        MissionUpdate = 6,
-        RemoteMission = 5,
-        MatchQueue = 7,
-        PvPShop = 8,
-        OfferingUI = 9,
-        DifficultyModeUnlocked = 10,
-        MetaGameInfo = 11,
-        LegendaryMission = 12,
-        PvPScore = 13,
-        OmegaPointsAwarded = 14,
-        TradeInvite = 15,
-        LoginReward = 16,
-        GiftReceived = 17,
-        LeaderboardRewarded = 18,
-        CouponReceived = 19,
-        PublicEvent = 20,
-        // Not found in client
-        SynergyPoints = 0
+        None,
+        PartyInvite,
+        GuildInvite,
+        PowerPointsAwarded,
+        ServerMessage,
+        RemoteMission,
+        MissionUpdate,
+        MatchQueue,
+        PvPShop,
+        OfferingUI,
+        DifficultyModeUnlocked,
+        MetaGameInfo,
+        LegendaryMission,
+        PvPScore,
+        OmegaPointsAwarded,
+        TradeInvite,
+        LoginReward,
+        GiftReceived,
+        LeaderboardRewarded,
+        CouponReceived,
+        PublicEvent,
+        // no lookup in the client
+        // SynergyPoints = 0,
+        // StarterAvatarUnlock = 0,
     }
 
     [AssetEnum((int)Interval)]

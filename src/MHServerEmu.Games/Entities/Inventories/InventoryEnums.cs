@@ -80,7 +80,6 @@ namespace MHServerEmu.Games.Entities.Inventories
     public enum InventoryConvenienceLabel
     {
         None,
-        //AvatarRing = 0,    // Missing in the client
         AvatarArtifact1,
         AvatarArtifact2,
         AvatarArtifact3,
@@ -117,6 +116,8 @@ namespace MHServerEmu.Games.Entities.Inventories
         AvatarEmoteItem3,
         UIDefaultEmoteItems,
 #endif
+        // no lookup in the client
+        //AvatarRing = 0,
     }
 
     public enum InventoryMetaDataType : byte
