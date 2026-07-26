@@ -4053,7 +4053,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
 
+#if GAME_VERSION_1_53
+            // V53_TODO: LevelingDataConsole
+            Curve pctXPFromPrestigeLevelCurve = advancementProto.LevelingDataPC.PctXPFromPrestigeLevelCurve.AsCurve();
+#else
             Curve pctXPFromPrestigeLevelCurve = advancementProto.PctXPFromPrestigeLevelCurve.AsCurve();
+#endif
             if (!Verify.IsNotNull(pctXPFromPrestigeLevelCurve)) return 1f;
 
             if (prestigeLevel == advancementProto.MaxPrestigeLevel)
@@ -5883,8 +5888,14 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Get requirements from advancement globals
             AdvancementGlobalsPrototype advancementGlobals = GameDatabase.AdvancementGlobalsPrototype;
+#if GAME_VERSION_1_53
+            // V53_TODO: LevelingDataConsole
+            Curve normalBonusCurve = advancementGlobals.LevelingDataPC.ExperienceBonusAvatarSynergy.AsCurve();
+            Curve cappedBonusMaxCurve = advancementGlobals.LevelingDataPC.ExperienceBonusLevel60Synergy.AsCurve();
+#else
             Curve normalBonusCurve = advancementGlobals.ExperienceBonusAvatarSynergy.AsCurve();
             Curve cappedBonusMaxCurve = advancementGlobals.ExperienceBonusLevel60Synergy.AsCurve();
+#endif
             int originalMaxLevel = advancementGlobals.OriginalMaxLevel;
 
             float experienceBonus = 0f;
@@ -5906,7 +5917,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             experienceBonus += cappedBonusMaxCurve.GetAt(numLevelCappedAvatars);
+#if GAME_VERSION_1_53
+            // V53_TODO: LevelingDataConsole
+            experienceBonus = Math.Min(experienceBonus, advancementGlobals.LevelingDataPC.ExperienceBonusAvatarSynergyMax);
+#else
             experienceBonus = Math.Min(experienceBonus, advancementGlobals.ExperienceBonusAvatarSynergyMax);
+#endif
 
             Properties[PropertyEnum.ExperienceBonusAvatarSynergy] = experienceBonus;
 

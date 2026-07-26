@@ -3789,6 +3789,9 @@ namespace MHServerEmu.Games.Entities
                         || indicatorType == HUDEntityOverheadIcon.MissionAdvancer)
                     {
                         var message = NetMessageMissionInteractRepeat.CreateBuilder()
+#if GAME_VERSION_1_53
+                            .SetAvatarIndex(0)  // V53_NOTE: need proper avatar index here for coop
+#endif
                             .SetTargetEntityId(targetId)
                             .SetMissionPrototypeId(0).Build(); // client not use MissionPrototype
 

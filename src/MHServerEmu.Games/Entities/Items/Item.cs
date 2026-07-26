@@ -1340,7 +1340,14 @@ namespace MHServerEmu.Games.Entities.Items
 
         public int GetAffixLevelCap()
         {
+#if GAME_VERSION_1_53
+            LegendaryPrototype legendaryProto = Prototype as LegendaryPrototype;
+            if (!Verify.IsNotNull(legendaryProto)) return 0;
+
+            return legendaryProto.GetItemAffixLevelCap();
+#else
             return GameDatabase.AdvancementGlobalsPrototype.GetItemAffixLevelCap();
+#endif
         }
 
         public void AwardAffixXP(long amount)
@@ -1354,7 +1361,14 @@ namespace MHServerEmu.Games.Entities.Items
 
         private long GetAffixLevelUpXPRequirement(int level)
         {
+#if GAME_VERSION_1_53
+            LegendaryPrototype legendaryProto = Prototype as LegendaryPrototype;
+            if (!Verify.IsNotNull(legendaryProto)) return 0;
+
+            return legendaryProto.GetItemAffixLevelUpXPRequirement(level);
+#else
             return GameDatabase.AdvancementGlobalsPrototype.GetItemAffixLevelUpXPRequirement(level);
+#endif
         }
 
         public bool CanSocketGem(Item gem)

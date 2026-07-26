@@ -410,7 +410,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AdvancementGlobalsPrototype : Prototype
     {
+#if !GAME_VERSION_1_53
         public CurveId LevelingCurve { get; protected set; }
+#endif
         public CurveId DeathPenaltyCost { get; protected set; }
         public CurveId ItemEquipRequirementOffset { get; protected set; }
 #if GAME_VERSION_1_48
@@ -429,11 +431,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int PowerBoostMax { get; protected set; }
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public PrestigeLevelPrototype[] PrestigeLevels { get; protected set; }
+#if !GAME_VERSION_1_53
         public CurveId ItemAffixLevelingCurve { get; protected set; }
         public CurveId ExperienceBonusAvatarSynergy { get; protected set; }
         public float ExperienceBonusAvatarSynergyMax { get; protected set; }
+#endif
         public int OriginalMaxLevel { get; protected set; }
+#if !GAME_VERSION_1_53
         public CurveId ExperienceBonusLevel60Synergy { get; protected set; }
+#endif
         public int TeamUpPowersPerTier { get; protected set; }
         public CurveId TeamUpPowerTiersCurve { get; protected set; }
 #if !GAME_VERSION_1_53
@@ -447,7 +453,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PetTechAffixInfoPrototype[] PetTechAffixInfo { get; protected set; }
         public PrototypeId PetTechDonationItemPrototype { get; protected set; }
         public int AvatarPowerSpecsMax { get; protected set; }
+#if !GAME_VERSION_1_53
         public CurveId PctXPFromPrestigeLevelCurve { get; protected set; }
+#endif
         public int StarterAvatarLevelCap { get; protected set; }
         public CurveId TeamUpLevelingCurve { get; protected set; }
         public int TeamUpPowerSpecsMax { get; protected set; }
@@ -512,6 +520,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return levelingCurve.MaxPosition;
         }
 
+#if !GAME_VERSION_1_53
         public int GetItemAffixLevelCap()
         {
             Curve levelingCurve = GetItemAffixLevelingCurve();
@@ -519,6 +528,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return levelingCurve.MaxPosition;
         }
+#endif
 
         public PetTechAffixInfoPrototype GetPetTechAffixInfoPrototype(AffixPosition position)
         {
@@ -579,6 +589,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
         }
 
+#if !GAME_VERSION_1_53
         public long GetItemAffixLevelUpXPRequirement(int level)
         {
             if (level < 0)
@@ -589,8 +600,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
         }
+#endif
 
-        private static long GetLevelUpXPRequirementFromCurve(int level, Curve curve)
+        public static long GetLevelUpXPRequirementFromCurve(int level, Curve curve)
         {
             if (level < curve.MinPosition || level > curve.MaxPosition)
                 return InvalidXPRequirement;
@@ -600,7 +612,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private Curve GetAvatarLevelingCurve()
         {
+#if GAME_VERSION_1_53
+            return CurveDirectory.Instance.GetCurve(LevelingDataPC.LevelingCurve);
+#else
             return CurveDirectory.Instance.GetCurve(LevelingCurve);
+#endif
         }
 
         private Curve GetTeamUpLevelingCurve()
@@ -608,10 +624,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return CurveDirectory.Instance.GetCurve(TeamUpLevelingCurve);
         }
 
+#if !GAME_VERSION_1_53
         private Curve GetItemAffixLevelingCurve()
         {
             return CurveDirectory.Instance.GetCurve(ItemAffixLevelingCurve);
         }
+#endif
     }
 
 #if GAME_VERSION_1_53

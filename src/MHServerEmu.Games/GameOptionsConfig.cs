@@ -67,6 +67,9 @@ namespace MHServerEmu.Games
                 .SetOrbisTrophiesEnabled(OrbisTrophiesEnabled)
                 .SetPlatformType((int)Platforms.PC)
 #endif
+#if GAME_VERSION_1_53
+                .SetMetaGamePanelV2Enabled(true)
+#endif
                 .Build();
         }
     }

@@ -225,6 +225,12 @@ namespace MHServerEmu.Games.Missions
             // Old versions have an ItemSpec map instead of a loot seed here
             success &= Serializer.Transfer(archive, ref _lootSeed);
 
+#if GAME_VERSION_1_53
+            // V53_TODO
+            PrototypeId difficultyRef = PrototypeId.Invalid;
+            success &= Serializer.Transfer(archive, ref difficultyRef);
+#endif
+
             if (archive.IsReplication)
             {
                 // Participants and suspension status are serialized only for replication

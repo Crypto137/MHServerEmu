@@ -1252,6 +1252,39 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_53
         public CurveId ItemAffixLevelingCurve { get; protected set; }
 #endif
+
+        //---
+
+        // V53_NOTE: 1.53 added per legendary leveling curves instead of a single global one.
+#if GAME_VERSION_1_53
+        public int GetItemAffixLevelCap()
+        {
+            Curve levelingCurve = GetItemAffixLevelingCurve();
+            if (!Verify.IsNotNull(levelingCurve)) return 0;
+
+            return levelingCurve.MaxPosition;
+        }
+#endif
+
+#if GAME_VERSION_1_53
+        public long GetItemAffixLevelUpXPRequirement(int level)
+        {
+            if (level < 0)
+                return AdvancementGlobalsPrototype.InvalidXPRequirement;
+
+            Curve levelingCurve = GetItemAffixLevelingCurve();
+            if (!Verify.IsNotNull(levelingCurve)) return AdvancementGlobalsPrototype.InvalidXPRequirement;
+
+            return AdvancementGlobalsPrototype.GetLevelUpXPRequirementFromCurve(level, levelingCurve);
+        }
+#endif
+
+#if GAME_VERSION_1_53
+        private Curve GetItemAffixLevelingCurve()
+        {
+            return CurveDirectory.Instance.GetCurve(ItemAffixLevelingCurve);
+        }
+#endif
     }
 
     public class MedalPrototype : ItemPrototype
