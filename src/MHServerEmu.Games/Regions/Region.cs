@@ -952,22 +952,49 @@ namespace MHServerEmu.Games.Regions
             DifficultyTierPrototype difficultyTierProto = difficultyTierProtoRef.As<DifficultyTierPrototype>();
             if (difficultyTierProto == null) return;
 
-            Properties.AdjustProperty(difficultyTierProto.BonusExperiencePct, PropertyEnum.ExperienceBonusPct);
-            Properties.AdjustProperty(difficultyTierProto.BonusExperiencePct, PropertyEnum.LootBonusXPPct);
+#if GAME_VERSION_1_53
+            DifficultyTierGameplaySettingsPrototype gameplaySettingsProto = null;
+            
+            foreach (DifficultyTierGameplaySettingsPrototype settings in difficultyTierProto.PlatformSpecificGameplaySettings)
+            {
+                // V53_TODO: console settings
+                if (settings.Platform.HasFlag(Platforms.PC))
+                {
+                    gameplaySettingsProto = settings;
+                    break;
+                }
+            }
+
+            if (!Verify.IsNotNull(gameplaySettingsProto)) return;
+#endif
+
             Properties.AdjustProperty(difficultyTierProto.ItemFindCreditsPct, PropertyEnum.LootBonusCreditsPct);
             Properties.AdjustProperty(difficultyTierProto.ItemFindRarePct, PropertyEnum.LootBonusRarityPct);
             Properties.AdjustProperty(difficultyTierProto.ItemFindSpecialPct, PropertyEnum.LootBonusSpecialPct);
+
+#if GAME_VERSION_1_53
+            Properties.AdjustProperty(gameplaySettingsProto.BonusExperiencePct, PropertyEnum.ExperienceBonusPct);
+            Properties.AdjustProperty(gameplaySettingsProto.BonusExperiencePct, PropertyEnum.LootBonusXPPct);
+
+            Properties.AdjustProperty(gameplaySettingsProto.BonusItemFindBonusDifficultyMult, PropertyEnum.BonusItemFindBonusDifficultyMult);
+
+            Properties[PropertyEnum.DamageRegionMobToPlayer] *= gameplaySettingsProto.DamageMobToPlayerPct;
+            Properties[PropertyEnum.DamageRegionPlayerToMob] *= gameplaySettingsProto.DamagePlayerToMobPct;
+#else
+            Properties.AdjustProperty(difficultyTierProto.BonusExperiencePct, PropertyEnum.ExperienceBonusPct);
+            Properties.AdjustProperty(difficultyTierProto.BonusExperiencePct, PropertyEnum.LootBonusXPPct);
 
             Properties.AdjustProperty(difficultyTierProto.BonusItemFindBonusDifficultyMult, PropertyEnum.BonusItemFindBonusDifficultyMult);
 
             Properties[PropertyEnum.DamageRegionMobToPlayer] *= difficultyTierProto.DamageMobToPlayerPct;
             Properties[PropertyEnum.DamageRegionPlayerToMob] *= difficultyTierProto.DamagePlayerToMobPct;
+#endif
         }
 #endif
 
-        #endregion
+#endregion
 
-        #region Space & Physics
+            #region Space & Physics
 
         public Aabb CalculateAabbFromAreas()
         {

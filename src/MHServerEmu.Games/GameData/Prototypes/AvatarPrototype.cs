@@ -64,6 +64,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ItemAssignmentPrototype StartingCostumePS4 { get; protected set; }
         public ItemAssignmentPrototype StartingCostumeXboxOne { get; protected set; }
 #endif
+#if GAME_VERSION_1_53
+        public LocaleStringId PresenceStatusKeyXboxOne { get; protected set; }
+        public SlotUnlockPrototype[] AbilitySlotUnlockProgression { get; protected set; }
+        public bool OmegaPrestigeEnabled { get; protected set; }
+        public AssetId SocialIconPathConsole { get; protected set; }
+        public AssetId SynergyIconPath { get; protected set; }
+        public AssetId SynergyIconPathConsole { get; protected set; }
+        public AvatarPowerGroupUIPrototype[] PowerGroupUIs { get; protected set; }
+#endif
 
         //---
 
@@ -491,8 +500,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int UIFanSortNumber { get; protected set; }
         public int UIFanTier { get; protected set; }
         public PrototypeId[] Antirequisites { get; protected set; }
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if GAME_VERSION_1_52
         public bool IsTrait { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public PrototypeId CostumeRequired { get; protected set; }
+        public TraitCategory TraitCategory { get; protected set; }
+        public bool TraitRequiresOmegaPrestige { get; protected set; }
 #endif
 
         //---
@@ -520,4 +534,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public int PowerProgTableTabIndex { get; protected set; }
     }
+
+#if GAME_VERSION_1_53
+    public class SlotUnlockPrototype : Prototype
+    {
+        public int UnlockLevel { get; protected set; }
+        public PrototypeId Slot { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class AvatarPowerGroupUIPrototype : Prototype
+    {
+        public AssetId IconPath { get; protected set; }
+        public PowerKeywordPrototype PowerKeyword { get; protected set; }
+    }
+#endif
 }

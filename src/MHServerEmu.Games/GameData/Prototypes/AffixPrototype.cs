@@ -460,8 +460,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId EnemyBoostModType { get; protected set; }
         public PrototypeId PvPUpgradeModType { get; protected set; }
         public PrototypeId TalentModType { get; protected set; }
+#if !GAME_VERSION_1_53
         public PrototypeId OmegaBonusModType { get; protected set; }
         public PrototypeId OmegaHowToTooltipTemplate { get; protected set; }
+#endif
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId InfinityHowToTooltipTemplate { get; protected set; }
 #endif
@@ -482,12 +484,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
     }
 
+#if !GAME_VERSION_1_53
     public class OmegaBonusPrototype : ModPrototype
     {
         public PrototypeId[] Prerequisites { get; protected set; }
         public int UIHexIndex { get; protected set; }
     }
+#endif
 
+#if !GAME_VERSION_1_53
     public class OmegaBonusSetPrototype : ModPrototype
     {
         public LocaleStringId UITitle { get; protected set; }
@@ -498,6 +503,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId UIColor { get; protected set; }
         public AssetId UIBackgroundImage { get; protected set; }
     }
+#endif
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class InfinityGemBonusPrototype : ModPrototype
@@ -531,6 +537,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] Keywords { get; protected set; }
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public int BonusItemFindPoints { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public AssetId LootSource { get; protected set; }
 #endif
 
         //---
@@ -776,4 +785,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return curve.GetAt(Math.Clamp(level, curve.MinPosition, curve.MaxPosition));
         }
     }
+
+#if GAME_VERSION_1_53
+    public class EquipmentSetEntryPrototype : Prototype
+    {
+        public PropertySetEntryPrototype[] Properties { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class EquipmentSetPrototype : Prototype
+    {
+        public LocaleStringId DisplayName { get; protected set; }
+        public EquipmentSetEntryPrototype[] Entries { get; protected set; }
+        public CurveId SetLevelToEntryIndex { get; protected set; }
+    }
+#endif
 }

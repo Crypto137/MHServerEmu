@@ -218,6 +218,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DeathLimitUINotification { get; protected set; }
         public bool StayInModeOnFail { get; protected set; }
         public bool UseRegionDeathCount { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool FailOnAllPlayersDeadAndNoLives { get; protected set; }
+#endif
 
         //---
 

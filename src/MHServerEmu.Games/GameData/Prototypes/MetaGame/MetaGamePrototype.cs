@@ -104,6 +104,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MetaGameWidget { get; protected set; }
         public bool AllowMissionTrackerSorting { get; protected set; }
         public LocaleStringId InterstitialTextOverride { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool DisplayInRaidUIConsole { get; protected set; }
+#endif
     }
 
     public class MetaGameTeamPrototype : Prototype
@@ -204,8 +207,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId VOTeammateKilled { get; protected set; }
         public CurveId DamageBoostForWinPct { get; protected set; }
         public CurveId DamageReductionForWinPct { get; protected set; }
+#if !GAME_VERSION_1_53
         public CurveId DamageBoostForOmegaPct { get; protected set; }
         public CurveId DamageReductionForOmegaPct { get; protected set; }
+#endif
         public bool ScreenArrowsForNonPartyAvatars { get; protected set; }
 
         //---
@@ -247,17 +252,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return GetDamageModifier(DamageReductionForWinPct, index, 1f);
         }
 
+#if !GAME_VERSION_1_53
         public float GetDamageBoostForOmegaPct(float omegaPct)
         {
             int index = MathHelper.RoundToInt(omegaPct * 100f);
             return GetDamageModifier(DamageBoostForOmegaPct, index, 0f);
         }
+#endif
 
+#if !GAME_VERSION_1_53
         public float GetDamageReductionForOmegaPct(float omegaPct)
         {
             int index = MathHelper.RoundToInt(omegaPct * 100f);
             return GetDamageModifier(DamageReductionForOmegaPct, index, 1f);
         }
+#endif
 
         private static float GetDamageModifier(CurveId curveRef, int index, float defaultValue)
         {
@@ -318,6 +327,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] ApplyStates { get; protected set; }
         public PrototypeId[] RemoveStates { get; protected set; }
         public AssetId[] RemoveGroups { get; protected set; }
+#if GAME_VERSION_1_53
+        public PrototypeId AvatarOnKilledInfoOverrideNoLife { get; protected set; }
+#endif
 
         //---
 

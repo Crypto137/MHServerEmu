@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsArtifactInventory { get => ConvenienceLabel >= InventoryConvenienceLabel.AvatarArtifact1 && ConvenienceLabel <= InventoryConvenienceLabel.AvatarArtifact4; }
 
         [DoNotCopy]
-        public bool IsVisible { get => VisibleToOwner || VisibleToTrader || VisibleToParty || VisibleToProximity; } 
+        public bool IsVisible { get => VisibleToOwner || VisibleToTrader || VisibleToParty || VisibleToProximity; }
 
         /// <summary>
         /// Returns <see langword="true"/> if entities that use the provided <see cref="EntityPrototype"/> are allowed to be stored in inventories that use this <see cref="InventoryPrototype"/>.
@@ -150,7 +150,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId UIData { get; protected set; }
     }
 
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if GAME_VERSION_1_53
+    public class InventoryExtraSlotsGrantPrototype : ItemPrototype
+    {
+        public new LocaleStringId DisplayName { get; protected set; }
+        public int GrantSlotCount { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public InventoryExtraSlotsGroupPrototype SlotGroup { get; protected set; }
+    }
+#elif GAME_VERSION_1_52
     public class InventoryExtraSlotsGrantPrototype : Prototype
     {
         public LocaleStringId DisplayName { get; protected set; }

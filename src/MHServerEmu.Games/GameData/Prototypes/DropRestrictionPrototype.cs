@@ -657,6 +657,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class UsableByRestrictionPrototype : DropRestrictionPrototype
     {
         public PrototypeId[] Avatars { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool UsableByRollingAvatar { get; protected set; }   // V53_TODO
+#endif
 
         //---
 
@@ -709,4 +712,42 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return dropDistanceThresholdSq > filterArgs.DropDistanceSq;
         }
     }
+
+#if GAME_VERSION_1_53
+    public class RequireKeywordRestrictionPrototype : DropRestrictionPrototype
+    {
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype DropperKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype RegionKeyword { get; protected set; }
+
+        //---
+
+        public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All)
+        {
+            // V53_TODO
+            Verify.IsTrue(false);
+            return false;
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class ForbidKeywordRestrictionPrototype : DropRestrictionPrototype
+    {
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype DropperKeyword { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype RegionKeyword { get; protected set; }
+
+        //---
+
+        public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All)
+        {
+            // V53_TODO
+            Verify.IsTrue(false);
+            return false;
+        }
+    }
+#endif
 }

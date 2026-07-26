@@ -369,4 +369,15 @@ namespace MHServerEmu.Games.Powers
         SingleStackAddDuration = 4,
         MultiStackAddDuration = 5,
     }
+
+#if GAME_VERSION_1_53
+    [AssetEnum((int)None)]
+    public enum TraitCategory
+    {
+        None,
+        Offense,
+        Mechanic,
+        Defense,
+    }
+#endif
 }

@@ -231,6 +231,12 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     }
                 }
 
+                if (fieldInfo == null)
+                {
+                    errorMessage = "Unknown field";
+                    goto Error;
+                }
+
                 PrototypeFieldType fieldType = fieldInfo.Type;
 
                 if (blueprintMemberInfo.Member.IsCompatibleWithType(fieldType) == false)
@@ -499,7 +505,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     }
                     else
                     {
-                        Logger.Trace($"DeserializeFieldGroupIntoPropertyBuilder(): Param field name '{fieldName}' does not contain param index, defaulting to 0, file name {prototypeName}");
+                        //Logger.Trace($"DeserializeFieldGroupIntoPropertyBuilder(): Param field name '{fieldName}' does not contain param index, defaulting to 0, file name {prototypeName}");
                         paramIndex = 0;     // This probably works out client-side because of the null terminator?
                     }
 

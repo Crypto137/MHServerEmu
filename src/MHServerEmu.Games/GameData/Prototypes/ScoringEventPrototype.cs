@@ -874,4 +874,47 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Proto0 = Waypoint;
         }
     }
+
+#if GAME_VERSION_1_53
+    public class ScoringEventAvatarOmegaPrestigeLevelPrototype : ScoringEventPrototype
+    {
+        //---
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            Type = ScoringEventType.AvatarOmegaPrestigeLevel;
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class ScoringEventAvatarsAtOmegaPrestigeLevelPrototype : ScoringEventPrototype
+    {
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public OmegaPrestigeLevelPrototype OmegaPrestigeLevel { get; protected set; }
+
+        //---
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            Type = ScoringEventType.AvatarsAtOmegaPrestigeLevel;
+            Proto0 = OmegaPrestigeLevel;
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class ScoringEventAvatarsAtOmegaPrestigeLevelCapPrototype : ScoringEventPrototype
+    {
+        //---
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            Type = ScoringEventType.AvatarsAtOmegaPrestigeLevelCap;
+        }
+    }
+#endif
 }

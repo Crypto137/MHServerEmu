@@ -6611,4 +6611,104 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
     }
+
+#if GAME_VERSION_1_53
+    public class ProceduralProfilePsylockeWarPrototype : ProceduralProfileBasicMeleePrototype
+    {
+        public PrototypeId AreaA { get; protected set; }
+        public PrototypeId AreaB { get; protected set; }
+        public TriggerSpawnersContextPrototype[] BallistaSpawnersAreaA { get; protected set; }
+        public TriggerSpawnersContextPrototype[] BallistaSpawnersAreaB { get; protected set; }
+        public int BallistaActivateMinCooldownMS { get; protected set; }
+        public int BallistaActivateMaxCooldownMS { get; protected set; }
+        public int BallistaSpawnTimerMS { get; protected set; }
+
+        //---
+
+        public override void Think(AIController ownerController)
+        {
+            // V53_TODO
+            base.Think(ownerController);
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class ProceduralProfileBallistaMobPrototype : ProceduralProfileWithAttackPrototype
+    {
+        public PrototypeId PsylockeWar { get; protected set; }
+        public ProceduralUsePowerContextPrototype BallistaMisslePower { get; protected set; }
+
+        //---
+
+        public override void Think(AIController ownerController)
+        {
+            // V53_TODO
+            base.Think(ownerController);
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class ProceduralProfileFiveManHellfirePrototype : ProceduralProfileWithEnragePrototype
+    {
+        public ProceduralUsePowerContextPrototype FireSpoutPower { get; protected set; }
+        public float FireSpoutPowerAllSearchRadius { get; protected set; }
+        public float FireSpoutPowerSafeChoiceRadius { get; protected set; }
+        public ProceduralProfileSurturEnc5FireSpoutPrototype FireSpoutProceduralProfile { get; protected set; }
+        public PrototypeId FireSpout { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrimaryPower { get; protected set; }
+
+        //---
+
+        public override void Think(AIController ownerController)
+        {
+            // V53_TODO
+            base.Think(ownerController);
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class ProceduralProfileSurturEnc5FireSpoutPrototype : ProceduralProfileWithAttackPrototype
+    {
+        public PrototypeId SafeSpotPowerRef { get; protected set; }
+        public ProceduralUsePowerContextPrototype SummonFirePower { get; protected set; }
+
+        //---
+
+        public override void Think(AIController ownerController)
+        {
+            // V53_TODO
+            base.Think(ownerController);
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class ProceduralProfileSurturFiveManPrototype : ProceduralProfileWithEnragePrototype
+    {
+        public ProceduralUsePowerContextPrototype AdvanceIntoFight { get; protected set; }
+        public PrototypeId RetreatFromFight { get; protected set; }
+        public PrototypeId SummonWave { get; protected set; }
+        public PrototypeId PhasePower1 { get; protected set; }
+        public PrototypeId PhasePower3 { get; protected set; }
+        public int PhasePowerCooldownMS { get; protected set; }
+        public float Phase1HealthThreshold { get; protected set; }
+        public float Phase2HealthThreshold { get; protected set; }
+        public float Phase3HealthThreshold { get; protected set; }
+        public float Phase4HealthThreshold { get; protected set; }
+        public ProceduralUsePowerContextPrototype[] SwordPowersInitial { get; protected set; }
+        public ProceduralUsePowerContextPrototype[] SwordPowersPhase4 { get; protected set; }
+        public int NumSummonWaveEntities { get; protected set; }
+
+        //---
+
+        public override void Think(AIController ownerController)
+        {
+            // V53_TODO
+            base.Think(ownerController);
+        }
+    }
+#endif
 }

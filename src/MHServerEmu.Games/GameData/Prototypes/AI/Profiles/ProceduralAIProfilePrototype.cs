@@ -1628,7 +1628,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProcProfileSpikeDanceControllerPrototype : ProceduralAIProfilePrototype
     {
+#if GAME_VERSION_1_53
+        public PrototypeId OwnerAgent { get; protected set; }
+#else
         public PrototypeId Onslaught { get; protected set; }
+#endif
         public PrototypeId SpikeDanceMob { get; protected set; }
         public int MaxSpikeDanceActivations { get; protected set; }
         public float SpikeDanceMobSearchRadius { get; protected set; }
@@ -1741,7 +1745,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (!Verify.IsNotNull(broadcasterBlackboard)) return;
 
             State stateVal = (State)(int)broadcasterBlackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+#if GAME_VERSION_1_53
+            if (broadcaster.PrototypeDataRef == OwnerAgent &&
+#else
             if (broadcaster.PrototypeDataRef == Onslaught &&
+#endif
                 (stateVal == State.SpikeDance || stateVal == State.SpikeDanceSingle))
             {
                 ownerController.SetIsEnabled(true);
@@ -1749,6 +1757,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
     }
+
+#if GAME_VERSION_1_53
+    public class ProfLavaWaveRaidControllerPrototype : ProcProfileSpikeDanceControllerPrototype
+    {
+        //---
+
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
+        {
+            // V53_TODO
+        }
+    }
+#endif
 
     public class ProceduralProfileMeleeRevengePrototype : ProceduralProfileBasicMeleePrototype
     {
@@ -1827,4 +1847,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
         }
     }
+
+#if GAME_VERSION_1_53
+    public class ProceduralProfileLeashCoopPlayerPrototype : ProceduralAIProfilePrototype
+    {
+        public MoveToContextPrototype AvatarFollow { get; protected set; }
+
+        //---
+
+        public override void Think(AIController ownerController)
+        {
+            // V53_TODO
+            base.Think(ownerController);
+        }
+    }
+#endif
 }

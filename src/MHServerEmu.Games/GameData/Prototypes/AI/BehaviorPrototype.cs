@@ -633,6 +633,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class TeleportContextPrototype : Prototype
     {
         public TeleportType TeleportType { get; protected set; }
+#if GAME_VERSION_1_53
+        public PrototypeId PowerToActivate { get; protected set; }
+#endif
     }
 
     public class SelectEntityContextPrototype : Prototype
@@ -739,6 +742,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int PathNodeSetGroup { get; protected set; }
         public MovementSpeedOverride MovementSpeed { get; protected set; }
         public bool StopLocomotorOnMoveToFail { get; protected set; }
+#if GAME_VERSION_1_53
+        public float ChanceToMoveInFrontOfAssistedEnt { get; protected set; }
+#endif
     }
 
     public class OrbitContextPrototype : Prototype

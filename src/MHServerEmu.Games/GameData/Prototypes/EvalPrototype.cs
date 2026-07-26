@@ -1393,4 +1393,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 #endif
+
+#if GAME_VERSION_1_53
+    public class GetConditionStackCountPrototype : EvalPrototype
+    {
+        public EvalContext Context { get; protected set; }
+        public PrototypeId CreatorPower { get; protected set; }
+
+        //---
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            Op = EvalOp.GetConditionStackCount;
+        }
+
+        public override string ExpressionString()
+        {
+            return $"GetConditionStackCount(Context=[{Context}], CreatorPower={{{(CreatorPower != PrototypeId.Invalid ? CreatorPower.GetName() : "!NONE!")}}})";
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class LocalizedEvalConditionEntryPrototype : Prototype
+    {
+        public EvalPrototype Eval { get; protected set; }
+        public LocaleStringId Output { get; protected set; }
+    }
+#endif
 }

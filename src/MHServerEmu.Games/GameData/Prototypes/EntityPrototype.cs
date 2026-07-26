@@ -210,6 +210,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconPathHiRes { get; protected set; }
 #endif
+#if GAME_VERSION_1_53
+        public LocaleStringId StoreCategoryName { get; protected set; }
+#endif
 
         //---
 
@@ -295,13 +298,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool OverheadIndicator { get; protected set; }
         public bool RequireCombatActiveForKillCredit { get; protected set; }
         public bool ClonePerPlayer { get; protected set; }
+#if GAME_VERSION_1_48
+        public bool PrefectchMarkedAssets { get; protected set; } // mistyped name in 1.48
+#endif
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool PrefetchMarkedAssets { get; protected set; }
         public AssetId MarvelModelRenderClass { get; protected set; }
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
-#else
-        public bool PrefectchMarkedAssets { get; protected set; } // mistyped name in 1.48
+#endif
+#if GAME_VERSION_1_53
+        public bool LootSourceByRank { get; protected set; }
+        public float MarvelModelRenderActivateSeconds { get; protected set; }
 #endif
 
         // ---

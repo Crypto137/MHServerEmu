@@ -62,6 +62,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int IconSize { get; protected set; }
         public bool ShowOnlyWithGamepad { get; protected set; }
         public Platforms Platforms { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool ShowOnlyWithMouse { get; protected set; }
+#endif
     }
 
     public class TooltipSectionIconLabeledPrototype : TooltipSectionPrototype

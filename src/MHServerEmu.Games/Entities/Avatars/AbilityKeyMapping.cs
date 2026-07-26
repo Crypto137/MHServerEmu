@@ -278,8 +278,13 @@ namespace MHServerEmu.Games.Entities.Avatars
                 foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgEntryList)
                 {
                     // Skip traits
+#if GAME_VERSION_1_52
                     if (powerProgEntry.IsTrait)
                         continue;
+#elif GAME_VERSION_1_53
+                    if (powerProgEntry.TraitCategory != TraitCategory.None)
+                        continue;
+#endif
 
                     // Skip powers that don't have auto-assignment defined
                     AbilityAutoAssignmentSlotPrototype powerAssignmentProto = avatarProto.GetPowerInAbilityAutoAssignmentSlot(powerProgEntry.PowerAssignment.Ability);
@@ -315,7 +320,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 #endif
 
-            return hotkeyDataList.Count > 0;
+                    return hotkeyDataList.Count > 0;
         }
 
         /// <summary>

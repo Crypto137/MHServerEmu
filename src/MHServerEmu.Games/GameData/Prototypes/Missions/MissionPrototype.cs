@@ -87,9 +87,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId OpenMissionContributionReward { get; protected set; }
         public PrototypeId InitialChapter { get; protected set; }
         public BannerMessagePrototype InventoryFullMessage { get; protected set; }
+#if !GAME_VERSION_1_53
         public PrototypeId InitialStoryWarp { get; protected set; }
+#endif
         public PrototypeId MigrationStoryEndMission { get; protected set; }
+#if !GAME_VERSION_1_53
         public int LegendaryMissionLevelUnlock { get; protected set; }
+#endif
         public PrototypeId LegendaryChapter { get; protected set; }
         public PrototypeId LegendaryMissionPlaceholder { get; protected set; }
         public EvalPrototype LegendaryRerollCost { get; protected set; }
@@ -105,6 +109,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId EventMissionsChapter { get; protected set; }
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId AccountMissionsChapter { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public PrototypeId[] LegendaryIntroMissions { get; protected set; }
+        public PrototypeId LegendaryMissionSystemLock { get; protected set; }
+        public PrototypeId[] ConsoleMissionLogCategories { get; protected set; }
 #endif
     }
 
@@ -262,6 +271,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public InteractionSpecPrototype[] InteractionsWhenFailed { get; protected set; }
         public bool PlayerHUDShowObjsOnEntityAbove { get; protected set; }
         public MissionActionPrototype[] OnAvailableActions { get; protected set; }
+#if GAME_VERSION_1_53
+        public PrototypeId MissionWaypoint { get; protected set; }
+#endif
 
         //---
 
@@ -372,12 +384,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SuspendIfNoMatchingKeyword { get; protected set; }
         public MissionActionPrototype[] OnAvailableActions { get; protected set; }
         public MissionConditionListPrototype CompleteNowConditions { get; protected set; }
+#if GAME_VERSION_1_48
+        public bool CompleteNowNoRewards { get; protected set; }
+#endif
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public LootTablePrototype[] CompleteNowRewards { get; protected set; }
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
-#else
-        public bool CompleteNowNoRewards { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public PrototypeId MissionWaypoint { get; protected set; }
 #endif
 
         //---

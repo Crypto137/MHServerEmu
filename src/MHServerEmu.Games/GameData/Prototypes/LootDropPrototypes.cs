@@ -777,4 +777,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
         }
     }
+
+#if GAME_VERSION_1_53
+    public class LootDropOmegaPrestigePrototype : LootNodePrototype
+    {
+        //---
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            // V53_TODO
+            Verify.IsTrue(false);
+            return LootRollResult.NoRoll;
+        }
+    }
+#endif
 }

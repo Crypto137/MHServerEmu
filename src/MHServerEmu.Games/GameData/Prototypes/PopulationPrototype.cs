@@ -154,6 +154,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public short Weight { get; protected set; }
         public PrototypeId Object { get; protected set; }
+#if GAME_VERSION_1_53
+        public PrototypeId RestrictToDifficultyMin { get; protected set; }
+        public PrototypeId RestrictToDifficultyMax { get; protected set; }
+#endif
 
         //---
 

@@ -30,6 +30,9 @@ namespace MHServerEmu.Games.Entities.Items
         UnlockPermaBuff,
 #endif
         UsePower,
+#if GAME_VERSION_1_53
+        AwardAvatarXP,
+#endif
         AwardTeamUpXP,
         OpenUIPanel
     }

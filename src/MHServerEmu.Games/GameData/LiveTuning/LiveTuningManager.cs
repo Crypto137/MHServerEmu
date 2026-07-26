@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public bool LoadLiveTuningData(bool sendToServices)
         {
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if GAME_VERSION_1_52
             // V48_FIXME
             if (!Verify.IsTrue(Directory.Exists(LiveTuningDataDirectory), "Live Tuning data directory not found"))
                 return false;

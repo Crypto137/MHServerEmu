@@ -2639,7 +2639,12 @@ namespace MHServerEmu.Games.Entities
             //Logger.Trace($"OnFullscreenMovieStarted {GameDatabase.GetFormattedPrototypeName(movieRef)} for {_playerName}");
             var movieProto = GameDatabase.GetPrototype<FullscreenMoviePrototype>(movieRef);
             if (movieProto == null) return;
+
+#if GAME_VERSION_1_53
+            if (movieProto.CinematicType == CinematicType.FullscreenMovie)
+#else
             if (movieProto.MovieType == MovieType.Cinematic)
+#endif
             {
                 Properties[PropertyEnum.FullScreenMovieSession] = Game.Random.Next();
                 Properties[PropertyEnum.FullScreenMoviePlaying] = true;
@@ -2655,7 +2660,11 @@ namespace MHServerEmu.Games.Entities
             var movieProto = GameDatabase.GetPrototype<FullscreenMoviePrototype>(movieRef);
             if (movieProto == null) return;
 
+#if GAME_VERSION_1_53
+            if (movieProto.CinematicType == CinematicType.FullscreenMovie)
+#else
             if (movieProto.MovieType == MovieType.Cinematic)
+#endif
             {
                 FullScreenMovieDequeued(movieRef);
                 GetRegion()?.CinematicFinishedEvent.Invoke(new(this, movieRef));
@@ -2676,7 +2685,11 @@ namespace MHServerEmu.Games.Entities
             var movieProto = GameDatabase.GetPrototype<FullscreenMoviePrototype>(movieRef);
             if (movieProto == null) return;
 
+#if GAME_VERSION_1_53
+            if (movieProto.CinematicType == CinematicType.FullscreenMovie)
+#else
             if (movieProto.MovieType == MovieType.Cinematic)
+#endif
                 FullScreenMovieQueued(movieRef);
 
             SendMessage(NetMessageQueueFullscreenMovie.CreateBuilder()
@@ -2774,7 +2787,7 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        #endregion
+#endregion
 
         #region Match Queue
 

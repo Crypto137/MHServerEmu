@@ -37,7 +37,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool AllowActionSell { get; protected set; }
         public LocaleStringId VendorFlavorText { get; protected set; }
         public bool IsRaidVendor { get; protected set; }
+#if GAME_VERSION_1_53
+        public CurveId VendorLevelingCurvePC { get; protected set; }
+        public CurveId VendorLevelingCurveConsole { get; protected set; }
+#else
         public CurveId VendorLevelingCurve { get; protected set; }
+#endif
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public ReputationDisplayInfoPrototype ReputationDisplayInfo { get; protected set; }
         public PrototypeId[] CraftingRecipeCategories { get; protected set; }

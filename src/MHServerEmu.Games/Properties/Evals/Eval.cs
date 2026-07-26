@@ -415,6 +415,9 @@ namespace MHServerEmu.Games.Properties.Evals
                     case EvalOp.HasEntityInInventory:
                     case EvalOp.IsContextDataNull:
                     case EvalOp.IsDynamicCombatLevelEnabled:
+#if GAME_VERSION_1_53
+                    case EvalOp.GetConditionStackCount:
+#endif
                         break;
 
                     case EvalOp.LoadPropContextParams:

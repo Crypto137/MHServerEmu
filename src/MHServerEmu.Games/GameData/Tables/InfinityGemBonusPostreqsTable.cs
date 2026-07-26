@@ -1,4 +1,5 @@
 ﻿#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Avatars;
@@ -26,6 +27,9 @@ namespace MHServerEmu.Games.GameData.Tables
             {
                 foreach (InfinityGemBonusPrototype gemBonusProto in infinityGemSetProto.Bonuses)
                 {
+                    if (gemBonusProto.Prerequisites.IsNullOrEmpty())
+                        continue;
+
                     foreach (PrototypeId gemBonusPrereqRef in gemBonusProto.Prerequisites)
                     {
                         if (_infinityGemBonusPostreqs.TryGetValue(gemBonusPrereqRef, out List<PrototypeId> gemBonusPostreqs) == false)

@@ -223,7 +223,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class DifficultyTierPrototype : Prototype
     {
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if GAME_VERSION_1_53
+        public DifficultyTier Tier { get; protected set; }
+        public float ItemFindCreditsPct { get; protected set; }
+        public float ItemFindRarePct { get; protected set; }
+        public float ItemFindSpecialPct { get; protected set; }
+        public int UnlockLevel { get; protected set; }
+        public AssetId UIColor { get; protected set; }
+        public LocaleStringId UIDisplayName { get; protected set; }
+        public DesignWorkflowState DesignState { get; protected set; }
+        public DesignWorkflowState DesignStatePS4 { get; protected set; }
+        public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+        public LocalizedEvalConditionEntryPrototype[] UnlockEvals { get; protected set; }
+        public DifficultyTierGameplaySettingsPrototype[] PlatformSpecificGameplaySettings { get; protected set; }
+#elif GAME_VERSION_1_52
         public int DEPTier { get; protected set; }
         public DifficultyTier Tier { get; protected set; }
         public float BonusExperiencePct { get; protected set; }
@@ -309,4 +322,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return teamUpDamageScalarCurve.GetAt(combatLevel);
         }
     }
+
+#if GAME_VERSION_1_53
+    public class DifficultyTierGameplaySettingsPrototype : Prototype
+    {
+        public float BonusExperiencePct { get; protected set; }
+        public int BonusItemFindBonusDifficultyMult { get; protected set; }
+        public float DamageMobToPlayerPct { get; protected set; }
+        public float DamagePlayerToMobPct { get; protected set; }
+        public Platforms Platform { get; protected set; }
+    }
+#endif
 }

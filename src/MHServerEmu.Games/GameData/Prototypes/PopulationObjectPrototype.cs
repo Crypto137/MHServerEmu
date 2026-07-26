@@ -319,6 +319,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public short Min { get; protected set; }
         public float RandomOffset { get; protected set; }
         public PopulationObjectPrototype[] Choices { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool Unique { get; protected set; }
+#endif
 
         //---
 

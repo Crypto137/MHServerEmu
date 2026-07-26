@@ -779,4 +779,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return new MissionActionShowTeamSelectDialog(owner, this);
         }
     }
+
+#if GAME_VERSION_1_53
+    public class MissionActionAvatarResurrectPrototype : MissionActionPrototype
+    {
+        public DistributionType ApplyTo { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class MissionActionShowMetaKeyListPrototype : MissionActionPrototype
+    {
+        public PrototypeId MetaKeyList { get; protected set; }
+        public DistributionType SendTo { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class MissionActionHideMetaKeyListPrototype : MissionActionPrototype
+    {
+        public DistributionType SendTo { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class MissionActionRollbackToObjectivePrototype : MissionActionPrototype
+    {
+        public PrototypeId MissionPrototype { get; protected set; }
+        public float ObjectiveOrder { get; protected set; }
+        public int RollbackDelayMS { get; protected set; }
+    }
+#endif
 }

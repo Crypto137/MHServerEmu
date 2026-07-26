@@ -333,7 +333,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (curve == null) return;
 
             var difficultyTierProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(settings.DifficultyTier);
+#if GAME_VERSION_1_53
+            DifficultyTier difficultyTierAsset = difficultyTierProto != null ? difficultyTierProto.Tier : DifficultyTier.Tier00Normal;
+#else
             DifficultyTier difficultyTierAsset = difficultyTierProto != null ? difficultyTierProto.Tier : DifficultyTier.Green;
+#endif
 
             float noDropModifier = curve.GetAt((int)difficultyTierAsset);
             if (Segment.EpsilonTest(noDropModifier, 1f) == false)
@@ -682,6 +686,65 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     break;
                 }
             }
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class LootRollRequireOmegaLevelPrototype : LootRollModifierPrototype
+    {
+        public int LevelMin { get; protected set; }
+        public int LevelMax { get; protected set; }
+
+        //---
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            if (LevelMax > 0)
+                LevelMin = Math.Min(LevelMin, LevelMax);
+        }
+
+        public override void Apply(LootRollSettings settings)
+        {
+            // V53_TODO
+            Verify.IsTrue(false);
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class LootRollSwapAffixesPrototype : LootRollModifierPrototype
+    {
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AffixCategoryPrototype CategoryToRemove { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public AffixCategoryPrototype CategoryToAdd { get; protected set; }
+        public AssetId[] AffixKeywordsToAdd { get; protected set; }
+        public short NumAffixesToAdd { get; protected set; }
+
+        //---
+
+        public override void Apply(LootRollSettings settings)
+        {
+            // V53_TODO
+            Verify.IsTrue(false);
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class LootRollUIRarityPrototype : LootRollModifierPrototype
+    {
+        public int UIRarity { get; protected set; }
+
+        //---
+
+        public override void Apply(LootRollSettings settings)
+        {
+            // V53_TODO
+            Verify.IsTrue(false);
         }
     }
 #endif

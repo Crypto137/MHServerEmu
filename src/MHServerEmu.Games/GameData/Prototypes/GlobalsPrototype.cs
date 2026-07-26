@@ -309,9 +309,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MetricsFrequencyPrototype { get; protected set; }
 #endif
         public PrototypeId ConsumableItemBlueprint { get; protected set; }
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if GAME_VERSION_1_53
+        public int AvatarCoopInactiveTimeSeconds { get; protected set; }
+#elif GAME_VERSION_1_52
         public int AvatarCoopInactiveTimeMS { get; protected set; }
+#endif
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public int AvatarCoopInactiveOnDeadBufferMS { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public int EmoteSpamCooldownMS { get; protected set; }
+        public int EmoteSpamNumUsages { get; protected set; }
+        public PrototypeId UIDefaultEmoteInventory { get; protected set; }
+        public PrototypeId PatchNotesItem { get; protected set; }
+        public int LFGSimultaneousCharacters { get; protected set; }
+        public PrototypeId DifficultyTuningPrototype { get; protected set; }
+        public PrototypeId OmegaPrestigeVersionReward { get; protected set; }
 #endif
 
         //---
@@ -367,12 +380,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public TextStylePrototype TextStyle { get; protected set; }
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
-        public PrototypeId Reward { get; protected set; }
-#else
+#if GAME_VERSION_1_48
         public bool GrantStartingCostume { get; protected set; }
 #endif
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        public PrototypeId Reward { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public AssetId IconPath { get; protected set; }
+#endif
     }
+
+#if GAME_VERSION_1_53
+    public class OmegaPrestigeLevelPrototype : Prototype
+    {
+        public AssetId IconPath { get; protected set; }
+        public PrototypeId Reward { get; protected set; }
+    }
+#endif
 
     public class PetTechAffixInfoPrototype : Prototype
     {
@@ -391,7 +416,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_48
         public CurveId PowerPointsGrantedAtLevel { get; protected set; }
 #endif
+#if !GAME_VERSION_1_53
         public CurveId VendorLevelingCurve { get; protected set; }
+#endif
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public EvalPrototype StatsEval { get; protected set; }
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
@@ -409,10 +436,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId ExperienceBonusLevel60Synergy { get; protected set; }
         public int TeamUpPowersPerTier { get; protected set; }
         public CurveId TeamUpPowerTiersCurve { get; protected set; }
+#if !GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public OmegaBonusSetPrototype[] OmegaBonusSets { get; protected set; }
+#endif
         public int OmegaPointsCap { get; protected set; }
+#if !GAME_VERSION_1_53
         public int OmegaSystemLevelUnlock { get; protected set; }
+#endif
         public PetTechAffixInfoPrototype[] PetTechAffixInfo { get; protected set; }
         public PrototypeId PetTechDonationItemPrototype { get; protected set; }
         public int AvatarPowerSpecsMax { get; protected set; }
@@ -433,6 +464,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int TravelPowerUnlockLevel { get; protected set; }
         public float ExperienceBonusCoop { get; protected set; }
         public CurveId CoopInactivityExperienceScalar { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public int CoopInactiveHitCountResetSeconds { get; protected set; }
+        public CurveId PctXPFromOmegaPrestigeLevelCurve { get; protected set; }
+        [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
+        public OmegaPrestigeLevelPrototype[] OmegaPrestigeLevels { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public LevelingDataPrototype LevelingDataConsole { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public LevelingDataPrototype LevelingDataPC { get; protected set; }
 #endif
 
         // ---
@@ -573,6 +614,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+#if GAME_VERSION_1_53
+    public class LevelingDataPrototype : Prototype
+    {
+        public CurveId LevelingCurve { get; protected set; }
+        public CurveId ExperienceBonusAvatarSynergy { get; protected set; }
+        public float ExperienceBonusAvatarSynergyMax { get; protected set; }
+        public CurveId ExperienceBonusLevel60Synergy { get; protected set; }
+        public CurveId PctXPFromPrestigeLevelCurve { get; protected set; }
+    }
+#endif
+
     public class AIGlobalsPrototype : Prototype
     {
         public PrototypeId LeashReturnHeal { get; protected set; }
@@ -587,6 +639,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public KeywordPrototype CantBeControlledKeyword { get; protected set; }
         public int ControlledAgentSummonDurationMS { get; protected set; }
+#if GAME_VERSION_1_53
+        public PrototypeId CoopAvatarLeashProfile { get; protected set; }
+        public float CoopAvatarLeashFollowStartDist { get; protected set; }
+        public float CoopAvatarLeashPathPct { get; protected set; }
+#endif
     }
 
     public class MusicStatePrototype : Prototype
@@ -674,6 +731,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId EndgamePvE { get; protected set; }
         public LocaleStringId PvP { get; protected set; }
         public LocaleStringId Tutorial { get; protected set; }
+#if GAME_VERSION_1_53
+        public LocaleStringId Fundamentals { get; protected set; }
+        public LocaleStringId GameModes { get; protected set; }
+        public LocaleStringId DifficultyModes { get; protected set; }
+        public LocaleStringId Skills { get; protected set; }
+        public LocaleStringId Items { get; protected set; }
+        public LocaleStringId Inventory { get; protected set; }
+#endif
     }
 
     public class AffixRollQualityPrototype : Prototype
@@ -818,7 +883,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId PowerTooltipBodyTeamUp { get; protected set; }
 #endif
         public CharacterSheetDetailedStatPrototype[] TeamUpDetailedStats { get; protected set; }
+#if !GAME_VERSION_1_53
         public PrototypeId MessageOmegaPointsAwarded { get; protected set; }
+#endif
         public PrototypeId MetaGameWidgetMissionName { get; protected set; }
         public UIConditionType[] BuffPageOrder { get; protected set; }
         public ObjectiveTrackerPageType[] ObjectiveTrackerPageOrder { get; protected set; }
@@ -902,6 +969,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId HelpTextConsole { get; protected set; }
         public PrototypeId MessageRegionNotDownloaded { get; protected set; }
 #endif
+#if GAME_VERSION_1_53
+        public PrototypeId ConsolePanelModelRendererDefault { get; protected set; }
+        public PrototypeId[] ConsolePanelModelRendererList { get; protected set; }
+        public CurveId ItemCompareGainPctIconIndex { get; protected set; }
+        public PrototypeId CinematicsListLoginScreenPS4 { get; protected set; }
+        public PrototypeId CinematicsListLoginScreenXboxOne { get; protected set; }
+        public PrototypeId[] CreditsMoviesPS4 { get; protected set; }
+        public PrototypeId[] CreditsMoviesXboxOne { get; protected set; }
+        public PrototypeId MessageItemPurchased { get; protected set; }
+        public PrototypeId WaypointPrototype { get; protected set; }
+        public int ConsoleModelRenderChangeDelayMS { get; protected set; }
+        public int ConsoleStoreMetricsSendAbandonMS { get; protected set; }
+        public PrototypeId MessageServerNotification { get; protected set; }
+        public PrototypeId CreditsTextConsole { get; protected set; }
+        public PrototypeId FadeToBlack { get; protected set; }
+        public PrototypeId FadeFromBlack { get; protected set; }
+        public TokenPrototype[] Tokens { get; protected set; }
+        public PrototypeId[] DefaultEmoteItems { get; protected set; }
+        public int GamepadHoldTimeDestroyDonateMS { get; protected set; }
+        public PrototypeId GamepadIconBuyAction { get; protected set; }
+#endif
 
         //---
 
@@ -931,7 +1019,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId NotificationLegendaryQuestShare { get; protected set; }
         public PrototypeId NotificationSynergyPoints { get; protected set; }
         public PrototypeId NotificationPvPScoreboard { get; protected set; }
+#if !GAME_VERSION_1_53
         public PrototypeId NotificationOmegaPoints { get; protected set; }
+#endif
         public PrototypeId NotificationTradeInvite { get; protected set; }
         public PrototypeId NotificationMatchLocked { get; protected set; }
         public PrototypeId NotificationLoginReward { get; protected set; }
@@ -1032,6 +1122,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CameraSettingPrototype[] CameraSettingsFlying { get; protected set; }
         public int CameraStartingIndex { get; protected set; }
         public bool CameraAllowCustomMaxZoom { get; protected set; }
+#if GAME_VERSION_1_53
+        public float TransitionBlendInTimeSecs { get; protected set; }
+        public float TransitionBlendOutTimeSecs { get; protected set; }
+        public float TransitionOutDelaySecs { get; protected set; }
+#endif
     }
 
     public class GlobalPropertiesPrototype : Prototype
@@ -1049,7 +1144,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId UnlockPetTechR5CosmicClass { get; protected set; }
         public AssetId LootVaporizedClass { get; protected set; }
         public AssetId AchievementUnlockedClass { get; protected set; }
+#if !GAME_VERSION_1_53
         public AssetId OmegaPointGainedClass { get; protected set; }
+#endif
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId AvatarLeashTeleportClass { get; protected set; }
         public AssetId InfinityTimePointEarnedClass { get; protected set; }
@@ -1360,6 +1457,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DangerRoomMerits { get; protected set; }
         public PrototypeId GazillioniteGs { get; protected set; }
 #endif
+#if GAME_VERSION_1_53
+        public PrototypeId MarvelousDust { get; protected set; }
+        public PrototypeId RelicBox { get; protected set; }
+#endif
 
         //---
 
@@ -1384,14 +1485,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class GamepadSlotBindingPrototype : Prototype
     {
+#if GAME_VERSION_1_53
+        public int ConsoleSlotNumber { get; protected set; }
+#else
         public int OrbisSlotNumber { get; protected set; }
+#endif
         public int PCSlotNumber { get; protected set; }
         public int SlotNumber { get; protected set; }
     }
 #endif
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
-    public class GamepadGlobalsPrototype : Prototype
+        public class GamepadGlobalsPrototype : Prototype
 #else
     public class ControllerGlobalsPrototype : Prototype
 #endif
@@ -1409,6 +1514,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SelectedItemUpdateIntervalMS { get; protected set; }
 #endif
         public int UltimateActivationTimeoutMS { get; protected set; }
+#if GAME_VERSION_1_48
+        public PrototypeId GamepadTeleportToTarget { get; protected set; }
+#endif
         public GamepadInputAssetPrototype[] InputAssets { get; protected set; }
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public float GamepadInteractionHalfAngle { get; protected set; }
@@ -1427,8 +1535,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float GamepadDestructTargetDeflctCost { get; protected set; }
         public float GamepadDestructTargetHalfAngle { get; protected set; }
         public float GamepadDestructTargetRange { get; protected set; }
-#else
-        public PrototypeId GamepadTeleportToTarget { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public PrototypeId[] GamepadEmotePowersList { get; protected set; }
 #endif
     }
 
@@ -1457,6 +1566,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int ResurrectionTimeoutMS { get; protected set; }
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public int RespawnLockoutMS { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public bool IncreaseDeathCountOnSelfRevive { get; protected set; }
+        public bool UseDeathTimer { get; protected set; }
 #endif
     }
 

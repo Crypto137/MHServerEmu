@@ -130,23 +130,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Aggro = 2,
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     [AssetEnum]
     public enum ConsoleHUDNotificationType
     {
-        NewPower = 1,
-        NewItem = 2,
-        QueueReady = 3,
-        QueueGracePeriodAboutToExpire = 4,
-        QueueEntered = 5,
-        NewSynergy = 6,
-        NewInfinityGemUpgrade = 7,
-        InfinityUnlocked = 8,
-        NewTalent = 9,
-        NewDeliveryItem = 10,
-        LegendaryQuestsUnlocked = 11,
-        OmegaWeekAvailable = 12,
-        GlobalEventAvailable = 13,
+        Invalid,
+        NewPower,
+        NewItem,
+        QueueReady,
+        QueueGracePeriodAboutToExpire,
+        QueueEntered,
+        NewSynergy,
+        NewInfinityGemUpgrade,
+        InfinityUnlocked,
+#if GAME_VERSION_1_53
+        SynergyUnlocked,
+#endif
+        NewTalent,
+        NewDeliveryItem,
+        LegendaryQuestsUnlocked,
+        OmegaWeekAvailable,
+        GlobalEventAvailable,
+#if GAME_VERSION_1_53
+        UltUnlocked,
+        AtLevelCap,
+        InventoryFull,
+        PowerSlotUnlocked,
+        NewEmote,
+        LootBoxAcquired,
+#endif
     }
+#endif
 
     [AssetEnum]
     public enum MovieType
@@ -188,6 +202,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool EntityInteractPanel { get; protected set; }
         public bool UseNewPlacementSystem { get; protected set; }
         public bool KeepLoaded { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool OpenOnPlay { get; protected set; }
+#endif
 
         //---
 
@@ -206,6 +223,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             EntityInteractPanel = reader.ReadBoolean();
             UseNewPlacementSystem = reader.ReadBoolean();
             KeepLoaded = reader.ReadBoolean();
+#if GAME_VERSION_1_53
+            OpenOnPlay = reader.ReadBoolean();
+#endif
         }
     }
 
@@ -381,6 +401,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconHeaderHiRes { get; protected set; }
 #endif
+#if GAME_VERSION_1_53
+        public LocaleStringId DescriptorConsole { get; protected set; }
+        public AssetId WidgetMovieClipOverrideConsole { get; protected set; }
+#endif
     }
 
     public class UIWidgetGenericFractionPrototype : MetaGameDataPrototype
@@ -407,6 +431,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId IconHiRes { get; protected set; }
         public AssetId IconDeadHiRes { get; protected set; }
 #endif
+#if GAME_VERSION_1_53
+        public PrototypeId DescriptorConsole { get; protected set; }
+#endif
     }
 
     public class UIWidgetEnrageEntryPrototype : UIWidgetEntityIconsEntryPrototype
@@ -421,6 +448,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype PropertyEval { get; protected set; }
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconHiRes { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public LocaleStringId DescriptorConsole { get; protected set; }
 #endif
     }
 
@@ -452,6 +482,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Descriptor { get; protected set; }
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconHiRes { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public PrototypeId DescriptorConsole { get; protected set; }
 #endif
     }
 
@@ -524,6 +557,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId UISystem { get; protected set; }
         public int UnlockLevel { get; protected set; }
         public bool IsNewPlayerExperienceLocked { get; protected set; }
+#if GAME_VERSION_1_53
+        public EvalPrototype UnlockEval { get; protected set; }
+        public DesignWorkflowState DesignState { get; protected set; }
+        public DesignWorkflowState DesignStatePS4 { get; protected set; }
+        public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+        public bool IsPerAvatar { get; protected set; }
+        public bool AutoAcknowledge { get; protected set; }
+        public PrototypeId Title { get; protected set; }
+        public PrototypeId Description { get; protected set; }
+        public PrototypeId PlayingAvatar { get; protected set; }
+#endif
     }
 
     public class IconPackagePrototype : Prototype
@@ -565,6 +609,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId SubTabs { get; protected set; }
         public AssetId Icon { get; protected set; }
         public bool ShowLocalPlayerName { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool OnlyForPlayer1 { get; protected set; }
+#endif
     }
 #endif
 
@@ -583,6 +630,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId ImageNormal { get; protected set; }
         public AssetId ImageSelected { get; protected set; }
         public PrototypeId TabList { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool OpensPartyPanel { get; protected set; }
+        public bool OnlyForPlayer1 { get; protected set; }
+#endif
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class PanelModelRendererInfoPrototype : Prototype
+    {
+        public AssetId MarvelModelRenderClass { get; protected set; }
+        public AssetId ModelClass { get; protected set; }
+        public AssetId Panel { get; protected set; }
     }
 #endif
 
@@ -593,6 +653,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId Button2 { get; protected set; }
         public ButtonStyle Button1Style { get; protected set; }
         public ButtonStyle Button2Style { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool Button1Hold { get; protected set; }
+        public bool Button2Hold { get; protected set; }
+#endif
     }
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
@@ -624,6 +688,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool Hidden { get; protected set; }
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public int FontSizeConsole { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public bool PlatformTag { get; protected set; }
+        public bool LanguageTag { get; protected set; }
 #endif
 
         //--
@@ -701,6 +769,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ConsoleHUDNotificationType NotificationType { get; protected set; }
         public AssetId OpensPanel { get; protected set; }
         public LocaleStringId PanelContext { get; protected set; }
+#if GAME_VERSION_1_53
+        public PrototypeId DisplayShortName { get; protected set; }
+        public bool AlwaysShow { get; protected set; }
+#endif
     }
 #endif
 
@@ -740,6 +812,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int FlashDelayMS { get; protected set; }
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool ShowOncePerAccount { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public HUDTutorialPrototype NextPage { get; protected set; }
 #endif
 
         //---
@@ -784,4 +860,55 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId[] CinematicsListToPopulate { get; protected set; }
     }
+
+#if GAME_VERSION_1_53
+    public class CreditsTextPrototype : Prototype
+    {
+        public LocaleStringId CreditsImageTag { get; protected set; }
+        public LocaleStringId ExtendedCredits { get; protected set; }
+        public PrototypeId CreditsMovie { get; protected set; }
+        public int ScrollingSpeed { get; protected set; }
+        public LocaleStringId URLBaseAddress { get; protected set; }
+        public AssetId[] Webpages { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class LFGObjectivePrototype : Prototype
+    {
+        public LocaleStringId DisplayName { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class MetaKeyPrototype : Prototype
+    {
+        public LocaleStringId Description { get; protected set; }
+        public AssetId Icon { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class MetaKeyListPrototype : Prototype
+    {
+        public PrototypeId[] Keys { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class TokenOverridePrototype : Prototype
+    {
+        public LocaleStringId Value { get; protected set; }
+        public Platforms Platform { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class TokenPrototype : Prototype
+    {
+        public LocaleStringId Token { get; protected set; }
+        public LocaleStringId DefaultValue { get; protected set; }
+        public TokenOverridePrototype[] Overrides { get; protected set; }
+    }
+#endif
 }

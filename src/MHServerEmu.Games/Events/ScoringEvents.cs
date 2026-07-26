@@ -64,6 +64,11 @@ namespace MHServerEmu.Games.Events
         CompletionTime,
         AvatarLevelTotal,
         AvatarLevelTotalAllAvatars,
+#if GAME_VERSION_1_53
+        AvatarOmegaPrestigeLevel,
+        AvatarsAtOmegaPrestigeLevel,
+        AvatarsAtOmegaPrestigeLevelCap,
+#endif
         Max
     }
 

@@ -103,6 +103,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool IsContainer { get; protected set; }
 #endif
+#if GAME_VERSION_1_53
+        public bool IsMTXItem { get; protected set; }
+        public LocaleStringId ShortDescription { get; protected set; }
+#endif
 
         // ---
 
@@ -746,6 +750,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int RequiredCharLevelOverride { get; protected set; }
         public bool AutoStackWhenAddedToInventory { get; protected set; }
         public bool StacksCanBeSplit { get; protected set; }
+#if GAME_VERSION_1_53
+        public int NumOfStacksToConsumeOnUse { get; protected set; }
+#endif
     }
 
     public class ItemActionBasePrototype : Prototype
@@ -850,6 +857,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         //---
 
         public override ItemActionType ActionType { get => ItemActionType.UnlockPermaBuff; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class ItemActionAwardAvatarXPPrototype : ItemActionPrototype
+    {
+        public int XP { get; protected set; }
+
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.AwardAvatarXP; }
     }
 #endif
 
@@ -1188,8 +1206,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId AvatarDisplayNameShort { get; protected set; }
         public bool EquipTriggersVO { get; protected set; }
         public AssetId PortraitIconPathHiRes { get; protected set; }
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if GAME_VERSION_1_52
         public PrototypeId FulfillmentDuplicateItem { get; protected set; }
+#elif GAME_VERSION_1_53
+        public PrototypeId FulfillmentDuplicateItemConsole { get; protected set; }
+        public CostumeSpecialEffectEntryPrototype[] CostumeSpecialEffects { get; protected set; }
+        public PrototypeId FulfillmentDuplicateItemPC { get; protected set; }
 #endif
 
         //---
@@ -1202,7 +1224,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             AvatarPrototype avatar = GameDatabase.GetPrototype<AvatarPrototype>(UsableBy);
             if (!Verify.IsNotNull(avatar)) return false;
 
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if GAME_VERSION_1_53
+            // V53_TODO: FulfillmentDuplicateItemConsole
+            ItemPrototype itemProto = GameDatabase.GetPrototype<ItemPrototype>(FulfillmentDuplicateItemPC);
+            if (!Verify.IsTrue(itemProto != null && itemProto != this)) return false;
+
+            return avatar.ApprovedForUse() && itemProto.ApprovedForUse();
+#elif GAME_VERSION_1_52
             ItemPrototype itemProto = GameDatabase.GetPrototype<ItemPrototype>(FulfillmentDuplicateItem);
             if (!Verify.IsTrue(itemProto != null && itemProto != this)) return false;
 
@@ -1221,6 +1249,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LegendaryPrototype : ItemPrototype
     {
+#if GAME_VERSION_1_53
+        public CurveId ItemAffixLevelingCurve { get; protected set; }
+#endif
     }
 
     public class MedalPrototype : ItemPrototype
@@ -1265,4 +1296,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalPrototype EvalAvatarProperties { get; protected set; }
     }
+
+#if GAME_VERSION_1_53
+    public class CostumeSpecialEffectEntryPrototype : Prototype
+    {
+        public PrototypeId SpecialEffect { get; protected set; }
+        public AssetId SpecialEffectUnrealClass { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class CostumeSpecialEffectPrototype : Prototype
+    {
+        public DesignWorkflowState DesignState { get; protected set; }
+        public DesignWorkflowState DesignStatePS4 { get; protected set; }
+        public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
+        public LocaleStringId UnlockRequirementDisplayName { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class OmegaPrestigeUnlockPrototype : ItemPrototype
+    {
+        public PrototypeId Avatar { get; protected set; }
+    }
+#endif
 }

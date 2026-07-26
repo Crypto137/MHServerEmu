@@ -86,6 +86,9 @@ namespace MHServerEmu.Games.Properties.Evals
         GetDamageReductionPct,
         GetDistanceToEntity,
         IsDynamicCombatLevelEnabled,
+#if GAME_VERSION_1_53
+        GetConditionStackCount,
+#endif
     }
 
     public enum EvalReturnType

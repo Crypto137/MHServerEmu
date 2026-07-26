@@ -170,6 +170,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public GamepadSettingsPrototype GamepadSettings { get; protected set; }
         public EvalPrototype BreaksStealthOverrideEval { get; protected set; }
 #endif
+#if GAME_VERSION_1_53
+        public LocaleStringId CostumePowerDescription { get; protected set; }
+        public PrototypeId[] AltPowerUIs { get; protected set; }
+        public bool DisableChargeGainWithNoCooldown { get; protected set; }
+#endif
 
         //---
 
@@ -725,6 +730,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MasterPower { get; protected set; }
 #endif
         public EvalPrototype[] EvalCanEnable { get; protected set; }
+#if GAME_VERSION_1_53
+        public PrototypeId[] HighlightPowers { get; protected set; }
+        public PrototypeId[] HighlightKeywords { get; protected set; }
+#endif
     }
 
     public class StealablePowerInfoPrototype : Prototype
@@ -1149,6 +1158,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool TeleportToTarget { get; protected set; }
         public bool MeleeMoveIntoRange { get; protected set; }
         public bool ChannelPowerOrientToEnemy { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool RangeSelfIfNoTarget { get; protected set; }
+        public bool IgnoreTargetLockedEntity { get; protected set; }
+#endif
     }
 #endif
 
@@ -1295,4 +1308,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] StacksByKeyword { get; protected set; }
         public PrototypeId StacksWithOtherPower { get; protected set; }
     }
+
+#if GAME_VERSION_1_53
+    public class AltPowerUIPrototype : Prototype
+    {
+        public PrototypeId Power { get; protected set; }
+        public PrototypeId Keyword { get; protected set; }
+    }
+#endif
 }

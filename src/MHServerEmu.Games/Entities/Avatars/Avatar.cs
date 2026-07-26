@@ -87,7 +87,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private ulong _avatarSynergyConditionId = ConditionCollection.InvalidConditionId;
 
+#if !GAME_VERSION_1_53
         private ulong _ultimatePrestigeLevel = 0;
+#endif
 
         public uint AvatarWorldInstanceId { get; private set; } = 0;
         public string PlayerName { get => _playerName.Get(); }
@@ -131,7 +133,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         public Inventory ControlledInventory { get => GetInventory(InventoryConvenienceLabel.Controlled); }
         public Agent ControlledAgent { get => GetControlledAgent(); }
 
+#if !GAME_VERSION_1_53
         public ulong UltimatePrestigeLevel { get => _ultimatePrestigeLevel; }
+#endif
 
         public Avatar(Game game) : base(game) { }
 
@@ -234,7 +238,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Custom data
             if (archive.IsPersistent)
             {
+#if !GAME_VERSION_1_53
                 success &= Serializer.Transfer(archive, ref _ultimatePrestigeLevel);
+#endif
             }
 
             return success;
@@ -6152,6 +6158,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         // CUSTOM: Ultimate Prestige (reset cosmic prestige)
 
+#if !GAME_VERSION_1_53
         public bool CanActivateUltimatePrestigeMode()
         {
             if (PartyId != InvalidId)
@@ -6165,7 +6172,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             return IsInTown();
         }
+#endif
 
+#if !GAME_VERSION_1_53
         public bool ActivateUltimatePrestigeMode()
         {
             Properties[PropertyEnum.AvatarPrestigeLevel] = 0;
@@ -6173,8 +6182,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             Logger.Trace($"ActivateUltimatePrestigeMode(): [{this}] - {_ultimatePrestigeLevel}");
             return ActivatePrestigeMode();
         }
+#endif
 
-        #endregion
+#endregion
 
         #region Alternate Advancement
 

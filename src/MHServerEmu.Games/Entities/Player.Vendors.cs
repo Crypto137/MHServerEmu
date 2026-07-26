@@ -511,7 +511,12 @@ namespace MHServerEmu.Games.Entities
         {
             if (!Verify.IsNotNull(vendorTypeProto)) return null;
 
+#if GAME_VERSION_1_53
+            // V53_TODO: VendorLevelingCurveConsole
+            CurveId vendorLevelingCurveId = vendorTypeProto.VendorLevelingCurvePC;
+#else
             CurveId vendorLevelingCurveId = vendorTypeProto.VendorLevelingCurve;
+#endif
             if (!Verify.IsTrue(vendorLevelingCurveId != CurveId.Invalid)) return null;
 
             return CurveDirectory.Instance.GetCurve(vendorLevelingCurveId);
