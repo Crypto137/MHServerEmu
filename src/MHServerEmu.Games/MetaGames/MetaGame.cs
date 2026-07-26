@@ -605,8 +605,7 @@ namespace MHServerEmu.Games.MetaGames
                 if (entity is Avatar) DiscoverEntity(entity);
             }
 
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
-            // V48_FIXME
+#if GAME_VERSION_1_52
             // REMOVEME this method of activating AddPlayer is used because OnPlayerEnteredRegion
             // is triggered before MetaState is created. Try fix this and remove.
             if (evt.Entity is Avatar avatar)
