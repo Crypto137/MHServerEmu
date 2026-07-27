@@ -1,0 +1,120 @@
+[
+  {
+    "SkuId": 53000000,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 3705594512618690215,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Spider-Woman",
+        "Title": "Spider-Woman",
+        "ReleaseDate": "",
+        "ItemPrice": 900
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Hero",
+      "Order": 0
+    },
+    "TypeModifiers": []
+  },
+  {
+    "SkuId": 53000001,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 16651778398901049163,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Gladiator Thor",
+        "Title": "Gladiator Thor",
+        "ReleaseDate": "",
+        "ItemPrice": 900
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Hero",
+      "Order": 0
+    },
+    "TypeModifiers": []
+  },
+  {
+    "SkuId": 53000002,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 6070120678843625329,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Spider-Woman Hero Stash",
+        "Title": "Spider-Woman Hero Stash",
+        "ReleaseDate": "",
+        "ItemPrice": 350
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Service",
+      "Order": 999
+    },
+    "TypeModifiers": [
+      {
+        "Name": "StashPage",
+        "Order": 999
+      }
+    ]
+  },
+  {
+    "SkuId": 53000003,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 14730676762547007548,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Gladiator Thor Hero Stash",
+        "Title": "Gladiator Thor Hero Stash",
+        "ReleaseDate": "",
+        "ItemPrice": 350
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Service",
+      "Order": 999
+    },
+    "TypeModifiers": [
+      {
+        "Name": "StashPage",
+        "Order": 999
+      }
+    ]
+  }
+]
