@@ -142,8 +142,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public RegionPrototype[] RestrictToRegionsExclude { get; protected set; }
         public bool RestrictToRegionsIncludeChildren { get; protected set; }
         public AssetId[] RestrictToCells { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId RestrictToDifficultyMin { get; protected set; }
         public PrototypeId RestrictToDifficultyMax { get; protected set; }
+#endif
 
         //---
 
