@@ -1321,6 +1321,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId OmegaLevel { get; protected set; }
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public KeywordPrototype AvatarKeyword { get; protected set; }
+
+        //---
+
+        public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
+        {
+            return new MissionConditionAvatarPrestigeLevelUp(mission, owner, this);
+        }
     }
 #endif
 
@@ -1328,6 +1335,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionSystemUnlockedAcknowledgedPrototype : MissionPlayerConditionPrototype
     {
         public AssetId UISystem { get; protected set; }
+
+        //---
+
+        public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
+        {
+            return new MissionConditionSystemUnlockedAcknowledged(mission, owner, this);
+        }
     }
 #endif
 
@@ -1336,6 +1350,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId VendorPrototype { get; protected set; }
         public long Level { get; protected set; }
+
+        //---
+
+        public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
+        {
+            return new MissionConditionVendorLevelUp(mission, owner, this);
+        }
     }
 #endif
 }

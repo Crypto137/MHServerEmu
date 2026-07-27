@@ -784,6 +784,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionAvatarResurrectPrototype : MissionActionPrototype
     {
         public DistributionType ApplyTo { get; protected set; }
+
+        //---
+
+        public override MissionAction AllocateAction(IMissionActionOwner owner)
+        {
+            return new MissionActionAvatarResurrect(owner, this);
+        }
     }
 #endif
 
@@ -792,6 +799,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId MetaKeyList { get; protected set; }
         public DistributionType SendTo { get; protected set; }
+
+        //---
+
+        public override MissionAction AllocateAction(IMissionActionOwner owner)
+        {
+            return new MissionActionShowMetaKeyList(owner, this);
+        }
     }
 #endif
 
@@ -799,6 +813,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionHideMetaKeyListPrototype : MissionActionPrototype
     {
         public DistributionType SendTo { get; protected set; }
+
+        //---
+
+        public override MissionAction AllocateAction(IMissionActionOwner owner)
+        {
+            return new MissionActionShowMetaKeyList(owner, this);
+        }
     }
 #endif
 
@@ -808,6 +829,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MissionPrototype { get; protected set; }
         public float ObjectiveOrder { get; protected set; }
         public int RollbackDelayMS { get; protected set; }
+
+        //---
+
+        public override MissionAction AllocateAction(IMissionActionOwner owner)
+        {
+            return new MissionActionRollbackToObjective(owner, this);
+        }
     }
 #endif
 }
