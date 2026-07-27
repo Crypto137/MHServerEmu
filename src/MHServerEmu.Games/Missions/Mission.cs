@@ -92,6 +92,9 @@ namespace MHServerEmu.Games.Missions
         private TimeSpan _achievementTime;
         private PrototypeId _prototypeDataRef;
         private int _lootSeed;
+#if GAME_VERSION_1_53
+        private PrototypeId _difficultyTierRef;
+#endif
         private SortedDictionary<byte, MissionObjective> _objectiveDict = new();
         private SortedSet<ulong> _participants = new();         // TODO: Potentially replace this with a HashSet or a SortedVector for optimization
         private Dictionary<ulong, float> _contributors = new(); // DistributionType.Contributors
@@ -117,6 +120,9 @@ namespace MHServerEmu.Games.Missions
         public PrototypeId PrototypeDataRef { get => _prototypeDataRef; }
         public MissionPrototype Prototype { get; }
         public int LootSeed { get => _lootSeed; set => _lootSeed = value; } // AvatarMissionLootSeed
+#if GAME_VERSION_1_53
+        public PrototypeId DifficultyTierRef { get => _difficultyTierRef; }
+#endif
         public bool IsSuspended { get => _isSuspended; }
         public IEnumerable<MissionObjective> Objectives { get => _objectiveDict.Values; }
         public EventGroup EventGroup { get; } = new();
@@ -226,9 +232,7 @@ namespace MHServerEmu.Games.Missions
             success &= Serializer.Transfer(archive, ref _lootSeed);
 
 #if GAME_VERSION_1_53
-            // V53_TODO
-            PrototypeId difficultyRef = PrototypeId.Invalid;
-            success &= Serializer.Transfer(archive, ref difficultyRef);
+            success &= Serializer.Transfer(archive, ref _difficultyTierRef);
 #endif
 
             if (archive.IsReplication)
@@ -1624,8 +1628,37 @@ namespace MHServerEmu.Games.Missions
         public void OnUpdateObjectiveCondition(MissionObjective objective, MissionCondition condition)
         {
             if (objective.State == MissionObjectiveState.Active)
-                if (condition is MissionPlayerCondition playerCondition && playerCondition.Count > 0) 
+            {
+                if (condition is MissionPlayerCondition playerCondition && playerCondition.Count > 0)
                     ScheduleIdleTimeout();
+
+#if GAME_VERSION_1_53
+                if (condition.Prototype.DifficultyProgressAdjusting && condition.IsReseting == false)
+                {
+                    Region region = MissionManager.GetRegion();
+                    if (region != null && region.Behavior != RegionBehavior.Town)
+                    {
+                        PrototypeId regionDifficultyRef = region.DifficultyTierRef;
+                        if (_difficultyTierRef != PrototypeId.Invalid)
+                        {
+                            // Downgrade mission difficulty to prevent abuse (doing a mission on a lower tier and then getting rewards from a higher tier)
+                            DifficultyTierPrototype regionDifficultyProto = regionDifficultyRef.As<DifficultyTierPrototype>();
+                            DifficultyTierPrototype missionDifficultyProto = _difficultyTierRef.As<DifficultyTierPrototype>();
+                            if (Verify.IsNotNull(missionDifficultyProto) && regionDifficultyProto != null)
+                            {
+                                if (regionDifficultyProto.Tier < missionDifficultyProto.Tier)
+                                    _difficultyTierRef = regionDifficultyRef;
+                            }
+                        }
+                        else
+                        {
+                            // Record first encountered difficulty tier for future reference
+                            _difficultyTierRef = regionDifficultyRef;
+                        }
+                    }
+                }
+#endif
+            }
         }
 
         public bool AddParticipant(Player player)
