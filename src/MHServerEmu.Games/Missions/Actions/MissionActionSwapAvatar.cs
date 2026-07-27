@@ -30,14 +30,16 @@ namespace MHServerEmu.Games.Missions.Actions
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
                         if (_proto.UseAvatarSwapPowers)
-                            player.BeginAvatarSwitch(_proto.AvatarPrototype);
+                        {
+                            player.BeginAvatarSwitch(_proto.AvatarPrototype, true);
+                        }
                         else
                         {
                             player.Properties[PropertyEnum.AvatarSwitchPending, _proto.AvatarPrototype] = true;
                             player.SwitchAvatar();
                         }
 #else
-                        player.BeginAvatarSwitch(_proto.AvatarPrototype); // V48_TODO: Find out which behavior should be used.
+                        player.BeginAvatarSwitch(_proto.AvatarPrototype, true);
 #endif
                     }
                 }
