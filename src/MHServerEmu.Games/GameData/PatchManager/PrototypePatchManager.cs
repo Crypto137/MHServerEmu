@@ -18,14 +18,6 @@ namespace MHServerEmu.Games.GameData.PatchManager
         public static PrototypePatchManager Instance { get; } = new();
 
         /// <summary>
-        /// Loads patches before Globals are loaded.
-        /// </summary>
-        public void PreInitialize(bool enablePatchManager)
-        {
-            if (enablePatchManager) _initialized |= LoadPatchDataFromDisk("PrePatchData");
-        }
-
-        /// <summary>
         /// Loads patches after Globals are loaded.
         /// </summary>
         public void Initialize(bool enablePatchManager)

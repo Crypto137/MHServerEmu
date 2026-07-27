@@ -104,8 +104,8 @@ namespace MHServerEmu.Games.GameData
             PropertyInfoTable.Initialize();
 
 #if GAME_VERSION_1_52
-            // Load patches that should apply to globals (limited RefPtr support)
-            PrototypePatchManager.Instance.PreInitialize(config.EnablePatchManager);
+            // Load prototype patches
+            PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
 #endif
 
             // Load globals
@@ -113,11 +113,6 @@ namespace MHServerEmu.Games.GameData
             GlobalsPrototype = GetPrototype<GlobalsPrototype>(globalsProtoRef);
 
             // initializeKeywordPrototypes
-
-#if GAME_VERSION_1_52
-            // Load regular patches
-            PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
-#endif
 
             // Preload all prototypes if needed
             if (config.LoadAllPrototypes)
