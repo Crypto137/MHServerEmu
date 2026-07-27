@@ -2,7 +2,13 @@
 
 MHServerEmu is a server emulator for Marvel Heroes.
 
-The only currently supported version of the game client is **1.52.0.1700** (also known as **2.16a**) released on September 7th, 2017.
+The following versions of the game client are supported:
+
+- **1.52.0.1700** - Full Support
+
+- **1.48.0.1712** (Pre-BUE) - Preliminary Support
+
+- **1.53.0.203** (Test Center) - Preliminary Support
 
 We post development progress reports on our [blog](https://crypto137.github.io/MHServerEmu/). You can find additional information on various topics in the [documentation](./docs/Index.md). If you would like to discuss this project and/or help with its development, feel free to join our [Discord](https://discord.gg/hjR8Bj52t3).
 
@@ -46,7 +52,7 @@ Download the latest stable or nightly build and overwrite your existing files. N
 
 **Are you going to support other versions of the game, like the ones from before the Biggest Update Ever (BUE) came out?**
 
-Yes, we do plan to implement support for other versions, including the final pre-BUE version (1.48) from late 2016. Currently there are no timeframes for when this is going to happen. The current work-in-progress 1.48 code is available on the [v48](https://github.com/Crypto137/MHServerEmu/tree/v48) branch.
+Preliminary support for game versions 1.48 (pre-BUE) and 1.53 (final test center version) is available if you build the source code using respective build configuration. Nightly builds will be provided at a later date. Support for these versions is still very early, and you will likely encounter game breaking bugs. For now, you should keep using 1.52 for normal play.
 
 Some early work has also been done to support version 1.10 from mid 2013. You can find the code for it in the [MHServerEmu2013](https://github.com/Crypto137/MHServerEmu2013) repository.
 

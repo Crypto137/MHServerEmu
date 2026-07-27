@@ -1,13 +1,13 @@
 @echo off
 
-set BUILD_DIR=.\src\MHServerEmu\bin\x64\Release\net8.0
-set OUTPUT_DIR=.\build
+set BUILD_DIR=.\src\MHServerEmu\bin\x64\Release 1.48\net8.0
+set OUTPUT_DIR=.\build\v48
 
 echo ==================
 echo     Building...
 echo ==================
 
-dotnet build MHServerEmu.sln -c Release
+dotnet build MHServerEmu.sln -c "Release 1.48"
 
 if %errorlevel% neq 0 (
     echo Build failed!
