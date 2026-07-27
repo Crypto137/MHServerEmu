@@ -324,12 +324,14 @@ namespace MHServerEmu.Games.Populations
                         if (foundArea == false) continue;
                     }
 
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
-                    bool isMissionMarker = entry.Population.UsePopulationMarker != PrototypeId.Invalid;
-#else
-                    // Based on the fact that CH00RaftTutorial references non-existent marker MissionSmallV1,
-                    // it appears partial spawning of mission populations was allowed in pre-BUE.
-                    bool isMissionMarker = false;
+                    PrototypeId markerRef = entry.Population.UsePopulationMarker;
+                    bool isMissionMarker = markerRef != PrototypeId.Invalid;
+
+#if GAME_VERSION_1_48
+                    // CH00RaftTutorial references non-existent marker MissionSmallV1, but partial spawning appears to break other missions.
+                    // For now work around this by skipping population entries that reference non-existent markers.
+                    if (isMissionMarker && Region.SpawnMarkerRegistry.HasMarker(markerRef) == false)
+                        continue;
 #endif
 
                     var spawnLocation = new SpawnLocation(Region, entry.RestrictToAreas, entry.RestrictToCells);
