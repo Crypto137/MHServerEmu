@@ -1060,7 +1060,7 @@
     "GuidItems": [
       {
         "PrototypeGuid": 0,
-        "ItemPrototypeRuntimeIdForClient": 11560301460145182733,
+        "ItemPrototypeRuntimeIdForClient": 9537398486486948479,
         "Quantity": 1
       }
     ],
@@ -1068,8 +1068,8 @@
     "LocalizedEntries": [
       {
         "LanguageId": "en_us",
-        "Description": "JeanGreyNewXmen",
-        "Title": "JeanGreyNewXmen",
+        "Description": "JeanGreyNewXmenJacket",
+        "Title": "JeanGreyNewXmenJacket",
         "ReleaseDate": "",
         "ItemPrice": 1250
       }
