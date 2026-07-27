@@ -362,7 +362,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             }
         }
 
-#if LoadLiveTuningDataFromDisk
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public static float GetLiveMetricsFrequencyTuningVar(MetricsFrequencyPrototype metricsFrequencyProto, MetricsFrequencyTuningVar tuningVarEnum)
         {
             Game game = Game.Current;
@@ -376,6 +376,24 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             {
                 lock (Instance._liveTuningData)
                     return Instance._liveTuningData.GetLiveMetricsFrequencyTuningVar(metricsFrequencyProto, tuningVarEnum);
+            }
+        }
+#endif
+
+#if GAME_VERSION_1_53
+        public static float GetLiveDifficultyTuningTuningVar(TuningPrototype tuningProto, DifficultyTuningTuningVar tuningVarEnum)
+        {
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (!Verify.IsNotNull(liveTuningData)) return LiveTuningData.DefaultTuningVarValue;
+                return liveTuningData.GetLiveDifficultyTuningTuningVar(tuningProto, tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLiveDifficultyTuningTuningVar(tuningProto, tuningVarEnum);
             }
         }
 #endif

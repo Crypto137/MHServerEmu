@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -126,6 +127,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #endif
 
         //---
+
+#if GAME_VERSION_1_53
+        [DoNotCopy]
+        public int DifficultyTuningPrototypeEnumValue { get; private set; }
+#endif
+
+#if GAME_VERSION_1_53
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            DifficultyTuningPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetDifficultyTuningBlueprintDataRef());
+        }
+#endif
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public void BuildRankPicker(PrototypeId difficultyTierRef, bool noAffixes, Picker<RankPrototype> picker)

@@ -25,6 +25,9 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private List<TuningVarArray> _perMetricsFrequencyTuningVars;
 #endif
+#if GAME_VERSION_1_53
+        private List<TuningVarArray> _perDifficultyTuningTuningVars;
+#endif
 
         private readonly Dictionary<int, List<WorldEntityPrototype>> _lootGroups = new();
 
@@ -56,6 +59,9 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             InitPerMetricsFrequencyTuningVars();
 #endif
+#if GAME_VERSION_1_53
+            InitDifficultyTuningTuningVars();
+#endif
         }
 
         public void ResetToDefaults()
@@ -74,6 +80,9 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             foreach (TuningVarArray tuningVarArray in _perPublicEventTuningVars)        tuningVarArray.Clear();
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             foreach (TuningVarArray tuningVarArray in _perMetricsFrequencyTuningVars)   tuningVarArray.Clear();
+#endif
+#if GAME_VERSION_1_53
+            foreach (TuningVarArray tuningVarArray in _perDifficultyTuningTuningVars)   tuningVarArray.Clear();
 #endif
 
             ClearLootGroups();
@@ -122,6 +131,11 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             for (int i = 0; i < _perMetricsFrequencyTuningVars.Count; i++)
                 _perMetricsFrequencyTuningVars[i].Copy(other._perMetricsFrequencyTuningVars[i]);
+#endif
+
+#if GAME_VERSION_1_53
+            for (int i = 0; i < _perDifficultyTuningTuningVars.Count; i++)
+                _perDifficultyTuningTuningVars[i].Copy(other._perDifficultyTuningTuningVars[i]);
 #endif
 
             ClearLootGroups();
@@ -179,6 +193,10 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             else if (prototype is MetricsFrequencyPrototype)
                 UpdateLiveMetricsFrequencyTuningVar(tuningVarProtoRef, (MetricsFrequencyTuningVar)tuningVarEnum, tuningVarValue);
+#endif
+#if GAME_VERSION_1_53
+            else if (prototype is TuningPrototype)
+                UpdateLiveDifficultyTuningTuningVar(tuningVarProtoRef, (DifficultyTuningTuningVar)tuningVarEnum, tuningVarValue);
 #endif
         }
 
@@ -392,6 +410,9 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (prototype is MetricsFrequencyPrototype) return ((MetricsFrequencyTuningVar)tuningVarEnum).ToString();
 #endif
+#if GAME_VERSION_1_53
+            if (prototype is TuningPrototype) return ((DifficultyTuningTuningVar)tuningVarEnum).ToString();
+#endif
 
             return tuningVarEnum.ToString();
         }
@@ -530,6 +551,18 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             if (!Verify.IsTrue(metricsFrequencyEnumVal >= 0 && metricsFrequencyEnumVal < _perMetricsFrequencyTuningVars.Count)) return DefaultTuningVarValue;
 
             return _perMetricsFrequencyTuningVars[metricsFrequencyEnumVal][(int)tuningVarEnum];
+        }
+#endif
+
+#if GAME_VERSION_1_53
+        public float GetLiveDifficultyTuningTuningVar(TuningPrototype tuningProto, DifficultyTuningTuningVar tuningVarEnum)
+        {
+            if (!Verify.IsTrue(tuningVarEnum >= 0 && tuningVarEnum < DifficultyTuningTuningVar.eDTTV_NumDifficultyTuningTuningVars)) return DefaultTuningVarValue;
+
+            int difficultyTuningEnumVal = tuningProto.DifficultyTuningPrototypeEnumValue;
+            if (!Verify.IsTrue(difficultyTuningEnumVal >= 0 && difficultyTuningEnumVal < _perDifficultyTuningTuningVars.Count)) return DefaultTuningVarValue;
+
+            return _perDifficultyTuningTuningVars[difficultyTuningEnumVal][(int)tuningVarEnum];
         }
 #endif
 
@@ -682,6 +715,17 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         }
 #endif
 
+#if GAME_VERSION_1_53
+        public static BlueprintId GetDifficultyTuningBlueprintDataRef()
+        {
+            GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
+            if (!Verify.IsNotNull(globalsProto)) return BlueprintId.Invalid;
+            if (!Verify.IsTrue(globalsProto.DifficultyTuningPrototype != PrototypeId.Invalid)) return BlueprintId.Invalid;
+
+            return DataDirectory.Instance.GetPrototypeBlueprintDataRef(globalsProto.DifficultyTuningPrototype);
+        }
+#endif
+
         #endregion
 
         #region Data Init
@@ -806,6 +850,19 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             _perMetricsFrequencyTuningVars = new(numMetricsFrequencyPrototypes);
             for (int i = 0; i < numMetricsFrequencyPrototypes; i++)
                 _perMetricsFrequencyTuningVars.Add(new TuningVarArray((int)MetricsFrequencyTuningVar.eMFTV_NumMetricsFrequencyTuningVars));
+        }
+#endif
+
+#if GAME_VERSION_1_53
+        private void InitDifficultyTuningTuningVars()
+        {
+            BlueprintId difficultyTuningBlueprintRef = GetDifficultyTuningBlueprintDataRef();
+            if (!Verify.IsTrue(difficultyTuningBlueprintRef != BlueprintId.Invalid)) return;
+
+            int numDifficultyTuningPrototypes = DataDirectory.Instance.GetPrototypeMaxEnumValue(difficultyTuningBlueprintRef) + 1;
+            _perDifficultyTuningTuningVars = new(numDifficultyTuningPrototypes);
+            for (int i = 0; i < numDifficultyTuningPrototypes; i++)
+                _perDifficultyTuningTuningVars.Add(new TuningVarArray((int)DifficultyTuningTuningVar.eDTTV_NumDifficultyTuningTuningVars));
         }
 #endif
 
@@ -979,6 +1036,23 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             if (!Verify.IsTrue(metricsFrequencyEnumVal >= 0 && metricsFrequencyEnumVal < _perMetricsFrequencyTuningVars.Count)) return;
             
             _perMetricsFrequencyTuningVars[metricsFrequencyEnumVal][(int)tuningVarEnum] = tuningVarValue;
+            // Server-only live tuning
+        }
+#endif
+
+#if GAME_VERSION_1_53
+        private void UpdateLiveDifficultyTuningTuningVar(PrototypeId difficultyTuningProtoRef, DifficultyTuningTuningVar tuningVarEnum, float tuningVarValue)
+        {
+            if (!Verify.IsTrue(tuningVarEnum >= 0 && tuningVarEnum < DifficultyTuningTuningVar.eDTTV_NumDifficultyTuningTuningVars)) return;
+            if (!Verify.IsTrue(difficultyTuningProtoRef != PrototypeId.Invalid)) return;
+
+            BlueprintId difficultyTuningBlueprintRef = GetDifficultyTuningBlueprintDataRef();
+            if (!Verify.IsTrue(difficultyTuningBlueprintRef != BlueprintId.Invalid)) return;
+
+            int difficultyTuningEnumVal = DataDirectory.Instance.GetPrototypeEnumValue(difficultyTuningProtoRef, difficultyTuningBlueprintRef);
+            if (!Verify.IsTrue(difficultyTuningEnumVal >= 0 && difficultyTuningEnumVal < _perDifficultyTuningTuningVars.Count)) return;
+
+            _perDifficultyTuningTuningVars[difficultyTuningEnumVal][(int)tuningVarEnum] = tuningVarValue;
             // Server-only live tuning
         }
 #endif
