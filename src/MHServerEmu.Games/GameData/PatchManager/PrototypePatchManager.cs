@@ -9,22 +9,13 @@ namespace MHServerEmu.Games.GameData.PatchManager
 {
     public class PrototypePatchManager
     {
-
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private Stack<PrototypeId> _protoStack = new();
+        
         private readonly Dictionary<PrototypeId, List<PrototypePatchEntry>> _patchDict = new();
-        private Dictionary<Prototype, string> _pathDict = new ();
+        private PatchContext _context = new();
         private bool _initialized = false;
 
         public static PrototypePatchManager Instance { get; } = new();
-
-        /// <summary>
-        /// Loads patches before Globals are loaded.
-        /// </summary>
-        public void PreInitialize(bool enablePatchManager)
-        {
-            if (enablePatchManager) _initialized |= LoadPatchDataFromDisk("PrePatchData");
-        }
 
         /// <summary>
         /// Loads patches after Globals are loaded.
@@ -107,10 +98,10 @@ namespace MHServerEmu.Games.GameData.PatchManager
             if (protoRef != PrototypeId.Invalid && _patchDict.TryGetValue(protoRef, out var list))
             {
                 if (NotPatched(list))
-                    _protoStack.Push(protoRef);
+                    _context.ProtoStack.Push(protoRef);
             }
 
-            return _protoStack.Count > 0;
+            return _context.ProtoStack.Count > 0;
         }
 
         private static bool NotPatched(List<PrototypePatchEntry> list)
@@ -122,18 +113,18 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
         public void PostOverride(Prototype prototype)
         {
-            if (_protoStack.Count == 0) return;
+            if (_context.ProtoStack.Count == 0) return;
 
             string currentPath = string.Empty;
             if (prototype.DataRef == PrototypeId.Invalid 
-                && _pathDict.TryGetValue(prototype, out currentPath) == false) return;
+                && _context.PathDict.TryGetValue(prototype, out currentPath) == false) return;
 
-            PrototypeId patchProtoRef = _protoStack.Peek();
+            PrototypeId patchProtoRef = _context.ProtoStack.Peek();
             if (prototype.DataRef != PrototypeId.Invalid)
             {
                 if (prototype.DataRef != patchProtoRef) return;
                 if (_patchDict.ContainsKey(prototype.DataRef))
-                    patchProtoRef = _protoStack.Pop();
+                    patchProtoRef = _context.ProtoStack.Pop();
             }
 
             if (_patchDict.TryGetValue(patchProtoRef, out var list) == false) return;
@@ -142,8 +133,8 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 if (entry.Patched == false)
                     CheckAndUpdate(entry, prototype, currentPath);
 
-            if (_protoStack.Count == 0)
-                _pathDict.Clear();
+            if (_context.ProtoStack.Count == 0)
+                _context.PathDict.Clear();
         }
 
         private static bool CheckAndUpdate(PrototypePatchEntry entry, Prototype prototype, string currentPath)
@@ -171,13 +162,22 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
             if (targetType.IsSubclassOf(typeof(Prototype)))
             {
+                PrototypeId? protoRef = null;
                 switch (rawValue)
                 {
-                    case PrototypeId protoRef:
-                        return GameDatabase.GetPrototype<Prototype>(protoRef);
+                    case PrototypeId protoId:   protoRef = protoId; break;
+                    case ulong dataId:          protoRef = (PrototypeId)dataId; break;
+                }
 
-                    case ulong dataId:
-                        return GameDatabase.GetPrototype<Prototype>((PrototypeId)dataId);
+                if (protoRef.HasValue)
+                {
+                    PatchContext contextBefore = Instance.CreateSubContext();
+
+                    Prototype proto = GameDatabase.GetPrototype<Prototype>(protoRef.Value);
+
+                    Instance.RestoreContext(contextBefore);
+
+                    return proto;
                 }
             }
 
@@ -313,18 +313,42 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
         public void SetPath(Prototype parent, Prototype child, string fieldName)
         {
-            string parentPath = _pathDict.TryGetValue(parent, out var path) ? path : string.Empty;
+            string parentPath = _context.PathDict.TryGetValue(parent, out var path) ? path : string.Empty;
             if (parent.DataRef != PrototypeId.Invalid && _patchDict.ContainsKey(parent.DataRef)) 
                 parentPath = string.Empty;
-            _pathDict[child] = $"{parentPath}.{fieldName}";
+            _context.PathDict[child] = $"{parentPath}.{fieldName}";
         }
 
         public void SetPathIndex(Prototype parent, Prototype child, string fieldName, int index)
         {
-            string parentPath = _pathDict.TryGetValue(parent, out var path) ? path : string.Empty;
+            string parentPath = _context.PathDict.TryGetValue(parent, out var path) ? path : string.Empty;
             if (parent.DataRef != PrototypeId.Invalid && _patchDict.ContainsKey(parent.DataRef)) 
                 parentPath = string.Empty;
-            _pathDict[child] = $"{parentPath}.{fieldName}[{index}]";
+            _context.PathDict[child] = $"{parentPath}.{fieldName}[{index}]";
+        }
+
+        private PatchContext CreateSubContext()
+        {
+            PatchContext oldContext = _context;
+            _context = new();
+            return oldContext;
+        }
+
+        private void RestoreContext(in PatchContext context)
+        {
+            _context = context;
+        }
+
+        private readonly struct PatchContext
+        {
+            public readonly Stack<PrototypeId> ProtoStack;
+            public readonly Dictionary<Prototype, string> PathDict;
+
+            public PatchContext()
+            {
+                ProtoStack = new();
+                PathDict = new();
+            }
         }
     }
 }

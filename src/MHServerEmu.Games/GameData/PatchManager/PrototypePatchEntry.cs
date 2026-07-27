@@ -1,7 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -109,8 +107,8 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 ValueType.LocaleStringId => new SimpleValue<LocaleStringId>((LocaleStringId)jsonElement.GetUInt64(), valueType),
                 ValueType.PrototypeIdArray or
                 ValueType.PrototypeDataRefArray => new ArrayValue<PrototypeId>(jsonElement, valueType, x => (PrototypeId)x.GetUInt64()),
-                ValueType.Prototype => new SimpleValue<Prototype>(ParseJsonPrototype(jsonElement), valueType),
-                ValueType.PrototypeArray => new ArrayValue<Prototype>(jsonElement, valueType, ParseJsonPrototype),
+                ValueType.Prototype => new JsonPrototype(jsonElement),
+                ValueType.PrototypeArray => new JsonPrototypeArray(jsonElement),
                 ValueType.Vector3 => new SimpleValue<Vector3>(ParseJsonVector3(jsonElement), valueType),
                 ValueType.Properties => new SimpleValue<PropertyCollection>(ParseJsonProperties(jsonElement), valueType),
                 _ => throw new NotSupportedException($"Type {valueType} not support.")
@@ -127,38 +125,6 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 throw new InvalidOperationException("Json element is not Vector3");
 
             return new Vector3(jsonArray[0].GetSingle(), jsonArray[1].GetSingle(), jsonArray[2].GetSingle());
-        }
-
-        public static Prototype ParseJsonPrototype(JsonElement jsonElement)
-        {
-
-            var referenceType = (PrototypeId)jsonElement.GetProperty("ParentDataRef").GetUInt64();
-            Type classType = GameDatabase.DataDirectory.GetPrototypeClassType(referenceType);
-            var prototype = GameDatabase.PrototypeClassManager.AllocatePrototype(classType);
-
-            CalligraphySerializer.CopyPrototypeDataRefFields(prototype, referenceType);
-            prototype.ParentDataRef = referenceType;
-
-            foreach (var property in jsonElement.EnumerateObject())
-            {
-                if (property.Name == "ParentDataRef") continue;
-                var fieldInfo = prototype.GetType().GetProperty(property.Name);
-                if (fieldInfo == null) continue;
-                Type fieldType = fieldInfo.PropertyType;
-                var element = ParseJsonElement(property.Value, fieldType);
-                try
-                {
-                    object convertedValue = PrototypePatchManager.ConvertValue(element, fieldType);
-                    fieldInfo.SetValue(prototype, convertedValue);
-                }
-                catch (Exception ex)
-                {
-                    Logger.ErrorException(ex, $"ParseJsonPrototype can't convert {element} in {fieldType.Name}");
-                }
-
-            }
-
-            return prototype;
         }
 
         public static PropertyCollection ParseJsonProperties(JsonElement jsonElement)
