@@ -324,7 +324,13 @@ namespace MHServerEmu.Games.Populations
                         if (foundArea == false) continue;
                     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     bool isMissionMarker = entry.Population.UsePopulationMarker != PrototypeId.Invalid;
+#else
+                    // Based on the fact that CH00RaftTutorial references non-existent marker MissionSmallV1,
+                    // it appears partial spawning of mission populations was allowed in pre-BUE.
+                    bool isMissionMarker = false;
+#endif
 
                     var spawnLocation = new SpawnLocation(Region, entry.RestrictToAreas, entry.RestrictToCells);
                     for (var i = 0; i < entry.Count; i++)                        
