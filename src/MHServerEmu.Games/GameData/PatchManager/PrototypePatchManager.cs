@@ -163,26 +163,20 @@ namespace MHServerEmu.Games.GameData.PatchManager
             if (targetType.IsSubclassOf(typeof(Prototype)))
             {
                 PrototypeId? protoRef = null;
-
                 switch (rawValue)
                 {
-                    case PrototypeId protoId:
-                        protoRef = protoId;
-                        break;
-
-                    case ulong dataId:
-                        protoRef = (PrototypeId)dataId;
-                        break;
+                    case PrototypeId protoId:   protoRef = protoId; break;
+                    case ulong dataId:          protoRef = (PrototypeId)dataId; break;
                 }
 
                 if (protoRef.HasValue)
                 {
-                    PatchContext oldContext = Instance._context;
-                    Instance._context = new();
+                    PatchContext contextBefore = Instance.CreateSubContext();
 
                     Prototype proto = GameDatabase.GetPrototype<Prototype>(protoRef.Value);
 
-                    Instance._context = oldContext;
+                    Instance.RestoreContext(contextBefore);
+
                     return proto;
                 }
             }
@@ -331,6 +325,18 @@ namespace MHServerEmu.Games.GameData.PatchManager
             if (parent.DataRef != PrototypeId.Invalid && _patchDict.ContainsKey(parent.DataRef)) 
                 parentPath = string.Empty;
             _context.PathDict[child] = $"{parentPath}.{fieldName}[{index}]";
+        }
+
+        private PatchContext CreateSubContext()
+        {
+            PatchContext oldContext = _context;
+            _context = new();
+            return oldContext;
+        }
+
+        private void RestoreContext(in PatchContext context)
+        {
+            _context = context;
         }
 
         private readonly struct PatchContext
