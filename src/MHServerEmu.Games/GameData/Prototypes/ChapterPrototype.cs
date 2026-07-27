@@ -17,14 +17,30 @@
         public AssetId MapImage { get; protected set; }
         public int RecommendedLevelMax { get; protected set; }
         public int RecommendedLevelMin { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId MapImageConsole { get; protected set; }
         public AssetId LocationImageConsole { get; protected set; }
         public LocaleStringId ConsoleDescription { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public PrototypeId[] CinematicsList { get; protected set; }
+#endif
     }
 
+#if !GAME_VERSION_1_53
     public class StoryWarpPrototype : Prototype
     {
         public PrototypeId Chapter { get; protected set; }
         public PrototypeId Waypoint { get; protected set; }
     }
+#endif
+
+#if GAME_VERSION_1_53
+    public class ChapterCategoryPrototype : Prototype
+    {
+        public PrototypeId[] ChaptersList { get; protected set; }
+        public LocaleStringId Description { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
+    }
+#endif
 }

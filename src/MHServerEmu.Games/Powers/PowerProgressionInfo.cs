@@ -10,8 +10,10 @@ namespace MHServerEmu.Games.Powers
         public const int RankLocked = -1;
 
         private ProgressionEntryPrototype _progressionEntryPrototype;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private TalentEntryPrototype _talentEntryPrototype;
         private TalentGroupPrototype _talentGroupPrototype;
+#endif
 
         public PowerPrototype PowerPrototype { get; private set; }
         public PrototypeId MappedPowerRef { get; private set; }
@@ -23,15 +25,25 @@ namespace MHServerEmu.Games.Powers
         public readonly PrototypeId PowerRef { get => PowerPrototype != null ? PowerPrototype.DataRef : PrototypeId.Invalid; }
         public readonly bool IsValid { get => PowerPrototype != null; }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public readonly bool IsForAvatar { get => _progressionEntryPrototype is PowerProgressionEntryPrototype || _talentEntryPrototype != null; }
+#else
+        public readonly bool IsForAvatar { get => _progressionEntryPrototype is PowerProgressionEntryPrototype; }
+#endif
         public readonly bool IsForTeamUp { get => _progressionEntryPrototype is TeamUpPowerProgressionEntryPrototype; }
         public readonly bool IsInPowerProgression { get => IsForAvatar || IsForTeamUp; }
 
         public readonly PrototypeId[] PrerequisitePowerRefs { get => _progressionEntryPrototype?.GetPrerequisites(); }
         public readonly PrototypeId[] AntirequisitePowerRefs { get => _progressionEntryPrototype?.GetAntirequisites(); }
         public readonly bool IsUltimatePower { get => PowerPrototype != null && Power.IsUltimatePower(PowerPrototype); }
+#if GAME_VERSION_1_53
+        public readonly bool IsTrait { get => _progressionEntryPrototype is PowerProgressionEntryPrototype entry && entry.TraitCategory != TraitCategory.None; }
+#elif GAME_VERSION_1_52
         public readonly bool IsTrait { get => _progressionEntryPrototype is PowerProgressionEntryPrototype entry && entry.IsTrait; }
+#endif
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public readonly bool IsTalent { get => _talentEntryPrototype != null && _talentGroupPrototype != null; }
+#endif
         public readonly bool IsPassivePowerOnAvatarWhileAway { get => _progressionEntryPrototype is TeamUpPowerProgressionEntryPrototype entry && entry.IsPassiveOnAvatarWhileAway; }
         public readonly bool IsPassivePowerOnAvatarWhileSummoned { get => _progressionEntryPrototype is TeamUpPowerProgressionEntryPrototype entry && entry.IsPassiveOnAvatarWhileSummoned; }
 
@@ -56,6 +68,7 @@ namespace MHServerEmu.Games.Powers
             PowerPrototype = avatarPowerProgEntry.PowerAssignment.Ability.As<PowerPrototype>();
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public void InitForAvatar(TalentEntryPrototype talentEntryPrototype, TalentGroupPrototype talentGroupPrototype, uint talentIndex, uint talentGroupIndex)
         {
             if (!Verify.IsTrue(PowerPrototype == null)) return;
@@ -66,6 +79,7 @@ namespace MHServerEmu.Games.Powers
             TalentGroupIndex = talentGroupIndex;
             PowerPrototype = talentEntryPrototype.Talent.As<PowerPrototype>();
         }
+#endif
 
         public void InitForTeamUp(TeamUpPowerProgressionEntryPrototype teamUpPowerProgressionEntryPrototype)
         {
@@ -79,10 +93,12 @@ namespace MHServerEmu.Games.Powers
         {
             if (_progressionEntryPrototype != null)
                 return _progressionEntryPrototype.GetRequiredLevel();
-            
+
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (_talentEntryPrototype != null)
                 return _talentEntryPrototype.UnlockLevel;
-            
+#endif
+
             return 0;
         }
 
@@ -91,8 +107,10 @@ namespace MHServerEmu.Games.Powers
             if (_progressionEntryPrototype != null)
                 return _progressionEntryPrototype.GetStartingRank();
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (_talentEntryPrototype != null)
                 return 1;
+#endif
 
             return 0;
         }

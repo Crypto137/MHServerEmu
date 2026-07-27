@@ -201,11 +201,13 @@ namespace MHServerEmu.Games.Loot
                     builder.AddVendorxp(vendorXP.ToProtobuf());
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (Types.HasFlag(LootType.Currency))
             {
                 foreach (CurrencySpec currency in Currencies)
                     builder.AddCurrencies(currency.ToProtobuf());
             }
+#endif
 
             if (Types.HasFlag(LootType.PowerPoints))
                 builder.SetPowerPoints((uint)PowerPoints);

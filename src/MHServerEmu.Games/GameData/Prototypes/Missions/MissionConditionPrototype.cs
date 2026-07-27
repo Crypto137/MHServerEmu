@@ -65,6 +65,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public StoryNotificationPrototype StoryNotification { get; protected set; }
         public bool NoTrackingOptimization { get; protected set; }
         public long MissionConditionGuid { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool DifficultyProgressAdjusting { get; protected set; }
+#endif
 
         //---
 
@@ -162,6 +165,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int CountMax { get; protected set; }
         public int CountMin { get; protected set; }
         public EntityFilterPrototype TargetFilter { get; protected set; }
+#if GAME_VERSION_1_53
+        public EvalPrototype CountMinAvatarEval { get; protected set; }
+#endif
 
         //---
 
@@ -239,6 +245,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId AvatarPrototype { get; protected set; }
         public long Level { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool TreatPrestigeAsLevelCap { get; protected set; }
+        public bool OmegaPrestigeEnabledOnly { get; protected set; }
+#endif
 
         //---
 
@@ -868,6 +878,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int CountMin { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public EntityFilterPrototype TargetFilter { get; protected set; }
+#if GAME_VERSION_1_53
+        public EvalPrototype CountMinAvatarEval { get; protected set; }
+#endif
 
         //---
 
@@ -1079,6 +1092,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool RegionIncludeChildren { get; protected set; }
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public RegionPrototype[] RegionsExclude { get; protected set; }
+#if GAME_VERSION_1_53
+        public EvalPrototype CountMinAvatarEval { get; protected set; }
+#endif
 
         //---
 
@@ -1296,4 +1312,51 @@ namespace MHServerEmu.Games.GameData.Prototypes
             entityFilter.FilterContextMissionRef = contextMissionRef;
         }
     }
+
+#if GAME_VERSION_1_53
+    public class MissionConditionAvatarPrestigeLevelUpPrototype : MissionPlayerConditionPrototype
+    {
+        public PrototypeId AvatarPrototype { get; protected set; }
+        public PrototypeId Level { get; protected set; }
+        public PrototypeId OmegaLevel { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public KeywordPrototype AvatarKeyword { get; protected set; }
+
+        //---
+
+        public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
+        {
+            return new MissionConditionAvatarPrestigeLevelUp(mission, owner, this);
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class MissionConditionSystemUnlockedAcknowledgedPrototype : MissionPlayerConditionPrototype
+    {
+        public AssetId UISystem { get; protected set; }
+
+        //---
+
+        public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
+        {
+            return new MissionConditionSystemUnlockedAcknowledged(mission, owner, this);
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class MissionConditionVendorLevelUpPrototype : MissionPlayerConditionPrototype
+    {
+        public PrototypeId VendorPrototype { get; protected set; }
+        public long Level { get; protected set; }
+
+        //---
+
+        public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
+        {
+            return new MissionConditionVendorLevelUp(mission, owner, this);
+        }
+    }
+#endif
 }

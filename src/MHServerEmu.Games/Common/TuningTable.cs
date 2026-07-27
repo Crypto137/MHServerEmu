@@ -12,7 +12,11 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Common
 {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class TuningTable
+#else
+    public class DifficultyTable
+#endif
     {
         // NOTE: In the client this class is referenced as D:\mirrorBuilds_source05\MarvelGame_v52\Source\Game\Game\Combat\TuningTable.cpp,
         // but it's awkward for namespaces and classes to use the same names in C#, so we moved both combat classes to Common.
@@ -20,16 +24,29 @@ namespace MHServerEmu.Games.Common
         // Pre-BUE this class was named DifficultyTable (and DifficultyPrototype instead of TuningPrototype respectively).
 
         private Region _region;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private PrototypeId _tuningRef;
         private TuningPrototype _tuningProto;
+#else
+        private PrototypeId _difficultyRef;
+        private DifficultyPrototype _difficultyProto;
+#endif
         private int _difficultyIndexMin;
         private int _difficultyIndexMax;
         private int _difficultyIndex;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public TuningPrototype Prototype { get => _tuningProto; }
+#else
+        public DifficultyPrototype Prototype { get => _difficultyProto; }
+#endif
         public int DifficultyIndex { get => _difficultyIndex > 0 ? _difficultyIndex : 0; set => SetDifficultyIndex(value, true); }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public TuningTable(Region region)
+#else
+        public DifficultyTable(Region region)
+#endif
         {
             _region = region;
 
@@ -44,14 +61,25 @@ namespace MHServerEmu.Games.Common
             }
         }
 
-        public void SetTuningTable(PrototypeId tuningTable)
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        public void SetTuningTable(PrototypeId tuningRef)
         {
-            if (_tuningRef != tuningTable)
+            if (_tuningRef != tuningRef)
             {
-                _tuningRef = tuningTable;
-                _tuningProto = GameDatabase.GetPrototype<TuningPrototype>(tuningTable);
+                _tuningRef = tuningRef;
+                _tuningProto = GameDatabase.GetPrototype<TuningPrototype>(tuningRef);
             }
         }
+#else
+        public void SetDifficultyTable(PrototypeId difficultyRef)
+        {
+            if (_difficultyRef != difficultyRef)
+            {
+                _difficultyRef = difficultyRef;
+                _difficultyProto = GameDatabase.GetPrototype<DifficultyPrototype>(difficultyRef);
+            }
+        }
+#endif
 
         public RankPrototype RollRank(List<RankPrototype> ranks, bool noAffixes)
         {
@@ -60,7 +88,11 @@ namespace MHServerEmu.Games.Common
             if (ranks.Any(r => r.Rank != Rank.Popcorn) == false)
             {
                 Picker<RankPrototype> picker = new(_region.Game.Random);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 _tuningProto.BuildRankPicker(_region.DifficultyTierRef, noAffixes, picker);
+#else
+                _difficultyProto.BuildRankPicker(noAffixes, picker);
+#endif
                 if (picker.Empty() == false)
                     picker.Pick(out rank);
             }
@@ -156,7 +188,11 @@ namespace MHServerEmu.Games.Common
             float damageMult = 1f;
 
             // Some older regions (e.g. Regions/EndGame/Terminals/Red/ShockerSubway) don't have tuning tables assigned.
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (_tuningProto != null)
+#else
+            if (_difficultyProto != null)
+#endif
             {
                 damageMult *= GetRegionDifficultyDamageMultiplier(isPlayerDamage, targetRank);
                 damageMult *= GetDifficultyIndexDamageMultiplier(isPlayerDamage, targetRank);
@@ -170,21 +206,27 @@ namespace MHServerEmu.Games.Common
         {
             float difficultyMult = 1f;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            TuningPrototype tableProto = _tuningProto;
+#else
+            DifficultyPrototype tableProto = _difficultyProto;
+#endif
+
             if (isPlayerDamage)
             {
-                difficultyMult *= _tuningProto.TuningDamagePlayerToMobDCL;
+                difficultyMult *= tableProto.TuningDamagePlayerToMobDCL;
                 difficultyMult *= _region.Properties[PropertyEnum.DamageRegionPlayerToMob];
             }
             else
             {
-                difficultyMult *= _tuningProto.TuningDamageMobToPlayerDCL;
+                difficultyMult *= tableProto.TuningDamageMobToPlayerDCL;
                 difficultyMult *= _region.Properties[PropertyEnum.DamageRegionMobToPlayer];
             }
 
             // Apply rank-specific multipliers
-            if (_tuningProto.TuningDamageByRankDCL.HasValue())
+            if (tableProto.TuningDamageByRankDCL.HasValue())
             {
-                foreach (TuningDamageByRankPrototype rankEntry in _tuningProto.TuningDamageByRankDCL)
+                foreach (TuningDamageByRankPrototype rankEntry in tableProto.TuningDamageByRankDCL)
                 {
                     if (rankEntry.Rank != targetRank)
                         continue;
@@ -226,8 +268,14 @@ namespace MHServerEmu.Games.Common
 
         private float GetNumNearbyPlayersDamageMultiplier(bool isPlayerDamage, Rank targetRank, Vector3 targetPosition)
         {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            TuningPrototype tableProto = _tuningProto;
+#else
+            DifficultyPrototype tableProto = _difficultyProto;
+#endif
+
             // Check if this region scales with the number of players
-            if (_tuningProto.NumNearbyPlayersScalingEnabled == false)
+            if (tableProto.NumNearbyPlayersScalingEnabled == false)
                 return 1f;
 
             DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;

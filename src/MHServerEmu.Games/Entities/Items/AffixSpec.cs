@@ -206,8 +206,13 @@ namespace MHServerEmu.Games.Entities.Items
                 if (Power.IsTravelPower(powerProto))
                     continue;
 
+#if GAME_VERSION_1_52
                 if (entryProto.IsTrait)
                     continue;
+#elif GAME_VERSION_1_53
+                if (entryProto.TraitCategory != TraitCategory.None)
+                    continue;
+#endif
 
                 if (affixSet.Contains(new(powerAffixProto.DataRef, powerProto.DataRef)))
                     continue;

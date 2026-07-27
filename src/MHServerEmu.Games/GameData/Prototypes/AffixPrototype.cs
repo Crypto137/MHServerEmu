@@ -129,7 +129,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private KeywordsMask _categoryKeywordsMask;
+#endif
 
         [DoNotCopy]
         public virtual bool HasBonusPropertiesToApply { get => Properties != null || PropertyEntries != null; }
@@ -144,6 +146,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             using var categoryListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> categoryList);
             foreach (var affixCategoryTableEntry in GameDatabase.LootGlobalsPrototype.AffixCategoryTable)
             {
@@ -157,8 +160,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
             _categoryKeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(categoryList);
 
             // Skipping UI stuff since we probably don't need it server-side
+#endif
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool HasCategory(AffixCategoryPrototype affixCategoryProto)
         {
             return KeywordPrototype.TestKeywordBit(_categoryKeywordsMask, affixCategoryProto);
@@ -182,6 +187,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return GetFirstCategoryMatch(affixCategoryProtos) != null;
         }
+#endif
 
         public virtual bool AllowAttachment(DropFilterArguments args)
         {
@@ -356,11 +362,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Type { get; protected set; }
         public int RanksMax { get; protected set; }
         public CurveId RankCostCurve { get; protected set; }
+#if GAME_VERSION_1_48
+        public ModDisableByBasePrototype[] DisableBy { get; protected set; }
+#endif
         public PrototypeId TooltipTemplateCurrentRank { get; protected set; }
         public EvalPrototype[] EvalOnCreate { get; protected set; }
         public PrototypeId TooltipTemplateNextRank { get; protected set; }
         public PropertySetEntryPrototype[] PropertiesForTooltips { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId UIIconHiRes { get; protected set; }
+#endif
 
         //---
 
@@ -449,9 +460,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId EnemyBoostModType { get; protected set; }
         public PrototypeId PvPUpgradeModType { get; protected set; }
         public PrototypeId TalentModType { get; protected set; }
+#if !GAME_VERSION_1_53
         public PrototypeId OmegaBonusModType { get; protected set; }
         public PrototypeId OmegaHowToTooltipTemplate { get; protected set; }
+#endif
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId InfinityHowToTooltipTemplate { get; protected set; }
+#endif
     }
 
     public class SkillPrototype : ModPrototype
@@ -469,12 +484,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
     }
 
+#if !GAME_VERSION_1_53
     public class OmegaBonusPrototype : ModPrototype
     {
         public PrototypeId[] Prerequisites { get; protected set; }
         public int UIHexIndex { get; protected set; }
     }
+#endif
 
+#if !GAME_VERSION_1_53
     public class OmegaBonusSetPrototype : ModPrototype
     {
         public LocaleStringId UITitle { get; protected set; }
@@ -485,7 +503,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId UIColor { get; protected set; }
         public AssetId UIBackgroundImage { get; protected set; }
     }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class InfinityGemBonusPrototype : ModPrototype
     {
         public PrototypeId[] Prerequisites { get; protected set; }
@@ -505,6 +525,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId UIIconRadialNormal { get; protected set; }
         public AssetId UIIconRadialSelected { get; protected set; }
     }
+#endif
 
     public class RankPrototype : ModPrototype
     {
@@ -514,7 +535,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LootDropEventType LootTableParam { get; protected set; }
         public OverheadInfoDisplayType OverheadInfoDisplayType { get; protected set; }
         public PrototypeId[] Keywords { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public int BonusItemFindPoints { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public AssetId LootSource { get; protected set; }
+#endif
 
         //---
 
@@ -582,7 +608,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CountsAsAffixSlot { get; protected set; }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class AffixTableEntryPrototype : Prototype
+#else
+    public class RankAffixEntryPrototype : Prototype
+#endif
     {
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public EnemyBoostSetPrototype AffixTable { get; protected set; }
@@ -625,6 +655,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class RankAffixEntryPrototype : Prototype
     {
         public AffixTableEntryPrototype[] Affixes { get; protected set; }
@@ -647,6 +678,68 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return Affixes.HasValue() ? Affixes.Length : 0;
         }
     }
+#else
+    public class DifficultyRankEntryPrototype : Prototype
+    {
+        public RankAffixEntryPrototype[] Affixes { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public RankPrototype Rank { get; protected set; }
+        public int Weight { get; protected set; }
+
+        //---
+
+        public RankAffixEntryPrototype GetAffixSlot(int slot)
+        {
+            if (Affixes.HasValue() && Verify.IsTrue(slot >= 0) && slot < Affixes.Length)
+                return Affixes[slot];
+
+            return null;
+        }
+
+        public int GetMaxAffixes()
+        {
+            return Affixes.HasValue() ? Affixes.Length : 0;
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_48
+    public class ModDisableByBasePrototype : Prototype
+    {
+    }
+
+    public class ModDisableByMissionRequirementPrototype : ModDisableByBasePrototype
+    {
+        public PrototypeId Mission { get; protected set; }
+    }
+
+    public class ModDisableByModSelectedPrototype : ModDisableByBasePrototype
+    {
+        public PrototypeId Mod { get; protected set; }
+    }
+
+    public class ModDisableByModTypeRequirementPrototype : ModDisableByBasePrototype
+    {
+        public PrototypeId ModType { get; protected set; }
+        public int RanksMin { get; protected set; }
+    }
+
+    public class ModDisableBySetPointRequirementPrototype : ModDisableByBasePrototype
+    {
+        public PrototypeId TalentSet { get; protected set; }
+        public int PointsRequired { get; protected set; }
+    }
+
+    public class ModDisableByUniqueRequirementPrototype : ModDisableByBasePrototype
+    {
+        public PrototypeId UniqueSet { get; protected set; }
+    }
+
+    public class ModUniqueSetPrototype : Prototype
+    {
+        public PrototypeId[] Set { get; protected set; }
+    }
+#endif
 
     public class RarityPrototype : Prototype
     {
@@ -692,4 +785,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return curve.GetAt(Math.Clamp(level, curve.MinPosition, curve.MaxPosition));
         }
     }
+
+#if GAME_VERSION_1_53
+    public class EquipmentSetEntryPrototype : Prototype
+    {
+        public PropertySetEntryPrototype[] Properties { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class EquipmentSetPrototype : Prototype
+    {
+        public LocaleStringId DisplayName { get; protected set; }
+        public EquipmentSetEntryPrototype[] Entries { get; protected set; }
+        public CurveId SetLevelToEntryIndex { get; protected set; }
+    }
+#endif
 }

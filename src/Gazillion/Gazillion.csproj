@@ -5,26 +5,69 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <Platforms>x64</Platforms>
-  </PropertyGroup>
-  
-  <PropertyGroup>
-    <AssemblyVersion>1.52.0.1700</AssemblyVersion>
-    <FileVersion>$(AssemblyVersion)</FileVersion>
-    <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
+    <Configurations>Debug;Release;Debug 1.48;Release 1.48;Debug 1.53;Release 1.53</Configurations>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <AssemblyVersion>1.52.0.1700</AssemblyVersion>
     <NoWarn>1701;1702;CS8981</NoWarn>
+    <DefineConstants>$(DefineConstants);GAME_VERSION_1_52</DefineConstants>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <AssemblyVersion>1.52.0.1700</AssemblyVersion>
+	<NoWarn>1701;1702;CS8981</NoWarn>
+    <DefineConstants>$(DefineConstants);GAME_VERSION_1_52</DefineConstants>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.48|x64'">
+	<AssemblyVersion>1.48.0.1712</AssemblyVersion>
+	<NoWarn>1701;1702;CS8981</NoWarn>
+    <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_48</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.48|x64'">
+	<AssemblyVersion>1.48.0.1712</AssemblyVersion>
+	<NoWarn>1701;1702;CS8981</NoWarn>
+    <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_48</DefineConstants>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.53|x64'">
+    <AssemblyVersion>1.53.0.203</AssemblyVersion>
     <NoWarn>1701;1702;CS8981</NoWarn>
+    <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_53</DefineConstants>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.53|x64'">
+    <AssemblyVersion>1.53.0.203</AssemblyVersion>
+    <NoWarn>1701;1702;CS8981</NoWarn>
+    <DefineConstants>$(DefineConstants);RELEASEGAME_VERSION_1_53</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
+    <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
+  </PropertyGroup>
+	
   <ItemGroup>
     <Reference Include="Google.ProtocolBuffers">
       <HintPath>..\..\dep\protobuf-csharp\Google.ProtocolBuffers.dll</HintPath>
     </Reference>
   </ItemGroup>
 
+  <ItemGroup Condition="'$(AssemblyVersion)'=='1.52.0.1700'">
+    <Compile Remove="1.48.0.1712\*.cs" />
+    <Compile Remove="1.53.0.203\*.cs" />
+  </ItemGroup>
+	
+  <ItemGroup Condition="'$(AssemblyVersion)'=='1.48.0.1712'">
+    <Compile Remove="1.52.0.1700\*.cs" />
+    <Compile Remove="1.53.0.203\*.cs" />
+  </ItemGroup>
+	
+  <ItemGroup Condition="'$(AssemblyVersion)'=='1.53.0.203'">
+    <Compile Remove="1.48.0.1712\*.cs" />
+    <Compile Remove="1.52.0.1700\*.cs" />
+  </ItemGroup>
+	
 </Project>

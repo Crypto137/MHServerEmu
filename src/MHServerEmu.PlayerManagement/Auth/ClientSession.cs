@@ -21,6 +21,9 @@ namespace MHServerEmu.PlayerManagement.Auth
     {
         public ulong Id { get; set; }
         public object Account { get; set; }
+#if GAME_VERSION_1_53
+        public uint ClientTokenCrc { get; set; }
+#endif
 
         public string PlatformTicket { get; }
         public ClientDownloader Downloader { get; }

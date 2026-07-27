@@ -38,6 +38,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EnemyBoostEntryPrototype[] EnemyBoostsFiltered { get; protected set; }
         public PrototypeId[] AffixRarityRestrictions { get; protected set; }
         public EvalPrototype Eval { get; protected set; }
+#if GAME_VERSION_1_53
+        public PrototypeId DifficultyTier { get; protected set; }
+#endif
 
         //---
 

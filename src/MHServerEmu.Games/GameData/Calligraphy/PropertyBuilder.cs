@@ -64,6 +64,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             PropertyInfo info = _propertyInfoTable.LookupPropertyInfo(_propertyEnum);
             if (!Verify.IsTrue(info.IsFullyLoaded == false)) return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             int numIntegerParams = 0;
             int usedBitCount = 0;
 
@@ -103,6 +104,26 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     info.SetParamTypeInteger(i, (PropertyParam)intParamMaxValue);
                 }
             }
+#else
+            // V48_NOTE: Pre-BUE versions use fixed bit budget for integer params (12 bits).
+            const int MaxIntegerParamValue = (1 << 12) - 1;
+
+            for (int i = 0; i < ParamCount; i++)
+            {
+                switch (_paramInfos[i].Type)
+                {
+                    case PropertyParamType.Integer:
+                        info.SetParamTypeInteger(i, (PropertyParam)MaxIntegerParamValue);
+                        break;
+                    case PropertyParamType.Asset:
+                        info.SetParamTypeAsset(i, (AssetTypeId)_paramInfos[i].SubtypeDataRef);
+                        break;
+                    case PropertyParamType.Prototype:
+                        info.SetParamTypePrototype(i, (BlueprintId)_paramInfos[i].SubtypeDataRef);
+                        break;
+                }
+            }
+#endif
 
             info.SetPropertyInfo(PropertyValue, ParamCount, _paramValues);
             info.DefaultCurveIndex = CurveIndex;

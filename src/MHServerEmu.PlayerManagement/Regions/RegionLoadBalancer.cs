@@ -33,8 +33,10 @@ namespace MHServerEmu.PlayerManagement.Regions
                 if (region.State == RegionHandleState.Shutdown)
                     continue;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 if (region.DifficultyTierProtoRef != difficultyProtoRef)
                     continue;
+#endif
 
                 if (region.IsAccessible(player) == false)
                     continue;

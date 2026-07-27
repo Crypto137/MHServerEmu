@@ -47,8 +47,10 @@ namespace MHServerEmu.Games.Dialog
                             WorldEntity dialogTarget = player.GetDialogTarget(true); 
                             isAvailable = dialogTarget != null && dialogTarget.Properties[PropertyEnum.OpenPlayerStash];
                         }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                         else if (inventoryLocation.InventoryConvenienceLabel == InventoryConvenienceLabel.DeliveryBox)
                             isAvailable = itemProto.IsContainer;
+#endif
                         else if (inventoryCategory == InventoryCategory.AvatarEquipment)
                             isAvailable = true;
                         else

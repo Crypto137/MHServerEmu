@@ -40,8 +40,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] RemoveStates { get; protected set; }
         public PrototypeId[] SubStates { get; protected set; }
         public PrototypeId UIWidget { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+#endif
 
         //---
 
@@ -216,6 +218,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DeathLimitUINotification { get; protected set; }
         public bool StayInModeOnFail { get; protected set; }
         public bool UseRegionDeathCount { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool FailOnAllPlayersDeadAndNoLives { get; protected set; }
+#endif
 
         //---
 

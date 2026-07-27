@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿#if !GAME_VERSION_1_53
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.Tables
@@ -28,3 +29,4 @@ namespace MHServerEmu.Games.GameData.Tables
         }
     }
 }
+#endif

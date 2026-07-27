@@ -407,13 +407,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public DelayContextPrototype DelayAfterWander { get; protected set; }
         public WanderContextPrototype Wander { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public WanderContextPrototype WanderInPlace { get; protected set; }
+#endif
 
         //---
 
         private enum State
         {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             WanderInPlace,
+#endif
             Delay,
             Wander,
         }
@@ -441,7 +445,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                 if (selectedEntity != null && proceduralAI.GetState(0) != UsePower.Instance)
                 {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.WanderInPlace;
+#endif
                     SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
                     senses.NotifyAlliesOnTargetAquired();
                     proceduralAI.ClearOverrideBehavior(OverrideType.Full);
@@ -449,6 +455,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             StaticBehaviorReturnType contextResult;
             int stateVal = blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal];
             switch ((State)stateVal)
@@ -472,6 +479,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.Delay;
                     break;
             }
+#else
+            // V48_FIXME: Wander/Delay
+#endif
         }
 
     }
@@ -686,8 +696,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int expLevel = Math.Max(avatar.CharacterLevel + levelDelta, 1);
             if (orbProto.GetXPAwarded(expLevel, out long xp, out long minXP, player.CanUseLiveTuneBonuses()))
             {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 TuningTable tuningTable = orbProto.IgnoreRegionDifficultyForXPCalc == false ? agent.Region?.TuningTable : null;
                 xp = avatar.ApplyXPModifiers(xp, false, tuningTable);
+#else
+                DifficultyTable difficultyTable = orbProto.IgnoreRegionDifficultyForXPCalc == false ? agent.Region?.DifficultyTable : null;
+                xp = avatar.ApplyXPModifiers(xp, false, difficultyTable);
+#endif
 
                 // Set xp to 1 if this is not the avatar this was intended for
                 if (orbProto.XPAwardRestrictedToAvatar)
@@ -704,6 +719,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             // Alternate advancement experience
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (avatar.Game.InfinitySystemEnabled)
             {
                 long infinityXP = agent.Properties[PropertyEnum.InfinityXP];
@@ -711,11 +727,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     player.AwardInfinityXP(infinityXP, true);
             }
             else
+#endif
             {
+#if !GAME_VERSION_1_53
                 long omegaXP = agent.Properties[PropertyEnum.OmegaXP];
                 if (omegaXP > 0)
                     player.AwardOmegaXP(omegaXP, true);
+#endif
             }
+
 
             // Credits / currency
             if (player.AcquireCurrencyItem(agent))
@@ -795,8 +815,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent.GetXPAwarded(out _, out _, false))
                 return false;
 
-            if (properties.HasProperty(PropertyEnum.OmegaXP) || properties.HasProperty(PropertyEnum.InfinityXP))
+#if !GAME_VERSION_1_53
+            if (properties.HasProperty(PropertyEnum.OmegaXP))
                 return false;
+#endif
+
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            if (properties.HasProperty(PropertyEnum.InfinityXP))
+                return false;
+#endif
 
             // Do not destroy currency
             if (properties.HasProperty(PropertyEnum.ItemCurrency) || properties.HasProperty(PropertyEnum.RunestonesAmount))

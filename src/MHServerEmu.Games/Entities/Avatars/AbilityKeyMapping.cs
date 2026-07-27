@@ -37,7 +37,11 @@ namespace MHServerEmu.Games.Entities.Avatars
     public class AbilityKeyMapping : ISerialize
     {
         private const int NumActionKeySlots = 6;   // non-mouse slots
+        private const int NumHotkeys = 6;
 
+#if GAME_VERSION_1_48
+        private int _keyMappingIndex;
+#endif
         private int _powerSpecIndex;
         private bool _shouldPersist;
         private PrototypeId _associatedTransformMode;
@@ -46,6 +50,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         private PrototypeId _primaryAction;
         private PrototypeId _secondaryAction;
         private InlineArray6<PrototypeId> _actionKeys;
+
+        private InlineArray6<HotkeyData> _hotkeys;
 
         public int PowerSpecIndex { get => _powerSpecIndex; set => _powerSpecIndex = value; }
         public bool ShouldPersist { get => _shouldPersist; set => _shouldPersist = value; }
@@ -70,12 +76,18 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             bool success = true;
 
+#if GAME_VERSION_1_48
+            success &= Serializer.Transfer(archive, ref _keyMappingIndex);
+#endif
             success &= Serializer.Transfer(archive, ref _powerSpecIndex);
             success &= Serializer.Transfer(archive, ref _shouldPersist);
             success &= Serializer.Transfer(archive, ref _associatedTransformMode);
             success &= Serializer.Transfer(archive, ref _primaryAction);
             success &= Serializer.Transfer(archive, ref _secondaryAction);
             success &= Serializer.Transfer(archive, _actionKeys);
+#if GAME_VERSION_1_48
+            success &= Serializer.Transfer(archive, (Span<HotkeyData>)_hotkeys);
+#endif
 
             return success;
         }
@@ -254,6 +266,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool GetDefaultAbilities(List<HotkeyData> hotkeyDataList, Avatar avatar, int startingLevel = -1)
         {
+#if !GAME_VERSION_1_48
+            // V48_FIXME
+
             AvatarPrototype avatarProto = avatar.AvatarPrototype;
             if (!Verify.IsNotNull(avatarProto)) return false;
 
@@ -263,8 +278,13 @@ namespace MHServerEmu.Games.Entities.Avatars
                 foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgEntryList)
                 {
                     // Skip traits
+#if GAME_VERSION_1_52
                     if (powerProgEntry.IsTrait)
                         continue;
+#elif GAME_VERSION_1_53
+                    if (powerProgEntry.TraitCategory != TraitCategory.None)
+                        continue;
+#endif
 
                     // Skip powers that don't have auto-assignment defined
                     AbilityAutoAssignmentSlotPrototype powerAssignmentProto = avatarProto.GetPowerInAbilityAutoAssignmentSlot(powerProgEntry.PowerAssignment.Ability);
@@ -298,8 +318,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                     hotkeyDataList.Add(new HotkeyData(abilityToBeSlotted, slot));
                 }
             }
+#endif
 
-            return hotkeyDataList.Count > 0;
+                    return hotkeyDataList.Count > 0;
         }
 
         /// <summary>

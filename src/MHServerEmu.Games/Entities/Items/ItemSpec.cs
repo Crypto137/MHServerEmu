@@ -181,6 +181,7 @@ namespace MHServerEmu.Games.Entities.Items
             return sb.ToString();
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public short NumAffixesOfCategory(AffixCategoryPrototype affixCategoryProto)
         {
             short numAffixes = 0;
@@ -196,6 +197,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             return numAffixes;
         }
+#endif
 
         public short NumAffixesOfPosition(AffixPosition affixPosition)
         {

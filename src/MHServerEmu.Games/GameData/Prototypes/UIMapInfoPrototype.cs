@@ -89,7 +89,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class UIMapInfoIconBehaviorPrototype : Prototype
     {
         public AssetId IconPath { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconPathHiRes { get; protected set; }
+#endif
     }
 
     public class UIMapInfoIconAppearancePrototype : Prototype

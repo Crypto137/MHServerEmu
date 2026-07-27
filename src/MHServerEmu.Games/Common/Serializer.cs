@@ -357,7 +357,7 @@ namespace MHServerEmu.Games.Common
             return success;
         }
 
-        public static bool Transfer<T>(Archive archive, Span<T> ioData) where T: ISerialize, new()
+        public static bool Transfer<T>(Archive archive, Span<T> ioData) where T: unmanaged, ISerialize
         {
             bool success = true;
 
@@ -380,15 +380,12 @@ namespace MHServerEmu.Games.Common
                     Logger.Warn($"Transfer(): Span length {ioData.Length} is not enough to hold {numElements} elements");
 
                 for (int i = 0; i < numElements && i < ioData.Length; i++)
-                {
-                    ioData[i] = new();
                     success &= Transfer(archive, ref ioData[i]);
-                }
 
                 // Elements outside the range of the provided array are discarded
                 for (int i = ioData.Length; i < numElements; i++)
                 {
-                    T value = new();
+                    T value = default;
                     success &= Transfer(archive, ref value);
                 }
             }

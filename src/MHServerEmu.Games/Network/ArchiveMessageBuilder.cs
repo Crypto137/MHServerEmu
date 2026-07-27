@@ -78,7 +78,12 @@ namespace MHServerEmu.Games.Network
         HasAvatarWorldInstanceId    = 1 << 0,
         IsNewOnServer               = 1 << 1,
         IsClientEntityHidden        = 1 << 2,
-        HasAttachedEntities         = 1 << 3
+#if GAME_VERSION_1_53
+        HasActivePower              = 1 << 3,
+        HasAttachedEntities         = 1 << 4,
+#else
+        HasAttachedEntities         = 1 << 3,
+#endif
     }
 
     /// <summary>
@@ -566,6 +571,11 @@ namespace MHServerEmu.Games.Network
                     extraFieldFlags |= EnterGameWorldMessageFlags.IsClientEntityHidden;
             }
 
+#if GAME_VERSION_1_53
+            if (worldEntity.ActivePowerRef != PrototypeId.Invalid)
+                extraFieldFlags |= EnterGameWorldMessageFlags.HasActivePower;
+#endif
+
             // Attached entities
             if (worldEntity.Physics.HasAttachedEntities())
                 extraFieldFlags |= EnterGameWorldMessageFlags.HasAttachedEntities;
@@ -599,6 +609,14 @@ namespace MHServerEmu.Games.Network
                 uint avatarWorldInstanceId = avatar.AvatarWorldInstanceId;
                 Serializer.Transfer(archive, ref avatarWorldInstanceId);
             }
+
+#if GAME_VERSION_1_53
+            if (extraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasActivePower))
+            {
+                PrototypeId activePowerRef = worldEntity.ActivePowerRef;
+                Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref activePowerRef);
+            }
+#endif
 
             if (extraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAttachedEntities))
             {

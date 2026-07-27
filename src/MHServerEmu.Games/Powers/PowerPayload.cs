@@ -1365,7 +1365,10 @@ namespace MHServerEmu.Games.Powers
             boostPct += pvpProto.GetDamageBoostForNoobs(avatarProps[PropertyEnum.PvPMatchCount]);
             boostPct += pvpProto.GetDamageBoostForWinPct(avatarProps[PropertyEnum.PvPRecentWinLossRatio]);
 
+#if !GAME_VERSION_1_53
+#if GAME_VERSION_1_52
             if (Game.InfinitySystemEnabled == false)
+#endif
             {
                 Player player = avatar.GetOwnerOfType<Player>();
                 if (player != null)
@@ -1374,6 +1377,7 @@ namespace MHServerEmu.Games.Powers
                     boostPct += pvpProto.GetDamageBoostForOmegaPct(omegaPct);
                 }
             }
+#endif
 
             ApplyDamageMultiplier(results.Properties, boostPct);
         }
@@ -1426,8 +1430,13 @@ namespace MHServerEmu.Games.Powers
             if (target.CanBePlayerOwned() == IsPlayerPayload)
                 return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             TuningTable tuningTable = target.Region?.TuningTable;
             if (!Verify.IsNotNull(tuningTable)) return;
+#else
+            DifficultyTable difficultyTable = target.Region?.DifficultyTable;
+            if (!Verify.IsNotNull(difficultyTable)) return;
+#endif
 
             // Scaling differs based on the rank of the target
             RankPrototype rankProto = IsPlayerPayload
@@ -1436,8 +1445,12 @@ namespace MHServerEmu.Games.Powers
 
             if (!Verify.IsNotNull(rankProto)) return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             difficultyMult = tuningTable.GetDamageMultiplier(IsPlayerPayload, rankProto.Rank, target.RegionLocation.Position);
-            
+#else
+            difficultyMult = difficultyTable.GetDamageMultiplier(IsPlayerPayload, rankProto.Rank, target.RegionLocation.Position);
+#endif
+
             ApplyDamageMultiplier(results.Properties, difficultyMult);
         }
 
@@ -1850,7 +1863,10 @@ namespace MHServerEmu.Games.Powers
             damageReduction *= pvpProto.GetDamageReductionForNoobs(avatarProps[PropertyEnum.PvPMatchCount]);
             damageReduction *= pvpProto.GetDamageReductionForWinPct(avatarProps[PropertyEnum.PvPRecentWinLossRatio]);
 
+#if !GAME_VERSION_1_53
+#if GAME_VERSION_1_52
             if (Game.InfinitySystemEnabled == false)
+#endif
             {
                 Player player = avatar.GetOwnerOfType<Player>();
                 if (player != null)
@@ -1859,6 +1875,7 @@ namespace MHServerEmu.Games.Powers
                     damageReduction *= pvpProto.GetDamageReductionForOmegaPct(omegaPct);
                 }
             }
+#endif
 
             ApplyDamageMultiplier(results.Properties, damageReduction);
         }
@@ -2696,7 +2713,7 @@ namespace MHServerEmu.Games.Powers
             targetAgent.StartHitReactionCooldown();
         }
 
-        #endregion
+#endregion
 
         #region Helper Methods
 
@@ -3071,17 +3088,21 @@ namespace MHServerEmu.Games.Powers
             RankPrototype rankProto = target?.GetRankPrototype();
             if (!Verify.IsNotNull(rankProto)) return 0;
 
-            TuningPrototype tuningProto = target.Region?.TuningTable?.Prototype;
-            if (!Verify.IsNotNull(tuningProto)) return 0;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            TuningPrototype difficultyProto = target.Region?.TuningTable?.Prototype;
+#else
+            DifficultyPrototype difficultyProto = target.Region?.DifficultyTable?.Prototype;
+#endif
+            if (!Verify.IsNotNull(difficultyProto)) return 0;
 
-            if (tuningProto.NegativeStatusCurves.HasValue() == false)
+            if (difficultyProto.NegativeStatusCurves.HasValue() == false)
                 return 0;
 
             PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
 
             // Find all curves relevant to this condition and pick the highest resist score out of them
             int score = 0;
-            foreach (NegStatusPropCurveEntryPrototype entry in tuningProto.NegativeStatusCurves)
+            foreach (NegStatusPropCurveEntryPrototype entry in difficultyProto.NegativeStatusCurves)
             {
                 PropertyEnum statusProperty = propertyInfoTable.GetPropertyEnumFromPrototype(entry.NegStatusProp);
                 if (conditionProperties[statusProperty] == false)

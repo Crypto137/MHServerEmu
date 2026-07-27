@@ -8,6 +8,7 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <Platforms>x64</Platforms>
+    <Configurations>Debug;Release;Debug 1.48;Release 1.48;Debug 1.53;Release 1.53</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

@@ -6,6 +6,7 @@
     <Nullable>disable</Nullable>
     <AppDesignerFolder>CSharpProperties</AppDesignerFolder>
     <Platforms>x64</Platforms>
+    <Configurations>Debug;Release;Debug 1.48;Release 1.48;Debug 1.53;Release 1.53</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -13,6 +14,30 @@
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
     <AssemblyVersion>$(InformationalVersion).0</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DefineConstants>$(DefineConstants);GAME_VERSION_1_52</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DefineConstants>$(DefineConstants);GAME_VERSION_1_52</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.48|x64'">
+    <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_48</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.48|x64'">
+    <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_48</DefineConstants>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.53|x64'">
+    <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_53</DefineConstants>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.53|x64'">
+    <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_53</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

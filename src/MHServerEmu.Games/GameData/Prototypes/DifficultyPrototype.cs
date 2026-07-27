@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Regions;
 
@@ -22,7 +21,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RegionDifficultySettingsPrototype : Prototype
     {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId TuningTable { get; protected set; }
+#else
+        public PrototypeId DifficultyTable { get; protected set; }
+        public int DifficultyIndex { get; protected set; }
+#endif
     }
 
     public class NumNearbyPlayersDmgByRankPrototype : Prototype
@@ -73,19 +77,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class RankAffixTableByDifficultyEntryPrototype : Prototype
     {
         public PrototypeId DifficultyMin { get; protected set; }
         public PrototypeId DifficultyMax { get; protected set; }
         public RankAffixEntryPrototype[] RankAffixTable { get; protected set; }
     }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class TuningPrototype : Prototype
+#else
+    public class DifficultyPrototype : Prototype
+#endif
     {
         public LocaleStringId Name { get; protected set; }
         public float PlayerInflictedDamageTimerSec { get; protected set; }
         public float PlayerNearbyRange { get; protected set; }
         public NegStatusPropCurveEntryPrototype[] NegativeStatusCurves { get; protected set; }
+#if GAME_VERSION_1_48
+        public float PlayerXPNearbyRange { get; protected set; }
+#endif
         public CurveId LootFindByLevelDeltaCurve { get; protected set; }
         public CurveId SpecialItemFindByLevelDeltaCurve { get; protected set; }
         public CurveId LootFindByDifficultyIndexCurve { get; protected set; }
@@ -95,7 +108,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId PctXPFromRaid { get; protected set; }
         public PrototypeId Tier { get; protected set; }
         public bool UseTierMinimapColor { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public RankAffixEntryPrototype[] RankAffixTable { get; protected set; }
+#else
+        public DifficultyRankEntryPrototype[] RankAffixTable { get; protected set; }
+#endif
         public float PctXPMultiplier { get; protected set; }
         public bool NumNearbyPlayersScalingEnabled { get; protected set; }
         public float TuningDamageMobToPlayer { get; protected set; }
@@ -104,10 +121,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float TuningDamagePlayerToMobDCL { get; protected set; }
         public TuningDamageByRankPrototype[] TuningDamageByRank { get; protected set; }
         public TuningDamageByRankPrototype[] TuningDamageByRankDCL { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public RankAffixTableByDifficultyEntryPrototype[] RankAffixTableByDifficulty { get; protected set; }
+#endif
 
         //---
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public void BuildRankPicker(PrototypeId difficultyTierRef, bool noAffixes, Picker<RankPrototype> picker)
         {
             RankAffixEntryPrototype[] table = GetRankAffixTable(difficultyTierRef);
@@ -120,7 +140,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     picker.Add(entry.Rank, entry.Weight);
             }
         }
+#else
+        public void BuildRankPicker(bool noAffixes, Picker<RankPrototype> picker)
+        {
+            DifficultyRankEntryPrototype[] table = GetRankAffixTable();
+            if (table.IsNullOrEmpty())
+                return;
 
+            foreach (DifficultyRankEntryPrototype entry in table)
+            {
+                if (entry.Weight > 0 && (noAffixes || entry.GetMaxAffixes() > 0))
+                    picker.Add(entry.Rank, entry.Weight);
+            }
+        }
+#endif
+
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public RankAffixEntryPrototype[] GetRankAffixTable(PrototypeId difficultyTierRef)
         {
             if (RankAffixTableByDifficulty.HasValue())
@@ -134,7 +169,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return RankAffixTable;
         }
+#else
+        public DifficultyRankEntryPrototype[] GetRankAffixTable()
+        {
+            return RankAffixTable;
+        }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public RankAffixEntryPrototype GetDifficultyRankEntry(PrototypeId difficultyTierRef, RankPrototype rankProto)
         {
             RankAffixEntryPrototype[] table = GetRankAffixTable(difficultyTierRef);
@@ -150,6 +192,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return null;
         }
+#else
+        public DifficultyRankEntryPrototype GetDifficultyRankEntry(RankPrototype rankProto)
+        {
+            DifficultyRankEntryPrototype[] table = GetRankAffixTable();
+            if (table.HasValue())
+            {
+                foreach (DifficultyRankEntryPrototype entry in table)
+                {
+                    RankPrototype entryRank = entry.Rank;
+                    if (entryRank != null && entryRank.Rank == rankProto.Rank)
+                        return entry;
+                }
+            }
+
+            return null;
+        }
+#endif
     }
 
     public class DifficultyModePrototype : Prototype
@@ -164,6 +223,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class DifficultyTierPrototype : Prototype
     {
+#if GAME_VERSION_1_53
+        public DifficultyTier Tier { get; protected set; }
+        public float ItemFindCreditsPct { get; protected set; }
+        public float ItemFindRarePct { get; protected set; }
+        public float ItemFindSpecialPct { get; protected set; }
+        public int UnlockLevel { get; protected set; }
+        public AssetId UIColor { get; protected set; }
+        public LocaleStringId UIDisplayName { get; protected set; }
+        public DesignWorkflowState DesignState { get; protected set; }
+        public DesignWorkflowState DesignStatePS4 { get; protected set; }
+        public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+        public LocalizedEvalConditionEntryPrototype[] UnlockEvals { get; protected set; }
+        public DifficultyTierGameplaySettingsPrototype[] PlatformSpecificGameplaySettings { get; protected set; }
+#elif GAME_VERSION_1_52
         public int DEPTier { get; protected set; }
         public DifficultyTier Tier { get; protected set; }
         public float BonusExperiencePct { get; protected set; }
@@ -176,6 +249,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId UIColor { get; protected set; }
         public LocaleStringId UIDisplayName { get; protected set; }
         public int BonusItemFindBonusDifficultyMult { get; protected set; }
+#else
+        public int Tier { get; protected set; }
+        public AssetId MinimapNameColor { get; protected set; }
+#endif
 
         //---
 
@@ -245,4 +322,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return teamUpDamageScalarCurve.GetAt(combatLevel);
         }
     }
+
+#if GAME_VERSION_1_53
+    public class DifficultyTierGameplaySettingsPrototype : Prototype
+    {
+        public float BonusExperiencePct { get; protected set; }
+        public int BonusItemFindBonusDifficultyMult { get; protected set; }
+        public float DamageMobToPlayerPct { get; protected set; }
+        public float DamagePlayerToMobPct { get; protected set; }
+        public Platforms Platform { get; protected set; }
+    }
+#endif
 }

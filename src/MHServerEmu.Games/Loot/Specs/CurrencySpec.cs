@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.Loot.Specs
             Amount = amount;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public NetStructCurrencySpec ToProtobuf()
         {
             return NetStructCurrencySpec.CreateBuilder()
@@ -29,6 +30,7 @@ namespace MHServerEmu.Games.Loot.Specs
                 .SetAmount((uint)Amount)
                 .Build();
         }
+#endif
 
         public override string ToString()
         {

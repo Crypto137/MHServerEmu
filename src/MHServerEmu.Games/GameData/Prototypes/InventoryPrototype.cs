@@ -33,6 +33,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ReplicateForTransfer { get; protected set; }
         public PrototypeId[] ItemSortPreferences { get; protected set; }
         public InventoryUIDataPrototype UIData { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public InventoryExtraSlotsGroupPrototype[] SoftCapacitySlotGroupsPC { get; protected set; }
         public int SoftCapacityDefaultSlotsPC { get; protected set; }
@@ -40,6 +41,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public InventoryExtraSlotsGroupPrototype[] SoftCapacitySlotGroupsConsole { get; protected set; }
         public int SoftCapacityDefaultSlotsConsole { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
+#endif
 
         //---
 
@@ -74,7 +76,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsArtifactInventory { get => ConvenienceLabel >= InventoryConvenienceLabel.AvatarArtifact1 && ConvenienceLabel <= InventoryConvenienceLabel.AvatarArtifact4; }
 
         [DoNotCopy]
-        public bool IsVisible { get => VisibleToOwner || VisibleToTrader || VisibleToParty || VisibleToProximity; } 
+        public bool IsVisible { get => VisibleToOwner || VisibleToTrader || VisibleToParty || VisibleToProximity; }
 
         /// <summary>
         /// Returns <see langword="true"/> if entities that use the provided <see cref="EntityPrototype"/> are allowed to be stored in inventories that use this <see cref="InventoryPrototype"/>.
@@ -95,6 +97,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return false;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public int GetSoftCapacityDefaultSlots()
         {
             // TODO: consoles
@@ -106,6 +109,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // TODO: consoles
             return SoftCapacitySlotGroupsPC;
         }
+#endif
 
         public bool InventoryRequiresFlaggedVisibility()
         {
@@ -113,15 +117,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class InventoryExtraSlotsGroupPrototype : Prototype
     {
         public int MaxExtraSlotCount { get; protected set; }
     }
+#endif
 
     public class PlayerStashInventoryPrototype : InventoryPrototype
     {
         public PrototypeId ForAvatar { get; protected set; }
         public AssetId IconPath { get; protected set; }
+#if GAME_VERSION_1_48
+        public LocaleStringId DisplayName { get; protected set; }
+#endif
         public LocaleStringId FulfillmentName { get; protected set; }
         public AssetId[] StashTabCustomIcons { get; protected set; }
     }
@@ -141,6 +150,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId UIData { get; protected set; }
     }
 
+#if GAME_VERSION_1_53
+    public class InventoryExtraSlotsGrantPrototype : ItemPrototype
+    {
+        public new LocaleStringId DisplayName { get; protected set; }
+        public int GrantSlotCount { get; protected set; }
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public InventoryExtraSlotsGroupPrototype SlotGroup { get; protected set; }
+    }
+#elif GAME_VERSION_1_52
     public class InventoryExtraSlotsGrantPrototype : Prototype
     {
         public LocaleStringId DisplayName { get; protected set; }
@@ -148,4 +166,5 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public InventoryExtraSlotsGroupPrototype SlotGroup { get; protected set; }
     }
+#endif
 }

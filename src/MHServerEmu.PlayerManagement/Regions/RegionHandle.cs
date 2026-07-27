@@ -52,7 +52,9 @@ namespace MHServerEmu.PlayerManagement.Regions
         public PrototypeId RegionProtoRef { get; }
         public RegionPrototype Prototype { get; }
         public NetStructCreateRegionParams CreateParams { get; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId DifficultyTierProtoRef { get => (PrototypeId)CreateParams.DifficultyTierProtoId; }
+#endif
         public ulong MatchNumber { get => CreateParams.HasMatchNumber ? CreateParams.MatchNumber : 0; }
 
         public TimeSpan CreationTime { get; } = Clock.UnixTime;
@@ -97,9 +99,13 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public override string ToString()
         {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             string regionName = RegionProtoRef.GetNameFormatted();
             string difficultyName = DifficultyTierProtoRef.GetNameFormatted();
             return $"[0x{Id:X}] {regionName} ({difficultyName})";
+#else
+            return $"[0x{Id:X}] {RegionProtoRef.GetNameFormatted()}";
+#endif
         }
 
         public int CompareTo(RegionHandle other)
@@ -185,8 +191,10 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public bool MatchesCreateParams(NetStructCreateRegionParams otherParams)
         {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (CreateParams.DifficultyTierProtoId != otherParams.DifficultyTierProtoId)
                 return false;
+#endif
 
             // EndlessLevel > 0 indicates that this is an endless region, in which case the level needs to match.
             if (CreateParams.EndlessLevel != 0 && CreateParams.EndlessLevel != otherParams.EndlessLevel)

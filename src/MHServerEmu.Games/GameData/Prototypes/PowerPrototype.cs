@@ -159,12 +159,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId CharacterSelectIconPath { get; protected set; }
         public ManaType[] DisableEnduranceRegenTypes { get; protected set; }
         public bool CanCauseCancelOnDamage { get; protected set; }
+#if GAME_VERSION_1_48
+        public float RangeGamepad { get; protected set; }
+#endif
         public AssetId IconPathHiRes { get; protected set; }
         public bool PrefetchAsset { get; protected set; }
         public bool IsTravelPower { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public GamepadSettingsPrototype GamepadSettings { get; protected set; }
         public EvalPrototype BreaksStealthOverrideEval { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public LocaleStringId CostumePowerDescription { get; protected set; }
+        public PrototypeId[] AltPowerUIs { get; protected set; }
+        public bool DisableChargeGainWithNoCooldown { get; protected set; }
+#endif
 
         //---
 
@@ -182,8 +192,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool LooksAtMousePosition { get; private set; }
         [DoNotCopy]
         public bool IsControlPower { get; private set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [DoNotCopy]
         public bool IsStealingPower { get; private set; }
+#endif
         [DoNotCopy]
         public virtual bool IsHighFlyingPower { get => false; }
 
@@ -313,7 +325,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return;
 
             IsControlPower = HasKeyword(keywordGlobalsProto.ControlPowerKeywordPrototype);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             IsStealingPower = HasKeyword(keywordGlobalsProto.StealingPowerKeyword);
+#endif
 
             PowerPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetPowerBlueprintDataRef());
         }
@@ -701,10 +715,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+#if GAME_VERSION_1_48
+    public class PowerReplacementPowerPrototype : PowerPrototype
+    {
+        public PrototypeId[] PowerReplacements { get; protected set; }
+    }
+#endif
+
     public class SpecializationPowerPrototype : PowerPrototype
     {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId MasterPowerDEPRECATED { get; protected set; }
+#else
+        public PrototypeId MasterPower { get; protected set; }
+#endif
         public EvalPrototype[] EvalCanEnable { get; protected set; }
+#if GAME_VERSION_1_53
+        public PrototypeId[] HighlightPowers { get; protected set; }
+        public PrototypeId[] HighlightKeywords { get; protected set; }
+#endif
     }
 
     public class StealablePowerInfoPrototype : Prototype
@@ -777,18 +806,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AbilityAssignmentPrototype : Prototype
     {
         public PrototypeId Ability { get; protected set; }
+#if GAME_VERSION_1_48
+        public int Rank { get; protected set; }
+#endif
 
         //---
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [DoNotCopy]
-        public int Rank { get => 1; }  // NOTE: This was a real prototype field in 1.48
+        public int Rank { get => 1; }
+#endif
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class AbilityAutoAssignmentSlotPrototype : Prototype
     {
         public PrototypeId Ability { get; protected set; }
         public PrototypeId Slot { get; protected set; }
     }
+#endif
 
     public class PowerEventContextCallbackPrototype : PowerEventContextPrototype
     {
@@ -1114,6 +1150,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId TransformMode { get; protected set; }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class GamepadSettingsPrototype : Prototype
     {
         public bool ClearContinuousInitialTarget { get; protected set; }
@@ -1121,7 +1158,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool TeleportToTarget { get; protected set; }
         public bool MeleeMoveIntoRange { get; protected set; }
         public bool ChannelPowerOrientToEnemy { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool RangeSelfIfNoTarget { get; protected set; }
+        public bool IgnoreTargetLockedEntity { get; protected set; }
+#endif
     }
+#endif
 
     public class TargetingStylePrototype : Prototype
     {
@@ -1266,4 +1308,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] StacksByKeyword { get; protected set; }
         public PrototypeId StacksWithOtherPower { get; protected set; }
     }
+
+#if GAME_VERSION_1_53
+    public class AltPowerUIPrototype : Prototype
+    {
+        public PrototypeId Power { get; protected set; }
+        public PrototypeId Keyword { get; protected set; }
+    }
+#endif
 }

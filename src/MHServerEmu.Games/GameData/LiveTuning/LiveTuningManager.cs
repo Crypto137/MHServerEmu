@@ -30,6 +30,8 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public bool LoadLiveTuningData(bool sendToServices)
         {
+#if GAME_VERSION_1_52
+            // V48_FIXME
             if (!Verify.IsTrue(Directory.Exists(LiveTuningDataDirectory), "Live Tuning data directory not found"))
                 return false;
 
@@ -49,6 +51,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
             if (sendToServices)
                 LiveTuningEventScheduler.Instance.SendEventMessageTextToGroupingManager();
+#endif
 
             return true;
         }
@@ -362,6 +365,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             }
         }
 
+#if LoadLiveTuningDataFromDisk
         public static float GetLiveMetricsFrequencyTuningVar(MetricsFrequencyPrototype metricsFrequencyProto, MetricsFrequencyTuningVar tuningVarEnum)
         {
             Game game = Game.Current;
@@ -377,6 +381,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                     return Instance._liveTuningData.GetLiveMetricsFrequencyTuningVar(metricsFrequencyProto, tuningVarEnum);
             }
         }
+#endif
 
         public static bool GetLiveLootGroup(int lootGroupNum, out IReadOnlyList<WorldEntityPrototype> lootGroup)
         {

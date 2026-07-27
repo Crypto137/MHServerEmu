@@ -40,7 +40,9 @@
         AICustomTimeVal2,
         AIDefeated,
         AIDefeatedAtHealthPct,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         AIDefaultActiveOverrideStateVal,
+#endif
         AIDelayCompletionTime,
         AIEnrageState,
         AIEnticedToID,
@@ -140,11 +142,17 @@
         AvatarLibraryTeamUp,
         AvatarMappedPower,
         AvatarMissionLootSeed,
+#if !GAME_VERSION_1_53
         AvatarMissionObjectiveRegionId,
+#endif
         AvatarMissionObjectiveSeq,
         AvatarMissionResetsWithRegionId,
         AvatarMissionState,
         AvatarMode,
+#if GAME_VERSION_1_53
+        AvatarOmegaPrestigeLevel,
+        AvatarOmegaPrestigeUnlockPending,
+#endif
         AvatarPowerPointsBonus,
         AvatarPowerUltimatePoints,
         AvatarPrestigeLevel,
@@ -152,7 +160,9 @@
         AvatarSpecializationPower,
         AvatarSwitchPending,
         AvatarSynergySelected,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         AvatarSynergyNewUnlock,
+#endif
         AvatarTimePlayedStart,
         AvatarTotalTimePlayed,
         AvatarUnlock,
@@ -172,11 +182,15 @@
         BodySliderRegionId,
         BodySliderRegionPos,
         BodySliderRegionRef,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         BodySliderDifficultyRef,
+#endif
         BodySliderRegionSeed,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         BonusItemFindBonusDifficultyMult,
         BonusItemFindRating,
         BonusItemFindPoints,
+#endif
         BounceCanRepeatTarget,
         BounceCount,
         BounceCountPayload,
@@ -209,8 +223,17 @@
         ContextTracking,
         ControlledAgentRespawnTime,
         ControlledAgentHasSummonDur,
+#if GAME_VERSION_1_53
+        CostumeClosetConvertResult,
+#endif
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         CostumeCurrent,
+#if GAME_VERSION_1_53
+        CostumeSpecialEffectSelected,
+        CostumeSpecialEffect,
+#endif
         CostumeUnlock,
+#endif
         CooldownModifierMSForKeyword,
         CooldownModifierMSForPower,
         CooldownModifierPctForKeyword,
@@ -227,6 +250,9 @@
         CritAlwaysOnKeywordAttack,
         CritChancePctAdd,
         CritChancePctAddPowerKeyword,
+#if GAME_VERSION_1_53
+        CritChancePctVsTgtKwd,
+#endif
         CritDamageMult,
         CritDamageRating,
         CritDamagePowerMultBonus,
@@ -282,6 +308,9 @@
         DamageMultForPowerKeyword,
         DamageMultOnPower,
         DamageMultPowerCdKwd,
+#if GAME_VERSION_1_53
+        DamageMultPowerCdKwdForKwd,
+#endif
         DamageMultVsKeyword,
         DamageMultVsKeywordForPowerKwd,
         DamageMultVsRank,
@@ -341,6 +370,9 @@
         DamageVariance,
         DangerRoomScenarioItemDbGuid,
         DeathLimitOverride,
+#if GAME_VERSION_1_53
+        DeathsRemaining,
+#endif
         DEBUGFakePartyMember,
         Defense,
         DefenseChangePercent,
@@ -355,7 +387,9 @@
         DetachOnContainerDestroyed,
         DifficultyIndex,
         DifficultyTier,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         DifficultyTierPreference,
+#endif
         DisableClientConditionFX,
         DisableEnduranceGain,
         DisableEnduranceRegen,
@@ -398,7 +432,9 @@
         EnduranceCOTVariance,
         EnduranceMax,
         EnduranceMaxOther,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         EnduranceOnHitAccumulation,
+#endif
         EnduranceOverTimePerSec,
         EnduranceOverTimePerSecPct,
         EndurancePctBonus,
@@ -429,6 +465,10 @@
         EntSelActScriptTrigger,
         EntSelActScriptCancel,
         EntSelActScriptInterrupt,
+#if GAME_VERSION_1_53
+        EquipmentSetLevel,
+        EquipmentSetLevelBonus,
+#endif
         EvalLoopVarProtoRef,
         EvalRegisterFloat,
         EvalRegisterInt,
@@ -465,7 +505,9 @@
         HealingBasePct,
         HealingBlocked,
         HealingMagnitude,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         HealthOnHitAccumulation,
+#endif
         HealingOverTimeBase,
         HealingOverTimeBasePct,
         HealingOverTimePerSecond,
@@ -478,6 +520,10 @@
         Health,
         HealthAddBonus,
         HealthBase,
+#if GAME_VERSION_1_53
+        PatchNotes,
+        PatchNotesCount,
+#endif
         PowerHealthCostOverTime,
         HealthMax,
         HealthMaxMagnitude,
@@ -497,8 +543,14 @@
         ImmuneToConditionWithKwd,
         ImmuneToPower,
         Intangible,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         InventoryExtraSlotsAvailable,
         LookForPartyOptions,
+#endif
+#if GAME_VERSION_1_53
+        OmegaXPDeprecated,
+        OmegaPointsDeprecated,
+#else
         OmegaRank,
         OmegaRankTemp,
         OmegaSpec,
@@ -507,6 +559,8 @@
         OmegaPoints,
         OmegaPointsSpent,
         OmegaRespecResult,
+#endif
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         InfinityGemBonusRank,
         InfinityGemBonusRankTemp,
         InfinityGemNext,
@@ -514,6 +568,7 @@
         InfinityPointsSpent,
         InfinityPointsSpentTemp,
         InfinityXP,
+#endif
         InformsHitInfoToAlly,
         InformsHitInfoToAllyId,
         InitialCharacterLevel,
@@ -528,6 +583,9 @@
         InvalidBounceTarget,
         InventoryAddTime,
         InventoryStackCount,
+#if GAME_VERSION_1_53
+        InventoryStackCountNoMax,
+#endif
         InventoryStackSizeMax,
         Invulnerable,
         InvulnExceptWithPowerKwd,
@@ -556,7 +614,9 @@
         ItemRegisterFloat,
         ItemVariation,
         ItemSoldPrice,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         PowerKeywordChange,
+#endif
         Knockback,
         KnockbackDistance,
         KnockbackTimeResult,
@@ -581,6 +641,10 @@
         LegendaryMissionSuccCondCnt,
         LegendaryMissionFailCondCnt,
         LegendaryMissionCRC,
+#if GAME_VERSION_1_53
+        LegendaryMissionIntroComplete,
+        LegendaryMissionIntroIndex,
+#endif
         LegendaryMissionsComplete,
         LegendaryMissionSharedByPlayer,
         LegendaryMissionSharedMission,
@@ -596,10 +660,15 @@
         LootBonusCreditsStackCount,
         LootBonusCreditsStackingMult,
         LootBonusCreditsPct,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         LootBonusCurrencyStackCount,
+#endif
         LootBonusSpecialPct,
         LootBonusSpecialStackCount,
         LootBonusSpecialStackingMult,
+#if GAME_VERSION_1_48
+        LootBonusXPFlat,
+#endif
         LootBonusXPPct,
         LootCooldownByChannel,
         LootCooldownCount,
@@ -612,6 +681,9 @@
         LootCooldownTimeStartSpecial,
         LootSourceTableOverride,
         LootSpawnPrototype,
+#if GAME_VERSION_1_53
+        LootTableMigration,
+#endif
         LootTablePrototype,
         LootTableSource,
         Magnetized,
@@ -637,7 +709,9 @@
         MissileAbsorbChancePct,
         MissileAbsorbImmunity,
         MissileAlwaysCollides,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         MissileOwnedByPlayer,
+#endif
         MissileBaseMoveSpeed,
         MissileBlockingHotspot,
         MissileBlockingHotspotImmunity,
@@ -661,8 +735,10 @@
         MissionPlayerID,
         MissionPrototype,
         MissionRewardReceived,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         MissionTrackerAchievements,
         MissionTrackerFilter,
+#endif
         MissionXEncounterHostilityOk,
         MobRankOverride,
         MouseHitCollisionMultExtra,
@@ -697,7 +773,9 @@
         OnPowerUsePowerRef,
         OpenMTXStore,
         OpenPlayerStash,
+#if !GAME_VERSION_1_53
         OpenStoryWarpPanel,
+#endif
         OrbAggroRangePctBonus,
         OrbAggroRangeBonusStackCount,
         OrbAggroRangeBonusStackingMult,
@@ -728,8 +806,10 @@
         PowerActiveUntilProjExpire,
         PowerBoost,
         PowerChargesAvailable,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         PowerChargesMaxBonus,
         PowerChargesMaxBonusForKwd,
+#endif
         PowerChargesMax,
         PowerClearsNegStatusChancePct,
         PowerClearsNegStatusChancePctAll,
@@ -765,7 +845,12 @@
         PowersUnlockAll,
         PowerToggleOn,
         PowerToggleInPrevRegion,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         PowerUnlocked,
+#endif
+#if GAME_VERSION_1_53
+        PowerUsable,
+#endif
         PowerUsePreventIn,
         PowerUsePreventInRegionKwd,
         PowerUseRequiresRegionKwd,
@@ -810,6 +895,9 @@
         Rank,
         RangeModifierPctKeyword,
         RangeModifier,
+#if GAME_VERSION_1_53
+        RangeModifierPctForPower,
+#endif
         RegionAffix,
         RegionAffixDifficulty,
         Reflected,
@@ -834,7 +922,9 @@
         RollWithRarityTier,
         RotationSpeedOverride,
         RunestonesAmount,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         ScriptRoleKey,
+#endif
         ScoringEventTimerStartTimeMS,
         ScoringEventTimerAccumTimeMS,
         SecondaryResource,
@@ -852,15 +942,21 @@
         SecondaryResourceDmgBnsPct,
         SecondaryResourceNoEndurance,
         SecondaryResourceMax,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         SecondaryResourceMaxBase,
         SecondaryResourceMaxChange,
+#endif
         SecondaryResourceMaxPips,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         SecondaryResourceMaxPipsBase,
         SecondaryResourceMaxPipsChg,
+#endif
         SecondaryResourceOverride,
         SecondaryResourcePips,
         SecondaryResourceRequired,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         SecondaryResourceVisible,
+#endif
         SetTargetLifespanMS,
         SharedQuestCompletionCount,
         ShowXPRewardText,
@@ -877,22 +973,34 @@
         StashNewItemCount,
         StatAllModifier,
         StatDurability,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         StatDurabilityDmgPctPerPoint,
+#endif
         StatDurabilityModifier,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         StatEnergyDmgPctPerPoint,
+#endif
         StatEnergyProjection,
         StatEnergyProjectionModifier,
         StatFightingSkills,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         StatFightingSkillsDmgPctPerPoint,
+#endif
         StatFightingSkillsModifier,
         StatIntelligence,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         StatIntelligenceDmgPctPerPoint,
+#endif
         StatIntelligenceModifier,
         StatSpeed,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         StatSpeedDmgPctPerPoint,
+#endif
         StatSpeedModifier,
         StatStrength,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         StatStrengthDmgPctPerPoint,
+#endif
         StatStrengthModifier,
         StatusDurationBonusMS,
         StatusResistByDurationMS,
@@ -906,7 +1014,12 @@
         StealthPenalty,
         SteamUserId,
         SteamAchievementUpdateSeqNum,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         StolenPowerAvailable,
+#endif
+#if GAME_VERSION_1_53
+        StoreLastUpdatedTimestamp,
+#endif
         Stunned,
         StunnedByHitReact,
         SummonContextIndex,
@@ -920,6 +1033,9 @@
         SummonWidthMax,
         SuperCritChancePctAdd,
         SuperCritChancePctAddPowerKwd,
+#if GAME_VERSION_1_53
+        SuperCritChancePctVsTgtKwd,
+#endif
         SuperCritDamageMult,
         SuperCritDamageRating,
         SuperCritDamagePowerMultBonus,
@@ -941,8 +1057,10 @@
         TeamIconAssetRef,
         TeamUpIsPermanent,
         TeamUpOwnerId,
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         TeamUpsAtMaxLevel,
         TeamUpsAtMaxLevelPersistent,
+#endif
         TeamUpStyle,
         Teleport,
         TeleportLockdown,
@@ -963,8 +1081,13 @@
         TutorialImmobilized,
         TutorialInvulnerable,
         TutorialPowerLock,
+#if GAME_VERSION_1_48
+        TutorialTipsEnabled,
+#endif
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         UIItemDisplayState,
         UINewItemsInSlot,
+#endif
         UICraftingIngredientSlotEntityId,
         UICraftingRecipeEntityId,
         UICursorSelectedEntityId,
@@ -995,6 +1118,10 @@
         VendorXP,
         VendorXPCapCounter,
         VendorXPCapRollOverTime,
+#if GAME_VERSION_1_53
+        VersionUnifyFortuneCardAwards,
+        VersionConvertPCRelics,
+#endif
         Visible,
         WeaponMissing,
         Waypoint,

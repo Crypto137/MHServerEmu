@@ -244,6 +244,8 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void OnGuildInvite(GuildInvite guildInvite)
         {
+            // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             PlayerHandle invitedByPlayer = _playerManager.ClientManager.GetPlayer(guildInvite.InvitedByPlayerId);
             if (invitedByPlayer == null || invitedByPlayer.State != PlayerHandleState.InGame)
                 return;
@@ -281,6 +283,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
             ServiceMessage.GuildMessageToClient message = new(invitedByPlayer.CurrentGame.Id, invitedByPlayer.PlayerDbId, clientMessage);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+#endif
         }
 
         private void OnGuildRespondToInvite(GuildRespondToInvite guildRespondToInvite)
@@ -312,6 +315,8 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void OnGuildChangeMember(GuildChangeMember guildChangeMember)
         {
+            // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             PlayerHandle sourcePlayer = _playerManager.ClientManager.GetPlayer(guildChangeMember.SourcePlayerId);
             if (sourcePlayer == null || sourcePlayer.State != PlayerHandleState.InGame)
                 return;
@@ -333,6 +338,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
             ServiceMessage.GuildMessageToClient message = new(sourcePlayer.CurrentGame.Id, sourcePlayer.PlayerDbId, clientMessage);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+#endif
         }
 
         private void OnGuildChangeMotd(GuildChangeMotd guildChangeMotd)

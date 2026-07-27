@@ -134,6 +134,7 @@ namespace MHServerEmu.Games.Powers
             if (Owner is not Avatar ultimateAvatarOwner)
                 ultimateAvatarOwner = GetUltimateOwner() as Avatar;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (ultimateAvatarOwner != null)
             {
                 foreach (var kvp in ultimateAvatarOwner.Properties.IteratePropertyRange(PropertyEnum.PowerKeywordChange, powerProto.DataRef))
@@ -146,6 +147,7 @@ namespace MHServerEmu.Games.Powers
                         RemoveKeyword(keywordProtoRef);
                 }
             }
+#endif
 
             // Restore cooldowns and charges
             TimeSpan cooldownTimeRemaining = GetCooldownTimeRemaining();
@@ -185,6 +187,7 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (Owner is Avatar avatar && (avatar.HasPowerInPowerProgression(PrototypeDataRef) || avatar.HasMappedPower(PrototypeDataRef)))
             {
                 using var bonusDictHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> bonusDict);
@@ -205,6 +208,7 @@ namespace MHServerEmu.Games.Powers
                     avatar.Properties[PropertyEnum.PowerChargesMaxBonus, PrototypeDataRef] = kvp.Value;
                 }
             }
+#endif
         }
 
         public void OnUnassign()
@@ -543,6 +547,7 @@ namespace MHServerEmu.Games.Powers
                 Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
                 if (keywordProtoRef == PrototypeId.Invalid) continue;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 int powerKeywordChange = properties2[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
 
                 if ((powerKeywordChange != (int)TriBool.False && powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>())) ||
@@ -550,6 +555,10 @@ namespace MHServerEmu.Games.Powers
                 {
                     value += kvp.Value;
                 }
+#else
+                if (powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>()))
+                    value += kvp.Value;
+#endif
             }
         }
 
@@ -562,6 +571,7 @@ namespace MHServerEmu.Games.Powers
                 Property.FromParam(kvp.Key, 1, out PrototypeId keywordProtoRef);
                 if (keywordProtoRef == PrototypeId.Invalid) continue;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 int powerKeywordChange = properties2[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
 
                 if ((powerKeywordChange != (int)TriBool.False && powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>())) ||
@@ -569,6 +579,10 @@ namespace MHServerEmu.Games.Powers
                 {
                     value += kvp.Value;
                 }
+#else
+                if (powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>()))
+                    value += kvp.Value;
+#endif
             }
         }
 
@@ -580,6 +594,7 @@ namespace MHServerEmu.Games.Powers
                 Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
                 if (keywordProtoRef == PrototypeId.Invalid) continue;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 int powerKeywordChange = properties2[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
 
                 if ((powerKeywordChange != (int)TriBool.False && powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>())) ||
@@ -587,6 +602,10 @@ namespace MHServerEmu.Games.Powers
                 {
                     value += kvp.Value;
                 }
+#else
+                if (powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>()))
+                    value += kvp.Value;
+#endif
             }
         }
 
@@ -1205,6 +1224,7 @@ namespace MHServerEmu.Games.Powers
             if (stealthedEntity == null || stealthedEntity.IsInWorld == false || stealthedEntity.TestStatus(EntityStatus.Destroyed))
                 return false;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             // Check stealth break override eval (e.g. talents that remove stealth break)
             if (powerProto.BreaksStealthOverrideEval != null)
             {
@@ -1213,6 +1233,7 @@ namespace MHServerEmu.Games.Powers
                 if (Eval.RunBool(powerProto.BreaksStealthOverrideEval, evalContext) == false)
                     return false;
             }
+#endif
 
             // Check if our potentially stealthed entity is actually stealthed
             KeywordPrototype stealthPowerKeyword = GameDatabase.KeywordGlobalsPrototype.StealthPowerKeyword;
@@ -2061,7 +2082,11 @@ namespace MHServerEmu.Games.Powers
         {
             if (!Verify.IsNotNull(region)) return numPlayersMin;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             TuningPrototype difficultyProto = region.TuningTable?.Prototype;
+#else
+            DifficultyPrototype difficultyProto = region.DifficultyTable?.Prototype;
+#endif
             if (!Verify.IsNotNull(difficultyProto)) return numPlayersMin;
 
             // "Nearby" depends on the region: in private regions like terminals this covers the entire region (100000),
@@ -2151,8 +2176,10 @@ namespace MHServerEmu.Games.Powers
 
         public bool StopsMovementOnActivation()
         {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (Owner is Avatar avatar && IsGamepadMeleeMoveIntoRangePower() && avatar.PendingActionState == PendingActionState.MovingToRange)
                 return false;
+#endif
 
             return Prototype != null && Prototype.MovementStopOnActivate;
         }
@@ -2350,12 +2377,14 @@ namespace MHServerEmu.Games.Powers
             return powerProto.TargetingStyle;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public GamepadSettingsPrototype GetGamepadSettingsPrototype()
         {
             PowerPrototype powerProto = Prototype;
             if (!Verify.IsNotNull(powerProto)) return null;
             return powerProto.GamepadSettings;
         }
+#endif
 
         public bool IsItemPower()
         {
@@ -2653,11 +2682,13 @@ namespace MHServerEmu.Games.Powers
             return reachProto.TargetsEntitiesInInventory == InventoryConvenienceLabel.Summoned;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool IsGamepadMeleeMoveIntoRangePower()
         {
             GamepadSettingsPrototype gamepadSettings = GetGamepadSettingsPrototype();
             return gamepadSettings != null && gamepadSettings.MeleeMoveIntoRange;
         }
+#endif
 
         public float GetRange()
         {
@@ -2668,10 +2699,14 @@ namespace MHServerEmu.Games.Powers
 
             float range;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (Owner is Avatar avatar && avatar.IsUsingGamepadInput && GetGamepadRange() > 0f)
                 range = GetGamepadRange();
             else
                 range = GetRange(powerProto, Properties, Owner.Properties);
+#else
+            range = GetRange(powerProto, Properties, Owner.Properties);
+#endif
 
             if (powerProto.PowerCategory == PowerCategoryType.MissileEffect)
                 range = Math.Max(range, Owner.EntityCollideBounds.Radius);
@@ -2696,11 +2731,13 @@ namespace MHServerEmu.Games.Powers
             return range;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public float GetGamepadRange()
         {
             GamepadSettingsPrototype gamepadSettings = GetGamepadSettingsPrototype();
             return gamepadSettings != null && gamepadSettings.Range > 0f ? gamepadSettings.Range : 0f;
         }
+#endif
 
         public float GetApplicationRange()
         {
@@ -3235,14 +3272,40 @@ namespace MHServerEmu.Games.Powers
             return Prototype.ExtraActivation is SecondaryActivateOnReleasePrototype;
         }
 
+#if GAME_VERSION_1_53
+        public bool IsBasicKeywordPower()
+        {
+            KeywordGlobalsPrototype keywordGlobals = GameDatabase.KeywordGlobalsPrototype;
+            if (!Verify.IsNotNull(keywordGlobals)) return false;
+            KeywordPrototype basicKeyword = keywordGlobals.BasicPowerKeyword;
+            if (!Verify.IsNotNull(basicKeyword)) return false;
+
+            return HasKeyword(basicKeyword);
+        }
+#endif
+
         public bool IsContinuous()
         {
             if (IsToggled())
                 return false;
 
+#if GAME_VERSION_1_53
+            // 1.53 specific edge case for Gladiator Thor's basic powers
+            TimeSpan executionTime = GetFullExecutionTime();
+            if (executionTime.TotalMilliseconds <= 50)
+            {
+                bool isInstantComboBasicPower = executionTime == TimeSpan.Zero &&
+                    IsBasicKeywordPower() &&
+                    TriggersComboPowerOnEvent(PowerEventType.OnPowerEnd);
+
+                if (isInstantComboBasicPower == false)
+                    return false;
+            }
+#else
             // <= 50 ms is too fast to be a continuous power - is this related to game fixed time update time?
             if (GetFullExecutionTime().TotalMilliseconds <= 50)
                 return false;
+#endif
 
             if (GetCooldownDuration() > TimeSpan.Zero)
                 return false;

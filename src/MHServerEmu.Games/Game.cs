@@ -46,7 +46,15 @@ namespace MHServerEmu.Games
 
     public class Game
     {
+#if GAME_VERSION_1_48
+        public const string Version = "1.48.0.1712";
+#elif GAME_VERSION_1_52
         public const string Version = "1.52.0.1700";
+#elif GAME_VERSION_1_53
+        public const string Version = "1.53.0.203";
+#else
+        public const string Version = "0.0.0.0";
+#endif
 
         [ThreadStatic]
         internal static Game Current;
@@ -110,7 +118,9 @@ namespace MHServerEmu.Games
         public bool OmegaMissionsEnabled { get => GameOptions.OmegaMissionsEnabled; }
         public bool LeaderboardsEnabled { get => GameOptions.LeaderboardsEnabled; }
         public bool GiftingEnabled { get => GameOptions.GiftingEnabled; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool InfinitySystemEnabled { get => GameOptions.InfinitySystemEnabled; }
+#endif
 
         public override string ToString() => $"serverGameId=0x{Id:X}";
 

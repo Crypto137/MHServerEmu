@@ -234,8 +234,10 @@ namespace MHServerEmu.Games.Regions.MatchQueues
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueSolo:
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueParty:
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass:
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     if (difficultyTierRef == PrototypeId.Invalid)
                         return Logger.WarnReturn(false, "TryRegionRequestCommand(): difficultyTierRef == PrototypeId.Invalid");
+#endif
 
                     if (IsOwnerInQueue())
                         return false;
@@ -294,7 +296,9 @@ namespace MHServerEmu.Games.Regions.MatchQueues
             {
                 case RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup:
                 case RegionRequestQueueUpdateVar.eRRQ_RaidNotAllowed:
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case RegionRequestQueueUpdateVar.eRRQ_PartyTooLarge:
+#endif
                 case RegionRequestQueueUpdateVar.eRRQ_GroupInviteExpired:
                 case RegionRequestQueueUpdateVar.eRRQ_MatchInviteExpired:
                     return true;

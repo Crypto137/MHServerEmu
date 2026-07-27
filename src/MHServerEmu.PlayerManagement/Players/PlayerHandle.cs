@@ -91,7 +91,9 @@ namespace MHServerEmu.PlayerManagement.Players
             Client = client;
             State = PlayerHandleState.Created;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             DifficultyTierPreference = GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+#endif
 
             _regionRequestQueueCommandHandler = new(this);
             _gracePeriodRegionExpiredCallback = OnGracePeriodRegionExpired;
@@ -353,7 +355,9 @@ namespace MHServerEmu.PlayerManagement.Players
 
             NetStructCreateRegionParams createRegionParams = NetStructCreateRegionParams.CreateBuilder()
                 .SetLevel(0)
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 .SetDifficultyTierProtoId((ulong)GameDatabase.GlobalsPrototype.DifficultyTierDefault)
+#endif
                 .Build();
 
             return BeginRegionTransferToTarget(0, TeleportContextEnum.TeleportContext_Transition, destTarget, createRegionParams);
@@ -790,6 +794,8 @@ namespace MHServerEmu.PlayerManagement.Players
             Logger.Trace($"SetDifficultyTierPreference(): player=[{this}], difficulty=[{difficultyTierProtoRef.GetNameFormatted()}]");
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        // V48_FIXME
         public void GetPartyBoosts(PartyMemberInfo.Builder infoBuilder)
         {
             if (_partyBoosts.Count == 0)
@@ -798,6 +804,7 @@ namespace MHServerEmu.PlayerManagement.Players
             foreach (PrototypeGuid partyBoost in _partyBoosts)
                 infoBuilder.AddBoosts((ulong)partyBoost);
         }
+#endif
 
         public void SetPartyBoosts(List<ulong> boosts)
         {

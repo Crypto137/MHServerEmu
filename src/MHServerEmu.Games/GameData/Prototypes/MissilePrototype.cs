@@ -133,7 +133,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int RandomPickWeight { get; protected set; }
         public bool KilledOnOverlappingCollision { get; protected set; }
         public bool Ghost { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool CreationOffsetCheckLOS { get; protected set; }
+#endif
     }
 
     public class MissilePowerPrototype : PowerPrototype

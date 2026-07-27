@@ -26,29 +26,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
     [AssetEnum((int)None)]
     public enum GameNotificationType
     {
-        None = 0,
-        PartyInvite = 1,
-        GuildInvite = 2,
-        PowerPointsAwarded = 3,
-        ServerMessage = 4,
-        MissionUpdate = 6,
-        RemoteMission = 5,
-        MatchQueue = 7,
-        PvPShop = 8,
-        OfferingUI = 9,
-        DifficultyModeUnlocked = 10,
-        MetaGameInfo = 11,
-        LegendaryMission = 12,
-        PvPScore = 13,
-        OmegaPointsAwarded = 14,
-        TradeInvite = 15,
-        LoginReward = 16,
-        GiftReceived = 17,
-        LeaderboardRewarded = 18,
-        CouponReceived = 19,
-        PublicEvent = 20,
-        // Not found in client
-        SynergyPoints = 0
+        None,
+        PartyInvite,
+        GuildInvite,
+        PowerPointsAwarded,
+        ServerMessage,
+        RemoteMission,
+        MissionUpdate,
+        MatchQueue,
+        PvPShop,
+        OfferingUI,
+        DifficultyModeUnlocked,
+        MetaGameInfo,
+        LegendaryMission,
+        PvPScore,
+        OmegaPointsAwarded,
+        TradeInvite,
+        LoginReward,
+        GiftReceived,
+        LeaderboardRewarded,
+        CouponReceived,
+        PublicEvent,
+        // no lookup in the client
+        // SynergyPoints = 0,
+        // StarterAvatarUnlock = 0,
     }
 
     [AssetEnum((int)Interval)]
@@ -104,6 +105,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MetaGameWidget { get; protected set; }
         public bool AllowMissionTrackerSorting { get; protected set; }
         public LocaleStringId InterstitialTextOverride { get; protected set; }
+#if GAME_VERSION_1_53
+        public bool DisplayInRaidUIConsole { get; protected set; }
+#endif
     }
 
     public class MetaGameTeamPrototype : Prototype
@@ -167,7 +171,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId StartTarget { get; protected set; }
         public AssetId IconPath { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconPathHiRes { get; protected set; }
+#endif
     }
 
     public class PvPMiniMapIconsPrototype : Prototype
@@ -202,8 +208,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId VOTeammateKilled { get; protected set; }
         public CurveId DamageBoostForWinPct { get; protected set; }
         public CurveId DamageReductionForWinPct { get; protected set; }
+#if !GAME_VERSION_1_53
         public CurveId DamageBoostForOmegaPct { get; protected set; }
         public CurveId DamageReductionForOmegaPct { get; protected set; }
+#endif
         public bool ScreenArrowsForNonPartyAvatars { get; protected set; }
 
         //---
@@ -245,17 +253,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return GetDamageModifier(DamageReductionForWinPct, index, 1f);
         }
 
+#if !GAME_VERSION_1_53
         public float GetDamageBoostForOmegaPct(float omegaPct)
         {
             int index = MathHelper.RoundToInt(omegaPct * 100f);
             return GetDamageModifier(DamageBoostForOmegaPct, index, 0f);
         }
+#endif
 
+#if !GAME_VERSION_1_53
         public float GetDamageReductionForOmegaPct(float omegaPct)
         {
             int index = MathHelper.RoundToInt(omegaPct * 100f);
             return GetDamageModifier(DamageReductionForOmegaPct, index, 1f);
         }
+#endif
 
         private static float GetDamageModifier(CurveId curveRef, int index, float defaultValue)
         {
@@ -316,6 +328,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] ApplyStates { get; protected set; }
         public PrototypeId[] RemoveStates { get; protected set; }
         public AssetId[] RemoveGroups { get; protected set; }
+#if GAME_VERSION_1_53
+        public PrototypeId AvatarOnKilledInfoOverrideNoLife { get; protected set; }
+#endif
 
         //---
 

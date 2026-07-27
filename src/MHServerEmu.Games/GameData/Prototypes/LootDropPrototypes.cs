@@ -469,6 +469,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootDropXPPrototype : LootNodePrototype
     {
         public CurveId XPCurve { get; protected set; }
+#if GAME_VERSION_1_48
+        public float Scalar { get; protected set; }
+#endif
 
         //---
 
@@ -580,6 +583,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class LootDropPlayVisualEffectPrototype : LootNodePrototype
     {
         public AssetId RecipientVisualEffect { get; protected set; }
@@ -623,6 +627,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return PushLootNodeCallback(settings, resolver);
         }
     }
+#endif
 
     public class LootDropChatMessagePrototype : LootNodePrototype
     {
@@ -772,4 +777,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
         }
     }
+
+#if GAME_VERSION_1_53
+    public class LootDropOmegaPrestigePrototype : LootNodePrototype
+    {
+        //---
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            // V53_TODO
+            Verify.IsTrue(false);
+            return LootRollResult.NoRoll;
+        }
+    }
+#endif
 }

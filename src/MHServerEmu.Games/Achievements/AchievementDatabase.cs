@@ -47,6 +47,10 @@ namespace MHServerEmu.Games.Achievements
             var stopwatch = Stopwatch.StartNew();
 
             // Load achievement info map
+#if GAME_VERSION_1_48
+            // V48_FIXME
+            List<string> achievementInfoMapFiles = new();
+#else
             string achievementInfoMapPath = Path.Combine(AchievementsDirectory, "AchievementInfoMap.json");
             if (File.Exists(achievementInfoMapPath) == false)
                 return Logger.WarnReturn(false, $"Initialize(): Achievement info map not found at {achievementInfoMapPath}");
@@ -58,6 +62,7 @@ namespace MHServerEmu.Games.Achievements
             // Ensure main file is loaded first
             achievementInfoMapFiles.Remove(achievementInfoMapPath); 
             achievementInfoMapFiles.Insert(0, achievementInfoMapPath); // Main file first       
+#endif
 
             JsonSerializerOptions options = new();
             options.Converters.Add(new TimeSpanJsonConverter());

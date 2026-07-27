@@ -501,6 +501,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class MissionActionShowWaypointNotificationPrototype : MissionActionPrototype
     {
         public PrototypeId Waypoint { get; protected set; }
@@ -513,7 +514,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return new MissionActionShowWaypointNotification(owner, this);
         }
     }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class MissionActionHideWaypointNotificationPrototype : MissionActionPrototype
     {
         public PrototypeId Waypoint { get; protected set; }
@@ -526,6 +529,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return new MissionActionHideWaypointNotification(owner, this);
         }
     }
+#endif
 
     public class MissionActionEnableRegionAvatarSwapPrototype : MissionActionPrototype
     {
@@ -550,7 +554,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionActionSwapAvatarPrototype : MissionActionPrototype
     {
         public PrototypeId AvatarPrototype { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool UseAvatarSwapPowers { get; protected set; }
+#endif
 
         //---
 
@@ -681,6 +687,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class MissionActionParticipantPerformPowerPrototype : MissionActionPrototype
     {
         public PrototypeId Power { get; protected set; }
@@ -693,11 +700,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return new MissionActionParticipantPerformPower(owner, this);
         }
     }
+#endif
 
     public class MissionActionOpenUIPanelPrototype : MissionActionPrototype
     {
         public AssetId PanelName { get; protected set; }
         public DistributionType SendTo { get; protected set; }
+#if GAME_VERSION_1_48
+        public int TabIndex { get; protected set; }
+#endif
 
         //---
 
@@ -768,4 +779,63 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return new MissionActionShowTeamSelectDialog(owner, this);
         }
     }
+
+#if GAME_VERSION_1_53
+    public class MissionActionAvatarResurrectPrototype : MissionActionPrototype
+    {
+        public DistributionType ApplyTo { get; protected set; }
+
+        //---
+
+        public override MissionAction AllocateAction(IMissionActionOwner owner)
+        {
+            return new MissionActionAvatarResurrect(owner, this);
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class MissionActionShowMetaKeyListPrototype : MissionActionPrototype
+    {
+        public PrototypeId MetaKeyList { get; protected set; }
+        public DistributionType SendTo { get; protected set; }
+
+        //---
+
+        public override MissionAction AllocateAction(IMissionActionOwner owner)
+        {
+            return new MissionActionShowMetaKeyList(owner, this);
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class MissionActionHideMetaKeyListPrototype : MissionActionPrototype
+    {
+        public DistributionType SendTo { get; protected set; }
+
+        //---
+
+        public override MissionAction AllocateAction(IMissionActionOwner owner)
+        {
+            return new MissionActionShowMetaKeyList(owner, this);
+        }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class MissionActionRollbackToObjectivePrototype : MissionActionPrototype
+    {
+        public PrototypeId MissionPrototype { get; protected set; }
+        public float ObjectiveOrder { get; protected set; }
+        public int RollbackDelayMS { get; protected set; }
+
+        //---
+
+        public override MissionAction AllocateAction(IMissionActionOwner owner)
+        {
+            return new MissionActionRollbackToObjective(owner, this);
+        }
+    }
+#endif
 }

@@ -472,11 +472,19 @@ namespace MHServerEmu.Games.Populations
             var popGlobals = GameDatabase.PopulationGlobalsPrototype;
             if (popGlobals == null) return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             var difficulty = Region.TuningTable;
             if (difficulty == null) return;
 
             var tuningProto = difficulty.Prototype;
             if (tuningProto == null) return;
+#else
+            var difficulty = Region.DifficultyTable;
+            if (difficulty == null) return;
+
+            var difficultyProto = difficulty.Prototype;
+            if (difficultyProto == null) return;
+#endif
 
             var random = Region.Game.Random;
 
@@ -512,7 +520,11 @@ namespace MHServerEmu.Games.Populations
 
             foreach (var rankProto in ranks)
             {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 var rankEntryProto = tuningProto.GetDifficultyRankEntry(Region.DifficultyTierRef, rankProto);
+#else
+                var rankEntryProto = difficultyProto.GetDifficultyRankEntry(rankProto);
+#endif
 
                 GetMobAffixesFromProperties(overrides);
                 Region.ApplyRegionAffixesEnemyBoosts(rankProto.DataRef, overrides);
@@ -946,12 +958,21 @@ namespace MHServerEmu.Games.Populations
                 RankProto = RankPrototype.DoOverride(RankProto, rankRef.As<RankPrototype>());
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if ((EntityProto.ModifierSetEnable
                 || EntityProto.ModifiersGuaranteed.HasValue())
                 && Flags.HasFlag(ClusterObjectFlag.Hostile))
             {
                 Flags |= ClusterObjectFlag.HasModifiers;
             }
+#else
+            // V48_TODO: Modifier set
+            if (EntityProto.ModifiersGuaranteed.HasValue()
+                && Flags.HasFlag(ClusterObjectFlag.Hostile))
+            {
+                Flags |= ClusterObjectFlag.HasModifiers;
+            }
+#endif
 
             return true;
         }

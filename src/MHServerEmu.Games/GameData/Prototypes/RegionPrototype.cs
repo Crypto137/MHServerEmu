@@ -78,6 +78,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Disabled = 2,
     }
 
+#if GAME_VERSION_1_53
+    [AssetEnum((int)None)]
+    public enum ClientMapOverrideType
+    {
+        None = 1,
+        Halloween = 2,
+        Christmas = 3,
+        Ragnarok = 4,
+    }
+#endif
+
     #endregion
 
     public class RegionPrototype : Prototype
@@ -151,7 +162,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] RestrictedRoster { get; protected set; }
         public PrototypeId[] AvatarPowers { get; protected set; }
         public bool IsNPE { get; protected set; }
+#if GAME_VERSION_1_53
+        public LocaleStringId PresenceStatusTextPS4 { get; protected set; }
+#else
         public LocaleStringId PresenceStatusText { get; protected set; }
+#endif
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId[] AccessDifficulties { get; protected set; }
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public TuningPrototype Tuning { get; protected set; }
@@ -159,6 +175,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId PlayerCameraSettingsOrbis { get; protected set; }
         public PrototypeId[] LoadingScreensConsole { get; protected set; }
         public bool AllowLocalCoopMode { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public LocaleStringId PresenceStatusKeyXboxOne { get; protected set; }
+        public DisplayDifficultySliderPrototype DisplayDifficultySlider { get; protected set; }
+        public ClientMapOverridePairPrototype[] ClientMapOverrides { get; protected set; }
+#endif
 
         //---
 
@@ -168,8 +190,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public KeywordsMask KeywordsMask { get; private set; }
         [DoNotCopy]
         public bool HasKeywords { get => Keywords.HasValue(); }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [DoNotCopy]
         public DifficultyTierMask DifficultyTierMask { get; private set; }
+#endif
         [DoNotCopy]
         public bool HasPvPMetaGame { get; private set; }
         [DoNotCopy]
@@ -197,6 +221,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             DifficultyTierMask = DifficultyTierMask.None;
 
             if (AccessDifficulties.HasValue())
@@ -212,10 +237,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
             else
             {
-                DifficultyTierMask = DifficultyTierMask.Green | DifficultyTierMask.Red | DifficultyTierMask.Cosmic;
+                DifficultyTierMask = DifficultyTierMask.All;
             }
+#endif
 
-            if (RegionQueueStates.HasValue())
+                if (RegionQueueStates.HasValue())
             {
                 for (int i = 0; i < RegionQueueStates.Length; i++)
                 {
@@ -406,6 +432,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public static PrototypeId ConstrainDifficulty(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
         {
             return ConstrainDifficulty(regionProtoRef.As<RegionPrototype>(), difficultyTierProtoRef.As<DifficultyTierPrototype>());
@@ -442,6 +469,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // No available difficulty
             return PrototypeId.Invalid;
         }
+#endif
 
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
@@ -672,7 +700,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return PrototypeId.Invalid;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool RunEvalAccessRestriction(Player player, Avatar avatar, PrototypeId difficultyProtoRef)
+#else
+        public bool RunEvalAccessRestriction(Player player, Avatar avatar)
+#endif
         {
             // Default to true if no valid avatar
             if (!Verify.IsNotNull(avatar)) return true;
@@ -693,14 +725,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             DifficultyTierPrototype difficultyProto = difficultyProtoRef.As<DifficultyTierPrototype>();
             if (success && difficultyProto != null)
                 success &= avatar.CharacterLevel >= difficultyProto.UnlockLevel;
+#endif
 
             if (success && EvalAccessRestriction != null)
             {
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 evalContext.SetReadOnlyVar_ProtoRef(EvalContext.Var1, difficultyProtoRef);
+#endif
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, avatar);
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Other, player);
                 success = Eval.RunBool(EvalAccessRestriction, evalContext);
@@ -771,11 +807,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (party != null)
                 {
                     CommunityMember communityMember = party.GetCommunityMemberForLeader(player);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     if (communityMember != null)
                     {
                         AvatarSlotInfo avatarSlotInfo = communityMember.GetAvatarSlotInfo();
                         avatarLevel = avatarSlotInfo != null ? avatarSlotInfo.Level : 0;
                     }
+#else
+                    avatarLevel = communityMember != null ? communityMember.CharacterLevel : 0;
+#endif
                 }
             }
 
@@ -838,4 +878,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public float BlackOutRadius { get; protected set; }
     }
+
+#if GAME_VERSION_1_53
+    public class DisplayDifficultySliderPrototype : Prototype
+    {
+        public bool PC { get; protected set; }
+        public bool PS4 { get; protected set; }
+        public bool XB1 { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class ClientMapOverridePairPrototype : Prototype
+    {
+        public ClientMapOverrideType LiveTuningValue { get; protected set; }
+        public AssetId Override { get; protected set; }
+    }
+#endif
 }

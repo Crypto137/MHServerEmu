@@ -389,6 +389,11 @@ namespace MHServerEmu.Games.Populations
                     positions.Add(testReservation.GetRegionPosition());
         }
 
+        public bool HasMarker(PrototypeId markerRef)
+        {
+            return _regionLookup.ContainsKey(markerRef);
+        }
+
         public void OnSimulation(Cell cell, int numPlayers)
         {
             using var reservationsHandle = ListPool<SpawnReservation>.Instance.Get(out List<SpawnReservation> reservations);

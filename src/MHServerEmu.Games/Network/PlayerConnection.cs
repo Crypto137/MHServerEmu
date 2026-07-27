@@ -193,8 +193,10 @@ namespace MHServerEmu.Games.Network
             // Initialize new players.
             if (_dbAccount.Player.ArchiveData.IsNullOrEmpty())
             {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 Player.InitializeMissionTrackerFilters();
                 Logger.Trace($"Initialized default mission filters for {Player}");
+#endif
 
                 // HACK: Unlock chat by default for accounts with elevated permissions to allow them to use chat commands during the tutorial
                 if (_dbAccount.UserLevel > AccountUserLevel.User)
@@ -245,7 +247,9 @@ namespace MHServerEmu.Games.Network
             }
 
             Player.SetAvatarLibraryProperties();
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             Player.SetTeamUpLibraryProperties();
+#endif
 
             return true;
         }
@@ -438,7 +442,9 @@ namespace MHServerEmu.Games.Network
 
             if (_dbAccount.MigrationData.IsFirstLoad)
             {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 Player.SendDifficultyTierPreferenceToPlayerManager();
+#endif
 
                 // Recount and update achievements
                 Player.AchievementManager.RecountAchievements();
@@ -544,7 +550,9 @@ namespace MHServerEmu.Games.Network
                 // case ClientToGameServerMessage.NetMessageStopPowersDebugUI:              OnStopPowersDebugUI(message); break;
                 case ClientToGameServerMessage.NetMessagePing:                              OnPing(message); break;
                 case ClientToGameServerMessage.NetMessageFPS:                               OnFps(message); break;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessageGamepadMetric:                     OnGamepadMetric(message); break;
+#endif
                 case ClientToGameServerMessage.NetMessagePickupInteraction:                 OnPickupInteraction(message); break;
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:                  OnTryInventoryMove(message); break;
                 case ClientToGameServerMessage.NetMessageTryMoveCraftingResultsToGeneral:   OnTryMoveCraftingResultsToGeneral(message); break;
@@ -556,15 +564,21 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageUseWaypoint:                       OnUseWaypoint(message); break;
                 // case ClientToGameServerMessage.NetMessageDebugAcquireAndSwitchToAvatar:  OnDebugAcquireAndSwitchToAvatar(message); break;
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:                      OnSwitchAvatar(message); break;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessageChangeDifficulty:                  OnChangeDifficulty(message); break;
+#endif
                 // case ClientToGameServerMessage.NetMessageSelectPublicEventTeam:          OnSelectPublicEventTeam(message); break;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessageRefreshAbilityKeyMapping:          OnRefreshAbilityKeyMapping(message); break;
+#endif
                 case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:           OnAbilitySlotToAbilityBar(message); break;
                 case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:       OnAbilityUnslotFromAbilityBar(message); break;
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;
                 // case ClientToGameServerMessage.NetMessageModCommitTemporary:             OnModCommitTemporary(message); break;
                 // case ClientToGameServerMessage.NetMessageModReset:                       OnModReset(message); break;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessagePowerRecentlyUnlocked:             OnPowerRecentlyUnlocked(message); break;
+#endif
                 case ClientToGameServerMessage.NetMessageRequestDeathRelease:               OnRequestDeathRelease(message); break;
                 case ClientToGameServerMessage.NetMessageRequestResurrectDecline:           OnRequestResurrectDecline(message); break;
                 case ClientToGameServerMessage.NetMessageRequestResurrectAvatar:            OnRequestResurrectAvatar(message); break;
@@ -624,7 +638,9 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAkEvent:                           OnAkEvent(message); break;
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;
+#if !GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessageTryMoveInventoryContentsToGeneral: OnTryMoveInventoryContentsToGeneral(message); break;
+#endif
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;
                 case ClientToGameServerMessage.NetMessageTeleportToPartyMember:             OnTeleportToPartyMember(message); break;
                 case ClientToGameServerMessage.NetMessageRegionRequestQueueCommandClient:   OnRegionRequestQueueCommandClient(message); break;
@@ -640,16 +656,22 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageTryTeamUpSelect:                   OnTryTeamUpSelect(message); break;
                 case ClientToGameServerMessage.NetMessageRequestTeamUpDismiss:              OnRequestTeamUpDismiss(message); break;
                 case ClientToGameServerMessage.NetMessageTryTeamUpStyleSelect:              OnTryTeamUpStyleSelect(message); break;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessageInfinityPointAllocationCommit:     OnInfinityPointAllocationCommit(message); break;
                 case ClientToGameServerMessage.NetMessageRespecInfinity:                    OnRespecInfinity(message); break;
+#endif
+#if !GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;
                 case ClientToGameServerMessage.NetMessageRespecOmegaBonus:                  OnRespecOmegaBonus(message); break;
+#endif
                 // case ClientToGameServerMessage.NetMessageRespecPowerSpec:                OnRespecPowerSpec(message); break;
                 case ClientToGameServerMessage.NetMessageNewItemGlintPlayed:                OnNewItemGlintPlayed(message); break;
                 case ClientToGameServerMessage.NetMessageNewItemHighlightCleared:           OnNewItemHighlightCleared(message); break;
                 // case ClientToGameServerMessage.NetMessageNewSynergyCleared:              OnNewSynergyCleared(message); break;
                 case ClientToGameServerMessage.NetMessageUnassignMappedPower:               OnUnassignMappedPower(message); break;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;
+#endif
                 case ClientToGameServerMessage.NetMessageVanityTitleSelect:                 OnVanityTitleSelect(message); break;
                 // case ClientToGameServerMessage.NetMessageRequestGlobalEventUpdate:       OnRequestGlobalEventUpdate(message); break;
                 // case ClientToGameServerMessage.NetMessageHasPendingGift:                 OnHasPendingGift(message); break;
@@ -661,7 +683,9 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;
                 case ClientToGameServerMessage.NetMessageRequestSocketAffix:                OnRequestSocketAffix(message); break;
                 case ClientToGameServerMessage.NetMessageUISystemLockState:                 OnUISystemLockState(message); break;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessageEnableTalentPower:                 OnEnableTalentPower(message); break;
+#endif
                 case ClientToGameServerMessage.NetMessageStashInventoryViewed:              OnStashInventoryViewed(message); break;
                 case ClientToGameServerMessage.NetMessageStashCurrentlyOpen:                OnStashCurrentlyOpen(message); break;
                 case ClientToGameServerMessage.NetMessageWidgetButtonResult:                OnWidgetButtonResult(message); break;
@@ -672,6 +696,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:      OnLeaderboardInitializeRequest(message); break;
                 // case ClientToGameServerMessage.NetMessageCoopOpRequest:                  OnCoopOpRequest(message); break;
                 // case ClientToGameServerMessage.NetMessageCouponAwardPresented:           OnCouponAwardPresented(message); break;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessagePartyOperationRequest:             OnPartyOperationRequest(message); break;
                 // case ClientToGameServerMessage.NetMessagePSNNotification:                OnPSNNotification(message); break;
                 // case ClientToGameServerMessage.NetMessageSuggestPlayerToPartyLeader:     OnSuggestPlayerToPartyLeader(message); break;
@@ -682,6 +707,7 @@ namespace MHServerEmu.Games.Network
                 // case ClientToGameServerMessage.NetMessagePlayerLookupByNameClientRequest:OnPlayerLookupByNameClientRequest(message); break;
                 // case ClientToGameServerMessage.NetMessageCostumeChange:                  OnCostumeChange(message); break;
                 // case ClientToGameServerMessage.NetMessageLookForParty:                   OnLookForParty(message); break;
+#endif
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
@@ -985,6 +1011,7 @@ namespace MHServerEmu.Games.Network
             //Logger.Trace($"OnFps():\n{fps}");
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void OnGamepadMetric(in MailboxMessage message)
         {
             var gamepadMetric = message.As<NetMessageGamepadMetric>();
@@ -993,6 +1020,7 @@ namespace MHServerEmu.Games.Network
             // Dummy handler, we are not interested in gamepad metrics
             //Logger.Trace($"OnGamepadMetric():\n{gamepadMetric}");
         }
+#endif
 
         private void OnPickupInteraction(in MailboxMessage message)
         {
@@ -1094,7 +1122,11 @@ namespace MHServerEmu.Games.Network
             ulong containerId = tryInventoryMove.ToInventoryOwnerId;
             PrototypeId inventoryProtoRef = (PrototypeId)tryInventoryMove.ToInventoryPrototype;
             uint slot = tryInventoryMove.ToSlot;
+#if GAME_VERSION_1_53
+            bool isStackSplit = tryInventoryMove.StackSplitSize != 0;   // V53_FIXME
+#else
             bool isStackSplit = tryInventoryMove.HasIsStackSplit && tryInventoryMove.IsStackSplit;
+#endif
 
             if (isStackSplit)
                 Player.TryInventoryStackSplit(itemId, containerId, inventoryProtoRef, slot);
@@ -1255,12 +1287,18 @@ namespace MHServerEmu.Games.Network
 
             PrototypeId waypointProtoRef = (PrototypeId)useWaypoint.WaypointDataRef;
             PrototypeId regionProtoRefOverride = (PrototypeId)useWaypoint.RegionProtoId;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             PrototypeId difficultyProtoRef = (PrototypeId)useWaypoint.DifficultyProtoId;
+#endif
 
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
             teleporter.Initialize(Player, TeleportContextEnum.TeleportContext_Waypoint);
             teleporter.TransitionEntity = waypoint;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             teleporter.TeleportToWaypoint(waypointProtoRef, regionProtoRefOverride, difficultyProtoRef);
+#else
+            teleporter.TeleportToWaypoint(waypointProtoRef, regionProtoRefOverride);
+#endif
         }
 
         private void OnSwitchAvatar(in MailboxMessage message)
@@ -1271,6 +1309,7 @@ namespace MHServerEmu.Games.Network
             Player.BeginAvatarSwitch((PrototypeId)switchAvatar.AvatarPrototypeId);
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void OnChangeDifficulty(in MailboxMessage message)
         {
             var changeDifficulty = message.As<NetMessageChangeDifficulty>();
@@ -1291,7 +1330,9 @@ namespace MHServerEmu.Games.Network
 
             avatar.Properties[PropertyEnum.DifficultyTierPreference] = difficultyTierProtoRef;
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void OnRefreshAbilityKeyMapping(in MailboxMessage message)
         {
             var refreshAbilityKeyMapping = message.As<NetMessageRefreshAbilityKeyMapping>();
@@ -1305,6 +1346,7 @@ namespace MHServerEmu.Games.Network
 
             avatar.RefreshAbilityKeyMapping(false);
         }
+#endif
 
         private void OnAbilitySlotToAbilityBar(in MailboxMessage message)
         {
@@ -1348,6 +1390,7 @@ namespace MHServerEmu.Games.Network
             avatar.SwapAbilities((AbilitySlot)abilitySwapInAbilityBar.SlotNumberA, (AbilitySlot)abilitySwapInAbilityBar.SlotNumberB, false);
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void OnPowerRecentlyUnlocked(in MailboxMessage message)
         {
             var powerRecentlyUnlocked = message.As<NetMessagePowerRecentlyUnlocked>();
@@ -1365,20 +1408,29 @@ namespace MHServerEmu.Games.Network
 
             avatar.Properties[PropertyEnum.PowerUnlocked, powerProto.DataRef] = powerRecentlyUnlocked.IsRecentlyUnlocked;
         }
+#endif
 
         private void OnRequestDeathRelease(in MailboxMessage message)
         {
             var requestDeathRelease = message.As<NetMessageRequestDeathRelease>();
             if (!Verify.IsNotNull(requestDeathRelease)) return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             Avatar avatar = Player.GetActiveAvatarByIndex((int)requestDeathRelease.AvatarIndex);
+#else
+            Avatar avatar = Player.CurrentAvatar;
+#endif
             if (!Verify.IsNotNull(avatar)) return;
 
             if (avatar.IsDead == false)
                 return;
 
             // Validate request
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             DeathReleaseRequestType requestType = (DeathReleaseRequestType)requestDeathRelease.RequestType;
+#else
+            DeathReleaseRequestType requestType = DeathReleaseRequestType.Checkpoint;   // V48_FIXME
+#endif
             if (!Verify.IsTrue(requestType >= 0 && requestType < DeathReleaseRequestType.NumRequestTypes)) return;
 
             if (requestType == DeathReleaseRequestType.Corpse)
@@ -1401,7 +1453,11 @@ namespace MHServerEmu.Games.Network
             var requestResurrectDecline = message.As<NetMessageRequestResurrectDecline>();
             if (!Verify.IsNotNull(requestResurrectDecline)) return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             Avatar avatar = Player.GetActiveAvatarByIndex((int)requestResurrectDecline.AvatarIndex);
+#else
+            Avatar avatar = Player.CurrentAvatar;
+#endif
             if (!Verify.IsNotNull(avatar)) return;
 
             avatar.ResurrectDecline();
@@ -1412,7 +1468,11 @@ namespace MHServerEmu.Games.Network
             var requestResurrectAvatar = message.As<NetMessageRequestResurrectAvatar>();
             if (!Verify.IsNotNull(requestResurrectAvatar)) return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             Avatar resurrectorAvatar = Player.GetActiveAvatarByIndex((int)requestResurrectAvatar.AvatarIndex);
+#else
+            Avatar resurrectorAvatar = Player.CurrentAvatar;
+#endif
             if (!Verify.IsNotNull(resurrectorAvatar)) return;
 
             Avatar targetAvatar = Game.EntityManager.GetEntity<Avatar>(requestResurrectAvatar.TargetId);
@@ -1637,7 +1697,12 @@ namespace MHServerEmu.Games.Network
             var vendorRequestBuyItemFrom = message.As<NetMessageVendorRequestBuyItemFrom>();
             if (!Verify.IsNotNull(vendorRequestBuyItemFrom)) return;
 
-            Player.BuyItemFromVendor(vendorRequestBuyItemFrom.AvatarIndex, vendorRequestBuyItemFrom.ItemId, vendorRequestBuyItemFrom.VendorId, vendorRequestBuyItemFrom.InventorySlot);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            int avatarIndex = vendorRequestBuyItemFrom.AvatarIndex;
+#else
+            int avatarIndex = 0;
+#endif
+            Player.BuyItemFromVendor(avatarIndex, vendorRequestBuyItemFrom.ItemId, vendorRequestBuyItemFrom.VendorId, vendorRequestBuyItemFrom.InventorySlot);
         }
 
         private void OnVendorRequestSellItemTo(in MailboxMessage message)
@@ -1652,7 +1717,12 @@ namespace MHServerEmu.Games.Network
             if (!Verify.IsTrue(item.GetOwnerOfType<Player>() == Player, $"Player [{this}] is attempting to sell item [{item}] that does not belong to them!"))
                 return;
 
-            Player.SellItemToVendor(vendorRequestSellItemTo.AvatarIndex, vendorRequestSellItemTo.ItemId, vendorRequestSellItemTo.VendorId);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            int avatarIndex = vendorRequestSellItemTo.AvatarIndex;
+#else
+            int avatarIndex = 0;
+#endif
+            Player.SellItemToVendor(avatarIndex, vendorRequestSellItemTo.ItemId, vendorRequestSellItemTo.VendorId);
         }
 
         private void OnVendorRequestDonateItemTo(in MailboxMessage message)
@@ -1667,7 +1737,12 @@ namespace MHServerEmu.Games.Network
             if (!Verify.IsTrue(item.GetOwnerOfType<Player>() == Player, $"Player [{this}] is attempting to donate item [{item}] that does not belong to them!"))
                 return;
 
-            Player.DonateItemToVendor(vendorRequestDonateItemTo.AvatarIndex, vendorRequestDonateItemTo.ItemId, vendorRequestDonateItemTo.VendorId);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            int avatarIndex = vendorRequestDonateItemTo.AvatarIndex;
+#else
+            int avatarIndex = 0;
+#endif
+            Player.DonateItemToVendor(avatarIndex, vendorRequestDonateItemTo.ItemId, vendorRequestDonateItemTo.VendorId);
         }
 
         private void OnVendorRequestRefresh(in MailboxMessage message)
@@ -1761,6 +1836,7 @@ namespace MHServerEmu.Games.Network
                 Player.ShowHUDTutorial(null);
         }
 
+#if !GAME_VERSION_1_53
         private void OnTryMoveInventoryContentsToGeneral(in MailboxMessage message)
         {
             var tryMoveInventoryContentsToGeneral = message.As<NetMessageTryMoveInventoryContentsToGeneral>();
@@ -1799,6 +1875,7 @@ namespace MHServerEmu.Games.Network
                     return;
             }
         }
+#endif
 
         private void OnSetPlayerGameplayOptions(in MailboxMessage message)
         {
@@ -1831,7 +1908,11 @@ namespace MHServerEmu.Games.Network
             if (!Verify.IsNotNull(regionRequestQueueCommandClient)) return;
 
             PrototypeId regionRef = (PrototypeId)regionRequestQueueCommandClient.RegionProtoId;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             PrototypeId difficultyTierRef = (PrototypeId)regionRequestQueueCommandClient.DifficultyTierProtoId;
+#else
+            PrototypeId difficultyTierRef = PrototypeId.Invalid;
+#endif
             ulong groupId = regionRequestQueueCommandClient.HasRegionRequestGroupId ? regionRequestQueueCommandClient.RegionRequestGroupId : 0;
             RegionRequestQueueCommandVar command = regionRequestQueueCommandClient.Command;
 
@@ -1875,7 +1956,9 @@ namespace MHServerEmu.Games.Network
                     continue;
 
                 avatar.Properties[PropertyEnum.AvatarSynergySelected, avatarProtoRef] = true;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 Player.Properties.RemoveProperty(new(PropertyEnum.AvatarSynergyNewUnlock, avatarProtoRef));
+#endif
             }
 
             // Update the synergy condition
@@ -1922,7 +2005,9 @@ namespace MHServerEmu.Games.Network
 
             SendMessage(NetMessageInventoryLoaded.CreateBuilder()
                 .SetInventoryProtoId(requestInterestInInventory.InventoryProtoId)
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 .SetLoadState(requestInterestInInventory.LoadState)
+#endif
                 .Build());
         }
 
@@ -1983,6 +2068,7 @@ namespace MHServerEmu.Games.Network
             avatar.TryTeamUpStyleSelect(tryTeamUpStyleSelect.StyleIndex);
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void OnInfinityPointAllocationCommit(in MailboxMessage message)
         {
             var infinityBonusAllocationCommit = message.As<NetMessageInfinityPointAllocationCommit>();
@@ -1999,7 +2085,9 @@ namespace MHServerEmu.Games.Network
 
             avatar.InfinityPointAllocationCommit(infinityBonusAllocationCommit);
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void OnRespecInfinity(in MailboxMessage message)
         {
             var respecInfinity = message.As<NetMessageRespecInfinity>();
@@ -2019,7 +2107,9 @@ namespace MHServerEmu.Games.Network
 
             avatar.RespecInfinity(infinityGem);
         }
+#endif
 
+#if !GAME_VERSION_1_53
         private void OnOmegaBonusAllocationCommit(in MailboxMessage message)
         {
             var omegaBonusAllocationCommit = message.As<NetMessageOmegaBonusAllocationCommit>();
@@ -2036,7 +2126,9 @@ namespace MHServerEmu.Games.Network
 
             avatar.OmegaPointAllocationCommit(omegaBonusAllocationCommit);
         }
+#endif
 
+#if !GAME_VERSION_1_53
         private void OnRespecOmegaBonus(in MailboxMessage message)
         {
             var respecOmegaBonus = message.As<NetMessageRespecOmegaBonus>();
@@ -2053,6 +2145,7 @@ namespace MHServerEmu.Games.Network
 
             avatar.RespecOmegaBonus();
         }
+#endif
 
         private void OnNewItemGlintPlayed(in MailboxMessage message)
         {
@@ -2108,6 +2201,7 @@ namespace MHServerEmu.Games.Network
             avatar.UnassignMappedPower((PrototypeId)unassignMappedPower.MappedPowerProtoId);
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void OnAssignStolenPower(in MailboxMessage message)
         {
             var assignStolenPower = message.As<NetMessageAssignStolenPower>();
@@ -2136,13 +2230,18 @@ namespace MHServerEmu.Games.Network
 
             avatar.MapPower(stealingPowerRef, stolenPowerRef);
         }
+#endif
 
         private void OnVanityTitleSelect(in MailboxMessage message)
         {
             var vanityTitleSelect = message.As<NetMessageVanityTitleSelect>();
             if (!Verify.IsNotNull(vanityTitleSelect)) return;
 
-            Avatar avatar = Player?.GetActiveAvatarByIndex(vanityTitleSelect.AvatarIndex);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            Avatar avatar = Player.GetActiveAvatarByIndex(vanityTitleSelect.AvatarIndex);
+#else
+            Avatar avatar = Player.CurrentAvatar;
+#endif
             if (avatar == null)
                 return;
 
@@ -2265,6 +2364,8 @@ namespace MHServerEmu.Games.Network
             Player.Properties[PropertyEnum.UISystemLock, uiSystemLockProtoRef] = uiSystemLockState.State;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        // V48_FIXME (Specialization power)
         private void OnEnableTalentPower(in MailboxMessage message)
         {
             var enableTalentPower = message.As<NetMessageEnableTalentPower>();
@@ -2285,6 +2386,7 @@ namespace MHServerEmu.Games.Network
 
             avatar.EnableTalentPower(talentPowerRef, specIndex, enable);
         }
+#endif
 
         private void OnStashInventoryViewed(in MailboxMessage message)
         {
@@ -2346,6 +2448,7 @@ namespace MHServerEmu.Games.Network
             SendMessage(response);
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void OnPartyOperationRequest(in MailboxMessage message)
         {
             var partyOperationRequest = message.As<NetMessagePartyOperationRequest>();
@@ -2356,7 +2459,9 @@ namespace MHServerEmu.Games.Network
 
             Game.PartyManager.OnClientPartyOperationRequest(Player, partyOperationRequest.Payload);
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void OnMissionTrackerFiltersUpdate(in MailboxMessage message)
         {
             var missionTrackerFiltersUpdate = message.As<NetMessageMissionTrackerFiltersUpdate>();
@@ -2373,7 +2478,9 @@ namespace MHServerEmu.Games.Network
                 Player.Properties[PropertyEnum.MissionTrackerFilter, filterProtoRef] = missionTrackerFilterChange.IsFiltered;
             }
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void OnAchievementMissionTrackerFilterChange(in MailboxMessage message)
         {
             var achievementMissionTrackerFilterChange = message.As<NetMessageAchievementMissionTrackerFilterChange>();
@@ -2386,6 +2493,7 @@ namespace MHServerEmu.Games.Network
 
             Player.Properties[PropertyEnum.MissionTrackerAchievements, achievementId] = isFiltered;
         }
+#endif
 
         #endregion
     }

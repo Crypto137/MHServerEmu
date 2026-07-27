@@ -1276,6 +1276,8 @@ namespace MHServerEmu.Games.Powers
             PrototypeId stolenPowerRef = stealablePowerInfoProto.Power;
             if (!Verify.IsTrue(stolenPowerRef != PrototypeId.Invalid)) return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            // V48_FIXME
             BannerMessagePrototype bannerMessageProto;
 
             if (avatar.IsStolenPowerAvailable(stealablePowerInfoProto.Power) == false)
@@ -1291,6 +1293,7 @@ namespace MHServerEmu.Games.Powers
             if (!Verify.IsNotNull(bannerMessageProto)) return;
 
             player.SendBannerMessage(bannerMessageProto);
+#endif
         }
 
         private void DoPowerEventActionPetItemDonate(PowerEventActionPrototype triggeredPowerEvent)

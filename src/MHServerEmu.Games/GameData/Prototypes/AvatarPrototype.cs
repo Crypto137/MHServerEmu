@@ -15,6 +15,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId BioText { get; protected set; }
         public AbilityAssignmentPrototype[] HiddenPassivePowers { get; protected set; }
         public AssetId PortraitPath { get; protected set; }
+#if GAME_VERSION_1_48
+        public PrototypeId[] Skills { get; protected set; }
+        public AbilityAssignmentPrototype[] StartingEquippedAbilities { get; protected set; }
+#endif
         public PrototypeId StartingLootTable { get; protected set; }
         public AssetId UnlockDialogImage { get; protected set; }
         public AssetId HUDTheme { get; protected set; }
@@ -52,12 +56,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int CharacterSelectDisplayOrder { get; protected set; }
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public CostumeCorePrototype CostumeCore { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public TalentGroupPrototype[] TalentGroups { get; protected set; }
         public PrototypeId TravelPower { get; protected set; }
         public AbilityAutoAssignmentSlotPrototype[] AbilityAutoAssignmentSlot { get; protected set; }
         public PrototypeId[] LoadingScreensConsole { get; protected set; }
         public ItemAssignmentPrototype StartingCostumePS4 { get; protected set; }
         public ItemAssignmentPrototype StartingCostumeXboxOne { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public LocaleStringId PresenceStatusKeyXboxOne { get; protected set; }
+        public SlotUnlockPrototype[] AbilitySlotUnlockProgression { get; protected set; }
+        public bool OmegaPrestigeEnabled { get; protected set; }
+        public AssetId SocialIconPathConsole { get; protected set; }
+        public AssetId SynergyIconPath { get; protected set; }
+        public AssetId SynergyIconPathConsole { get; protected set; }
+        public AvatarPowerGroupUIPrototype[] PowerGroupUIs { get; protected set; }
+#endif
 
         //---
 
@@ -149,10 +164,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         /// </summary>
         public PrototypeId GetStartingCostumeForPlatform(Platforms platform)
         {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (platform == Platforms.PS4 && StartingCostumePS4 != null)
                 return StartingCostumePS4.Item;
             else if (platform == Platforms.XboxOne && StartingCostumeXboxOne != null)
                 return StartingCostumeXboxOne.Item;
+#endif
 
             if (!Verify.IsNotNull(StartingCostume)) return PrototypeId.Invalid;
             return StartingCostume.Item;
@@ -206,6 +223,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return powerProgEntryList.Count > 0;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         /// <summary>
         /// Returns the <see cref="AbilityAutoAssignmentSlotPrototype"/> for the specified power <see cref="PrototypeId"/> if there is one.
         /// Otherwise, returns <see langword="null"/>.
@@ -223,6 +241,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return null;
         }
+#endif
 
         public PowerProgressionTablePrototype GetPowerProgressionTableAtIndex(int index)
         {
@@ -413,6 +432,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int Index { get; protected set; }
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public class TalentEntryPrototype : Prototype
     {
         public PrototypeId Talent { get; protected set; }
@@ -425,6 +445,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float UIPositionPctX { get; protected set; }
         public float UIPositionPctY { get; protected set; }
     }
+#endif
 
     public class AvatarModePrototype : Prototype
     {
@@ -479,7 +500,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int UIFanSortNumber { get; protected set; }
         public int UIFanTier { get; protected set; }
         public PrototypeId[] Antirequisites { get; protected set; }
+#if GAME_VERSION_1_52
         public bool IsTrait { get; protected set; }
+#endif
+#if GAME_VERSION_1_53
+        public PrototypeId CostumeRequired { get; protected set; }
+        public TraitCategory TraitCategory { get; protected set; }
+        public bool TraitRequiresOmegaPrestige { get; protected set; }
+#endif
 
         //---
 
@@ -506,4 +534,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public int PowerProgTableTabIndex { get; protected set; }
     }
+
+#if GAME_VERSION_1_53
+    public class SlotUnlockPrototype : Prototype
+    {
+        public int UnlockLevel { get; protected set; }
+        public PrototypeId Slot { get; protected set; }
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public class AvatarPowerGroupUIPrototype : Prototype
+    {
+        public AssetId IconPath { get; protected set; }
+        public PowerKeywordPrototype PowerKeyword { get; protected set; }
+    }
+#endif
 }

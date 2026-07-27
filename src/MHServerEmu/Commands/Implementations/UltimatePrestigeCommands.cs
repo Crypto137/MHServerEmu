@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Commands.Attributes;
+﻿#if !GAME_VERSION_1_53
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
@@ -57,3 +58,4 @@ namespace MHServerEmu.Commands.Implementations
         }
     }
 }
+#endif

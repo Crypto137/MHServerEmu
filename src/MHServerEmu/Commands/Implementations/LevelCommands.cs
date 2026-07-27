@@ -64,6 +64,7 @@ namespace MHServerEmu.Commands.Implementations
             return "Reset to level 1.";
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [Command("maxinfinity")]
         [CommandDescription("Maxes out Infinity experience.")]
         [CommandUsage("level maxinfinity")]
@@ -81,7 +82,9 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Infinity experience maxed out.";
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [Command("resetinfinity")]
         [CommandDescription("Removes all Infinity progression.")]
         [CommandUsage("level resetinfinity")]
@@ -103,7 +106,9 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Infinity reset.";
         }
+#endif
 
+#if GAME_VERSION_1_52
         [Command("maxomega")]
         [CommandDescription("Maxes out Omega experience.")]
         [CommandUsage("level maxomega")]
@@ -113,6 +118,7 @@ namespace MHServerEmu.Commands.Implementations
             PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
+            // V48_FIXME
             if (player.Game.InfinitySystemEnabled)
                 return "Omega system is disabled by server settings.";
 
@@ -121,13 +127,16 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Omega experience maxed out.";
         }
+#endif
 
+#if GAME_VERSION_1_52
         [Command("resetomega")]
         [CommandDescription("Removes all Omega progression.")]
         [CommandUsage("level resetomega")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string ResetOmega(string[] @params, NetClient client)
         {
+            // V48_FIXME
             PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
@@ -143,6 +152,7 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Omega reset.";
         }
+#endif
 
         [Command("awardxp")]
         [CommandDescription("Awards the specified amount of experience.")]

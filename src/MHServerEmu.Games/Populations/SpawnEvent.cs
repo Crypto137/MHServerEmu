@@ -295,7 +295,9 @@ namespace MHServerEmu.Games.Populations
             bool notOpen = missionProto is not OpenMissionPrototype;
             bool spawnCleanup = notOpen;
             bool critical = notOpen || missionProto.PopulationRequired;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             var difficultyRef = Region.DifficultyTierRef;
+#endif
 
             var time = TimeSpan.Zero;
 
@@ -305,7 +307,9 @@ namespace MHServerEmu.Games.Populations
             if (missionProto.PopulationSpawns.HasValue())            
                 foreach (var entry in missionProto.PopulationSpawns)
                 {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     if (entry.AllowedInDifficulty(difficultyRef) == false) continue;
+#endif
                     if (entry.FilterRegion(Region.Prototype) == false) continue;
                     if (entry.RestrictToAreas.HasValue()) // check areas
                     {
@@ -320,7 +324,15 @@ namespace MHServerEmu.Games.Populations
                         if (foundArea == false) continue;
                     }
 
-                    bool isMissionMarker = entry.Population.UsePopulationMarker != PrototypeId.Invalid;
+                    PrototypeId markerRef = entry.Population.UsePopulationMarker;
+                    bool isMissionMarker = markerRef != PrototypeId.Invalid;
+
+#if GAME_VERSION_1_48
+                    // CH00RaftTutorial references non-existent marker MissionSmallV1, but partial spawning appears to break other missions.
+                    // For now work around this by skipping population entries that reference non-existent markers.
+                    if (isMissionMarker && Region.SpawnMarkerRegistry.HasMarker(markerRef) == false)
+                        continue;
+#endif
 
                     var spawnLocation = new SpawnLocation(Region, entry.RestrictToAreas, entry.RestrictToCells);
                     for (var i = 0; i < entry.Count; i++)                        
@@ -363,11 +375,15 @@ namespace MHServerEmu.Games.Populations
             bool spawnCleanup, bool removeOnSpawnFail, TimeSpan time = default)
         {
             float spawnableArea = spawnLocation.CalcSpawnableArea();
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             var difficultyRef = Region.DifficultyTierRef;
+#endif
 
             foreach (var reqObject in populationObjects)
             {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 if (reqObject.AllowedInDifficulty(difficultyRef) == false) continue;
+#endif
                 int count = reqObject.Count;
                 var objectProto = reqObject.GetPopObject();
                 if (count <= 0 && reqObject.Density > 0.0f)

@@ -354,6 +354,9 @@ namespace MHServerEmu.Core.Network
             }
         }
 
+#if !GAME_VERSION_1_48
+        // V48_FIXME
+
         /// <summary>
         /// [Game -> PlayerManager] Forwards a party operation request received from a client to the player manager.
         /// </summary>
@@ -412,6 +415,7 @@ namespace MHServerEmu.Core.Network
             public readonly PartyMemberEvent MemberEvent = memberEvent;
             public readonly PartyMemberInfo MemberInfo = memberInfo;
         }
+#endif
 
         /// <summary>
         /// [PlayerManager -> Game] Notifies a player of a party kick grace period before they are removed from the current region.

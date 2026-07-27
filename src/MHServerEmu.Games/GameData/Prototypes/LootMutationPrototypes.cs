@@ -43,16 +43,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId[] Keywords { get; protected set; }
         public short Count { get; protected set; }
         public AffixPosition Position { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public AffixCategoryPrototype[] Categories { get; protected set; }
+#endif
 
         //---
 
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
             ItemSpec itemSpec = new(lootCloneRecord);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             MutationResults affixResults = LootUtilities.AddAffixes(resolver, lootCloneRecord, Count, itemSpec, Position, Categories, Keywords, settings);
-            
+#else
+            MutationResults affixResults = LootUtilities.AddAffixes(resolver, lootCloneRecord, Count, itemSpec, Position, Keywords, settings);
+#endif
+
             if (affixResults.HasFlag(MutationResults.Error))
                 return MutationResults.Error;
 
@@ -167,8 +173,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SourceIndex { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public AffixCategoryPrototype[] Categories { get; protected set; }
+#endif
 
         //---
 
@@ -182,7 +190,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ItemSpec sourceItemSpec = new(sourceRecord);
             ItemSpec destItemSpec = new(lootCloneRecord);
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             MutationResults result = LootUtilities.CopyAffixes(resolver, lootCloneRecord, sourceItemSpec, destItemSpec, Position, Keywords, Categories, EnforceAffixLimits);
+#else
+            MutationResults result = LootUtilities.CopyAffixes(resolver, lootCloneRecord, sourceItemSpec, destItemSpec, Position, Keywords, EnforceAffixLimits);   
+#endif
             if (result.HasFlag(MutationResults.Error))
                 return MutationResults.Error;
 
@@ -198,8 +210,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SourceIndex { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public AffixCategoryPrototype[] Categories { get; protected set; }
+#endif
 
         //---
 
@@ -213,7 +227,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ItemSpec sourceItemSpec = new(sourceRecord);
             ItemSpec destItemSpec = new(lootCloneRecord);
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             MutationResults result = LootUtilities.CopyBuiltinAffixes(resolver, lootCloneRecord, sourceItemSpec, destItemSpec, Position, Keywords, Categories, EnforceAffixLimits);
+#else
+            MutationResults result = LootUtilities.CopyBuiltinAffixes(resolver, lootCloneRecord, sourceItemSpec, destItemSpec, Position, Keywords, EnforceAffixLimits);
+#endif
             if (result.HasFlag(MutationResults.Error))
                 return MutationResults.Error;
 
@@ -250,15 +268,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public AssetId[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public AffixCategoryPrototype[] Categories { get; protected set; }
+#endif
 
         //---
 
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
             ItemSpec itemSpec = new(lootCloneRecord);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             MutationResults affixResults = LootUtilities.DropAffixes(resolver, lootCloneRecord, itemSpec, Position, Keywords, Categories);
+#else
+            MutationResults affixResults = LootUtilities.DropAffixes(resolver, lootCloneRecord, itemSpec, Position, Keywords);
+#endif
 
             if (affixResults.HasFlag(MutationResults.Error))
                 return MutationResults.Error;
@@ -577,15 +601,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public AssetId[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public AffixCategoryPrototype[] Categories { get; protected set; }
+#endif
 
         //---
 
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
             bool hasKeywords = Keywords.HasValue();
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             bool hasCategories = Categories.HasValue();
+#endif
 
             for (int i = 0; i < lootCloneRecord.AffixRecords.Count; i++)
             {
@@ -603,8 +631,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (hasKeywords && affixProto.HasKeywords(Keywords, false) == false)
                     continue;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 if (hasCategories && affixProto.HasAnyCategory(Categories) == false)
                     continue;
+#endif
 
                 lootCloneRecord.AffixRecords[i] = affixRecord.SetSeed(resolver.Random.Next() | 1);
             }
@@ -619,8 +649,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public AffixCategoryPrototype[] Categories { get; protected set; }
+#endif
 
         //---
 
@@ -634,7 +666,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ItemSpec sourceItemSpec = new(sourceRecord);
             ItemSpec destItemSpec = new(lootCloneRecord);
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             MutationResults result = LootUtilities.ReplaceAffixes(resolver, lootCloneRecord, sourceItemSpec, destItemSpec, Position, Keywords, Categories, EnforceAffixLimits);
+#else
+            MutationResults result = LootUtilities.ReplaceAffixes(resolver, lootCloneRecord, sourceItemSpec, destItemSpec, Position, Keywords, EnforceAffixLimits);
+#endif
             if (result.HasFlag(MutationResults.Error))
                 return MutationResults.Error;
 
@@ -666,6 +702,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootAddAffixPrototype : LootMutationPrototype
     {
         public PrototypeId Affix { get; protected set; }
+#if GAME_VERSION_1_48
+        public AffixPosition Position { get; protected set; }
+#endif
 
         //---
 

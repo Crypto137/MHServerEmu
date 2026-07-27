@@ -93,6 +93,8 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnCommunityStatusRequest(communityStatusRequest);
                     break;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+                // V48_FIXME
                 case ServiceMessage.PartyOperationRequest partyOperationRequest:
                     OnPartyOperationRequest(partyOperationRequest);
                     break;
@@ -100,6 +102,7 @@ namespace MHServerEmu.PlayerManagement.Network
                 case ServiceMessage.PartyBoostUpdate partyBoostUpdate:
                     OnPartyBoostUpdate(partyBoostUpdate);
                     break;
+#endif
 
                 case ServiceMessage.GuildMessageToPlayerManager guildMessageFromGame:
                     OnGuildMessageFromGame(guildMessageFromGame);
@@ -370,6 +373,8 @@ namespace MHServerEmu.PlayerManagement.Network
             return true;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        // V48_FIXME
         private bool OnPartyOperationRequest(in ServiceMessage.PartyOperationRequest partyOperationRequest)
         {
             PartyOperationPayload request = partyOperationRequest.Request;
@@ -410,6 +415,7 @@ namespace MHServerEmu.PlayerManagement.Network
 
             return true;
         }
+#endif
 
         private bool OnGuildMessageFromGame(in ServiceMessage.GuildMessageToPlayerManager guildMessageFromGame)
         {

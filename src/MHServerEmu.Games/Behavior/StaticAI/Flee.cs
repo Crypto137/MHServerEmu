@@ -81,11 +81,13 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 var senses = ownerController.Senses;
                 var random = game.Random;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 if (fleeContext.FleeTowardAllies && random.NextFloat() <= fleeContext.FleeTowardAlliesPercentChance)
                 {
                     if (FleeTowardAllies(agent, fleeContext))
                         return StaticBehaviorReturnType.Running;
                 }
+#endif
 
                 var potentialEnemies = senses.PotentialHostileTargetIds;                
                 var averageDirection = Vector3.Zero;
@@ -106,9 +108,15 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     }
                 }
 
-                var distance = locomotor.GetCurrentSpeed() * random.NextFloat((float)fleeContext.FleeTime.TotalSeconds - fleeContext.FleeTimeVariance, (float)fleeContext.FleeTime.TotalSeconds + fleeContext.FleeTimeVariance);
+                float fleeTime = (float)fleeContext.FleeTime.TotalSeconds;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+                fleeTime = random.NextFloat(fleeTime - fleeContext.FleeTimeVariance, fleeTime + fleeContext.FleeTimeVariance);
+#endif
+
+                var distance = locomotor.GetCurrentSpeed() * fleeTime;
                 var targetPosition = agentPosition + Vector3.SafeNormalize2D(averageDirection) * distance;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 if (fleeContext.FleeHalfAngle != 0.0f)
                 {
                     if (FleeTowardsAngle(agent, fleeContext, averageDirection, targetPosition, distance))
@@ -116,6 +124,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     return StaticBehaviorReturnType.Failed;
                 }
                 else
+#endif
                 {
                     var locomotionOptions = new LocomotionOptions
                     { PathGenerationFlags = PathGenerationFlags.IncompletedPath };
@@ -128,6 +137,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             return StaticBehaviorReturnType.Running;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private static bool FleeTowardsAngle(Agent owner, in FleeContext fleeContext, Vector3 direction, Vector3 targetPosition, float distance)
         {
             var locomotor = owner.Locomotor;
@@ -164,7 +174,9 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             return false;
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private static void GenerateValidFleeAnglePaths(List<FleePath> pathResults, Agent owner, Vector3 direction, float distance, in FleeContext fleeContext)
         {
             var region = owner.Region;
@@ -196,7 +208,9 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     pathResults.Add(new FleePath(sideBPos, distanceSideB));
             }
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private static bool FleeTowardAllies(Agent owner, in FleeContext fleeContext)
         {
             var region = owner.Region;
@@ -255,6 +269,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             return false;
         }
+#endif
 
         public bool Validate(in IStateContext context)
         {
@@ -309,21 +324,25 @@ namespace MHServerEmu.Games.Behavior.StaticAI
     {
         public AIController OwnerController { get; set; }
         public TimeSpan FleeTime;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public float FleeTimeVariance;
         public float FleeHalfAngle;
         public float FleeDistanceMin;
         public bool FleeTowardAllies;
         public float FleeTowardAlliesPercentChance;
+#endif
 
         public FleeContext(AIController ownerController, FleeContextPrototype proto)
         {
             OwnerController = ownerController;
             FleeTime = TimeSpan.FromSeconds(proto.FleeTime);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             FleeTimeVariance = proto.FleeTimeVariance;
             FleeHalfAngle = proto.FleeHalfAngle;
             FleeDistanceMin = proto.FleeDistanceMin;
             FleeTowardAllies = proto.FleeTowardAllies;
             FleeTowardAlliesPercentChance = proto.FleeTowardAlliesPercentChance;
+#endif
         }
     }
 

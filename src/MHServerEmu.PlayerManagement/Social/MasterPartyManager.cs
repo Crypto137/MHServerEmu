@@ -27,6 +27,8 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public void OnPlayerRegionTransferFinished(PlayerHandle player)
         {
+            // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             // The client "loses" pending party invites on region change, so just cancel it here as well.
             // This won't do anything if there isn't an actual pending invite.
             CancelPartyInvite(player);
@@ -42,14 +44,21 @@ namespace MHServerEmu.PlayerManagement.Social
                 ServiceMessage.PartyInfoServerUpdate message = new(player.CurrentGame.Id, player.PlayerDbId, 0, null);
                 ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
             }
+#endif
         }
 
         public void OnPlayerRemoved(PlayerHandle player)
         {
             CancelPartyInvite(player);
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             RemoveMemberFromParty(player, GroupLeaveReason.GROUP_LEAVE_REASON_DISCONNECTED);
+#else
+            RemoveMemberFromParty(player, GroupLeaveReason.GROUP_LEAVE_REASON_LEFT);
+#endif
         }
 
+        // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public GroupingOperationResult DoPartyOperation(ref PartyOperationPayload request, HashSet<PlayerHandle> playersToNotify)
         {
             GroupingOperationResult result = GroupingOperationResult.eGOPR_SystemError;
@@ -145,6 +154,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
             return result;
         }
+#endif
 
         #region Operations
 
@@ -159,13 +169,21 @@ namespace MHServerEmu.PlayerManagement.Social
             if (targetPlayer == requestingPlayer)
                 return GroupingOperationResult.eGOPR_TargetedSelf;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (targetPlayer.HasVisitedTown == false)
                 return GroupingOperationResult.eGOPR_HasNoCheckpoint;
+#endif
 
             if (targetPlayer.CurrentParty != null)
             {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 if (requestingPlayer.CurrentParty != null && requestingPlayer.CurrentParty == targetPlayer.CurrentParty)
                     return GroupingOperationResult.eGOPR_NoChange;
+#else
+                // V48_FIXME?
+                if (requestingPlayer.CurrentParty != null && requestingPlayer.CurrentParty == targetPlayer.CurrentParty)
+                    return GroupingOperationResult.eGOPR_SystemError;
+#endif
 
                 return GroupingOperationResult.eGOPR_AlreadyInParty;
             }
@@ -210,7 +228,11 @@ namespace MHServerEmu.PlayerManagement.Social
             if (party.HasInvite(player) == false)
             {
                 player.PendingParty = null;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 return GroupingOperationResult.eGOPR_NoPendingInvite;
+#else
+                return GroupingOperationResult.eGOPR_SystemError;
+#endif
             }
 
             if (party.IsFull())
@@ -229,9 +251,15 @@ namespace MHServerEmu.PlayerManagement.Social
             if (player.PendingParty == null)
                 return GroupingOperationResult.eGOPR_PendingPartyDisbanded;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             MasterParty party = player.PendingParty;
             if (party.HasInvite(player) == false)
                 return GroupingOperationResult.eGOPR_NoPendingInvite;
+#else
+            MasterParty party = player.PendingParty;
+            if (party.HasInvite(player) == false)
+                return GroupingOperationResult.eGOPR_SystemError;
+#endif
 
             CancelPartyInvite(player);
 
@@ -243,9 +271,15 @@ namespace MHServerEmu.PlayerManagement.Social
             if (player == null)
                 return GroupingOperationResult.eGOPR_SystemError;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             MasterParty party = player.CurrentParty;
             if (party == null)
                 return GroupingOperationResult.eGOPR_NotInParty;
+#else
+            MasterParty party = player.CurrentParty;
+            if (party == null)
+                return GroupingOperationResult.eGOPR_SystemError;
+#endif
 
             RemoveMemberFromParty(player, GroupLeaveReason.GROUP_LEAVE_REASON_LEFT);
             return GroupingOperationResult.eGOPR_Success;
@@ -295,8 +329,11 @@ namespace MHServerEmu.PlayerManagement.Social
 
             MasterParty party = player.CurrentParty;
 
+            // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (party.SetType(GroupType.GroupType_Raid) == false)
                 return GroupingOperationResult.eGOPR_NoChange;
+#endif
 
             foreach (PlayerHandle member in party)
                 member.CheckWorldViewRegionAvailability();
@@ -315,8 +352,11 @@ namespace MHServerEmu.PlayerManagement.Social
             if (party.MemberCount > GameDatabase.GlobalsPrototype.PlayerPartyMaxSize)
                 return GroupingOperationResult.eGOPR_PartyFull;
 
+            // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (party.SetType(GroupType.GroupType_Party) == false)
                 return GroupingOperationResult.eGOPR_NoChange;
+#endif
 
             foreach (PlayerHandle member in party)
                 member.CheckWorldViewRegionAvailability();
@@ -324,6 +364,7 @@ namespace MHServerEmu.PlayerManagement.Social
             return GroupingOperationResult.eGOPR_Success;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private GroupingOperationResult DoPartyOperationChangeDifficulty(PlayerHandle player, PrototypeId difficultyTierProtoRef)
         {
             GroupingOperationResult result = ValidatePartyLeader(player);
@@ -339,6 +380,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
             return GroupingOperationResult.eGOPR_Success;
         }
+#endif
 
         #endregion
 
@@ -438,8 +480,11 @@ namespace MHServerEmu.PlayerManagement.Social
             if (player == null)
                 return GroupingOperationResult.eGOPR_SystemError;
 
+            // V48_FIXME
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (player.CurrentParty == null)
                 return GroupingOperationResult.eGOPR_NotInParty;
+#endif
 
             if (player.CurrentParty.Leader != player)
                 return GroupingOperationResult.eGOPR_NotLeader;

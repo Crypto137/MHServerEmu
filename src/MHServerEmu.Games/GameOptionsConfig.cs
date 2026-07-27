@@ -41,21 +41,35 @@ namespace MHServerEmu.Games
                 .SetGiftingEnabled(GiftingEnabled)
                 .SetCharacterSelectV2Enabled(CharacterSelectV2Enabled)
                 .SetCommunityNewsV2Enabled(CommunityNewsV2Enabled)
+#if GAME_VERSION_1_48
+                .SetDynamicCombatLevelEnabled(true)
+#endif
                 .SetLeaderboardsEnabled(LeaderboardsEnabled)
                 .SetNewPlayerExperienceEnabled(NewPlayerExperienceEnabled)
                 .SetServerTimeOffsetUTC(-7)
                 .SetUseServerTimeOffset(true)  // Although originally this was set to false, it needs to be true because auto offset doesn't work past 2019
+#if GAME_VERSION_1_48
+                .SetMissionTrackerV2Enabled(false) // V48_NOTE: Enabling this crashes the client.
+#else
                 .SetMissionTrackerV2Enabled(MissionTrackerV2Enabled)
+#endif
                 .SetGiftingAccountAgeInDaysRequired(GiftingAccountAgeInDaysRequired)
                 .SetGiftingAvatarLevelRequired(GiftingAvatarLevelRequired)
                 .SetGiftingLoginCountRequired(GiftingLoginCountRequired)
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 .SetInfinitySystemEnabled(InfinitySystemEnabled)
+#endif
                 .SetChatBanVoteAccountAgeInDaysRequired(ChatBanVoteAccountAgeInDaysRequired)
                 .SetChatBanVoteAvatarLevelRequired(ChatBanVoteAvatarLevelRequired)
                 .SetChatBanVoteLoginCountRequired(ChatBanVoteLoginCountRequired)
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 .SetIsDifficultySliderEnabled(IsDifficultySliderEnabled)
                 .SetOrbisTrophiesEnabled(OrbisTrophiesEnabled)
                 .SetPlatformType((int)Platforms.PC)
+#endif
+#if GAME_VERSION_1_53
+                .SetMetaGamePanelV2Enabled(true)
+#endif
                 .Build();
         }
     }

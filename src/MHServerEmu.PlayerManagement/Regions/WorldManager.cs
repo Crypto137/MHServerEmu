@@ -42,7 +42,11 @@ namespace MHServerEmu.PlayerManagement.Regions
                 _publicRegions.Add(regionProtoRef, regionLoadBalancer);
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             RegionHandle region = regionLoadBalancer.GetAvailableRegion((PrototypeId)createRegionParams.DifficultyTierProtoId, player);
+#else
+            RegionHandle region = regionLoadBalancer.GetAvailableRegion(PrototypeId.Invalid, player);
+#endif
             if (region == null)
             {
                 GameHandle game = _playerManager.GameHandleManager.CreateGame();

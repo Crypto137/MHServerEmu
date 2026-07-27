@@ -61,6 +61,8 @@ namespace MHServerEmu.Games.Network
                     OnCommunityBroadcastBatch(communityBroadcastBatch);
                     break;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+                // V48_FIXME
                 case ServiceMessage.PartyOperationRequestServerResult partyOperationRequestServerResult:
                     OnPartyOperationRequestServerResult(partyOperationRequestServerResult);
                     break;
@@ -76,6 +78,7 @@ namespace MHServerEmu.Games.Network
                 case ServiceMessage.PartyKickGracePeriod partyKickGracePeriod:
                     OnPartyKickGracePeriod(partyKickGracePeriod);
                     break;
+#endif
 
                 case ServiceMessage.GuildMessageToServer guildMessageToServer:
                     OnGuildMessageToServer(guildMessageToServer);
@@ -216,6 +219,8 @@ namespace MHServerEmu.Games.Network
             }
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        // V48_FIXME
         private void OnPartyOperationRequestServerResult(in ServiceMessage.PartyOperationRequestServerResult partyOperationRequestServerResult)
         {
             ulong playerDbId = partyOperationRequestServerResult.PlayerDbId;
@@ -253,6 +258,7 @@ namespace MHServerEmu.Games.Network
                 .SetLeaveReason(partyKickGracePeriod.LeaveReason)
                 .Build());
         }
+#endif
 
         private void OnGuildMessageToServer(in ServiceMessage.GuildMessageToServer guildMessageToServer)
         {

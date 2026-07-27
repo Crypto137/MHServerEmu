@@ -159,9 +159,17 @@ namespace MHServerEmu.Games.Network
                 var broadcast = CommunityMemberBroadcast.CreateBuilder()
                     .SetMemberPlayerDbId(member.DbId)
                     .SetCurrentRegionRefId((ulong)member.RegionRef)
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     .SetCurrentDifficultyRefId((ulong)member.DifficultyRef)
+#else
+                    .SetCurrentAvatarRefId((ulong)member.AvatarRef)
+                    .SetCurrentCostumeRefId((ulong)member.CostumeRef)
+                    .SetCurrentCharacterLevel((uint)member.CharacterLevel)
+                    .SetCurrentPrestigeLevel((uint)member.PrestigeLevel)
+#endif
                     .SetIsOnline((int)member.IsOnline);
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 AvatarSlotInfo slot = member.GetAvatarSlotInfo();
                 if (slot != null)
                 {
@@ -171,6 +179,7 @@ namespace MHServerEmu.Games.Network
                         .SetLevel((uint)slot.Level)
                         .SetPrestigeLevel((uint)slot.PrestigeLevel));
                 }
+#endif
 
                 migrationData.CommunityStatus.Add(broadcast.Build());
             }

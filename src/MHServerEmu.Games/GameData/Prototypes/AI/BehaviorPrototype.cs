@@ -633,6 +633,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class TeleportContextPrototype : Prototype
     {
         public TeleportType TeleportType { get; protected set; }
+#if GAME_VERSION_1_53
+        public PrototypeId PowerToActivate { get; protected set; }
+#endif
     }
 
     public class SelectEntityContextPrototype : Prototype
@@ -665,11 +668,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class FleeContextPrototype : Prototype
     {
         public float FleeTime { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public float FleeTimeVariance { get; protected set; }
         public float FleeHalfAngle { get; protected set; }
         public float FleeDistanceMin { get; protected set; }
         public bool FleeTowardAllies { get; protected set; }
         public float FleeTowardAlliesPercentChance { get; protected set; }
+#endif
     }
 
     public class FlockContextPrototype : Prototype
@@ -737,6 +742,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int PathNodeSetGroup { get; protected set; }
         public MovementSpeedOverride MovementSpeed { get; protected set; }
         public bool StopLocomotorOnMoveToFail { get; protected set; }
+#if GAME_VERSION_1_53
+        public float ChanceToMoveInFrontOfAssistedEnt { get; protected set; }
+#endif
     }
 
     public class OrbitContextPrototype : Prototype

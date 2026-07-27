@@ -136,7 +136,9 @@ namespace MHServerEmu.Games.Missions
         public AdvancedMissionPrototype AdvancedMissionPrototype { get; }
         public bool IsAdvancedMission { get => AdvancedMissionPrototype != null; }
         public bool IsLoreMission { get => HasLoreMissionChapter(); }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool IsAccountMission { get => HasAccountMissionsChapter(); }
+#endif
         public bool IsSharedQuest { get => IsDailyMission && HasEventMissionChapter() == false; }
         public bool IsRegionEventMission { get => IsOpenMission && HasEventMissionChapter() == false; }
         public bool IsRepeatable { get => Prototype.Repeatable || Prototype.ResetTimeSeconds > 0; }
@@ -222,6 +224,12 @@ namespace MHServerEmu.Games.Missions
 
             // Old versions have an ItemSpec map instead of a loot seed here
             success &= Serializer.Transfer(archive, ref _lootSeed);
+
+#if GAME_VERSION_1_53
+            // V53_TODO
+            PrototypeId difficultyRef = PrototypeId.Invalid;
+            success &= Serializer.Transfer(archive, ref difficultyRef);
+#endif
 
             if (archive.IsReplication)
             {
@@ -1816,6 +1824,7 @@ namespace MHServerEmu.Games.Missions
             return missionProto.Chapter == missionGlobals.LoreChapter;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool HasAccountMissionsChapter()
         {
             var missionProto = Prototype;
@@ -1824,6 +1833,7 @@ namespace MHServerEmu.Games.Missions
             if (missionGlobals == null) return false;
             return missionProto.Chapter == missionGlobals.AccountMissionsChapter;
         }
+#endif
 
         public bool ShouldShowInteractIndicators()
         {
@@ -2266,8 +2276,13 @@ namespace MHServerEmu.Games.Missions
         {
             MissionPrototype missionProto = Prototype;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (CompleteNowRewards && missionProto.CompleteNowRewards.HasValue())
                 return missionProto.CompleteNowRewards;
+#else
+            if (CompleteNowRewards && missionProto.CompleteNowNoRewards)
+                return null;
+#endif
 
             if (missionProto.Rewards.HasValue())
                 return missionProto.Rewards;

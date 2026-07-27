@@ -20,7 +20,9 @@ namespace MHServerEmu.Games.Regions
         // CreateRegionParams
         public int Level { get; set; }
         public NetStructRegionOrigin Origin { get; set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId DifficultyTierRef { get; set; }
+#endif
         public int EndlessLevel { get; set; }
         public PrototypeId GameStateId { get; set; }
         public ulong MatchNumber { get; set; }
@@ -52,8 +54,10 @@ namespace MHServerEmu.Games.Regions
             if (createRegionParams.HasOrigin)
                 Origin = createRegionParams.Origin;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (createRegionParams.HasDifficultyTierProtoId)
                 DifficultyTierRef = (PrototypeId)createRegionParams.DifficultyTierProtoId;
+#endif
 
             if (createRegionParams.HasEndlessLevel)
                 EndlessLevel = (int)createRegionParams.EndlessLevel;

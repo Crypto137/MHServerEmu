@@ -50,8 +50,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int PickWeight { get; protected set; }
         public ProceduralUsePowerContextSwitchTargetPrototype TargetSwitch { get; protected set; }
         public int InitialCooldownMaxMS { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public PrototypeId RestrictToDifficultyMin { get; protected set; }
         public PrototypeId RestrictToDifficultyMax { get; protected set; }
+#endif
 
         //---
 
@@ -83,10 +85,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             properties[PropertyEnum.AIProceduralPowerSpecificCDTime, PowerContext.Power.DataRef] = cooldownTime;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool AllowedInDifficulty(PrototypeId difficultyRef)
         {
             return DifficultyTierPrototype.InRange(difficultyRef, RestrictToDifficultyMin, RestrictToDifficultyMax);
         }
+#endif
     }
 
     public class ProceduralUseAffixPowerContextPrototype : ProceduralContextPrototype

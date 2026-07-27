@@ -109,6 +109,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (broadcast.HasCurrentRegionRefId)
                 sendBroadcast |= member.SetCurrentRegionRefId(broadcast.CurrentRegionRefId);
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (broadcast.HasCurrentDifficultyRefId)
                 sendBroadcast |= member.SetCurrentDifficultyRefId(broadcast.CurrentDifficultyRefId);
 
@@ -129,6 +130,19 @@ namespace MHServerEmu.PlayerManagement.Social
                 if (avatarSlot.HasPrestigeLevel)
                     sendBroadcast |= member.SetPrestigeLevel(avatarSlot.PrestigeLevel);
             }
+#else
+            if (broadcast.HasCurrentAvatarRefId)
+                sendBroadcast |= member.SetAvatarRefId(broadcast.CurrentAvatarRefId);
+
+            if (broadcast.HasCurrentCostumeRefId)
+                sendBroadcast |= member.SetCostumeRefId(broadcast.CurrentCostumeRefId);
+
+            if (broadcast.HasCurrentCharacterLevel)
+                sendBroadcast |= member.SetLevel((uint)broadcast.CurrentCharacterLevel);
+
+            if (broadcast.HasCurrentPrestigeLevel)
+                sendBroadcast |= member.SetPrestigeLevel((uint)broadcast.CurrentPrestigeLevel);
+#endif
 
             sendBroadcast |= member.SetIsOnline(player.IsConnected);
             sendBroadcast |= member.SetLastLogoutTime(player.LastLogoutTime);
