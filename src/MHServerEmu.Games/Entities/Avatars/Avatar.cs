@@ -43,7 +43,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private const uint TalentGroupIndexInvalid = 0;
 #else
         private const int NumAbilityKeyMappings = 3;
-        private const int TransformAbilityKeyMappingIndex = 2;
+        private const int SlottableTransformKeyMappingIndex = 2;
 #endif
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -3015,8 +3015,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (oldTransformModeProto?.PowersAreSlottable == false || newTransformModeProto?.PowersAreSlottable == false)
                 SelectAbilityKeyMapping(_currentAbilityKeyMappingIndex, false);
             else if (newTransformModeProto?.PowersAreSlottable == true)
-                SelectAbilityKeyMapping(TransformAbilityKeyMappingIndex, false);
-            else if (newTransformModeProto == null && _currentAbilityKeyMappingIndex == TransformAbilityKeyMappingIndex)
+                SelectAbilityKeyMapping(SlottableTransformKeyMappingIndex, false);
+            else if (newTransformModeProto == null && _currentAbilityKeyMappingIndex == SlottableTransformKeyMappingIndex)
                 SelectAbilityKeyMapping(_preTransformAbilityKeyMappingIndex, false);
 #endif
 
@@ -3432,6 +3432,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             CleanUpAbilityKeyMappingsAfterRespec();
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         /// <summary>
         /// Automatically slots powers for level up.
         /// </summary>
@@ -3453,6 +3454,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     keyMapping.SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
             }
         }
+#endif
 
         private bool CleanUpAbilityKeyMappingsAfterRespec()
         {
@@ -3572,11 +3574,19 @@ namespace MHServerEmu.Games.Entities.Avatars
                     keyMapping = new();
                     _abilityKeyMappings.Add(keyMapping);
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     // AssociatedTransformMode doesn't seem to be getting used here, is this correct?
                     if (transformModeProto != null && transformModeProto.PowersAreSlottable)
                         keyMapping.SlotDefaultAbilitiesForTransformMode(transformModeProto);
                     else
                         keyMapping.SlotDefaultAbilities(this);
+#else
+                    if (transformModeProto != null && keyMappingIndex == SlottableTransformKeyMappingIndex)
+                        keyMapping.SlotDefaultAbilitiesForTransformMode(transformModeProto);
+                    else
+                        keyMapping.SlotDefaultAbilities(AvatarPrototype, false);
+#endif
+
 
 #if GAME_VERSION_1_48
                     keyMapping.KeyMappingIndex = keyMappingIndex;
@@ -4318,8 +4328,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                     Properties[PropertyEnum.Endurance, manaType] = Properties[PropertyEnum.EnduranceMax, manaType];
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (IsInWorld)
                 AutoSlotPowers();
+#endif
 
             var player = GetOwnerOfType<Player>();
             if (player == null) return false;

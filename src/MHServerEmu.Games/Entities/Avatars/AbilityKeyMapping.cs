@@ -28,7 +28,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         DedicatedTeamUpSlot = 11,   // K
         DedicatedPetTechSlot = 12,  // J
         TravelPower = 13,           // R
-        NumSlotsTotal = 14
+        NumSlotsTotal = 14,
+
+        ActiveFirst = PrimaryAction,
+        ActiveLast = ActionKey5,
     }
 
     /// <summary>
@@ -218,13 +221,20 @@ namespace MHServerEmu.Games.Entities.Avatars
                 SetAbilityInAbilitySlot(PrototypeId.Invalid, slot);
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             SlotDefaultAbilities(avatar);
+#else
+            if (_keyMappingIndex == 0)
+                SlotDefaultAbilities(avatarProto, true);
+#endif
+
             return true;
         }
 
         /// <summary>
         /// Slots default abilities into all slots.
         /// </summary>
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public void SlotDefaultAbilities(Avatar avatar)
         {
             using var hotkeyDataListHandle = ListPool<HotkeyData>.Instance.Get(out List<HotkeyData> hotkeyDataList);
@@ -235,6 +245,71 @@ namespace MHServerEmu.Games.Entities.Avatars
                     SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
             }
         }
+#else
+        public void SlotDefaultAbilities(AvatarPrototype avatarProto, bool isRespecCleanup)
+        {
+            if (avatarProto.StartingEquippedAbilities.IsNullOrEmpty())
+                return;
+
+            AbilitySlot abilitySlot = 0;
+            foreach (AbilityAssignmentPrototype abilityAssignment in avatarProto.StartingEquippedAbilities)
+            {
+                if (!Verify.IsNotNull(abilityAssignment))
+                    goto Next;
+
+                PrototypeId abilityProtoRef = abilityAssignment.Ability;
+
+                if (!Verify.IsTrue(abilitySlot >= AbilitySlot.ActiveFirst && abilitySlot <= AbilitySlot.ActiveLast,
+                    $"Too many StartingEquippedAbilities to fit on ability bar:\nAvatar: [{avatarProto}]"))
+                {
+                    return;
+                }
+
+                if (abilityProtoRef == PrototypeId.Invalid)
+                    goto Next;
+
+                if (GetAbilityInAbilitySlot(abilitySlot) != PrototypeId.Invalid)
+                    goto Next;
+
+                Prototype abilityProto = abilityProtoRef.As<Prototype>();
+                PowerPrototype powerProto = abilityProto as PowerPrototype;
+                ItemPrototype itemProto = abilityProto as ItemPrototype;
+
+                if (!Verify.IsTrue(powerProto == null || powerProto.Activation != PowerActivationType.Passive,
+                    $"Encountered a passive power in the following avatar's StartingEquippedAblities which isn't supported anymore. Just give the passive a non-zero Rank in the avatar's PowerProgressionTable.\nAvatar: [{avatarProto}]\nPower: [{abilityProtoRef.GetName()}]"))
+                {
+                    goto Next;
+                }
+
+                if (!Verify.IsTrue(powerProto != null || (itemProto?.AbilitySettings != null),
+                    $"Failed to get the prototype using data ref when assigning a starting equipped ability:\nAvatar: [{avatarProto}]\nAbility: [{abilityProtoRef.GetName()}]"))
+                {
+                    goto Next;
+                }
+
+                if (isRespecCleanup && itemProto != null)
+                    goto Next;
+
+                AbilitySlotOpValidateResult slotResult = Avatar.CheckAbilitySlotRestrictions(abilityProtoRef, abilitySlot);
+                if (!Verify.IsTrue(slotResult == AbilitySlotOpValidateResult.Valid,
+                    $"Failed to slot ability because of slot restriction. SlotResult: [{slotResult}]\nAvatar: [{avatarProto}]\nAbility: [{abilityProtoRef.GetName()}]"))
+                {
+                    goto Next;
+                }
+
+                if (!Verify.IsTrue(powerProto == null || avatarProto.HasPowerInPowerProgression(abilityProtoRef),
+                    $"Failed to slot starting ability [{abilityProtoRef.GetName()}] to avatar [{avatarProto}], because it is not in the avatar's PowerProgressionTable."))
+                {
+                    goto Next;
+                }
+
+                SetAbilityInAbilitySlot(abilityProtoRef, abilitySlot);
+
+            Next:
+                abilitySlot++;
+            }
+        }
+#endif
 
         public void SlotDefaultAbilitiesForTransformMode(TransformModePrototype transformModeProto)
         {
@@ -267,11 +342,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool GetDefaultAbilities(List<HotkeyData> hotkeyDataList, Avatar avatar, int startingLevel = -1)
         {
-#if !GAME_VERSION_1_48
-            // V48_FIXME
-
             AvatarPrototype avatarProto = avatar.AvatarPrototype;
             if (!Verify.IsNotNull(avatarProto)) return false;
 
@@ -321,10 +394,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                     hotkeyDataList.Add(new HotkeyData(abilityToBeSlotted, slot));
                 }
             }
-#endif
 
-                    return hotkeyDataList.Count > 0;
+            return hotkeyDataList.Count > 0;
         }
+#endif
 
         /// <summary>
         /// Converts an <see cref="AbilitySlot"/> to an array index.
