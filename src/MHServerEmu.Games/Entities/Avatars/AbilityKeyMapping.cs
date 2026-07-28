@@ -53,6 +53,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private InlineArray6<HotkeyData> _hotkeys;
 
+#if GAME_VERSION_1_48
+        public int KeyMappingIndex { get => _keyMappingIndex; set => _keyMappingIndex = value; }
+#endif
         public int PowerSpecIndex { get => _powerSpecIndex; set => _powerSpecIndex = value; }
         public bool ShouldPersist { get => _shouldPersist; set => _shouldPersist = value; }
         public PrototypeId AssociatedTransformMode { get => _associatedTransformMode; set => _associatedTransformMode = value; }

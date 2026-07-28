@@ -41,6 +41,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         private const int MaxNumTransientAbilityKeyMappings = 1;
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private const uint TalentGroupIndexInvalid = 0;
+#else
+        private const int NumAbilityKeyMappings = 3;
+        private const int TransformAbilityKeyMappingIndex = 2;
 #endif
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -73,7 +76,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
 #if GAME_VERSION_1_48
         private int _currentAbilityKeyMappingIndex = 0;
-        private int _unknownAbilityKeyMappingIndex = 0;
+        private int _preTransformAbilityKeyMappingIndex = 0;    // V48_TODO: Find where this is set
 #endif
 
         private ulong _guildId = GuildManager.InvalidGuildId;
@@ -83,7 +86,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly PendingPowerData _continuousPowerData = new();
         private readonly PendingAction _pendingAction = new();
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private PrototypeId _travelPowerOverrideProtoRef = PrototypeId.Invalid;
+#endif
 
         private ulong _avatarSynergyConditionId = ConditionCollection.InvalidConditionId;
 
@@ -232,7 +237,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 #if GAME_VERSION_1_48
             // V48_NOTE: The client clamps these to the 0-2 range.
             success &= Serializer.Transfer(archive, ref _currentAbilityKeyMappingIndex);
-            success &= Serializer.Transfer(archive, ref _unknownAbilityKeyMappingIndex);
+            success &= Serializer.Transfer(archive, ref _preTransformAbilityKeyMappingIndex);
 #endif
 
             // Custom data
@@ -2239,8 +2244,13 @@ namespace MHServerEmu.Games.Entities.Avatars
                 UpdatePowerProgressionPowers(true);
             }
 
-            RefreshAbilityKeyMapping(false); // false because the client will do it on its own when it handles the change in PowerSpecIndexActive
-            
+            // The client calls Refresh/Select when it handles the change in PowerSpecIndexActive
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            RefreshAbilityKeyMapping(false);
+#else
+            SelectAbilityKeyMapping(0, false);
+#endif
+
             // "Equip" powers for the spec we enabled
             if (IsInWorld)
                 EquipPowersForCurrentSpec();
@@ -2541,7 +2551,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                     foreach (AbilitySlot slot in slotList)
                     {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                         bool slotted = SlotAbility(mappedPowerRef, slot, true, true);
+#else
+                        bool slotted = SlotAbility(mappedPowerRef, keyMapping.KeyMappingIndex, slot, true, true);
+#endif
                         Verify.IsTrue(slotted, $"Failed to slot mapped power {mappedPowerProto} in slot {slot} for avatar [{this}]");
                     }
 
@@ -2579,7 +2593,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 foreach (AbilitySlot slot in slotList)
                 {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                     bool slotted = SlotAbility(originalPowerRef, slot, true, true);
+#else
+                    bool slotted = SlotAbility(originalPowerRef, keyMapping.KeyMappingIndex, slot, true, true);
+#endif
                     Verify.IsTrue(slotted, $"Failed to slot original power {originalPowerProto} in slot {slot} for avatar [{this}]");
                 }
 
@@ -2986,12 +3004,21 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (!Verify.IsTrue(oldTransformModeProto != null || newTransformModeProto != null)) return false;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (oldTransformModeProto?.PowersAreSlottable == false || newTransformModeProto?.PowersAreSlottable == false)
                 RefreshAbilityKeyMapping(false);    // Swap to and from non-slottable transform mapping
             else if (newTransformModeProto?.PowersAreSlottable == true)
                 RefreshAbilityKeyMapping(false);    // Swap to slottable transform mapping
             else if (newTransformModeProto == null && oldTransformModeProto?.PowersAreSlottable == true)
                 RefreshAbilityKeyMapping(false);    // Swap back from slottable transform mapping
+#else
+            if (oldTransformModeProto?.PowersAreSlottable == false || newTransformModeProto?.PowersAreSlottable == false)
+                SelectAbilityKeyMapping(_currentAbilityKeyMappingIndex, false);
+            else if (newTransformModeProto?.PowersAreSlottable == true)
+                SelectAbilityKeyMapping(TransformAbilityKeyMappingIndex, false);
+            else if (newTransformModeProto == null && _currentAbilityKeyMappingIndex == TransformAbilityKeyMappingIndex)
+                SelectAbilityKeyMapping(_preTransformAbilityKeyMappingIndex, false);
+#endif
 
             return true;
         }
@@ -3210,12 +3237,20 @@ namespace MHServerEmu.Games.Entities.Avatars
             return false;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool SlotAbility(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation, bool sendToClient)
+#else
+        public bool SlotAbility(PrototypeId abilityProtoRef, int keyMappingIndex, AbilitySlot slot, bool skipEquipValidation, bool sendToClient)
+#endif
         {
             if (IsAbilityEquippableInSlot(abilityProtoRef, slot, skipEquipValidation) != AbilitySlotOpValidateResult.Valid)
                 return false;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             AbilityKeyMapping keyMapping = GetAbilityKeyMappingIgnoreTransient(GetPowerSpecIndexActive());
+#else
+            AbilityKeyMapping keyMapping = GetAbilityKeyMappingIgnoreTransient(keyMappingIndex, GetPowerSpecIndexActive());
+#endif
             if (!Verify.IsNotNull(keyMapping)) return false;
 
             bool wasEquipped = HasPowerEquipped(abilityProtoRef);
@@ -3224,8 +3259,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             PrototypeId slottedAbilityProtoRef = keyMapping.GetAbilityInAbilitySlot(slot);
             if (slottedAbilityProtoRef != PrototypeId.Invalid && slottedAbilityProtoRef != abilityProtoRef)
             {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 if (!Verify.IsTrue(UnslotAbility(slot, false), $"Failed to unslot ability {abilityProtoRef.GetName()} in slot {slot}"))
                     return false;
+#else
+                if (!Verify.IsTrue(UnslotAbility(keyMappingIndex, slot, false), $"Failed to unslot ability {abilityProtoRef.GetName()} in slot {slot}"))
+                    return false;
+#endif
             }
 
             // Set
@@ -3250,6 +3290,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                         .SetAvatarId(Id)
                         .SetPrototypeRefId((ulong)abilityProtoRef)
                         .SetSlotNumber((uint)slot)
+#if GAME_VERSION_1_48
+                        .SetKeyMappingIndex((uint)keyMappingIndex)
+#endif
                         .Build());
                 }
             }
@@ -3257,11 +3300,19 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool UnslotAbility(AbilitySlot slot, bool sendToClient)
+#else
+        public bool UnslotAbility(int keyMappingIndex, AbilitySlot slot, bool sendToClient)
+#endif
         {
             if (!Verify.IsTrue(IsActiveAbilitySlot(slot))) return false;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             AbilityKeyMapping keyMapping = GetAbilityKeyMappingIgnoreTransient(GetPowerSpecIndexActive());
+#else
+            AbilityKeyMapping keyMapping = GetAbilityKeyMappingIgnoreTransient(keyMappingIndex, GetPowerSpecIndexActive());
+#endif
             if (!Verify.IsNotNull(keyMapping)) return false;
 
             PrototypeId abilityProtoRef = keyMapping.GetAbilityInAbilitySlot(slot);
@@ -3287,6 +3338,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                 {
                     player.SendMessage(NetMessageAbilityUnslotFromAbilityBarFromServer.CreateBuilder()
                         .SetAvatarId(Id)
+#if GAME_VERSION_1_48
+                        .SetKeyMappingIndex((uint)keyMappingIndex)
+#endif
                         .SetSlotNumber((uint)slot)
                         .Build());
                 }
@@ -3305,8 +3359,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (!Verify.IsNotNull(keyMapping)) return false;
 
             // Check B to A - this is allowed to be invalid, in which case we just discard B
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (ValidateAbilitySwap(slotB, slotA) != AbilitySlotOpValidateResult.Valid)
                 UnslotAbility(slotB, false);
+#else
+            if (ValidateAbilitySwap(slotB, slotA) != AbilitySlotOpValidateResult.Valid)
+                UnslotAbility(keyMapping.KeyMappingIndex, slotB, false);
+#endif
 
             // Do the swap            
             PrototypeId abilityA = keyMapping.GetAbilityInAbilitySlot(slotA);
@@ -3333,6 +3392,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool RefreshAbilityKeyMapping(bool sendToClient)
         {
             // NOTE: The server has nothing to send to client here, but we are keeping the bool arg for now to keep the API the same as the client
@@ -3344,10 +3404,31 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             return true;
         }
+#else
+        public bool SelectAbilityKeyMapping(int keyMappingIndex, bool sendToClient)
+        {
+            // NOTE: The server has nothing to send to client here, but we are keeping the bool arg for now to keep the API the same as the client
+
+            if (!Verify.IsTrue(keyMappingIndex >= 0 && keyMappingIndex < NumAbilityKeyMappings)) return false;
+
+            _currentAbilityKeyMapping = GetOrCreateAbilityKeyMapping(keyMappingIndex, GetPowerSpecIndexActive(), CurrentTransformMode);
+            if (!Verify.IsNotNull(_currentAbilityKeyMapping)) return false;
+
+            _currentAbilityKeyMapping.InitDedicatedAbilitySlots(this);
+
+            _currentAbilityKeyMappingIndex = keyMappingIndex;
+
+            return true;
+        }
+#endif
 
         private void InitAbilityKeyMappings()
         {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             RefreshAbilityKeyMapping(false);
+#else
+            SelectAbilityKeyMapping(_currentAbilityKeyMappingIndex, false);
+#endif
             CleanUpAbilityKeyMappingsAfterRespec();
         }
 
@@ -3422,10 +3503,17 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private AbilityKeyMapping GetOrCreateAbilityKeyMapping(int powerSpecIndex, PrototypeId transformModeProtoRef)
+#else
+        private AbilityKeyMapping GetOrCreateAbilityKeyMapping(int keyMappingIndex, int powerSpecIndex, PrototypeId transformModeProtoRef)
+#endif
         {
             AbilityKeyMapping keyMapping = null;
 
+#if GAME_VERSION_1_48
+            if (!Verify.IsTrue(keyMappingIndex >= 0 && keyMappingIndex < NumAbilityKeyMappings)) return null;
+#endif
             if (!Verify.IsTrue(powerSpecIndex >= 0 && powerSpecIndex <= GetPowerSpecIndexUnlocked())) return null;
 
             TransformModePrototype transformModeProto = transformModeProtoRef.As<TransformModePrototype>();
@@ -3467,12 +3555,16 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // Normal key mapping and transform modes with swappable slots
                 foreach (AbilityKeyMapping keyMappingToCheck in _abilityKeyMappings)
                 {
-                    // Pre-BUE this is where mapping index would also be checked
-                    if (keyMappingToCheck.PowerSpecIndex == powerSpecIndex)
-                    {
-                        keyMapping = keyMappingToCheck;
-                        break;
-                    }
+#if GAME_VERSION_1_48
+                    if (keyMappingToCheck.KeyMappingIndex != keyMappingIndex)
+                        continue;
+#endif
+
+                    if (keyMappingToCheck.PowerSpecIndex != powerSpecIndex)
+                        continue;
+
+                    keyMapping = keyMappingToCheck;
+                    break;
                 }
 
                 if (keyMapping == null)
@@ -3486,6 +3578,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                     else
                         keyMapping.SlotDefaultAbilities(this);
 
+#if GAME_VERSION_1_48
+                    keyMapping.KeyMappingIndex = keyMappingIndex;
+#endif
                     keyMapping.PowerSpecIndex = powerSpecIndex;
                     keyMapping.ShouldPersist = false;       // Will be flagged to persist if anything gets changed
                 }
@@ -3494,10 +3589,17 @@ namespace MHServerEmu.Games.Entities.Avatars
             return keyMapping;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private AbilityKeyMapping GetAbilityKeyMappingIgnoreTransient(int powerSpecIndex)
         {
             return GetOrCreateAbilityKeyMapping(powerSpecIndex, PrototypeId.Invalid);
         }
+#else
+        private AbilityKeyMapping GetAbilityKeyMappingIgnoreTransient(int keyMappingIndex, int powerSpecIndex)
+        {
+            return GetOrCreateAbilityKeyMapping(keyMappingIndex, powerSpecIndex, PrototypeId.Invalid);
+        }
+#endif
 
         private AbilitySlotOpValidateResult IsAbilityEquippableInSlot(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation)
         {

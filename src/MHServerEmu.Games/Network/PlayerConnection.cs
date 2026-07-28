@@ -570,6 +570,8 @@ namespace MHServerEmu.Games.Network
                 // case ClientToGameServerMessage.NetMessageSelectPublicEventTeam:          OnSelectPublicEventTeam(message); break;
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessageRefreshAbilityKeyMapping:          OnRefreshAbilityKeyMapping(message); break;
+#else
+                case ClientToGameServerMessage.NetMessageSelectAbilityKeyMapping:           OnSelectAbilityKeyMapping(message); break;
 #endif
                 case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:           OnAbilitySlotToAbilityBar(message); break;
                 case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:       OnAbilityUnslotFromAbilityBar(message); break;
@@ -1346,6 +1348,20 @@ namespace MHServerEmu.Games.Network
 
             avatar.RefreshAbilityKeyMapping(false);
         }
+#else
+        public void OnSelectAbilityKeyMapping(in MailboxMessage message)
+        {
+            var selectAbilityKeyMapping = message.As<NetMessageSelectAbilityKeyMapping>();
+            if (!Verify.IsNotNull(selectAbilityKeyMapping)) return;
+
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(selectAbilityKeyMapping.AvatarId);
+            if (!Verify.IsNotNull(avatar)) return;
+
+            if (!Verify.IsTrue(avatar.GetOwnerOfType<Player>() == Player, $"Player [{Player}] is attempting to select ability key mapping for avatar [{avatar}] that belongs to another player"))
+                return;
+
+            avatar.SelectAbilityKeyMapping((int)selectAbilityKeyMapping.KeyMappingIndex, false);
+        }
 #endif
 
         private void OnAbilitySlotToAbilityBar(in MailboxMessage message)
@@ -1359,7 +1375,12 @@ namespace MHServerEmu.Games.Network
             if (!Verify.IsTrue(avatar.GetOwnerOfType<Player>() == Player, $"Player [{Player}] is attempting to slot ability for avatar [{avatar}] that belongs to another player"))
                 return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             avatar.SlotAbility((PrototypeId)abilitySlotToAbilityBar.PrototypeRefId, (AbilitySlot)abilitySlotToAbilityBar.SlotNumber, false, false);
+#else
+            avatar.SlotAbility((PrototypeId)abilitySlotToAbilityBar.PrototypeRefId, (int)abilitySlotToAbilityBar.KeyMappingIndex,
+                (AbilitySlot)abilitySlotToAbilityBar.SlotNumber, false, false);
+#endif
         }
 
         private void OnAbilityUnslotFromAbilityBar(in MailboxMessage message)
@@ -1373,7 +1394,11 @@ namespace MHServerEmu.Games.Network
             if (!Verify.IsTrue(avatar.GetOwnerOfType<Player>() == Player, $"Player [{Player}] is attempting to unslot ability for avatar [{avatar}] that belongs to another player"))
                 return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             avatar.UnslotAbility((AbilitySlot)abilityUnslotFromAbilityBar.SlotNumber, false);
+#else
+            avatar.UnslotAbility((int)abilityUnslotFromAbilityBar.KeyMappingIndex, (AbilitySlot)abilityUnslotFromAbilityBar.SlotNumber, false);
+#endif
         }
 
         private void OnAbilitySwapInAbilityBar(in MailboxMessage message)
