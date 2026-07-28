@@ -537,6 +537,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                         if (!Verify.IsTrue(transformModeProto.ExitTransformModePower != PrototypeId.Invalid, $"Power [{power}] for agent [{_owner}] has a triggered TransformModeStart power event with no ExitTransformModePower power specified"))
                             continue;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                         // Transform enter/exit powers are not unassigned when a transform mode is active (see UnassignTriggeredPowers()).
                         // Because these are combo powers, this can result in multiple instances of enter/exit powers being assigned.
                         // We prevent this here by skipping assignment if we already have records for these powers.
@@ -545,6 +546,11 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
                         if (_powers.ContainsKey(transformModeProto.ExitTransformModePower) == false)
                             triggeredPowerRefList.Add(transformModeProto.ExitTransformModePower);
+#else
+                        // V48_NOTE: The above fix breaks Mr Fantastic's signature. Need a better solution for this.
+                        triggeredPowerRefList.Add(transformModeProto.EnterTransformModePower);
+                        triggeredPowerRefList.Add(transformModeProto.ExitTransformModePower);
+#endif
 
                         break;
 
