@@ -27,11 +27,11 @@ namespace MHServerEmu.Games.Entities.Avatars
     {
         None,
         Starter,
-        Type2,
-        Type3,
-        Type4,
+        FreeUnlock,
+        Default,
+        CharacterToken,
         Type5,
-        Type6
+        Type6,
     }
 
     public enum DeathReleaseRequestType : uint

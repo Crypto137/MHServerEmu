@@ -353,6 +353,33 @@ namespace MHServerEmu.Games.Entities
             return RefreshVendorInventoryInternal(vendorTypeProtoRef);
         }
 
+#if GAME_VERSION_1_48
+        public bool HasUsedInitialFreeAvatarUnlock()
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarUnlock))
+            {
+                AvatarUnlockType unlockType = (AvatarUnlockType)(int)kvp.Value;
+                if (unlockType == AvatarUnlockType.FreeUnlock)
+                    return true;
+            }
+
+            return false;
+        }
+#endif
+
+#if GAME_VERSION_1_48
+        public bool CanUnlockAvatarForFree(PrototypeId avatarProtoRef)
+        {
+            if (HasUsedInitialFreeAvatarUnlock())
+                return false;
+
+            if (GetAvatarUnlockType(avatarProtoRef) != AvatarUnlockType.Starter)
+                return false;
+
+            return true;
+        }
+#endif
+
         public PurchaseUnlockResult CanPurchaseUnlock(PrototypeId agentProtoRef)
         {
             AgentPrototype agentProto = agentProtoRef.As<AgentPrototype>();
@@ -369,6 +396,11 @@ namespace MHServerEmu.Games.Entities
             {
                 if (HasAvatarFullyUnlocked(agentProtoRef))
                     return PurchaseUnlockResult.AlreadyUnlocked;
+
+#if GAME_VERSION_1_48
+                if (CanUnlockAvatarForFree(agentProtoRef))
+                    return PurchaseUnlockResult.Success;
+#endif
             }
             else
             {
@@ -411,6 +443,8 @@ namespace MHServerEmu.Games.Entities
 
         public PurchaseUnlockResult PurchaseUnlock(PrototypeId agentProtoRef)
         {
+            if (!Verify.IsTrue(agentProtoRef != PrototypeId.Invalid)) return PurchaseUnlockResult.UnknownFailure;
+
             PurchaseUnlockResult result = CanPurchaseUnlock(agentProtoRef);
             if (result != PurchaseUnlockResult.Success)
                 return result;
@@ -423,7 +457,12 @@ namespace MHServerEmu.Games.Entities
 
             if (agentProto is AvatarPrototype)
             {
-                if (!Verify.IsTrue(UnlockAvatar(agentProtoRef, true))) return PurchaseUnlockResult.UnknownFailure;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+                AvatarUnlockType unlockType = AvatarUnlockType.Default;
+#else
+                AvatarUnlockType unlockType = HasUsedInitialFreeAvatarUnlock() ? AvatarUnlockType.Default : AvatarUnlockType.FreeUnlock;
+#endif
+                if (!Verify.IsTrue(UnlockAvatar(agentProtoRef, unlockType, true))) return PurchaseUnlockResult.UnknownFailure;
             }
             else
             {

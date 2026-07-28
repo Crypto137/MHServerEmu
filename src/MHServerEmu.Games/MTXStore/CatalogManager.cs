@@ -4,6 +4,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
@@ -374,7 +375,7 @@ namespace MHServerEmu.Games.MTXStore
             }
 
             // Unlock the avatar.
-            if (player.UnlockAvatar(avatarProtoRef, true) == false)
+            if (player.UnlockAvatar(avatarProtoRef, AvatarUnlockType.Default, true) == false)
                 return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
 
             return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
