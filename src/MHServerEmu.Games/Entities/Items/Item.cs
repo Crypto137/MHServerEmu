@@ -41,11 +41,14 @@ namespace MHServerEmu.Games.Entities.Items
         AvatarUltimateNotUnlocked,
         AvatarUltimateAlreadyMaxedOut,
         AvatarUltimateUpgradeCurrentOnly,
+#if GAME_VERSION_1_53
+        CostumeAlreadyUnlocked,
+#endif
         PlayerAlreadyHasCraftingRecipe,
         CannotTriggerPower,
         ItemNotEquipped,
         DownloadRequired,
-        UnknownFailure
+        UnknownFailure,
     }
 
     public partial class Item : WorldEntity
@@ -1176,6 +1179,13 @@ namespace MHServerEmu.Games.Entities.Items
                 case CraftingRecipePrototype craftingRecipeProto:
                     wasUsed |= DoCraftingRecipeInteraction(craftingRecipeProto, player);
                     break;
+
+#if GAME_VERSION_1_53
+                case CostumePrototype costumeProto:
+                    isConsumable = true;
+                    wasUsed |= DoCostumeInteraction(costumeProto, player);
+                    break;
+#endif
             }
 
             // Consume if this is a consumable item that was successfully used
@@ -1274,6 +1284,17 @@ namespace MHServerEmu.Games.Entities.Items
 
             return true;
         }
+
+#if GAME_VERSION_1_53
+        private bool DoCostumeInteraction(CostumePrototype costumeProto, Player player)
+        {
+            PrototypeId costumeProtoRef = costumeProto.DataRef;
+            if (!Verify.IsTrue(player.HasCostumeUnlocked(costumeProtoRef) == false)) return false;
+
+            player.UnlockCostume(costumeProtoRef);
+            return player.HasCostumeUnlocked(costumeProtoRef);
+        }
+#endif
 
         public bool OnUsePowerActivated()
         {
@@ -2301,6 +2322,11 @@ namespace MHServerEmu.Games.Entities.Items
 
                 case EmoteTokenPrototype emoteTokenProto:
                     return PlayerCanUseEmoteToken(player, emoteTokenProto);
+
+#if GAME_VERSION_1_53
+                case CostumePrototype costumeProto:
+                    return PlayerCanUseCostume(player, costumeProto);
+#endif
             }
 
             if (IsCraftingRecipe)
@@ -2398,6 +2424,16 @@ namespace MHServerEmu.Games.Entities.Items
 
             return InteractionValidateResult.Success;
         }
+
+#if GAME_VERSION_1_53
+        private InteractionValidateResult PlayerCanUseCostume(Player player, CostumePrototype costumeProto)
+        {
+            if (player.HasCostumeUnlocked(costumeProto.DataRef))
+                return InteractionValidateResult.CostumeAlreadyUnlocked;
+
+            return InteractionValidateResult.Success;
+        }
+#endif
 
         private InteractionValidateResult PlayerCanUsePrestigeMode(Avatar avatar)
         {
