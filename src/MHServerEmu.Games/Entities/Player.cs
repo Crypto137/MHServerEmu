@@ -4187,6 +4187,27 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Costumes
+
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        public bool HasCostumeUnlocked(PrototypeId costumeProtoRef)
+        {
+            return Properties[PropertyEnum.CostumeUnlock, costumeProtoRef];
+        }
+#endif
+
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        public void UnlockCostume(PrototypeId costumeProtoRef)
+        {
+            CostumePrototype costumeProto = costumeProtoRef.As<CostumePrototype>();
+            if (!Verify.IsNotNull(costumeProto)) return;
+
+            Properties[PropertyEnum.CostumeUnlock, costumeProtoRef] = true;
+        }
+#endif
+
+        #endregion
+
         #region Daily Login
 
         public void CheckDailyLogin()

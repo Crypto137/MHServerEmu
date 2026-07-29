@@ -4813,6 +4813,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player player = GetOwnerOfType<Player>();
             if (!Verify.IsNotNull(player)) return false;
 
+#if GAME_VERSION_1_53
+            // V53_TODO: consoles?
+            PrototypeId costumeProtoRef = avatarProto.GetStartingCostumeForPlatform(Platforms.PC);
+            player.UnlockCostume(costumeProtoRef);
+            return player.HasCostumeUnlocked(costumeProtoRef);
+#else
             Inventory costumeInventory = GetInventory(InventoryConvenienceLabel.Costume);
             if (!Verify.IsNotNull(costumeInventory)) return false;
 
@@ -4859,6 +4865,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+#endif
         }
 
         #endregion
