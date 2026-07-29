@@ -16,6 +16,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Loot;
@@ -943,7 +944,7 @@ namespace MHServerEmu.Games.Entities
             return rankCurrentBest;
         }
 
-        protected virtual int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int specIndex)
+        protected virtual int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int specIndex, bool includePending = false)
         {
             // NOTE: This was called CalcPowerRankBase() in pre-BUE versions of the game.
 
@@ -965,12 +966,18 @@ namespace MHServerEmu.Games.Entities
                 rankBase = powerInfo.GetStartingRank();
 #else
             if (powerInfo.IsUltimatePower)
+            {
                 rankBase = Properties[PropertyEnum.AvatarPowerUltimatePoints];
+            }
             else
+            {
                 rankBase = Properties[PropertyEnum.PowerSpec, specIndex, powerInfo.PowerRef];
+                if (includePending)
+                    rankBase += Properties[PropertyEnum.PowerSpecPending, specIndex, powerInfo.PowerRef];
+            }
 #endif
 
-            int rankMax = GetMaxPossibleRankForPowerAtCurrentLevel(ref powerInfo, specIndex);
+            int rankMax = GetMaxPossibleRankForPowerAtCurrentLevel(ref powerInfo, specIndex, includePending);
 
             if (Properties[PropertyEnum.PowersUnlockAll])
                 return Math.Max(1, rankMax);
@@ -979,12 +986,12 @@ namespace MHServerEmu.Games.Entities
             return Math.Min(rankBase, rankMax);
         }
 
-        public int GetMaxPossibleRankForPowerAtCurrentLevel(ref PowerProgressionInfo powerInfo, int specIndex)
+        public int GetMaxPossibleRankForPowerAtCurrentLevel(ref PowerProgressionInfo powerInfo, int specIndex, bool includePending = false)
         {
-            return GetMaxPossibleRankForPowerAtLevel(ref powerInfo, specIndex, CharacterLevel, out _, out _);
+            return GetMaxPossibleRankForPowerAtLevel(ref powerInfo, specIndex, CharacterLevel, includePending, out _, out _);
         }
 
-        public int GetMaxPossibleRankForPowerAtLevel(ref PowerProgressionInfo powerInfo, int specIndex, int level, out bool filteredByPrereq, out bool filteredByAntireq)
+        public int GetMaxPossibleRankForPowerAtLevel(ref PowerProgressionInfo powerInfo, int specIndex, int level, bool includePending, out bool filteredByPrereq, out bool filteredByAntireq)
         {
             filteredByPrereq = false;
             filteredByAntireq = false;
@@ -1015,11 +1022,23 @@ namespace MHServerEmu.Games.Entities
                     {
                         if (!Verify.IsTrue(GetPowerProgressionInfo(prereqProtoRef, out PowerProgressionInfo preReqPowerInfo))) return 0;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                         if (preReqPowerInfo.GetRequiredLevel() > level)
                         {
                             filteredByPrereq = true;
                             return 0;
                         }
+#else
+                        int powerSpec = Properties[PropertyEnum.PowerSpec, specIndex, prereqProtoRef];
+                        if (includePending)
+                            powerSpec += Properties[PropertyEnum.PowerSpecPending, specIndex, prereqProtoRef];
+
+                        if (powerSpec <= 0)
+                        {
+                            filteredByPrereq = true;
+                            return 0;
+                        }
+#endif
                     }
                 }
 
@@ -1031,12 +1050,24 @@ namespace MHServerEmu.Games.Entities
                     {
                         if (!Verify.IsTrue(GetPowerProgressionInfo(antireqProtoRef, out PowerProgressionInfo antiReqPowerInfo))) return 0;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                         // Shouldn't this be <=?
                         if (antiReqPowerInfo.GetRequiredLevel() < level)
                         {
                             filteredByAntireq = true;
                             return 0;
                         }
+#else
+                        int powerSpec = Properties[PropertyEnum.PowerSpec, specIndex, antireqProtoRef];
+                        if (includePending)
+                            powerSpec += Properties[PropertyEnum.PowerSpecPending, specIndex, antireqProtoRef];
+
+                        if (powerSpec > 0)
+                        {
+                            filteredByAntireq = true;
+                            return 0;
+                        }
+#endif
                     }
                 }
             }
@@ -1456,7 +1487,7 @@ namespace MHServerEmu.Games.Entities
 
             Verify.IsTrue(PowerPointAllocationClearTemporary(powerSpecIndex) == false, $"[{this}] already had a pending allocation");
 
-            using var propsToSetHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> propsToSet);
+            using var propsToAdjustHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> propsToAdjust);
 
             long pointsSpent = 0;
 
@@ -1465,10 +1496,10 @@ namespace MHServerEmu.Games.Entities
                 NetStructPowerPointAllocation allocation = commitMessage.AllocationsList[i];
                 PrototypeId powerProtoRef = (PrototypeId)allocation.PowerProtoId;
                 int delta = (int)allocation.Delta;
+                if (!Verify.IsTrue(delta > 0))
+                    goto End;
 
-                int current = Properties[PropertyEnum.PowerSpec, powerSpecIndex, powerProtoRef];
-
-                Properties[PropertyEnum.PowerSpecPending, powerSpecIndex, powerProtoRef] = current + delta;
+                Properties[PropertyEnum.PowerSpecPending, powerSpecIndex, powerProtoRef] = delta;
                 pointsSpent += delta;
             }
 
@@ -1486,11 +1517,11 @@ namespace MHServerEmu.Games.Entities
                 if (!Verify.IsTrue(ValidatePendingPowerPointAllocation(ref powerInfo, powerSpecIndex)))
                     goto End;
 
-                propsToSet[new(PropertyEnum.PowerSpec, powerSpecIndex, powerProtoRef)] = kvp.Value;
+                propsToAdjust[new(PropertyEnum.PowerSpec, powerSpecIndex, powerProtoRef)] = kvp.Value;
             }
 
-            foreach (var kvp in propsToSet)
-                Properties[kvp.Key] = kvp.Value;
+            foreach (var kvp in propsToAdjust)
+                Properties.AdjustProperty((int)kvp.Value, kvp.Key);
 
             UpdatePowerProgressionPowers(false);
 
@@ -1500,9 +1531,39 @@ namespace MHServerEmu.Games.Entities
 #endif
 
 #if GAME_VERSION_1_48
-        private bool ValidatePendingPowerPointAllocation(ref PowerProgressionInfo powerInfo, int powerSpecIndex)
+        private bool ValidatePendingPowerPointAllocation(ref PowerProgressionInfo powerInfo, int specIndex)
         {
-            // V48_TODO
+            PowerPrototype powerProto = powerInfo.PowerPrototype;
+            if (!Verify.IsNotNull(powerProto)) return false;
+
+            if (Segment.IsNearZero(LiveTuningManager.GetLivePowerTuningVar(powerProto, PowerTuningVar.ePTV_PowerEnabled)))
+                return false;
+
+            PropertyId pendingPropId = new(PropertyEnum.PowerSpecPending, specIndex, powerProto.DataRef);
+            if (!Verify.IsTrue(Properties.HasProperty(pendingPropId))) return false;
+
+            if (!Verify.IsTrue(powerInfo.IsInPowerProgression)) return false;
+
+            if (!Verify.IsTrue(powerInfo.IsUltimatePower == false)) return false;
+
+            int rankBase = ComputePowerRankBase(ref powerInfo, specIndex);
+            int powerSpecPending = Properties[pendingPropId];
+
+            PropertyInfo avatarPowerPropInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.PowerRankBase);
+            PropertyInfoPrototype avatarPowerPropInfoProto = avatarPowerPropInfo.Prototype;
+            if (!Verify.IsNotNull(avatarPowerPropInfoProto)) return false;
+
+            int totalAfterAllocation = rankBase + powerSpecPending;
+            if (!Verify.IsTrue(totalAfterAllocation <= avatarPowerPropInfoProto.Max)) return false;
+
+            int maxPossibleRankAtCurrentLevel = GetMaxPossibleRankForPowerAtCurrentLevel(ref powerInfo, specIndex, true);
+            if (!Verify.IsTrue(maxPossibleRankAtCurrentLevel >= 1, $"Power not available!\nCharacter: {this}\nPower: {powerProto}"))
+                return false;
+
+            if (!Verify.IsTrue(totalAfterAllocation <= maxPossibleRankAtCurrentLevel,
+                $"Too many power points allocated for power! TotalAfterAllocation: {totalAfterAllocation}, Max: {maxPossibleRankAtCurrentLevel}.\n Character: {this}\nPower: {powerProto}"))
+                return false;
+
             return true;
         }
 #endif

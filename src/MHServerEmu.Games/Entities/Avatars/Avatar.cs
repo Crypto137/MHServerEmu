@@ -2000,7 +2000,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             return InteractionValidateResult.Success;
         }
 
-        protected override int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int powerSpecIndexActive)
+        protected override int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int powerSpecIndexActive, bool includePending = false)
         {
             // Check avatar-specific overrides
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
