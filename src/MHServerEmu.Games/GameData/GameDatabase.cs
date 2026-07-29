@@ -103,10 +103,8 @@ namespace MHServerEmu.Games.GameData
             PropertyInfoTable = new();
             PropertyInfoTable.Initialize();
 
-#if GAME_VERSION_1_52
             // Load prototype patches
             PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
-#endif
 
             // Load globals
             PrototypeId globalsProtoRef = GetPrototypeRefByName("Globals/Globals.defaults");
