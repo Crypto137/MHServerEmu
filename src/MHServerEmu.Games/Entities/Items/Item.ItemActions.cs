@@ -323,11 +323,7 @@ namespace MHServerEmu.Games.Entities.Items
             int itemCount = lootResultSummary.ItemSpecs.Count;
             if (itemCount > 1 && inventory.Count + itemCount >= inventory.MaxCapacity)
             {
-                player.SendMessage(NetMessageInventoryFull.CreateBuilder()
-                    .SetPlayerID(player.Id)
-                    .SetItemID(InvalidId)
-                    .Build());
-
+                player.SendInventoryFullMessage(InvalidId, inventory.PrototypeDataRef);
                 return false;
             }
 

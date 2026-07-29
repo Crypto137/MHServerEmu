@@ -332,11 +332,44 @@ namespace MHServerEmu.Games.MTXStore
 
         private static BuyItemResultErrorCodes AcquireItem(Player player, ItemPrototype itemProto)
         {
+#if GAME_VERSION_1_53
+            if (itemProto is CostumePrototype costumeProto)
+                return AcquireCostume(player, costumeProto);
+#endif
+
             if (player.Game.LootManager.GiveItem(itemProto.DataRef, LootContext.CashShop, player) == false)
                 return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
 
             return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
         }
+
+#if GAME_VERSION_1_53
+        private static BuyItemResultErrorCodes AcquireCostume(Player player, CostumePrototype costumeProto)
+        {
+            PrototypeId costumeProtoRef = costumeProto.DataRef;
+
+            if (player.HasCostumeUnlocked(costumeProtoRef) == false)
+            {
+                player.UnlockCostume(costumeProtoRef);
+                if (player.HasCostumeUnlocked(costumeProtoRef) == false)
+                    return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SOLD_OUT;
+
+                return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+            }
+
+            // V53_TODO: consoles?
+            PrototypeId duplicateItemProtoRef = costumeProto.FulfillmentDuplicateItemPC;
+            if (!Verify.IsTrue(duplicateItemProtoRef != PrototypeId.Invalid)) return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
+
+            ItemPrototype duplicateItemProto = duplicateItemProtoRef.As<ItemPrototype>();
+            if (!Verify.IsNotNull(duplicateItemProto)) return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
+
+            // Falling back from costume to costume can potentially create an infinite loop
+            if (!Verify.IsTrue(duplicateItemProto != costumeProto)) return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
+
+            return AcquireItem(player, duplicateItemProto);
+        }
+#endif
 
         private static BuyItemResultErrorCodes AcquirePlayerStashInventory(Player player, PlayerStashInventoryPrototype playerStashInventoryProto)
         {
