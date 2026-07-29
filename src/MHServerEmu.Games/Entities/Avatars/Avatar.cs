@@ -4783,7 +4783,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             return avatarProto.GetStartingCostumeAssetRef(Platforms.PC);
         }
 
-        public bool ChangeCostume(PrototypeId costumeProtoRef)
+        public bool ChangeCostume(PrototypeId costumeProtoRef, bool validate = false)
         {
             Player owner = GetOwnerOfType<Player>();
             if (!Verify.IsNotNull(owner)) return false;
@@ -4793,9 +4793,12 @@ namespace MHServerEmu.Games.Entities.Avatars
                 CostumePrototype costumeProto = GameDatabase.GetPrototype<CostumePrototype>(costumeProtoRef);
                 if (!Verify.IsNotNull(costumeProto)) return false;
 
-#if GAME_VERSION_1_53
-                if (!Verify.IsTrue(owner.HasCostumeUnlocked(costumeProtoRef))) return false;
-                if (!Verify.IsTrue(costumeProto.UsableBy == PrototypeDataRef)) return false;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+                if (validate)
+                {
+                    if (!Verify.IsTrue(owner.HasCostumeUnlocked(costumeProtoRef))) return false;
+                    if (!Verify.IsTrue(costumeProto.UsableBy == PrototypeDataRef)) return false;
+                }
 #endif
             }
 

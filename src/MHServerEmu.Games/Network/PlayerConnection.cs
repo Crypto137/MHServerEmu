@@ -2562,11 +2562,7 @@ namespace MHServerEmu.Games.Network
             Avatar avatar = Player.GetActiveAvatarById(costumeChange.AvatarId);
             if (!Verify.IsNotNull(avatar)) return;
 
-#if GAME_VERSION_1_53
-            avatar.ChangeCostume((PrototypeId)costumeChange.CostumePrototypeId);
-#else
-            Verify.IsTrue(false, $"Player [{Player}] is attempting to use costume closet, which should not be possible in the current game version ({Game.Version})");
-#endif
+            avatar.ChangeCostume((PrototypeId)costumeChange.CostumePrototypeId, true);
         }
 #endif
 
