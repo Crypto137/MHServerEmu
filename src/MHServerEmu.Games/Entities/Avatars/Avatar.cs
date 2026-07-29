@@ -2281,7 +2281,15 @@ namespace MHServerEmu.Games.Entities.Avatars
 #endif
 
             // Fall back to base implementation if no talents were unassigned
-            return base.RespecPowerSpec(specIndex, reason, skipValidation, powerProtoRef);
+            if (base.RespecPowerSpec(specIndex, reason, skipValidation, powerProtoRef) == false)
+                return false;
+
+#if GAME_VERSION_1_48
+            if (IsInWorld)
+                CleanUpAbilityKeyMappingsAfterRespec();
+#endif
+
+            return true;
         }
 
         #endregion
@@ -3458,11 +3466,14 @@ namespace MHServerEmu.Games.Entities.Avatars
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowersRespecResult))
             {
                 Property.FromParam(kvp.Key, 0, out int specIndex);
+
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 Property.FromParam(kvp.Key, 1, out int reasonValue);
 
                 // Do not reset key mappings for player requested respecs
                 if ((PowersRespecReason)reasonValue == PowersRespecReason.PlayerRequest)
                     continue;
+#endif
 
                 foreach (AbilityKeyMapping keyMapping in _abilityKeyMappings)
                 {
