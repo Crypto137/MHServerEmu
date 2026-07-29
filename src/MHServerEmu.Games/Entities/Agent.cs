@@ -945,16 +945,30 @@ namespace MHServerEmu.Games.Entities
 
         protected virtual int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int specIndex)
         {
+            // NOTE: This was called CalcPowerRankBase() in pre-BUE versions of the game.
+
             int rankBase = PowerProgressionInfo.RankLocked;
 
             // Do not apply bonuses to non-progression powers
             if (powerInfo.IsInPowerProgression == false)
                 return GetPowerRankBase(powerInfo.PowerRef);
 
+#if GAME_VERSION_1_48
+            if (Power.IsTalentPower(powerInfo.PowerPrototype))
+                return GetPowerRankBase(powerInfo.PowerRef);
+#endif
+
+#if GAME_VERSION_52 || GAME_VERSION_1_53
             if (powerInfo.IsUltimatePower)
                 rankBase = Properties[PropertyEnum.AvatarPowerUltimatePoints];
             else if (CharacterLevel >= powerInfo.GetRequiredLevel())
                 rankBase = powerInfo.GetStartingRank();
+#else
+            if (powerInfo.IsUltimatePower)
+                rankBase = Properties[PropertyEnum.AvatarPowerUltimatePoints];
+            else
+                rankBase = Properties[PropertyEnum.PowerSpec, specIndex, powerInfo.PowerRef];
+#endif
 
             int rankMax = GetMaxPossibleRankForPowerAtCurrentLevel(ref powerInfo, specIndex);
 
@@ -1392,8 +1406,125 @@ namespace MHServerEmu.Games.Entities
                 UpdatePowerRank(ref powerInfo, forceUnassign);
             }
 
+#if GAME_VERSION_1_48
+            UpdatePowerPointsUnspent(GetPowerSpecIndexActive());
+#endif
             return true;
         }
+
+        #endregion
+
+        #region Power Points
+
+#if GAME_VERSION_1_48
+        public int GetPowerPointsUnspent()
+        {
+            int powerSpecIndex = GetPowerSpecIndexActive();
+            return GetPowerPointsUnspentForSpec(powerSpecIndex);
+        }
+#endif
+
+#if GAME_VERSION_1_48
+        public int GetPowerPointsUnspentForSpec(int powerSpecIndex)
+        {
+            if (!Verify.IsTrue(this is Avatar || IsTeamUpAgent)) return 0;
+            return Properties[PropertyEnum.PowerPointsUnspent, powerSpecIndex];
+        }
+#endif
+
+#if GAME_VERSION_1_48
+        public bool PowerPointAllocationClearTemporary(int powerSpecIndex)
+        {
+            using var propsToRemoveHandle = ListPool<PropertyId>.Instance.Get(out List<PropertyId> propsToRemove);
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerSpecPending, powerSpecIndex))
+                propsToRemove.Add(kvp.Key);
+
+            bool removed = false;
+
+            foreach (PropertyId propId in propsToRemove)
+                removed |= Properties.RemoveProperty(propId);
+
+            return removed;
+        }
+#endif
+
+#if GAME_VERSION_1_48
+        public void PowerPointAllocationCommit(NetMessagePowerPointAllocationCommit commitMessage)
+        {
+            int powerSpecIndex = (int)commitMessage.PowerSpecIndex;
+
+            Verify.IsTrue(PowerPointAllocationClearTemporary(powerSpecIndex) == false, $"[{this}] already had a pending allocation");
+
+            using var propsToSetHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> propsToSet);
+
+            long pointsSpent = 0;
+
+            for (int i = 0; i < commitMessage.AllocationsCount; i++)
+            {
+                NetStructPowerPointAllocation allocation = commitMessage.AllocationsList[i];
+                PrototypeId powerProtoRef = (PrototypeId)allocation.PowerProtoId;
+                int delta = (int)allocation.Delta;
+
+                int current = Properties[PropertyEnum.PowerSpec, powerSpecIndex, powerProtoRef];
+
+                Properties[PropertyEnum.PowerSpecPending, powerSpecIndex, powerProtoRef] = current + delta;
+                pointsSpent += delta;
+            }
+
+            long powerPointsAvailable = GetPowerPointsUnspentForSpec(powerSpecIndex);
+            if (!Verify.IsTrue(pointsSpent <= powerPointsAvailable, $"Number of points spent [{pointsSpent}] exceeds the total available number [{powerPointsAvailable}] for [{this}]"))
+                goto End;
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerSpecPending, powerSpecIndex))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId powerProtoRef);
+
+                if (!Verify.IsTrue(GetPowerProgressionInfo(powerProtoRef, out PowerProgressionInfo powerInfo)))
+                    goto End;
+
+                if (!Verify.IsTrue(ValidatePendingPowerPointAllocation(ref powerInfo, powerSpecIndex)))
+                    goto End;
+
+                propsToSet[new(PropertyEnum.PowerSpec, powerSpecIndex, powerProtoRef)] = kvp.Value;
+            }
+
+            foreach (var kvp in propsToSet)
+                Properties[kvp.Key] = kvp.Value;
+
+            UpdatePowerProgressionPowers(false);
+
+        End:
+            PowerPointAllocationClearTemporary(powerSpecIndex);
+        }
+#endif
+
+#if GAME_VERSION_1_48
+        private bool ValidatePendingPowerPointAllocation(ref PowerProgressionInfo powerInfo, int powerSpecIndex)
+        {
+            // V48_TODO
+            return true;
+        }
+#endif
+
+#if GAME_VERSION_1_48
+        protected void UpdatePowerPointsUnspent(int powerSpecIndex)
+        {
+            AdvancementGlobalsPrototype advancementGlobals = GameDatabase.AdvancementGlobalsPrototype;
+            if (!Verify.IsNotNull(advancementGlobals)) return;
+
+            int numPowerPoints = advancementGlobals.GetPowerPointsGrantedAtLevel(CharacterLevel);
+            
+            if (this is Avatar)
+                numPowerPoints += Properties[PropertyEnum.AvatarPowerPointsBonus];
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerSpec, powerSpecIndex))
+                numPowerPoints -= kvp.Value;
+
+            numPowerPoints = Math.Max(numPowerPoints, 0);
+            Properties[PropertyEnum.PowerPointsUnspent, powerSpecIndex] = numPowerPoints;
+        }
+#endif
 
         #endregion
 
@@ -1418,12 +1549,24 @@ namespace MHServerEmu.Games.Entities
             if (skipValidation == false && CanRespecPowers() == false)
                 return false;
 
-            // Lock powers (V48_TODO: is this where in pre-BUE power points should be unassigned?)
+            using var removeListHandle = ListPool<PropertyId>.Instance.Get(out List<PropertyId> removeList);
+
+#if GAME_VERSION_1_48
+            // Remove spent power points
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerSpec, specIndex))
+                removeList.Add(kvp.Key);
+
+            foreach (PropertyId propId in removeList)
+                Properties.RemoveProperty(propId);
+
+            removeList.Clear();
+#endif
+
+            // Lock powers
             if (specIndex == GetPowerSpecIndexActive())
                 UpdatePowerProgressionPowers(true);
 
             // Clean up previous respecs
-            using var removeListHandle = ListPool<PropertyId>.Instance.Get(out List<PropertyId> removeList);
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowersRespecResult, specIndex))
                 removeList.Add(kvp.Key);
 
@@ -1441,6 +1584,8 @@ namespace MHServerEmu.Games.Entities
 
         public bool CanRespecPowers()
         {
+            // NOTE: This was called CanRespecPowerPoints() in pre-BUE versions of the game.
+
             if (!Verify.IsTrue(this is Avatar || IsTeamUpAgent)) return false;
 
             // Check for hub/training room overrides that always allow to respec

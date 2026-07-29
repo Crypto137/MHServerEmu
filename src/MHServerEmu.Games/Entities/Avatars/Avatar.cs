@@ -158,11 +158,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (player != null)
                 _ownerPlayerDbId = player.DatabaseUniqueId;
 
-#if GAME_VERSION_1_48
-            // V48_FIXME: Grant all powers until we get power points working.
-            Properties[PropertyEnum.PowerGrantRank] = 20;
-#endif
-
             return true;
         }
 
@@ -6812,6 +6807,12 @@ namespace MHServerEmu.Games.Entities.Avatars
                         UpdatePowerRank(ref powerInfo, false);
                     }
                     break;
+
+#if GAME_VERSION_1_48
+                case PropertyEnum.AvatarPowerPointsBonus:
+                    UpdatePowerPointsUnspent(GetPowerSpecIndexActive());
+                    break;
+#endif
 
                 case PropertyEnum.AvatarMappedPower:
                     Property.FromParam(id, 0, out PrototypeId originalPowerRef);
