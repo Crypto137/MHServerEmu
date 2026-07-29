@@ -3589,7 +3589,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 #else
                     if (transformModeProto != null && keyMappingIndex == SlottableTransformKeyMappingIndex)
                         keyMapping.SlotDefaultAbilitiesForTransformMode(transformModeProto);
-                    else if (keyMapping.KeyMappingIndex == 0)
+                    else if (keyMappingIndex == 0)
                         keyMapping.SlotDefaultAbilities(AvatarPrototype, false);
 #endif
 
