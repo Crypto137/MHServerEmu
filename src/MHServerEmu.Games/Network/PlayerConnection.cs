@@ -1088,12 +1088,7 @@ namespace MHServerEmu.Games.Network
             if (result != InventoryResult.Success)
             {
                 if (result == InventoryResult.InventoryFull || result == InventoryResult.NoAvailableInventory)
-                {
-                    SendMessage(NetMessageInventoryFull.CreateBuilder()
-                        .SetPlayerID(Player.Id)
-                        .SetItemID(item.Id)
-                        .Build());
-                }
+                    Player.SendInventoryFullMessage(item.Id, inventory.PrototypeDataRef);
 
                 return;
             }
@@ -1163,11 +1158,7 @@ namespace MHServerEmu.Games.Network
                 uint freeSlot = generalInv.GetFreeSlot(item, true, true);
                 if (freeSlot == Inventory.InvalidSlot || Player.TryInventoryMove(itemId, playerId, generalInv.PrototypeDataRef, freeSlot) == false)
                 {
-                    SendMessage(NetMessageInventoryFull.CreateBuilder()
-                        .SetPlayerID(playerId)
-                        .SetItemID(Entity.InvalidId)
-                        .Build());
-
+                    Player.SendInventoryFullMessage(Entity.InvalidId, generalInv.PrototypeDataRef);
                     break;
                 }
             }
@@ -1916,11 +1907,7 @@ namespace MHServerEmu.Games.Network
                 // we are full
                 if (freeSlot == Inventory.InvalidSlot)
                 {
-                    SendMessage(NetMessageInventoryFull.CreateBuilder()
-                        .SetPlayerID(Player.Id)
-                        .SetItemID(item.Id)
-                        .Build());
-
+                    Player.SendInventoryFullMessage(item.Id, generalInventory.PrototypeDataRef);
                     return;
                 }
 

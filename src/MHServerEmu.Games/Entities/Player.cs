@@ -1172,11 +1172,7 @@ namespace MHServerEmu.Games.Entities
                 slot = inventory.GetFreeSlot(item, true, isAdding);
                 if (slot == Inventory.InvalidSlot)
                 {
-                    SendMessage(NetMessageInventoryFull.CreateBuilder()
-                        .SetPlayerID(Id)
-                        .SetItemID(InvalidId)
-                        .Build());
-
+                    SendInventoryFullMessage(InvalidId, inventory.PrototypeDataRef);
                     return false;
                 }
             }
@@ -1229,12 +1225,7 @@ namespace MHServerEmu.Games.Entities
             InventoryResult result = item.SplitStack(ref invLoc, 1);
 
             if (result == InventoryResult.InventoryFull)
-            {
-                SendMessage(NetMessageInventoryFull.CreateBuilder()
-                    .SetPlayerID(Id)
-                    .SetItemID(InvalidId)
-                    .Build());
-            }
+                SendInventoryFullMessage(InvalidId, inventory.PrototypeDataRef);
 
             return result == InventoryResult.Success;
         }
@@ -3942,6 +3933,19 @@ namespace MHServerEmu.Games.Entities
         public bool SendBannerMessage(PrototypeId bannerMessageProtoRef)
         {
             return SendBannerMessage(bannerMessageProtoRef.As<BannerMessagePrototype>());
+        }
+
+        public void SendInventoryFullMessage(ulong itemId, PrototypeId inventoryProtoRef = PrototypeId.Invalid)
+        {
+            NetMessageInventoryFull message = NetMessageInventoryFull.CreateBuilder()
+                .SetPlayerID(Id)
+                .SetItemID(itemId)
+#if GAME_VERSION_1_53
+                .SetInventoryPrototypeID((ulong)inventoryProtoRef)
+#endif
+                .Build();
+
+            SendMessage(message);
         }
 
         #endregion
