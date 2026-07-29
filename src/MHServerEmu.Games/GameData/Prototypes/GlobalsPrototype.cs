@@ -530,6 +530,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
 #endif
 
+#if GAME_VERSION_1_48
+        public int GetPowerPointsGrantedAtLevel(int level, int startingLevel = 1)
+        {
+            Curve curve = PowerPointsGrantedAtLevel.AsCurve();
+            if (!Verify.IsNotNull(curve)) return 0;
+
+            level = Math.Max(level, startingLevel);
+            return curve.IntegrateDiscreteInt(startingLevel, level);
+        }
+#endif
+
         public PetTechAffixInfoPrototype GetPetTechAffixInfoPrototype(AffixPosition position)
         {
             if (!Verify.IsTrue(PetTechAffixInfo.HasValue())) return null;

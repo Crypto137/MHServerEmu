@@ -1,0 +1,1122 @@
+[
+  {
+    "SkuId": 52000000,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 434982509143398064,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Beast.Beast90s",
+        "Title": "Entity.Items.Costumes.Prototypes.Beast.Beast90s",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000001,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 9412332697244604849,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.BlackBolt.InhumansTV",
+        "Title": "Entity.Items.Costumes.Prototypes.BlackBolt.InhumansTV",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000002,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 10451071760350977103,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Cyclops.AstonishingVariant",
+        "Title": "Entity.Items.Costumes.Prototypes.Cyclops.AstonishingVariant",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000003,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 17449700780852517436,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Cyclops.Xmen90sVariant",
+        "Title": "Entity.Items.Costumes.Prototypes.Cyclops.Xmen90sVariant",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000004,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 6173916294457400239,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Daredevil.ManWOFearNoMask",
+        "Title": "Entity.Items.Costumes.Prototypes.Daredevil.ManWOFearNoMask",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000005,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 7966858706345859798,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.DrStrange.MovieEnhanced",
+        "Title": "Entity.Items.Costumes.Prototypes.DrStrange.MovieEnhanced",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000006,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 1016345349423897617,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Gambit.Classic90sJacketless",
+        "Title": "Entity.Items.Costumes.Prototypes.Gambit.Classic90sJacketless",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000007,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 2967925676249323199,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Hulk.Ragnarok",
+        "Title": "Entity.Items.Costumes.Prototypes.Hulk.Ragnarok",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000008,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 14118286607812991412,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Hulk.RagnarokVariant",
+        "Title": "Entity.Items.Costumes.Prototypes.Hulk.RagnarokVariant",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000009,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 5171562808936307455,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.IronMan.HomecomingEmpty",
+        "Title": "Entity.Items.Costumes.Prototypes.IronMan.HomecomingEmpty",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000010,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 8787218900672060149,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.IronMan.Mark46Helmetless",
+        "Title": "Entity.Items.Costumes.Prototypes.IronMan.Mark46Helmetless",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000011,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 16954012278798621287,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.IronMan.NightClubBlack",
+        "Title": "Entity.Items.Costumes.Prototypes.IronMan.NightClubBlack",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000012,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 14757120848372766481,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.JeanGrey.Death",
+        "Title": "Entity.Items.Costumes.Prototypes.JeanGrey.Death",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000013,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 8681262413709973159,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Loki.FinalAct",
+        "Title": "Entity.Items.Costumes.Prototypes.Loki.FinalAct",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000014,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 13015900089258153658,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Loki.Ragnarok",
+        "Title": "Entity.Items.Costumes.Prototypes.Loki.Ragnarok",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000015,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 13568982371733018072,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Loki.Sakaar",
+        "Title": "Entity.Items.Costumes.Prototypes.Loki.Sakaar",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000016,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 13381090057948895437,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Loki.SakaarVariant",
+        "Title": "Entity.Items.Costumes.Prototypes.Loki.SakaarVariant",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000017,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 10555018762175584652,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Magik.HorsemanFamine",
+        "Title": "Entity.Items.Costumes.Prototypes.Magik.HorsemanFamine",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000018,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 8718054447939985089,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Odinson.ComicHoodDownShirtClosed",
+        "Title": "Entity.Items.Costumes.Prototypes.Odinson.ComicHoodDownShirtClosed",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000019,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 17424249465712614905,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Odinson.ComicHoodDownShirtOpen",
+        "Title": "Entity.Items.Costumes.Prototypes.Odinson.ComicHoodDownShirtOpen",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000020,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 4838751036404014574,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Odinson.ComicHoodUpShirtClosed",
+        "Title": "Entity.Items.Costumes.Prototypes.Odinson.ComicHoodUpShirtClosed",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000021,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 12142629757362445606,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Odinson.ComicHoodUpShirtOpen",
+        "Title": "Entity.Items.Costumes.Prototypes.Odinson.ComicHoodUpShirtOpen",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000022,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 16300074403837910286,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Odinson.RagnarokGodOfThunder",
+        "Title": "Entity.Items.Costumes.Prototypes.Odinson.RagnarokGodOfThunder",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000023,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 17516807413427412032,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Odinson.RagnarokWithHelmet",
+        "Title": "Entity.Items.Costumes.Prototypes.Odinson.RagnarokWithHelmet",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000024,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 16743373344278322000,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Psylocke.Classic90sJacket",
+        "Title": "Entity.Items.Costumes.Prototypes.Psylocke.Classic90sJacket",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000025,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 10735657737949683075,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Psylocke.HorsemanOfApocalypse",
+        "Title": "Entity.Items.Costumes.Prototypes.Psylocke.HorsemanOfApocalypse",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000026,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 9059187002834295926,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Punisher.TVMarvelsPunisher",
+        "Title": "Entity.Items.Costumes.Prototypes.Punisher.TVMarvelsPunisher",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000027,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 8612445338116627213,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.SheHulk.LawyerNoGlasses",
+        "Title": "Entity.Items.Costumes.Prototypes.SheHulk.LawyerNoGlasses",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000028,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 79256898193988495,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.SheHulk.LawyerPinstripes",
+        "Title": "Entity.Items.Costumes.Prototypes.SheHulk.LawyerPinstripes",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000029,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 14590746101930596922,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.SpiderWoman.MarvelNOW",
+        "Title": "Entity.Items.Costumes.Prototypes.SpiderWoman.MarvelNOW",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000030,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 2294106884886240116,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Storm.HorsemanPestilence",
+        "Title": "Entity.Items.Costumes.Prototypes.Storm.HorsemanPestilence",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000031,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 8913087628310353536,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Storm.XTreme",
+        "Title": "Entity.Items.Costumes.Prototypes.Storm.XTreme",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000032,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 9150382877260978408,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Thor.RagnarokMovie",
+        "Title": "Entity.Items.Costumes.Prototypes.Thor.RagnarokMovie",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000033,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 15327940560185662250,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Thor.RoadWornSkullMovie",
+        "Title": "Entity.Items.Costumes.Prototypes.Thor.RoadWornSkullMovie",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  },
+  {
+    "SkuId": 52000034,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 9655168729540007973,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Entity.Items.Costumes.Prototypes.Wolverine.Xmen90s",
+        "Title": "Entity.Items.Costumes.Prototypes.Wolverine.Xmen90s",
+        "ReleaseDate": "",
+        "ItemPrice": 950
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Costume",
+      "Order": 1
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 1
+      }
+    ]
+  }
+]

@@ -2244,13 +2244,15 @@ namespace MHServerEmu.Games.Entities
             return unlockType;
         }
 
-        public bool UnlockAvatar(PrototypeId avatarRef, bool sendToClient)
+        public bool UnlockAvatar(PrototypeId avatarRef, AvatarUnlockType unlockType, bool sendToClient)
         {
-            AvatarUnlockType currentUnlockType = GetAvatarUnlockType(avatarRef);
-            if (currentUnlockType != AvatarUnlockType.None && currentUnlockType != AvatarUnlockType.Starter)
-                return false;
+            if (!Verify.IsTrue(avatarRef != PrototypeId.Invalid)) return false;
+            if (!Verify.IsTrue(unlockType != AvatarUnlockType.None)) return false;
 
-            Properties[PropertyEnum.AvatarUnlock, avatarRef] = (int)AvatarUnlockType.Type2;
+            AvatarUnlockType currentUnlockType = GetAvatarUnlockType(avatarRef);
+            if (!Verify.IsTrue(currentUnlockType == AvatarUnlockType.None || currentUnlockType == AvatarUnlockType.Starter)) return false;
+
+            Properties[PropertyEnum.AvatarUnlock, avatarRef] = (int)unlockType;
             GetRegion()?.PlayerUnlockedAvatarEvent.Invoke(new(this, avatarRef));
             OnScoringEvent(new(ScoringEventType.AvatarsUnlocked, avatarRef.As<AvatarPrototype>(), 1));
 
@@ -4059,7 +4061,7 @@ namespace MHServerEmu.Games.Entities
                 foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                 {
                     if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
-                    UnlockAvatar(avatarRef, false);
+                    UnlockAvatar(avatarRef, AvatarUnlockType.Default, false);
                 }
             }
 

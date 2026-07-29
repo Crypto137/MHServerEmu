@@ -1,0 +1,812 @@
+[
+  {
+    "SkuId": 51000000,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 17591756837553313434,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Mister Fantastic",
+        "Title": "Mister Fantastic",
+        "ReleaseDate": "",
+        "ItemPrice": 900
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Hero",
+      "Order": 0
+    },
+    "TypeModifiers": []
+  },
+  {
+    "SkuId": 51000001,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 12259390671146653669,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Invisible Woman",
+        "Title": "Invisible Woman",
+        "ReleaseDate": "",
+        "ItemPrice": 900
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Hero",
+      "Order": 0
+    },
+    "TypeModifiers": []
+  },
+  {
+    "SkuId": 51000002,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 6996312464889026103,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Human Torch",
+        "Title": "Human Torch",
+        "ReleaseDate": "",
+        "ItemPrice": 900
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Hero",
+      "Order": 0
+    },
+    "TypeModifiers": []
+  },
+  {
+    "SkuId": 51000003,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 14005962908529333272,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Thing",
+        "Title": "Thing",
+        "ReleaseDate": "",
+        "ItemPrice": 450
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Hero",
+      "Order": 0
+    },
+    "TypeModifiers": []
+  },
+  {
+    "SkuId": 51000004,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 11103546526429026090,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Silver Surfer",
+        "Title": "Silver Surfer",
+        "ReleaseDate": "",
+        "ItemPrice": 900
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Hero",
+      "Order": 0
+    },
+    "TypeModifiers": []
+  },
+  {
+    "SkuId": 51000005,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 10625106050843291492,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Mister Fantastic Hero Stash",
+        "Title": "Mister Fantastic Hero Stash",
+        "ReleaseDate": "",
+        "ItemPrice": 350
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Service",
+      "Order": 999
+    },
+    "TypeModifiers": [
+      {
+        "Name": "StashPage",
+        "Order": 999
+      }
+    ]
+  },
+  {
+    "SkuId": 51000006,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 9817501136631836540,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Invisible Woman Hero Stash",
+        "Title": "Invisible Woman Hero Stash",
+        "ReleaseDate": "",
+        "ItemPrice": 350
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Service",
+      "Order": 999
+    },
+    "TypeModifiers": [
+      {
+        "Name": "StashPage",
+        "Order": 999
+      }
+    ]
+  },
+  {
+    "SkuId": 51000007,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 17136516014004186881,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Human Torch Hero Stash",
+        "Title": "Human Torch Hero Stash",
+        "ReleaseDate": "",
+        "ItemPrice": 350
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Service",
+      "Order": 999
+    },
+    "TypeModifiers": [
+      {
+        "Name": "StashPage",
+        "Order": 999
+      }
+    ]
+  },
+  {
+    "SkuId": 51000008,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 17467867243750108386,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Thing Hero Stash",
+        "Title": "Thing Hero Stash",
+        "ReleaseDate": "",
+        "ItemPrice": 350
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Service",
+      "Order": 999
+    },
+    "TypeModifiers": [
+      {
+        "Name": "StashPage",
+        "Order": 999
+      }
+    ]
+  },
+  {
+    "SkuId": 51000009,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 982401239437357044,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Silver Surfer Hero Stash",
+        "Title": "Silver Surfer Hero Stash",
+        "ReleaseDate": "",
+        "ItemPrice": 350
+      }
+    ],
+    "InfoUrls": [],
+    "ContentData": [],
+    "Type": {
+      "Name": "Service",
+      "Order": 999
+    },
+    "TypeModifiers": [
+      {
+        "Name": "StashPage",
+        "Order": 999
+      }
+    ]
+  },
+  {
+    "SkuId": 51000010,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 17591756837553313434,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 10625106050843291492,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 5460518059085536758,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 9964627584974134775,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 16513128686675238775,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 7132784530930736633,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 18095141954958532090,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 15142736093714783733,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 3585754036662380275,
+        "Quantity": 2
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 4314676162454560036,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Mr. Fantastic Bundle",
+        "Title": "Mr. Fantastic Bundle",
+        "ReleaseDate": "",
+        "ItemPrice": 1800
+      }
+    ],
+    "InfoUrls": [
+      {
+        "LanguageId": "en_us",
+        "Url": "http://storecdn.marvelheroes.com/cdn/en_us/bundles/mrfantastic_en_bundle.html",
+        "ImageData": ""
+      }
+    ],
+    "ContentData": [
+      {
+        "LanguageId": "en_us",
+        "Url": "http://storecdn.marvelheroes.com/bundles/MTX_Store_Bundle_MrFantastic_Thumb.png",
+        "ImageData": ""
+      }
+    ],
+    "Type": {
+      "Name": "Bundle",
+      "Order": 6
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 6
+      }
+    ]
+  },
+  {
+    "SkuId": 51000011,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 12259390671146653669,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 9817501136631836540,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 5460518059085536758,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 9964627584974134775,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 16513128686675238775,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 7132784530930736633,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 18095141954958532090,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 15142736093714783733,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 3585754036662380275,
+        "Quantity": 2
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 14378742973356645999,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Invisible Woman Bundle",
+        "Title": "Invisible Woman Bundle",
+        "ReleaseDate": "",
+        "ItemPrice": 1800
+      }
+    ],
+    "InfoUrls": [
+      {
+        "LanguageId": "en_us",
+        "Url": "http://storecdn.marvelheroes.com/cdn/en_us/bundles/invisiblewoman_en_bundle.html",
+        "ImageData": ""
+      }
+    ],
+    "ContentData": [
+      {
+        "LanguageId": "en_us",
+        "Url": "http://storecdn.marvelheroes.com/bundles/MTX_Store_Bundle_InvisibleWoman_Thumb.png",
+        "ImageData": ""
+      }
+    ],
+    "Type": {
+      "Name": "Bundle",
+      "Order": 6
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 6
+      }
+    ]
+  },
+  {
+    "SkuId": 51000012,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 14005962908529333272,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 17467867243750108386,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 5460518059085536758,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 9964627584974134775,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 16513128686675238775,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 7132784530930736633,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 18095141954958532090,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 15142736093714783733,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 3585754036662380275,
+        "Quantity": 2
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 4030114999323204142,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Thing Marvel NOW! Bundle",
+        "Title": "Thing Marvel NOW! Bundle",
+        "ReleaseDate": "",
+        "ItemPrice": 1400
+      }
+    ],
+    "InfoUrls": [
+      {
+        "LanguageId": "en_us",
+        "Url": "http://storecdn.marvelheroes.com/cdn/en_us/bundles/thing_en_bundle.html",
+        "ImageData": ""
+      }
+    ],
+    "ContentData": [
+      {
+        "LanguageId": "en_us",
+        "Url": "http://storecdn.marvelheroes.com/bundles/MTX_Store_Bundle_Thing_Thumb.png",
+        "ImageData": ""
+      }
+    ],
+    "Type": {
+      "Name": "Bundle",
+      "Order": 6
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 6
+      }
+    ]
+  },
+  {
+    "SkuId": 51000013,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 11103546526429026090,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 982401239437357044,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 5460518059085536758,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 9964627584974134775,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 16513128686675238775,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 7132784530930736633,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 18095141954958532090,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 15142736093714783733,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 3585754036662380275,
+        "Quantity": 2
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 5872684648721488878,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Silver Surfer Bundle",
+        "Title": "Silver Surfer Bundle",
+        "ReleaseDate": "",
+        "ItemPrice": 1800
+      }
+    ],
+    "InfoUrls": [
+      {
+        "LanguageId": "en_us",
+        "Url": "http://storecdn.marvelheroes.com/cdn/en_us/bundles/silversurfer_en_bundle.html",
+        "ImageData": ""
+      }
+    ],
+    "ContentData": [
+      {
+        "LanguageId": "en_us",
+        "Url": "http://storecdn.marvelheroes.com/bundles/MTX_Store_Bundle_SilverSurfer_Thumb.png",
+        "ImageData": ""
+      }
+    ],
+    "Type": {
+      "Name": "Bundle",
+      "Order": 6
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 6
+      }
+    ]
+  },
+  {
+    "SkuId": 80109800,
+    "GuidItems": [
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 6996312464889026103,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 12259390671146653669,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 17591756837553313434,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 17510769099164947813,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 8842376528969668459,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 11103546526429026090,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 5394058310044226921,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 14005962908529333272,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 17136516014004186881,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 9817501136631836540,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 10625106050843291492,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 10540579155076132399,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 4751367429711015890,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 982401239437357044,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 3143121290555305523,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 17467867243750108386,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 9989356770217302741,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 14378742973356645999,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 4314676162454560036,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 5723263051851308390,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 8071236626015919052,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 5872684648721488878,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 1437244590091671794,
+        "Quantity": 1
+      },
+      {
+        "PrototypeGuid": 0,
+        "ItemPrototypeRuntimeIdForClient": 3736448333214587554,
+        "Quantity": 1
+      }
+    ],
+    "AdditionalGuidItems": [],
+    "LocalizedEntries": [
+      {
+        "LanguageId": "en_us",
+        "Description": "Cosmic Heroes Mega Bundle",
+        "Title": "Cosmic Heroes Mega Bundle",
+        "ReleaseDate": "",
+        "ItemPrice": 5000
+      }
+    ],
+    "InfoUrls": [
+      {
+        "LanguageId": "en_us",
+        "Url": "http://storecdn.marvelheroes.com/cdn/en_us/bundles/cosmic_hero_mega_en_bundle.html",
+        "ImageData": ""
+      }
+    ],
+    "ContentData": [
+      {
+        "LanguageId": "en_us",
+        "Url": "http://storecdn.marvelheroes.com/bundles/MTX_Store_Bundle_CosmicHeroes_Thumb.png",
+        "ImageData": ""
+      }
+    ],
+    "Type": {
+      "Name": "Bundle",
+      "Order": 2
+    },
+    "TypeModifiers": [
+      {
+        "Name": "Giftable",
+        "Order": 2
+      }
+    ]
+  }
+]

@@ -1199,7 +1199,7 @@ namespace MHServerEmu.Games.Entities.Items
             {
                 if (characterTokenProto.GrantsCharacterUnlock && player.HasAvatarFullyUnlocked(characterProtoRef) == false)
                 {
-                    wasUsed = player.UnlockAvatar(characterProtoRef, true);
+                    wasUsed = player.UnlockAvatar(characterProtoRef, AvatarUnlockType.CharacterToken, true);
                 }
 
                 if (wasUsed == false && characterTokenProto.GrantsUltimateUpgrade)

@@ -18,26 +18,32 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DefineConstants>$(DefineConstants);GAME_VERSION_1_52</DefineConstants>
+    <GameDataFolder>v52</GameDataFolder>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DefineConstants>$(DefineConstants);GAME_VERSION_1_52</DefineConstants>
+    <GameDataFolder>v52</GameDataFolder>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.48|x64'">
     <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_48</DefineConstants>
+    <GameDataFolder>v48</GameDataFolder>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.48|x64'">
     <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_48</DefineConstants>
+    <GameDataFolder>v48</GameDataFolder>
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.53|x64'">
     <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_53</DefineConstants>
+    <GameDataFolder>v53</GameDataFolder>
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.53|x64'">
     <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_53</DefineConstants>
+    <GameDataFolder>v53</GameDataFolder>
   </PropertyGroup>
 
   <ItemGroup>
@@ -54,179 +60,13 @@
       <HintPath>..\..\dep\RobustPredicates\RobustPredicates.dll</HintPath>
     </Reference>
   </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Data\Game\Achievements\AchievementInfoMap_00_MainPatch.json">
+	
+  <ItemGroup Condition="'$(GameDataFolder)'!=''">
+    <Content Include="Data\$(GameDataFolder)\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\AchievementStringMap.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\AchievementStringMap_00_MainPatch.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\Off\AchievementInfoMap_01_DisableBroken.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\Off\AchievementInfoMap_02_Party.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\Off\AchievementInfoMap_03_Restore.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\Off\AchievementInfoMap_04_Seasonal.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\Off\AchievementInfoMap_05_Collection.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\Off\AchievementStringMap_02_Party.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\Off\AchievementStringMap_03_Restore.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\Off\AchievementStringMap_04_Seasonal.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\Off\AchievementStringMap_05_Collection.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\EventSchedule.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataAnniversary.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataAprilFoolsDay.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataAustraliaDay.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataDailyBugle.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataEndOfSummer.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataGuardiansOfTheGalaxy.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataHalloween.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataHeroesForHire.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataLunarNewYear.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataOrdersFromTheHand.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataStPatricksDay.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataWealthOfKingsCounty.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataWinterHoliday.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataArmorIncursion.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\Experimental\LiveTuningDataCivilWar.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataCosmicChaos.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataCowpocalypse.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataMidtownMadness.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataMysticMayhem.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataOdinsBounty.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\Weekly\LiveTuningDataOperationOmega.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\Events\LiveTuningDataValentinesDay.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\LiveTuningData.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\LiveTuningDataPvP.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LootCooldownChannels.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\MTXStore\Catalog.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\MTXStore\CatalogLimitedCostumes.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\AchievementInfoMap.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\Off\AchievementInfoMapParty.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Achievements\AchievementNewThresholdUS.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\MTXStore\CatalogRestoredHeroes.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Patches\Off\PatchDataCarnival.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Patches\Off\PatchDataCowpocalypse.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Patches\Off\PatchDataGameBalance.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Patches\Off\PatchDataMysticMayhem.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Patches\Off\PatchDataTestOverrideLoot.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Patches\PatchDataMissions.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Patches\PatchDataBugFixes.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\LiveTuning\LiveTuningDataGlobal.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Patches\PatchDataCustom.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Patches\PatchDataRestoredContent.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Patches\PatchDataSpecialDrops.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Game\Patches\PatchDataSpecialEvents.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+      <Link>Data\Game\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
   </ItemGroup>
 
 </Project>

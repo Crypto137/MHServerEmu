@@ -128,6 +128,14 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                     return (int)metricsFrequencyTuningVar;
 #endif
 
+#if GAME_VERSION_1_53
+                case "eDTTV":
+                    if (Enum.TryParse(tuningVarEnum, out DifficultyTuningTuningVar difficultyTuningTuningVar) == false)
+                        return -1;
+
+                    return (int)difficultyTuningTuningVar;
+#endif
+
                 default:
                     return -1;
             }
