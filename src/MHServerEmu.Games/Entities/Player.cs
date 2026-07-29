@@ -1183,6 +1183,22 @@ namespace MHServerEmu.Games.Entities
             if (!Verify.IsTrue(canMove, $"PlayerCanMove check failed, player=[{this}], item={item}, canMoveResult={canMoveResult}, canMoveResultProperty=[{canMoveResultProperty}]"))
                 return false;
 
+#if GAME_VERSION_1_53
+            // Special handling for when a player tries to equip a legacy costume item in 1.53.
+            if (item.Prototype is CostumePrototype && inventory.ConvenienceLabel == InventoryConvenienceLabel.Costume)
+            {
+                if (HasCostumeUnlocked(item.PrototypeDataRef))
+                {
+                    SendInventoryFullMessage(InvalidId, inventory.PrototypeDataRef);
+                    return false;
+                }
+
+                UnlockCostume(item.PrototypeDataRef);
+                item.Destroy();
+                return true;
+            }
+#endif
+
             // Move
             ulong? stackEntityId = InvalidId;
             InventoryResult result = item.ChangeInventoryLocation(inventory, slot, ref stackEntityId, true);
