@@ -2185,6 +2185,12 @@ namespace MHServerEmu.Games.Entities
                     return true;
             }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            // Costume unlocks
+            if (HasCostumeUnlocked(itemProtoRef))
+                return true;
+#endif
+
             return false;
         }
 
