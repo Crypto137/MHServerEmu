@@ -4785,14 +4785,19 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool ChangeCostume(PrototypeId costumeProtoRef)
         {
+            Player owner = GetOwnerOfType<Player>();
+            if (!Verify.IsNotNull(owner)) return false;
+
             if (costumeProtoRef != PrototypeId.Invalid)
             {
                 CostumePrototype costumeProto = GameDatabase.GetPrototype<CostumePrototype>(costumeProtoRef);
                 if (!Verify.IsNotNull(costumeProto)) return false;
-            }
 
-            Player owner = GetOwnerOfType<Player>();
-            if (!Verify.IsNotNull(owner)) return false;
+#if GAME_VERSION_1_53
+                if (!Verify.IsTrue(owner.HasCostumeUnlocked(costumeProtoRef))) return false;
+                if (!Verify.IsTrue(costumeProto.UsableBy == PrototypeDataRef)) return false;
+#endif
+            }
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             Properties[PropertyEnum.CostumeCurrent] = costumeProtoRef;

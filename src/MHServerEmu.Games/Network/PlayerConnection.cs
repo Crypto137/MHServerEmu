@@ -710,7 +710,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAchievementMissionTrackerFilterChange: OnAchievementMissionTrackerFilterChange(message); break;
                 // case ClientToGameServerMessage.NetMessageBillingRoutedClientMessage:     OnBillingRoutedClientMessage(message); break;
                 // case ClientToGameServerMessage.NetMessagePlayerLookupByNameClientRequest:OnPlayerLookupByNameClientRequest(message); break;
-                // case ClientToGameServerMessage.NetMessageCostumeChange:                  OnCostumeChange(message); break;
+                case ClientToGameServerMessage.NetMessageCostumeChange:                     OnCostumeChange(message); break;
                 // case ClientToGameServerMessage.NetMessageLookForParty:                   OnLookForParty(message); break;
 #endif
 
@@ -2563,6 +2563,23 @@ namespace MHServerEmu.Games.Network
             if (!Verify.IsTrue(achievementId != 0)) return;
 
             Player.Properties[PropertyEnum.MissionTrackerAchievements, achievementId] = isFiltered;
+        }
+#endif
+
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        private void OnCostumeChange(in MailboxMessage message)
+        {
+            var costumeChange = message.As<NetMessageCostumeChange>();
+            if (!Verify.IsNotNull(costumeChange)) return;
+
+            Avatar avatar = Player.GetActiveAvatarById(costumeChange.AvatarId);
+            if (!Verify.IsNotNull(avatar)) return;
+
+#if GAME_VERSION_1_53
+            avatar.ChangeCostume((PrototypeId)costumeChange.CostumePrototypeId);
+#else
+            Verify.IsTrue(false, $"Player [{Player}] is attempting to use costume closet, which should not be possible in the current game version ({Game.Version})");
+#endif
         }
 #endif
 
