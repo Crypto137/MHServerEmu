@@ -334,7 +334,7 @@ namespace MHServerEmu.Games.MTXStore
         {
 #if GAME_VERSION_1_53
             if (itemProto is CostumePrototype costumeProto)
-                AcquireCostume(player, costumeProto);
+                return AcquireCostume(player, costumeProto);
 #endif
 
             if (player.Game.LootManager.GiveItem(itemProto.DataRef, LootContext.CashShop, player) == false)
