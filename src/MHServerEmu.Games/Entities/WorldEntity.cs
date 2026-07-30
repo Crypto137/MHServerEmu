@@ -3911,11 +3911,21 @@ namespace MHServerEmu.Games.Entities
 #endif
                 }
 
-                // OnKilled loot table is different based on the rank of this entity
+                // OnKilled loot table is different based on the rank of this entity...
                 RankPrototype rankProto = GetRankPrototype();
                 LootDropEventType lootDropEventType = rankProto.LootTableParam != LootDropEventType.None
                     ? rankProto.LootTableParam
                     : LootDropEventType.OnKilled;
+
+#if GAME_VERSION_1_53
+                // ...unless this is 1.53 and LootSourceByRank is enabled
+                if (LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootSourceByRankEnabled) != 0f)
+                {
+                    WorldEntityPrototype worldEntityProto = WorldEntityPrototype;
+                    if (worldEntityProto != null && worldEntityProto.LootSourceByRank)
+                        lootDropEventType = LootDropEventType.OnKilled;
+                }
+#endif
 
                 AwardLootForDropEvent(lootDropEventType, playerList);
             }
@@ -4148,58 +4158,105 @@ namespace MHServerEmu.Games.Entities
 
         private bool ApplyLootTableSourceOverrides(Region region)
         {
-            // See if we have an override source (e.g. this is used primarily for chests with variable rewards in Holo-Sim / X-Defense / Danger Room)
-            AssetId lootTableSource = Properties[PropertyEnum.LootTableSource];
-            if (lootTableSource == AssetId.Invalid)
-                return true;
-
             WorldEntityPrototype worldEntityProto = WorldEntityPrototype;
+            if (!Verify.IsNotNull(worldEntityProto)) return false;
+
             RegionPrototype regionProto = region.Prototype;
+            if (!Verify.IsNotNull(regionProto)) return false;
 
-            using var overridesHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> overrides);
-
-            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.LootTablePrototype))
+            // See if we have an override source (e.g. this is used primarily for chests with variable rewards in Holo-Sim / X-Defense / Danger Room)
+            // V53_NOTE: In 1.53 this was expanded to more sources via the LootSourceByRank flag in WorldEntityPrototype.
+            AssetId lootTableSource = Properties[PropertyEnum.LootTableSource];
+            if (lootTableSource != AssetId.Invalid)
             {
-                Property.FromParam(kvp.Key, 0, out int lootEventValue);
-                LootDropEventType lootEvent = (LootDropEventType)lootEventValue;
-                PrototypeId lootTableOverrideRef = PrototypeId.Invalid;
+#if GAME_VERSION_1_53
+                if (!Verify.IsTrue(worldEntityProto.LootSourceByRank == false)) return false;
+#endif
 
-                // Region property overrides (e.g. affixes) take priority over the region prototype
+                using var overridesHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> overrides);
 
-                // Check event-specific events
-                AssetId lootEventAsset = Property.PropertyEnumToAsset(PropertyEnum.LootTablePrototype, 0, (int)lootEvent);
-                lootTableOverrideRef = region.Properties[PropertyEnum.LootSourceTableOverride, lootTableSource, lootEventAsset];
-                if (lootTableOverrideRef != PrototypeId.Invalid)
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.LootTablePrototype))
                 {
-                    overrides[kvp.Key] = lootTableOverrideRef;
-                    continue;
-                }
+                    Property.FromParam(kvp.Key, 0, out int lootEventValue);
+                    LootDropEventType lootEvent = (LootDropEventType)lootEventValue;
+                    PrototypeId lootTableOverrideRef = PrototypeId.Invalid;
 
-                // Region property overrides for unspecified events (OnKilled / OnInteractedWith)
-                if (lootEvent == LootDropEventType.OnKilled || lootEvent == LootDropEventType.OnInteractedWith)
-                {
-                    lootEventAsset = Property.PropertyEnumToAsset(PropertyEnum.LootTablePrototype, 0, (int)LootDropEventType.None);
+                    // Region property overrides (e.g. affixes) take priority over the region prototype
+
+                    // Check event-specific events
+                    AssetId lootEventAsset = Property.PropertyEnumToAsset(PropertyEnum.LootTablePrototype, 0, (int)lootEvent);
                     lootTableOverrideRef = region.Properties[PropertyEnum.LootSourceTableOverride, lootTableSource, lootEventAsset];
                     if (lootTableOverrideRef != PrototypeId.Invalid)
                     {
                         overrides[kvp.Key] = lootTableOverrideRef;
                         continue;
                     }
+
+                    // Region property overrides for unspecified events (OnKilled / OnInteractedWith)
+                    if (lootEvent == LootDropEventType.OnKilled || lootEvent == LootDropEventType.OnInteractedWith)
+                    {
+                        lootEventAsset = Property.PropertyEnumToAsset(PropertyEnum.LootTablePrototype, 0, (int)LootDropEventType.None);
+                        lootTableOverrideRef = region.Properties[PropertyEnum.LootSourceTableOverride, lootTableSource, lootEventAsset];
+                        if (lootTableOverrideRef != PrototypeId.Invalid)
+                        {
+                            overrides[kvp.Key] = lootTableOverrideRef;
+                            continue;
+                        }
+                    }
+
+                    // Region prototype overrides
+                    lootTableOverrideRef = regionProto.GetLootTableOverride(this, lootTableSource, lootEvent);
+                    if (lootTableOverrideRef != PrototypeId.Invalid)
+                    {
+                        overrides[kvp.Key] = lootTableOverrideRef;
+                        continue;
+                    }
+
+                    Verify.IsTrue(false, $"Failed to find override for loot table source {lootTableSource.GetName()} for entity [{this}] in region [{region}]");
                 }
 
-                // Region prototype overrides
-                lootTableOverrideRef = regionProto.GetLootTableOverride(this, lootTableSource, lootEvent);
-                if (lootTableOverrideRef != PrototypeId.Invalid)
-                {
-                    overrides[kvp.Key] = lootTableOverrideRef;
-                    continue;
-                }
-
-                Verify.IsTrue(false, $"Failed to find override for loot table source {lootTableSource.GetName()} for entity [{this}] in region [{region}]");
+                foreach (var kvp in overrides)
+                    Properties[kvp.Key] = kvp.Value;
             }
+#if GAME_VERSION_1_53
+            else if (worldEntityProto.LootSourceByRank)
+            {
+                if (LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootSourceByRankEnabled) == 0f)
+                    return true;
 
-            foreach (var kvp in overrides)
-                Properties[kvp.Key] = kvp.Value;
+                RankPrototype rankProto = GetRankPrototype();
+                if (!Verify.IsNotNull(rankProto)) return false;
+                if (!Verify.IsTrue(rankProto.LootSource != AssetId.Invalid)) return false;
+
+                // Clear existing loot tables
+                using var propsToRemoveHandle = ListPool<PropertyId>.Instance.Get(out List<PropertyId> propsToRemove);
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.LootTablePrototype))
+                {
+                    Property.FromParam(kvp.Key, 1, out int index);
+                    if (index != 0)
+                        continue;
+
+                    Property.FromParam(kvp.Key, 0, out int lootEventValue);
+                    LootDropEventType lootEvent = (LootDropEventType)lootEventValue;
+                    switch (lootEvent)
+                    {
+                        case LootDropEventType.OnKilled:
+                        case LootDropEventType.OnKilledChampion:
+                        case LootDropEventType.OnKilledElite:
+                        case LootDropEventType.OnKilledMiniBoss:
+                            propsToRemove.Add(kvp.Key);
+                            break;
+                    }
+                }
+
+                foreach (PropertyId propIdToRemove in propsToRemove)
+                    Properties.RemoveProperty(propIdToRemove);
+
+                // Set rank based loot table override
+                PropertyId propId = new(PropertyEnum.LootTablePrototype, (PropertyParam)LootDropEventType.OnKilled, 0, (PropertyParam)LootActionType.Spawn);
+                Properties[propId] = regionProto.GetLootTableOverride(this, rankProto.LootSource, LootDropEventType.OnKilled);
+            }
+#endif
 
             return true;
         }
