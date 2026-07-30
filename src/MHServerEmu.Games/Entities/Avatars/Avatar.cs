@@ -6836,7 +6836,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
 #if GAME_VERSION_1_48
                 case PropertyEnum.AvatarPowerPointsBonus:
-                    UpdatePowerPointsUnspent(GetPowerSpecIndexActive());
+                    UpdatePowerPointsUnspent();
                     break;
 #endif
 
