@@ -9,13 +9,15 @@ namespace MHServerEmu.Games.UI
         public GameDialogResultEnum Type { get; }
         public LocaleStringMessageHandler ButtonText { get; }
         public ButtonStyle Style { get; }
+        public bool Hold { get; }
         public bool Enabled { get; set; }
 
-        public DialogButton(GameDialogResultEnum type, LocaleStringId buttonText, ButtonStyle style, bool enabled)
+        public DialogButton(GameDialogResultEnum type, LocaleStringId buttonText, ButtonStyle style, bool hold, bool enabled)
         {
             Type = type;
             ButtonText = new(buttonText);
             Style = style;
+            Hold = hold;
             Enabled = enabled;
         }
 
@@ -25,7 +27,11 @@ namespace MHServerEmu.Games.UI
                 .SetType(Type)
                 .SetFormatString(ButtonText.ToProtobuf())
                 .SetStyle((uint)Style)
-                .SetEnabled(Enabled).Build();
+#if GAME_VERSION_1_53
+                .SetHold(Hold)
+#endif
+                .SetEnabled(Enabled)
+                .Build();
         }
     }
 }

@@ -368,7 +368,7 @@ namespace MHServerEmu.Games.Entities
                 TransitionDestination destination = _destinationList[0];
                 LocaleStringId text = destination.GetDisplayName();
                 bool isEnabled = destination.IsAvailable(player);
-                dialog.AddButton(GameDialogResultEnum.eGDR_Option1, text, ButtonStyle.SecondaryPositive, isEnabled);
+                dialog.AddButton(GameDialogResultEnum.eGDR_Option1, text, ButtonStyle.SecondaryPositive, false, isEnabled);
             }
 
             if (_destinationList.Count > 1)
@@ -376,7 +376,7 @@ namespace MHServerEmu.Games.Entities
                 TransitionDestination destination = _destinationList[1];
                 LocaleStringId text = destination.GetDisplayName();
                 bool isEnabled = destination.IsAvailable(player);
-                dialog.AddButton(GameDialogResultEnum.eGDR_Option2, text, ButtonStyle.SecondaryPositive, isEnabled);
+                dialog.AddButton(GameDialogResultEnum.eGDR_Option2, text, ButtonStyle.SecondaryPositive, false, isEnabled);
             }
 
             Verify.IsTrue(_destinationList.Count <= 2, $"Transition [{this}] has more than 2 destinations, the remaining destinations will not be included in the dialog");

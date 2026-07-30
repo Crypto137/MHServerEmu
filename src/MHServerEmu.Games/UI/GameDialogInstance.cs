@@ -39,9 +39,9 @@ namespace MHServerEmu.Games.UI
             Buttons = new();
         }
 
-        public void AddButton(GameDialogResultEnum option, LocaleStringId text, ButtonStyle style, bool enabled = true)
+        public void AddButton(GameDialogResultEnum option, LocaleStringId text, ButtonStyle style, bool hold, bool enabled = true)
         {
-            var button = new DialogButton(option, text, style, enabled);
+            DialogButton button = new(option, text, style, hold, enabled);
             Buttons.Add(button);
         }
 

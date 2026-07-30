@@ -106,11 +106,19 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 dialog.Message.LocaleString = dialogProto.Text;
                 dialog.Options = DialogOptionEnum.ScreenBottom;
 
+#if GAME_VERSION_1_53
+                bool button1Hold = dialogProto.Button1Hold;
+                bool button2Hold = dialogProto.Button2Hold;
+#else
+                bool button1Hold = false;
+                bool button2Hold = false;
+#endif
+
                 if (dialogProto.Button1 != LocaleStringId.Blank)
-                    dialog.AddButton(GameDialogResultEnum.eGDR_Option1, dialogProto.Button1, dialogProto.Button1Style);
+                    dialog.AddButton(GameDialogResultEnum.eGDR_Option1, dialogProto.Button1, dialogProto.Button1Style, button1Hold);
 
                 if (dialogProto.Button2 != LocaleStringId.Blank)
-                    dialog.AddButton(GameDialogResultEnum.eGDR_Option2, dialogProto.Button2, dialogProto.Button2Style);
+                    dialog.AddButton(GameDialogResultEnum.eGDR_Option2, dialogProto.Button2, dialogProto.Button2Style, button2Hold);
 
                 _dialogs.Add(playerGuid, dialog);
             }
