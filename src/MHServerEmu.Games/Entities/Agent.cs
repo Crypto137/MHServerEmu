@@ -1437,9 +1437,6 @@ namespace MHServerEmu.Games.Entities
                 UpdatePowerRank(ref powerInfo, forceUnassign);
             }
 
-#if GAME_VERSION_1_48
-            UpdatePowerPointsUnspent();
-#endif
             return true;
         }
 
@@ -1524,6 +1521,7 @@ namespace MHServerEmu.Games.Entities
                 Properties.AdjustProperty((int)kvp.Value, kvp.Key);
 
             UpdatePowerProgressionPowers(false);
+            UpdatePowerPointsUnspent();
 
         End:
             PowerPointAllocationClearTemporary(powerSpecIndex);
@@ -1632,6 +1630,10 @@ namespace MHServerEmu.Games.Entities
             // Lock powers
             if (specIndex == GetPowerSpecIndexActive())
                 UpdatePowerProgressionPowers(true);
+
+#if GAME_VERSION_1_48
+            UpdatePowerPointsUnspent();
+#endif
 
             // Clean up previous respecs
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowersRespecResult, specIndex))
@@ -1837,6 +1839,10 @@ namespace MHServerEmu.Games.Entities
             // Unlock new powers
             if (TeamUpOwner != null)
                 UpdatePowerProgressionPowers(false);
+
+#if GAME_VERSION_1_48
+            UpdatePowerPointsUnspent();
+#endif
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             // Update player owner property if reached level cap
