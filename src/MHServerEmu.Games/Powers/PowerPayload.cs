@@ -519,6 +519,46 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
+#if GAME_VERSION_1_53
+            // This is similar to DamageMultPowerCdKwd above, but it applies only to powers that have a specific keyword.
+            // i.e. increase damage of all powers that have keyword A for every power with keyword B that is on cooldown.
+            if (ownerProperties.HasProperty(PropertyEnum.DamageMultPowerCdKwdForKwd))
+            {
+                // Get the number of cooldowns from the most responsible power user because
+                // this may be a missile / hotspot / summon power.
+                WorldEntity mostResponsiblePowerUser = powerOwner.GetMostResponsiblePowerUser<WorldEntity>();
+
+                foreach (var kvp in ownerProperties.IteratePropertyRange(PropertyEnum.DamageMultPowerCdKwdForKwd))
+                {
+                    Property.FromParam(kvp.Key, 1, out PrototypeId targetPowerKeywordRef);
+                    if (!Verify.IsTrue(targetPowerKeywordRef != PrototypeId.Invalid))
+                        continue;
+
+                    KeywordPrototype targetPowerKeywordProto = targetPowerKeywordRef.As<KeywordPrototype>();
+                    if (KeywordsMask.HasKeyword(targetPowerKeywordProto) == false)
+                        continue;
+
+                    Property.FromParam(kvp.Key, 0, out PrototypeId sourcePowerKeywordRef);
+                    if (!Verify.IsTrue(sourcePowerKeywordRef != PrototypeId.Invalid))
+                        continue;
+
+                    KeywordPrototype sourcePowerKeywordProto = sourcePowerKeywordRef.As<KeywordPrototype>();
+
+                    int numPowersOnCooldown = 0;
+
+                    foreach (var recordKvp in mostResponsiblePowerUser.PowerCollection)
+                    {
+                        Power recordPower = recordKvp.Value.Power;
+                        if (recordPower.HasKeyword(sourcePowerKeywordProto) && recordPower.IsOnCooldown())
+                            numPowersOnCooldown++;
+                    }
+
+                    if (numPowersOnCooldown > 0)
+                        damageMult += (float)kvp.Value * numPowersOnCooldown;
+                }
+            }
+#endif
+
             // Set all damage bonus properties
             Properties[PropertyEnum.PayloadDamageMultTotal, DamageType.Any] = damageMult;
             Properties[PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any] = damagePct;

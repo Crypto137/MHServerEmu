@@ -2725,6 +2725,9 @@ namespace MHServerEmu.Games.Powers
                 // Calculate and apply range multiplier
                 float rangeMult = 1f;
                 AccumulateKeywordProperties(ref rangeMult, powerProto, ownerProperties, ownerProperties, PropertyEnum.RangeModifierPctKeyword);
+#if GAME_VERSION_1_53
+                rangeMult += ownerProperties[PropertyEnum.RangeModifierPctForPower, powerProto.DataRef];
+#endif
                 range *= rangeMult;
             }
 
@@ -3504,6 +3507,9 @@ namespace MHServerEmu.Games.Powers
 
             // Apply target keyword crit bonus
             target.AccumulateKeywordProperties(PropertyEnum.CritRatingBonusVsTargetKeyword, userProperties, ref critRatingAdd);            
+#if GAME_VERSION_1_53
+            target.AccumulateKeywordProperties(PropertyEnum.CritChancePctVsTgtKwd, userProperties, ref critChancePctAdd);
+#endif
 
             // Prepare int arguments for context data
             int critRating = (int)(critRatingAdd * MathF.Max(critRatingMult, 0f));
@@ -3547,6 +3553,10 @@ namespace MHServerEmu.Games.Powers
                 AccumulateKeywordProperties(ref superCritRatingMult, powerProto, userProperties, userProperties, PropertyEnum.SuperCritRatingBonusMultPowerKeyword);
                 AccumulateKeywordProperties(ref superCritChancePctAdd, powerProto, userProperties, userProperties, PropertyEnum.SuperCritChancePctAddPowerKwd);
             }
+
+#if GAME_VERSION_1_53
+            target.AccumulateKeywordProperties(PropertyEnum.SuperCritChancePctVsTgtKwd, userProperties, ref superCritChancePctAdd);
+#endif
 
             // Prepare arguments for context data
             float superCritRating = superCritRatingAdd * MathF.Max(superCritRatingMult, 0f);

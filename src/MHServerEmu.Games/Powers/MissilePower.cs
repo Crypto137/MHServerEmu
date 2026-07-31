@@ -459,6 +459,9 @@ namespace MHServerEmu.Games.Powers
             extraProperties[PropertyEnum.DamagePctBonusDistanceFar] = Properties[PropertyEnum.DamagePctBonusDistanceFar];
             extraProperties[PropertyEnum.DamagePctBonusDistanceClose] = Properties[PropertyEnum.DamagePctBonusDistanceClose];
             extraProperties.CopyPropertyRange(Properties, PropertyEnum.DamageMultPowerCdKwd);
+#if GAME_VERSION_1_53
+            extraProperties.CopyPropertyRange(Properties, PropertyEnum.DamageMultPowerCdKwdForKwd);
+#endif
 
             extraProperties[PropertyEnum.CreatorEntityAssetRefBase] = Owner.GetOriginalWorldAsset();
             extraProperties[PropertyEnum.CreatorEntityAssetRefCurrent] = Owner.GetEntityWorldAsset();
