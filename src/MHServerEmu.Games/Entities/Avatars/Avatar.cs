@@ -5318,15 +5318,17 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private void RestoreMissionRewardProperties(Player player)
         {
+            using var rewardPropsHandle = ListPool<PropertyId>.Instance.Get(out List<PropertyId> rewardProps);
+
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.MissionRewardReceived))
-            {
-                Property.FromParam(kvp.Key, 0, out PrototypeId missionProtoRef);
-                RestoreMissionRewardProperties(player, missionProtoRef);
-            }
+                rewardProps.Add(kvp.Key);
 
             foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.MissionRewardReceived))
+                rewardProps.Add(kvp.Key);
+
+            foreach (PropertyId propId in rewardProps)
             {
-                Property.FromParam(kvp.Key, 0, out PrototypeId missionProtoRef);
+                Property.FromParam(propId, 0, out PrototypeId missionProtoRef);
                 RestoreMissionRewardProperties(player, missionProtoRef);
             }
         }
