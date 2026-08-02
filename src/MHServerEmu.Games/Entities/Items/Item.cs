@@ -224,6 +224,20 @@ namespace MHServerEmu.Games.Entities.Items
                         if (avatar != null && avatar.IsInWorld && avatar.CurrentTeamUpAgent == ownerAgent)
                             ApplyTeamUpAffixesToAvatar(avatar);
                     }
+
+                    // Show tip for equipped cosmic items
+                    if (owner is Avatar && ItemSpec.RarityProtoRef == GameDatabase.LootGlobalsPrototype.RarityCosmic)
+                    {
+                        Player playerOwner = owner?.GetOwnerOfType<Player>();
+                        if (playerOwner != null)
+                        {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+                            playerOwner.ShowHUDTutorial(GameDatabase.UIGlobalsPrototype.CosmicEquippedTutorialTip);
+#else
+                            TutorialSystem.ShowTip(playerOwner, GameDatabase.UIGlobalsPrototype.CosmicEquippedTutorialTip);
+#endif
+                        }
+                    }
                 }
             }
 
