@@ -344,10 +344,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SendToChat { get; protected set; }
         public bool ShowForEachAvatar { get; protected set; }
         public bool AlwaysShow { get; protected set; }
-
-        //---
-
-        // V48_TODO: TutorialSystem::ShouldShowTip()
     }
 #endif
 

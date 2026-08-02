@@ -6,6 +6,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -1348,7 +1349,7 @@ namespace MHServerEmu.Games.Entities
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 player.ShowHUDTutorial(GameDatabase.UIGlobalsPrototype.PowerGrantItemTutorialTip);
 #else
-                // V48_TODO: TutorialSystem::ShowTip()
+                TutorialSystem.ShowTip(player, GameDatabase.UIGlobalsPrototype.PowerGrantItemTutorialTip);
 #endif
             }
 

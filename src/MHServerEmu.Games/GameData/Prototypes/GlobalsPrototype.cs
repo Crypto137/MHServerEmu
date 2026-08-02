@@ -910,8 +910,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MessagePrivateDisallowedInRaid { get; protected set; }
         public PrototypeId MessageQueueNotAvailableInRaid { get; protected set; }
         public PrototypeId PowerTooltipBodyNextRank1Antireq { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public HUDTutorialPrototype CosmicEquippedTutorialTip { get; protected set; }
+#else
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TipPrototype CosmicEquippedTutorialTip { get; protected set; }
+#endif
         public PrototypeId MessageRegionDisabledPortalFail { get; protected set; }
 #if GAME_VERSION_1_48
         public PrototypeId PowerTooltipBodyTeamUp { get; protected set; }

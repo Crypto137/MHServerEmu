@@ -577,9 +577,13 @@ namespace MHServerEmu.Games.Entities
                 _notifiedPlayers.Add(player.Id);
             }
 
-            // V48_TODO?: This may need to use TutorialSystem::ShowTip() instead.
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (hotspotProto.TutorialTip != null)
                 player.ShowHUDTutorial(hotspotProto.TutorialTip);
+#else
+            if (hotspotProto.TutorialTip != null)
+                TutorialSystem.ShowTip(player, hotspotProto.TutorialTip);
+#endif
 
             if (hotspotProto.KismetSeq != PrototypeId.Invalid)
                 player.PlayKismetSeq(hotspotProto.KismetSeq);

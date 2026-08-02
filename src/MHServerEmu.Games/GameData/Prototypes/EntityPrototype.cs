@@ -272,8 +272,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool RemoveNavInfluenceOnKilled { get; protected set; }
         public bool AlwaysSimulated { get; protected set; }
         public bool XPIsShared { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public HUDTutorialPrototype TutorialTip { get; protected set; }
+#else
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TipPrototype TutorialTip { get; protected set; }
+#endif
         public bool TrackingDisabled { get; protected set; }
         public PrototypeId[] ModifiersGuaranteed { get; protected set; }
         public float InteractRangeBonus { get; protected set; }
