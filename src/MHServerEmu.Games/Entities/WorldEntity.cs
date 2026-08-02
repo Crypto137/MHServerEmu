@@ -561,8 +561,10 @@ namespace MHServerEmu.Games.Entities
             if (newOnServer)
             {
                 settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 if (IsTeamUpAgent)
                     settings.OptionFlags |= EntitySettingsOptionFlags.IsClientEntityHidden;
+#endif
             }
 
             EnterWorld(region, position, orientation, settings);
