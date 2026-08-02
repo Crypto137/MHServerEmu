@@ -900,8 +900,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MessageAlreadyInQueue { get; protected set; }
         public PrototypeId MessageOnlyPartyLeaderCanQueue { get; protected set; }
         public PrototypeId MessageTeleportTargetIsInMatch { get; protected set; }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public HUDTutorialPrototype PowerGrantItemTutorialTip { get; protected set; }
+#else
+        [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
+        public TipPrototype PowerGrantItemTutorialTip { get; protected set; }
+#endif
         public PrototypeId MessagePrivateDisallowedInRaid { get; protected set; }
         public PrototypeId MessageQueueNotAvailableInRaid { get; protected set; }
         public PrototypeId PowerTooltipBodyNextRank1Antireq { get; protected set; }

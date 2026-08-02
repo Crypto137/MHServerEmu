@@ -1345,7 +1345,11 @@ namespace MHServerEmu.Games.Entities
                 Player player = GetOwnerOfType<Player>();
                 if (!Verify.IsNotNull(player)) return false;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 player.ShowHUDTutorial(GameDatabase.UIGlobalsPrototype.PowerGrantItemTutorialTip);
+#else
+                // V48_TODO: TutorialSystem::ShowTip()
+#endif
             }
 
             return true;
