@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 
 namespace MHServerEmu.Games.Social.Communities
@@ -9,7 +8,7 @@ namespace MHServerEmu.Games.Social.Communities
     {
         None,
         System,
-        User
+        User,
     }
 
     public enum CircleId    // Also known as SystemCircle from symbolic lookup
@@ -21,7 +20,7 @@ namespace MHServerEmu.Games.Social.Communities
         __Nearby,
         __Party,
         __Guild,
-        NumCircles
+        NumCircles,
     }
 
     /// <summary>
@@ -29,17 +28,15 @@ namespace MHServerEmu.Games.Social.Communities
     /// </summary>
     public class CommunityCircle
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
-        private static readonly CommunityCirclePrototype[] Prototypes = new CommunityCirclePrototype[]
-        {
+        private static readonly CommunityCirclePrototype[] Prototypes =
+        [
             new(CircleId.__None,    false,  false,  false,  false,  false,  false,  false,  false, 0,   false,  CommunityBroadcastFlags.None),
             new(CircleId.__Friends, true,   true,   false,  false,  false,  false,  false,  false, 96,  true,   CommunityBroadcastFlags.Subscription),
             new(CircleId.__Ignore,  true,   true,   false,  true,   true,   false,  false,  false, 128, false,  CommunityBroadcastFlags.None),
             new(CircleId.__Nearby,  false,  false,  false,  false,  true,   false,  false,  false, 0,   false,  CommunityBroadcastFlags.Local),
             new(CircleId.__Party,   false,  true,   false,  false,  false,  false,  true,   false, 0,   false,  CommunityBroadcastFlags.Subscription),
             new(CircleId.__Guild,   false,  false,  false,  false,  false,  false,  true,   false, 0,   false,  CommunityBroadcastFlags.OnDemand),
-        };
+        ];
 
         public Community Community { get; }
         public string Name { get; }
@@ -205,7 +202,7 @@ namespace MHServerEmu.Games.Social.Communities
                     return prototype;
             }
 
-            Logger.Warn($"GetPrototype(): Prototype for id {Id} not found");
+            Verify.IsTrue(false);
             return Prototypes[0];
         }
     }
