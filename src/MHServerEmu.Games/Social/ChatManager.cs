@@ -9,7 +9,6 @@ using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Communities;
-using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Social
 {
@@ -80,7 +79,7 @@ namespace MHServerEmu.Games.Social
                     break;
 
                 default:
-                    Logger.Warn($"HandleChat(): Received a chat for unexpected room type {chat.RoomType} from player [{player}]");
+                    Verify.IsTrue(false, $"Received a chat for unhandled room type {chat.RoomType} from player [{player}]");
                     break;
             }
         }
@@ -111,12 +110,12 @@ namespace MHServerEmu.Games.Social
 
         // ChatFromGameSystem messages are local to this game instance and do not go through the grouping manager
 
-        public bool SendChatFromGameSystem(LocaleStringId localeString, List<PlayerConnection> clientList)
+        public void SendChatFromGameSystem(LocaleStringId localeString, List<PlayerConnection> clientList)
         {
-            if (localeString == LocaleStringId.Invalid) return Logger.WarnReturn(false, "SendChatFromGameSystem(): localeString == LocaleStringId.Invalid");
+            if (!Verify.IsTrue(localeString != LocaleStringId.Invalid)) return;
 
             if (clientList.Count == 0)
-                return true;
+                return;
             
             // Args don't appear to be needed for anything in 1.52
             var message = NetMessageChatFromGameSystem.CreateBuilder()
@@ -125,7 +124,6 @@ namespace MHServerEmu.Games.Social
                 .Build();
 
             Game.NetworkManager.SendMessageToMultiple(clientList, message);
-            return true;
         }
 
         public void SendChatFromGameSystem(LocaleStringId localeString, Player player)
@@ -141,14 +139,14 @@ namespace MHServerEmu.Games.Social
             SendChatFromGameSystem((LocaleStringId)5066146868144571696, player);
         }
 
-        public bool SendChatFromGameSystem(LocaleStringId localeString, Player player, CircleId circleId)
+        public void SendChatFromGameSystem(LocaleStringId localeString, Player player, CircleId circleId)
         {
-            if (player == null) return Logger.WarnReturn(false, "SendChatFromGameSystem(): player == null");
-            if (circleId == CircleId.__None) return Logger.WarnReturn(false, "SendChatFromGameSystem(): circleId == CircleId.__None");
+            if (!Verify.IsNotNull(player)) return;
+            if (!Verify.IsTrue(circleId != CircleId.__None)) return;
 
             CommunityCircle circle = player.Community.GetCircle(circleId);
             if (circle == null)
-                return true;
+                return;
 
             using var clientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> clientList);
 
@@ -162,9 +160,7 @@ namespace MHServerEmu.Games.Social
                 clientList.Add(memberPlayer.PlayerConnection);
             }
 
-            bool success = SendChatFromGameSystem(localeString, clientList);
-
-            return success;
+            SendChatFromGameSystem(localeString, clientList);
         }
 
         public void SendChatFromGameSystem(LocaleStringId localeString, Region region)
@@ -181,13 +177,13 @@ namespace MHServerEmu.Games.Social
 
         #region ChatFromMetaGame
 
-        public bool SendChatFromMetaGame(LocaleStringId localeString, List<PlayerConnection> clientList, 
+        public void SendChatFromMetaGame(LocaleStringId localeString, List<PlayerConnection> clientList, 
             Player player1, Player player2, LocaleStringId arg = LocaleStringId.Blank)
         {
-            if (localeString == LocaleStringId.Invalid) return Logger.WarnReturn(false, "SendChatFromMetaGame(): localeString == LocaleStringId.Invalid");
+            if (!Verify.IsTrue(localeString != LocaleStringId.Invalid)) return;
 
             if (clientList.Count == 0)
-                return true;
+                return;
 
             var message = NetMessageChatFromMetaGame.CreateBuilder()
                 .SetSourceStringId((ulong)GameDatabase.GlobalsPrototype.MetaGameLocalized)
@@ -198,7 +194,6 @@ namespace MHServerEmu.Games.Social
             if (player2 != null) message.SetPlayerName2(player2.GetName());
 
             Game.NetworkManager.SendMessageToMultiple(clientList, message.Build());
-            return true;
         }
 
         #endregion
@@ -219,33 +214,31 @@ namespace MHServerEmu.Games.Social
 
         // NOTE: It's not safe to pool filter lists here because the implementation of the grouping manager may change.
 
-        private bool SendChatToNearby(Player player, NetMessageChat chat)
+        private void SendChatToNearby(Player player, NetMessageChat chat)
         {
             Community community = player.Community;
 
             CommunityCircle circle = community.GetCircle(CircleId.__Nearby);
-            if (circle == null) return Logger.WarnReturn(false, "SendChatToNearby(): circle == null");
+            if (!Verify.IsNotNull(circle)) return;
 
             List<ulong> playerFilter = new();
             foreach (CommunityMember member in community.IterateMembers(circle))
                 playerFilter.Add(member.DbId);
 
             SendChat(player, chat, playerFilter);
-            return true;
         }
 
-        private bool SendChatToPvPTeam(Player player, NetMessageChat chat)
+        private void SendChatToPvPTeam(Player player, NetMessageChat chat)
         {
             MetaGameTeam team = player.GetPvPTeam();
             if (team == null)
-                return false;
+                return;
 
             List<ulong> playerFilter = new();
             foreach (Player teamPlayer in team)
                 playerFilter.Add(teamPlayer.DatabaseUniqueId);
 
             SendChat(player, chat, playerFilter);
-            return true;
         }
 
         private void SendChat(Player player, NetMessageChat chat, List<ulong> playerFilter = null)

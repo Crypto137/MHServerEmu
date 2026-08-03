@@ -85,16 +85,16 @@ namespace MHServerEmu.Games.Social.Parties
                     break;
 
                 default:
-                    Logger.Warn($"OnClientPartyOperationRequest(): Unhandled operation {request.Operation} from player {player}");
+                    Verify.IsTrue(false, $"Unhandled operation {request.Operation} from player {player}");
                     SendOperationResultToClient(player, request, GroupingOperationResult.eGOPR_SystemError);
                     break;
             }
         }
 
-        public bool OnPartyOperationRequestServerResult(ulong playerDbId, PartyOperationPayload request, GroupingOperationResult result)
+        public void OnPartyOperationRequestServerResult(ulong playerDbId, PartyOperationPayload request, GroupingOperationResult result)
         {
             Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
-            if (player == null) return Logger.WarnReturn(false, "OnPartyOperationRequestServerResult(): player == null");
+            if (!Verify.IsNotNull(player)) return;
 
             switch (request.Operation)
             {
@@ -111,7 +111,7 @@ namespace MHServerEmu.Games.Social.Parties
                             .Build();
 
                         SendOperationRequestToPlayerManager(declineRequest);
-                        return true;
+                        return;
                     }
                     break;
 
@@ -119,12 +119,11 @@ namespace MHServerEmu.Games.Social.Parties
                     // The client interprets decline requests as if they are coming from the target player,
                     // so don't forward this back to the declining player.
                     if (request.RequestingPlayerDbId == player.DatabaseUniqueId)
-                        return true;
+                        return;
                     break;
             }
 
             SendOperationResultToClient(player, request, result);
-            return true;
         }
 
         public void OnPartyInfoServerUpdate(ulong playerDbId, ulong groupId, PartyInfo partyInfo)
@@ -253,9 +252,9 @@ namespace MHServerEmu.Games.Social.Parties
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
-        private static bool SendOperationResultToClient(Player player, PartyOperationPayload request, GroupingOperationResult result)
+        private static void SendOperationResultToClient(Player player, PartyOperationPayload request, GroupingOperationResult result)
         {
-            if (player == null) return Logger.WarnReturn(false, "SendOperationResultToClient(): player == null");
+            if (!Verify.IsNotNull(player)) return;
 
             PartyOperationRequestClientResult message = PartyOperationRequestClientResult.CreateBuilder()
                 .SetRequest(request)
@@ -263,7 +262,6 @@ namespace MHServerEmu.Games.Social.Parties
                 .Build();
 
             player.SendMessage(message);
-            return true;
         }
 #endif
     }

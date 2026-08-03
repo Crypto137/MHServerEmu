@@ -19,8 +19,6 @@ namespace MHServerEmu.Games.Social.Guilds
 
     public class Guild
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Dictionary<ulong, GuildMember> _members = new();
 
         private readonly EventGroup _pendingEvents = new();
@@ -177,8 +175,8 @@ namespace MHServerEmu.Games.Social.Guilds
             ulong playerDbId = guildMemberInfo.PlayerId;
 
             GuildMember existingMember = GetMember(playerDbId);
-            if (existingMember != null)
-                return Logger.WarnReturn<GuildMember>(null, $"AddMember(): Duplicate guild member found.  existingMember={existingMember}");
+            if (!Verify.IsTrue(existingMember == null, $"Duplicate guild member found.  existingMember={existingMember}"))
+                return null;
 
             GuildMember member = new(this, guildMemberInfo);
             _members.Add(playerDbId, member);
@@ -197,8 +195,8 @@ namespace MHServerEmu.Games.Social.Guilds
         public bool RemoveMember(ulong playerDbId)
         {
             GuildMember member = GetMember(playerDbId);
-            if (member == null)
-                return Logger.WarnReturn(false, $"RemoveMember(): Guild member not found. id=0x{playerDbId:X}");
+            if (!Verify.IsNotNull(member, $"Guild member not found. id=0x{playerDbId:X}"))
+                return false;
 
             if (member.Membership == GuildMembership.eGMLeader)
                 LeaderDbId = 0;
@@ -250,8 +248,8 @@ namespace MHServerEmu.Games.Social.Guilds
             }
             else
             {
-                if (newMembership == GuildMembership.eGMNone)
-                    return Logger.WarnReturn(result, $"ChangeMember(): Changing guild member, but member not found, and new membership is none. memberInfo={guildMemberInfo}");
+                if (!Verify.IsTrue(newMembership != GuildMembership.eGMNone, $"Changing guild member, but member not found, and new membership is none. memberInfo={guildMemberInfo}"))
+                    return result;
 
                 if (AddMember(guildMemberInfo) != null)
                     result = GuildChangeMemberResult.Added;
@@ -353,11 +351,8 @@ namespace MHServerEmu.Games.Social.Guilds
 
         public void ReplicateToPlayer(Player player)
         {
-            if (_members.ContainsKey(player.DatabaseUniqueId) == false)
-            {
-                Logger.Warn($"ReplicateToPlayer(): Player [{player}] is not a member of guild [{this}]");
+            if (!Verify.IsTrue(_members.ContainsKey(player.DatabaseUniqueId), $"Player [{player}] is not a member of guild [{this}]"))
                 return;
-            }
 
             if (_guildCompleteInfoCache == null)
                 CacheGuildCompleteInfo();
