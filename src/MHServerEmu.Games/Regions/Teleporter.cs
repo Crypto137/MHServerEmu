@@ -24,8 +24,6 @@ namespace MHServerEmu.Games.Regions
     /// </summary>
     public class Teleporter : IPoolable, IDisposable
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public Player Player { get; private set; }
         public TeleportContextEnum Context { get; private set; }
 
@@ -43,11 +41,11 @@ namespace MHServerEmu.Games.Regions
         public PrototypeId RequiredItemProtoRef { get; set; }
         public ulong RequiredItemEntityId { get; set; }
         public NetStructPortalInstance AccessPortal { get; set; }
-        public List<PrototypeId> Affixes { get; set; }
+        public List<PrototypeId> Affixes { get; private set; }
         public int PlayerDeaths { get; set; }
         public ulong DangerRoomScenarioItemDbGuid { get; set; }
         public PrototypeId ItemRarity { get; set; }
-        public PropertyCollection Properties { get; set; }
+        public PropertyCollection Properties { get; private set; }
         public PrototypeId DangerRoomScenarioRef { get; set; }
 
         public bool IsInPool { get; set; }
@@ -84,15 +82,17 @@ namespace MHServerEmu.Games.Regions
         {
             ObjectPoolManager pool = ObjectPoolManager.Instance;
 
-            if (Affixes != null)
+            if (Verify.IsNotNull(Affixes))
+            {
                 ListPool<PrototypeId>.Instance.Return(Affixes);
-            else
-                Logger.Warn("Dispose(): Affixes == null");
+                Affixes = null;
+            }
 
-            if (Properties != null)
+            if (Verify.IsNotNull(Properties))
+            {
                 pool.Return(Properties);
-            else
-                Logger.Warn("Dispose(): Properties == null");
+                Properties = null;
+            }
 
             pool.Return(this);
         }
@@ -106,10 +106,10 @@ namespace MHServerEmu.Games.Regions
             Properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
         }
 
-        public bool SetAccessPortal(Transition accessPortalEntity)
+        public void SetAccessPortal(Transition accessPortalEntity)
         {
-            if (accessPortalEntity == null) return Logger.WarnReturn(false, "SetAccessPortal(): accessPortalEntity == null");
-            if (accessPortalEntity.IsInWorld == false) return Logger.WarnReturn(false, "SetAccessPortal(): accessPortalEntity.IsInWorld == false");
+            if (!Verify.IsNotNull(accessPortalEntity)) return;
+            if (!Verify.IsTrue(accessPortalEntity.IsInWorld)) return;
 
             ParentRegionId = accessPortalEntity.Region.Id;
 
@@ -122,16 +122,15 @@ namespace MHServerEmu.Games.Regions
                 portalInstanceBuilder.SetOwnerPlayerDbId(ownerDbId).SetBoundToOwner(true);
 
             AccessPortal = portalInstanceBuilder.Build();
-            return true;
         }
 
-        public bool CopyEndlessRegionData(Region region, bool incrementEndlessLevel)
+        public void CopyEndlessRegionData(Region region, bool incrementEndlessLevel)
         {
             RegionPrototype regionProto = region.Prototype;
-            if (regionProto == null) return Logger.WarnReturn(false, "CopyEndlessRegionData(): regionProto == null");
+            if (!Verify.IsNotNull(regionProto)) return;
 
-            if (regionProto.HasEndlessTheme() == false)
-                return Logger.WarnReturn(false, $"CopyEndlessRegionData(): Region [{regionProto}] is not an endless region");
+            if (!Verify.IsTrue(regionProto.HasEndlessTheme(), $"Region [{regionProto}] is not an endless region"))
+                return;
 
             RegionSettings settings = region.Settings;
 
@@ -159,8 +158,6 @@ namespace MHServerEmu.Games.Regions
             Properties.CopyPropertyRange(region.Properties, PropertyEnum.ScoringEventTimerAccumTimeMS);
 
             DangerRoomScenarioRef = settings.DangerRoomScenarioRef;
-
-            return true;
         }
 
         public bool TeleportToTarget(PrototypeId targetProtoRef)
@@ -168,16 +165,16 @@ namespace MHServerEmu.Games.Regions
             if (CanTeleport() == false)
                 return false;
 
-            var targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
-            if (targetProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): targetProto == null");
+            RegionConnectionTargetPrototype targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
+            if (!Verify.IsNotNull(targetProto)) return false;
 
             // V52_NOTE: The data for 1.52 doesn't specify the correct difficulty tiers in SurturRaidRegionBand,
             // which causes the cosmic difficulty to be clamped to red. Resolve the target region here to avoid this.
             RegionPrototype currentRegionProto = Player.GetRegion()?.Prototype;
-            if (currentRegionProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): currentRegionProto == null");
+            if (!Verify.IsNotNull(currentRegionProto)) return false;
 
             RegionPrototype destRegionProto = targetProto.Region.As<RegionPrototype>();
-            if (destRegionProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): destRegionProto == null");
+            if (!Verify.IsNotNull(destRegionProto)) return false;
 
             PrototypeId regionProtoRef = RegionPrototype.Equivalent(destRegionProto, currentRegionProto)
                 ? currentRegionProto.DataRef
@@ -196,10 +193,10 @@ namespace MHServerEmu.Games.Regions
                 return false;
 
             Region region = Player.GetRegion();
-            if (region == null) return Logger.WarnReturn(false, "TeleportToTarget(): region == null");
+            if (!Verify.IsNotNull(region)) return false;
 
             RegionPrototype destinationRegionProto = regionProtoRef.As<RegionPrototype>();
-            if (destinationRegionProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): destinationRegionProto == null");
+            if (!Verify.IsNotNull(destinationRegionProto)) return false;
 
             // Fix endless data if needed
             if (destinationRegionProto.HasEndlessTheme() && EndlessLevel <= 0)
@@ -275,10 +272,10 @@ namespace MHServerEmu.Games.Regions
                 return false;
 
             WaypointPrototype waypointProto = waypointProtoRef.As<WaypointPrototype>();
-            if (waypointProto == null) return Logger.WarnReturn(false, "TeleportToWaypoint(): waypointProto == null");
+            if (!Verify.IsNotNull(waypointProto)) return false;
 
             RegionConnectionTargetPrototype targetProto = waypointProto.Destination.As<RegionConnectionTargetPrototype>();
-            if (targetProto == null) return Logger.WarnReturn(false, "TeleportToWaypoint(): targetProto == null");
+            if (!Verify.IsNotNull(targetProto)) return false;
 
 #if !GAME_VERSION_1_48
             DifficultyTierRef = difficultyProtoRef;
@@ -313,10 +310,10 @@ namespace MHServerEmu.Games.Regions
         public bool TeleportToTransition(ulong entityId)
         {
             Transition transition = Player.Game.EntityManager.GetEntity<Transition>(entityId);
-            if (transition == null) return Logger.WarnReturn(false, "TeleportToTransitionEntity(): transition == null");
+            if (!Verify.IsNotNull(transition)) return false;
 
             TransitionPrototype transitionProto = transition.TransitionPrototype;
-            if (transitionProto == null) return Logger.WarnReturn(false, "TeleportToTransitionEntity(): transitionProto == null");
+            if (!Verify.IsNotNull(transitionProto)) return false;
 
             Vector3 targetPos = transition.RegionLocation.Position;
             Orientation targetRot = transition.RegionLocation.Orientation;
@@ -328,7 +325,7 @@ namespace MHServerEmu.Games.Regions
 
         public bool TeleportToPlayer(ulong playerDbId)
         {
-            if (playerDbId == 0) return Logger.WarnReturn(false, "TeleportToPlayer(): playerDbId == 0");
+            if (!Verify.IsTrue(playerDbId != 0)) return false;
 
             // See if we can do a local teleport
             Avatar otherAvatar = Player.Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId)?.CurrentAvatar;
@@ -366,13 +363,14 @@ namespace MHServerEmu.Games.Regions
         private bool TeleportToLocalTarget(PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
         {
             Region region = Player.GetRegion();
-            if (region == null) return Logger.WarnReturn(false, "TeleportToLocalTarget(): region == null");
+            if (!Verify.IsNotNull(region)) return false;
 
             Vector3 position = Vector3.Zero;
             Orientation orientation = Orientation.Zero;
 
-            if (region.FindTargetLocation(ref position, ref orientation, areaProtoRef, cellProtoRef, entityProtoRef) == false)
-                return Logger.WarnReturn(false, $"TeleportToLocalTarget(): Failed to find location for local target [area={areaProtoRef.GetName()}, cell={cellProtoRef.GetName()}, entity={entityProtoRef.GetName()}] in region [{region}]");
+            bool locationFound = region.FindTargetLocation(ref position, ref orientation, areaProtoRef, cellProtoRef, entityProtoRef);
+            if (!Verify.IsTrue(locationFound, $"Failed to find location for local target [area={areaProtoRef.GetName()}, cell={cellProtoRef.GetName()}, entity={entityProtoRef.GetName()}] in region [{region}]"))
+                return false;
 
             if (Player.CurrentAvatar.Area?.PrototypeDataRef != areaProtoRef)
                 region.PlayerBeginTravelToAreaEvent.Invoke(new(Player, areaProtoRef));
@@ -386,7 +384,7 @@ namespace MHServerEmu.Games.Regions
         private bool BeginTeleportToQueueTarget(PrototypeId regionProtoRef)
         {
             RegionPrototype destinationRegionProto = regionProtoRef.As<RegionPrototype>();
-            if (destinationRegionProto == null) return Logger.WarnReturn(false, "BeginTeleportToQueueTarget(): destinationRegionProto == null");
+            if (!Verify.IsNotNull(destinationRegionProto)) return false;
 
             if (Player.MatchQueueStatus.IsOwnerInQueue())
             {
@@ -485,7 +483,7 @@ namespace MHServerEmu.Games.Regions
 
         private bool CanTeleport()
         {
-            if (Player == null) return Logger.WarnReturn(false, "CanTeleport(): Player == null");
+            if (!Verify.IsNotNull(Player)) return false;
 
             if (Player.PlayerConnection.HasPendingRegionTransfer)
                 return false;
@@ -493,7 +491,7 @@ namespace MHServerEmu.Games.Regions
             if (TransitionEntity != null)
             {
                 Avatar avatar = Player.CurrentAvatar;
-                if (avatar == null) return Logger.WarnReturn(false, "CanTeleport(): avatar == null");
+                if (!Verify.IsNotNull(avatar)) return false;
 
                 if (avatar.InInteractRange(TransitionEntity, Dialog.InteractionMethod.Use) == false)
                     return false;

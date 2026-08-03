@@ -98,10 +98,10 @@ namespace MHServerEmu.Games.Regions
         public bool Initialize(AreaSettings settings)
         {
             Id = settings.Id;
-            if (Id == 0) return false;
+            if (!Verify.IsTrue(Id != 0)) return false;
 
             Prototype = GameDatabase.GetPrototype<AreaPrototype>(settings.AreaDataRef);
-            if (Prototype == null) return false;
+            if (!Verify.IsNotNull(Prototype)) return false;
 
             Origin = settings.Origin;
             RegionBounds = new Aabb(Origin, Origin);
@@ -112,13 +112,8 @@ namespace MHServerEmu.Games.Regions
             if (settings.RegionSettings.GenerateAreas)
             {
                 Generator = DRAGSystem.LinkGenerator(GenerateLog, Prototype.Generator, this);
-                if (Generator == null)
-                {
-                    if (GenerateLog)
-                        Logger.Error("Area failed to link to a required generator.");
-
+                if (!Verify.IsNotNull(Generator, "Area failed to link to a required generator."))
                     return false;
-                }
 
                 GRandom random = new(RandomSeed);
 
@@ -284,10 +279,11 @@ namespace MHServerEmu.Games.Regions
 
         private bool GeneratePopulation()
         {
-            if (TestStatus(GenerateFlag.Background) == false)
-                return Logger.WarnReturn(false, $"Generate population should have background generator \nRegion:{Region}\nArea:{this}");
+            if (TestStatus(GenerateFlag.Population))
+                return true;
 
-            if (TestStatus(GenerateFlag.Population)) return true;
+            if (!Verify.IsTrue(TestStatus(GenerateFlag.Background), $"GeneratePopulation() should be called when background is already generated\nRegion:{Region}\nArea:{this}"))
+                return false;
 
             var populationProto = PopulationArea.PopulationPrototype;
             if (populationProto?.UseSpawnMap == true)
@@ -326,8 +322,8 @@ namespace MHServerEmu.Games.Regions
 
         private bool GenerateNavi()
         {
-            if (TestStatus(GenerateFlag.Background) == false)
-                return Logger.WarnReturn(false, $"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region}\nArea:{this}");
+            if (!Verify.IsTrue(TestStatus(GenerateFlag.Background), $"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region}\nArea:{this}"))
+                return false;
 
             if (TestStatus(GenerateFlag.Navi))
                 return true;
@@ -418,9 +414,12 @@ namespace MHServerEmu.Games.Regions
 
         public bool GenerateBackground(RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
-            if (Region == null) return false;
-            if (TestStatus(GenerateFlag.Background)) return true;
-            if (Generator == null) return false;
+            if (!Verify.IsNotNull(Region)) return false;
+
+            if (TestStatus(GenerateFlag.Background))
+                return true;
+
+            if (!Verify.IsNotNull(Generator)) return false;
 
             GRandom random = new(RandomSeed);
 
@@ -476,8 +475,10 @@ namespace MHServerEmu.Games.Regions
 
         public static void CreateConnection(Area areaA, Area areaB, Vector3 position, ConnectPosition connectPosition)
         {
+#if DEBUG
             if (areaA.GenerateLog)
                 Logger.Debug($"CreateConnection(): Connect {position} {areaA.Id} <> {areaB.Id}");
+#endif
 
             areaA.AddConnection(position, areaB, connectPosition);
             areaB.AddConnection(position, areaA, connectPosition);
@@ -503,7 +504,7 @@ namespace MHServerEmu.Games.Regions
         public KeywordsMask GetKeywordsMask()
         {
             AreaPrototype areaProto = Prototype;
-            if (areaProto == null) return Logger.WarnReturn(KeywordsMask.Empty, "GetKeywordsMask(): areaProto == null");
+            if (!Verify.IsNotNull(areaProto)) return KeywordsMask.Empty;
             return areaProto.KeywordsMask;
         }
 

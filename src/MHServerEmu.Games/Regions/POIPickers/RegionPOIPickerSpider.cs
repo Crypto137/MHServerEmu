@@ -8,8 +8,6 @@ namespace MHServerEmu.Games.Regions.POIPickers
 {
     public class RegionPOIPickerSpider
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly POISpiderNode _root;
         private readonly PrototypeId _poiGroupProto;
 
@@ -42,14 +40,14 @@ namespace MHServerEmu.Games.Regions.POIPickers
 
         public bool GetCellsForArea(Area area, Picker<POISpiderNode> picker, List<Prototype> list)
         {
-            if (area == null) return false;
+            if (!Verify.IsNotNull(area)) return false;
 
             int picks = GetAreaPicks(area);
             for (int pick = 0; pick < picks; ++pick)
             {
                 POISpiderNode node = _root.PickNode(picker, area);
-                if (node == null)
-                    Logger.ErrorReturn(false, $"GetCellsForArea(): Area failed to resolve its Points of Interest.");
+                if (!Verify.IsNotNull(node, $"Area failed to resolve its Points of Interest. Region: {area.Region} Area: {area}"))
+                    return false;
 
                 list.Add(node.Prototype);
             }

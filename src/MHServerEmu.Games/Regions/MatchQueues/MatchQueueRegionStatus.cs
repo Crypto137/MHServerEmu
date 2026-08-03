@@ -10,8 +10,6 @@ namespace MHServerEmu.Games.Regions.MatchQueues
     /// </summary>
     public class MatchQueueRegionStatus
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public PrototypeId RegionRef { get; }
         public PrototypeId DifficultyTierRef { get; }
         public ulong GroupId { get; set; }
@@ -44,11 +42,7 @@ namespace MHServerEmu.Games.Regions.MatchQueues
 
         public void UpdateQueue(int playersInQueue)
         {
-            if (playersInQueue < 0)
-            {
-                Logger.Warn("UpdateQueue(): playersInQueue < 0");
-                return;
-            }
+            if (!Verify.IsTrue(playersInQueue >= 0)) return;
 
             PlayersInQueue = playersInQueue;
         }

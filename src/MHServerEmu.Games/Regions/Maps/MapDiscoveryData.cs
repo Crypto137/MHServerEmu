@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
@@ -16,8 +18,6 @@ namespace MHServerEmu.Games.Regions.Maps
     /// </summary>
     public class MapDiscoveryData : ISerialize
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private ulong _regionId;
         private PrototypeId _regionProtoRef;    // Needed to reset discovery for region instances in other games.
         private TimeSpan _accessTimestamp;
@@ -69,16 +69,16 @@ namespace MHServerEmu.Games.Regions.Maps
 
         public bool DiscoverEntity(WorldEntity worldEntity)
         {
-            if (worldEntity.IsDiscoverable == false)
-                return Logger.WarnReturn(false, $"DiscoverEntity(): Entity {worldEntity} is not discoverable");
+            if (!Verify.IsTrue(worldEntity.IsDiscoverable, $"Entity {worldEntity} is not discoverable"))
+                return false;
 
             return _discoveredEntities.Add(worldEntity.Id);
         }
 
         public bool UndiscoverEntity(WorldEntity worldEntity)
         {
-            if (worldEntity.IsDiscoverable == false)
-                return Logger.WarnReturn(false, $"UndiscoverEntity(): Entity {worldEntity} is not discoverable");
+            if (!Verify.IsTrue(worldEntity.IsDiscoverable, $"Entity {worldEntity} is not discoverable"))
+                return false;
 
             return _discoveredEntities.Remove(worldEntity.Id);
         }
@@ -113,14 +113,14 @@ namespace MHServerEmu.Games.Regions.Maps
 
         public bool SendLowResMapUpdate(Player player, Vector3? position = null)
         {
-            var aoi = player.AOI;
-            if (aoi == null) return Logger.WarnReturn(false, $"LowResMapUpdate(): AOI == null");
+            AreaOfInterest aoi = player.AOI;
+            if (!Verify.IsNotNull(aoi)) return false;
 
-            var regionManager = player.Game.RegionManager;
-            if (regionManager == null) return Logger.WarnReturn(false, $"LowResMapUpdate(): regionManager == null");
+            RegionManager regionManager = player.Game.RegionManager;
+            if (!Verify.IsNotNull(regionManager)) return false;
 
-            var region = regionManager.GetRegion(RegionId);
-            if (region == null) return Logger.WarnReturn(false, $"LowResMapUpdate(): region == null");
+            Region region = regionManager.GetRegion(RegionId);
+            if (!Verify.IsNotNull(region)) return false;
 
             bool regenNavi = false;
             bool update = false;
@@ -130,29 +130,36 @@ namespace MHServerEmu.Games.Regions.Maps
 
             if (position.HasValue)
             {
-                var volume = region.GetLowResVolume(position.Value);
+                Aabb volume = region.GetLowResVolume(position.Value);
                 aoi.AddCellsFromVolume(volume, areas, cells, ref regenNavi);
             }
             else
             {
-                var map = LowResMap.Map;
+                GBitArray map = LowResMap.Map;
                 Vector3 posAtIndex = Vector3.Zero;
                 bool isRevealAll = LowResMap.IsRevealAll;
                 int size = Math.Min(map.Size, region.LowResVectorSize);
 
                 for (int index = 0; index < size; index++)
+                {
                     if (isRevealAll || map[index])
                     {
-                        if (LowResMap.Translate(index, ref posAtIndex) == false) continue;
-                        var volume = region.GetLowResVolume(posAtIndex);
+                        if (LowResMap.Translate(index, ref posAtIndex) == false)
+                            continue;
+
+                        Aabb volume = region.GetLowResVolume(posAtIndex);
                         aoi.AddCellsFromVolume(volume, areas, cells, ref regenNavi);
                     }
+                }
 
                 update = true;
             }
 
-            if (regenNavi) aoi.RegenerateClientNavi();
-            if (update) SendMiniMapUpdate(player);
+            if (regenNavi)
+                aoi.RegenerateClientNavi();
+
+            if (update)
+                SendMiniMapUpdate(player);
 
             if (aoi.RemoveCells(areas, cells)) 
                 aoi.RegenerateClientNavi();

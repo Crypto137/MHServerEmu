@@ -3,7 +3,6 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
-using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -17,6 +16,54 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Heroic = 1,
         SuperHeroic = 2,
     }
+
+#if GAME_VERSION_1_53
+    [AssetEnum((int)Tier00Normal)]
+    public enum DifficultyTier
+    {
+        Tier00Normal,
+        Tier01Heroic,
+        Tier02Cosmic,
+        Tier03,
+        Tier04,
+        Tier05,
+        NumTiers,
+    }
+#else
+    [AssetEnum((int)Green)]
+    public enum DifficultyTier
+    {
+        Green,
+        Red,
+        Cosmic,
+        NumTiers,
+    }
+#endif
+
+#if GAME_VERSION_1_53
+    public enum DifficultyTierMask
+    {
+        None            = 0,
+        Tier00Normal    = 1 << 0,
+        Tier01Heroic    = 1 << 1,
+        Tier02Cosmic    = 1 << 2,
+        Tier03          = 1 << 3,
+        Tier04          = 1 << 4,
+        Tier05          = 1 << 5,
+
+        All = Tier00Normal | Tier01Heroic | Tier02Cosmic | Tier03 | Tier04 | Tier05,
+    }
+#elif GAME_VERSION_1_52
+    public enum DifficultyTierMask
+    {
+        None            = 0,
+        Green           = 1 << 0,
+        Red             = 1 << 1,
+        Cosmic          = 1 << 2,
+
+        All = Green | Red | Cosmic,
+    }
+#endif
 
     #endregion
 

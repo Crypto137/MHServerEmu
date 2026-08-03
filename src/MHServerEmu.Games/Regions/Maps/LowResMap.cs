@@ -8,8 +8,6 @@ namespace MHServerEmu.Games.Regions.Maps
 {
     public class LowResMap : ISerialize
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private GBitArray _map = new();
         private bool _isRevealAll = false;
 
@@ -84,13 +82,13 @@ namespace MHServerEmu.Games.Regions.Maps
 
         public bool Translate(in Vector3 position, ref int index)
         {
-            if (_region == null) return Logger.WarnReturn(false, "Translate(): _region == null");
+            if (!Verify.IsNotNull(_region)) return false;
             return _region.TranslateLowResMap(position, ref index) && index < _map.Size;
         }
 
         public bool Translate(int index, ref Vector3 position)
         {
-            if (_region == null) return Logger.WarnReturn(false, "Translate(): _region == null");
+            if (!Verify.IsNotNull(_region)) return false;
             return _region.TranslateLowResMap(index, ref position);
         }
 
