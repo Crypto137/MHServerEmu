@@ -128,5 +128,43 @@ namespace MHServerEmu.Games.Powers
             
             return maxRankCurve.GetIntAt(maxRankCurve.MaxPosition) > GetStartingRank();
         }
+
+#if GAME_VERSION_1_53
+        public readonly PrototypeId GetCostumeRequired()
+        {
+            PowerProgressionEntryPrototype powerProgEntryProto = PowerProgressionEntryPrototype;
+            if (powerProgEntryProto == null)
+                return PrototypeId.Invalid;
+
+            return powerProgEntryProto.CostumeRequired;
+        }
+#endif
+
+#if GAME_VERSION_1_53
+        public readonly bool PassesCostumeRequirement(PrototypeId costumeProtoRef)
+        {
+            PrototypeId requiredCostumeProtoRef = GetCostumeRequired();
+            return requiredCostumeProtoRef == PrototypeId.Invalid || costumeProtoRef == requiredCostumeProtoRef;
+        }
+#endif
+
+#if GAME_VERSION_1_53
+        public readonly bool IsOmegaTrait()
+        {
+            PowerProgressionEntryPrototype powerProgEntryProto = PowerProgressionEntryPrototype;
+
+            if (powerProgEntryProto != null)
+            {
+                switch (powerProgEntryProto.TraitCategory)
+                {
+                    case TraitCategory.OffenseOmega:
+                    case TraitCategory.DefenseOmega:
+                        return true;
+                }
+            }
+
+            return false;
+        }
+#endif
     }
 }

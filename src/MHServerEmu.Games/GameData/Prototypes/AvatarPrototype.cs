@@ -390,6 +390,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (!Verify.IsTrue(superteamProtoRef != PrototypeId.Invalid)) return false;
             return SuperteamMemberships.HasValue() && SuperteamMemberships.Contains(superteamProtoRef);
         }
+
+#if GAME_VERSION_1_53
+        public bool IsOmegaPrestigeEnabled()
+        {
+            // This works similarly to IsLiveTuningEnabled() methods in WorldEntityPrototype and LootTablePrototype
+            int tuningVar = (int)Math.Floor(LiveTuningManager.GetLiveAvatarTuningVar(this, AvatarEntityTuningVar.eAETV_OmegaPrestigeEnabled));
+
+            if (tuningVar == 0)
+                return false;
+
+            if (tuningVar == 1)
+                return OmegaPrestigeEnabled;
+
+            return true;
+        }
+#endif
     }
 
     public class ItemAssignmentPrototype : Prototype
@@ -517,6 +533,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override CurveId GetMaxRankForPowerAtCharacterLevel() => MaxRankForPowerAtCharacterLevel;
         public override PrototypeId[] GetPrerequisites() => Prerequisites;
         public override PrototypeId[] GetAntirequisites() => Antirequisites;
+
+#if GAME_VERSION_1_53
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            if (TraitRequiresOmegaPrestige)
+            {
+                switch (TraitCategory)
+                {
+                    case TraitCategory.Offense:
+                        TraitCategory = TraitCategory.OffenseOmega;
+                        break;
+
+                    case TraitCategory.Defense:
+                        TraitCategory = TraitCategory.DefenseOmega;
+                        break;
+                }
+            }
+        }
+#endif
     }
 
     public class PowerProgressionTablePrototype : Prototype

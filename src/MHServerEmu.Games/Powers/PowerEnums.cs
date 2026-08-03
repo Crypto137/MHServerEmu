@@ -378,6 +378,8 @@ namespace MHServerEmu.Games.Powers
         Offense,
         Mechanic,
         Defense,
+        OffenseOmega,
+        DefenseOmega,
     }
 #endif
 }
