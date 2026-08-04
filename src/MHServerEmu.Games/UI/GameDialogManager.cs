@@ -1,33 +1,33 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.UI
 {
     public class GameDialogManager
     {
+        private readonly Dictionary<ulong, GameDialogInstance> _dialogs = new();
+
+        private ulong _nextServerId = 1;
+
         public Game Game { get; }
-
-        private ulong _newServerId;
-        private ulong NewServerId() => _newServerId++;
-
-        private readonly Dictionary<ulong, GameDialogInstance> _dialogs;
 
         public GameDialogManager(Game game)
         {
             Game = game;
-            _dialogs = new();
-            _newServerId = 1;
         }
 
         public void OnDialogResult(NetMessageDialogResult dialogResult, Player player)
         {
             ulong playerGuid = dialogResult.PlayerGuid;
-            if (player.DatabaseUniqueId != playerGuid) return;
+            if (!Verify.IsTrue(player.DatabaseUniqueId == playerGuid)) return;
+
             ulong serverId = dialogResult.ServerId;
-            if (_dialogs.TryGetValue(serverId, out var dialog))
+            if (_dialogs.TryGetValue(serverId, out GameDialogInstance dialog))
             {
-                if (dialog.PlayerGuid != playerGuid) return;
-                var dialogResponse = new DialogResponse(dialogResult.ButtonIndex, dialogResult.CheckboxClicked);
+                if (!Verify.IsTrue(dialog.PlayerGuid == playerGuid)) return;
+
+                DialogResponse dialogResponse = new(dialogResult.ButtonIndex, dialogResult.CheckboxClicked);
                 dialog.OnResponse.Invoke(playerGuid, dialogResponse);
 
                 RemoveDialog(dialog);
@@ -35,54 +35,37 @@ namespace MHServerEmu.Games.UI
             }
         }
 
-        private Player GetPlayerFromInstance(GameDialogInstance instance)
-        {
-            if (instance == null) return null;
-
-            ulong serverId = instance.ServerId;
-            if (serverId == 0) return null;
-
-            if (_dialogs.ContainsKey(serverId) == false) return null;
-
-            var player = Game.EntityManager.GetEntityByDbGuid<Player>(instance.PlayerGuid);
-            if (player == null)
-            {
-                _dialogs.Remove(serverId);
-                return null;
-            }
-
-            return player;
-        }
-
         public void ShowDialog(GameDialogInstance instance)
         {
             Player player = GetPlayerFromInstance(instance);
-            if (player == null) return;
+            if (!Verify.IsNotNull(player)) return;
 
-            var message = NetMessagePostDialogToClient.CreateBuilder()
+            NetMessagePostDialogToClient message = NetMessagePostDialogToClient.CreateBuilder()
                 .SetServerId(instance.ServerId)
                 .SetPlayerGuid(instance.PlayerGuid)
-                .SetDialog(instance.ToProtobuf()).Build();
+                .SetDialog(instance.ToProtobuf())
+                .Build();
 
             player.SendMessage(message);
         }
 
         public void RemoveDialog(GameDialogInstance instance)
         {
-            var player = GetPlayerFromInstance(instance);
-            if (player == null) return;
+            Player player = GetPlayerFromInstance(instance);
+            if (!Verify.IsNotNull(player)) return;
 
-            var message = NetMessageRemoveDialogFromClient.CreateBuilder()
+            NetMessageRemoveDialogFromClient message = NetMessageRemoveDialogFromClient.CreateBuilder()
                 .SetServerId(instance.ServerId)
-                .SetPlayerGuid(instance.PlayerGuid).Build();
+                .SetPlayerGuid(instance.PlayerGuid)
+                .Build();
 
             player.SendMessage(message);
         }
 
         public GameDialogInstance CreateInstance(ulong playerGuid)
         {
-            ulong serverId = NewServerId();
-            var instance = new GameDialogInstance(this, serverId, playerGuid);
+            ulong serverId = _nextServerId++;
+            GameDialogInstance instance = new(this, serverId, playerGuid);
             _dialogs[serverId] = instance;
             return instance;
         }
@@ -93,6 +76,26 @@ namespace MHServerEmu.Games.UI
                 return null;
 
             return instance;
+        }
+
+        private Player GetPlayerFromInstance(GameDialogInstance instance)
+        {
+            if (!Verify.IsNotNull(instance)) return null;
+
+            ulong serverId = instance.ServerId;
+            if (!Verify.IsTrue(serverId != 0)) return null;
+
+            if (_dialogs.ContainsKey(serverId) == false)
+                return null;
+
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(instance.PlayerGuid);
+            if (!Verify.IsNotNull(player))
+            {
+                _dialogs.Remove(serverId);
+                return null;
+            }
+
+            return player;
         }
     }
 }

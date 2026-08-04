@@ -19,8 +19,6 @@ namespace MHServerEmu.Games.UI
     {
         private const int UISyncDataTimeStartOffsetMS = 100;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         protected readonly UIDataProvider _uiDataProvider;
         protected readonly PrototypeId _widgetRef;
         protected readonly PrototypeId _contextRef;
@@ -40,6 +38,13 @@ namespace MHServerEmu.Games.UI
             _uiDataProvider = uiDataProvider;
             _widgetRef = widgetRef;
             _contextRef = contextRef;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            BuildString(sb);
+            return sb.ToString();
         }
 
         public virtual void Deallocate() { }
@@ -79,28 +84,17 @@ namespace MHServerEmu.Games.UI
             _uiDataProvider.OnUpdateUI(this); 
         }
 
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            BuildString(sb);
-            return sb.ToString();
-        }
-
         /// <summary>
         /// Sets elapsed time in milliseconds for this widget. Mutually exclusive with <see cref="SetTimeRemaining(long)"/>.
         /// </summary>
         public void SetTimeElapsed(long timeElapsedMS)
         {
-            if (_timeEnd != 0)
-            {
-                Logger.Warn("SetTimeElapsed(): _timeEnd != 0");
+            if (!Verify.IsTrue(_timeEnd == 0))
                 _timeEnd = 0;
-            }
-
-            var game = Game.Current;
 
             // Client checks _timeStart against its own GameTime, so we need to add a time offset here to avoid UI issues
-            var clientCurrentTime = (long)game.CurrentTime.TotalMilliseconds - UISyncDataTimeStartOffsetMS;
+            Game game = Game.Current;
+            long clientCurrentTime = (long)game.CurrentTime.TotalMilliseconds - UISyncDataTimeStartOffsetMS;
 
             _timeStart = clientCurrentTime - timeElapsedMS;
             UpdateUI();
@@ -111,11 +105,8 @@ namespace MHServerEmu.Games.UI
         /// </summary>
         public void SetTimeRemaining(long timeRemainingMS)
         {
-            if (_timeStart != 0)
-            {
-                Logger.Warn("SetTimeRemaining(): _timeStart != 0");
+            if (!Verify.IsTrue(_timeStart == 0))
                 _timeStart = 0;
-            }
 
             _timeEnd = (long)Game.Current.CurrentTime.TotalMilliseconds + timeRemainingMS;
             UpdateUI();
