@@ -1036,8 +1036,7 @@ namespace MHServerEmu.Games.Missions
         /// </summary>
         public bool ShouldCreateMission(MissionPrototype missionPrototype)
         {
-            if (missionPrototype == null)
-                return Logger.WarnReturn(false, "ShouldCreateMission(): missionPrototype == false");
+            if (!Verify.IsNotNull(missionPrototype)) return false;
 
             if (missionPrototype is OpenMissionPrototype)
             {
@@ -1156,8 +1155,8 @@ namespace MHServerEmu.Games.Missions
                         if (archive.IsPersistent && versionMismatch)
                         {
                             // Reset the mission if its version has changed
-                            if (CreateMissionByDataRef(missionRef, MissionCreationState.Reset, (MissionState)missionState) == null)
-                                Logger.Warn($"SerializeMissions(): Failed to reset version mismatched mission {missionRef.GetName()}");
+                            Verify.IsNotNull(CreateMissionByDataRef(missionRef, MissionCreationState.Reset, (MissionState)missionState),
+                                $"Failed to reset version mismatched mission {missionRef.GetName()}");
 
                             archive.Skip();
 
@@ -1478,20 +1477,18 @@ namespace MHServerEmu.Games.Missions
         public bool ResetAvatarMissionsForStoryWarp(PrototypeId chapterProtoRef, bool sendToClient)
         {
             Player player = Player;
-            if (player == null) return Logger.WarnReturn(false, "ResetMissions(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             Avatar avatar = player.CurrentAvatar;
-            if (avatar == null) return Logger.WarnReturn(false, "ResetMissions(): avatar == null");
+            if (!Verify.IsNotNull(avatar)) return false;
 
             // Default to chapter 0 (full reset)
             int chapterNumber = 0;
             if (chapterProtoRef != PrototypeId.Invalid)
             {
                 ChapterPrototype chapterProto = chapterProtoRef.As<ChapterPrototype>();
-                if (chapterProto != null)
+                if (Verify.IsNotNull(chapterProto))
                     chapterNumber = chapterProto.ChapterNumber;
-                else
-                    Logger.Warn("ResetMissions(): chapterProto == null");
             }
 
             player.SetActiveChapter(chapterProtoRef);
@@ -1516,11 +1513,8 @@ namespace MHServerEmu.Games.Missions
                     continue;
 
                 MissionPrototype missionProto = mission.Prototype;
-                if (missionProto == null)
-                {
-                    Logger.Warn("ResetAvatarMissionsForStoryWarp(): missionProto == null");
+                if (!Verify.IsNotNull(missionProto))
                     continue;
-                }
 
                 bool hasConditions = missionProto.PrereqConditions != null || missionProto.ActivateConditions != null || missionProto.ActivateNowConditions != null;
                 if (mission.IsAdvancedMission == false && hasConditions)

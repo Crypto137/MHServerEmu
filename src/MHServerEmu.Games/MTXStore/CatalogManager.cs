@@ -89,8 +89,8 @@ namespace MHServerEmu.Games.MTXStore
 
         public bool OnBuyItemFromCatalog(Player player, NetMessageBuyItemFromCatalog buyItemFromCatalog)
         {
-            if (buyItemFromCatalog.HasSkuId == false)
-                return Logger.WarnReturn(false, $"OnBuyItemFromCatalog(): No SkuId received from player [{player}]");
+            if (!Verify.IsTrue(buyItemFromCatalog.HasSkuId, $"No SkuId received from player [{player}]"))
+                return false;
 
             long skuId = buyItemFromCatalog.SkuId;
             long clientPrice = buyItemFromCatalog.ItemUnitPrice;
@@ -115,8 +115,8 @@ namespace MHServerEmu.Games.MTXStore
 
         public bool OnBuyGiftForOtherPlayer(Player buyer, NetMessageBuyGiftForOtherPlayer buyGiftForOtherPlayer)
         {
-            if (buyGiftForOtherPlayer.HasSkuId == false)
-                return Logger.WarnReturn(false, $"OnBuyGiftForOtherPlayer(): No SkuId received from player [{buyer}]");
+            if (!Verify.IsTrue(buyGiftForOtherPlayer.HasSkuId, $"No SkuId received from player [{buyer}]"))
+                return false;
 
             long skuId = buyGiftForOtherPlayer.SkuId;
             long clientPrice = buyGiftForOtherPlayer.ItemUnitPrice;
@@ -289,7 +289,7 @@ namespace MHServerEmu.Games.MTXStore
         private static BuyItemResultErrorCodes AcquireCatalogGuid(Player player, CatalogGuidEntry guidEntry, bool allowTokenReplacements)
         {
             Prototype proto = guidEntry.ItemPrototypeRuntimeIdForClient.As<Prototype>();
-            if (proto == null) return Logger.WarnReturn(BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, "AcquireCatalogItem(): proto == null");
+            if (!Verify.IsNotNull(proto)) return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
 
             for (int i = 0; i < guidEntry.Quantity; i++)
             {
@@ -318,7 +318,7 @@ namespace MHServerEmu.Games.MTXStore
                         break;
 
                     default:
-                        Logger.Warn($"AcquireCatalogItem(): Unimplemented catalog item type {proto.GetType().Name} for {proto}", LogCategory.MTXStore);
+                        Verify.IsTrue(false, $"Unimplemented catalog item type {proto.GetType().Name} for {proto}");
                         result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
                         break;
                 }

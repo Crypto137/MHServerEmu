@@ -8,7 +8,6 @@ namespace MHServerEmu.Games.Dialog
 {
     public class InteractionOption
     {
-        public static readonly Logger Logger = LogManager.CreateLogger();
         public int Priority { get; protected set; }
         public InteractionMethod MethodEnum { get; protected set; }
         public HUDEntityOverheadIcon IndicatorType { get; protected set; }

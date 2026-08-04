@@ -29,7 +29,10 @@ namespace MHServerEmu.Games.GameData.PatchManager
         {
             string patchDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "Patches");
             if (Directory.Exists(patchDirectory) == false)
-                return Logger.WarnReturn(false, "LoadPatchDataFromDisk(): Game data directory not found");
+            {
+                Logger.Warn("LoadPatchDataFromDisk(): Game data directory not found");
+                return false;
+            }
 
             int count = 0;
             var options = new JsonSerializerOptions { Converters = { new PatchEntryConverter() } };

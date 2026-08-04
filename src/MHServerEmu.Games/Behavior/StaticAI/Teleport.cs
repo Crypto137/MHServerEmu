@@ -8,7 +8,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 {
     public class Teleport : IAIState
     {
-        public static readonly Logger Logger = LogManager.CreateLogger();
         public static Teleport Instance { get; } = new();
         private Teleport() { }
 
@@ -33,26 +32,29 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 Orientation agentOrientation = agent.Orientation;
                 Vector3 spawnPoint = blackboard.SpawnPoint;
 
-                if (agent.ChangeRegionPosition(spawnPoint, agentOrientation) != ChangePositionResult.PositionChanged)
-                {
-                    Logger.Warn($"[{agent}] tried to leash teleport but was unsuccessful at position {spawnPoint} with region id {agent.Region.Id}.");
+                ChangePositionResult crpResult = agent.ChangeRegionPosition(spawnPoint, agentOrientation);
+                if (!Verify.IsTrue(crpResult == ChangePositionResult.PositionChanged, $"[{agent}] tried to leash teleport but was unsuccessful at position {spawnPoint} with region id {agent.Region.Id}. Failure code: {crpResult}"))
                     return failResult;
-                }
             }
             else if (teleportContext.TeleportType == TeleportType.AssistedEntity)
             {
                 WorldEntity assistedEntity = ownerController.AssistedEntity;
-                if (assistedEntity == null)
-                    return Logger.WarnReturn(failResult, $"[{agent}] We shouldn't be trying to teleport to the assisted entity if it doesn't exist");
-                if (assistedEntity.IsInWorld == false)
-                    return Logger.WarnReturn(failResult, $"[{agent}] We shouldn't be trying to teleport to the assisted entity [{assistedEntity}] when it's not in the world");
+
+                if (!Verify.IsNotNull(assistedEntity, $"[{agent}] We shouldn't be trying to teleport to the assisted entity if it doesn't exist"))
+                    return failResult;
+
+                if (!Verify.IsTrue(assistedEntity.IsInWorld, $"[{agent}] We shouldn't be trying to teleport to the assisted entity [{assistedEntity}] when it's not in the world"))
+                    return failResult;
 
                 Orientation assitedOrientation = assistedEntity.Orientation;
                 Vector3 assistedPosition = assistedEntity.RegionLocation.Position;
 
-                if (agent.CanPowerTeleportToPosition(assistedPosition) == false) return failResult;
-                if (agent.ChangeRegionPosition(assistedPosition, assitedOrientation, ChangePositionFlags.Teleport) != ChangePositionResult.PositionChanged)
-                    return Logger.WarnReturn(failResult, $"[{agent}] tried to teleport to assisted entity position but was unsuccessful at position {assistedPosition} with region id {agent.Region.Id}.");
+                if (agent.CanPowerTeleportToPosition(assistedPosition) == false)
+                    return failResult;
+
+                ChangePositionResult crpResult = agent.ChangeRegionPosition(assistedPosition, assitedOrientation, ChangePositionFlags.Teleport);
+                if (!Verify.IsTrue(crpResult == ChangePositionResult.PositionChanged, $"[{agent}] tried to teleport to assisted entity position but was unsuccessful at position {assistedPosition} with region id {agent.Region.Id}. Failure code: {crpResult}"))
+                    return failResult;
             }
 
             return StaticBehaviorReturnType.Completed;

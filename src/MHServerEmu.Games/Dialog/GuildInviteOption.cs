@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Social.Guilds;
 
 namespace MHServerEmu.Games.Dialog
@@ -17,11 +18,9 @@ namespace MHServerEmu.Games.Dialog
             if (base.IsCurrentlyAvailable(interacteeDesc, localInteractee, interactor, interactionFlags))
             {
                 Player interactingPlayer = interactor.GetOwnerOfType<Player>();
-                if (interactingPlayer == null)
-                {
-                    Logger.Warn($"GuildInviteOption only works on avatars with a player, but could not find one on {interactor.PrototypeName}!");
+                if (!Verify.IsNotNull(interactingPlayer, $"GuildInviteOption only works on avatars with a player, but could not find one on {interactor.PrototypeName}!"))
                     return false;
-                }
+
                 isAvailable = GuildMember.CanInvite(interactingPlayer.GuildMembership);
             }
             return isAvailable;

@@ -33,12 +33,9 @@ namespace MHServerEmu.Games.Dialog
             base.FillOutputData(isAvailable, ref outInteractions, ref outInteractData, localInteractee, interactor);
 
             if (localInteractee == null || outInteractData == null) return;
-            var vendorTypeProtoRef = localInteractee.Properties[PropertyEnum.VendorType];
-            if (vendorTypeProtoRef == PrototypeId.Invalid) 
-            {
-                Logger.Debug($"Entity has vendor interaction option but doesn't have VendorType set!\nEntity: {localInteractee}");
-                return; 
-            }
+            PrototypeId vendorTypeProtoRef = localInteractee.Properties[PropertyEnum.VendorType];
+            if (!Verify.IsTrue(vendorTypeProtoRef != PrototypeId.Invalid, $"Entity has vendor interaction option but doesn't have VendorType set!\nEntity: {localInteractee}"))
+                return;
 
             var vendorTypeProto = GameDatabase.GetPrototype<VendorTypePrototype>(vendorTypeProtoRef);
             if (vendorTypeProto == null) return;

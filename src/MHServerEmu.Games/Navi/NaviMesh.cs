@@ -26,7 +26,6 @@ namespace MHServerEmu.Games.Navi
             public NaviPatchPrototype Patch;
         }
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
         private readonly NaviSystem _navi;
 
         public Aabb Bounds { get; private set; }
@@ -418,10 +417,12 @@ namespace MHServerEmu.Games.Navi
 
         public Vector3 ProjectToMesh(Vector3 regionPos)
         {
-            if (IsMeshValid == false) return Logger.WarnReturn(Vector3.Zero, $"ProjectToMesh(): Invalid mesh in region {_region}");
+            if (!Verify.IsTrue(IsMeshValid, $"Invalid mesh in region: {_region}"))
+                return Vector3.Zero;
 
             NaviTriangle triangle = NaviCdt.FindTriangleAtPoint(regionPos);
-            if (triangle == null) return Logger.WarnReturn(regionPos, $"ProjectToMesh(): Failed to find triangle at point {regionPos}");
+            if (!Verify.IsNotNull(triangle, $"Failed to find triangle at point {regionPos}"))
+                return regionPos;
 
             return NaviUtil.ProjectToPlane(triangle, regionPos);
         }
@@ -594,18 +595,19 @@ namespace MHServerEmu.Games.Navi
             float padding = 0, HeightSweepType heightSweep = HeightSweepType.None, int maxHeight = short.MaxValue, int minHeight = short.MinValue, Entity owner = null)
         {
             NaviTriangle currentTriangle = NaviCdt.FindTriangleAtPoint(fromPosition);
-            if (currentTriangle == null)
-            {
-                Logger.Warn($"Sweep(): Navi sweep failed to find starting triangle at point: {fromPosition} for mesh: [{this}] (owner=[{owner}])");
-                resultPosition = Vector3.Zero;
-                return SweepResult.Failed;
-            }
-            if (_region == null)
+            if (!Verify.IsNotNull(currentTriangle, $"Navi sweep failed to find starting triangle at point: {fromPosition} for mesh: [{this}] (owner=[{owner}])"))
             {
                 resultPosition = Vector3.Zero;
                 return SweepResult.Failed;
             }
-            NaviSweep naviSweep = new (this, _region, pathFlags, radius, fromPosition, currentTriangle, toPosition, owner, heightSweep, maxHeight, minHeight);
+
+            if (!Verify.IsNotNull(_region))
+            {
+                resultPosition = Vector3.Zero;
+                return SweepResult.Failed;
+            }
+
+            NaviSweep naviSweep = new(this, _region, pathFlags, radius, fromPosition, currentTriangle, toPosition, owner, heightSweep, maxHeight, minHeight);
             SweepResult resultSweep = naviSweep.DoSweep(ref resultPosition, ref resultNormal, padding);
             return resultSweep;
         }
@@ -619,11 +621,8 @@ namespace MHServerEmu.Games.Navi
                 return PointOnLineResult.Failed;
 
             float radius = bounds.GetRadius();
-            if (radius <= 0.0f)
-            {
-                Logger.Debug("This implementation of FindPointOnLineToOccupy requires a radius.");
+            if (!Verify.IsTrue(radius > 0f, "This implementation of FindPointOnLineToOccupy requires a radius."))
                 return PointOnLineResult.Failed;
-            }
 
             maxRange += radius;
             Vector3 targetVector = desiredPosition - startPosition;
@@ -665,7 +664,7 @@ namespace MHServerEmu.Games.Navi
                     return PointOnLineResult.Failed;
             }
 
-            Logger.Debug($"NaviMesh.FindPointOnLineToOccupy loop protection fired. maxRange={maxRange} radius={radius} startPosition={startPosition} desiredPosition={desiredPosition}");
+            Verify.IsTrue(false, $"NaviMesh.FindPointOnLineToOccupy loop protection fired. maxRange={maxRange} radius={radius} startPosition={startPosition} desiredPosition={desiredPosition}");
             return PointOnLineResult.Failed;
         }
 

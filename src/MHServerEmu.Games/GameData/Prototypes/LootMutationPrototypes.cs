@@ -512,8 +512,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
             int level = resolver.ResolveLevel(lootCloneRecord.Level, true);
@@ -525,7 +523,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             lootCloneRecord.Rarity = rarityProtoRef;
 
             ItemPrototype itemProto = lootCloneRecord.ItemProto as ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "Mutate(): itemProto == null");
+            if (!Verify.IsNotNull(itemProto)) return MutationResults.Error;
 
             if (itemProto.IsDroppableForRestrictions(lootCloneRecord, RestrictionTestFlags.Level) == false)
                 itemProto.MakeRestrictionsDroppable(lootCloneRecord, RestrictionTestFlags.Level, out _);
@@ -708,8 +706,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
             if (Affix == PrototypeId.Invalid)
@@ -718,7 +714,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ItemSpec itemSpec = new(lootCloneRecord);
 
             AffixPrototype affixProto = Affix.As<AffixPrototype>();
-            if (affixProto == null) return Logger.WarnReturn(MutationResults.Error, "Mutate(): affixProto == null");
+            if (!Verify.IsNotNull(affixProto)) return MutationResults.Error;
 
             MutationResults affixResult = LootUtilities.AddAffix(resolver, lootCloneRecord, itemSpec, affixProto);
             if (affixResult.HasFlag(MutationResults.Error))
