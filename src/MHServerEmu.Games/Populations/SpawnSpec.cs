@@ -4,7 +4,6 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -26,8 +25,6 @@ namespace MHServerEmu.Games.Populations
 
     public class SpawnSpec
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public const ulong Invalid = 0;
         public ulong Id { get; }
         public Game Game { get; private set; }
@@ -82,7 +79,7 @@ namespace MHServerEmu.Games.Populations
             if (manager == null) return false;
 
             Cell cell = region.GetCellAtPosition(position);
-            if (cell == null) return Logger.WarnReturn(false, "Spawn(): cell == null");
+            if (!Verify.IsNotNull(cell)) return false;
 
             Area area = cell.Area;
 
@@ -145,8 +142,8 @@ namespace MHServerEmu.Games.Populations
                 settings.ItemSpec = Game.LootManager.CreateItemSpec(EntityRef, LootContext.CashShop, null);
 
             ActiveEntity = manager.CreateEntity(settings) as WorldEntity;
-            if (ActiveEntity == null)
-                return Logger.WarnReturn(false, $"Spawn(): Failed to create entity {EntityRef.GetName()}");
+            if (!Verify.IsNotNull(ActiveEntity, $"Failed to create entity {EntityRef.GetName()}"))
+                return false;
 
             var twinBoost = GameDatabase.PopulationGlobalsPrototype.TwinEnemyBoost;
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.EnemyBoost))

@@ -43,8 +43,6 @@ namespace MHServerEmu.Games.Social.Communities
 
     public class CommunityMember : ISerialize
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private ulong _dbId;
         private PrototypeId _regionRef;
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
@@ -92,6 +90,39 @@ namespace MHServerEmu.Games.Social.Communities
             _playerName = playerName;
         }
 
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+
+            sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
+            sb.AppendLine($"{nameof(_dbId)}: 0x{_dbId:X}");
+            sb.AppendLine($"{nameof(_regionRef)}: {GameDatabase.GetPrototypeName(_regionRef)}");
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            sb.AppendLine($"{nameof(_difficultyRef)}: {GameDatabase.GetPrototypeName(_difficultyRef)}");
+
+            for (int i = 0; i < _slots.Length; i++)
+                sb.AppendLine($"{nameof(_slots)}[{i}]: {_slots[i]}");
+#else
+            sb.AppendLine($"{nameof(_avatarRef)}: {GameDatabase.GetPrototypeName(_avatarRef)}");
+            sb.AppendLine($"{nameof(_costumeRef)}: {GameDatabase.GetPrototypeName(_costumeRef)}");
+            sb.AppendLine($"{nameof(_characterLevel)}: {_characterLevel}");
+            sb.AppendLine($"{nameof(_prestigeLevel)}: {_prestigeLevel}");
+#endif
+            sb.AppendLine($"{nameof(_isOnline)}: {_isOnline}");
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
+            sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
+            sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
+#endif
+
+            sb.Append($"{nameof(_systemCircles)}: ");
+            for (int i = 0; i < _systemCircles.Count; i++)
+                if (_systemCircles[i]) sb.Append((CircleId)i).Append(' ');
+            sb.AppendLine();
+
+            return sb.ToString();
+        }
+
         public bool Serialize(Archive archive)
         {
             bool success = true;
@@ -105,8 +136,7 @@ namespace MHServerEmu.Games.Social.Communities
                 byte numSlots = 0;
                 if (archive.IsPacking)
                 {
-                    if (_slots.Length >= byte.MaxValue)
-                        return Logger.ErrorReturn(false, $"Serialize(): numSlots overflow {_slots.Length}");
+                    if (!Verify.IsTrue(_slots.Length <= byte.MaxValue)) return false;
                     numSlots = (byte)_slots.Length;
                 }
 
@@ -157,11 +187,12 @@ namespace MHServerEmu.Games.Social.Communities
             {
                 foreach (CommunityCircle circle in Community.IterateCircles(this))
                 {
-                    if (circle.ShouldArchiveTo(archive) == false) continue;
+                    if (circle.ShouldArchiveTo(archive) == false)
+                        continue;
 
                     int archiveCircleId = Community.CircleManager.GetArchiveCircleId(circle);
-                    if (archiveCircleId == -1)
-                        return Logger.ErrorReturn(false, $"Serialize(): Invalid archive circle id returned for circle in archive. circle={circle}");
+                    if (!Verify.IsTrue(archiveCircleId != CommunityCircleManager.ArchiveCircleIdInvalid, $"Invalid archive circle id returned for circle in archive. circle={circle}"))
+                        return false;
 
                     success &= Serializer.Transfer(archive, ref archiveCircleId);
                 }
@@ -174,8 +205,8 @@ namespace MHServerEmu.Games.Social.Communities
                     success &= Serializer.Transfer(archive, ref archiveCircleId);
 
                     CommunityCircle circle = Community.CircleManager.GetCircleByArchiveCircleId(archiveCircleId);
-                    if (circle == null)
-                        return Logger.ErrorReturn(false, $"Serialize(): Circle not found when reading member. archiveCircleId=0x{archiveCircleId:X}, member={this}, community={Community}");
+                    if (!Verify.IsNotNull(circle, $"Circle not found when reading member. archiveCircleId=0x{archiveCircleId:X}, member={this}, community={Community}"))
+                        return false;
 
                     SetBitForCircle(_systemCircles, circle, true);
                 }
@@ -217,21 +248,16 @@ namespace MHServerEmu.Games.Social.Communities
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public ulong GetConsoleAccountId(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
         {
-            if ((avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count) == false)
-                return Logger.WarnReturn(0ul, "GetConsoleAccountId(): avatarIndex out of range");
-
+            if (!Verify.IsTrue(avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count)) return 0;
             return _consoleAccountIds[(int)avatarIndex];
         }
 #endif
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
-        public bool SetConsoleAccountId(ulong consoleAccountId, PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
+        public void SetConsoleAccountId(ulong consoleAccountId, PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
         {
-            if ((avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count) == false)
-                return Logger.WarnReturn(false, "SetConsoleAccountId(): avatarIndex out of range");
-
+            if (!Verify.IsTrue(avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count)) return;
             _consoleAccountIds[(int)avatarIndex] = consoleAccountId;
-            return true;
         }
 #endif
 
@@ -264,8 +290,8 @@ namespace MHServerEmu.Games.Social.Communities
         public bool IsInCircle(CommunityCircle circle)
         {
             int circleId = (int)circle.Id;
-            if ((circleId >= 0 && circleId < _systemCircles.Length) == false)
-                return Logger.WarnReturn(false, $"IsInCircle(): Invalid circle id for bitset. circle={circle}");
+            if (!Verify.IsTrue(circleId >= 0 && circleId < _systemCircles.Length, $"Invalid circle id for bitset.  circle={circle}"))
+                return false;
 
             return _systemCircles[circleId];
         }
@@ -273,7 +299,8 @@ namespace MHServerEmu.Games.Social.Communities
         public bool IsIgnored()
         {
             CommunityCircle ignoreCircle = Community.GetCircle(CircleId.__Ignore);
-            if (ignoreCircle == null) return Logger.WarnReturn(false, "IsIgnored(): ignoreCircle == null");
+            if (!Verify.IsNotNull(ignoreCircle)) return false;
+
             return IsInCircle(ignoreCircle);
         }
 
@@ -295,8 +322,8 @@ namespace MHServerEmu.Games.Social.Communities
         public bool AddRemoveFromCircle(bool add, CommunityCircle circle)
         {
             // This method is pretty much just a wrapper around SetBitForCircle since user circles never got implemented.
-            if (circle.Type != CircleType.System)
-                return Logger.WarnReturn(false, $"AddRemoveFromCircle(): Only system circles are supported. add={add}, circle={circle}, member={this}");
+            if (!Verify.IsTrue(circle.Type == CircleType.System, $"Only system circles are supported at this time.  add={add}, circle={circle}, member={this}"))
+                return false;
 
             return SetBitForCircle(_systemCircles, circle, add);
         }
@@ -436,9 +463,8 @@ namespace MHServerEmu.Games.Social.Communities
                         }
                     }
 
-                    // slot.OnlineId is ignored for some reason
-                    if (slot.HasOnlineId)
-                        Logger.Warn($"ReceiveBroadcast(): HasOnlineId {slot.OnlineId}");
+                    // slot.OnlineId is unused?
+                    Verify.IsTrue(slot.HasOnlineId == false);
                 }
             }
 #else
@@ -697,47 +723,14 @@ namespace MHServerEmu.Games.Social.Communities
             Community.Owner.SendMessage(messageBuilder.Build());
         }
 
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-
-            sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
-            sb.AppendLine($"{nameof(_dbId)}: 0x{_dbId:X}");
-            sb.AppendLine($"{nameof(_regionRef)}: {GameDatabase.GetPrototypeName(_regionRef)}");
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
-            sb.AppendLine($"{nameof(_difficultyRef)}: {GameDatabase.GetPrototypeName(_difficultyRef)}");
-
-            for (int i = 0; i < _slots.Length; i++)
-                sb.AppendLine($"{nameof(_slots)}[{i}]: {_slots[i]}");
-#else
-            sb.AppendLine($"{nameof(_avatarRef)}: {GameDatabase.GetPrototypeName(_avatarRef)}");
-            sb.AppendLine($"{nameof(_costumeRef)}: {GameDatabase.GetPrototypeName(_costumeRef)}");
-            sb.AppendLine($"{nameof(_characterLevel)}: {_characterLevel}");
-            sb.AppendLine($"{nameof(_prestigeLevel)}: {_prestigeLevel}");
-#endif
-            sb.AppendLine($"{nameof(_isOnline)}: {_isOnline}");
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
-            sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
-            sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
-            sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
-#endif
-
-            sb.Append($"{nameof(_systemCircles)}: ");
-            for (int i = 0; i < _systemCircles.Count; i++)
-                if (_systemCircles[i]) sb.Append((CircleId)i).Append(' ');
-            sb.AppendLine();
-
-            return sb.ToString();
-        }
-
         /// <summary>
         /// Sets the bit value for the provided <see cref="CommunityCircle"/>.
         /// </summary>
         private bool SetBitForCircle(BitArray bitSet, CommunityCircle circle, bool value)
         {
             int circleId = (int)circle.Id;
-            if ((circleId >= 0 && circleId < bitSet.Length) == false)
-                return Logger.WarnReturn(false, $"SetBitForCircle(): Invalid circle id for bitset. value={value}, circle={circle}, member={this}");
+            if (!Verify.IsTrue(circleId >= 0 && circleId < bitSet.Length, $"Invalid circle id for bitset.  value={value}, circle={circle}, member={this}"))
+                return false;
 
             bitSet[circleId] = value;
             return true;

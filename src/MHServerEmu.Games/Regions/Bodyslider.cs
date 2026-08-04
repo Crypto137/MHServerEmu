@@ -9,8 +9,6 @@ namespace MHServerEmu.Games.Regions
 {
     public static class Bodyslider
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public static PrototypeId GetBodyslideTargetRef(Player player)
         {
             // Based on Bodyslider::GetBodyslideReturnToRegionName() from the client.
@@ -38,10 +36,10 @@ namespace MHServerEmu.Games.Regions
         private static PrototypeId GetBodyslideRegionConnectionTargetOverride(Player player)
         {
             Region currentRegion = player.GetRegion();
-            if (currentRegion == null) return Logger.WarnReturn(PrototypeId.Invalid, "GetBodyslideRegionConnectionTargetOverride(): currentRegion == null");
+            if (!Verify.IsNotNull(currentRegion)) return PrototypeId.Invalid;
 
             RegionPrototype currentRegionProto = currentRegion.Prototype;
-            if (currentRegionProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "GetBodyslideRegionConnectionTargetOverride(): currentRegionProto == null");
+            if (!Verify.IsNotNull(currentRegionProto)) return PrototypeId.Invalid;
 
             PrototypeId targetOverrideProtoRef = PrototypeId.Invalid;
 

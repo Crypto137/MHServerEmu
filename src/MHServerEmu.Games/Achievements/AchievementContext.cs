@@ -28,11 +28,16 @@ namespace MHServerEmu.Games.Achievements
 
         public static Prototype GetPrototype(long prototypeGuid)
         {
-            if (prototypeGuid == 0) return null;
+            if (prototypeGuid == 0)
+                return null;
+
             PrototypeId protoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)prototypeGuid);
-            if (protoRef == PrototypeId.Invalid) return Logger.WarnReturn((Prototype)null, $"GetPrototype Guid {prototypeGuid} have not DataRef");
+            if (!Verify.IsTrue(protoRef != PrototypeId.Invalid, $"No PrototypeDataRef found for guid {prototypeGuid}"))
+                return null;
+
             Prototype proto = GameDatabase.GetPrototype<Prototype>(protoRef);
-            if (proto == null) return Logger.WarnReturn((Prototype)null, $"GetPrototype DataRef {protoRef} have not Prototype");
+            if (!Verify.IsNotNull(proto)) return null;
+
             return proto;
         }
 

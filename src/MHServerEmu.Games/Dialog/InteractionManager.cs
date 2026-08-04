@@ -1243,8 +1243,8 @@ namespace MHServerEmu.Games.Dialog
             var interactor = player.PrimaryAvatar;
             if (interactor == null) return false;
 
-            if (DataDirectory.Instance.GetPrototypeClassType(regionRef) != typeof(RegionPrototype))
-                return Logger.WarnReturn(false, $"GetRegionInterest called on a non-Region PrototypeId: {regionRef}"); 
+            if (!Verify.IsTrue(DataDirectory.Instance.GetPrototypeClassType(regionRef) == typeof(RegionPrototype), $"GetRegionInterest called on a non-Region PrototypeDataRef."))
+                return false;
 
             bool interest = false;
             if (_interaсtionMap.TryGetValue(regionRef, out var interactionData))
@@ -1334,7 +1334,7 @@ namespace MHServerEmu.Games.Dialog
         {
             isAvailable = false;
 
-            if (targetRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "GetRegionTargetAvailability(): targetRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(targetRef != PrototypeId.Invalid)) return false;
 
             bool hasAvailabilityData = false;
 
@@ -1342,11 +1342,9 @@ namespace MHServerEmu.Games.Dialog
             {
                 foreach (InteractionOption option in interactionData.Options)
                 {
-                    if (option is not MissionConnectionTargetEnableOption targetEnableOption)
-                    {
-                        Logger.Warn($"GetRegionTargetAvailability(): Incompatible interaction option {option.GetType()} for target {targetRef.GetName()}");
+                    MissionConnectionTargetEnableOption targetEnableOption = option as MissionConnectionTargetEnableOption;
+                    if (!Verify.IsNotNull(targetEnableOption, $"Incompatible interaction option {option.GetType()} for target {targetRef.GetName()}"))
                         continue;
-                    }
 
                     hasAvailabilityData |= ParseRegionTargetAvailability(player, targetEnableOption, ref isAvailable);
                 }
@@ -1358,10 +1356,10 @@ namespace MHServerEmu.Games.Dialog
         private static bool ParseRegionTargetAvailability(Player player, MissionConnectionTargetEnableOption option, ref bool outIsAvailable)
         {
             Region region = player.GetRegion();
-            if (region == null) return Logger.WarnReturn(false, "ParseRegionTargetAvailability(): region == null");
+            if (!Verify.IsNotNull(region)) return false;
 
             MissionPrototype missionProto = option.MissionProto;
-            if (missionProto == null) return Logger.WarnReturn(false, "ParseRegionTargetAvailability(): missionProto == null");
+            if (!Verify.IsNotNull(missionProto)) return false;
 
             MissionManager missionManager = MissionManager.FindMissionManagerForMission(player, region, missionProto);
             Mission mission = missionManager?.FindMissionByDataRef(missionProto.DataRef);
@@ -1373,7 +1371,7 @@ namespace MHServerEmu.Games.Dialog
                 return false;
 
             ConnectionTargetEnableSpecPrototype enableSpecProto = option.Proto;
-            if (enableSpecProto == null) return Logger.WarnReturn(false, "ParseRegionTargetAvailability(): enableSpecProto == null");
+            if (!Verify.IsNotNull(enableSpecProto)) return false;
 
             outIsAvailable = enableSpecProto.Enabled;
             return true;

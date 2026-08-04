@@ -14,11 +14,17 @@
             _children = new();
         }
 
-        public void AddChild(RegionProgressionNode node) { _children.Add(node); }
+        public void AddChild(RegionProgressionNode node)
+        {
+            _children.Add(node);
+        }
 
-        public void RemoveChild(RegionProgressionNode node) { _children.Remove(node); }
+        public void RemoveChild(RegionProgressionNode node)
+        {
+            _children.Remove(node);
+        }
 
-        public RegionProgressionNode FindChildNode(Area area, bool recurse = false)
+        public RegionProgressionNode FindChildNode(Area area, bool recursive = false)
         {
             foreach (RegionProgressionNode child in _children)
             {
@@ -26,15 +32,15 @@
                 {
                     return child;
                 }
-                else if (recurse)
+                else if (recursive)
                 {
                     RegionProgressionNode foundNode = child.FindChildNode(area, true);
                     if (foundNode != null)
                         return foundNode;
                 }
             }
+
             return null;
         }
-
     }
 }

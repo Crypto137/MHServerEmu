@@ -40,8 +40,8 @@ namespace MHServerEmu.Games.Social.Guilds
         public Guild CreateGuild(GuildCompleteInfo guildCompleteInfo)
         {
             Guild existingGuild = GetGuild(guildCompleteInfo.GuildId);
-            if (existingGuild != null)
-                return Logger.WarnReturn<Guild>(null, "CreateGuild(): Trying to create duplicate guild. existingGuild=%s");
+            if (!Verify.IsTrue(existingGuild == null, $"Trying to create duplicate guild. existingGuild={existingGuild}"))
+                return null;
 
             Guild guild = new(Game, guildCompleteInfo);
             _guilds.Add(guild.Id, guild);
@@ -61,8 +61,7 @@ namespace MHServerEmu.Games.Social.Guilds
 
         public bool RemoveGuild(Guild guild)
         {
-            if (_guilds.Remove(guild.Id) == false)
-                Logger.Warn($"RemoveGuild(): Trying to remove guild, but not found in collection. guild={guild}");
+            Verify.IsTrue(_guilds.Remove(guild.Id), $"Trying to remove guild, but not found in collection. guild={guild}");
 
             Logger.Trace($"Destroying guild [{guild}] in game [{Game}]");
 
@@ -97,11 +96,7 @@ namespace MHServerEmu.Games.Social.Guilds
 
         public void OnPlayerEnteringGame(Player player)
         {
-            if (player == null)
-            {
-                Logger.Warn("OnPlayerEnteringGame(): player == null");
-                return;
-            }
+            if (!Verify.IsNotNull(player)) return;
 
             GuildMember guildMember = GetGuildMember(player.DatabaseUniqueId);
             if (guildMember == null)
@@ -116,21 +111,14 @@ namespace MHServerEmu.Games.Social.Guilds
 
         public void OnPlayerLeavingGame(Player player)
         {
-            if (player == null)
-            {
-                Logger.Warn("OnPlayerLeavingGame(): player == null");
-                return;
-            }
+            if (!Verify.IsNotNull(player)) return;
 
             if (player.IsInGuild == false)
                 return;
 
             Guild guild = GetGuild(player.GuildId);
-            if (guild == null)
-            {
-                Logger.Warn($"OnPlayerRemoved(): Failed to retrieve guild {player.GuildId} for player [{player}]");
+            if (!Verify.IsNotNull(guild, $"Failed to retrieve guild {player.GuildId} for player [{player}]"))
                 return;
-            }
 
             player.SetGuildMembership(InvalidGuildId, string.Empty, GuildMembership.eGMNone);
 
@@ -192,10 +180,10 @@ namespace MHServerEmu.Games.Social.Guilds
 
             // Interact with the item to run all the normal validation.
             Avatar avatar = player.CurrentAvatar;
-            if (avatar == null) return Logger.WarnReturn(GuildMessageCode.eGMC_GuildsLocked, "ValidateGuildForm(): avatar == null");
+            if (!Verify.IsNotNull(avatar)) return GuildMessageCode.eGMC_GuildsLocked;
 
             Item item = player.Game.EntityManager.GetEntity<Item>(guildForm.ItemId);
-            if (item == null) return Logger.WarnReturn(GuildMessageCode.eGMC_GuildsLocked, "ValidateGuildForm(): item == null");
+            if (!Verify.IsNotNull(item)) return GuildMessageCode.eGMC_GuildsLocked;
 
             if (item.IsGuildUnlockItem == false)
                 return GuildMessageCode.eGMC_GuildsLocked;
@@ -387,15 +375,12 @@ namespace MHServerEmu.Games.Social.Guilds
                 case GuildChangeMotd guildChangeMotd:           playerId = guildChangeMotd.PlayerId; break;
 
                 default:
-                    Logger.Warn($"ValidateGuildMessagePlayerId(): Invalid guild message type {message.DescriptorForType.Name} from player [{player}]");
+                    Verify.IsTrue(false, $"Invalid guild message type {message.DescriptorForType.Name} from player [{player}]");
                     return GuildMessageCode.eGMC_ServicesDown;
             }
 
-            if (playerId != player.DatabaseUniqueId)
-            {
-                Logger.Warn($"ValidateGuildMessagePlayerId(): Received guild message {message.DescriptorForType.Name} from player [{player}] with unexpected playerId 0x{playerId:X}");
+            if (!Verify.IsTrue(playerId == player.DatabaseUniqueId, $"Received guild message {message.DescriptorForType.Name} from player [{player}] with unexpected playerId 0x{playerId:X}"))
                 return GuildMessageCode.eGMC_ServicesDown;
-            }
 
             return GuildMessageCode.eGMC_None;
         }
@@ -472,11 +457,8 @@ namespace MHServerEmu.Games.Social.Guilds
                 }
             }
 
-            if (hasMembersInGame == false)
-            {
-                Logger.Warn($"OnGuildCompleteInfo(): Game [{Game}] received GuildCompleteInfo for guild {guildCompleteInfo.GuildName} ({guildCompleteInfo.GuildId}), but no members are present");
+            if (!Verify.IsTrue(hasMembersInGame, $"Game [{Game}] received GuildCompleteInfo for guild {guildCompleteInfo.GuildName} ({guildCompleteInfo.GuildId}), but no members are present"))
                 return;
-            }
 
             Guild guild = GetGuild(guildCompleteInfo.GuildId);
 

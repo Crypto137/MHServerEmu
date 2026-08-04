@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
@@ -17,21 +16,18 @@ namespace MHServerEmu.Games.Social.Communities
     /// </summary>
     public class Community : ISerialize
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private static ulong CurrentRemoteJobId = 0;    // Use a shared static counter for all Community instances for easier tracking in logs.
 
-        private readonly Dictionary<ulong, CommunityMember> _communityMemberDict = new();   // key is DbId
+        private readonly Dictionary<ulong, CommunityMember> _communityMembers = new();   // key is DbId
         private readonly Dictionary<ulong, (CircleId, string, ModifyCircleOperation)> _pendingCircleOperations = new();
 
-        private int _numCircleIteratorsInScope = 0;
         private int _numMemberIteratorsInScope = 0;
 
         public Player Owner { get; }
 
         public CommunityCircleManager CircleManager { get; }
         public int NumCircles { get => CircleManager.NumCircles; }
-        public int NumMembers { get => _communityMemberDict.Count; }
+        public int NumMembers { get => _communityMembers.Count; }
 
         /// <summary>
         /// Constructs a new <see cref="CommunityCircle"/> for the provided owner <see cref="Player"/>/
@@ -44,14 +40,7 @@ namespace MHServerEmu.Games.Social.Communities
 
         public override string ToString()
         {
-            StringBuilder sb = new();
-
-            sb.AppendLine($"{nameof(CircleManager)}: {CircleManager}");
-
-            foreach (var kvp in _communityMemberDict)
-                sb.AppendLine($"Member[0x{kvp.Key:X}]: {kvp.Value}");
-
-            return sb.ToString();
+            return $"Community, community.numMembers={NumMembers}, community.numCircles={NumCircles}, community.owner={Owner}";
         }
 
         /// <summary>
@@ -68,7 +57,7 @@ namespace MHServerEmu.Games.Social.Communities
         public void Shutdown()
         {
             CircleManager.Shutdown();
-            _communityMemberDict.Clear();
+            _communityMembers.Clear();
         }
 
         public bool Serialize(Archive archive)
@@ -141,7 +130,7 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public CommunityMember GetMember(ulong dbId)
         {
-            if (_communityMemberDict.TryGetValue(dbId, out CommunityMember member) == false)
+            if (_communityMembers.TryGetValue(dbId, out CommunityMember member) == false)
                 return null;
 
             return member;
@@ -167,8 +156,7 @@ namespace MHServerEmu.Games.Social.Communities
         public bool AddMember(ulong playerDbId, string playerName, CircleId circleId)
         {
             CommunityCircle circle = GetCircle(circleId);
-            if (circle == null)
-                return Logger.WarnReturn(false, $"AddMember(): Failed to get circle for circleId {circleId}");
+            if (!Verify.IsNotNull(circle)) return false;
 
             if (circle.CanContainPlayer(playerName, playerDbId) == false)
                 return false;
@@ -184,8 +172,7 @@ namespace MHServerEmu.Games.Social.Communities
                 isNewMember = true;
             }
 
-            if (member == null)
-                return Logger.WarnReturn(false, $"AddMember(): Failed to get or create a member for dbId 0x{playerDbId:X}");
+            if (!Verify.IsNotNull(member)) return false;
 
             // Add to the circle
             bool wasAdded = circle.AddMember(member);
@@ -201,8 +188,7 @@ namespace MHServerEmu.Games.Social.Communities
         public bool RemoveMember(ulong playerDbId, CircleId circleId)
         {
             CommunityCircle circle = GetCircle(circleId);
-            if (circle == null)
-                return Logger.WarnReturn(false, $"RemoveMember(): Failed to get circle for cicleId {circleId}");
+            if (!Verify.IsNotNull(circle)) return false;
 
             // It's valid to not have this member, so don't log
             CommunityMember member = GetMember(playerDbId);
@@ -218,14 +204,22 @@ namespace MHServerEmu.Games.Social.Communities
             return wasRemoved;
         }
 
-        public bool ModifyMember(ulong playerDbId, string playerName, CircleId circleId, ModifyCircleOperation operation)
+        public void ModifyMember(ulong playerDbId, string playerName, CircleId circleId, ModifyCircleOperation operation)
         {
-            return operation switch
+            switch (operation)
             {
-                ModifyCircleOperation.eMCO_Add    => AddMember(playerDbId, playerName, circleId),
-                ModifyCircleOperation.eMCO_Remove => RemoveMember(playerDbId, circleId),
-                _                                 => Logger.WarnReturn(false, $"ModifyMember(): Unknown operation {operation}"),
-            };
+                case ModifyCircleOperation.eMCO_Add:
+                    AddMember(playerDbId, playerName, circleId);
+                    break;
+
+                case ModifyCircleOperation.eMCO_Remove:
+                    RemoveMember(playerDbId, circleId);
+                    break;
+
+                default:
+                    Verify.IsTrue(false, $"Unknown operation {operation}");
+                    break;
+            }
         }
 
         /// <summary>
@@ -234,8 +228,7 @@ namespace MHServerEmu.Games.Social.Communities
         public int NumMembersInCircle(CircleId circleId)
         {
             CommunityCircle circle = GetCircle(circleId);
-            if (circle == null)
-                return Logger.WarnReturn(0, $"NumMembersInCircle(): circle == null");
+            if (!Verify.IsNotNull(circle)) return 0;
 
             int numMembers = 0;
             foreach (CommunityMember member in IterateMembers())
@@ -243,21 +236,21 @@ namespace MHServerEmu.Games.Social.Communities
                 if (member.IsInCircle(circle))
                     numMembers++;
             }
+
             return numMembers;
         }
 
         /// <summary>
         /// Routes the provided <see cref="CommunityMemberBroadcast"/> to the relevant <see cref="CommunityMember"/>.
         /// </summary>
-        public bool ReceiveMemberBroadcast(CommunityMemberBroadcast broadcast)
+        public void ReceiveMemberBroadcast(CommunityMemberBroadcast broadcast)
         {
             ulong playerDbId = broadcast.MemberPlayerDbId;
-            if (playerDbId == 0)
-                return Logger.WarnReturn(false, $"ReceiveMemberBroadcast(): Invalid playerDbId");
+            if (!Verify.IsTrue(playerDbId != 0)) return;
 
             CommunityMember member = GetMember(playerDbId);
             if (member == null)
-                return false;   // Don't log because this is valid for untargeted broadcast batches.
+                return;   // Don't verify because this is valid for untargeted broadcast batches.
 
             if (member.CanReceiveBroadcast())
             {
@@ -269,8 +262,6 @@ namespace MHServerEmu.Games.Social.Communities
                 if (updateOptions != 0)
                     member.SendUpdateToOwner(updateOptions);
             }
-
-            return true;
         }
 
         public bool RequestLocalBroadcast(CommunityMember member)
@@ -321,13 +312,14 @@ namespace MHServerEmu.Games.Social.Communities
             }
         }
 
-        public bool TryModifyCommunityMemberCircle(CircleId circleId, string playerName, ModifyCircleOperation operation)
+        public void TryModifyCommunityMemberCircle(CircleId circleId, string playerName, ModifyCircleOperation operation)
         {
             CommunityCircle circle = GetCircle(circleId);
-            if (circle == null) return Logger.WarnReturn(false, "TryModifyCommunityMemberCircle(): circle == null");
+            if (!Verify.IsNotNull(circle)) return;
 
-            if (string.IsNullOrWhiteSpace(playerName))
-                return Logger.WarnReturn(false, $"TryModifyCommunityMemberCircle(): No player name is provided! owner=[{Owner}], circleId={circleId}, operation={operation}");
+            bool hasPlayerName = string.IsNullOrWhiteSpace(playerName) == false;
+            if (!Verify.IsTrue(hasPlayerName, $"No player name is provided! owner=[{Owner}], circleId={circleId}, operation={operation}"))
+                return;
 
             ulong playerDbId = 0;
 
@@ -363,23 +355,23 @@ namespace MHServerEmu.Games.Social.Communities
 
                 // For remove operations we should always be able to resolve the dbid locally.
                 // If it's not there, we must have already removed the member.
-                return true;
+                return;
             }
 
-            return ModifyMember(playerDbId, playerName, circleId, operation);
+            ModifyMember(playerDbId, playerName, circleId, operation);
         }
 
-        public bool OnPlayerLookupByNameResult(ulong remoteJobId, ulong playerDbId, string playerName)
+        public void OnPlayerLookupByNameResult(ulong remoteJobId, ulong playerDbId, string playerName)
         {
-            if (_pendingCircleOperations.Remove(remoteJobId, out var jobData) == false)
-                return Logger.WarnReturn(false, $"OnPlayerLookupByNameResult(): RemoteJobId {remoteJobId} not found");
+            if (!Verify.IsTrue(_pendingCircleOperations.Remove(remoteJobId, out var jobData), $"RemoteJobId {remoteJobId} not found"))
+                return;
 
             (CircleId circleId, string requestPlayerName, ModifyCircleOperation operation) = jobData;
 
             if (playerDbId == 0)
             {
                 // There is also CommunityModifyFailureCode.eCMFC_Timeout, not sure if we need it.
-                Logger.Trace($"OnPlayerLookupByNameResult(): Player [{Owner}] failed to add player {requestPlayerName} (not found or rate limit exceeded)");
+                //Logger.Trace($"OnPlayerLookupByNameResult(): Player [{Owner}] failed to add player {requestPlayerName} (not found or rate limit exceeded)");
 
                 var failureMessage = NetMessageModifyCommunityMemberFailure.CreateBuilder()
                     .SetMemberToModifyName(requestPlayerName)
@@ -389,10 +381,10 @@ namespace MHServerEmu.Games.Social.Communities
                     .Build();
 
                 Owner.SendMessage(failureMessage);
-                return true;
+                return;
             }
 
-            return ModifyMember(playerDbId, playerName, circleId, operation);
+            ModifyMember(playerDbId, playerName, circleId, operation);
         }
 
         /// <summary>
@@ -406,11 +398,7 @@ namespace MHServerEmu.Games.Social.Communities
         public void UpdateParty(Party party)
         {
             CommunityCircle partyCircle = GetCircle(CircleId.__Party);
-            if (partyCircle == null)
-            {
-                Logger.Warn("UpdateParty(): partyCircle == null");
-                return;
-            }
+            if (!Verify.IsNotNull(partyCircle)) return;
 
             // Add members
             if (party != null)
@@ -440,11 +428,7 @@ namespace MHServerEmu.Games.Social.Communities
         public void UpdateGuild(Guilds.Guild guild)
         {
             CommunityCircle guildCircle = GetCircle(CircleId.__Guild);
-            if (guildCircle == null)
-            {
-                Logger.Warn("UpdateGuild(): guildCircle == null");
-                return;
-            }
+            if (!Verify.IsNotNull(guildCircle)) return;
 
             // Add members
             if (guild != null)
@@ -467,10 +451,10 @@ namespace MHServerEmu.Games.Social.Communities
                 RemoveMember(playerDbId, CircleId.__Guild);
         }
 
-        public bool ClearCircle(CircleId circleId)
+        public void ClearCircle(CircleId circleId)
         {
             CommunityCircle circle = GetCircle(circleId);
-            if (circle == null) return Logger.WarnReturn(false, "ClearCircle(): circle == null");
+            if (!Verify.IsNotNull(circle)) return;
 
             using var membersToRemoveHandle = ListPool<ulong>.Instance.Get(out List<ulong> membersToRemove);
             foreach (CommunityMember member in IterateMembers(circle))
@@ -478,8 +462,6 @@ namespace MHServerEmu.Games.Social.Communities
 
             foreach (ulong playerDbId in membersToRemove)
                 RemoveMember(playerDbId, circleId);
-
-            return true;
         }
 
         /// <summary>
@@ -522,30 +504,32 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         private CommunityMember CreateMember(ulong playerDbId, string playerName)
         {
-            if (_numMemberIteratorsInScope > 0)
-                return Logger.WarnReturn<CommunityMember>(null, $"CreateMember(): Trying to create a new member while iterating the community");
+            if (!Verify.IsTrue(_numMemberIteratorsInScope == 0, $"Trying to create a new member while iterating the community {this}"))
+                return null;
 
-            if (playerDbId == 0)
-                return Logger.WarnReturn<CommunityMember>(null, $"CreateMember(): Invalid player id when creating community member {playerName}");
+            if (!Verify.IsTrue(playerDbId != 0, $"Invalid player id when creating community member.  member={playerName}, community={this}"))
+                return null;
 
             CommunityMember existingMember = GetMember(playerDbId);
-            if (existingMember != null)
-                return Logger.WarnReturn<CommunityMember>(null, $"CreateMember(): Member already exists {existingMember}");
+            if (!Verify.IsTrue(existingMember == null, $"Member already exists {existingMember}"))
+                return null;
 
             CommunityMember newMember = new(this, playerDbId, playerName);
-            _communityMemberDict.Add(playerDbId, newMember);
+            // verify: Unable to allocate community member.  Name=%s, DbId=0x%llx
+
+            _communityMembers.Add(playerDbId, newMember);
             return newMember;
         }
 
         /// <summary>
         /// Removes the provided <see cref="CommunityMember"/> instance from this <see cref="Community"/>.
         /// </summary>
-        private bool DestroyMember(CommunityMember member)
+        private void DestroyMember(CommunityMember member)
         {
-            if (_numMemberIteratorsInScope > 0)
-                return Logger.WarnReturn(false, $"DestroyMember(): Trying to destroy a member while iterating the community");
+            if (!Verify.IsTrue(_numMemberIteratorsInScope == 0, $"Trying to destroy a member while iterating the community {this}"))
+                return;
 
-            return _communityMemberDict.Remove(member.DbId);
+            _communityMembers.Remove(member.DbId);
         }
 
         public readonly struct CircleIterator
@@ -580,7 +564,6 @@ namespace MHServerEmu.Games.Social.Communities
                     _member = member;
 
                     _enumerator = community.CircleManager.GetEnumerator();
-                    _community._numCircleIteratorsInScope++;
                 }
 
                 public bool MoveNext()
@@ -608,7 +591,6 @@ namespace MHServerEmu.Games.Social.Communities
                 public void Dispose()
                 {
                     _enumerator.Dispose();
-                    _community._numCircleIteratorsInScope--;
                 }
             }
         }
@@ -644,7 +626,7 @@ namespace MHServerEmu.Games.Social.Communities
                     _community = community;
                     _circle = circle;
 
-                    _enumerator = community._communityMemberDict.Values.GetEnumerator();
+                    _enumerator = community._communityMembers.Values.GetEnumerator();
                     _community._numMemberIteratorsInScope++;
                 }
 
@@ -667,7 +649,7 @@ namespace MHServerEmu.Games.Social.Communities
                 public void Reset()
                 {
                     _enumerator.Dispose();
-                    _enumerator = _community._communityMemberDict.Values.GetEnumerator();
+                    _enumerator = _community._communityMembers.Values.GetEnumerator();
                 }
 
                 public void Dispose()

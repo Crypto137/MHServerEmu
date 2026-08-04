@@ -1445,7 +1445,7 @@ namespace MHServerEmu.Games.Missions
         public MissionObjective GetObjectiveByObjectiveIndex(byte objectiveIndex)
         {
             if (_objectiveDict.TryGetValue(objectiveIndex, out MissionObjective objective) == false)
-                return Logger.WarnReturn<MissionObjective>(null, $"GetObjectiveByObjectiveIndex(): Objective index {objectiveIndex} is not valid");
+                return null;
 
             return objective;
         }
@@ -1468,8 +1468,10 @@ namespace MHServerEmu.Games.Missions
 
         public MissionObjective InsertObjective(byte objectiveIndex, MissionObjective objective)
         {
-            if (_objectiveDict.TryAdd(objectiveIndex, objective) == false)
-                return Logger.WarnReturn<MissionObjective>(null, $"InsertObjective(): Failed to insert objective with index {objectiveIndex}");
+            if (!Verify.IsNotNull(objective)) return null;
+
+            bool inserted = _objectiveDict.TryAdd(objectiveIndex, objective);
+            if (!Verify.IsTrue(inserted)) return null;
 
             return objective;
         }
@@ -1781,7 +1783,7 @@ namespace MHServerEmu.Games.Missions
                 float contributionPercentage = contributionTotal > 0f ? playerContribution / contributionTotal : 1f;
 
                 Curve openMissionContributionReward = GameDatabase.MissionGlobalsPrototype.OpenMissionContributionReward.AsCurve();
-                if (openMissionContributionReward == null) return Logger.WarnReturn(0f, "GetContributionRewardMultiplier(): openMissionContributionReward == null");
+                if (!Verify.IsNotNull(openMissionContributionReward)) return 0f;
 
                 float contributionRewardMultiplier = openMissionContributionReward.GetAt((int)(contributionPercentage * 100f));
                 return Math.Max(contributionRewardMultiplier, 0f);
@@ -1877,7 +1879,7 @@ namespace MHServerEmu.Games.Missions
         public bool ShouldResetForStoryWarp(int chapterNumber)
         {
             MissionPrototype missionProto = Prototype;
-            if (missionProto == null) return Logger.WarnReturn(false, "ShouldResetForStoryWarp(): missionProto == null");
+            if (!Verify.IsNotNull(missionProto)) return false;
 
             if (missionProto.SaveStatePerAvatar == false)
                 return false;
@@ -1887,7 +1889,7 @@ namespace MHServerEmu.Games.Missions
                 return true;
 
             ChapterPrototype chapterProto = chapterProtoRef.As<ChapterPrototype>();
-            if (chapterProto == null) return Logger.WarnReturn(false, "ShouldResetForStoryWarp(): chapterProto == null");
+            if (!Verify.IsNotNull(chapterProto)) return false;
 
             if (chapterProto.ResetsOnStoryWarp == false)
                 return false;
@@ -1956,7 +1958,7 @@ namespace MHServerEmu.Games.Missions
 
         public static bool AddContributorsForLootSpawn(Agent source, List<Player> playerList)
         {
-            if (source == null) return Logger.WarnReturn(false, "AddContributorsForLootSpawn(): source == null");
+            if (!Verify.IsNotNull(source)) return false;
 
             if (source.AgentPrototype.SpawnLootForMissionContributors == false)
                 return true;
@@ -1966,10 +1968,10 @@ namespace MHServerEmu.Games.Missions
                 return true;
 
             MissionManager missionManager = source.Region?.MissionManager;
-            if (missionManager == null) return Logger.WarnReturn(false, "AddContributorsForLootSpawn(): missionManager == null");
+            if (!Verify.IsNotNull(missionManager)) return false;
 
             Mission mission = missionManager.MissionByDataRef(missionProtoRef);
-            if (mission == null) return Logger.WarnReturn(false, "AddContributorsForLootSpawn(): mission == null");
+            if (!Verify.IsNotNull(mission)) return false;
 
             // This is used for SpawnLootForMissionContributors, we may want to use a set for this instead.
             using var contributorsHandle = ListPool<Player>.Instance.Get(out List<Player> contributors);
@@ -2035,16 +2037,15 @@ namespace MHServerEmu.Games.Missions
 
         public MissionObjectivePrototype GetObjectivePrototypeByIndex(byte prototypeIndex)
         {
-            var missionProto = Prototype;
-            if (missionProto == null || missionProto.Objectives.IsNullOrEmpty()) return null;
-            if (missionProto.Objectives.Length <= prototypeIndex)
-            {
-                Logger.Warn($"Unable to get mission objective {prototypeIndex} for mission [{missionProto}]. Mission prototype only has {missionProto.Objectives.Length} objectives.");
-                return null;
-            }
+            MissionPrototype missionProto = Prototype;
+            if (!Verify.IsNotNull(missionProto)) return null;
+            if (!Verify.IsTrue(missionProto.Objectives.HasValue())) return null;
 
-            var objectiveProto = missionProto.Objectives[prototypeIndex];
-            if (objectiveProto == null) return null;
+            if (!Verify.IsTrue(missionProto.Objectives.Length > prototypeIndex, $"Unable to get mission objective {prototypeIndex} for mission [{missionProto}]. Mission prototype only has {missionProto.Objectives.Length} objectives."))
+                return null;
+
+            MissionObjectivePrototype objectiveProto = missionProto.Objectives[prototypeIndex];
+            if (!Verify.IsNotNull(objectiveProto)) return null;
 
             return objectiveProto;
         }

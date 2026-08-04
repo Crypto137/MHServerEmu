@@ -1,7 +1,7 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Parties;
 
@@ -30,12 +30,13 @@ namespace MHServerEmu.Games.Dialog
 
         private bool CheckPartyRequirements(EntityDesc interacteeDesc, WorldEntity interactor)
         {
-            if (interactor is not Avatar) 
-                return Logger.WarnReturn(false, $"PartyOption interaction option requires an avatar interactor, but none was found for {interactor.PrototypeName}!");
+            Avatar interactingAvatar = interactor as Avatar;
+            if (!Verify.IsNotNull(interactingAvatar, $"PartyOption interaction option requires an avatar interactor, but none was found for {interactor.PrototypeName}!"))
+                return false;
 
             Player interactingPlayer = interactor.GetOwnerOfType<Player>();
-            if (interactingPlayer == null)
-                return Logger.WarnReturn(false, $"PartyOption interaction option requires a player interactor, but none was found for {interactor.PrototypeName}!");
+            if (!Verify.IsNotNull(interactingPlayer, $"PartyOption interaction option requires a player interactor, but none was found for {interactor.PrototypeName}!"))
+                return false;
 
             bool isSelf = interacteeDesc.EntityId == interactor.Id;
             if (CheckRequirement(RequirementSelf, isSelf) == false)
@@ -106,8 +107,8 @@ namespace MHServerEmu.Games.Dialog
                 && localInteractee.IsHostileTo(interactor) == false)
             {
                 Player interactingPlayer = interactor.GetOwnerOfType<Player>();
-                if (interactingPlayer == null)
-                    return Logger.WarnReturn(false, $"PartyInviteOption only works on avatars with a player, but could find one on {interactor.PrototypeName}!");
+                if (!Verify.IsNotNull(interactingPlayer, $"PartyInviteOption only works on avatars with a player, but could find one on {interactor.PrototypeName}!"))
+                    return false;
 
                 isAvailable = interacteeDesc.PlayerName != interactingPlayer.GetName();
             }
@@ -152,12 +153,12 @@ namespace MHServerEmu.Games.Dialog
             if (base.IsCurrentlyAvailable(interacteeDesc, localInteractee, interactor, interactionFlags))
             {
                 Player interactingPlayer = interactor.GetOwnerOfType<Player>();
-                if (interactingPlayer == null)
-                    return Logger.WarnReturn(false, $"GroupChangeTypeOption only works on avatars with a player, but couldn't find one on {interactor.PrototypeName}!");
+                if (!Verify.IsNotNull(interactingPlayer, $"GroupChangeTypeOption only works on avatars with a player, but couldn't find one on {interactor.PrototypeName}!"))
+                    return false;
 
                 Region interactingRegion = interactor.Region;
-                if (interactingRegion == null)
-                    return Logger.WarnReturn(false, $"GroupChangeTypeOption only works on avatars actually in the world {interactor.PrototypeName}!");
+                if (!Verify.IsNotNull(interactingRegion, $"GroupChangeTypeOption only works on avatars actually in the world {interactor.PrototypeName}!"))
+                    return false;
 
                 Party party = interactingPlayer.GetParty();
                 if (party != null)

@@ -7,8 +7,6 @@ namespace MHServerEmu.Games.MetaGames
 {
     public class MetaGameTeam
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         protected readonly List<Player> _players = new();
 
         public MetaGame MetaGame { get; }
@@ -30,7 +28,9 @@ namespace MHServerEmu.Games.MetaGames
 
         public virtual bool AddPlayer(Player player)
         {
-            if (IndexOf(player) >= 0) return Logger.WarnReturn(false, "Attempt to add a player to a team twice");
+            if (!Verify.IsTrue(IndexOf(player) < 0, "Attempt to add a player to a team twice"))
+                return false;
+
             _players.Add(player); 
             return true;
         }

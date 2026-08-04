@@ -18,8 +18,6 @@ namespace MHServerEmu.Games.Regions.MatchQueues
     /// </summary>
     public class MatchQueueStatus : ISerialize
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Dictionary<(PrototypeId, PrototypeId), MatchQueueRegionStatus> _regionStatusDict = new();
 
         private Player _owner;
@@ -148,11 +146,7 @@ namespace MHServerEmu.Games.Regions.MatchQueues
         public void UpdateQueue(PrototypeId regionRef, PrototypeId difficultyTierRef, ulong groupId, int playersInQueue)
         {
             MatchQueueRegionStatus newRegionStatus = GetOrCreateRegionStatus(regionRef, difficultyTierRef, groupId);
-            if (newRegionStatus == null)
-            {
-                Logger.Warn("UpdateQueue(): newRegionStatus == null");
-                return;
-            }
+            if (!Verify.IsNotNull(newRegionStatus)) return;
 
             newRegionStatus.UpdateQueue(playersInQueue);
         }
@@ -163,8 +157,7 @@ namespace MHServerEmu.Games.Regions.MatchQueues
         public bool UpdatePlayerState(ulong playerGuid, PrototypeId regionRef, PrototypeId difficultyTierRef,
             ulong groupId, RegionRequestQueueUpdateVar status, string playerName)
         {
-            if (_owner == null)
-                return Logger.WarnReturn(false, "UpdatePlayerState(): _owner == null");
+            if (!Verify.IsNotNull(_owner)) return false;
 
             // Some statuses cause the player to be removed.
             if (IsRemovePlayerStatus(status) && _owner.DatabaseUniqueId == playerGuid)
@@ -216,10 +209,10 @@ namespace MHServerEmu.Games.Regions.MatchQueues
         public bool TryRegionRequestCommand(PrototypeId regionRef, PrototypeId difficultyTierRef,
             ulong groupId, RegionRequestQueueCommandVar command, int teamSizeOverride = -1)
         {
-            if (regionRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "TryRegionRequestCommand(): regionRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(regionRef != PrototypeId.Invalid)) return false;
 
             RegionPrototype regionProto = regionRef.As<RegionPrototype>();
-            if (regionProto == null) return Logger.WarnReturn(false, "TryRegionRequestCommand(): regionProto == null");
+            if (!Verify.IsNotNull(regionProto)) return false;
 
             RegionRequestQueueUpdateVar status = RegionRequestQueueUpdateVar.eRRQ_RemovedFromGroup;
 
@@ -235,8 +228,9 @@ namespace MHServerEmu.Games.Regions.MatchQueues
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueParty:
                 case RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass:
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
-                    if (difficultyTierRef == PrototypeId.Invalid)
-                        return Logger.WarnReturn(false, "TryRegionRequestCommand(): difficultyTierRef == PrototypeId.Invalid");
+                    if (!Verify.IsTrue(difficultyTierRef != PrototypeId.Invalid)) return false;
+#else
+                    if (!Verify.IsTrue(difficultyTierRef == PrototypeId.Invalid)) return false;
 #endif
 
                     if (IsOwnerInQueue())
@@ -250,8 +244,8 @@ namespace MHServerEmu.Games.Regions.MatchQueues
 
                 case RegionRequestQueueCommandVar.eRRQC_GroupInviteAccept:
                 case RegionRequestQueueCommandVar.eRRQC_GroupInviteDecline:
-                    if (status != RegionRequestQueueUpdateVar.eRRQ_GroupInvitePending)
-                        return Logger.WarnReturn(false, $"TryRegionRequestCommand(): Invalid status {status} for command {command} from [{_owner}]");
+                    if (!Verify.IsTrue(status == RegionRequestQueueUpdateVar.eRRQ_GroupInvitePending, $"Invalid status {status} for command {command} from [{_owner}]"))
+                        return false;
                     break;
 
                 case RegionRequestQueueCommandVar.eRRQC_RemoveFromQueue:
@@ -260,15 +254,17 @@ namespace MHServerEmu.Games.Regions.MatchQueues
 
                 case RegionRequestQueueCommandVar.eRRQC_MatchInviteAccept:
                 case RegionRequestQueueCommandVar.eRRQC_MatchInviteDecline:
-                    if (status != RegionRequestQueueUpdateVar.eRRQ_MatchInvitePending && status != RegionRequestQueueUpdateVar.eRRQ_RemovedGracePeriod)
-                        return Logger.WarnReturn(false, $"TryRegionRequestCommand(): Invalid status {status} for command {command} from [{_owner}]");
+                    if (!Verify.IsTrue(status == RegionRequestQueueUpdateVar.eRRQ_MatchInvitePending || status == RegionRequestQueueUpdateVar.eRRQ_RemovedGracePeriod,
+                        $"Invalid status {status} for command {command} from [{_owner}]"))
+                        return false;
                     break;
 
                 // The client should not be sending these commands.
                 case RegionRequestQueueCommandVar.eRRQC_DebugForceStart:
                 case RegionRequestQueueCommandVar.eRRQC_DebugInfo:
                 case RegionRequestQueueCommandVar.eRRQC_RequestToJoinGroup:
-                    return Logger.WarnReturn(false, $"TryRegionRequestCommand(): Received command {command} from [{_owner}]");
+                    Verify.IsTrue(false, $"Received command {command} from [{_owner}]");
+                    return false;
             }
 
             if (command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass && regionProto.AllowsQueueBypass == false)

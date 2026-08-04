@@ -26,7 +26,6 @@ namespace MHServerEmu.Games.Regions
 
     public class Cell
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
         private CellStatusFlag _status;
         private float _playableNavArea;
         private float _spawnableNavArea;
@@ -342,12 +341,10 @@ namespace MHServerEmu.Games.Regions
 
         public bool InstanceMarkerSet(MarkerSetPrototype markerSet, in Transform3 transform, MarkerSetOptions instanceMarkerSetOptions)
         {
-            if (instanceMarkerSetOptions.HasFlag(MarkerSetOptions.SpawnMissionAssociated) &&
-                instanceMarkerSetOptions.HasFlag(MarkerSetOptions.NoSpawnMissionAssociated))
-            {
-                return Logger.WarnReturn(false,
-                    "InstanceMarkerSet(): SpawnMissionAssociated and NoSpawnMissionAssociated cannot be set at the same time");
-            }
+            // SpawnMissionAssociated and NoSpawnMissionAssociated cannot be set at the same time.
+            bool bothMissionAssociatedFlagsSet = instanceMarkerSetOptions.HasFlag(MarkerSetOptions.SpawnMissionAssociated) &&
+                instanceMarkerSetOptions.HasFlag(MarkerSetOptions.NoSpawnMissionAssociated);
+            if (!Verify.IsTrue(bothMissionAssociatedFlagsSet == false)) return false;
 
             if (markerSet.Markers.HasValue())
             {
@@ -647,7 +644,7 @@ namespace MHServerEmu.Games.Regions
         public bool GetEntitiesInCellBounds(List<WorldEntity> entityList)
         {
             Region region = Region;
-            if (region == null) return Logger.WarnReturn(false, "GetEntitiesInCellBounds(): region == null");
+            if (!Verify.IsNotNull(region)) return false;
 
             region.GetEntitiesInVolume(entityList, RegionBounds, new());
             return true;
@@ -657,7 +654,6 @@ namespace MHServerEmu.Games.Regions
         {
             Generate();
             _numInterestedPlayers++;
-            //Logger.Debug($"OnAddedToAOI(): {PrototypeName}[{Id}] (_numInterestedPlayers={_numInterestedPlayers})");
 
             if (_numInterestedPlayers == 1)
             {
@@ -678,13 +674,9 @@ namespace MHServerEmu.Games.Regions
         public void OnRemovedFromAOI()
         {
             _numInterestedPlayers--;
-            //Logger.Debug($"OnRemovedFromAOI(): {PrototypeName}[{Id}] (_numInterestedPlayers={_numInterestedPlayers})");
 
-            if (_numInterestedPlayers < 0)
-            {
-                Logger.Warn("OnRemovedFromAOI(): _numInterestedPlayers < 0");
+            if (!Verify.IsTrue(_numInterestedPlayers >= 0))
                 _numInterestedPlayers = 0;
-            }
 
             if (_numInterestedPlayers == 0)
             {

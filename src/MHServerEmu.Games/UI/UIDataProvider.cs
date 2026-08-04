@@ -16,9 +16,7 @@ namespace MHServerEmu.Games.UI
 {
     public class UIDataProvider : ISerialize
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
-        private readonly Dictionary<(PrototypeId, PrototypeId), UISyncData> _dataDict = new();
+        private readonly Dictionary<(PrototypeId WidgetRef, PrototypeId ContextRef), UISyncData> _data = new();
 
         public Region Region { get => Owner as Region; }
         public Game Game { get; }
@@ -30,27 +28,40 @@ namespace MHServerEmu.Games.UI
             Owner = owner;
         }
 
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+
+            foreach (var kvp in _data)
+            {
+                string widgetName = GameDatabase.GetFormattedPrototypeName(kvp.Key.WidgetRef);
+                string contextName = GameDatabase.GetFormattedPrototypeName(kvp.Key.ContextRef);
+                sb.AppendLine($"_data[{widgetName}][{contextName}]: {kvp.Value}");
+            }
+
+            return sb.ToString();
+        }
+
         public void Deallocate()
         {
-            foreach (var widget in _dataDict.Values)
+            foreach (UISyncData widget in _data.Values)
                 widget?.Deallocate();
 
-            _dataDict.Clear();
+            _data.Clear();
         }
 
         public bool Serialize(Archive archive)
         {
             bool success = true;
 
-            uint numWidgets = (uint)_dataDict.Count;
+            uint numWidgets = (uint)_data.Count;
             success &= Serializer.Transfer(archive, ref numWidgets);
 
             if (archive.IsPacking)
             {
-                foreach (var kvp in _dataDict)
+                foreach (var kvp in _data)
                 {
-                    PrototypeId widgetRef = kvp.Key.Item1;
-                    PrototypeId contextRef = kvp.Key.Item2;
+                    (PrototypeId widgetRef, PrototypeId contextRef) = kvp.Key;
                     success &= Serializer.Transfer(archive, ref widgetRef);
                     success &= Serializer.Transfer(archive, ref contextRef);
                     success &= kvp.Value.Serialize(archive);
@@ -71,23 +82,9 @@ namespace MHServerEmu.Games.UI
             return success;
         }
 
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-
-            foreach (var kvp in _dataDict)
-            {
-                string widgetName = GameDatabase.GetFormattedPrototypeName(kvp.Key.Item1);
-                string contextName = GameDatabase.GetFormattedPrototypeName(kvp.Key.Item2);
-                sb.AppendLine($"_dataDict[{widgetName}][{contextName}]: {kvp.Value}");
-            }
-
-            return sb.ToString();
-        }
-
         public T GetWidget<T>(PrototypeId widgetRef, PrototypeId contextRef = PrototypeId.Invalid) where T: UISyncData
         {
-            if (_dataDict.TryGetValue((widgetRef, contextRef), out UISyncData widget) == false)
+            if (_data.TryGetValue((widgetRef, contextRef), out UISyncData widget) == false)
                 widget = AllocateUIWidget(widgetRef, contextRef);
 
             return widget as T;
@@ -95,13 +92,14 @@ namespace MHServerEmu.Games.UI
 
         public void DeleteWidget(PrototypeId widgetRef, PrototypeId contextRef = PrototypeId.Invalid)
         {
-            if (_dataDict.Remove((widgetRef, contextRef), out UISyncData widget))
+            if (_data.Remove((widgetRef, contextRef), out UISyncData widget))
                 widget.Deallocate();
 
-            var region = Region;
-            if (region == null) return;
+            Region region = Region;
+            if (region == null)
+                return;
 
-            var message = NetMessageUISyncDataRemove.CreateBuilder()
+            NetMessageUISyncDataRemove message = NetMessageUISyncDataRemove.CreateBuilder()
                 .SetUiSyncDataProtoId((ulong)widgetRef)
                 .SetContextProtoId((ulong)contextRef)
                 .Build();
@@ -111,17 +109,18 @@ namespace MHServerEmu.Games.UI
 
         public void OnUpdateUI(UISyncData uiSyncData)
         {
-            var region = Region;
-            if (region == null) return;
+            Region region = Region;
+            if (region == null)
+                return;
 
             ByteString buffer;
-            using (var archive = new Archive(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AllChannels))
+            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AllChannels))
             {
                 uiSyncData.Serialize(archive);
                 buffer = archive.ToByteString();
             }
 
-            var message = NetMessageUISyncDataUpdate.CreateBuilder()
+            NetMessageUISyncDataUpdate message = NetMessageUISyncDataUpdate.CreateBuilder()
                 .SetUiSyncDataProtoId((ulong)uiSyncData.WidgetRef)
                 .SetContextProtoId((ulong)uiSyncData.ContextRef)
                 .SetBuffer(buffer)
@@ -130,55 +129,16 @@ namespace MHServerEmu.Games.UI
             Game?.NetworkManager.SendMessageToInterested(message, region);
         }
 
-        /// <summary>
-        /// Creates a <see cref="UISyncData"/> instance of the appropriate subtype for the specified widget prototype.
-        /// </summary>
-        private UISyncData AllocateUIWidget(PrototypeId widgetRef, PrototypeId contextRef)
+        public void OnEntityTracked(WorldEntity worldEntity, PrototypeId widgetRef)
         {
-            if (widgetRef == PrototypeId.Invalid)
-                return Logger.WarnReturn<UISyncData>(null, "AllocateUIWidget(): widgetRef == PrototypeId.Invalid");
+            if (!Verify.IsNotNull(worldEntity)) return;
+            if (!Verify.IsTrue(widgetRef != PrototypeId.Invalid)) return;
 
-            if (_dataDict.ContainsKey((widgetRef, contextRef)))
-                return Logger.WarnReturn<UISyncData>(null, $"AllocateUIWidget(): Widget already exists, widgetRef={widgetRef}, contextRef={contextRef}");
+            MetaGameDataPrototype metaGameProto = widgetRef.As<MetaGameDataPrototype>();
+            if (metaGameProto == null)
+                return;
 
-            MetaGameDataPrototype metaGameDataPrototype = GameDatabase.GetPrototype<MetaGameDataPrototype>(widgetRef);
-
-            if (metaGameDataPrototype == null)
-                return Logger.WarnReturn<UISyncData>(null, "AllocateUIWidget(): metaGameDataPrototype == null");
-
-            UISyncData uiSyncData = metaGameDataPrototype switch
-            {
-                UIWidgetButtonPrototype             => new UIWidgetButton(this, widgetRef, contextRef),
-                UIWidgetEntityIconsPrototype        => new UIWidgetEntityIconsSyncData(this, widgetRef, contextRef),
-                UIWidgetGenericFractionPrototype    => new UIWidgetGenericFraction(this, widgetRef, contextRef),
-                UIWidgetMissionTextPrototype        => new UIWidgetMissionText(this, widgetRef, contextRef),
-                UIWidgetReadyCheckPrototype         => new UIWidgetReadyCheck(this, widgetRef, contextRef),
-                _ => null
-            };
-
-            if (uiSyncData == null)
-                return Logger.WarnReturn<UISyncData>(null, "AllocateUIWidget(): Trying to allocate widget of the base type");
-
-            _dataDict.Add((widgetRef, contextRef), uiSyncData);
-            return uiSyncData;
-        }
-
-        private UISyncData UpdateOrCreateUIWidget(PrototypeId widgetRef, PrototypeId contextRef, Archive archive)
-        {
-            if (_dataDict.TryGetValue((widgetRef, contextRef), out UISyncData uiData) == false)
-                uiData = AllocateUIWidget(widgetRef, contextRef);
-
-            uiData.Serialize(archive);
-            uiData.UpdateUI();
-
-            return uiData;
-        }
-
-        public void OnEntityTracked(WorldEntity worldEntity, PrototypeId contextRef)
-        {
-            var metaGameProto = GameDatabase.GetPrototype<MetaGameDataPrototype>(contextRef);
-            if (metaGameProto == null) return;
-            var uiSyncData = FindWidget(worldEntity, contextRef);
+            UISyncData uiSyncData = FindWidget(worldEntity, widgetRef);
             uiSyncData?.OnEntityTracked(worldEntity);
         }
 
@@ -193,22 +153,71 @@ namespace MHServerEmu.Games.UI
                 }
         }
 
-        private UISyncData FindWidget(WorldEntity worldEntity, PrototypeId contextRef)
-        {
-            if (_dataDict.TryGetValue((contextRef, PrototypeId.Invalid), out UISyncData widget)) return widget;
-            if (_dataDict.TryGetValue((contextRef, worldEntity.MissionPrototype), out widget)) return widget;
-            foreach(var kvp in _dataDict)
-                if (kvp.Key.Item1 == contextRef) return kvp.Value;
-            return null;
-        }
-
         public void OnWidgetButtonResult(NetMessageWidgetButtonResult widgetButtonResult)
         {
             PrototypeId widgetRef = (PrototypeId)widgetButtonResult.WidgetRefId;
             PrototypeId contextRef = (PrototypeId)widgetButtonResult.WidgetContextRefId;
-            var button = GetWidget<UIWidgetButton>(widgetRef, contextRef);
-            button?.DoCallback(widgetButtonResult.PlayerGuid, widgetButtonResult.Result);
 
+            UIWidgetButton button = GetWidget<UIWidgetButton>(widgetRef, contextRef);
+            if (!Verify.IsNotNull(button)) return;
+
+            button.DoCallback(widgetButtonResult.PlayerGuid, widgetButtonResult.Result);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="UISyncData"/> instance of the appropriate subtype for the specified widget prototype.
+        /// </summary>
+        private UISyncData AllocateUIWidget(PrototypeId widgetRef, PrototypeId contextRef)
+        {
+            if (!Verify.IsTrue(widgetRef != PrototypeId.Invalid)) return null;
+            if (!Verify.IsTrue(_data.ContainsKey((widgetRef, contextRef)) == false)) return null;
+
+            MetaGameDataPrototype metaGameDataProto = widgetRef.As<MetaGameDataPrototype>();
+            if (!Verify.IsNotNull(metaGameDataProto)) return null;
+
+            UISyncData uiSyncData = metaGameDataProto switch
+            {
+                UIWidgetButtonPrototype             => new UIWidgetButton(this, widgetRef, contextRef),
+                UIWidgetEntityIconsPrototype        => new UIWidgetEntityIconsSyncData(this, widgetRef, contextRef),
+                UIWidgetGenericFractionPrototype    => new UIWidgetGenericFraction(this, widgetRef, contextRef),
+                UIWidgetMissionTextPrototype        => new UIWidgetMissionText(this, widgetRef, contextRef),
+                UIWidgetReadyCheckPrototype         => new UIWidgetReadyCheck(this, widgetRef, contextRef),
+                _ => null
+            };
+
+            if (!Verify.IsNotNull(uiSyncData, $"Trying to allocate widget of the base type, use UIWidgetEntityIconsSyncData, UIWidgetGenericFraction, or UIWidgetMissionText. WIDGETREF={widgetRef.GetNameFormatted()}"))
+                return null;
+
+            _data.Add((widgetRef, contextRef), uiSyncData);
+            return uiSyncData;
+        }
+
+        private UISyncData UpdateOrCreateUIWidget(PrototypeId widgetRef, PrototypeId contextRef, Archive archive)
+        {
+            if (_data.TryGetValue((widgetRef, contextRef), out UISyncData uiData) == false)
+                uiData = AllocateUIWidget(widgetRef, contextRef);
+
+            uiData.Serialize(archive);
+            uiData.UpdateUI();
+
+            return uiData;
+        }
+
+        private UISyncData FindWidget(WorldEntity worldEntity, PrototypeId widgetRef)
+        {
+            if (_data.TryGetValue((widgetRef, PrototypeId.Invalid), out UISyncData widget))
+                return widget;
+
+            if (_data.TryGetValue((widgetRef, worldEntity.MissionPrototype), out widget))
+                return widget;
+
+            foreach (var kvp in _data)
+            {
+                if (kvp.Key.WidgetRef == widgetRef)
+                    return kvp.Value;
+            }
+
+            return null;
         }
     }
 }

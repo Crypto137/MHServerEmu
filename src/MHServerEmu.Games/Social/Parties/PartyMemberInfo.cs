@@ -5,8 +5,6 @@ namespace MHServerEmu.Games.Social.Parties
 {
     public class PartyMemberInfo
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public ulong PlayerDbId { get; private set; }
         public string PlayerName { get; private set; }
         public HashSet<PrototypeId> Boosts { get; } = new();    // the client uses a sorted map here
@@ -37,11 +35,8 @@ namespace MHServerEmu.Games.Social.Parties
             for (int i = 0; i < protobuf.BoostsCount; i++)
             {
                 PrototypeId boostRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)protobuf.BoostsList[i]);
-                if (boostRef == PrototypeId.Invalid)
-                {
-                    Logger.Warn("SetFromMsg(): boostRef == PrototypeId.Invalid");
+                if (!Verify.IsTrue(boostRef != PrototypeId.Invalid))
                     continue;
-                }
 
                 Boosts.Add(boostRef);
             }

@@ -11,13 +11,15 @@ namespace MHServerEmu.Games.Social.Communities
     /// </summary>
     public class CommunityCircleManager : ISerialize
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        public const int ArchiveCircleIdInvalid = -1;
 
-        private readonly Dictionary<CircleId, CommunityCircle> _circleDict = new();
+        private readonly Dictionary<CircleId, CommunityCircle> _circles = new();
         private readonly List<CircleId> _archiveCircles = new();     // A collection of circle ids that need to be written to archives
 
+        private int _numCircleIteratorsInScope = 0;
+
         public Community Community { get; }
-        public int NumCircles { get => _circleDict.Count; }
+        public int NumCircles { get => _circles.Count; }
 
         /// <summary>
         /// Constructs a new <see cref="CommunityCircleManager"/>.
@@ -25,6 +27,16 @@ namespace MHServerEmu.Games.Social.Communities
         public CommunityCircleManager(Community community)
         {
             Community = community;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+
+            foreach (CommunityCircle circle in _circles.Values)
+                sb.AppendLine(circle.ToString());
+
+            return sb.ToString();
         }
 
         public bool Serialize(Archive archive)
@@ -49,13 +61,13 @@ namespace MHServerEmu.Games.Social.Communities
 
                 if (archive.IsUnpacking)
                 {
-                    if (Enum.TryParse(circleName, out CircleId circleId) == false)
-                        return Logger.ErrorReturn(false, $"Serialize(): Unable to find system circle enum value for name {circleName}");
+                    bool found = Enum.TryParse(circleName, out CircleId circleId);
+                    if (!Verify.IsTrue(found, $"Unable to find system circle enum value for name {circleName}"))
+                        return false;
 
                     CommunityCircle circle = GetCircle(circleId);
-
-                    if (circle == null)
-                        Logger.ErrorReturn(false, $"Serialize(): Unable to get community circle for header. name={circleName}, id=0x{(int)circleId:X}, community={Community}");
+                    if (!Verify.IsNotNull(circle, $"Unable to get community circle for header. name={circleName}, id=0x{(int)circleId:X}, community={Community}"))
+                        return false;
 
                     _archiveCircles.Add(circle.Id);
                 }
@@ -80,9 +92,9 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public void Shutdown()
         {
-            while (_circleDict.Count > 0)
+            while (_circles.Count > 0)
             {
-                CommunityCircle circle = _circleDict.Values.First();
+                CommunityCircle circle = _circles.Values.First();
                 DestroyCircle(circle);
             }
         }
@@ -92,7 +104,7 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public CommunityCircle GetCircle(CircleId id)
         {
-            if (_circleDict.TryGetValue(id, out CommunityCircle circle) == false)
+            if (_circles.TryGetValue(id, out CommunityCircle circle) == false)
                 return null;
 
             return circle;
@@ -103,8 +115,8 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public CommunityCircle GetCircleByArchiveCircleId(int archiveCircleId)
         {
-            if ((archiveCircleId >= 0 && archiveCircleId < _archiveCircles.Count) == false)
-                return Logger.WarnReturn<CommunityCircle>(null, $"GetCircleByArchiveCircleId(): Invalid circle id {archiveCircleId}");
+            if (!Verify.IsTrue(archiveCircleId >= 0 && archiveCircleId < _archiveCircles.Count, $"Invalid archive circle id {archiveCircleId}"))
+                return null;
 
             CircleId circleId = _archiveCircles[archiveCircleId];
             return GetCircle(circleId);
@@ -122,18 +134,8 @@ namespace MHServerEmu.Games.Social.Communities
                     return i;
             }
 
-            Logger.Warn($"GetArchiveCircleId(): circleId not found");
-            return -1;
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-
-            foreach (CommunityCircle circle in _circleDict.Values)
-                sb.AppendLine(circle.ToString());
-
-            return sb.ToString();
+            Verify.IsTrue(false, $"Asked for archive circle id for circle that is not persistent. circle={circle}");
+            return ArchiveCircleIdInvalid;
         }
 
         /// <summary>
@@ -141,16 +143,18 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         private CommunityCircle CreateCircle(CircleId circleId)
         {
-            // Verify "Trying to create a new circle while iterating them in the community %s"
-            // We probably don't need this because it seems user circles were never implemented,
-            // and all system circles are created during initalization.
+            if (!Verify.IsTrue(_numCircleIteratorsInScope == 0, $"Trying to create a new circle while iterating them in the community {Community}"))
+                return null;
 
-            if (_circleDict.ContainsKey(circleId))
-                return Logger.WarnReturn((CommunityCircle)null, "CreateCircle(): Cannot create circle that already exists");
+            CommunityCircle existingCircle = GetCircle(circleId);
+            if (!Verify.IsTrue(existingCircle == null, $"Cannot create circle that already exists. circle={existingCircle}, community={Community}"))
+                return null;
 
             string circleName = Community.GetLocalizedSystemCircleName(circleId);
             CommunityCircle circle = new(Community, circleName, circleId, CircleType.System);
-            _circleDict.Add(circleId, circle);
+            // verify: Unable to allocate system circle %s
+
+            _circles.Add(circleId, circle);
             return circle;
         }
 
@@ -159,11 +163,10 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         private void DestroyCircle(CommunityCircle circle)
         {
-            // Verify "Trying to destroy circle while iterating them in the community %s"
-            // We probably don't need this because it seems user circles were never implemented,
-            // and all system circles are destroyed during shutdown.
+            if (!Verify.IsTrue(_numCircleIteratorsInScope == 0, $"Trying to destroy circle while iterating them in the community {Community}"))
+                return;
 
-            _circleDict.Remove(circle.Id);
+            _circles.Remove(circle.Id);
             _archiveCircles.Remove(circle.Id);
         }
 
@@ -172,15 +175,12 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         private void CreateArchiveCircleIds(Archive archive = null)
         {
-            foreach(CommunityCircle circle in _circleDict.Values)
+            foreach(CommunityCircle circle in _circles.Values)
             {
                 if (circle.ShouldArchiveTo(archive))
                 {
-                    if (_archiveCircles.Contains(circle.Id))
-                    {
-                        Logger.Warn($"CreateArchiveCircleIds(): Trying to add archive circle twice");
+                    if (!Verify.IsTrue(_archiveCircles.Contains(circle.Id) == false, $"Trying to add archive circle twice.  circle={circle}"))
                         continue;
-                    }
 
                     _archiveCircles.Add(circle.Id);                        
                 }
@@ -208,7 +208,8 @@ namespace MHServerEmu.Games.Social.Communities
             public Enumerator(CommunityCircleManager circleManager)
             {
                 _circleManager = circleManager;
-                _enumerator = _circleManager._circleDict.Values.GetEnumerator();
+                _enumerator = _circleManager._circles.Values.GetEnumerator();
+                _circleManager._numCircleIteratorsInScope++;
             }
 
             public bool MoveNext()
@@ -219,12 +220,13 @@ namespace MHServerEmu.Games.Social.Communities
             public void Reset()
             {
                 _enumerator.Dispose();
-                _enumerator = _circleManager._circleDict.Values.GetEnumerator();
+                _enumerator = _circleManager._circles.Values.GetEnumerator();
             }
 
             public void Dispose()
             {
                 _enumerator.Dispose();
+                _circleManager._numCircleIteratorsInScope--;
             }
         }
     }

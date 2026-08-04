@@ -14,8 +14,6 @@ namespace MHServerEmu.Games.Regions
     /// </remarks>
     public class WorldViewCache : IEnumerable<(PrototypeId, ulong)>
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly HashSet<ulong> _regionIds = new();
         private readonly SortedVector<(PrototypeId, ulong)> _regionIdsByProto = new();
 
@@ -55,29 +53,26 @@ namespace MHServerEmu.Games.Regions
         /// <summary>
         /// Adds a region to this <see cref="WorldViewCache"/>. Returns <see langword="true"/> if successful.
         /// </summary>
-        public bool AddRegion(ulong regionId, PrototypeId regionProtoRef)
+        public void AddRegion(ulong regionId, PrototypeId regionProtoRef)
         {
-            if (regionId == 0) return Logger.WarnReturn(false, "AddRegion(): regionId == 0");
-            if (regionProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "AddRegion(): regionProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(regionId != 0)) return;
+            if (!Verify.IsTrue(regionProtoRef != PrototypeId.Invalid)) return;
 
-            if (_regionIds.Contains(regionId))
-                return Logger.WarnReturn(false, $"AddRegion(): World view for {Owner} already contains region 0x{regionId:X} ({regionProtoRef.GetName()})");
+            if (!Verify.IsTrue(_regionIds.Add(regionId), $"World view for {Owner} already contains region 0x{regionId:X} ({regionProtoRef.GetName()})"))
+                return;
 
-            _regionIds.Add(regionId);
             _regionIdsByProto.SortedInsert((regionProtoRef, regionId));
 
             Owner.Player?.ScheduleWorldViewUpdate();
-
-            return true;
         }
 
         /// <summary>
         /// Removes the specified region from this <see cref="WorldViewCache"/>. Returns <see langword="true"/> if successful.
         /// </summary>
-        public bool RemoveRegion(ulong regionId)
+        public void RemoveRegion(ulong regionId)
         {
-            if (_regionIds.Remove(regionId) == false)
-                return Logger.WarnReturn(false, $"RemoveRegion(): 0x{regionId:X} not found");
+            if (!Verify.IsTrue(_regionIds.Remove(regionId), $"Region 0x{regionId:X} not found"))
+                return;
 
             for (int i = 0; i < _regionIdsByProto.Count; i++)
             {
@@ -90,8 +85,6 @@ namespace MHServerEmu.Games.Regions
             }
 
             Owner.Player?.ScheduleWorldViewUpdate();
-
-            return true;
         }
 
         /// <summary>

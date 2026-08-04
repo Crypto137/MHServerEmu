@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.Dialog
 {
@@ -15,7 +16,9 @@ namespace MHServerEmu.Games.Dialog
             if (base.IsCurrentlyAvailable(interacteeDesc, localInteractee, interactor, interactionFlags))
             {
                 Player interactingPlayer = interactor.GetOwnerOfType<Player>();
-                if (interactingPlayer == null) return Logger.WarnReturn(false, $"InspectOption only works on avatars with a player, but could not find one on {interactor.PrototypeName}!");
+                if (!Verify.IsNotNull(interactingPlayer, $"InspectOption only works on avatars with a player, but could not find one on {interactor.PrototypeName}!"))
+                    return false;
+
                 isAvailable = interacteeDesc.PlayerName != interactingPlayer.GetName(); 
             }
             return isAvailable;

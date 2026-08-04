@@ -49,7 +49,10 @@ namespace MHServerEmu.Games.Achievements
             // Load achievement info map
             string achievementInfoMapPath = Path.Combine(AchievementsDirectory, "AchievementInfoMap.json");
             if (File.Exists(achievementInfoMapPath) == false)
-                return Logger.WarnReturn(false, $"Initialize(): Achievement info map not found at {achievementInfoMapPath}");
+            {
+                Logger.Warn($"Initialize(): Achievement info map not found at {achievementInfoMapPath}");
+                return false;
+            }
 
             // Get all AchievementInfoMap*.json files
             var achievementInfoMapFiles = Directory.GetFiles(AchievementsDirectory, "AchievementInfoMap*.json")

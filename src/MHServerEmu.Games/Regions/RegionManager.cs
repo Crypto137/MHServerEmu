@@ -86,11 +86,11 @@ namespace MHServerEmu.Games.Regions
 
         public Region CreateRegion(RegionSettings settings)
         {
-            if (settings.RegionDataRef == 0) return Logger.WarnReturn<Region>(null, "CreateRegion(): settings.RegionDataRef == 0");
+            if (!Verify.IsTrue(settings.RegionDataRef != PrototypeId.Invalid)) return null;
 
             ulong instanceAddress = settings.InstanceAddress;
-            if (instanceAddress == 0) return Logger.WarnReturn<Region>(null, "CreateRegion(): instanceAddress == 0");
-            if (GetRegion(instanceAddress) != null) return Logger.WarnReturn<Region>(null, "CreateRegion(): GetRegion(instanceAddress) != null");
+            if (!Verify.IsTrue(instanceAddress != 0)) return null;
+            if (!Verify.IsTrue(GetRegion(instanceAddress) == null)) return null;
 
             // Game::AllocateRegion()
             Region region = new(Game);
@@ -108,9 +108,7 @@ namespace MHServerEmu.Games.Regions
             if (region.MatchNumber != 0)
                 _matches[region.MatchNumber] = region;
 
-            if (region.Id != instanceAddress)
-                Logger.Warn("CreateRegion(): region.Id != instanceAddress");
-
+            Verify.IsTrue(region.Id == instanceAddress);
             return region;
         }
 
@@ -119,8 +117,8 @@ namespace MHServerEmu.Games.Regions
             // NOTE: We merged Region::DestroyRegion() with Region::destroyRegionFromIterator() from the client
             // because we don't use C++ style iterators here.
 
-            if (_allRegions.TryGetValue(regionId, out Region region) == false)
-                return Logger.WarnReturn(false, $"DestroyRegion(): Failed to retrieve region for id 0x{regionId:X}");
+            if (!Verify.IsTrue(_allRegions.TryGetValue(regionId, out Region region), $"Failed to retrieve region for id 0x{regionId:X}"))
+                return false;
 
             if (region.MatchNumber != 0)
                 _matches.Remove(region.MatchNumber);

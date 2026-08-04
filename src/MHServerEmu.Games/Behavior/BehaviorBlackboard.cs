@@ -13,9 +13,8 @@ namespace MHServerEmu.Games.Behavior
 {
     public class BehaviorBlackboard: IPropertyChangeWatcher
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        private readonly Agent _owner;
 
-        private Agent _owner; 
         public PropertyCollection PropertyCollection { get; private set; }
         public Vector3 SpawnPoint { get; set; }
         public Vector3 SpawnOffset { get; set; }
@@ -63,11 +62,8 @@ namespace MHServerEmu.Games.Behavior
 
         public void Attach(PropertyCollection propertyCollection)
         {
-            if (propertyCollection != PropertyCollection)
-            {
-                Logger.Warn("Attach(): Entities can attach only to their own property collection");
-                return;
-            }
+            if (!Verify.IsTrue(propertyCollection == PropertyCollection)) return;
+
             PropertyCollection.AttachWatcher(this);
         }
 
@@ -176,7 +172,8 @@ namespace MHServerEmu.Games.Behavior
                             newValue += value;
                             break;
                         case BlackboardOperatorType.Div:
-                            if (value == 0) return Logger.DebugReturn(false, "Attempted division by zero!");
+                            if (!Verify.IsTrue(value != 0, "Attempted Division by zero!"))
+                                return false;
                             newValue /= value;
                             break;
                         case BlackboardOperatorType.Mul:

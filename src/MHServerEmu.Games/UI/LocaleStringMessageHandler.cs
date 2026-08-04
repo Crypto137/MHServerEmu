@@ -1,5 +1,4 @@
-﻿
-using Gazillion;
+﻿using Gazillion;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.UI
@@ -8,16 +7,18 @@ namespace MHServerEmu.Games.UI
     {
         public LocaleStringId LocaleString { get; set; }
 
+        public bool HasString { get => LocaleString != LocaleStringId.Blank; }
+
         public LocaleStringMessageHandler(LocaleStringId localeString = LocaleStringId.Blank)
         {
             LocaleString = localeString;
         }
 
-        public bool HasString => LocaleString != LocaleStringId.Blank;
-
         public NetStructFormatString ToProtobuf()
         {
-            return new NetStructFormatString.Builder().SetFormatStringId((ulong)LocaleString).Build();
+            return NetStructFormatString.CreateBuilder()
+                .SetFormatStringId((ulong)LocaleString)
+                .Build();
         }
     }
 }

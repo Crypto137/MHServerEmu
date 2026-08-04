@@ -1,5 +1,4 @@
-﻿
-using Gazillion;
+﻿using Gazillion;
 
 namespace MHServerEmu.Games.UI
 {

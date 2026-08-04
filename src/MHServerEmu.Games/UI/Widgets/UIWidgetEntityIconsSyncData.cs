@@ -15,8 +15,6 @@ namespace MHServerEmu.Games.UI.Widgets
 {
     public class UIWidgetEntityIconsSyncData : UISyncData
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly List<FilterEntry> _filterList = new();
 
         public UIWidgetEntityIconsPrototype Prototype;
@@ -24,11 +22,7 @@ namespace MHServerEmu.Games.UI.Widgets
         public UIWidgetEntityIconsSyncData(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef)
         {
             Prototype = GameDatabase.GetPrototype<UIWidgetEntityIconsPrototype>(widgetRef);
-            if (Prototype == null)
-            {
-                Logger.Warn($"UIWidgetEntityIconsSyncData(): widgetPrototype == null");
-                return;
-            }
+            if (!Verify.IsNotNull(Prototype)) return;
 
             if (Prototype.Entities.IsNullOrEmpty()) return;
 
@@ -38,11 +32,8 @@ namespace MHServerEmu.Games.UI.Widgets
             int index = 0;
             foreach (var entryProto in Prototype.Entities)
             {
-                if (entryProto.Filter == null)
-                {
-                    Logger.Warn("UIWidgetEntityIconsSyncData(): entryPrototype.Filter == null");
+                if (!Verify.IsNotNull(entryProto.Filter))
                     continue;
-                }
 
                 FilterEntry filterEntry = new();
                 filterEntry.Index = index++;
@@ -411,6 +402,7 @@ namespace MHServerEmu.Games.UI.Widgets
     {
         private PropertyCollection _properties;
         private UISyncData _uiSyncData;
+
         public ulong EntityId { get; set; }
         public UIWidgetEntityState State { get; set; }
         public int HealthPercent { get; set; }
@@ -425,6 +417,20 @@ namespace MHServerEmu.Games.UI.Widgets
             // IconIndexForHealthPercentEval = -1; // Bonus* bug
             PropertyEntryTableIndex = -1;
             EnrageStartTime = TimeSpan.FromMilliseconds(-1);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            //sb.AppendLine($"{nameof(EntityId)}: {EntityId}");
+            sb.AppendLine($"{nameof(State)}: {State}");
+            sb.AppendLine($"{nameof(HealthPercent)}: {HealthPercent}");
+            sb.AppendLine($"{nameof(IconIndexForHealthPercentEval)}: {IconIndexForHealthPercentEval}");
+            sb.AppendLine($"{nameof(ForceRefreshEntityHealthPercent)}: {ForceRefreshEntityHealthPercent}");
+            sb.AppendLine($"{nameof(EnrageStartTime)}: {EnrageStartTime - Game.Current.CurrentTime}");
+            sb.AppendLine($"{nameof(HasPropertyEntryEval)}: {HasPropertyEntryEval}");
+            sb.AppendLine($"{nameof(PropertyEntryTableIndex)}: {PropertyEntryTableIndex}");
+            return sb.ToString();
         }
 
         public void Destroy()
@@ -457,20 +463,6 @@ namespace MHServerEmu.Games.UI.Widgets
             if (entity is Agent agent && agent.AIController != null) 
                 Attach(agent.AIController.Blackboard.PropertyCollection);
             Attach(entity.Properties);
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            //sb.AppendLine($"{nameof(EntityId)}: {EntityId}");
-            sb.AppendLine($"{nameof(State)}: {State}");
-            sb.AppendLine($"{nameof(HealthPercent)}: {HealthPercent}");
-            sb.AppendLine($"{nameof(IconIndexForHealthPercentEval)}: {IconIndexForHealthPercentEval}");
-            sb.AppendLine($"{nameof(ForceRefreshEntityHealthPercent)}: {ForceRefreshEntityHealthPercent}");
-            sb.AppendLine($"{nameof(EnrageStartTime)}: {EnrageStartTime - Game.Current.CurrentTime}");
-            sb.AppendLine($"{nameof(HasPropertyEntryEval)}: {HasPropertyEntryEval}");
-            sb.AppendLine($"{nameof(PropertyEntryTableIndex)}: {PropertyEntryTableIndex}");
-            return sb.ToString();
         }
     }
 }

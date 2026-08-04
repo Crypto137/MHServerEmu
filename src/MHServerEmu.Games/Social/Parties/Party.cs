@@ -61,7 +61,7 @@ namespace MHServerEmu.Games.Social.Parties
         public bool AddMember(Gazillion.PartyMemberInfo protobuf)
         {
             ulong playerDbId = protobuf.PlayerDbId;
-            if (playerDbId == 0) return Logger.WarnReturn(false, "AddMember(): playerDbId == 0");
+            if (!Verify.IsTrue(playerDbId != 0)) return false;
 
             if (GetMemberInfo(playerDbId) != null)
                 return UpdateMember(protobuf);
@@ -193,24 +193,24 @@ namespace MHServerEmu.Games.Social.Parties
             return GetCommunityMemberForDbGuid(player, LeaderId);
         }
 
-        public bool SendAIAggroNotification(PrototypeId bannerMessageRef, Agent aiAgent, Player aggroPlayer)
+        public void SendAIAggroNotification(PrototypeId bannerMessageRef, Agent aiAgent, Player aggroPlayer)
         {
-            if (bannerMessageRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "SendAIAggroNotification(): bannerMessageRef == PrototypeId.Invalid");
-            if (aiAgent == null) return Logger.WarnReturn(false, "SendAIAggroNotification(): aiAgent == null");
-            if (aggroPlayer == null) return Logger.WarnReturn(false, "SendAIAggroNotification(): aggroPlayer == null");
+            if (!Verify.IsTrue(bannerMessageRef != PrototypeId.Invalid)) return;
+            if (!Verify.IsNotNull(aiAgent)) return;
+            if (!Verify.IsNotNull(aggroPlayer)) return;
 
             Region region = aggroPlayer.GetRegion();
-            if (region == null) return Logger.WarnReturn(false, "SendAIAggroNotification(): region == null");
+            if (!Verify.IsNotNull(region)) return;
 
             Avatar aggroAvatar = aggroPlayer.CurrentAvatar;
-            if (aggroAvatar == null) return Logger.WarnReturn(false, "SendAIAggroNotification(): aggroAvatar == null");
-            if (aggroAvatar.IsInWorld == false) return Logger.WarnReturn(false, "SendAIAggroNotification(): aggroAvatar.IsInWorld == false");
+            if (!Verify.IsNotNull(aggroAvatar)) return;
+            if (!Verify.IsTrue(aggroAvatar.IsInWorld)) return;
 
             UINotificationGlobalsPrototype notificationGlobalsProto = GameDatabase.UIGlobalsPrototype.UINotificationGlobals.As<UINotificationGlobalsPrototype>();
-            if (notificationGlobalsProto == null) return Logger.WarnReturn(false, "SendAIAggroNotification(): notificationGlobalsProto == null");
+            if (!Verify.IsNotNull(notificationGlobalsProto)) return;
 
             if (aiAgent.Id == _lastAIAggroNotificationEntityId)
-                return true;
+                return;
 
             _lastAIAggroNotificationEntityId = aiAgent.Id;
 
@@ -243,8 +243,6 @@ namespace MHServerEmu.Games.Social.Parties
 
                 itPlayer.SendAIAggroNotification(bannerMessageRef, aiAgent, aggroPlayer, false);
             }
-
-            return true;
         }
 
         private void UpdateBoostCounts()
