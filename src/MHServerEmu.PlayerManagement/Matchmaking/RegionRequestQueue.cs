@@ -73,38 +73,36 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             }
         }
 
-        public bool UpdateGroupBucket(RegionRequestGroup group)
+        public void UpdateGroupBucket(RegionRequestGroup group)
         {
-            if (group == null) return Logger.WarnReturn(false, "UpdateGroupBucket(): group == null");
+            if (!Verify.IsNotNull(group)) return;
 
             // Remove from the current bucket.
             List<RegionRequestGroup> oldBucket = group.Bucket;
             if (oldBucket != null)
             {
-                if (oldBucket.Remove(group))
-                    group.Bucket = null;
-                else
-                    return Logger.WarnReturn(false, $"UpdateGroupBucket(): Group {group} is not in the bucket assigned to it.");
+                if (!Verify.IsTrue(oldBucket.Remove(group), $"Group {group} is not in the bucket assigned to it."))
+                    return;
+
+                group.Bucket = null;
             }
 
             // Do not rebucket if the group is empty now.
             int memberCount = group.GetCountNotInWaitlist();
             if (memberCount == 0)
-                return false;
+                return;
 
             RegionRequestQueueParams queueParams = group.QueueParams;
 
             List<RegionRequestGroup> newBucket = GetBucket(queueParams, memberCount);
-            if (newBucket == null)
-                return Logger.WarnReturn(false, $"UpdateGroupBucket(): No bucket found for region=[{Prototype}], params=[{queueParams}], memberCount=[{memberCount}]");
+            if (!Verify.IsNotNull(newBucket, $"No bucket found for region=[{Prototype}], params=[{queueParams}], memberCount=[{memberCount}]"))
+                return;
 
             newBucket.Add(group);
             group.Bucket = newBucket;
 
             if (oldBucket != newBucket)
                 UpdateQueue(queueParams);
-
-            return true;
         }
 
         public void UpdateMatchSortOrder(Match match)
@@ -116,7 +114,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (match.IsEmpty() == false || (Prototype.QueueDoNotWaitToFull && match.Region != null))
                 _matches.Add(match);
             else
-                Logger.Info($"Removed match {match}");
+                Logger.Trace($"Removed match {match}");
         }
 
         public List<RegionRequestGroup> GetBucket(in RegionRequestQueueParams queueParams, int memberCount)
@@ -180,7 +178,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             Match match = new(matchNumber, this, queueParams);
             _matches.Add(match);
 
-            Logger.Info($"Created match {match}");
+            Logger.Trace($"Created match {match}");
 
             return match;
         }

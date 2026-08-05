@@ -16,7 +16,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             return GetType().Name;
         }
 
-        public abstract bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState);
+        public abstract void SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState);
 
         public virtual void OnEntered(RegionRequestGroupMember member) { }
         public virtual void OnExited(RegionRequestGroupMember member) { }
@@ -24,8 +24,6 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
     public class RegionRequestGroupMember
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public RegionRequestGroup Group { get; }
         public PlayerHandle Player { get; }
         public RegionRequestGroupMemberState State { get; private set; }
@@ -43,40 +41,35 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             Status = RegionRequestQueueUpdateVar.eRRQ_Invalid;
         }
 
-        public bool SetState(RegionRequestGroupMemberState newState)
+        public void SetState(RegionRequestGroupMemberState newState)
         {
             RegionRequestGroupMemberState oldState = State;
 
-            if (newState == null)
-                return Logger.WarnReturn(false, "SetState(): newState == null");
+            if (!Verify.IsNotNull(newState)) return;
 
             if (newState == oldState)
-                return false;
+                return;
 
-            return oldState.SetState(this, newState);
+            oldState.SetState(this, newState);
         }
 
-        private bool SetStateInternal(RegionRequestGroupMemberState newState)
+        private void SetStateInternal(RegionRequestGroupMemberState newState)
         {
             RegionRequestGroupMemberState oldState = State;
 
             // This should have already been validated by now
-            if (newState == oldState)
-                return Logger.WarnReturn(false, "SetStateInternal(): newState == oldState");
+            if (!Verify.IsTrue(newState != oldState)) return;
 
             oldState.OnExited(this);
             State = newState;
             newState.OnEntered(this);
 
             Group.UpdatePlayerStatus(Player, newState.StatusVar);
-
-            return true;
         }
 
-        private bool OnInvalidStateTransition(RegionRequestGroupMemberState newState)
+        private void OnInvalidStateTransition(RegionRequestGroupMemberState newState)
         {
-            Logger.Warn($"SetState(): Attempted invalid state transition {State} -> {newState} for player [{Player}]");
-            return false;
+            Verify.IsTrue(false, $"Attempted invalid state transition {State} -> {newState} for player [{Player}]");
         }
 
         #region State Implementations
@@ -91,7 +84,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private InitialState() { }
 
-            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
+            public override void SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
@@ -101,10 +94,12 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     case WaitingInWaitlistState:
                     case WaitingInWaitlistLockedState:
                     case MatchInvitePendingState:
-                        return member.SetStateInternal(newState);
+                        member.SetStateInternal(newState);
+                        break;
 
                     default:
-                        return member.OnInvalidStateTransition(newState);
+                        member.OnInvalidStateTransition(newState);
+                        break;
                 }
             }
         }
@@ -117,15 +112,17 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private GroupInvitePendingState() { }
 
-            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
+            public override void SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
                     case GroupInviteAcceptedState:
-                        return member.SetStateInternal(newState);
+                        member.SetStateInternal(newState);
+                        break;
 
                     default:
-                        return member.OnInvalidStateTransition(newState);
+                        member.OnInvalidStateTransition(newState);
+                        break;
                 }
             }
 
@@ -153,22 +150,25 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private GroupInviteAcceptedState() { }
 
-            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
+            public override void SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
                     case WaitingInQueueState:
-                        return member.SetStateInternal(newState);
+                        member.SetStateInternal(newState);
+                        break;
 
                     case WaitingInWaitlistState:
                     case MatchInvitePendingState:
-                        if (member.Group.IsBypass == false)
-                            return Logger.WarnReturn(false, $"SetState(): Attempted to skip to state {newState} in a non-bypass group for player [{member.Player}]");
+                        if (!Verify.IsTrue(member.Group.IsBypass, $"Attempted to skip to state {newState} in a non-bypass group for player [{member.Player}]"))
+                            return;
 
-                        return member.SetStateInternal(newState);
+                        member.SetStateInternal(newState);
+                        break;
                     
                     default:
-                        return member.OnInvalidStateTransition(newState);
+                        member.OnInvalidStateTransition(newState);
+                        break;
                 }
             }
         }
@@ -181,15 +181,17 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private WaitingInQueueState() { }
 
-            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
+            public override void SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
                     case MatchInvitePendingState:
-                        return member.SetStateInternal(newState);
+                        member.SetStateInternal(newState);
+                        break;
 
                     default:
-                        return member.OnInvalidStateTransition(newState);
+                        member.OnInvalidStateTransition(newState);
+                        break;
                 }
             }
         }
@@ -202,17 +204,19 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private WaitingInWaitlistState() { }
 
-            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
+            public override void SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
                     case WaitingInQueueState:
                     case WaitingInWaitlistLockedState:
                     case MatchInvitePendingState:
-                        return member.SetStateInternal(newState);
+                        member.SetStateInternal(newState);
+                        break;
 
                     default:
-                        return member.OnInvalidStateTransition(newState);
+                        member.OnInvalidStateTransition(newState);
+                        break;
                 }
             }
         }
@@ -225,15 +229,17 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private WaitingInWaitlistLockedState() { }
 
-            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
+            public override void SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
                     case WaitingInWaitlistState:
-                        return member.SetStateInternal(newState);
+                        member.SetStateInternal(newState);
+                        break;
 
                     default:
-                        return member.OnInvalidStateTransition(newState);
+                        member.OnInvalidStateTransition(newState);
+                        break;
                 }
             }
         }
@@ -246,17 +252,19 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private MatchInvitePendingState() { }
 
-            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
+            public override void SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
                     case WaitingInQueueState:
                     case WaitingInWaitlistLockedState:
                     case MatchInviteAcceptedState:
-                        return member.SetStateInternal(newState);
+                        member.SetStateInternal(newState);
+                        break;
 
                     default:
-                        return member.OnInvalidStateTransition(newState);
+                        member.OnInvalidStateTransition(newState);
+                        break;
                 }
             }
 
@@ -284,16 +292,18 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private MatchInviteAcceptedState() { }
 
-            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
+            public override void SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
                     case WaitingInQueueState:
                     case InMatchState:
-                        return member.SetStateInternal(newState);
+                        member.SetStateInternal(newState);
+                        break;
 
                     default:
-                        return member.OnInvalidStateTransition(newState);
+                        member.OnInvalidStateTransition(newState);
+                        break;
                 }
             }
         }
@@ -306,15 +316,17 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private InMatchState() { }
 
-            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
+            public override void SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
                     case RemovedGracePeriodState:
-                        return member.SetStateInternal(newState);
+                        member.SetStateInternal(newState);
+                        break;
 
                     default:
-                        return member.OnInvalidStateTransition(newState);
+                        member.OnInvalidStateTransition(newState);
+                        break;
                 }
             }
         }
@@ -327,15 +339,17 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             private RemovedGracePeriodState() { }
 
-            public override bool SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
+            public override void SetState(RegionRequestGroupMember member, RegionRequestGroupMemberState newState)
             {
                 switch (newState)
                 {
                     case MatchInviteAcceptedState:
-                        return member.SetStateInternal(newState);
+                        member.SetStateInternal(newState);
+                        break;
 
                     default:
-                        return member.OnInvalidStateTransition(newState);
+                        member.OnInvalidStateTransition(newState);
+                        break;
                 }
             }
 

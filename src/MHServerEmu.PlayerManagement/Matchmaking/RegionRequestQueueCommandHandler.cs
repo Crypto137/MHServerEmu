@@ -48,29 +48,29 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                     break;
 
                 default:
-                    Logger.Warn($"HandleCommand(): Unhandled command {command} from player [{_player}]");
+                    Verify.IsTrue(false, $"Unhandled command {command} from player [{_player}]");
                     break;
             }
         }
 
-        private bool OnAddToQueue(PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId metaStateRef,
+        private void OnAddToQueue(PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId metaStateRef,
             RegionRequestQueueCommandVar command, int teamSizeOverride = -1)
         {
             RegionRequestQueue queue = PlayerManagerService.Instance.RegionRequestQueueManager.GetRegionRequestQueue(regionRef);
-            if (queue == null)
-                return Logger.WarnReturn(false, $"OnAddToQueue(): Player [{_player}] attempted to enter queue for non-queue region [{regionRef.GetName()}]");
+            if (!Verify.IsNotNull(queue, $"Player [{_player}] attempted to enter queue for non-queue region [{regionRef.GetName()}]"))
+                return;
 
             if (difficultyTierRef == PrototypeId.Invalid)
             {
                 OnRemoveFromQueue();
-                return true;
+                return;
             }
 
             RegionTransferFailure canEnterRegion = _player.CanEnterRegion(queue.Prototype, true);
             if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
             {
                 SendMatchQueueStatusError(regionRef, difficultyTierRef, canEnterRegion);
-                return true;
+                return;
             }
 
             // Create region request group
@@ -78,10 +78,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             RegionRequestQueueParams queueParams = new(difficultyTierRef, metaStateRef, command == RegionRequestQueueCommandVar.eRRQC_AddToQueueBypass, teamSizeOverride);
             RegionRequestGroup group = RegionRequestGroup.Create(queue, queueParams, _player, party);
 
-            if (group == null)
-                return Logger.WarnReturn(false, $"OnAddToQueue(): Failed to create region request group for player [{_player}]");
-
-            return true;
+            if (!Verify.IsNotNull(group, $"Failed to create region request group for player [{_player}]"))
+                return;
         }
 
         private void OnRemoveFromQueue()

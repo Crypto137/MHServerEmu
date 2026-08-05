@@ -234,11 +234,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
         public void OnGroupUpdate(RegionRequestGroup group, bool memberCountChanged)
         {
             MatchTeam? nullableTeam = GetTeamForGroup(group);
-            if (nullableTeam == null)
-            {
-                Logger.Warn("OnGroupUpdate(): nullableTeam == null");
-                return;
-            }
+            if (!Verify.IsTrue(nullableTeam != null)) return;
 
             MatchTeam team = nullableTeam.Value;
 
@@ -305,11 +301,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public void OnRegionAccessChanged(RegionHandle region)
         {
-            if (region != Region)
-            {
-                Logger.Warn("OnRegionAccessChanged(): region != Region");
-                return;
-            }
+            if (!Verify.IsTrue(region == Region)) return;
 
             foreach (MatchTeam team in _teams)
             {
@@ -320,7 +312,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
         public void CreateRegion()
         {
-            Logger.Info($"Creating region for match {this}");
+            Logger.Trace($"Creating region for match {this}");
 
             PrototypeId regionProtoRef = Queue.PrototypeDataRef;
 
