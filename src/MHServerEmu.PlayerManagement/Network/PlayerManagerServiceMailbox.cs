@@ -476,7 +476,8 @@ namespace MHServerEmu.PlayerManagement.Network
 
             PlayerHandle player = null;
 
-            if (_playerManager.SessionManager.VerifyPlatformTicket(email, token, out ulong playerDbId))
+            VerifyPlatformTicketResult vptResult = _playerManager.SessionManager.VerifyPlatformTicket(email, token, out ulong playerDbId);
+            if (Verify.IsTrue(vptResult == VerifyPlatformTicketResult.Success, $"Failed to verify platform ticket when processing ES balance request! result={vptResult}"))
                 player = _playerManager.ClientManager.GetPlayer(playerDbId);
 
             if (player == null || player.State != PlayerHandleState.InGame)
@@ -486,7 +487,7 @@ namespace MHServerEmu.PlayerManagement.Network
                 return true;
             }
 
-            Logger.Info($"Authenticated ES balance request from player [{player}]");
+            Logger.Trace($"Authenticated ES balance request from player [{player}]");
 
             ulong gameId = player.CurrentGame.Id;
 
@@ -520,7 +521,8 @@ namespace MHServerEmu.PlayerManagement.Network
 
             PlayerHandle player = null;
 
-            if (_playerManager.SessionManager.VerifyPlatformTicket(email, token, out ulong playerDbId))
+            VerifyPlatformTicketResult vptResult = _playerManager.SessionManager.VerifyPlatformTicket(email, token, out ulong playerDbId);
+            if (Verify.IsTrue(vptResult == VerifyPlatformTicketResult.Success, $"Failed to verify platform ticket when processing ES convert request! result={vptResult}"))
                 player = _playerManager.ClientManager.GetPlayer(playerDbId);
 
             if (player == null || player.State != PlayerHandleState.InGame)
@@ -530,7 +532,7 @@ namespace MHServerEmu.PlayerManagement.Network
                 return true;
             }
 
-            Logger.Info($"Authenticated ES conversion request from player [{player}]");
+            Logger.Trace($"Authenticated ES conversion request from player [{player}]");
 
             ulong gameId = player.CurrentGame.Id;
 
