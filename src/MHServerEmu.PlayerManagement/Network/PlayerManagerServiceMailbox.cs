@@ -145,26 +145,26 @@ namespace MHServerEmu.PlayerManagement.Network
                     break;
 
                 default:
-                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
+                    Verify.IsTrue(false, $"Unhandled service message type {message.GetType().Name}");
                     break;
             }
         }
 
         #region Handlers
 
-        private bool OnAddClient(in ServiceMessage.AddClient addClient)
+        private void OnAddClient(in ServiceMessage.AddClient addClient)
         {
             IFrontendClient client = addClient.Client;
-            return _playerManager.ClientManager.AddClient(client);
+            _playerManager.ClientManager.AddClient(client);
         }
 
-        private bool OnRemoveClient(in ServiceMessage.RemoveClient removeClient)
+        private void OnRemoveClient(in ServiceMessage.RemoveClient removeClient)
         {
             IFrontendClient client = removeClient.Client;
-            return _playerManager.ClientManager.RemoveClient(client);
+            _playerManager.ClientManager.RemoveClient(client);
         }
 
-        private bool OnGameInstanceOp(in ServiceMessage.GameInstanceOp gameInstanceOp)
+        private void OnGameInstanceOp(in ServiceMessage.GameInstanceOp gameInstanceOp)
         {
             GameInstanceOpType type = gameInstanceOp.Type;
             ulong gameId = gameInstanceOp.GameId;
@@ -180,21 +180,19 @@ namespace MHServerEmu.PlayerManagement.Network
                     break;
 
                 default:
-                    Logger.Warn($"OnGameInstanceOp(): Unhandled operation type {type}");
+                    Verify.IsTrue(false, $"Unhandled operation type {type}");
                     break;
             }
-
-            return true;
         }
 
-        private bool OnGameInstanceClientOp(in ServiceMessage.GameInstanceClientOp gameInstanceClientOp)
+        private void OnGameInstanceClientOp(in ServiceMessage.GameInstanceClientOp gameInstanceClientOp)
         {
             IFrontendClient client = gameInstanceClientOp.Client;
             ulong gameId = gameInstanceClientOp.GameId;
 
             PlayerHandle player = _playerManager.ClientManager.GetPlayer(client.DbId);
-            if (player == null)
-                return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): No handle found for client [{client}]");
+            if (!Verify.IsNotNull(player, $"No handle found for client [{client}]"))
+                return;
 
             switch (gameInstanceClientOp.Type)
             {
@@ -207,113 +205,111 @@ namespace MHServerEmu.PlayerManagement.Network
                     break;
 
                 default:
-                    return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): Unhandled operation type {gameInstanceClientOp.Type}");
+                    Verify.IsTrue(false, $"Unhandled operation type {gameInstanceClientOp.Type}");
+                    break;
             }
-
-            return true;
         }
 
-        private bool OnCreateRegionResult(in ServiceMessage.CreateRegionResult createRegionResponse)
+        private void OnCreateRegionResult(in ServiceMessage.CreateRegionResult createRegionResponse)
         {
             RegionHandle region = _playerManager.WorldManager.GetRegion(createRegionResponse.RegionId);
-            if (region == null)
-                return Logger.WarnReturn(false, $"OnCreateRegionResponse(): Region 0x{createRegionResponse.RegionId:X} not found");
+            if (!Verify.IsNotNull(region, $"Region 0x{createRegionResponse.RegionId:X} not found"))
+                return;
 
             region.OnInstanceCreateResponse(createRegionResponse.Success);
-            return true;
         }
 
-        private bool OnSetRegionPlayerAccess(in ServiceMessage.SetRegionPlayerAccess setRegionPlayerAccess)
+        private void OnSetRegionPlayerAccess(in ServiceMessage.SetRegionPlayerAccess setRegionPlayerAccess)
         {
             RegionHandle region = _playerManager.WorldManager.GetRegion(setRegionPlayerAccess.RegionId);
             region?.SetPlayerAccess(setRegionPlayerAccess.PlayerAccess);
-            return true;
         }
 
-        private bool OnRequestRegionShutdown(in ServiceMessage.RequestRegionShutdown requestRegionShutdown)
+        private void OnRequestRegionShutdown(in ServiceMessage.RequestRegionShutdown requestRegionShutdown)
         {
             RegionHandle region = _playerManager.WorldManager.GetRegion(requestRegionShutdown.RegionId);
-            if (region == null)
-                return Logger.WarnReturn(false, $"OnRequestRegionShutdown(): Region 0x{requestRegionShutdown.RegionId:X} not found");
+            if (!Verify.IsNotNull(region, $"Region 0x{requestRegionShutdown.RegionId:X} not found"))
+                return;
 
             region.RequestShutdown();
-            return true;
         }
 
-        private bool OnChangeRegionRequest(in ServiceMessage.ChangeRegionRequest changeRegionRequest)
+        private void OnChangeRegionRequest(in ServiceMessage.ChangeRegionRequest changeRegionRequest)
         {
             ulong requestingGameId = changeRegionRequest.Header.RequestingGameId;
             ulong playerDbId = changeRegionRequest.Header.RequestingPlayerGuid;
             TeleportContextEnum context = changeRegionRequest.Header.Type;
 
             PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
-            if (player == null)
-                return Logger.WarnReturn(false, $"OnChangeRegionRequest(): No player handle for dbid 0x{playerDbId:X}");
+            if (!Verify.IsNotNull(player, $"No player handle for dbid 0x{playerDbId:X}"))
+                return;
 
             if (changeRegionRequest.DestTarget != null)
-                return player.BeginRegionTransferToTarget(requestingGameId, context, changeRegionRequest.DestTarget, changeRegionRequest.CreateRegionParams);
-
-            if (changeRegionRequest.DestLocation != null)
-                return player.BeginRegionTransferToLocation(requestingGameId, context, changeRegionRequest.DestLocation);
-
-            if (changeRegionRequest.DestPlayerDbId != 0)
-                return player.BeginRegionTransferToPlayer(requestingGameId, changeRegionRequest.DestPlayerDbId);
-
-            Logger.Warn($"BeginRegionTransfer(): ChangeRegionRequest for player [{this}] does not include transfer params");
-            player.CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_GenericError);
-            return false;
+            {
+                player.BeginRegionTransferToTarget(requestingGameId, context, changeRegionRequest.DestTarget, changeRegionRequest.CreateRegionParams);
+            }
+            else if (changeRegionRequest.DestLocation != null)
+            {
+                player.BeginRegionTransferToLocation(requestingGameId, context, changeRegionRequest.DestLocation);
+            }
+            else if (changeRegionRequest.DestPlayerDbId != 0)
+            {
+                player.BeginRegionTransferToPlayer(requestingGameId, changeRegionRequest.DestPlayerDbId);
+            }
+            else
+            {
+                Verify.IsTrue(false, $"ChangeRegionRequest for player [{this}] does not include transfer params");
+                player.CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_GenericError);
+            }
         }
 
-        private bool OnRegionTransferFinished(in ServiceMessage.RegionTransferFinished regionTransferFinished)
+        private void OnRegionTransferFinished(in ServiceMessage.RegionTransferFinished regionTransferFinished)
         {
             ulong playerDbId = regionTransferFinished.PlayerDbId;
             ulong transferId = regionTransferFinished.TransferId;
 
             PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
-            if (player == null)
-                return Logger.WarnReturn(false, $"OnRegionTransferFinished(): No handle found for playerDbId 0x{playerDbId:X}");
+            if (!Verify.IsNotNull(player, $"No handle found for playerDbId 0x{playerDbId:X}"))
+                return;
 
-            return player.FinishRegionTransfer(regionTransferFinished.TransferId);
+            player.FinishRegionTransfer(transferId);
         }
 
-        private bool OnClearPrivateStoryRegions(in ServiceMessage.ClearPrivateStoryRegions clearPrivateStoryRegions)
+        private void OnClearPrivateStoryRegions(in ServiceMessage.ClearPrivateStoryRegions clearPrivateStoryRegions)
         {
             ulong playerDbId = clearPrivateStoryRegions.PlayerDbId;
 
             PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
-            if (player == null)
-                return Logger.WarnReturn(false, $"OnClearPrivateStoryRegions(): No handle found for playerDbId 0x{playerDbId:X}");
+            if (!Verify.IsNotNull(player, $"No handle found for playerDbId 0x{playerDbId:X}"))
+                return;
 
             player.WorldView.ClearPrivateStoryRegions();
-            return true;
         }
 
-        private bool OnSetDifficultyTierPreference(in ServiceMessage.SetDifficultyTierPreference setDifficultyTierPreference)
+        private void OnSetDifficultyTierPreference(in ServiceMessage.SetDifficultyTierPreference setDifficultyTierPreference)
         {
             ulong playerDbId = setDifficultyTierPreference.PlayerDbId;
             PrototypeId difficultyTierProtoRef = (PrototypeId)setDifficultyTierPreference.DifficultyTierProtoId;
 
             PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
-            if (player == null)
-                return Logger.WarnReturn(false, $"OnSetDifficultyTierPreference(): No handle found for playerDbId 0x{playerDbId:X}");
+            if (!Verify.IsNotNull(player, $"No handle found for playerDbId 0x{playerDbId:X}"))
+                return;
 
             player.SetDifficultyTierPreference(difficultyTierProtoRef);
-            return true;
         }
 
-        private bool OnPlayerDataUpdated(in ServiceMessage.PlayerDataUpdated playerDataUpdated)
+        private void OnPlayerDataUpdated(in ServiceMessage.PlayerDataUpdated playerDataUpdated)
         {
             ulong playerDbId = playerDataUpdated.PlayerDbId;
 
             PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
-            if (player == null)
-                return Logger.WarnReturn(false, $"OnPlayerDataUpdated(): No handle found for playerDbId 0x{playerDbId:X}");
+            if (!Verify.IsNotNull(player, $"No handle found for playerDbId 0x{playerDbId:X}"))
+                return;
 
             player.SavePlayerData();
-            return true;
         }
 
-        private bool OnPlayerLookupByNameRequest(in ServiceMessage.PlayerLookupByNameRequest playerLookupByNameRequest)
+        private void OnPlayerLookupByNameRequest(in ServiceMessage.PlayerLookupByNameRequest playerLookupByNameRequest)
         {
             ulong gameId = playerLookupByNameRequest.GameId;
             ulong playerDbId = playerLookupByNameRequest.PlayerDbId;
@@ -337,11 +333,9 @@ namespace MHServerEmu.PlayerManagement.Network
 
             ServiceMessage.PlayerLookupByNameResult response = new(gameId, playerDbId, remoteJobId, resultPlayerDbId, resultPlayerName);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, response);
-
-            return true;
         }
 
-        private bool OnPlayerNameChanged(in ServiceMessage.PlayerNameChanged playerNameChanged)
+        private void OnPlayerNameChanged(in ServiceMessage.PlayerNameChanged playerNameChanged)
         {
             ulong playerDbId = playerNameChanged.PlayerDbId;
             string oldPlayerName = playerNameChanged.OldPlayerName;
@@ -350,32 +344,28 @@ namespace MHServerEmu.PlayerManagement.Network
             _playerManager.ClientManager.OnPlayerNameChanged(playerDbId, oldPlayerName, newPlayerName);
             PlayerNameCache.Instance.OnPlayerNameChanged(playerDbId);
             _playerManager.CommunityRegistry.OnPlayerNameChanged(playerDbId, newPlayerName);
-
-            return true;
         }
 
-        private bool OnCommunityStatusUpdate(in ServiceMessage.CommunityStatusUpdate communityStatusUpdate)
+        private void OnCommunityStatusUpdate(in ServiceMessage.CommunityStatusUpdate communityStatusUpdate)
         {
             CommunityMemberBroadcast broadcast = communityStatusUpdate.Broadcast;
-            if (broadcast == null) return Logger.WarnReturn(false, "OnCommunityStatusUpdate(): broadcast == null");
+            if (!Verify.IsNotNull(broadcast)) return;
             
             _playerManager.CommunityRegistry.ReceiveMemberBroadcast(broadcast);
-            return true;
         }
 
-        private bool OnCommunityStatusRequest(in ServiceMessage.CommunityStatusRequest communityStatusRequest)
+        private void OnCommunityStatusRequest(in ServiceMessage.CommunityStatusRequest communityStatusRequest)
         {
             ulong gameId = communityStatusRequest.GameId;
             ulong playerDbId = communityStatusRequest.PlayerDbId;
             List<ulong> members = communityStatusRequest.Members;
 
             _playerManager.CommunityRegistry.RequestMemberBroadcast(gameId, playerDbId, members);
-            return true;
         }
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         // V48_FIXME
-        private bool OnPartyOperationRequest(in ServiceMessage.PartyOperationRequest partyOperationRequest)
+        private void OnPartyOperationRequest(in ServiceMessage.PartyOperationRequest partyOperationRequest)
         {
             PartyOperationPayload request = partyOperationRequest.Request;
 
@@ -383,8 +373,7 @@ namespace MHServerEmu.PlayerManagement.Network
 
             GroupingOperationResult result = _playerManager.PartyManager.DoPartyOperation(ref request, playersToNotify);
 
-            if (playersToNotify.Count == 0)
-                return Logger.WarnReturn(false, "OnPartyOperationRequest(): playersToNotify.Count == 0");
+            if (!Verify.IsTrue(playersToNotify.Count != 0)) return;
 
             foreach (PlayerHandle player in playersToNotify)
             {
@@ -397,36 +386,31 @@ namespace MHServerEmu.PlayerManagement.Network
                 ServiceMessage.PartyOperationRequestServerResult message = new(gameId, playerDbId, request, result);
                 ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
             }
-
-            return true;
         }
 
-        private bool OnPartyBoostUpdate(in ServiceMessage.PartyBoostUpdate partyBoostUpdate)
+        private void OnPartyBoostUpdate(in ServiceMessage.PartyBoostUpdate partyBoostUpdate)
         {
             ulong playerDbId = partyBoostUpdate.PlayerDbId;
             List<ulong> boosts = partyBoostUpdate.Boosts;
 
             PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
-            if (player == null)
-                return Logger.WarnReturn(false, $"OnPartyBoostUpdate(): No handle found for playerDbId 0x{playerDbId:X}");
+            if (!Verify.IsNotNull(player, $"No handle found for playerDbId 0x{playerDbId:X}"))
+                return;
 
             player.SetPartyBoosts(boosts);
             player.CurrentParty?.UpdateMember(player);
-
-            return true;
         }
 #endif
 
-        private bool OnGuildMessageFromGame(in ServiceMessage.GuildMessageToPlayerManager guildMessageFromGame)
+        private void OnGuildMessageFromGame(in ServiceMessage.GuildMessageToPlayerManager guildMessageFromGame)
         {
             GuildMessageSetToPlayerManager messages = guildMessageFromGame.Messages;
-            if (messages == null) return Logger.WarnReturn(false, "OnGuildMessageFromGame(): messages == null");
+            if (!Verify.IsNotNull(messages)) return;
 
             _playerManager.GuildManager.OnGuildMessage(messages);
-            return true;
         }
 
-        private bool OnMatchRegionRequestQueueCommand(in ServiceMessage.MatchRegionRequestQueueCommand matchRegionRequestQueueCommand)
+        private void OnMatchRegionRequestQueueCommand(in ServiceMessage.MatchRegionRequestQueueCommand matchRegionRequestQueueCommand)
         {
             ulong playerDbId = matchRegionRequestQueueCommand.PlayerDbId;
             PrototypeId regionRef = (PrototypeId)matchRegionRequestQueueCommand.RegionProtoId;
@@ -439,20 +423,17 @@ namespace MHServerEmu.PlayerManagement.Network
 
             PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
             player?.ReceiveRegionRequestQueueCommand(regionRef, difficultyTierRef, metaStateRef, command, regionRequestGroupId, targetPlayerDbId, teamSizeOverride);
-            return true;
         }
 
-        private bool OnAuthRequest(in ServiceMessage.AuthRequest authRequest)
+        private void OnAuthRequest(in ServiceMessage.AuthRequest authRequest)
         {
             AuthStatusCode statusCode = _playerManager.SessionManager.TryCreateSession(authRequest.LoginDataPB, out AuthTicket authTicket);
 
             ServiceMessage.AuthResponse response = new(authRequest.RequestId, (int)statusCode, authTicket);
             ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
-
-            return true;
         }
 
-        private bool OnSessionVerificationRequest(in ServiceMessage.SessionVerificationRequest sessionVerificationRequest)
+        private void OnSessionVerificationRequest(in ServiceMessage.SessionVerificationRequest sessionVerificationRequest)
         {
             IFrontendClient client = sessionVerificationRequest.Client;
             ClientCredentials clientCredentials = sessionVerificationRequest.ClientCredentials;
@@ -461,14 +442,13 @@ namespace MHServerEmu.PlayerManagement.Network
             {
                 Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client [{client}]");
                 client.Disconnect();
-                return false;
+                return;
             }
 
             _playerManager.LoginQueueManager.EnqueueNewClient(client);
-            return true;
         }
 
-        private bool OnMTXStoreESBalanceRequest(in ServiceMessage.MTXStoreESBalanceRequest mtxStoreESBalanceRequest)
+        private void OnMTXStoreESBalanceRequest(in ServiceMessage.MTXStoreESBalanceRequest mtxStoreESBalanceRequest)
         {
             ulong requestId = mtxStoreESBalanceRequest.RequestId;
             string email = mtxStoreESBalanceRequest.Email;
@@ -484,7 +464,7 @@ namespace MHServerEmu.PlayerManagement.Network
             {
                 ServiceMessage.MTXStoreESBalanceResponse response = new(requestId, (int)HttpStatusCode.Forbidden);
                 ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
-                return true;
+                return;
             }
 
             Logger.Trace($"Authenticated ES balance request from player [{player}]");
@@ -494,11 +474,9 @@ namespace MHServerEmu.PlayerManagement.Network
             // Route the request to game instance to get up to date balance and conversion ratio
             ServiceMessage.MTXStoreESBalanceGameRequest gameRequest = new(requestId, gameId, playerDbId);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameRequest);
-
-            return true;
         }
 
-        private bool OnMTXStoreESBalanceGameResponse(in ServiceMessage.MTXStoreESBalanceGameResponse mtxStoreESBalanceGameResponse)
+        private void OnMTXStoreESBalanceGameResponse(in ServiceMessage.MTXStoreESBalanceGameResponse mtxStoreESBalanceGameResponse)
         {
             ulong requestId = mtxStoreESBalanceGameResponse.RequestId;
             int currentBalance = mtxStoreESBalanceGameResponse.CurrentBalance;
@@ -508,11 +486,9 @@ namespace MHServerEmu.PlayerManagement.Network
             // We should have already handled authentication before routing the request to the game instance, so just route the result back.
             ServiceMessage.MTXStoreESBalanceResponse response = new(requestId, (int)HttpStatusCode.OK, currentBalance, conversionRate, conversionStep);
             ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
-
-            return true;
         }
 
-        private bool OnMTXStoreESConvertRequest(in ServiceMessage.MTXStoreESConvertRequest mtxStoreESConvertRequest)
+        private void OnMTXStoreESConvertRequest(in ServiceMessage.MTXStoreESConvertRequest mtxStoreESConvertRequest)
         {
             ulong requestId = mtxStoreESConvertRequest.RequestId;
             string email = mtxStoreESConvertRequest.Email;
@@ -529,7 +505,7 @@ namespace MHServerEmu.PlayerManagement.Network
             {
                 ServiceMessage.MTXStoreESConvertResponse response = new(requestId, (int)HttpStatusCode.Forbidden);
                 ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
-                return true;
+                return;
             }
 
             Logger.Trace($"Authenticated ES conversion request from player [{player}]");
@@ -539,11 +515,9 @@ namespace MHServerEmu.PlayerManagement.Network
             // Route the conversion request to the game instance the player is currently in to do the conversion.
             ServiceMessage.MTXStoreESConvertGameRequest gameRequest = new(requestId, gameId, playerDbId, amount);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameRequest);
-
-            return true;
         }
 
-        private bool OnMTXStoreESConvertGameResponse(in ServiceMessage.MTXStoreESConvertGameResponse mtxStoreESConvertGameResponse)
+        private void OnMTXStoreESConvertGameResponse(in ServiceMessage.MTXStoreESConvertGameResponse mtxStoreESConvertGameResponse)
         {
             ulong requestId = mtxStoreESConvertGameResponse.RequestId;
             bool result = mtxStoreESConvertGameResponse.Result;
@@ -551,11 +525,9 @@ namespace MHServerEmu.PlayerManagement.Network
             // We should have already handled authentication before routing the request to the game instance, so just route the result back.
             ServiceMessage.MTXStoreESConvertResponse response = new(requestId, result ? (int)HttpStatusCode.OK : (int)HttpStatusCode.InternalServerError);
             ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
-
-            return true;
         }
 
-        private bool OnAccountOperationRequest(in ServiceMessage.AccountOperationRequest accountOperationRequest)
+        private void OnAccountOperationRequest(in ServiceMessage.AccountOperationRequest accountOperationRequest)
         {
             ulong requestId = accountOperationRequest.RequestId;
             AccountOperation operation = accountOperationRequest.Operation;
@@ -570,81 +542,60 @@ namespace MHServerEmu.PlayerManagement.Network
             switch (operation)
             {
                 case AccountOperation.Create:
-                    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(playerName) || string.IsNullOrWhiteSpace(password))
-                    {
-                        Logger.Warn("OnAccountOperationRequest(): Invalid arguments for the Create operation");
-                        break;
-                    }
+                    if (!Verify.IsTrue(string.IsNullOrWhiteSpace(email) == false)) break;
+                    if (!Verify.IsTrue(string.IsNullOrWhiteSpace(playerName) == false)) break;
+                    if (!Verify.IsTrue(string.IsNullOrWhiteSpace(password) == false)) break;
 
                     resultCode = (int)AccountManager.CreateAccount(email, playerName, password);
                     break;
 
                 case AccountOperation.SetPlayerName:
-                    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(playerName))
-                    {
-                        Logger.Warn("OnAccountOperationRequest(): Invalid arguments for the SetPlayerName operation");
-                        break;
-                    }
+                    if (!Verify.IsTrue(string.IsNullOrWhiteSpace(email) == false)) break;
+                    if (!Verify.IsTrue(string.IsNullOrWhiteSpace(playerName) == false)) break;
 
                     resultCode = (int)AccountManager.ChangeAccountPlayerName(email, playerName);
                     break;
 
                 case AccountOperation.SetPassword:
-                    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-                    {
-                        Logger.Warn("OnAccountOperationRequest(): Invalid arguments for the SetPassword operation");
-                        break;
-                    }
+                    if (!Verify.IsTrue(string.IsNullOrWhiteSpace(email) == false)) break;
+                    if (!Verify.IsTrue(string.IsNullOrWhiteSpace(password) == false)) break;
 
                     resultCode = (int)AccountManager.ChangeAccountPassword(email, password);
                     break;
 
                 case AccountOperation.SetUserLevel:
-                    if (string.IsNullOrWhiteSpace(email) || userLevel < AccountUserLevel.User || userLevel > AccountUserLevel.Admin)
-                    {
-                        Logger.Warn("OnAccountOperationRequest(): Invalid arguments for the SetUserLevel operation");
-                        break;
-                    }
+                    if (!Verify.IsTrue(string.IsNullOrWhiteSpace(email) == false)) break;
+                    if (!Verify.IsTrue(userLevel >= AccountUserLevel.User && userLevel <= AccountUserLevel.Admin)) break;
 
                     resultCode = (int)AccountManager.SetAccountUserLevel(email, userLevel);
                     break;
 
                 case AccountOperation.SetFlag:
-                    if (string.IsNullOrWhiteSpace(email) || flags == 0)
-                    {
-                        Logger.Warn("OnAccountOperationRequest(): Invalid arguments for the SetFlag operation");
-                        break;
-                    }
+                    if (!Verify.IsTrue(string.IsNullOrWhiteSpace(email) == false)) break;
+                    if (!Verify.IsTrue(flags != 0)) break;
 
                     resultCode = (int)AccountManager.SetFlag(email, flags);
                     break;
 
                 case AccountOperation.ClearFlag:
-                    if (string.IsNullOrWhiteSpace(email) || flags == 0)
-                    {
-                        Logger.Warn("OnAccountOperationRequest(): Invalid arguments for the SetFlag operation");
-                        break;
-                    }
+                    if (!Verify.IsTrue(string.IsNullOrWhiteSpace(email) == false)) break;
+                    if (!Verify.IsTrue(flags != 0)) break;
 
                     resultCode = (int)AccountManager.ClearFlag(email, flags);
                     break;
 
                 default:
-                    Logger.Warn($"OnAccountOperationRequest(): Unhandled account operation {operation}");
+                    Verify.IsTrue(false, $"Unhandled account operation {operation}");
                     break;
             }
 
             ServiceMessage.AccountOperationResponse response = new(requestId, resultCode);
             ServerManager.Instance.SendMessageToService(GameServiceType.WebFrontend, response);
-
-            return true;
         }
 
-        private bool OnSetWhitelistEnabled(in ServiceMessage.SetWhitelistEnabled setWhitelistEnabled)
+        private void OnSetWhitelistEnabled(in ServiceMessage.SetWhitelistEnabled setWhitelistEnabled)
         {
             _playerManager.SessionManager.SetWhitelistEnabled(setWhitelistEnabled.Enable);
-
-            return true;
         }
 
         #endregion
