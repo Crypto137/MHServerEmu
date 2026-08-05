@@ -186,12 +186,12 @@ namespace MHServerEmu.PlayerManagement.Players
             return true;
         }
 
-        private bool RemovePlayerHandle(IFrontendClient client)
+        private void RemovePlayerHandle(IFrontendClient client)
         {
             ulong playerDbId = client.DbId;
 
-            if (_players.Remove(playerDbId, out PlayerHandle player) == false)
-                return Logger.WarnReturn(false, $"RemovePlayer(): Client [{client}] is not bound to a PlayerHandle");
+            if (!Verify.IsTrue(_players.Remove(playerDbId, out PlayerHandle player), $"Client [{client}] is not bound to a PlayerHandle"))
+                return;
 
             _playersByName.Remove(player.PlayerName);
 
@@ -199,7 +199,6 @@ namespace MHServerEmu.PlayerManagement.Players
 
             _playerManager.CommunityRegistry.RefreshPlayerStatus(player);
             player.OnRemoved();
-            return true;
         }
 
         #endregion

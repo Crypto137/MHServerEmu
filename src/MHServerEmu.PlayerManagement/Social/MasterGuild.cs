@@ -12,8 +12,6 @@ namespace MHServerEmu.PlayerManagement.Social
 {
     public class MasterGuild
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private static bool PersistenceEnabled { get => PlayerManagerService.Instance.Config.EnablePersistence; }
         private static MasterGuildManager GuildManager { get => PlayerManagerService.Instance.GuildManager; }
 
@@ -384,17 +382,10 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public void OnMemberRegionChanged(PlayerHandle player, RegionHandle newRegion, RegionHandle prevRegion)
         {
-            if (player == null)
-            {
-                Logger.Warn("OnMemberRegionChanged(): player == null");
-                return;
-            }
+            if (!Verify.IsNotNull(player)) return;
 
-            if (player.Guild != this)
-            {
-                Logger.Warn($"OnMemberRegionChanged(): Player [{player}] is not in guild [{this}]");
+            if (!Verify.IsTrue(player.Guild == this, $"Player [{player}] is not in guild [{this}]"))
                 return;
-            }
 
             if (newRegion != null)
                 AddGame(newRegion.Game);
@@ -424,12 +415,12 @@ namespace MHServerEmu.PlayerManagement.Social
             ulong playerDbId = (ulong)data.PlayerDbGuid;
 
             MemberEntry? existingMember = GetMember(playerDbId);
-            if (existingMember != null)
-                return Logger.WarnReturn<MemberEntry?>(null, $"AddMember(): Attempted to add existing member [{existingMember}] to guild [{this}]");
+            if (!Verify.IsTrue(existingMember == null, $"Attempted to add existing member [{existingMember}] to guild [{this}]"))
+                return null;
 
             bool isLeader = data.Membership == (int)GuildMembership.eGMLeader;
-            if (isLeader && _leader != null)
-                return Logger.WarnReturn<MemberEntry?>(null, $"AddMember(): Attempted to add a second leader [{data}] when there is an existing leader [{_leader}] in guild [{this}]");
+            if (!Verify.IsTrue(isLeader == false || _leader == null, $"Attempted to add a second leader [{data}] when there is an existing leader [{_leader}] in guild [{this}]"))
+                return null;
 
             MemberEntry member = new(data);
             _members.Add(playerDbId, member);
@@ -552,27 +543,26 @@ namespace MHServerEmu.PlayerManagement.Social
                 player.RemoveFromChatRoom(ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER, Id);
         }
 
-        private bool AddGame(GameHandle game)
+        private void AddGame(GameHandle game)
         {
-            if (game == null) return Logger.WarnReturn(false, "AddGame(): game == null");
+            if (!Verify.IsNotNull(game)) return;
 
             if (_games.Add(game) == false)
-                return false;
+                return;
 
             SendGuildCompleteInfo(game);
-            return true;
         }
 
-        private bool RemoveGame(GameHandle game)
+        private void RemoveGame(GameHandle game)
         {
-            if (game == null) return Logger.WarnReturn(false, "RemoveGame(): game == null");
+            if (!Verify.IsNotNull(game)) return;
 
             if (HasMembersInGame(game))
-                return false;
+                return;
 
             // NOTE: The game instance will remove its copy of the guild when all members leave the instance,
             // so we don't need to explicitly send anything here.
-            return _games.Remove(game);
+            _games.Remove(game);
         }
 
         private bool HasMembersInGame(GameHandle game)
@@ -586,10 +576,10 @@ namespace MHServerEmu.PlayerManagement.Social
             return false;
         }
 
-        private bool SendGuildCompleteInfo(GameHandle game)
+        private void SendGuildCompleteInfo(GameHandle game)
         {
-            if (game == null) return Logger.WarnReturn(false, "SendGuildCompleteInfo(): game == null");
-            if (game.IsRunning == false) return Logger.WarnReturn(false, "SendGuildCompleteInfo(): game.IsRunning == false");
+            if (!Verify.IsNotNull(game)) return;
+            if (!Verify.IsTrue(game.IsRunning)) return;
 
             // The cache is invalidated when something about the guild changes (name / motd / memberships).
             // (Re)build it if needed.
@@ -612,8 +602,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
             ServiceMessage.GuildMessageToServer message = new(game.Id, _guildCompleteInfoCache);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
-
-            return true;
         }
 
         private void SendMessageToAllGames(GuildMessageSetToServer serverMessage)

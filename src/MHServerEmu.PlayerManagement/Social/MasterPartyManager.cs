@@ -66,8 +66,8 @@ namespace MHServerEmu.PlayerManagement.Social
             // Get requesting player
             ulong requestingPlayerDbId = request.RequestingPlayerDbId;
             PlayerHandle requestingPlayer = _playerManager.ClientManager.GetPlayer(requestingPlayerDbId);
-            if (requestingPlayer == null)
-                return Logger.WarnReturn(result, $"OnPartyOperationRequest(): Player 0x{requestingPlayerDbId:X} not found");
+            if (!Verify.IsNotNull(requestingPlayer, $"Player 0x{requestingPlayerDbId:X} not found"))
+                return result;
 
             playersToNotify.Add(requestingPlayer);
 
@@ -148,7 +148,7 @@ namespace MHServerEmu.PlayerManagement.Social
                     break;
 
                 default:
-                    Logger.Warn($"DoPartyOperation(): Unhandled party operation {request.Operation}");
+                    Verify.IsTrue(false, $"Unhandled party operation {request.Operation}");
                     break;
             }
 
@@ -208,7 +208,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
             party.AddInvite(targetPlayer);
 
-            Logger.Info($"DoPartyOperationInvitePlayer(): Success for [{requestingPlayer}] => [{targetPlayer}]");
+            Logger.Trace($"DoPartyOperationInvitePlayer(): Success for [{requestingPlayer}] => [{targetPlayer}]");
 
             return GroupingOperationResult.eGOPR_Success;
         }
@@ -371,8 +371,8 @@ namespace MHServerEmu.PlayerManagement.Social
             if (result != GroupingOperationResult.eGOPR_Success)
                 return result;
 
-            if (difficultyTierProtoRef == PrototypeId.Invalid)
-                return Logger.WarnReturn(GroupingOperationResult.eGOPR_SystemError, "DoPartyOperationChangeDifficulty(): difficultyTierProtoRef == PrototypeId.Invalid");
+            if (!Verify.IsTrue(difficultyTierProtoRef != PrototypeId.Invalid))
+                return GroupingOperationResult.eGOPR_SystemError;
 
             // CurrentParty is null checked in ValidatePartyLeader()
             if (player.CurrentParty.SetDifficultyTier(difficultyTierProtoRef) == false)
@@ -388,20 +388,20 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private MasterParty CreateParty(PlayerHandle player)
         {
-            if (player == null) return Logger.WarnReturn<MasterParty>(null, "CreateParty(): player == null");
-            if (player.CurrentParty != null) return Logger.WarnReturn<MasterParty>(null, "CreateParty(): player.CurrentParty != null");
+            if (!Verify.IsNotNull(player)) return null;
+            if (!Verify.IsTrue(player.CurrentParty == null)) return null;
 
             MasterParty party = new(++_currentPartyId, player);
             _parties.Add(party.Id, party);
 
-            Logger.Info($"CreateParty(): party=[{party}]");
+            Logger.Trace($"CreateParty(): party=[{party}]");
 
             return party;
         }
 
         private bool DisbandParty(MasterParty party)
         {
-            if (party == null) return Logger.WarnReturn(false, "DisbandParty(): party == null");
+            if (!Verify.IsNotNull(party)) return false;
 
             // Clean up remaining members
             using var membersHandle = HashSetPool<PlayerHandle>.Instance.Get(out HashSet<PlayerHandle> members);
@@ -410,7 +410,7 @@ namespace MHServerEmu.PlayerManagement.Social
             foreach (PlayerHandle member in members)
                 party.RemoveMember(member, GroupLeaveReason.GROUP_LEAVE_REASON_DISBANDED);
 
-            if (party.MemberCount == 0)
+            if (Verify.IsTrue(party.MemberCount == 0, $"Failed to remove all players from party {party}"))
             {
                 // Clear world view and cancel reservations
                 party.WorldView.Clear();
@@ -421,11 +421,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 // Remove from the manager
                 _parties.Remove(party.Id);
 
-                Logger.Info($"DisbandParty(): party=[{party}]");
-            }
-            else
-            {
-                Logger.Warn($"DisbandParty(): Failed to remove all players from party {party}");
+                Logger.Trace($"DisbandParty(): party=[{party}]");
             }
 
             foreach (PlayerHandle member in members)

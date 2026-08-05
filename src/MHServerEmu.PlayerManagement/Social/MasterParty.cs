@@ -85,7 +85,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public bool AddMember(PlayerHandle player)
         {
-            if (player == null) return Logger.WarnReturn(false, "AddMember(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
             bool added = false;
 
@@ -106,7 +106,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
                 WorldView.AddOwner(player);
 
-                Logger.Info($"AddMember(): party=[{this}], player=[{player}]");
+                Logger.Trace($"AddMember(): party=[{this}], player=[{player}]");
 
                 added = true;
             }
@@ -118,7 +118,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public bool RemoveMember(PlayerHandle player, GroupLeaveReason leaveReason)
         {
-            if (player == null) return Logger.WarnReturn(false, "RemoveMember(): player == null");
+            if (!Verify.IsNotNull(player)) return false; 
 
             // V48_FIXME
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
@@ -163,15 +163,15 @@ namespace MHServerEmu.PlayerManagement.Social
                     player.SetGracePeriodRegion(removedMemberRegion, leaveReason);
             }
 
-            Logger.Info($"RemoveMember(): party=[{this}], player=[{player}]");
+            Logger.Trace($"RemoveMember(): party=[{this}], player=[{player}]");
 
             return true;
         }
 
         public bool UpdateMember(PlayerHandle player)
         {
-            if (HasMember(player) == false)
-                return Logger.WarnReturn(false, $"UpdateMember(): Attempting to update player [{player}] who is not a member of party [{this}]");
+            if (!Verify.IsTrue(HasMember(player), $"Attempting to update player [{player}] who is not a member of party [{this}]"))
+                return false;
 
             // V48_FIXME
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
@@ -182,15 +182,15 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public bool SetLeader(PlayerHandle player)
         {
-            if (player == null) return Logger.WarnReturn(false, "SetLeader(): player == null");
+            if (!Verify.IsNotNull(player)) return false;
 
-            if (HasMember(player) == false)
-                return Logger.WarnReturn(false, $"SetLeader(): Attempting to set player [{player}] as the leader of party [{this}], but this player is not in this party");
+            if (!Verify.IsTrue(HasMember(player), $"Attempting to set player [{player}] as the leader of party [{this}], but this player is not in this party"))
+                return false;
 
             Leader = player;
             SendPartyInfo(false, _members);
 
-            Logger.Info($"SetLeader(): party=[{this}], player=[{player}]");
+            Logger.Trace($"SetLeader(): party=[{this}], player=[{player}]");
 
             return true;
         }
@@ -249,11 +249,8 @@ namespace MHServerEmu.PlayerManagement.Social
         {
             foreach (PlayerHandle player in _pendingMembers)
             {
-                if (player.PendingParty != null && player.PendingParty != this)
-                {
-                    Logger.Warn($"CancelAllInvites(): Player pending party desync (expected [{this}], got [{player.PendingParty}])");
+                if (!Verify.IsTrue(player.PendingParty == null || player.PendingParty == this, $"Player pending party desync (expected [{this}], got [{player.PendingParty}])"))
                     continue;
-                }
 
                 player.PendingParty = null;
 
