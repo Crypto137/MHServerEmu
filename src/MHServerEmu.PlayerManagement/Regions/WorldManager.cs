@@ -12,8 +12,6 @@ namespace MHServerEmu.PlayerManagement.Regions
     /// </summary>
     public class WorldManager
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly IdGenerator _idGenerator = new(IdType.Region, 0);
 
         private readonly Dictionary<ulong, RegionHandle> _allRegions = new();
@@ -76,7 +74,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public RegionHandle CreateMatchRegion(PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)
         {
-            if (createRegionParams.MatchNumber == 0) return Logger.WarnReturn<RegionHandle>(null, "CreateMatchRegion(): createRegionParams.MatchNumber == 0");
+            if (!Verify.IsTrue(createRegionParams.MatchNumber != 0)) return null;
 
             GameHandle game = _playerManager.GameHandleManager.CreateGame();
             RegionHandle region = CreateRegionInGame(game, regionProtoRef, createRegionParams, RegionFlags.None);

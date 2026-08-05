@@ -49,20 +49,21 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public bool AddRegion(RegionHandle region)
         {
-            if (region == null) return Logger.WarnReturn(false, "AddRegion(): region == null");
+            if (!Verify.IsNotNull(region)) return false;
 
             if (region.IsPublic == false)
                 return false;
 
-            if (region.State == RegionHandleState.Shutdown)
-                return Logger.WarnReturn(false, $"AddRegion(): Attempting to add region {region} that has already been shut down");
+            if (!Verify.IsTrue(region.State != RegionHandleState.Shutdown, $"Attempting to add region {region} that has already been shut down"))
+                return false;
 
             return _regions.Add(region);
         }
 
         public bool RemoveRegion(RegionHandle region)
         {
-            if (region == null) return Logger.WarnReturn(false, "RemoveRegion(): region == null");
+            if (!Verify.IsNotNull(region)) return false;
+
             return _regions.Remove(region);
         }
 
