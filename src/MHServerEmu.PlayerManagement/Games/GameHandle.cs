@@ -56,11 +56,11 @@ namespace MHServerEmu.PlayerManagement.Games
         /// </summary>
         public bool RequestInstanceCreation()
         {
-            if (State != GameHandleState.HandleCreated)
-                return Logger.WarnReturn(false, $"RequestInstanceCreation(): Invalid state {State} for game [{this}]");
+            if (!Verify.IsTrue(State == GameHandleState.HandleCreated, $"Invalid state {State} for game [{this}"))
+                return false;
 
             State = GameHandleState.PendingInstanceCreation;
-            Logger.Info($"Requesting instance creation for game [{this}]");
+            Logger.Trace($"Requesting instance creation for game [{this}]");
 
             ServiceMessage.GameInstanceOp gameInstanceOp = new(GameInstanceOpType.Create, Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameInstanceOp);
@@ -73,11 +73,11 @@ namespace MHServerEmu.PlayerManagement.Games
         /// </summary>
         public bool OnInstanceCreateResponse()
         {
-            if (State != GameHandleState.PendingInstanceCreation)
-                return Logger.WarnReturn(false, $"OnInstanceCreateResponse(): Invalid state {State} for game [{this}]");
+            if (!Verify.IsTrue(State == GameHandleState.PendingInstanceCreation, $"Invalid state {State} for game [{this}]"))
+                return false;
 
             State = GameHandleState.Running;
-            Logger.Info($"Received instance creation confirmation for game [{this}]");
+            Logger.Trace($"Received instance creation confirmation for game [{this}]");
 
             // Handle the edge case when we shut down a game instance while it's being created. There is probably a better way of handling this.
             if (_instanceCreationCancelled)
@@ -106,11 +106,11 @@ namespace MHServerEmu.PlayerManagement.Games
                 return true;
             }
 
-            if (State != GameHandleState.Running)
-                return Logger.WarnReturn(false, $"RequestInstanceShutdown(): Invalid state {State} for game [{this}]");
+            if (!Verify.IsTrue(State == GameHandleState.Running, $"Invalid state {State} for game [{this}]"))
+                return false;
 
             State = GameHandleState.PendingShutdown;
-            Logger.Info($"Requesting instance shutdown for game [{this}]");
+            Logger.Trace($"Requesting instance shutdown for game [{this}]");
 
             ServiceMessage.GameInstanceOp gameInstanceOp = new(GameInstanceOpType.Shutdown, Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameInstanceOp);
@@ -123,16 +123,14 @@ namespace MHServerEmu.PlayerManagement.Games
         /// </summary>
         public bool OnInstanceShutdownNotice()
         {
-            if (State != GameHandleState.PendingShutdown)
-            {
-                if (State == GameHandleState.Running)
-                    Logger.Warn($"OnInstanceShutdownNotice(): Game [{this}] was shut down without a request");
-                else
-                    return Logger.WarnReturn(false, $"OnInstanceShutdownNotice(): Invalid state {State} for game [{this}]");
-            }
+            if (!Verify.IsTrue(State == GameHandleState.Running || State == GameHandleState.PendingShutdown, $"Invalid state {State} for game [{this}]"))
+                return false;
+
+            if (State == GameHandleState.Running)
+                Logger.Warn($"OnInstanceShutdownNotice(): Game [{this}] was shut down without a request");
 
             State = GameHandleState.Shutdown;
-            Logger.Info($"Received instance shutdown notification for game [{this}]");
+            Logger.Trace($"Received instance shutdown notification for game [{this}]");
 
             foreach (PlayerHandle player in _players)
                 player.Disconnect();
@@ -151,11 +149,11 @@ namespace MHServerEmu.PlayerManagement.Games
         {
             region = null;
 
-            if (State == GameHandleState.PendingShutdown || State == GameHandleState.Shutdown)
-                return Logger.WarnReturn(false, $"CreateRegion(): Invalid state {State} for game [{this}]");
+            if (!Verify.IsTrue(State != GameHandleState.PendingShutdown && State != GameHandleState.Shutdown, $"Invalid state {State} for game [{this}]"))
+                return false;
 
-            if (createRegionParams == null)
-                return Logger.WarnReturn(false, $"CreateRegion(): No params to create region 0x{regionId:X}");
+            if (!Verify.IsNotNull(createRegionParams, $"No params to create region 0x{regionId:X} ({regionProtoRef.GetName()})"))
+                return false;
 
             region = new(this, regionId, regionProtoRef, createRegionParams, flags);
             _regions.Add(regionId, region);
@@ -170,12 +168,12 @@ namespace MHServerEmu.PlayerManagement.Games
             return true;
         }
 
-        public bool OnRegionShutdown(RegionHandle region)
+        public void OnRegionShutdown(RegionHandle region)
         {
             PlayerManagerService.Instance.WorldManager.RemoveRegion(region);
 
-            if (_regions.Remove(region.Id) == false)
-                return Logger.WarnReturn(false, $"FinishRegionShutdown(): Region 0x{region.Id:X} not found");
+            if (!Verify.IsTrue(_regions.Remove(region.Id), $"Region 0x{region.Id:X} not found"))
+                return;
 
             // Shut this game down if all of its regions were shut down
             if (_regions.Count == 0 && State == GameHandleState.Running)
@@ -183,8 +181,6 @@ namespace MHServerEmu.PlayerManagement.Games
                 Logger.Trace($"Game [{this}] is no longer hosting any regions, shutting down...");
                 RequestInstanceShutdown();
             }
-
-            return true;
         }
 
         #endregion
@@ -193,17 +189,17 @@ namespace MHServerEmu.PlayerManagement.Games
 
         public bool AddPlayer(PlayerHandle player)
         {
-            if (State != GameHandleState.Running)
-                return Logger.WarnReturn(false, $"AddPlayer(): Invalid state {State} for game [{this}] when adding player [{player}]");
+            if (!Verify.IsTrue(State == GameHandleState.Running, $"Invalid state {State} for game [{this}] when adding player [{player}]"))
+                return false;
 
-            if (player.State != PlayerHandleState.Idle)
-                return Logger.WarnReturn(false, $"AddPlayer(): Invalid state {player.State} for player [{player}] when adding to game [{this}]");
+            if (!Verify.IsTrue(player.State == PlayerHandleState.Idle, $"Invalid state {player.State} for player [{player}] when adding to game [{this}]"))
+                return false;
 
-            if (_players.Add(player) == false)
-                return Logger.WarnReturn(false, $"AddClient(): Player [{player}] is already added to game [{this}]");
+            if (!Verify.IsTrue(_players.Add(player), $"Player [{player}] is already added to game [{this}]"))
+                return false;
 
-            if (player.BeginAddToGame(this) == false)
-                return Logger.WarnReturn(false, $"AddClient(): BeginAddToGame failed for player [{player}] when adding to game [{this}]");
+            if (!Verify.IsTrue(player.BeginAddToGame(this), $"BeginAddToGame failed for player [{player}] when adding to game [{this}]"))
+                return false;
 
             return true;
         }
@@ -212,19 +208,18 @@ namespace MHServerEmu.PlayerManagement.Games
         {
             // Not checking game state when removing players for now
 
-            if (player.State != PlayerHandleState.InGame)
-                return Logger.WarnReturn(false, $"RemovePlayer(): Invalid state {player.State} for player [{player}] when removing from game [{this}]");
+            if (!Verify.IsTrue(player.State == PlayerHandleState.InGame, $"Invalid state {player.State} for player [{player}] when removing from game [{this}]"))
+                return false;
 
-            if (_players.Remove(player) == false)
-                return Logger.WarnReturn(false, $"RemoveClient(): Player [{player}] not found in game [{this}]");
+            if (!Verify.IsTrue(_players.Remove(player), $"Player [{player}] not found in game [{this}]"))
+                return false;
 
-            if (player.BeginRemoveFromGame(this) == false)
-                return Logger.WarnReturn(false, $"RemovePlayer(): BeginRemoveFromGame failed for player [{player}] when removing from game [{this}]");
+            if (!Verify.IsTrue(player.BeginRemoveFromGame(this), $"BeginRemoveFromGame failed for player [{player}] when removing from game [{this}]"))
+                return false;
 
             return true;
         }
 
         #endregion
-
     }
 }

@@ -8,14 +8,12 @@ namespace MHServerEmu.PlayerManagement.Games
     /// </summary>
     public class GameHandleManager
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly IdGenerator _idGenerator = new(IdType.Game, 0);
-        private readonly Dictionary<ulong, GameHandle> _gameDict = new();
+        private readonly Dictionary<ulong, GameHandle> _games = new();
 
         private readonly PlayerManagerService _playerManager;
 
-        public int GameCount { get => _gameDict.Count; }
+        public int GameCount { get => _games.Count; }
 
         public GameHandleManager(PlayerManagerService playerManager)
         {
@@ -27,9 +25,7 @@ namespace MHServerEmu.PlayerManagement.Games
             ulong gameId = _idGenerator.Generate();
 
             GameHandle game = new(gameId);
-            _gameDict.Add(gameId, game);
-
-            Logger.Info($"Created game handle [{game}]");
+            _games.Add(gameId, game);
 
             game.RequestInstanceCreation();
 
@@ -38,34 +34,30 @@ namespace MHServerEmu.PlayerManagement.Games
 
         public void Shutdown()
         {
-            foreach (GameHandle game in _gameDict.Values)
+            foreach (GameHandle game in _games.Values)
                 game.RequestInstanceShutdown();
         }
 
         public bool TryGetGameById(ulong gameId, out GameHandle game)
         {
-            return _gameDict.TryGetValue(gameId, out game);
+            return _games.TryGetValue(gameId, out game);
         }
 
-        public bool OnInstanceCreateResponse(ulong gameId)
+        public void OnInstanceCreateResponse(ulong gameId)
         {
-            if (TryGetGameById(gameId, out GameHandle game) == false)
-                return Logger.WarnReturn(false, $"OnCreateResponse(): No handle found for gameId 0x{gameId:X}");
+            if (!Verify.IsTrue(TryGetGameById(gameId, out GameHandle game), $"No handle found for gameId 0x{gameId:X}"))
+                return;
 
             game.OnInstanceCreateResponse();
-
-            return true;
         }
 
-        public bool OnInstanceShutdownNotice(ulong gameId)
+        public void OnInstanceShutdownNotice(ulong gameId)
         {
-            if (TryGetGameById(gameId, out GameHandle game) == false)
-                return Logger.WarnReturn(false, $"OnShutdownNotice(): No handle found for gameId 0x{gameId:X}");
+            if (!Verify.IsTrue(TryGetGameById(gameId, out GameHandle game), $"No handle found for gameId 0x{gameId:X}"))
+                return;
 
             game.OnInstanceShutdownNotice();
-            _gameDict.Remove(game.Id);
-
-            return true;
+            _games.Remove(game.Id);
         }
     }
 }
