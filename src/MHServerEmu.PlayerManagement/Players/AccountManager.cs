@@ -86,6 +86,11 @@ namespace MHServerEmu.PlayerManagement.Players
             return IDBManager.Instance.LoadPlayerData(account);
         }
 
+        public static bool SavePlayerDataForAccount(DBAccount account)
+        {
+            return IDBManager.Instance.SavePlayerData(account);
+        }
+
         /// <summary>
         /// Creates a new <see cref="DBAccount"/> and inserts it into the database. Returns <see langword="true"/> if successful.
         /// </summary>
