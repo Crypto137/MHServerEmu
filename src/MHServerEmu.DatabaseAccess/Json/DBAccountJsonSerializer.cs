@@ -10,8 +10,6 @@ namespace MHServerEmu.DatabaseAccess.Json
     /// </summary>
     public class DBAccountJsonSerializer
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly JsonSerializerOptions _options = new();
         private readonly TimeLeakyBucketCollection<ulong> _rateLimiter = new(TimeSpan.FromMinutes(30), 5);
 
@@ -26,10 +24,16 @@ namespace MHServerEmu.DatabaseAccess.Json
         {
             json = string.Empty;
 
-            if (account == null) return Logger.WarnReturn(false, "TrySerializeAccount(): account == null");
+            if (!Verify.IsNotNull(account)) return false;
 
-            if (checkRateLimit && _rateLimiter.AddTime((ulong)account.Id) == false)
-                return false;
+            if (checkRateLimit)
+            {
+                lock (_rateLimiter)
+                {
+                    if (_rateLimiter.AddTime((ulong)account.Id) == false)
+                        return false;
+                }
+            }
 
             try
             {
@@ -37,7 +41,7 @@ namespace MHServerEmu.DatabaseAccess.Json
             }
             catch (Exception e)
             {
-                Logger.Error($"Failed to serialize account {account}: {e.Message}");
+                Verify.IsTrue(false, LoggingLevel.Error, $"Failed to serialize account {account}: {e.Message}");
                 return false;
             }
 

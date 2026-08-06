@@ -216,7 +216,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 // Maybe we should add a delay here
             }
 
-            return Logger.WarnReturn(false, $"SavePlayerData(): Failed to write player data for account [{account}]");
+            Verify.IsTrue(false, $"Failed to write player data for account [{account}]");
+            return false;
         }
 
         public bool LoadGuilds(List<DBGuild> outGuilds)
@@ -237,11 +238,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
                 foreach (DBGuildMember member in memberQueryResult)
                 {
-                    if (guildLookup.TryGetValue(member.GuildId, out DBGuild guild) == false)
-                    {
-                        Logger.Warn($"LoadGuilds(): Found orphan member [{member}]");
+                    if (!Verify.IsTrue(guildLookup.TryGetValue(member.GuildId, out DBGuild guild), $"Found orphan member [{member}]"))
                         continue;
-                    }
 
                     guild.Members.Add(member);
                 }
@@ -358,8 +356,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         private bool InitializeDatabaseFile()
         {
             string initializationScript = SQLiteScripts.GetInitializationScript();
-            if (initializationScript == string.Empty)
-                return Logger.ErrorReturn(false, "InitializeDatabaseFile(): Failed to get database initialization script");
+            if (!Verify.IsTrue(string.IsNullOrWhiteSpace(initializationScript) == false, LoggingLevel.Error, "Failed to get database initialization script"))
+                return false;
 
             SQLiteConnection.CreateFile(_dbFilePath);
             using SQLiteConnection connection = GetConnection();
@@ -398,7 +396,10 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
             int schemaVersion = GetSchemaVersion(connection);
             if (schemaVersion > CurrentSchemaVersion)
-                return Logger.ErrorReturn(false, $"Initialize(): Existing database file uses unsupported schema version {schemaVersion} (current = {CurrentSchemaVersion})");
+            {
+                Logger.Error($"Initialize(): Existing database file uses unsupported schema version {schemaVersion} (current = {CurrentSchemaVersion})");
+                return false;
+            }
 
             if (schemaVersion < MinimumSchemaVersion)
             {
@@ -428,9 +429,9 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 Logger.Info($"Migrating version {schemaVersion} => {schemaVersion + 1}...");
 
                 string migrationScript = SQLiteScripts.GetMigrationScript(schemaVersion);
-                if (migrationScript == string.Empty)
+                if (!Verify.IsTrue(string.IsNullOrWhiteSpace(migrationScript) == false, LoggingLevel.Error,
+                    $"Failed to get database migration script for version {schemaVersion}"))
                 {
-                    Logger.Error($"MigrateDatabaseFileToCurrentSchema(): Failed to get database migration script for version {schemaVersion}");
                     success = false;
                     break;
                 }
@@ -446,7 +447,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 // Restore backup
                 File.Delete(_dbFilePath);
                 File.Move(backupDbPath, _dbFilePath);
-                return Logger.ErrorReturn(false, "MigrateDatabaseFileToCurrentSchema(): Migration failed, backup restored");
+                Logger.Error("MigrateDatabaseFileToCurrentSchema(): Migration failed, backup restored");
+                return false;
             }
             else
             {
@@ -471,16 +473,12 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 try
                 {
                     // Update player entity
-                    if (account.Player != null)
+                    if (Verify.IsNotNull(account.Player, $"Attempted to save null player entity data for account {account}"))
                     {
                         connection.Execute(@"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
                         connection.Execute(@"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget, AOIVolume=@AOIVolume,
                                             GazillioniteBalance=@GazillioniteBalance, LastLogoutTime=@LastLogoutTime, Flags=@Flags WHERE DbGuid = @DbGuid",
                                             account.Player, transaction);
-                    }
-                    else
-                    {
-                        Logger.Warn($"DoSavePlayerData(): Attempted to save null player entity data for account {account}");
                     }
 
                     // Update inventory entities
@@ -508,7 +506,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 }
                 catch (Exception e)
                 {
-                    Logger.Warn($"DoSavePlayerData(): SQLite error for account [{account}]: {e.Message}");
+                    Logger.Error($"DoSavePlayerData(): SQLite error for account [{account}]: {e.Message}");
                     transaction.Rollback();
                     return false;
                 }
@@ -548,7 +546,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             }
             catch (Exception e)
             {
-                Logger.Warn($"CreateBackup(): SQLite error creating database backup: {e.Message}");
+                Logger.Error($"CreateBackup(): SQLite error creating database backup: {e.Message}");
             }
             finally
             {
@@ -561,11 +559,11 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         /// </summary>
         private static int GetSchemaVersion(SQLiteConnection connection)
         {
-            var queryResult = connection.Query<int>("PRAGMA user_version");
-            if (queryResult.Any())
-                return queryResult.First();
+            IEnumerable<int> queryResult = connection.Query<int>("PRAGMA user_version");
+            if (!Verify.IsTrue(queryResult.Any(), "Failed to query user_version from the DB"))
+                return -1;
 
-            return Logger.WarnReturn(-1, "GetSchemaVersion(): Failed to query user_version from the DB");
+            return queryResult.First();
         }
 
         /// <summary>

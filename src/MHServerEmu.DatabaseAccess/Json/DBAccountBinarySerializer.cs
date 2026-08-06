@@ -64,8 +64,8 @@ namespace MHServerEmu.DatabaseAccess.Json
             {
                 using (BinaryReader reader = new(stream))
                 {
-                    if (ReadFileHeader(reader) == false)
-                        return Logger.ErrorReturn<DBAccount>(null, "Deserialize(): File header error");
+                    if (!Verify.IsTrue(ReadFileHeader(reader), LoggingLevel.Error, "File header error"))
+                        return null;
 
                     DBAccount dbAccount = new();
 
@@ -103,12 +103,12 @@ namespace MHServerEmu.DatabaseAccess.Json
         private static bool ReadFileHeader(BinaryReader reader)
         {
             string magic = reader.ReadBytes(3).ToHexString();
-            if (magic != Magic)
-                return Logger.WarnReturn(false, "ReadFileHeader(): Invalid file header");
+            if (!Verify.IsTrue(magic == Magic, "Invalid file header"))
+                return false;
 
             byte version = reader.ReadByte();
-            if (version != SerializerVersion)
-                return Logger.WarnReturn(false, $"ReadFileHeader(): Unsupported file version (found {version}, expected {SerializerVersion}");
+            if (!Verify.IsTrue(version == SerializerVersion, $"Unsupported file version (found {version}, expected {SerializerVersion}"))
+                return false;
 
             return true;
         }

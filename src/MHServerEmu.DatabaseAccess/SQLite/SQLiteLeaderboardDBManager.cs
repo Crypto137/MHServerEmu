@@ -41,8 +41,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         private bool InitializeDatabaseFile()
         {
             string initializationScript = SQLiteScripts.GetLeaderboardsScript();
-            if (initializationScript == string.Empty)
-                return Logger.ErrorReturn(false, "InitializeDatabaseFile(): Failed to get database initialization script");
+            if (!Verify.IsTrue(string.IsNullOrWhiteSpace(initializationScript) == false, LoggingLevel.Error, "Failed to get database initialization script"))
+                return false;
 
             SQLiteConnection.CreateFile(_dbFilePath);
             using SQLiteConnection connection = GetConnection();
