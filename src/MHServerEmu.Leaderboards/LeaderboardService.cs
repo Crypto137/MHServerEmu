@@ -14,8 +14,6 @@ namespace MHServerEmu.Leaderboards
     {
         private const int UpdateTimeMS = 1000;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly LeaderboardDatabase _database = LeaderboardDatabase.Instance;
         private readonly LeaderboardRewardManager _rewardManager = new();
 
@@ -93,7 +91,7 @@ namespace MHServerEmu.Leaderboards
                     break;
 
                 default:
-                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
+                    Verify.IsTrue(false, $"Unhandled service message type {typeof(T).Name}");
                     break;
             }
         }
@@ -105,11 +103,8 @@ namespace MHServerEmu.Leaderboards
 
         private void OnRouteMailboxMessage(in ServiceMessage.RouteMessage routeMailboxMessage)
         {
-            if (routeMailboxMessage.Protocol != typeof(ClientToGameServerMessage))
-            {
-                Logger.Warn($"OnRouteMailboxMessage(): Unhandled protocol {routeMailboxMessage.Protocol.Name}");
+            if (!Verify.IsTrue(routeMailboxMessage.Protocol == typeof(ClientToGameServerMessage), $"Unhandled protocol {routeMailboxMessage.Protocol.Name}"))
                 return;
-            }
 
             IFrontendClient client = routeMailboxMessage.Client;
             MailboxMessage message = routeMailboxMessage.Message;
@@ -118,16 +113,18 @@ namespace MHServerEmu.Leaderboards
             {
                 case ClientToGameServerMessage.NetMessageLeaderboardRequest:            OnLeaderboardRequest(client, message); break;
 
-                default: Logger.Warn($"OnRouteMailboxMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
+                default:
+                    Verify.IsTrue(false, $"Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]");
+                    break;
             }
         }
 
         #endregion
 
-        private bool OnLeaderboardRequest(IFrontendClient client, MailboxMessage message)
+        private void OnLeaderboardRequest(IFrontendClient client, MailboxMessage message)
         {
             var request = message.As<NetMessageLeaderboardRequest>();
-            if (request == null) return Logger.WarnReturn(false, $"OnLeaderboardRequest(): Failed to retrieve message");
+            if (!Verify.IsNotNull(request)) return;
 
             //Logger.Trace($"Received NetMessageLeaderboardRequest for {GameDatabase.GetPrototypeNameByGuid((PrototypeGuid)request.DataQuery.LeaderboardId)}");
 
@@ -140,8 +137,6 @@ namespace MHServerEmu.Leaderboards
                     .SetReport(_database.GetLeaderboardReport(request))
                     .Build());
             });
-
-            return true;
         }
     }
 }
