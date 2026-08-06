@@ -47,7 +47,7 @@ namespace MHServerEmu.Frontend
             switch (message)
             {
                 default:
-                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
+                    Verify.IsTrue(false, $"Unhandled service message type {typeof(T).Name}");
                     break;
             }
         }
@@ -64,7 +64,7 @@ namespace MHServerEmu.Frontend
 
         protected override void OnClientConnected(TcpClientConnection connection)
         {
-            Logger.Info($"Client connected from {connection}");
+            Logger.Trace($"Client connected from {connection}");
 
             _clients.Add(new FrontendClient(connection));
         }
@@ -72,7 +72,7 @@ namespace MHServerEmu.Frontend
         protected override void OnClientDisconnected(TcpClientConnection connection)
         {
             var client = (FrontendClient)connection.Client;
-            Logger.Info($"Client [{client}] disconnected");
+            Logger.Trace($"Client [{client}] disconnected");
 
             client.OnDisconnected();
 
