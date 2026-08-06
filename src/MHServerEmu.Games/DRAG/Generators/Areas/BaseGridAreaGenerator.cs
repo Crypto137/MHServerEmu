@@ -269,7 +269,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 AddCellsToPicker(cellPicker, proto.NonRequiredSuperCells);
                 if (!SpawnNonRequiredCellList(random, picker, cellPicker, proto.NonRequiredSuperCellsMin, proto.NonRequiredSuperCellsMax))
                 {
-                    if (Log) Logger.Warn($"Failed to place the minimum number of Non-Required SuperCells. CELLS={Logger.ObjectCollectionToString(proto.NonRequiredSuperCells)} AREA={Area}");
+                    if (Log) Logger.Warn($"Failed to place the minimum number of Non-Required SuperCells. CELLS={{{string.Join(' ', proto.NonRequiredSuperCells.Select(cell => cell.ToString()))}}} AREA={Area}");
                     failed = true;
                 }
             }
@@ -374,7 +374,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 if (!SpawnNonRequiredCellList(random, picker, cellPicker, proto.NonRequiredNormalCellsMin, proto.NonRequiredNormalCellsMax))
                 {
                     failed = true;
-                    if (Log) Logger.Warn($"Failed to place the minimum number of Non-Required Normal Cells. CELLS={Logger.ObjectCollectionToString(proto.NonRequiredNormalCells)}");
+                    if (Log) Logger.Warn($"Failed to place the minimum number of Non-Required Normal Cells. CELLS={{{string.Join(' ', proto.NonRequiredNormalCells.Select(cell => cell.ToString()))}}}");
                 }
             }
             return !failed;
