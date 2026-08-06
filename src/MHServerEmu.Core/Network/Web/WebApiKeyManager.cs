@@ -38,22 +38,16 @@ namespace MHServerEmu.Core.Network.Web
                 return;
 
             var keys = FileHelper.DeserializeJson<List<KeyValuePair<string, WebApiKeyData>>>(KeyFilePath);
-            if (keys == null)
-            {
-                Logger.Warn("LoadKeys(): Failed to deserialize web API keys");
+            if (!Verify.IsNotNull(keys))
                 return;
-            }
 
             foreach (var kvp in keys)
             {
                 string key = kvp.Key;
                 WebApiKeyData keyData = kvp.Value;
 
-                if (_keys.ImportToken(key, keyData) == false)
-                {
-                    Logger.Warn($"LoadKeys(): Failed to import web API key [{keyData}]");
+                if (!Verify.IsTrue(_keys.ImportToken(key, keyData), $"Failed to import web API key [{keyData}]"))
                     continue;
-                }
 
                 Logger.Info($"Loaded web API key [{keyData}]");
             }
@@ -69,16 +63,14 @@ namespace MHServerEmu.Core.Network.Web
 
         public string CreateKey(string name, WebApiAccessType access)
         {
-            string key = null;
+            if (!Verify.IsTrue(string.IsNullOrWhiteSpace(name) == false, $"Invalid key name '{name}'"))
+                return null;
 
-            if (string.IsNullOrWhiteSpace(name))
-                return Logger.WarnReturn(key, $"CreateKey(): Invalid key name '{name}'");
-
-            if (access <= WebApiAccessType.None || access >= WebApiAccessType.NumTypes)
-                return Logger.WarnReturn(key, $"CreateKey(): Invalid access type {access}");
+            if (!Verify.IsTrue(access >= WebApiAccessType.None && access < WebApiAccessType.NumTypes, $"Invalid access type {access}"))
+                return null;
 
             WebApiKeyData keyData = new(name, access, DateTime.UtcNow);
-            key = _keys.GenerateToken(keyData);
+            string key = _keys.GenerateToken(keyData);
 
             SaveKeys();
 

@@ -13,8 +13,6 @@ namespace MHServerEmu.Core.Network
         // NOTE: In the client this class is based on a "FastList" data structure, which appears to be a variation of an intrusive linked list.
         // Using a linked list in our case would cause node allocations, so our implemenetation is Queue<T> based instead.
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private Queue<(IFrontendClient, MailboxMessage)> _messageQueue = new();
 
         /// <summary>
@@ -42,7 +40,7 @@ namespace MHServerEmu.Core.Network
         public void TransferFrom(MessageList other)
         {
             // NOTE: In the client this is done by calling FastList::Concat().
-            if (_messageQueue.Count == 0)
+            if (Verify.IsTrue(_messageQueue.Count == 0))
             {
                 // When this list is empty, we can swap the underlying queues instead of transferring messages one by one
                 (_messageQueue, other._messageQueue) = (other._messageQueue, _messageQueue);
@@ -50,7 +48,6 @@ namespace MHServerEmu.Core.Network
             else
             {
                 // Fall back to the slow one by one transfer (shouldn't be happening)
-                Logger.Warn("TransferFrom(): This MessageList is not empty");
                 while (other._messageQueue.Count > 0)
                     _messageQueue.Enqueue(other._messageQueue.Dequeue());
             }
@@ -70,8 +67,8 @@ namespace MHServerEmu.Core.Network
         public (IFrontendClient, MailboxMessage) PeekNextMessage()
         {
             // Do we even need peeking considering we have the HasMessages properties?
-            if (_messageQueue.TryPeek(out var result) == false)
-                return Logger.WarnReturn<(IFrontendClient, MailboxMessage)>(default, $"PeekNextMessage(): No messages to peek");
+            if (!Verify.IsTrue(_messageQueue.TryPeek(out var result)))
+                return default;
 
             return result;
         }
@@ -81,8 +78,8 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public (IFrontendClient, MailboxMessage) PopNextMessage()
         {
-            if (_messageQueue.TryDequeue(out var result) == false)
-                return Logger.WarnReturn<(IFrontendClient, MailboxMessage)>(default, $"PopNextMessage(): No messages to pop");
+            if (!Verify.IsTrue(_messageQueue.TryDequeue(out var result)))
+                return default;
 
             return result;
         }

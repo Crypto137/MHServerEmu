@@ -15,8 +15,6 @@ namespace MHServerEmu.Core.Network
     {
         // NOTE: This class combines the functionality of both the base IMessageSerializer and its derivative CoreNetworkMailbox class from the client.
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly MessageList _messageList = new();
 
         private SpinLock _lock = new(false);
@@ -44,7 +42,7 @@ namespace MHServerEmu.Core.Network
 
             // Deserialize
             IMessage message = messageBuffer.Deserialize<T>();
-            if (message == null) return Logger.ErrorReturn(false, "Post(): Message deserialization failed");
+            if (!Verify.IsNotNull(message, LoggingLevel.Error)) return false;
 
             // CoreNetworkMailbox::OnDeserializeMessage()
             MailboxMessage mailboxMessage = new(messageId, message, gameTimeReceived, dateTimeReceived);
