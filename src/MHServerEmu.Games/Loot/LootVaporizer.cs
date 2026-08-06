@@ -57,9 +57,9 @@ namespace MHServerEmu.Games.Loot
 
                 case LootType.Credits:
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
-                    return player.GameplayOptions.GetOptionSetting(GameplayOptionSetting.EnableVaporizeCredits) == 1;
+                    return player.GameplayOptions.GetOptionSetting(GameplayOptionSetting.VaporizeCredits) != 0;
 #else
-                    return player.GameplayOptions.GetOptionSetting(GameplayOptionSetting.EnableVaporizeCredits);
+                    return player.GameplayOptions.GetOptionSetting(GameplayOptionSetting.VaporizeCredits);
 #endif
 
                 default:
