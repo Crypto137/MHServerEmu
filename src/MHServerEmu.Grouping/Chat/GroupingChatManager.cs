@@ -99,8 +99,8 @@ namespace MHServerEmu.Grouping.Chat
             else
             {
                 // Chat rooms with multiple instances
-                if (SendMessageToChatRoom(message, roomType, (ulong)account.Id, out roomId) == false)
-                    Logger.Warn($"OnChat(): Player [{account}] failed to send message to chat room {roomType}");
+                Verify.IsTrue(SendMessageToChatRoom(message, roomType, (ulong)account.Id, out roomId),
+                    $"Player [{account}] failed to send message to chat room {roomType}");
             }
 
             string messageBody = chat.TheMessage.Body;
@@ -177,8 +177,7 @@ namespace MHServerEmu.Grouping.Chat
 
         private ChatRoomManager GetChatRoomManager(ChatRoomTypes roomType)
         {
-            if (roomType < 0 || roomType >= ChatRoomTypes.CHAT_ROOM_TYPE_NUM_TYPES)
-                return Logger.WarnReturn<ChatRoomManager>(null, $"Invalid room type {roomType}");
+            if (!Verify.IsTrue(roomType >= 0 && roomType < ChatRoomTypes.CHAT_ROOM_TYPE_NUM_TYPES)) return null;
 
             return _chatRoomManager[(int)roomType];
         }
@@ -198,11 +197,11 @@ namespace MHServerEmu.Grouping.Chat
             roomId = 0;
 
             ChatRoomManager chatRoomManager = GetChatRoomManager(roomType);
-            if (chatRoomManager == null) return Logger.WarnReturn(false, "SendMessageToChatRoom(): chatRoomManager == null");
+            if (!Verify.IsNotNull(chatRoomManager)) return false;
 
             ChatRoom chatRoom = chatRoomManager.GetRoomForPlayer(playerDbId);
-            if (chatRoom == null)
-                return Logger.WarnReturn(false, $"SendMessageToChatRoom(): Player 0x{playerDbId:X} is not in a chat room of type {roomType}");
+            if (!Verify.IsNotNull(chatRoom, $"Player 0x{playerDbId:X} is not in a chat room of type {roomType}"))
+                return false;
 
             roomId = chatRoom.Id;
 
