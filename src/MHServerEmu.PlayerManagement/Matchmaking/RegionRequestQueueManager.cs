@@ -30,11 +30,8 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             foreach (PrototypeId regionRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RegionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 RegionPrototype regionProto = regionRef.As<RegionPrototype>();
-                if (regionProto == null)
-                {
-                    Logger.Warn("Initialize(): regionProto == null");
+                if (!Verify.IsNotNull(regionProto))
                     continue;
-                }
 
                 if (regionProto.IsQueueRegion == false)
                     continue;

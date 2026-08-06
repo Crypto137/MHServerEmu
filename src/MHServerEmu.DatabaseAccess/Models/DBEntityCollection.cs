@@ -16,8 +16,6 @@ namespace MHServerEmu.DatabaseAccess.Models
     /// </summary>
     public class DBEntityCollection
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Dictionary<long, List<DBEntity>> _bucketedEntities = new();    // Stored DBEntity bucketed per container
 
         private Dictionary<long, DBEntity> _allEntities = new();    // All DBEntity instances stored in this collection
@@ -37,8 +35,8 @@ namespace MHServerEmu.DatabaseAccess.Models
 
         public bool Add(DBEntity dbEntity)
         {
-            if (_allEntities.TryAdd(dbEntity.DbGuid, dbEntity) == false)
-                return Logger.WarnReturn(false, $"Add(): Guid 0x{dbEntity.DbGuid} is already in use");
+            if (!Verify.IsTrue(_allEntities.TryAdd(dbEntity.DbGuid, dbEntity), $"Guid 0x{dbEntity.DbGuid} is already in use"))
+                return false;
 
             if (_bucketedEntities.TryGetValue(dbEntity.ContainerDbGuid, out List<DBEntity> bucket) == false)
             {

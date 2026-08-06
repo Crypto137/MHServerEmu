@@ -133,40 +133,6 @@ namespace MHServerEmu.Core.Logging
 
         #endregion
 
-        #region Return Logging (for single line early returns)
-
-        /// <summary>
-        /// Logs a <see cref="LoggingLevel.Trace"/> message and returns <typeparamref name="T"/>.
-        /// </summary>
-        public T TraceReturn<T>(T returnValue, string message) => LogReturn(LoggingLevel.Trace, message, returnValue);
-
-        /// <summary>
-        /// Logs a <see cref="LoggingLevel.Debug"/> message and returns <typeparamref name="T"/>.
-        /// </summary>
-        public T DebugReturn<T>(T returnValue, string message) => LogReturn(LoggingLevel.Debug, message, returnValue);
-
-        /// <summary>
-        /// Logs a <see cref="LoggingLevel.Info"/> message and returns <typeparamref name="T"/>.
-        /// </summary>
-        public T InfoReturn<T>(T returnValue, string message) => LogReturn(LoggingLevel.Info, message, returnValue);
-
-        /// <summary>
-        /// Logs a <see cref="LoggingLevel.Warn"/> message and returns <typeparamref name="T"/>.
-        /// </summary>
-        public T WarnReturn<T>(T returnValue, string message) => LogReturn(LoggingLevel.Warn, message, returnValue);
-
-        /// <summary>
-        /// Logs a <see cref="LoggingLevel.Error"/> message and returns <typeparamref name="T"/>.
-        /// </summary>
-        public T ErrorReturn<T>(T returnValue, string message) => LogReturn(LoggingLevel.Error, message, returnValue);
-
-        /// <summary>
-        /// Logs a <see cref="LoggingLevel.Fatal"/> message and returns <typeparamref name="T"/>.
-        /// </summary>
-        public T FatalReturn<T>(T returnValue, string message) => LogReturn(LoggingLevel.Fatal, message, returnValue);
-
-        #endregion
-
         /// <summary>
         /// Logs a message on the specified <see cref="LoggingLevel"/>.
         /// </summary>
@@ -184,26 +150,6 @@ namespace MHServerEmu.Core.Logging
         private void LogException(LoggingLevel level, string message, Exception exception)
         {
             Log(level, $"{message} - [Exception] {exception}");
-        }
-
-        /// <summary>
-        /// Logs a message on the specified <see cref="LoggingLevel"/> and returns <typeparamref name="T"/>.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private T LogReturn<T>(LoggingLevel level, string message, T returnValue)
-        {
-            Log(level, message);
-            return returnValue;
-        }
-
-        public static string ObjectCollectionToString(IEnumerable<object> collection)
-        {
-            string output = "{";
-            foreach (var item in collection)
-                output += $"{item} ";
-            output += "}";
-
-            return output;
         }
     }
 }

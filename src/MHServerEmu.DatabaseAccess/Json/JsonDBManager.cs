@@ -75,7 +75,8 @@ namespace MHServerEmu.DatabaseAccess.Json
         {
             playerDbId = 0;
             playerNameOut = playerName;
-            return Logger.WarnReturn(true, "TryGetPlayerDbIdByName(): Operation not supported");
+            Verify.IsTrue(false, "Operation not supported");
+            return true;
         }
 
         public bool TryGetPlayerName(ulong id, out string playerName)
@@ -97,12 +98,14 @@ namespace MHServerEmu.DatabaseAccess.Json
 
         public bool InsertAccount(DBAccount account)
         {
-            return Logger.WarnReturn(false, "InsertAccount(): Operation not supported");
+            Verify.IsTrue(false, "Operation not supported");
+            return false;
         }
 
         public bool UpdateAccount(DBAccount account)
         {
-            return Logger.WarnReturn(false, "UpdateAccount(): Operation not supported");
+            Verify.IsTrue(false, "Operation not supported");
+            return false;
         }
 
         public bool LoadPlayerData(DBAccount account)
@@ -113,8 +116,8 @@ namespace MHServerEmu.DatabaseAccess.Json
 
         public bool SavePlayerData(DBAccount account)
         {
-            if (account != _account)
-                return Logger.WarnReturn(false, "UpdateAccountData(): Attempting to update non-default account when bypass auth is enabled");
+            if (!Verify.IsTrue(account == _account, $"Attempting to update non-default account when bypass auth is enabled"))
+                return false;
 
             Logger.Info($"Updated account file {FileHelper.GetRelativePath(_accountFilePath)}");
             FileHelper.SerializeJson(_accountFilePath, _account, _jsonOptions);

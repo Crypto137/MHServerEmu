@@ -9,8 +9,6 @@ namespace MHServerEmu.Leaderboards
 {
     public class LeaderboardScheduler
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public static readonly JsonSerializerOptions JsonSerializerOptions = new()
         {
             Converters = { new PrototypeGuidJsonConverter() },
@@ -102,11 +100,8 @@ namespace MHServerEmu.Leaderboards
 
             foreach (LeaderboardScheduler scheduler in metaSchedulers)
             {
-                if (scheduler.IsEnabled != isEnabled)
-                {
-                    Logger.Warn($"ValidateMetaLeaderboards(): Schedule entry {scheduler} is out of sync, forcing IsEnabled = {isEnabled}");
+                if (!Verify.IsTrue(scheduler.IsEnabled == isEnabled, $"Schedule entry {scheduler} is out of sync, forcing IsEnabled = {isEnabled}"))
                     scheduler.IsEnabled = isEnabled;
-                }
             }
         }
 

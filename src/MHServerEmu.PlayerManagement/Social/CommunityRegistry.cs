@@ -11,8 +11,6 @@ namespace MHServerEmu.PlayerManagement.Social
     /// </summary>
     public class CommunityRegistry
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-        
         // NOTE: Member entries continue to exist for as long as the server is up to be available for lookups. This is by design and not a leak.
         private readonly Dictionary<ulong, CommunityMemberEntry> _members = new();
         private readonly HashSet<CommunityMemberEntry> _membersToBroadcast = new();
@@ -90,19 +88,18 @@ namespace MHServerEmu.PlayerManagement.Social
                 SendBroadcastOnNextUpdate(member);
         }
 
-        public bool ReceiveMemberBroadcast(CommunityMemberBroadcast broadcast)
+        public void ReceiveMemberBroadcast(CommunityMemberBroadcast broadcast)
         {
             ulong playerDbId = broadcast.MemberPlayerDbId;
 
             // We should be receiving broadcasts only from online players
             PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
-            if (player == null)
-                return Logger.WarnReturn(false, $"ReceiveMemberBroadcast(): No player found for dbid 0x{playerDbId:X}");
+            if (!Verify.IsNotNull(player, $"No player found for dbid 0x{playerDbId:X}"))
+                return;
 
             // Member entry should be created when a player logs in
             CommunityMemberEntry member = GetMemberEntry(playerDbId);
-            if (member == null)
-                return Logger.WarnReturn(false, "ReceiveMemberBroadcast(): member == null");
+            if (!Verify.IsNotNull(member)) return;
 
             bool sendBroadcast = false;
 
@@ -149,8 +146,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
             if (sendBroadcast)
                 SendBroadcastOnNextUpdate(member);
-
-            return true;
         }
 
         public void RequestMemberBroadcast(ulong gameId, ulong playerDbId, List<ulong> members)

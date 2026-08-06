@@ -66,8 +66,8 @@ namespace MHServerEmu.Frontend
 
         public bool AssignSession(IFrontendSession session)
         {
-            if (Session != null)
-                return Logger.WarnReturn(false, $"AssignSession(): Failed to assign {session} to a client: already assigned {Session}");
+            if (!Verify.IsTrue(Session == null, $"Attempted to assign session {session} to a client while another session {Session} is already assigned"))
+                return false;
 
             Session = session;
 
@@ -83,7 +83,8 @@ namespace MHServerEmu.Frontend
             if (Connection.Connected == false)
             {
                 messageBuffer.Destroy();
-                return Logger.WarnReturn(false, $"HandleIncomingMessageBuffer(): Client [{this}] has already disconnected");
+                Logger.Warn($"HandleIncomingMessageBuffer(): Client [{this}] has already disconnected");
+                return false;
             }
 
             bool success;
@@ -99,7 +100,7 @@ namespace MHServerEmu.Frontend
                     break;
 
                 default:
-                    Logger.Error($"HandleIncomingMessageBuffer(): Unexpected channel {muxId} when handling a MessageBuffer from client [{this}]");
+                    Verify.IsTrue(false, LoggingLevel.Error, $"Unexpected channel {muxId} when handling a MessageBuffer from client [{this}]");
                     success = false;
                     break;
             }
@@ -191,13 +192,12 @@ namespace MHServerEmu.Frontend
                 return $"[{_muxId}] {_service} - {_state}";
             }
 
-            public bool FinishAuth()
+            public void FinishAuth()
             {
-                if (_state != MuxChannelState.Auth)
-                    return Logger.ErrorReturn(false, $"FinishAuth(): Channel {_muxId} is in unexpected state {_state} for client [{_client}]");
+                if (!Verify.IsTrue(_state == MuxChannelState.Auth, LoggingLevel.Error, $"Channel {_muxId} is in unexpected state {_state} for client [{_client}]"))
+                    return;
 
                 _state = MuxChannelState.Handshake;
-                return true;
             }
 
             public void Disconnect()
@@ -229,16 +229,18 @@ namespace MHServerEmu.Frontend
                         return RouteMessageBuffer(messageBuffer);
 
                     default:
-                        return Logger.ErrorReturn(false, $"HandleIncomingMessageBuffer(): Unexpected state {_state} for channel {_muxId} when handling a MessageBuffer from client [{_client}]");
+                        Verify.IsTrue(false, LoggingLevel.Error, $"Unexpected state {_state} for channel {_muxId} when handling a MessageBuffer from client [{_client}]");
+                        return false;
                 }
             }
 
             private bool HandleClientCredentials(in MessageBuffer messageBuffer)
             {
-                if (_muxId != 1) return Logger.WarnReturn(false, $"OnClientCredentials(): Received client credentials from client [{_client}] on unexpected channel {_muxId}");
+                if (!Verify.IsTrue(_muxId == 1, $"Received client credentials from client [{_client}] on unexpected channel {_muxId}"))
+                    return false;
 
                 var clientCredentials = messageBuffer.Deserialize<FrontendProtocolMessage>() as ClientCredentials;
-                if (clientCredentials == null) return Logger.ErrorReturn(false, $"OnClientCredentials(): Failed to retrieve message");
+                if (!Verify.IsNotNull(clientCredentials)) return false;
 
                 // Routing this message should authenticate the client if the credentials are successfully verified.
                 // If we ever split the frontend into a separate process we will need to replicate session assignment between the processes.
@@ -251,7 +253,7 @@ namespace MHServerEmu.Frontend
             private bool HandleInitialClientHandshake(in MessageBuffer messageBuffer)
             {
                 var initialClientHandshake = messageBuffer.Deserialize<FrontendProtocolMessage>() as InitialClientHandshake;
-                if (initialClientHandshake == null) return Logger.WarnReturn(false, $"OnInitialClientHandshake(): Failed to retrieve message");
+                if (!Verify.IsNotNull(initialClientHandshake)) return false;
 
                 PubSubServerTypes serverType = initialClientHandshake.ServerType;
 
@@ -274,7 +276,8 @@ namespace MHServerEmu.Frontend
                         break;
 
                     default:
-                        return Logger.ErrorReturn(false, $"HandleInitialClientHandshake(): Unexpected PubSubServerType {serverType} on channel {_muxId} from client [{_client}]");
+                        Verify.IsTrue(false, LoggingLevel.Error, $"Unexpected PubSubServerType {serverType} on channel {_muxId} from client [{_client}]");
+                        return false;
                 }
 
                 _state = MuxChannelState.Connected;

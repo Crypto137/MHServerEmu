@@ -104,7 +104,8 @@ namespace MHServerEmu.Leaderboards
             }
             catch (Exception e)
             {
-                return Logger.WarnReturn(false, $"LoadSchedule(): Schedule {schedulePath} deserialization failed - {e.Message}");
+                Verify.IsTrue(false, $"Schedule {schedulePath} deserialization failed - {e.Message}");
+                return false;
             }
 
             // Load current leaderboard data from the database
@@ -114,11 +115,8 @@ namespace MHServerEmu.Leaderboards
             foreach (LeaderboardScheduler scheduler in schedulers)
             {
                 DBLeaderboard oldDbLeaderboard = oldDbLeaderboards.FirstOrDefault(lb => lb.LeaderboardId == (long)scheduler.LeaderboardId);
-                if (oldDbLeaderboard == null)
-                {
-                    Logger.Warn($"LoadSchedule(): Loaded scheduler {scheduler}, but found no record for it in the database");
+                if (!Verify.IsNotNull(oldDbLeaderboard, $"Loaded scheduler {scheduler}, but found no record for it in the database"))
                     continue;
-                }
 
                 // Skip unchanged
                 if (scheduler.IsEquivalent(oldDbLeaderboard))
@@ -277,19 +275,14 @@ namespace MHServerEmu.Leaderboards
             {
                 PrototypeGuid leaderboardId = (PrototypeGuid)dbLeaderboard.LeaderboardId;
                 PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(leaderboardId);
-                if (dataRef == PrototypeId.Invalid)
-                {
-                    Logger.Warn($"Failed GetDataRefByPrototypeGuid LeaderboardId = {leaderboardId}");
+                if (!Verify.IsTrue(dataRef != PrototypeId.Invalid, $"No leaderboard data ref for guid {(ulong)leaderboardId}"))
                     continue;
-                }
-                var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
-                if (proto == null)
-                {
-                    Logger.Warn($"Failed GetPrototype dataRef = {dataRef}");
-                    continue;
-                }
 
-                var leaderboard = new Leaderboard(proto, dbLeaderboard);
+                LeaderboardPrototype proto = dataRef.As<LeaderboardPrototype>();
+                if (!Verify.IsNotNull(proto))
+                    continue;
+
+                Leaderboard leaderboard = new(proto, dbLeaderboard);
                 if (proto.IsMetaLeaderboard)
                     _metaLeaderboards.Add(leaderboardId, leaderboard);
                 else

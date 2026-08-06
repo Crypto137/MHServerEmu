@@ -47,15 +47,14 @@ namespace MHServerEmu.Core.Memory
         /// <summary>
         /// Returns an instance of <typeparamref name="T"/> to the pool for later reuse.
         /// </summary>
-        public bool Return<T>(T @object) where T: IPoolable, IDisposable, new()
+        public void Return<T>(T @object) where T: IPoolable, IDisposable, new()
         {
-            if (@object.IsInPool)
-                return Logger.WarnReturn(false, $"Return<T>(): Attempted to return an instance of {typeof(T).Name} that is already in a pool!");
+            if (!Verify.IsTrue(@object.IsInPool == false, LoggingLevel.Error, $"Attempted to return an instance of {typeof(T).Name} that is already in a pool!"))
+                return;
 
             @object.ResetForPool();
             @object.IsInPool = true;
             _objects.Push(@object);
-            return true;
         }
     }
 }

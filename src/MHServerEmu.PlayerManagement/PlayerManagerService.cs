@@ -21,8 +21,6 @@ namespace MHServerEmu.PlayerManagement
     {
         public const int TargetTickTimeMS = 150;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
         private readonly PlayerManagerServiceMailbox _serviceMailbox;
 
@@ -192,17 +190,15 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Handles <see cref="NetMessageReadyForGameJoin"/>.
         /// </summary>
-        private bool OnReadyForGameJoin(IFrontendClient client, MessageBuffer messageBuffer)
+        private void OnReadyForGameJoin(IFrontendClient client, MessageBuffer messageBuffer)
         {
             // There is a client-side bug with NetMessageReadyForGameJoin that requires special handling, see DeserializeReadyForGameJoin() for more info.
             var readyForGameJoin = messageBuffer.DeserializeReadyForGameJoin();
-            if (readyForGameJoin == null) return Logger.WarnReturn(false, "OnReadyForGameJoin(): readyForGameJoin == null");
+            if (!Verify.IsNotNull(readyForGameJoin)) return;
 
             // ReadyForGameJoin is sent right after InitialClientHandshake, and we currently don't use any data from it.
             // TODO: PlayerManager shouldn't try to put clients into games until it receives this message.
-            Logger.Trace($"Received NetMessageReadyForGameJoin from client [{client}]");
-
-            return true;
+            //Logger.Trace($"Received NetMessageReadyForGameJoin from client [{client}]");
         }
 
         #endregion

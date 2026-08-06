@@ -37,17 +37,11 @@ namespace MHServerEmu.PlayerManagement.Social
             int numMembers = 0;
             foreach (DBGuild dbGuild in dbGuilds)
             {
-                if (dbGuild == null)
-                {
-                    Logger.Warn("Initialize(): dbGuild == null");
+                if (!Verify.IsNotNull(dbGuild))
                     continue;
-                }
 
-                if (string.IsNullOrWhiteSpace(dbGuild.Name))
-                {
-                    Logger.Warn($"Initialize(): Loaded guild with invalid name, id={dbGuild.Id}");
+                if (!Verify.IsTrue(string.IsNullOrWhiteSpace(dbGuild.Name) == false, $"Loaded guild with invalid name, id={dbGuild.Id}"))
                     continue;
-                }
 
                 if (dbGuild.Members == null || dbGuild.Members.Count == 0)
                 {
@@ -58,11 +52,8 @@ namespace MHServerEmu.PlayerManagement.Social
                 }
 
                 MasterGuild guild = CreateGuild(dbGuild, false);
-                if (guild == null)
-                {
-                    Logger.Warn("Initialize(): guild == null");
+                if (!Verify.IsNotNull(guild))
                     continue;
-                }
 
                 _currentGuildId = Math.Max(_currentGuildId, guild.Id);
                 numMembers += guild.MemberCount;
@@ -74,18 +65,13 @@ namespace MHServerEmu.PlayerManagement.Social
             Logger.Info($"Initialized in {(long)elapsed.TotalMilliseconds} ms (guilds={_guilds.Count}, members={numMembers}, currentGuildId={_currentGuildId})");
         }
 
-        public bool RemoveGuild(MasterGuild guild)
+        public void RemoveGuild(MasterGuild guild)
         {
-            if (guild == null)
-                return Logger.WarnReturn(false, "RemoveGuild(): guild == null");
+            if (!Verify.IsNotNull(guild)) return;
 
-            if (guild.MemberCount != 0)
-                Logger.Warn("RemoveGuild(): guild.MemberCount != 0");
+            Verify.IsTrue(guild.MemberCount == 0);
 
-            if (_guilds.Remove(guild.Id) == false)
-                return Logger.WarnReturn(false, $"RemoveGuild(): Guild {guild} not found");
-
-            return true;
+            Verify.IsTrue(_guilds.Remove(guild.Id), $"Guild {guild} not found");
         }
 
         public MasterGuild GetGuild(ulong guildId)
@@ -120,11 +106,11 @@ namespace MHServerEmu.PlayerManagement.Social
             ulong guildId = (ulong)data.Id;
             string guildName = data.Name;
 
-            if (_guilds.ContainsKey(guildId))
-                return Logger.WarnReturn<MasterGuild>(null, $"CreateGuild(): Guild id {guildId} is already in use");
+            if (!Verify.IsTrue(_guilds.ContainsKey(guildId) == false, $"Guild id {guildId} is already in use"))
+                return null;
 
-            if (_guildNameRegistry.AddGuildNameInUse(guildName) == false)
-                return Logger.WarnReturn<MasterGuild>(null, $"CreateGuild(): Guild name {guildName} is already in use");
+            if (!Verify.IsTrue(_guildNameRegistry.AddGuildNameInUse(guildName), $"Guild name {guildName} is already in use"))
+                return null;
 
             MasterGuild guild = new(data, saveToDatabase);
             _guilds.Add(guild.Id, guild);
@@ -251,11 +237,8 @@ namespace MHServerEmu.PlayerManagement.Social
                 return;
 
             MasterGuild guild = invitedByPlayer.Guild;
-            if (guild == null)
-            {
-                Logger.Warn($"OnGuildInvite(): Player [{invitedByPlayer}] is not in a guild");
+            if (!Verify.IsNotNull(guild, $"Player [{invitedByPlayer}] is not in a guild"))
                 return;
-            }
 
             // Cases where toInvitePlayer is null will be handled by InvitePlayer()
             PlayerHandle toInvitePlayer = guildInvite.HasToInvitePlayerId && guildInvite.ToInvitePlayerId != 0

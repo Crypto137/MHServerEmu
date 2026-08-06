@@ -79,10 +79,7 @@ namespace MHServerEmu.PlayerManagement.Players
         
         public bool RemovePendingClient(IFrontendClient client)
         {
-            if (_pendingClients.Remove(client) == false)
-                return Logger.WarnReturn(false, $"RemovePendingClient(): Client [{client}] is not in the pending client collection");
-
-            return true;
+            return _pendingClients.Remove(client);
         }
 
         /// <summary>
@@ -118,10 +115,7 @@ namespace MHServerEmu.PlayerManagement.Players
             {
                 TimeSpan duration = now - kvp.Value;
                 if (duration >= ReconnectPermissionDuration)
-                {
                     _reconnectPermissions.Remove(kvp.Key);
-                    Logger.Info($"Reconnect permission expired for account 0x{kvp.Key:X}");
-                }
             }
         }
 
@@ -166,14 +160,14 @@ namespace MHServerEmu.PlayerManagement.Players
                     if (_reconnectPermissions.Remove(client.DbId))
                     {
                         queueToUse = _reconnectQueue;
-                        Logger.Info($"Consumed reconnect permission for client [{client}]");
+                        Logger.Trace($"Consumed reconnect permission for client [{client}]");
                     }
 
                     queueNode.Value = client;
                     queueToUse.AddLast(queueNode);
                 }
 
-                Logger.Info($"Accepted client [{client}] into the login queue");
+                Logger.Trace($"Accepted client [{client}] into the login queue");
             }
         }
 
@@ -243,10 +237,7 @@ namespace MHServerEmu.PlayerManagement.Players
         {
             // Allow all clients that pass the default queue to reconnect because of the client-side afk timer bug.
             if (allowReconnect)
-            {
                 _reconnectPermissions[client.DbId] = Clock.UnixTime;
-                Logger.Info($"Added reconnect permission for client [{client}]");
-            }
 
             if (client.IsConnected == false)
             {
@@ -278,7 +269,7 @@ namespace MHServerEmu.PlayerManagement.Players
             client.SendMessage(MuxChannel, SessionEncryptionChangedMessage);
 #endif
 
-            Logger.Info($"Client [{client}] passed the login queue");
+            Logger.Trace($"Client [{client}] passed the login queue");
 
             availableCapacity--;
 

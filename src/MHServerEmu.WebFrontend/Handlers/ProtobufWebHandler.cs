@@ -45,7 +45,7 @@ namespace MHServerEmu.WebFrontend.Handlers
 #endif
 
                 default:
-                    Logger.Warn($"Post(): Unhandled protobuf {message?.DescriptorForType.Name}");
+                    Verify.IsTrue(false, $"Unhandled protobuf {message?.DescriptorForType.Name}");
                     context.StatusCode = (int)HttpStatusCode.BadRequest;
                     break;
             }
@@ -53,9 +53,8 @@ namespace MHServerEmu.WebFrontend.Handlers
 
         private async Task OnLoginDataPB(WebRequestContext context, LoginDataPB loginDataPB)
         {
-            if (loginDataPB == null)
+            if (!Verify.IsNotNull(loginDataPB))
             {
-                Logger.Warn($"OnLoginDataPB(): Failed to retrieve message");
                 context.StatusCode = (int)HttpStatusCode.BadRequest;
                 return;
             }
@@ -91,7 +90,9 @@ namespace MHServerEmu.WebFrontend.Handlers
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private static async Task OnPrecacheHeaders(WebRequestContext context, PrecacheHeaders precacheHeaders)
         {
+#if DEBUG
             Logger.Trace("Received PrecacheHeaders message");
+#endif
             await context.SendAsync(PrecacheHeadersMessageResponse.DefaultInstance);
         }
 #endif

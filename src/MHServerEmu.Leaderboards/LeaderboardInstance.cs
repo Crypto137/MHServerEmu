@@ -215,13 +215,10 @@ namespace MHServerEmu.Leaderboards
 
                     PrototypeGuid subLeaderboardId = metaEntry.SubLeaderboardId;
                     LeaderboardInstance subInstance = metaEntry.SubInstance;
-                    
+
                     // We need a subinstance here
-                    if (subInstance == null)
-                    {
-                        Logger.Warn("UpdateMetaScore(): subInstance == null");
+                    if (!Verify.IsNotNull(subInstance))
                         continue;
-                    }
 
                     ulong score = 0;
                     foreach (LeaderboardEntry subEntry in subInstance.Entries)
@@ -258,8 +255,8 @@ namespace MHServerEmu.Leaderboards
                 metaEntry.SubInstanceId = (ulong)dbManager.GetSubInstanceId((long)LeaderboardId, (long)InstanceId, (long)metaEntry.SubLeaderboardId);
             }
 
-            if (metaEntry.SubInstanceId == 0)
-                return Logger.WarnReturn(false, $"RestoreSubInstanceReference(): Failed to retrieve SubInstanceId for SubLeaderboard {metaEntry.SubLeaderboardId}");
+            if (!Verify.IsTrue(metaEntry.SubInstanceId != 0, $"Failed to retrieve SubInstanceId for SubLeaderboard {metaEntry.SubLeaderboardId}"))
+                return false;
 
             SetSubInstance(metaEntry.SubLeaderboardId, metaEntry.SubInstanceId);
             return true;

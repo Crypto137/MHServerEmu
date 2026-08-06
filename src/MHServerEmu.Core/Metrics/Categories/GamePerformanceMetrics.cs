@@ -23,8 +23,6 @@ namespace MHServerEmu.Core.Metrics.Categories
 
     public class GamePerformanceMetrics
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         // At 20 FPS this gives us about 51.2 seconds of data
         private const int NumSamples = 1024;
 
@@ -44,8 +42,7 @@ namespace MHServerEmu.Core.Metrics.Categories
         public bool Update(in GamePerformanceMetricValue gameMetricValue)
         {
             GamePerformanceMetricEnum metric = gameMetricValue.Metric;
-            if (metric < 0 || metric >= GamePerformanceMetricEnum.NumGameMetrics)
-                return Logger.WarnReturn(false, $"Update(): Metric {metric} is out of range");
+            if (!Verify.IsTrue(metric >= 0 && metric < GamePerformanceMetricEnum.NumGameMetrics)) return false;
 
             switch (metric)
             {
@@ -61,7 +58,7 @@ namespace MHServerEmu.Core.Metrics.Categories
                     break;
 
                 default:
-                    Logger.WarnReturn(false, $"Update(): Unhandled metric {metric}");
+                    Verify.IsTrue(false, $"Unhandled metric {metric}");
                     break;
             }
 

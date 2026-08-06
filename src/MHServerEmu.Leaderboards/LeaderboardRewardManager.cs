@@ -77,7 +77,7 @@ namespace MHServerEmu.Leaderboards
             {
                 if ((now - kvp.Value.Timestamp) >= Timeout)
                 {
-                    Logger.Error($"Update(): Reward timeout for participant 0x{kvp.Key:X}");
+                    Verify.IsTrue(false, LoggingLevel.Error, $"Reward timeout for participant 0x{kvp.Key:X}");
                     _pendingRewards.Remove(kvp.Key);
                 }
             }
@@ -88,8 +88,8 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         private bool QueryRewards(ulong participantId)
         {
-            if (_pendingRewards.ContainsKey(participantId))
-                return Logger.WarnReturn(false, $"QueryRewards(): Participant 0x{participantId:X} already has pending rewards");
+            if (!Verify.IsTrue(_pendingRewards.ContainsKey(participantId) == false, $"Participant 0x{participantId:X} already has pending rewards"))
+                return false;
 
             // Query the database and exit early if there are no rewards to give
             List<DBRewardEntry> dbRewards = SQLiteLeaderboardDBManager.Instance.GetRewards((long)participantId);
@@ -119,8 +119,9 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         private bool FinalizeReward(long leaderboardId, long instanceId, ulong participantId)
         {
-            if (_pendingRewards.TryGetValue(participantId, out RewardQueryResult rewardQuery) == false)
-                return Logger.WarnReturn(false, $"FinalizeReward(): Received confirmation for participant 0x{participantId:X}, who does not have pending rewards");
+            bool pendingRewardFound = _pendingRewards.TryGetValue(participantId, out RewardQueryResult rewardQuery);
+            if (!Verify.IsTrue(pendingRewardFound, $"Received confirmation for participant 0x{participantId:X}, who does not have pending rewards"))
+                return false;
 
             List<DBRewardEntry> rewards = rewardQuery.Rewards;
 
@@ -137,8 +138,8 @@ namespace MHServerEmu.Leaderboards
                 }
             }
 
-            if (reward == null)
-                return Logger.WarnReturn(false, $"FinalizeReward(): Failed to find reward for leaderboardId={leaderboardId}, instanceId={instanceId}, participant=0x{participantId:X}");
+            if (!Verify.IsNotNull(reward, $"Failed to find reward for leaderboardId={leaderboardId}, instanceId={instanceId}, participant=0x{participantId:X}"))
+                return false;
 
             // Update reward in the database
             reward.UpdateRewardedDate();

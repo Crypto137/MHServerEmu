@@ -62,7 +62,8 @@ namespace MHServerEmu.Core.Helpers
             }
             catch (Exception e)
             {
-                return Logger.WarnReturn<T>(default, $"DeserializeJson(): Failed to deserialize {path} as {typeof(T).Name} - {e.Message}");
+                Logger.WarnException(e, $"Failed to deserialize {path} as {typeof(T).Name}");
+                return default;
             }
         }
 
@@ -109,8 +110,8 @@ namespace MHServerEmu.Core.Helpers
             if (maxBackups == 0)
                 return false;
 
-            if (File.Exists(sourceFilePath) == false)
-                return Logger.WarnReturn(false, $"PrepareFileBackup(): File not found at {sourceFilePath}");
+            if (!Verify.IsTrue(File.Exists(sourceFilePath), $"File not found at {sourceFilePath}"))
+                return false;
 
             // Cache backup file names for reuse.
             // NOTE: We can also reuse the same string array for multiple calls of this function,
@@ -144,8 +145,8 @@ namespace MHServerEmu.Core.Helpers
                 File.Move(backupPaths[i], backupPaths[i + 1]);
 
             // Path 0 should be free now.
-            if (File.Exists(backupPaths[0]))
-                return Logger.WarnReturn(false, $"CreateFileBackup(): Backup file path is not free {backupPaths[0]}");
+            if (!Verify.IsTrue(File.Exists(backupPaths[0]) == false, $"Backup file path is not free {backupPaths[0]}"))
+                return false;
 
             backupFilePath = backupPaths[0];
             return true;

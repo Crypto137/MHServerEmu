@@ -31,8 +31,8 @@ namespace MHServerEmu.Grouping.Chat
             if (_roomsByPlayer.TryGetValue(playerDbId, out ChatRoom room) == false)
                 return null;
 
-            if (room.HasPlayer(playerDbId) == false)
-                return Logger.WarnReturn<ChatRoom>(null, $"GetRoomForPlayer(): Room [{room}] is added as a lookup for player 0x{playerDbId:X}, but it does not contain this player");
+            if (!Verify.IsTrue(room.HasPlayer(playerDbId), $"Room [{room}] is added as a lookup for player 0x{playerDbId:X}, but it does not contain this player"))
+                return null;
 
             return room;
         }
@@ -42,14 +42,11 @@ namespace MHServerEmu.Grouping.Chat
         /// </summary>
         public bool AddPlayer(ulong roomId, ulong playerDbId)
         {
-            if (playerDbId == 0) return Logger.WarnReturn(false, "AddPlayer(): playerDbId == 0");
+            if (!Verify.IsTrue(playerDbId != 0)) return false;
 
             ChatRoom existingRoom = GetRoomForPlayer(playerDbId);
-            if (existingRoom != null)
-            {
-                Logger.Warn($"AddPlayer(): Player 0x{playerDbId:X} is already added to room of the same type [{existingRoom}], removing");
+            if (!Verify.IsTrue(existingRoom == null, $"Player 0x{playerDbId:X} is already added to room of the same type [{existingRoom}]"))
                 RemovePlayer(existingRoom.Id, playerDbId);
-            }
 
             if (_rooms.TryGetValue(roomId, out ChatRoom room) == false)
             {
@@ -71,10 +68,10 @@ namespace MHServerEmu.Grouping.Chat
         /// </summary>
         public bool RemovePlayer(ulong roomId, ulong playerDbId)
         {
-            if (playerDbId == 0) return Logger.WarnReturn(false, "RemovePlayer(): playerDbId == 0");
+            if (!Verify.IsTrue(playerDbId != 0)) return false;
 
-            if (_rooms.TryGetValue(roomId, out ChatRoom room) == false)
-                return Logger.WarnReturn(false, $"RemovePlayer(): Room 0x{roomId:X} not found for player 0x{playerDbId:X}");
+            if (!Verify.IsTrue(_rooms.TryGetValue(roomId, out ChatRoom room), $"Room 0x{roomId:X} not found for player 0x{playerDbId:X}"))
+                return false;
 
             bool removed = room.RemovePlayer(playerDbId);
 

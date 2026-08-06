@@ -10,8 +10,6 @@ namespace MHServerEmu.Core.Metrics
 {
     public class PerformanceReport : IPoolable, IDisposable
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private static uint _currentReportId = 0;
 
         [JsonNumberHandling(JsonNumberHandling.WriteAsString)]
@@ -52,7 +50,8 @@ namespace MHServerEmu.Core.Metrics
                     return JsonSerializer.Serialize(this);
 
                 default:
-                    return Logger.WarnReturn(string.Empty, $"ToString(): Unsupported format {format}");
+                    Verify.IsTrue(false, $"Unsupported format {format}");
+                    return string.Empty;
             }
         }
 

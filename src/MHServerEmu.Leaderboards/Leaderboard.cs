@@ -131,8 +131,8 @@ namespace MHServerEmu.Leaderboards
                 // If not found, this instance may not be loaded from the database
                 var dbManager = LeaderboardDatabase.Instance.DBManager;
                 DBLeaderboardInstance dbInstance = dbManager.GetInstance((long)LeaderboardId, (long)instanceId);
-                if (dbInstance == null)
-                    return Logger.WarnReturn(instance, $"GetInstance(): Failed to find instance for id {instanceId}");
+                if (!Verify.IsNotNull(dbInstance, $"Failed to find instance for id {instanceId}"))
+                    return null;
 
                 instance = AddInstance(dbInstance, true);
             }

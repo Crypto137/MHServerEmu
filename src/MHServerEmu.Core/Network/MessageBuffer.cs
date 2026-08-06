@@ -56,7 +56,7 @@ namespace MHServerEmu.Core.Network
         /// </remarks>
         public IMessage Deserialize<T>() where T: Enum
         {
-            if (_buffer == null) return Logger.WarnReturn<IMessage>(null, $"Deserialize(): _buffer == null");
+            if (!Verify.IsNotNull(_buffer)) return null;
 
             try
             {

@@ -6,8 +6,6 @@ namespace MHServerEmu.Grouping
 {
     internal sealed class GroupingServiceMailbox : ServiceMailbox
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly GroupingManagerService _groupingManager;
 
         public GroupingServiceMailbox(GroupingManagerService groupingManager)
@@ -58,7 +56,7 @@ namespace MHServerEmu.Grouping
                     break;
 
                 default:
-                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
+                    Verify.IsTrue(false, $"Unhandled service message type {message.GetType().Name}");
                     break;
             }
         }
@@ -99,11 +97,8 @@ namespace MHServerEmu.Grouping
             int prestigeLevel = groupingManagerChat.PrestigeLevel;
             List<ulong> playerFilter = groupingManagerChat.PlayerFilter;
 
-            if (_groupingManager.ClientManager.TryGetClient(playerDbId, out IFrontendClient client) == false)
-            {
-                Logger.Warn($"OnGroupingManagerChat(): Player 0x{playerDbId:X} not found");
+            if (!Verify.IsTrue(_groupingManager.ClientManager.TryGetClient(playerDbId, out IFrontendClient client), $"Player 0x{playerDbId:X} not found"))
                 return;
-            }
 
             _groupingManager.ChatManager.OnChat(client, chat, prestigeLevel, playerFilter);
         }
@@ -114,11 +109,8 @@ namespace MHServerEmu.Grouping
             NetMessageTell tell = groupingManagerTell.Tell;
             int prestigeLevel = groupingManagerTell.PrestigeLevel;
 
-            if (_groupingManager.ClientManager.TryGetClient(playerDbId, out IFrontendClient client) == false)
-            {
-                Logger.Warn($"OnGroupingManagerTell(): Player 0x{playerDbId:X} not found");
+            if (!Verify.IsTrue(_groupingManager.ClientManager.TryGetClient(playerDbId, out IFrontendClient client), $"Player 0x{playerDbId:X} not found"))
                 return;
-            }
 
             _groupingManager.ChatManager.OnTell(client, tell, prestigeLevel);
         }
@@ -129,11 +121,8 @@ namespace MHServerEmu.Grouping
             string text = groupingManagerMetagameMessage.Text;
             bool showSender = groupingManagerMetagameMessage.ShowSender;
 
-            if (_groupingManager.ClientManager.TryGetClient(playerDbId, out IFrontendClient client) == false)
-            {
-                Logger.Warn($"OnGroupingManagerMetagameMessage(): Player 0x{playerDbId:X} not found");
+            if (!Verify.IsTrue(_groupingManager.ClientManager.TryGetClient(playerDbId, out IFrontendClient client), $"Player 0x{playerDbId:X} not found"))
                 return;
-            }
 
             _groupingManager.ChatManager.OnMetagameMessage(client, text, showSender);
         }
@@ -163,7 +152,7 @@ namespace MHServerEmu.Grouping
                     break;
 
                 default:
-                    Logger.Warn("OnGroupingManagerChatRoomOperation(): Unhandled operation");
+                    Verify.IsTrue(false, $"Unhandled chat room operation {operation}");
                     break;
             }
         }

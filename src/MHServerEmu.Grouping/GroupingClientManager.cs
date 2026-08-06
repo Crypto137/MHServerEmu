@@ -16,15 +16,15 @@ namespace MHServerEmu.Grouping
         // Need a name -> client lookup because tells sent by clients are addressed by name.
         // We no longer need thread safety here because everything grouping manager related is now handled by a dedicated worker thread.
 
-        private readonly Dictionary<ulong, IFrontendClient> _playerDbIdDict = new();
-        private readonly Dictionary<string, IFrontendClient> _playerNameDict = new(StringComparer.OrdinalIgnoreCase);   // case insensitive
+        private readonly Dictionary<ulong, IFrontendClient> _clientsByDbId = new();
+        private readonly Dictionary<string, IFrontendClient> _clientsByName = new(StringComparer.OrdinalIgnoreCase);   // case insensitive
 
         private readonly Stack<List<IMessage>> _freeMessageBuckets = new();
         private readonly Dictionary<IFrontendClient, List<IMessage>> _pendingMessages = new();
 
         private bool _hasPendingMessages;
 
-        public int Count { get => _playerDbIdDict.Count; }
+        public int Count { get => _clientsByDbId.Count; }
 
         public GroupingClientManager()
         {
@@ -36,16 +36,15 @@ namespace MHServerEmu.Grouping
             ulong playerDbId = (ulong)account.Id;
             string playerName = account.PlayerName;
 
-            if (_playerDbIdDict.ContainsKey(playerDbId))
-                return Logger.WarnReturn(false, $"AddClient(): Account {account} is already added");
+            if (!Verify.IsTrue(_clientsByDbId.TryAdd(playerDbId, client), $"Account {account} is already added"))
+                return false;
 
-            _playerDbIdDict.Add(playerDbId, client);
-            _playerNameDict.Add(playerName, client);
+            _clientsByName.Add(playerName, client);
 
             List<IMessage> messageBucket = _freeMessageBuckets.Count > 0 ? _freeMessageBuckets.Pop() : new();
             _pendingMessages.Add(client, messageBucket);
 
-            Logger.Info($"Added client [{client}]");
+            Logger.Trace($"Added client [{client}]");
             return true;
         }
 
@@ -55,10 +54,9 @@ namespace MHServerEmu.Grouping
             ulong playerDbId = (ulong)account.Id;
             string playerName = account.PlayerName;
 
-            if (_playerDbIdDict.Remove(playerDbId) == false)
-                Logger.Warn($"RemoveClient(): Account {account} not found");
+            Verify.IsTrue(_clientsByDbId.Remove(playerDbId), $"Account {account} not found");
 
-            _playerNameDict.Remove(playerName);
+            _clientsByName.Remove(playerName);
 
             if (_pendingMessages.Remove(client, out List<IMessage> messageBucket) && _freeMessageBuckets.Count < MaxMessageBuckets)
             {
@@ -66,7 +64,7 @@ namespace MHServerEmu.Grouping
                 _freeMessageBuckets.Push(messageBucket);
             }
 
-            Logger.Info($"Removed client [{client}]");
+            Logger.Trace($"Removed client [{client}]");
             return true;
         }
 
@@ -93,25 +91,24 @@ namespace MHServerEmu.Grouping
         public void OnPlayerNameChanged(ulong playerDbId, string oldPlayerName, string newPlayerName)
         {
             // Update the currently logged in player name lookup
-            if (_playerDbIdDict.TryGetValue(playerDbId, out IFrontendClient client) == false)
+            if (_clientsByDbId.TryGetValue(playerDbId, out IFrontendClient client) == false)
                 return;
 
-            if (_playerNameDict.Remove(oldPlayerName) == false)
-                Logger.Warn($"OnPlayerNameChanged(): Player 0x{playerDbId:X} is logged in, but doesn't have a name lookup!");
+            Verify.IsTrue(_clientsByName.Remove(oldPlayerName), $"Player 0x{playerDbId:X} is logged in, but doesn't have a name lookup!");
 
-            _playerNameDict.Add(newPlayerName, client);
+            _clientsByName.Add(newPlayerName, client);
 
             Logger.Info($"Updated name for player 0x{playerDbId:X}: {oldPlayerName} => {newPlayerName}");
         }
 
         public bool TryGetClient(ulong playerDbId, out IFrontendClient client)
         {
-            return _playerDbIdDict.TryGetValue(playerDbId, out client);
+            return _clientsByDbId.TryGetValue(playerDbId, out client);
         }
 
         public bool TryGetClient(string playerName, out IFrontendClient client)
         {
-            return _playerNameDict.TryGetValue(playerName, out client);
+            return _clientsByName.TryGetValue(playerName, out client);
         }
 
         public void SendMessage(IMessage message, IFrontendClient client)
@@ -131,7 +128,7 @@ namespace MHServerEmu.Grouping
         {
             foreach (ulong playerDbId in playerDbIdFilter)
             {
-                if (_playerDbIdDict.TryGetValue(playerDbId, out IFrontendClient client) == false)
+                if (_clientsByDbId.TryGetValue(playerDbId, out IFrontendClient client) == false)
                     continue;
 
                 SendMessage(message, client);
@@ -140,7 +137,7 @@ namespace MHServerEmu.Grouping
 
         public void SendMessageToAll(IMessage message)
         {
-            foreach (IFrontendClient client in _playerDbIdDict.Values)
+            foreach (IFrontendClient client in _clientsByDbId.Values)
                 SendMessage(message, client);
         }
     }

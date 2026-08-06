@@ -11,6 +11,16 @@ using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Auth
 {
+    public enum VerifyPlatformTicketResult
+    {
+        Success,
+        InvalidTicket,
+        SessionNotFound,
+        AccountNotFound,
+        TicketMismatch,
+        EmailMismatch,
+    }
+
     /// <summary>
     /// Authenticates clients and manages <see cref="ClientSession"/> instances.
     /// </summary>
@@ -25,18 +35,15 @@ namespace MHServerEmu.PlayerManagement.Auth
         private readonly TokenManager<ulong> _platformTicketManager = new();
         // "Platform Tickets" are tokens used to access the Add G page from the MTX store.
 
-        private readonly Dictionary<ulong, ClientSession> _pendingSessionDict = new();
-        private readonly Dictionary<ulong, ClientSession> _activeSessionDict = new();
-
-        // This client dictionary prevents sessions from being used by multiple clients
-        private readonly Dictionary<ulong, IFrontendClient> _clientDict = new();
+        private readonly Dictionary<ulong, ClientSession> _pendingSessions = new();
+        private readonly Dictionary<ulong, IFrontendClient> _activeSessions = new();
 
         private CooldownTimer _updateTimer = new(TimeSpan.FromMilliseconds(1000));
 
         public bool WhitelistEnabled { get; private set; }
 
-        public int PendingSessionCount { get => _pendingSessionDict.Count; }
-        public int ActiveSessionCount { get => _activeSessionDict.Count; }
+        public int PendingSessionCount { get => _pendingSessions.Count; }
+        public int ActiveSessionCount { get => _activeSessions.Count; }
 
         /// <summary>
         /// Constructs a new <see cref="SessionManager"/> instance for the provided <see cref="PlayerManagerService"/>.
@@ -88,11 +95,8 @@ namespace MHServerEmu.PlayerManagement.Auth
 #endif
 
             // Check client version
-            if (loginDataPB.HasVersion == false)
-            {
-                Logger.Warn($"TryCreateSessionFromLoginDataPB(): LoginDataPB for {loginDataPB.EmailAddress} contains no version information");
+            if (!Verify.IsTrue(loginDataPB.HasVersion, $"LoginDataPB for {loginDataPB.EmailAddress} contains no version information"))
                 return AuthStatusCode.PatchRequired;
-            }
 
             if (loginDataPB.Version != Game.Version)
             {
@@ -114,11 +118,9 @@ namespace MHServerEmu.PlayerManagement.Auth
 
             if (loginDataPB.HasClientDownloader)
             {
-                if (Enum.TryParse(loginDataPB.ClientDownloader, out downloaderEnum) == false)
-                {
+                bool parseResult = Enum.TryParse(loginDataPB.ClientDownloader, out downloaderEnum);
+                if (!Verify.IsTrue(parseResult, $"Invalid client downloader {loginDataPB.ClientDownloader} for {account}, defaulting to {downloaderEnum}"))
                     downloaderEnum = ClientDownloader.None;
-                    Logger.Warn($"TryCreateSessionFromLoginDataPB(): Invalid client downloader {loginDataPB.ClientDownloader} for {account}, defaulting to {downloaderEnum}");
-                }
             }
 
             string locale = loginDataPB.HasLocale ? loginDataPB.Locale : "en_us";
@@ -128,7 +130,7 @@ namespace MHServerEmu.PlayerManagement.Auth
             string platformTicket = _platformTicketManager.GenerateToken(sessionId);
 
             ClientSession session = new(sessionId, account, platformTicket, downloaderEnum, locale);
-            _pendingSessionDict.Add(session.Id, session);
+            _pendingSessions.Add(session.Id, session);
 
             // Create an AuthTicket for the client
             // Avoid extra allocations and copying by using Unsafe.FromBytes() for session key and token.
@@ -155,49 +157,48 @@ namespace MHServerEmu.PlayerManagement.Auth
         public bool VerifyClientCredentials(IFrontendClient client, ClientCredentials credentials)
         {
             // Check if a pending session for these credentials exists
-            if (_pendingSessionDict.Remove(credentials.Sessionid, out ClientSession session) == false)
-                return Logger.WarnReturn(false, $"VerifyClientCredentials(): SessionId 0x{credentials.Sessionid:X} not found");
+            bool sessionFound = _pendingSessions.Remove(credentials.Sessionid, out ClientSession session);
+            if (!Verify.IsTrue(sessionFound, $"SessionId 0x{credentials.Sessionid:X} not found"))
+                return false;
 
-            // Verify the token if enabled
-            if (_playerManager.Config.UseJsonDBManager == false)
-            {
-                // Try to decrypt the token (we avoid extra allocations and copying by accessing buffers directly with Unsafe.GetBuffer())
-                byte[] encryptedToken = ByteString.Unsafe.GetBuffer(credentials.EncryptedToken);
-                byte[] iv = ByteString.Unsafe.GetBuffer(credentials.Iv);
+            // Try to decrypt the token (we avoid extra allocations and copying by accessing buffers directly with Unsafe.GetBuffer())
+            byte[] encryptedToken = ByteString.Unsafe.GetBuffer(credentials.EncryptedToken);
+            byte[] iv = ByteString.Unsafe.GetBuffer(credentials.Iv);
 
-                if (CryptographyHelper.TryDecryptToken(encryptedToken, session.Key, iv, out byte[] decryptedToken) == false)
-                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to decrypt token for {session}");
+            bool decryptResult = CryptographyHelper.TryDecryptToken(encryptedToken, session.Key, iv, out byte[] decryptedToken);
+            if (!Verify.IsTrue(decryptResult, $"Failed to decrypt server token for session {session}"))
+                return false;
 
-                // Verify the token
-                if (CryptographyHelper.VerifyToken(decryptedToken, session.Token) == false)
-                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to verify token for {session}");
-            }
+            bool verifyResult = CryptographyHelper.VerifyToken(decryptedToken, session.Token);
+            if (!Verify.IsTrue(verifyResult, $"Failed to verify token for session {session}"))
+                return false;
 
 #if GAME_VERSION_1_53
-            // 1.53 added a second token generated by the client and encrypted using the same key as the server token.
+            // 1.53 added a second token generated by the client and encrypted using the same key/iv as the server token.
             if (credentials.HasEncryptedClientToken)
             {
-                byte[] encryptedToken = ByteString.Unsafe.GetBuffer(credentials.EncryptedClientToken);
-                byte[] iv = ByteString.Unsafe.GetBuffer(credentials.Iv);
+                byte[] encryptedClientToken = ByteString.Unsafe.GetBuffer(credentials.EncryptedClientToken);
 
-                if (CryptographyHelper.TryDecryptToken(encryptedToken, session.Key, iv, out byte[] decryptedToken) == false)
-                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to decrypt client token for {session}");
+                bool decryptClientResult = CryptographyHelper.TryDecryptToken(encryptedClientToken, session.Key, iv, out byte[] decryptedClientToken);
+                if (!Verify.IsTrue(decryptClientResult, $"Failed to decrypt client token for session {session}"))
+                    return false;
 
-                session.ClientTokenCrc = HashHelper.Crc32(decryptedToken);
+                // Client token CRC will be sent back to the client to prove the server's identity once the client passes the login queue.
+                session.ClientTokenCrc = HashHelper.Crc32(decryptedClientToken);
             }
 #endif
 
             // Assign the session to the client if the token is valid
             // Handle the case when someone hijacks another client's credentials and attempts to log in with them while the actual client is still logged in
-            if (_activeSessionDict.TryAdd(session.Id, session) == false || _clientDict.TryAdd(session.Id, client) == false)
-                return Logger.WarnReturn(false, $"VerifyClientCredentials(): A client is attempting to use {session} that is already in use");
+            if (!Verify.IsTrue(_activeSessions.TryAdd(session.Id, client), $"A client is attempting to use session {session} that is already in use!"))
+                return false;
 
             // Sessions cannot be reassigned
-            if (client.AssignSession(session) == false)
+            if (!Verify.IsTrue(client.AssignSession(session), $"Failed to assign {session} to a client"))
             {
-                _activeSessionDict.Remove(session.Id);
-                _clientDict.Remove(session.Id);
-                return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to assign {session} to a client");
+                _activeSessions.Remove(session.Id);
+                _platformTicketManager.RemoveToken(session.PlatformTicket);
+                return false;
             }
 
             // Success!
@@ -208,29 +209,27 @@ namespace MHServerEmu.PlayerManagement.Auth
         /// <summary>
         /// Verifies credentials for MTX store authentication.
         /// </summary>
-        public bool VerifyPlatformTicket(string email, string token, out ulong playerDbId)
+        public VerifyPlatformTicketResult VerifyPlatformTicket(string email, string ticket, out ulong playerDbId)
         {
             playerDbId = 0;
 
-            if (_platformTicketManager.TryGetValue(token, out ulong sessionId) == false)
-                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): Invalid token {token}");
+            if (_platformTicketManager.TryGetValue(ticket, out ulong sessionId) == false)
+                return VerifyPlatformTicketResult.InvalidTicket;
 
-            _activeSessionDict.TryGetValue(sessionId, out ClientSession session);
-
-            if (session == null)
-                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): Failed to retrieve session! sessionId=0x{sessionId:X}, token={token}, email={email}");
-
-            if (session.PlatformTicket != token)
-                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): Token mismatch for session 0x{sessionId:X}: expected {session.PlatformTicket}, received {token}");
+            if (TryGetActiveSession(sessionId, out ClientSession session) == false || session == null)
+                return VerifyPlatformTicketResult.SessionNotFound;
 
             if (session.Account is not DBAccount account)
-                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): No account for session 0x{sessionId:X}");
+                return VerifyPlatformTicketResult.AccountNotFound;
+
+            if (session.PlatformTicket != ticket)
+                return VerifyPlatformTicketResult.TicketMismatch;
 
             if (account.Email.Equals(email, StringComparison.OrdinalIgnoreCase) == false)
-                return Logger.WarnReturn(false, $"VerifyPlatformTicket(): Email mismatch for sessionId 0x{sessionId:X}");
+                return VerifyPlatformTicketResult.EmailMismatch;
 
             playerDbId = (ulong)account.Id;
-            return true;
+            return VerifyPlatformTicketResult.Success;
         }
 
         /// <summary>
@@ -238,13 +237,11 @@ namespace MHServerEmu.PlayerManagement.Auth
         /// </summary>
         public void RemoveActiveSession(ulong sessionId)
         {
-            if (_activeSessionDict.Remove(sessionId, out ClientSession session) == false)
-                Logger.Warn($"RemoveActiveSession(): No active session for sessionId {sessionId:X}");
+            Verify.IsTrue(_activeSessions.Remove(sessionId, out IFrontendClient client), $"No active session for sessionId 0x{sessionId:X}");
 
-            if (_clientDict.Remove(sessionId) == false)
-                Logger.Warn($"RemoveActiveSession(): No client for sessionId {sessionId:X}");
+            ClientSession session = client.Session as ClientSession;
 
-            if (session != null)
+            if (Verify.IsNotNull(session))
                 _platformTicketManager.RemoveToken(session.PlatformTicket);
         }
 
@@ -253,15 +250,20 @@ namespace MHServerEmu.PlayerManagement.Auth
         /// </summary>
         public bool TryGetActiveSession(ulong sessionId, out ClientSession session)
         {
-            return _activeSessionDict.TryGetValue(sessionId, out session);
+            session = null;
+
+            if (_activeSessions.TryGetValue(sessionId, out IFrontendClient client))
+                session = client.Session as ClientSession;
+
+            return session != null;
         }
 
         private void PurgeExpiredSessions()
         {
-            if (_pendingSessionDict.Count == 0)
+            if (_pendingSessions.Count == 0)
                 return;
 
-            foreach (var kvp in _pendingSessionDict)
+            foreach (var kvp in _pendingSessions)
             {
                 ClientSession session = kvp.Value;
 
@@ -269,7 +271,7 @@ namespace MHServerEmu.PlayerManagement.Auth
                     continue;
 
                 Logger.Warn($"Pending session expired: sessionId=0x{session.Id:X}, account=[{session.Account}]");
-                _pendingSessionDict.Remove(kvp.Key);
+                _pendingSessions.Remove(kvp.Key);
                 _platformTicketManager.RemoveToken(session.PlatformTicket);
             }
         }

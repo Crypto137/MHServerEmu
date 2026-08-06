@@ -5,8 +5,6 @@ namespace MHServerEmu.PlayerManagement.Players
 {
     public class PlayerNameCache
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly Dictionary<ulong, string> _playerNames = new();
         private readonly Dictionary<string, ulong> _playerDbIds = new(StringComparer.OrdinalIgnoreCase);
 
@@ -70,11 +68,11 @@ namespace MHServerEmu.PlayerManagement.Players
 
         private bool AddLookup(ulong playerDbId, string playerName)
         {
-            if (_playerNames.TryAdd(playerDbId, playerName) == false)
-                return Logger.WarnReturn(false, $"AddLookup(): Lookup for 0x{playerDbId:X} => {playerName} already exists");
+            if (!Verify.IsTrue(_playerNames.TryAdd(playerDbId, playerName), $"Lookup for 0x{playerDbId:X} => {playerName} already exists"))
+                return false;
 
-            if (_playerDbIds.TryAdd(playerName, playerDbId) == false)
-                return Logger.WarnReturn(false, $"AddLookup(): Lookup for {playerName} => 0x{playerDbId:X} already exists");
+            if (!Verify.IsTrue(_playerDbIds.TryAdd(playerName, playerDbId), $"Lookup for {playerName} => 0x{playerDbId:X} already exists"))
+                return false;
 
             return true;
         }

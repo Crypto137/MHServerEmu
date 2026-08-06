@@ -100,9 +100,7 @@ namespace MHServerEmu.PlayerManagement.Regions
         public override string ToString()
         {
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
-            string regionName = RegionProtoRef.GetNameFormatted();
-            string difficultyName = DifficultyTierProtoRef.GetNameFormatted();
-            return $"[0x{Id:X}] {regionName} ({difficultyName})";
+            return $"[0x{Id:X}] {RegionProtoRef.GetNameFormatted()} ({DifficultyTierProtoRef.GetNameFormatted()})";
 #else
             return $"[0x{Id:X}] {RegionProtoRef.GetNameFormatted()}";
 #endif
@@ -117,38 +115,35 @@ namespace MHServerEmu.PlayerManagement.Regions
             return Id.CompareTo(other.Id);
         }
 
-        public bool RequestInstanceCreation()
+        public void RequestInstanceCreation()
         {
-            if (State != RegionHandleState.Pending)
-                return Logger.WarnReturn(false, $"RequestInstanceCreation(): Invalid state {State} for region [{this}]");
+            if (!Verify.IsTrue(State == RegionHandleState.Pending, $"Invalid state {State} for region [{this}]"))
+                return;
 
-            Logger.Info($"Requesting instance creation for region [{this}]");
+            Logger.Trace($"Requesting instance creation for region [{this}]");
             
             ServiceMessage.CreateRegion message = new(Game.Id, Id, (ulong)RegionProtoRef, CreateParams);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
-            
-            return true;
         }
 
-        public bool OnInstanceCreateResponse(bool result)
+        public void OnInstanceCreateResponse(bool result)
         {
-            if (State != RegionHandleState.Pending)
-                return Logger.WarnReturn(false, $"OnInstanceCreateResponse(): Invalid state {State} for region [{this}]");
+            if (!Verify.IsTrue(State == RegionHandleState.Pending, $"Invalid state {State} for region [{this}]"))
+                return;
 
             if (result == false)
             {
                 Logger.Warn($"OnInstanceCreateResponse(): Region [{this}] failed to generate");
-                return Shutdown(false);
+                Shutdown(false);
+                return;
             }
 
             State = RegionHandleState.Running;
-            Logger.Info($"Received instance creation confirmation for region [{this}]");
+            Logger.Trace($"Received instance creation confirmation for region [{this}]");
 
             foreach (PlayerHandle player in _pendingPlayers)
                 player.OnRegionReadyToTransfer();
             _pendingPlayers.Clear();
-
-            return true;
         }
 
         public bool RequestShutdown()
@@ -160,7 +155,7 @@ namespace MHServerEmu.PlayerManagement.Regions
             return true;
         }
 
-        public bool Shutdown(bool sendShutdownToGis)
+        public void Shutdown(bool sendShutdownToGis)
         {
             // Instruct the game instance service to shut down this region if needed.
             // We don't differentiate between pending shutdown and shutdown here, so we don't need a confirmation.
@@ -181,12 +176,12 @@ namespace MHServerEmu.PlayerManagement.Regions
                 else
                     player.Disconnect();
             }
+
             _pendingPlayers.Clear();            
 
             DestroyAccessPortalIfNeeded();
 
             Game.OnRegionShutdown(this);
-            return true;
         }
 
         public bool MatchesCreateParams(NetStructCreateRegionParams otherParams)
@@ -268,7 +263,7 @@ namespace MHServerEmu.PlayerManagement.Regions
                     break;
 
                 default:
-                    Logger.Warn($"Reserve(): Unknown reservation type {reservationType}");
+                    Verify.IsTrue(false, $"Unknown reservation type {reservationType}");
                     break;
             }
         }
@@ -278,21 +273,17 @@ namespace MHServerEmu.PlayerManagement.Regions
             switch (reservationType)
             {
                 case RegionReservationType.WorldView:
-                    if (_worldViewReservationCount > 0)
+                    if (Verify.IsTrue(_worldViewReservationCount > 0))
                         _worldViewReservationCount--;
-                    else
-                        Logger.Warn("Unreserve(): _worldViewReservationCount == 0");
                     break;
 
                 case RegionReservationType.Presence:
-                    if (_presenceReservationCount > 0)
+                    if (Verify.IsTrue(_presenceReservationCount > 0))
                         _presenceReservationCount--;
-                    else
-                        Logger.Warn("Unreserve(): _presenceReservationCount == 0");
                     break;
 
                 default:
-                    Logger.Warn($"Unreserve(): Unknown reservation type {reservationType}");
+                    Verify.IsTrue(false, $"Unknown reservation type {reservationType}");
                     break;
             }
 
@@ -312,7 +303,7 @@ namespace MHServerEmu.PlayerManagement.Regions
             if (uptime < Prototype.Lifetime)
                 return false;
 
-            Logger.Info($"Region [{this}] expired after {uptime:dd\\:hh\\:mm\\:ss}");
+            Logger.Trace($"Region [{this}] expired after {uptime:dd\\:hh\\:mm\\:ss}");
             Flags |= RegionFlags.IsExpired;
             SetPlayerAccessInternal(RegionPlayerAccessVar.eRPA_InviteOnly);
             return true;
