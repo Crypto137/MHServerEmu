@@ -163,7 +163,7 @@ namespace MHServerEmu.Games.Entities.Physics
 
             EntityManager entityManager = Entity.Game.EntityManager;
 
-            using var attachedEntitiesHandle = ListPool<ulong>.Instance.Get(out List<ulong> attachedEntities);
+            using var attachedEntitiesHandle = ListPool<ulong>.Get(out List<ulong> attachedEntities);
             if (GetAttachedEntities(attachedEntities))
             {
                 foreach (ulong entityId in attachedEntities)

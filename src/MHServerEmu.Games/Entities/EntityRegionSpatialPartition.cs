@@ -192,7 +192,7 @@ namespace MHServerEmu.Games.Entities
 
             public ElementIterator(TVolume volume)
             {
-                _partitions = ListPool<WorldEntityRegionSpatialPartition>.Instance.Get();
+                _partitions = ListPool<WorldEntityRegionSpatialPartition>.Get();
                 _volume = volume;
             }
 
@@ -202,7 +202,7 @@ namespace MHServerEmu.Games.Entities
                 // see the Enumerator constructor below for more information.
                 if (!Verify.IsTrue(_partitions == null))
                 {
-                    ListPool<WorldEntityRegionSpatialPartition>.Instance.Return(_partitions);
+                    ListPool<WorldEntityRegionSpatialPartition>.Return(_partitions);
                     _partitions = null;
                 }
             }
@@ -311,7 +311,7 @@ namespace MHServerEmu.Games.Entities
                         _subIterator.Dispose();
 
                     if (_partitions != null)
-                        ListPool<WorldEntityRegionSpatialPartition>.Instance.Return(_partitions);
+                        ListPool<WorldEntityRegionSpatialPartition>.Return(_partitions);
 
                     _isDisposed = true;
                 }

@@ -81,7 +81,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             ulong groupId = ++_currentGroupId;
 
-            using var playersHandle = HashSetPool<PlayerHandle>.Instance.Get(out HashSet<PlayerHandle> players);
+            using var playersHandle = HashSetPool<PlayerHandle>.Get(out HashSet<PlayerHandle> players);
             if (party != null)
                 party.GetMembers(players);
             else
@@ -126,7 +126,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (player == null)
                 return;
 
-            using var playersHandle = HashSetPool<PlayerHandle>.Instance.Get(out HashSet<PlayerHandle> players);
+            using var playersHandle = HashSetPool<PlayerHandle>.Get(out HashSet<PlayerHandle> players);
             players.Add(player);
             AddPlayers(players);
         }
@@ -153,7 +153,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             if (player == null)
                 return;
 
-            using var playersHandle = HashSetPool<PlayerHandle>.Instance.Get(out HashSet<PlayerHandle> players);
+            using var playersHandle = HashSetPool<PlayerHandle>.Get(out HashSet<PlayerHandle> players);
             players.Add(player);
             RemovePlayers(players);
         }
@@ -249,7 +249,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
             MatchTeam? team = Match.GetTeamForGroup(this);
             if (!Verify.IsTrue(team != null)) return;
 
-            using var playersToRemoveHandle = HashSetPool<PlayerHandle>.Instance.Get(out HashSet<PlayerHandle> playersToRemove);
+            using var playersToRemoveHandle = HashSetPool<PlayerHandle>.Get(out HashSet<PlayerHandle> playersToRemove);
 
             foreach (RegionRequestGroupMember member in this)
             {
@@ -419,7 +419,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
                 return;
             }
 
-            using var playersToRemoveHandle = HashSetPool<PlayerHandle>.Instance.Get(out HashSet<PlayerHandle> playersToRemove);
+            using var playersToRemoveHandle = HashSetPool<PlayerHandle>.Get(out HashSet<PlayerHandle> playersToRemove);
 
             foreach (RegionRequestGroupMember member in this)
             {
@@ -969,7 +969,7 @@ namespace MHServerEmu.PlayerManagement.Matchmaking
 
             public override void OnEntered(RegionRequestGroup group)
             {
-                using var playersHandle = HashSetPool<PlayerHandle>.Instance.Get(out HashSet<PlayerHandle> players);
+                using var playersHandle = HashSetPool<PlayerHandle>.Get(out HashSet<PlayerHandle> players);
 
                 foreach (RegionRequestGroupMember member in group)
                     players.Add(member.Player);

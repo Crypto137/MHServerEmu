@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Missions.Actions
                 | InventoryIterationFlags.PlayerStashGeneral 
                 | InventoryIterationFlags.SortByPrototypeRef;
 
-            using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
+            using var participantsHandle = ListPool<Player>.Get(out List<Player> participants);
             if (Mission.GetParticipants(participants))
             {
                 foreach (Player player in participants)

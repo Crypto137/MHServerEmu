@@ -142,8 +142,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ConditionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetConditionBlueprintDataRef());
 
             // Find all index properties for this condition
-            using var propertyEnumsHandle = HashSetPool<PropertyEnum>.Instance.Get(out HashSet<PropertyEnum> propertyEnums);
-            using var evalPropertyIdsHandle = ListPool<PropertyId>.Instance.Get(out List<PropertyId> evalPropertyIds);
+            using var propertyEnumsHandle = HashSetPool<PropertyEnum>.Get(out HashSet<PropertyEnum> propertyEnums);
+            using var evalPropertyIdsHandle = ListPool<PropertyId>.Get(out List<PropertyId> evalPropertyIds);
 
             // Duration
             if (DurationMSCurve != CurveId.Invalid)

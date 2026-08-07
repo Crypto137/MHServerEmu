@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Regions
 
             if (Verify.IsNotNull(Affixes))
             {
-                ListPool<PrototypeId>.Instance.Return(Affixes);
+                ListPool<PrototypeId>.Return(Affixes);
                 Affixes = null;
             }
 
@@ -102,7 +102,7 @@ namespace MHServerEmu.Games.Regions
             Player = player;
             Context = context;
 
-            Affixes = ListPool<PrototypeId>.Instance.Get();
+            Affixes = ListPool<PrototypeId>.Get();
             Properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
         }
 

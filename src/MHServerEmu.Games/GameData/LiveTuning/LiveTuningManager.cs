@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             List<NetStructLiveTuningSettingProtoEnumValue> settingsToSend = null;
 
             // Iterate in reverse and skip already encountered proto refs to send only the latest data if a setting is set multiple times.
-            using var protoRefsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> protoRefs);
+            using var protoRefsHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> protoRefs);
 
             for (int i = loadedSettings.Count - 1; i >= 0; i--)
             {

@@ -91,7 +91,7 @@ namespace MHServerEmu.Games.Network
         public bool GetInterestedClients(List<PlayerConnection> interestedClientList, Entity entity,
             AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.AllChannels, bool skipOwner = false)
         {
-            using var interestedPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> interestedPlayerList);
+            using var interestedPlayerListHandle = ListPool<Player>.Get(out List<Player> interestedPlayerList);
             GetInterestedPlayers(interestedPlayerList, entity, interestFilter, skipOwner);
 
             foreach (Player player in interestedPlayerList)
@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public bool GetInterestedClients(List<PlayerConnection> interestedClientList, Region region)
         {
-            using var interestedPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> interestedPlayerList);
+            using var interestedPlayerListHandle = ListPool<Player>.Get(out List<Player> interestedPlayerList);
             GetInterestedPlayers(interestedPlayerList, region);
 
             foreach (Player player in interestedPlayerList)
@@ -136,7 +136,7 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void SendMessageToInterested(IMessage message, Region region)
         {
-            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClientList);
             GetInterestedClients(interestedClientList, region);
 
             foreach (PlayerConnection playerConnection in interestedClientList)
@@ -148,7 +148,7 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void SendMessageToInterested(IMessage message, Entity entity, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.AllChannels, bool skipOwner = false)
         {
-            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClientList);
             GetInterestedClients(interestedClientList, entity, interestFilter, skipOwner);
 
             foreach (PlayerConnection playerConnection in interestedClientList)

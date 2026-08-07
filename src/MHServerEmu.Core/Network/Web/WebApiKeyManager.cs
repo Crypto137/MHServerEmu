@@ -55,7 +55,7 @@ namespace MHServerEmu.Core.Network.Web
 
         public void SaveKeys()
         {
-            using var keysHandle = ListPool<KeyValuePair<string, WebApiKeyData>>.Instance.Get(out var keys);
+            using var keysHandle = ListPool<KeyValuePair<string, WebApiKeyData>>.Get(out var keys);
             _keys.ExportTokens(keys);
 
             FileHelper.SerializeJson(KeyFilePath, keys, JsonOptions);

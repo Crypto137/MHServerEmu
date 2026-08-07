@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.Network
 
             if (_messageDispatcher?.CanSendArchiveMessages == true)
             {
-                using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
+                using var interestedClientsHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClients);
                 if (_messageDispatcher.GetInterestedClients(interestedClients, _interestPolicies))
                 {
                     using Archive archive = new(ArchiveSerializeType.Replication, (ulong)_interestPolicies);

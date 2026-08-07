@@ -338,7 +338,7 @@ namespace MHServerEmu.Games.Entities.Items
             }
 
             // We need to keep track of everything we are doing so we can roll back if something goes wrong
-            using var replacementItemListHandle = ListPool<(ulong, int)>.Instance.Get(out List<(ulong, int)> replacementItemList);
+            using var replacementItemListHandle = ListPool<(ulong, int)>.Get(out List<(ulong, int)> replacementItemList);
 
             using PropertyCollection oldCurrencyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
             oldCurrencyProperties.CopyPropertyRange(player.Properties, PropertyEnum.Currency);

@@ -503,7 +503,7 @@ namespace MHServerEmu.Games.Events
         public static int GetPlayerAvatarsAtLevelCap(Player player)
         {
             int levelCap = Avatar.GetAvatarLevelCap();
-            using var avatarsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> avatars);
+            using var avatarsHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> avatars);
             foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);
@@ -524,7 +524,7 @@ namespace MHServerEmu.Games.Events
 
         public static int GetPlayerAvatarsAtPrestigeLevel(Player player, int prestigeLevel)
         {
-            using var avatarsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> avatars);
+            using var avatarsHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> avatars);
             foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);
@@ -559,7 +559,7 @@ namespace MHServerEmu.Games.Events
             if (advancementProto == null) return 0;
             int maxPrestigeLevel = advancementProto.MaxPrestigeLevel;
 
-            using var avatarsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> avatars);
+            using var avatarsHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> avatars);
             foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);

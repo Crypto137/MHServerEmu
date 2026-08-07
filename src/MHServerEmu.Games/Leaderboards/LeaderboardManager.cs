@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.Leaderboards
 
             ClearActiveRules();
 
-            using var activeLeaderboardsHandle = ListPool<LeaderboardPrototype>.Instance.Get(out List<LeaderboardPrototype> activeLeaderboards);
+            using var activeLeaderboardsHandle = ListPool<LeaderboardPrototype>.Get(out List<LeaderboardPrototype> activeLeaderboards);
             LeaderboardInfoCache.Instance.GetActiveLeaderboardPrototypes(activeLeaderboards);
             foreach (var leaderboard in activeLeaderboards)
                 if (leaderboard.ScoringRules.HasValue())
@@ -185,7 +185,7 @@ namespace MHServerEmu.Games.Leaderboards
         {
             if (LeaderboardsEnabled == false) return;
 
-            using var activeLeaderboardsHandle = ListPool<LeaderboardPrototype>.Instance.Get(out List<LeaderboardPrototype> activeLeaderboards);
+            using var activeLeaderboardsHandle = ListPool<LeaderboardPrototype>.Get(out List<LeaderboardPrototype> activeLeaderboards);
             LeaderboardInfoCache.Instance.GetActiveLeaderboardPrototypes(activeLeaderboards);
             foreach (var leaderboard in activeLeaderboards)
                 if (leaderboard.ScoringRules.HasValue())

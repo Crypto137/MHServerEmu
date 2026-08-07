@@ -318,7 +318,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ItemSpec itemSpec = new(lootCloneRecord);
             AffixSpec affixSpec = new();
 
-            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
+            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Get(out HashSet<ScopedAffixRef> affixSet);
 
             List<AffixRecord> affixRecords = lootCloneRecord.AffixRecords;
             for (int i = 0; i < affixRecords.Count; i++)
@@ -397,7 +397,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 result |= MutationResults.ItemPrototypeChange;
 
             // Update affixes
-            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
+            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Get(out HashSet<ScopedAffixRef> affixSet);
 
             ItemSpec itemSpec = new(destItem);
             for (int i = 0; i < itemSpec.AffixSpecs.Count; i++)

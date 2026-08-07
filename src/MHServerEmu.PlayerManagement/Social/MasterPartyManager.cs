@@ -404,7 +404,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (!Verify.IsNotNull(party)) return false;
 
             // Clean up remaining members
-            using var membersHandle = HashSetPool<PlayerHandle>.Instance.Get(out HashSet<PlayerHandle> members);
+            using var membersHandle = HashSetPool<PlayerHandle>.Get(out HashSet<PlayerHandle> members);
             party.GetMembers(members);
 
             foreach (PlayerHandle member in members)

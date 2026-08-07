@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         public override bool OnReset()
         {
-            using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
+            using var participantsHandle = ListPool<Player>.Get(out List<Player> participants);
             if (Mission.GetParticipants(participants))
             {
                 foreach (var player in participants)

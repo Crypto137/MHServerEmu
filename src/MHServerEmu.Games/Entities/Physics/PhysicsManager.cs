@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Entities.Physics
                 EntityPhysics entityPhysics = worldEntity.Physics;
                 EntityManager entityManager = _game.EntityManager;
 
-                using var overlappedEntitiesHandle = ListPool<KeyValuePair<ulong, OverlapEntityEntry>>.Instance.Get(out var overlappedEntities);
+                using var overlappedEntitiesHandle = ListPool<KeyValuePair<ulong, OverlapEntityEntry>>.Get(out var overlappedEntities);
                 overlappedEntities.AddRange(entityPhysics.OverlappedEntities);
 
                 foreach (var overlappedEntry in overlappedEntities)
@@ -148,7 +148,7 @@ namespace MHServerEmu.Games.Entities.Physics
         {
             if (!Verify.IsNotNull(parentEntity)) return;
 
-            using var attachedEntitiesHandle = ListPool<ulong>.Instance.Get(out List<ulong> attachedEntities);
+            using var attachedEntitiesHandle = ListPool<ulong>.Get(out List<ulong> attachedEntities);
             if (parentEntity.Physics.GetAttachedEntities(attachedEntities))
             {
                 Vector3 parentEntityPosition = parentEntity.RegionLocation.Position;
@@ -238,7 +238,7 @@ namespace MHServerEmu.Games.Entities.Physics
                 $"Entity {entity} is not in the world.  destroyed={entity?.TestStatus(EntityStatus.Destroyed)}"))
                 return false;
 
-            using var entityCollisionListHandle = ListPool<EntityCollision>.Instance.Get(out List<EntityCollision> entityCollisionList);
+            using var entityCollisionListHandle = ListPool<EntityCollision>.Get(out List<EntityCollision> entityCollisionList);
             bool moved = false;
 
             if (Vector3.IsNearZero(vector))
@@ -465,7 +465,7 @@ namespace MHServerEmu.Games.Entities.Physics
             Aabb bound = entity.EntityCollideBounds.ToAabb();            
             Vector3 position = entity.RegionLocation.Position;
 
-            using var collisionsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> collisions);
+            using var collisionsHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> collisions);
             EntityRegionSPContext context = entity.GetEntityRegionSPContext();
             foreach (WorldEntity otherEntity in region.IterateEntitiesInVolume(bound, context))
             {
@@ -785,12 +785,12 @@ namespace MHServerEmu.Games.Entities.Physics
 
         public PhysicsContext()
         {
-            AttachedEntities = ListPool<WorldEntity>.Instance.Get();
+            AttachedEntities = ListPool<WorldEntity>.Get();
         }
 
         public void Dispose()
         {
-            ListPool<WorldEntity>.Instance.Return(AttachedEntities);
+            ListPool<WorldEntity>.Return(AttachedEntities);
         }
     }
 

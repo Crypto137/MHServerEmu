@@ -339,7 +339,7 @@ namespace MHServerEmu.Games.Entities
             // Restore persistent cooldowns
             if (archive.IsPersistent)
             {
-                using var setDictHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> setDict);
+                using var setDictHandle = DictionaryPool<PropertyId, PropertyValue>.Get(out Dictionary<PropertyId, PropertyValue> setDict);
 
                 foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerCooldownDurationPersistent))
                 {
@@ -1054,7 +1054,7 @@ namespace MHServerEmu.Games.Entities
             // Update vendor inventories if we are adding a recipe
             if (invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.CraftingRecipesLearned)
             {
-                using var vendorsToUpdateHandle = ListPool<VendorTypePrototype>.Instance.Get(out List<VendorTypePrototype> vendorsToUpdate);
+                using var vendorsToUpdateHandle = ListPool<VendorTypePrototype>.Get(out List<VendorTypePrototype> vendorsToUpdate);
 
                 foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.VendorLevel))
                 {
@@ -1653,7 +1653,7 @@ namespace MHServerEmu.Games.Entities
         /// </summary>
         private void OnEnterGameInitStashTabOptions()
         {
-            using var stashInvRefsHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> stashInvRefs);
+            using var stashInvRefsHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> stashInvRefs);
             if (!Verify.IsTrue(GetStashInventoryProtoRefs(stashInvRefs, false, true))) return;
 
             foreach (PrototypeId stashRef in stashInvRefs)
@@ -3365,8 +3365,8 @@ namespace MHServerEmu.Games.Entities
             if (!Verify.IsTrue(gotB, $"Failed to get one or more trade inventories for target player [{playerB}]"))
                 return false;
 
-            using var itemsAHandle = ListPool<Entity>.Instance.Get(out List<Entity> itemsA);
-            using var itemsBHandle = ListPool<Entity>.Instance.Get(out List<Entity> itemsB);
+            using var itemsAHandle = ListPool<Entity>.Get(out List<Entity> itemsA);
+            using var itemsBHandle = ListPool<Entity>.Get(out List<Entity> itemsB);
 
             GatherItemsForPlayerTrade(tradeInvA, itemsA);
             GatherItemsForPlayerTrade(tradeInvB, itemsB);
@@ -3989,7 +3989,7 @@ namespace MHServerEmu.Games.Entities
             Party party = GetParty();
             if (party != null && party.Type == GroupType.GroupType_Party && avatars.Count > 0)
             {
-                using var newFiltersHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> newFilters);
+                using var newFiltersHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> newFilters);
 
                 foreach (PrototypeId partyFilterProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<PartyFilterPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                 {
@@ -4448,8 +4448,8 @@ namespace MHServerEmu.Games.Entities
             CommunityCircle partyCircle = Community?.GetCircle(CircleId.__Party);
             if (!Verify.IsNotNull(partyCircle)) return false;
 
-            using var avatarsHandle = ListPool<AvatarPrototype>.Instance.Get(out List<AvatarPrototype> avatars);
-            using var costumesHandle = ListPool<CostumePrototype>.Instance.Get(out List<CostumePrototype> costumes);
+            using var avatarsHandle = ListPool<AvatarPrototype>.Get(out List<AvatarPrototype> avatars);
+            using var costumesHandle = ListPool<CostumePrototype>.Get(out List<CostumePrototype> costumes);
 
             ulong playerDbId = DatabaseUniqueId;
             int playerIndex = -1;
@@ -4680,7 +4680,7 @@ namespace MHServerEmu.Games.Entities
             if (mapDiscoveryData == null)
                 return;
 
-            using var partyMembersHandle = ListPool<Player>.Instance.Get(out List<Player> partyMembers);
+            using var partyMembersHandle = ListPool<Player>.Get(out List<Player> partyMembers);
 
             EntityManager entityManager = Game.EntityManager;
             foreach (var kvp in party)

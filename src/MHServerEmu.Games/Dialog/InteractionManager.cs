@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Dialog
                 GetInteractionDataFromMissionPrototype(missionProto);
             }
 
-            using var contextsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> contexts);
+            using var contextsHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> contexts);
             foreach (var kvp in _missionMap)
             {
                 var missionData = kvp.Value;
@@ -175,7 +175,7 @@ namespace MHServerEmu.Games.Dialog
             
             if (metaGameDataProto is UIWidgetEntityIconsPrototype uiWidgetEntityIconsProto && uiWidgetEntityIconsProto.Entities.HasValue())
             {
-                using var contextRefsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> contextRefs);
+                using var contextRefsHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> contextRefs);
                 foreach (var entryP in uiWidgetEntityIconsProto.Entities)
                 {
                     if (entryP == null) continue;
@@ -262,7 +262,7 @@ namespace MHServerEmu.Games.Dialog
 
                     if (objectivePrototype.ObjectiveHints.HasValue())
                     {
-                        using var contextRefsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> contextRefs);                        
+                        using var contextRefsHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> contextRefs);                        
                         foreach (var hintProto in objectivePrototype.ObjectiveHints)
                         {
                             if (hintProto == null) continue;
@@ -353,7 +353,7 @@ namespace MHServerEmu.Games.Dialog
         {
             if (interactionSpec.IsNullOrEmpty()) return;
 
-            using var contextRefsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> contextRefs);
+            using var contextRefsHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> contextRefs);
             foreach (var specProto in interactionSpec)
             {
                 if (specProto == null) continue;
@@ -402,7 +402,7 @@ namespace MHServerEmu.Games.Dialog
         {
             if (dialogTexts.IsNullOrEmpty()) return;
 
-            using var contextRefsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> contextRefs);
+            using var contextRefsHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> contextRefs);
             foreach (var missionDialogTextProto in dialogTexts)
             {
                 if (missionDialogTextProto == null) continue;
@@ -426,7 +426,7 @@ namespace MHServerEmu.Games.Dialog
             MissionOptionTypeFlags optionType, InteractionOptimizationFlags optimizationFlag)
         {
             if (conditionList == null) return;
-            using var contextRefsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> contextRefs);
+            using var contextRefsHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> contextRefs);
             foreach (MissionConditionPrototype prototype in conditionList.IteratePrototypes())
             {
                 if (prototype == null) continue;
@@ -468,7 +468,7 @@ namespace MHServerEmu.Games.Dialog
         {
             if (actionList.IsNullOrEmpty()) return;
 
-            using var contextRefsHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> contextRefs);
+            using var contextRefsHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> contextRefs);
             foreach (var prototype in actionList)
             {
                 if (prototype == null) continue;
@@ -499,7 +499,7 @@ namespace MHServerEmu.Games.Dialog
             map.Clear();
 
             var worldEntityProto = entity.WorldEntityPrototype;
-            using var checkListHandle = HashSetPool<InteractionOption>.Instance.Get(out HashSet<InteractionOption> checkList);
+            using var checkListHandle = HashSetPool<InteractionOption>.Get(out HashSet<InteractionOption> checkList);
 
             if (entity is Transition transition)
             {
@@ -748,7 +748,7 @@ namespace MHServerEmu.Games.Dialog
             const int startingPriority = int.MaxValue;
             int lastAvailableOptionPriority = startingPriority;
 
-            using var optionsListHandle = ListPool<InteractionOption>.Instance.Get(out List<InteractionOption> optionsList);
+            using var optionsListHandle = ListPool<InteractionOption>.Get(out List<InteractionOption> optionsList);
             if (optimizationFlags == InteractionOptimizationFlags.None)
             {
                 GetInteractionDataFromWorldEntityPrototype(optionsList, interactee.PrototypeDataRef);
@@ -766,7 +766,7 @@ namespace MHServerEmu.Games.Dialog
 
             if (optionsList.Count > 0 || hasInteractionData || hasKeywords)
             {
-                using var interactionOptionsHandle = HashSetPool<InteractionOption>.Instance.Get(out HashSet<InteractionOption> interactionOptions);
+                using var interactionOptionsHandle = HashSetPool<InteractionOption>.Get(out HashSet<InteractionOption> interactionOptions);
                 if (hasInteractionData)
                     if (optimizationFlags == InteractionOptimizationFlags.None || interactionData.HasOptionFlags(optimizationFlags))
                         foreach (var option in interactionData.Options)
@@ -821,7 +821,7 @@ namespace MHServerEmu.Games.Dialog
             ref InteractionMethod outInteractions, ref InteractData outInteractData)
         {
             bool result;
-            using var checkListHandle = ListPool<BaseMissionOption>.Instance.Get(out List<BaseMissionOption> checkList);
+            using var checkListHandle = ListPool<BaseMissionOption>.Get(out List<BaseMissionOption> checkList);
 
             if (option is BaseMissionOption baseMissionOption)
             {

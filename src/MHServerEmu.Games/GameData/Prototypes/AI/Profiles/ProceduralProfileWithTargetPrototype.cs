@@ -859,7 +859,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             const int MaxProcRank = 100;
             int procRank = (int)(MaxProcRank * shrinkRatio);
 
-            using var procPowerRefsHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> procPowerRefs);
+            using var procPowerRefsHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> procPowerRefs);
             foreach (var kvp in agent.Properties.IteratePropertyRange(PropertyEnum.Proc))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId procPowerRef);

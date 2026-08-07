@@ -57,7 +57,7 @@ namespace MHServerEmu.Commands.Implementations
                 avatar.Properties.RemovePropertyRange(cooldownProperty);
 
             // Avatar charges
-            using var setDictHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> setDict);
+            using var setDictHandle = DictionaryPool<PropertyId, PropertyValue>.Get(out Dictionary<PropertyId, PropertyValue> setDict);
             foreach (var kvp in avatar.Properties.IteratePropertyRange(PropertyEnum.PowerChargesMax))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);

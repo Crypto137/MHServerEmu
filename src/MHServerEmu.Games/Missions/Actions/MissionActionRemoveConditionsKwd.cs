@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Missions.Actions
             var keywordRef = _proto.Keyword;
             if (keywordRef == PrototypeId.Invalid) return;
 
-            using var playersHandle = ListPool<Player>.Instance.Get(out List<Player> players);
+            using var playersHandle = ListPool<Player>.Get(out List<Player> players);
             if (GetDistributors(_proto.SendTo, players))
             {
                 foreach (Player player in players)

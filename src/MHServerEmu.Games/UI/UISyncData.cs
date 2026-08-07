@@ -143,7 +143,7 @@ namespace MHServerEmu.Games.UI
             }
             else if (contextProto is RegionPrototype)
             {
-                using var areaListHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> areaList);
+                using var areaListHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> areaList);
                 RegionPrototype.GetAreasInGenerator(contextRef, areaList);
                 _areaList.Insert(areaList);
                 UpdateUI();

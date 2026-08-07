@@ -18,7 +18,7 @@ namespace MHServerEmu.Core.Memory
     /// <summary>
     /// Provides a pool of reusable <typeparamref name="TCollection"/> instances, similar to ArrayPool.
     /// </summary>
-    public abstract class CollectionPool<TCollection, TValue> where TCollection: ICollection<TValue>, new()
+    public class CollectionPool<TCollection, TValue> where TCollection: ICollection<TValue>, new()
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -132,19 +132,36 @@ namespace MHServerEmu.Core.Memory
         }
     }
 
+    // REMOVEME - get rid of this once unified pools are implemented
+    public abstract class CollectionPoolImpl<TCollection, TValue> where TCollection: ICollection<TValue>, new()
+    {
+        private static readonly CollectionPool<TCollection, TValue> _pool = new();
+
+        public static TCollection Get()
+        {
+            return _pool.Get();
+        }
+
+        public static CollectionPool<TCollection, TValue>.CollectionHandle Get(out TCollection instance)
+        {
+            return _pool.Get(out instance);
+        }
+
+        public static void Return(TCollection instance)
+        {
+            _pool.Return(instance);
+        }
+    }
+
     /// <summary>
     /// Provides a pool of reusable <see cref="List{T}"/> instances, similar to ArrayPool.
     /// </summary>
-    public sealed class ListPool<T> : CollectionPool<List<T>, T>
+    public class ListPool<T> : CollectionPoolImpl<List<T>, T>
     {
-        public static ListPool<T> Instance { get; } = new();
-
-        private ListPool() { }
-
         /// <summary>
         /// Retrieves a <see cref="List{T}"/> from the pool or allocates a new one if the pool is empty and ensures it has the specified capacity.
         /// </summary>
-        public List<T> Get(int capacity)
+        public static List<T> Get(int capacity)
         {
             List<T> list = Get();
             list.EnsureCapacity(capacity);
@@ -156,9 +173,9 @@ namespace MHServerEmu.Core.Memory
         /// Returns a <see cref="CollectionPool{TCollection, TValue}.CollectionHandle"/> that can automatically return the <see cref="List{T}"/>
         /// instance to the pool when it goes out of scope.
         /// </summary>
-        public CollectionHandle Get(int capacity, out List<T> list)
+        public static CollectionPool<List<T>, T>.CollectionHandle Get(int capacity, out List<T> list)
         {
-            CollectionHandle handle = Get(out list);
+            var handle = Get(out list);
             list.EnsureCapacity(capacity);
             return handle;
         }
@@ -166,7 +183,7 @@ namespace MHServerEmu.Core.Memory
         /// <summary>
         /// Retrieves a <see cref="List{T}"/> from the pool or allocates a new one if the pool is empty and copies all elements from the provided <see cref="IEnumerable{T}"/> collection.
         /// </summary>
-        public List<T> Get(IEnumerable<T> collection)
+        public static List<T> Get(IEnumerable<T> collection)
         {
             List<T> list = Get();
             list.AddRange(collection);
@@ -177,9 +194,9 @@ namespace MHServerEmu.Core.Memory
         /// Retrieves a <see cref="List{T}"/> from the pool or allocates a new one if the pool is empty and copies all elements from the provided <see cref="IEnumerable{T}"/> collection.
         /// Returns a <see cref="CollectionPool{TCollection, TValue}.CollectionHandle"/> that can automatically return the <see cref="List{T}"/> instance to the pool when it goes out of scope.
         /// </summary>
-        public CollectionHandle Get(IEnumerable<T> collection, out List<T> list)
+        public static CollectionPool<List<T>, T>.CollectionHandle Get(IEnumerable<T> collection, out List<T> list)
         {
-            CollectionHandle handle = Get(out list);
+            var handle = Get(out list);
             list.AddRange(collection);
             return handle;
         }
@@ -188,30 +205,21 @@ namespace MHServerEmu.Core.Memory
     /// <summary>
     /// Provides a pool of reusable <see cref="Dictionary{TKey, TValue}"/> instances, similar to ArrayPool.
     /// </summary>
-    public sealed class DictionaryPool<TKey, TValue> : CollectionPool<Dictionary<TKey, TValue>, KeyValuePair<TKey, TValue>>
+    public sealed class DictionaryPool<TKey, TValue> : CollectionPoolImpl<Dictionary<TKey, TValue>, KeyValuePair<TKey, TValue>>
     {
-        public static DictionaryPool<TKey, TValue> Instance { get; } = new();
-
-        private DictionaryPool() { }
     }
 
     /// <summary>
     /// Provides a pool of reusable <see cref="HashSet{T}"/> instances, similar to ArrayPool.
     /// </summary>
-    public sealed class HashSetPool<T> : CollectionPool<HashSet<T>, T>
+    public sealed class HashSetPool<T> : CollectionPoolImpl<HashSet<T>, T>
     {
-        public static HashSetPool<T> Instance { get; } = new();
-
-        private HashSetPool() { }
     }
 
     /// <summary>
     /// Provides a pool of reusable <see cref="PoolableStack{T}"/> instances, similar to ArrayPool.
     /// </summary>
-    public sealed class StackPool<T> : CollectionPool<PoolableStack<T>, T>
+    public sealed class StackPool<T> : CollectionPoolImpl<PoolableStack<T>, T>
     {
-        public static StackPool<T> Instance { get; } = new();
-
-        private StackPool() { }
     }
 }

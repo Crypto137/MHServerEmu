@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.Powers
             if (inventory == null)
                 return;
 
-            using var killListHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> killList);
+            using var killListHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> killList);
 
             foreach (SummonEntityContextPrototype context in summonPowerProto.SummonEntityContexts)
             {
@@ -288,7 +288,7 @@ namespace MHServerEmu.Games.Powers
 
             if (powerProto.AttachSummonsToTarget || powerProto.UseTargetAsSource)
             {
-                using var targetListHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> targetList);
+                using var targetListHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> targetList);
                 GetTargets(targetList, payload);
 
                 foreach (WorldEntity target in targetList)
@@ -599,7 +599,7 @@ namespace MHServerEmu.Games.Powers
             }
 
             // Summon positions
-            using var summonPositionsHandle = ListPool<Vector3>.Instance.Get(out List<Vector3> summonPositions);
+            using var summonPositionsHandle = ListPool<Vector3>.Get(out List<Vector3> summonPositions);
 
             Orientation orientation = settings.Orientation; 
             bool hasSummonPositions = GetSummonPositions(owner, powerProto, summonProto, contextProto, region, context.Properties,
@@ -785,7 +785,7 @@ namespace MHServerEmu.Games.Powers
             if (inventory == null)
                 return count;
 
-            using var summonsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> summons);
+            using var summonsHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> summons);
 
             foreach (WorldEntity summoned in new SummonedEntityIterator(Owner))
             {
@@ -822,7 +822,7 @@ namespace MHServerEmu.Games.Powers
             Inventory inventory = owner.SummonedInventory;
             if (!Verify.IsNotNull(inventory)) return;
             
-            using var killListHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> killList);
+            using var killListHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> killList);
 
             foreach (WorldEntity summoned in new SummonedEntityIterator(owner))
             {

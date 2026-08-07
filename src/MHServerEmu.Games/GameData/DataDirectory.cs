@@ -205,7 +205,7 @@ namespace MHServerEmu.Games.GameData
         {
             const string prefix = "resource";
 
-            using var pakResourcesHandle = ListPool<string>.Instance.Get(out List<string> pakResources);
+            using var pakResourcesHandle = ListPool<string>.Get(out List<string> pakResources);
 
             if (!Verify.IsTrue(PakFileSystem.Instance.GetResourceFiles(prefix, pakResources))) return;
 

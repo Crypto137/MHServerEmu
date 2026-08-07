@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             bool result = false;
             if (_proto.TargetFilter != null)
             {
-                using var hotspotsHandle = ListPool<Hotspot>.Instance.Get(out List<Hotspot> hotspots);
+                using var hotspotsHandle = ListPool<Hotspot>.Get(out List<Hotspot> hotspots);
                 if (Mission.GetMissionHotspots(hotspots))
                 {
                     foreach (var hotspot in hotspots)
@@ -53,7 +53,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             {
                 var missionRef = Mission.PrototypeDataRef;
 
-                using var hotspotsHandle = ListPool<Hotspot>.Instance.Get(out List<Hotspot> hotspots);
+                using var hotspotsHandle = ListPool<Hotspot>.Get(out List<Hotspot> hotspots);
                 if (Mission.GetMissionHotspots(hotspots))
                 {
                     foreach (var hotspot in hotspots)
@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             var entity = evt.Defender;
             if (entity == null) return;
 
-            using var hotspotsHandle = ListPool<Hotspot>.Instance.Get(out List<Hotspot> hotspots);
+            using var hotspotsHandle = ListPool<Hotspot>.Get(out List<Hotspot> hotspots);
             if (Mission.GetMissionHotspots(hotspots))
             {
                 foreach (var hotspot in hotspots)

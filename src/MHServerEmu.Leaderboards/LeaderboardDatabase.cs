@@ -604,7 +604,7 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         public void UpdateState()
         {
-            using var leaderboardsHandle = ListPool<Leaderboard>.Instance.Get(out List<Leaderboard> leaderboards);
+            using var leaderboardsHandle = ListPool<Leaderboard>.Get(out List<Leaderboard> leaderboards);
             GetLeaderboards(leaderboards);
 
             DateTime updateTime = Clock.UtcNowPrecise;
@@ -617,7 +617,7 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         public void Save()
         {
-            using var leaderboardsHandle = ListPool<Leaderboard>.Instance.Get(out List<Leaderboard> leaderboards);
+            using var leaderboardsHandle = ListPool<Leaderboard>.Get(out List<Leaderboard> leaderboards);
             GetLeaderboards(leaderboards);
 
             foreach (var leaderboard in leaderboards)                
@@ -629,7 +629,7 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         public LeaderboardInstance FindInstance(ulong instanceId)
         {
-            using var leaderboardsHandle = ListPool<Leaderboard>.Instance.Get(out List<Leaderboard> leaderboards);
+            using var leaderboardsHandle = ListPool<Leaderboard>.Get(out List<Leaderboard> leaderboards);
             GetLeaderboards(leaderboards);
 
             foreach (Leaderboard leaderboard in leaderboards)

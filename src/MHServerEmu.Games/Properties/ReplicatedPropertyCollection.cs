@@ -147,7 +147,7 @@ namespace MHServerEmu.Games.Properties
             if (interestFilter == AOINetworkPolicyValues.AOIChannelNone) return;
 
             // Check if any there are any interested clients
-            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClientList);
             if (_messageDispatcher.GetInterestedClients(interestedClientList, interestFilter))
             {
                 // Send update to interested
@@ -171,7 +171,7 @@ namespace MHServerEmu.Games.Properties
             if (interestFilter == AOINetworkPolicyValues.AOIChannelNone) return;
 
             // Check if any there are any interested clients
-            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClientList);
             if (_messageDispatcher.GetInterestedClients(interestedClientList, interestFilter))
             {
                 // Send update to interested

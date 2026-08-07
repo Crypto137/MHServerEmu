@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.Leaderboards
         public NetMessageLeaderboardInitializeRequestResponse BuildInitializeRequestResponse(NetMessageLeaderboardInitializeRequest initializeRequest)
         {
             var response = NetMessageLeaderboardInitializeRequestResponse.CreateBuilder();
-            using var instancesHandle = ListPool<LeaderboardInstanceInfo>.Instance.Get(out List<LeaderboardInstanceInfo> instances);
+            using var instancesHandle = ListPool<LeaderboardInstanceInfo>.Get(out List<LeaderboardInstanceInfo> instances);
 
             lock (_leaderboardInfoMap)
             {

@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
             if (hudTutorial.SkipIfOnPC == false) // only PC check
             {
-                using var playersHandle = ListPool<Player>.Instance.Get(out List<Player> players);
+                using var playersHandle = ListPool<Player>.Get(out List<Player> players);
                 if (GetDistributors(_proto.SendTo, players))
                 {
                     foreach (Player player in players)

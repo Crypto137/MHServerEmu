@@ -412,7 +412,7 @@ namespace MHServerEmu.Games.Social.Communities
             }
 
             // Remove members
-            using var membersToRemoveHandle = ListPool<ulong>.Instance.Get(out List<ulong> membersToRemove);
+            using var membersToRemoveHandle = ListPool<ulong>.Get(out List<ulong> membersToRemove);
 
             foreach (CommunityMember member in IterateMembers(partyCircle))
             {
@@ -438,7 +438,7 @@ namespace MHServerEmu.Games.Social.Communities
             }
 
             // Remove members
-            using var membersToRemoveHandle = ListPool<ulong>.Instance.Get(out List<ulong> membersToRemove);
+            using var membersToRemoveHandle = ListPool<ulong>.Get(out List<ulong> membersToRemove);
 
             foreach (CommunityMember member in IterateMembers(guildCircle))
             {
@@ -456,7 +456,7 @@ namespace MHServerEmu.Games.Social.Communities
             CommunityCircle circle = GetCircle(circleId);
             if (!Verify.IsNotNull(circle)) return;
 
-            using var membersToRemoveHandle = ListPool<ulong>.Instance.Get(out List<ulong> membersToRemove);
+            using var membersToRemoveHandle = ListPool<ulong>.Get(out List<ulong> membersToRemove);
             foreach (CommunityMember member in IterateMembers(circle))
                 membersToRemove.Add(member.DbId);
 

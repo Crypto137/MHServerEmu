@@ -8,7 +8,7 @@ namespace MHServerEmu.WebFrontend.Handlers.WebApi
     {
         protected override async Task Get(WebRequestContext context)
         {
-            using var statusDictHandle = DictionaryPool<string, long>.Instance.Get(out Dictionary<string, long> statusDict);
+            using var statusDictHandle = DictionaryPool<string, long>.Get(out Dictionary<string, long> statusDict);
             ServerManager.Instance.GetServerStatus(statusDict);
 
             await context.SendJsonAsync(statusDict);

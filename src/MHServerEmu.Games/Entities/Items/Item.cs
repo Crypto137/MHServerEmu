@@ -600,7 +600,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             bool isInRecipeLibrary = false;
 
-            using var inventoryListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> inventoryList);
+            using var inventoryListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> inventoryList);
             if (vendorTypeProto.GetInventories(inventoryList))
             {
                 foreach (PrototypeId crafterVendorInvProtoRef in inventoryList)
@@ -988,7 +988,7 @@ namespace MHServerEmu.Games.Entities.Items
             int indexSeed = random.GetSeed();
 
             // Apply built-in affixes
-            using var detailsListHandle = ListPool<BuiltInAffixDetails>.Instance.Get(out List<BuiltInAffixDetails> detailsList);
+            using var detailsListHandle = ListPool<BuiltInAffixDetails>.Get(out List<BuiltInAffixDetails> detailsList);
             if (itemProto.GenerateBuiltInAffixDetails(_itemSpec, detailsList))
             {
                 foreach (BuiltInAffixDetails builtInAffixDetails in detailsList)

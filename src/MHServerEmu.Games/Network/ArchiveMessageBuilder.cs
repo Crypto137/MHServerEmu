@@ -265,7 +265,7 @@ namespace MHServerEmu.Games.Network
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
                 {
-                    using var attachedEntityListHandle = ListPool<ulong>.Instance.Get(out List<ulong> attachedEntityList);
+                    using var attachedEntityListHandle = ListPool<ulong>.Get(out List<ulong> attachedEntityList);
                     worldEntity.Physics.GetAttachedEntities(attachedEntityList);
                     Serializer.Transfer(archive, ref attachedEntityList);
                 }
@@ -620,7 +620,7 @@ namespace MHServerEmu.Games.Network
 
             if (extraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAttachedEntities))
             {
-                using var attachedEntityListHandle = ListPool<ulong>.Instance.Get(out List<ulong> attachedEntityList);
+                using var attachedEntityListHandle = ListPool<ulong>.Get(out List<ulong> attachedEntityList);
                 worldEntity.Physics.GetAttachedEntities(attachedEntityList);
                 Serializer.Transfer(archive, ref attachedEntityList);
             }

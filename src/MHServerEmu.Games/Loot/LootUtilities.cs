@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.Loot
 
             if (affixCountBehavior == AffixCountBehavior.Roll)
             {
-                using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
+                using var affixSetHandle = HashSetPool<ScopedAffixRef>.Get(out HashSet<ScopedAffixRef> affixSet);
                 result = UpdateAffixesHelper(resolver, settings, args, itemSpec, affixSet);
             }
 
@@ -152,7 +152,7 @@ namespace MHServerEmu.Games.Loot
             if ((affixLimits != null && affixLimits.CategorizedAffixes.HasValue()) ||
                 (settings != null && settings.AffixLimitByCategoryModifiers.Count > 0))
             {
-                using var affixCategoryDictHandle = DictionaryPool<AffixCategoryPrototype, short>.Instance.Get(out Dictionary<AffixCategoryPrototype, short> affixCategoryDict);
+                using var affixCategoryDictHandle = DictionaryPool<AffixCategoryPrototype, short>.Get(out Dictionary<AffixCategoryPrototype, short> affixCategoryDict);
 
                 // Get category limits from the prototype
                 if (affixLimits != null)
@@ -238,8 +238,8 @@ namespace MHServerEmu.Games.Loot
             if (itemProto.IsPetItem)
                 return ItemPrototype.UpdatePetTechAffixes(resolver.Random, args.RollFor, itemSpec);
 
-            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
-            using var affixCountsHandle = ListPool<AffixCountData>.Instance.Get(out List<AffixCountData> affixCounts);
+            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Get(out HashSet<ScopedAffixRef> affixSet);
+            using var affixCountsHandle = ListPool<AffixCountData>.Get(out List<AffixCountData> affixCounts);
 
             affixCounts.Fill(default, (int)AffixPosition.NumPositions);
 
@@ -295,8 +295,8 @@ namespace MHServerEmu.Games.Loot
 
         public static MutationResults AddAffix(IItemResolver resolver, DropFilterArguments args, ItemSpec itemSpec, AffixPrototype affixProto)
         {
-            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
-            using var affixCountsHandle = ListPool<AffixCountData>.Instance.Get(out List<AffixCountData> affixCounts);
+            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Get(out HashSet<ScopedAffixRef> affixSet);
+            using var affixCountsHandle = ListPool<AffixCountData>.Get(out List<AffixCountData> affixCounts);
 
             affixCounts.Fill(default, (int)AffixPosition.NumPositions);
 
@@ -359,8 +359,8 @@ namespace MHServerEmu.Games.Loot
             if (itemProto.IsPetItem)
                 return ItemPrototype.CopyPetTechAffixes(sourceItemSpec, destItemSpec, position);
 
-            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
-            using var affixCountsHandle = ListPool<AffixCountData>.Instance.Get(out List<AffixCountData> affixCounts);
+            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Get(out HashSet<ScopedAffixRef> affixSet);
+            using var affixCountsHandle = ListPool<AffixCountData>.Get(out List<AffixCountData> affixCounts);
 
             affixCounts.Fill(default, (int)AffixPosition.NumPositions);
 
@@ -396,10 +396,10 @@ namespace MHServerEmu.Games.Loot
             ItemPrototype destItemProto = args.ItemProto as ItemPrototype;
             if (!Verify.IsNotNull(destItemProto)) return MutationResults.Error;
 
-            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Instance.Get(out HashSet<ScopedAffixRef> affixSet);
-            using var affixCountsHandle = ListPool<AffixCountData>.Instance.Get(out List<AffixCountData> affixCounts);
-            using var builtInAffixDetailsListHandle = ListPool<BuiltInAffixDetails>.Instance.Get(out List<BuiltInAffixDetails> builtInAffixDetailsList);
-            using var builtInAffixSpecsHandle = ListPool<AffixSpec>.Instance.Get(out List<AffixSpec> builtInAffixSpecs);
+            using var affixSetHandle = HashSetPool<ScopedAffixRef>.Get(out HashSet<ScopedAffixRef> affixSet);
+            using var affixCountsHandle = ListPool<AffixCountData>.Get(out List<AffixCountData> affixCounts);
+            using var builtInAffixDetailsListHandle = ListPool<BuiltInAffixDetails>.Get(out List<BuiltInAffixDetails> builtInAffixDetailsList);
+            using var builtInAffixSpecsHandle = ListPool<AffixSpec>.Get(out List<AffixSpec> builtInAffixSpecs);
 
             affixCounts.Fill(default, (int)AffixPosition.NumPositions);
 
@@ -691,7 +691,7 @@ namespace MHServerEmu.Games.Loot
 
             MutationResults result = MutationResults.None;
             
-            using var filteredAffixSpecsHandle = ListPool<AffixSpec>.Instance.Get(out List<AffixSpec> filteredAffixSpecs);
+            using var filteredAffixSpecsHandle = ListPool<AffixSpec>.Get(out List<AffixSpec> filteredAffixSpecs);
 
             bool hasKeywords = keywords.HasValue();
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
@@ -753,10 +753,10 @@ namespace MHServerEmu.Games.Loot
 
             MutationResults result = MutationResults.None;
 
-            using var affixSpecsToAddHandle = ListPool<AffixSpec>.Instance.Get(out List<AffixSpec> affixSpecsToAdd);
-            using var addedPositionCountsHandle = ListPool<int>.Instance.Get(out List<int> addedPositionCounts);
+            using var affixSpecsToAddHandle = ListPool<AffixSpec>.Get(out List<AffixSpec> affixSpecsToAdd);
+            using var addedPositionCountsHandle = ListPool<int>.Get(out List<int> addedPositionCounts);
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
-            using var addedCategoryCountsHandle = DictionaryPool<AffixCategoryPrototype, int>.Instance.Get(out Dictionary<AffixCategoryPrototype, int> addedCategoryCounts);
+            using var addedCategoryCountsHandle = DictionaryPool<AffixCategoryPrototype, int>.Get(out Dictionary<AffixCategoryPrototype, int> addedCategoryCounts);
 #endif
 
             addedPositionCounts.Fill(0, (int)AffixPosition.NumPositions);

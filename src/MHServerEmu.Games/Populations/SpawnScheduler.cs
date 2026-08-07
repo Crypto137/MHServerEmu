@@ -43,7 +43,7 @@ namespace MHServerEmu.Games.Populations
 
         public void Destroy()
         {
-            using var reservationsHandle = ListPool<SpawnReservation>.Instance.Get(out List<SpawnReservation> reservations);
+            using var reservationsHandle = ListPool<SpawnReservation>.Get(out List<SpawnReservation> reservations);
             foreach (var popObj in MissionObjects)
                 if (popObj.MarkerReservation != null && popObj.MarkerReservation.State == MarkerState.Pending)
                     reservations.Add(popObj.MarkerReservation);
@@ -104,7 +104,7 @@ namespace MHServerEmu.Games.Populations
 
                 if (CanSpawnMissionMarkers(critical))
                 {
-                    using var entitiesHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> entities);
+                    using var entitiesHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> entities);
 
                     foreach(var missionObject in SpawnMissionObjects.Values)
                         foreach (var spawnObject in missionObject.MissionObjects)
@@ -251,7 +251,7 @@ namespace MHServerEmu.Games.Populations
             var populationObject = Pop(critical);
             if (populationObject != null)
             {
-                using var entitiesHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> entities);
+                using var entitiesHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> entities);
 
                 if (populationObject.SpawnByMarker(entities))
                 {

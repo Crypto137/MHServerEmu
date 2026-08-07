@@ -86,7 +86,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int numMembers = matches;
             int numMatches = 0;
             
-            using var matchedAvatarsHandle = ListPool<AvatarPrototype>.Instance.Get(out List<AvatarPrototype> matchedAvatars);
+            using var matchedAvatarsHandle = ListPool<AvatarPrototype>.Get(out List<AvatarPrototype> matchedAvatars);
 
             for (int i = 0; i < numMembers; i++)
             {

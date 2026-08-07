@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
                 bool isParticipant = false;
                 bool isContributor = false;
-                using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
+                using var participantsHandle = ListPool<Player>.Get(out List<Player> participants);
                 mission.GetParticipants(participants);
 
                 var party = player.GetParty();

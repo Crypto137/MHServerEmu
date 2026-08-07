@@ -1399,7 +1399,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 if (otherHasNaviInfluence) other.DisableNavigationInfluence();
             }
 
-            using var entitiesHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> entities);
+            using var entitiesHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> entities);
             _owner.OnPreGeneratePath(_owner.RegionLocation.Position, goalPosition, entities);
             generatedPath.PathResult = generatedPath.Path.GeneratePath(region.NaviMesh, _owner.RegionLocation.Position, goalPosition,
                 _owner.Bounds.GetRadius(), PathFlags, pathGenerationFlags, incompleteDistance);

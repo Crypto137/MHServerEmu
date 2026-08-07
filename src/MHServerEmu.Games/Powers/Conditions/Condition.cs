@@ -915,7 +915,7 @@ namespace MHServerEmu.Games.Powers.Conditions
             }
 
             // Assign proc properties
-            using var procPowerRefListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> procPowerRefList);
+            using var procPowerRefListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> procPowerRefList);
             foreach (var kvp in conditionProperties.IteratePropertyRange(Property.ProcPropertyTypesAll))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId procPowerRef);

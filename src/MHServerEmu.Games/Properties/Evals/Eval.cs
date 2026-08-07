@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.Properties.Evals
     {
         public static bool ValidateEvalContextsForField(EvalPrototype[] evals, HashSet<EvalContext> validContexts, string contextName)
         {
-            using var contextsHandle = HashSetPool<EvalContext>.Instance.Get(out HashSet<EvalContext> contexts);
+            using var contextsHandle = HashSetPool<EvalContext>.Get(out HashSet<EvalContext> contexts);
             validContexts.Add(EvalContext.Globals);
 
             foreach (EvalPrototype evalProto in evals)
@@ -37,7 +37,7 @@ namespace MHServerEmu.Games.Properties.Evals
 
         public static bool ValidateEvalContextsForField(EvalPrototype evalProto, HashSet<EvalContext> validContexts, string contextName)
         {
-            using var contextsHandle = HashSetPool<EvalContext>.Instance.Get(out HashSet<EvalContext> contexts);
+            using var contextsHandle = HashSetPool<EvalContext>.Get(out HashSet<EvalContext> contexts);
             validContexts.Add(EvalContext.Globals);
 
             GetEvalContexts(evalProto, contexts, validContexts);
@@ -79,7 +79,7 @@ namespace MHServerEmu.Games.Properties.Evals
         {
             if (!Verify.IsNotNull(startEvalProto)) return;
 
-            using var evalStackHandle = StackPool<EvalPrototype>.Instance.Get(out PoolableStack<EvalPrototype> evalStack);
+            using var evalStackHandle = StackPool<EvalPrototype>.Get(out PoolableStack<EvalPrototype> evalStack);
             evalStack.Push(startEvalProto);
 
             while (evalStack.Count > 0)
@@ -445,7 +445,7 @@ namespace MHServerEmu.Games.Properties.Evals
         {
             if (!Verify.IsNotNull(startEvalProto)) return;
 
-            using var evalStackHandle = StackPool<EvalPrototype>.Instance.Get(out PoolableStack<EvalPrototype> evalStack);
+            using var evalStackHandle = StackPool<EvalPrototype>.Get(out PoolableStack<EvalPrototype> evalStack);
             evalStack.Push(startEvalProto);
 
             while (evalStack.Count > 0)

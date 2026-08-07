@@ -177,7 +177,7 @@ namespace MHServerEmu.Games.Entities.Items
             int powerUnlockLevelMax = Eval.RunInt(powerAffixProto.PowerUnlockLevelMax, evalContext);
             powerUnlockLevelMax = Math.Max(powerUnlockLevelMin, powerUnlockLevelMax);
 
-            using var powerProgEntriesHandle = ListPool<PowerProgressionEntryPrototype>.Instance.Get(out List<PowerProgressionEntryPrototype> powerProgEntries);
+            using var powerProgEntriesHandle = ListPool<PowerProgressionEntryPrototype>.Get(out List<PowerProgressionEntryPrototype> powerProgEntries);
             if (avatarProto.GetPowersUnlockedAtLevel(powerProgEntries, powerUnlockLevelMax, true) == false)
                 return MutationResults.Error | MutationResults.ErrorReasonAffixScopePower;
 
@@ -341,7 +341,7 @@ namespace MHServerEmu.Games.Entities.Items
         /// </summary>
         private MutationResults SetAffixScopeRegionAffix(GRandom random, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet)
         {
-            using var regionAffixCategoryPicksHandle = DictionaryPool<RegionAffixCategoryPrototype, int>.Instance.Get(
+            using var regionAffixCategoryPicksHandle = DictionaryPool<RegionAffixCategoryPrototype, int>.Get(
                 out Dictionary<RegionAffixCategoryPrototype, int> regionAffixCategoryPicks);
             
             foreach (PrototypeId regionAffixCategoryProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RegionAffixCategoryPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
@@ -351,7 +351,7 @@ namespace MHServerEmu.Games.Entities.Items
             }
 
             // Filter out scopes that are already in use or mutually exclusive with existing ones
-            using var scopeFilterHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> scopeFilter);
+            using var scopeFilterHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> scopeFilter);
             foreach (ScopedAffixRef scopedAffixRef in affixSet)
             {
                 if (AffixProto.DataRef != scopedAffixRef.AffixProtoRef)
@@ -374,8 +374,8 @@ namespace MHServerEmu.Games.Entities.Items
             }
 
             // Pick categories to use
-            using var essentialCategoriesHandle = ListPool<RegionAffixCategoryPrototype>.Instance.Get(out List<RegionAffixCategoryPrototype> essentialCategories);
-            using var extraCategoriesHandle = ListPool<RegionAffixCategoryPrototype>.Instance.Get(out List<RegionAffixCategoryPrototype> extraCategories);
+            using var essentialCategoriesHandle = ListPool<RegionAffixCategoryPrototype>.Get(out List<RegionAffixCategoryPrototype> essentialCategories);
+            using var extraCategoriesHandle = ListPool<RegionAffixCategoryPrototype>.Get(out List<RegionAffixCategoryPrototype> extraCategories);
 
             foreach (var kvp in regionAffixCategoryPicks)
             {

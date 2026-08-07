@@ -274,7 +274,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int availableSubscriptions = Math.Min(MaxSubscriptionsPerActivation, MaxSubscriptions - subscriptions);
             int subscribed = 0;
 
-            using var potentialTargetsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> potentialTargets);
+            using var potentialTargetsHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> potentialTargets);
             Combat.GetTargetsInRange(agent, potentialTargets, Radius, 0.0f, CombatTargetType.Ally, CombatTargetFlags.IgnoreHostile, EnticeeAttributes);
             foreach (WorldEntity potentialTarget in potentialTargets)
             {
@@ -1463,7 +1463,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return -1;
 
             EntityManager entityManager = game.EntityManager;
-            using var syncAttackIndicesHandle = ListPool<int>.Instance.Get(out List<int> syncAttackIndices);
+            using var syncAttackIndicesHandle = ListPool<int>.Get(out List<int> syncAttackIndices);
 
             for (int i = 0; i < IDPropertiesLength && i < SyncAttacks.Length; i++)
             {
@@ -1674,7 +1674,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             PropertyCollection properties = ownerController.Blackboard.PropertyCollection;
             State state = (State)(int)properties[PropertyEnum.AICustomStateVal1];
-            using var targetsHandle = ListPool<Agent>.Instance.Get(out List<Agent> targets);
+            using var targetsHandle = ListPool<Agent>.Get(out List<Agent> targets);
 
             if (state == State.SpikeDance)
             {

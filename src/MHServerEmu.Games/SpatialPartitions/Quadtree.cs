@@ -310,7 +310,7 @@ namespace MHServerEmu.Games.SpatialPartitions
                     _tree = tree;
                     _volume = volume;
 
-                    _candidateStack = StackPool<CandidateNode>.Instance.Get();
+                    _candidateStack = StackPool<CandidateNode>.Get();
 
                     _tree?.IncrementIteratorCount();
 
@@ -365,7 +365,7 @@ namespace MHServerEmu.Games.SpatialPartitions
                         return;
 
                     if (_candidateStack != null)
-                        StackPool<CandidateNode>.Instance.Return(_candidateStack);
+                        StackPool<CandidateNode>.Return(_candidateStack);
 
                     _tree?.DecrementIteratorCount();
 

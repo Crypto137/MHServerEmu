@@ -386,7 +386,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             var center = regionBounds.Center;
             Bounds checkBounds = agent.Bounds;     // copy
 
-            using var sideListHandle = ListPool<Vector3>.Instance.Get(out List<Vector3> sideList);
+            using var sideListHandle = ListPool<Vector3>.Get(out List<Vector3> sideList);
             Vector3 position;
 
             if (cellType.HasFlag(Cell.Type.N) || !wallsType.HasFlag(Cell.Walls.N) || wallsType == Cell.Walls.All)

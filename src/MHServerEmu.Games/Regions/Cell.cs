@@ -659,7 +659,7 @@ namespace MHServerEmu.Games.Regions
             {
                 SpawnSpecScheduler.Spawn(false);
 
-                using var entityListHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> entityList);
+                using var entityListHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> entityList);
                 GetEntitiesInCellBounds(entityList);
 
                 foreach (WorldEntity worldEntity in entityList)
@@ -680,7 +680,7 @@ namespace MHServerEmu.Games.Regions
 
             if (_numInterestedPlayers == 0)
             {
-                using var entityListHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> entityList);
+                using var entityListHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> entityList);
                 GetEntitiesInCellBounds(entityList);
 
                 foreach (WorldEntity worldEntity in entityList)

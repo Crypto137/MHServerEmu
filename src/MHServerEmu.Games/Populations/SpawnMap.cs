@@ -203,7 +203,7 @@ namespace MHServerEmu.Games.Populations
 
             var manager = Area.Region.PopulationManager;
 
-            using var zonesHandle = ListPool<BlackOutZone>.Instance.Get(out List<BlackOutZone> zones);
+            using var zonesHandle = ListPool<BlackOutZone>.Get(out List<BlackOutZone> zones);
             foreach (BlackOutZone zone in manager.IterateBlackOutZoneInVolume(Area.RegionBounds))
                 zones.Add(zone);
 

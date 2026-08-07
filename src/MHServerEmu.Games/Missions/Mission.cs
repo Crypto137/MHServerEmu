@@ -446,8 +446,8 @@ namespace MHServerEmu.Games.Missions
 
         public void SendToParticipants(MissionUpdateFlags missionFlags, MissionObjectiveUpdateFlags objectiveFlags, bool contributors = false)
         {
-            using var playersHandle = ListPool<Player>.Instance.Get(out List<Player> players);
-            using var uniquePlayersHandle = HashSetPool<Player>.Instance.Get(out HashSet<Player> uniquePlayers);
+            using var playersHandle = ListPool<Player>.Get(out List<Player> players);
+            using var uniquePlayersHandle = HashSetPool<Player>.Get(out HashSet<Player> uniquePlayers);
 
             if (GetParticipants(players))
             {
@@ -535,7 +535,7 @@ namespace MHServerEmu.Games.Missions
 
         private void SendRemoteMissionNotificationToParticipants(MissionConditionRemoteNotificationPrototype notificationProto)
         {
-            using var playersHandle = ListPool<Player>.Instance.Get(out List<Player> players);
+            using var playersHandle = ListPool<Player>.Get(out List<Player> players);
             if (GetParticipants(players))
             {
                 var messageBuilder = NetMessageRemoteMissionNotification.CreateBuilder();
@@ -946,7 +946,7 @@ namespace MHServerEmu.Games.Missions
 
             if (missionProto.ShowInMissionLog != MissionShowInLog.Never && missionProto.Chapter != PrototypeId.Invalid)
             {
-                using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
+                using var participantsHandle = ListPool<Player>.Get(out List<Player> participants);
                 if (GetParticipants(participants))
                 {
                     foreach (var player in participants)
@@ -964,7 +964,7 @@ namespace MHServerEmu.Games.Missions
 
             if (isOpenMission)
             {
-                using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
+                using var participantsHandle = ListPool<Player>.Get(out List<Player> participants);
                 if (GetParticipants(participants))
                 {
                     foreach (var player in participants)
@@ -1052,7 +1052,7 @@ namespace MHServerEmu.Games.Missions
 
                     bool isAchievement = isOpenMission == false || OpenMissionPrototype.AchievementTimeLimitSeconds == 0 || Game.CurrentTime <= _achievementTime;
 
-                    using var playerActivitiesHandle = DictionaryPool<ulong, PlayerActivity>.Instance.Get(out var playerActivities);
+                    using var playerActivitiesHandle = DictionaryPool<ulong, PlayerActivity>.Get(out var playerActivities);
                     if (GetPlayerActivities(playerActivities))
                     {
                         foreach (var activity in playerActivities.Values)
@@ -1131,7 +1131,7 @@ namespace MHServerEmu.Games.Missions
                     if (isOpenMission)
                         region.OpenMissionFailedEvent.Invoke(new(missionRef));
 
-                    using var playerActivitiesHandle = DictionaryPool<ulong, PlayerActivity>.Instance.Get(out var playerActivities);
+                    using var playerActivitiesHandle = DictionaryPool<ulong, PlayerActivity>.Get(out var playerActivities);
                     if (GetPlayerActivities(playerActivities))
                     {
                         foreach (var activity in playerActivities.Values)
@@ -1825,7 +1825,7 @@ namespace MHServerEmu.Games.Missions
         public bool FilterHotspots(Avatar avatar, PrototypeId hotspotRef, EntityFilterPrototype entityFilter = null)
         {
             bool found = false;
-            using var hotspotsHandle = ListPool<Hotspot>.Instance.Get(out List<Hotspot> hotspots);
+            using var hotspotsHandle = ListPool<Hotspot>.Get(out List<Hotspot> hotspots);
             if (GetMissionHotspots(hotspots))
             {
                 foreach (var hotspot in hotspots)
@@ -1974,7 +1974,7 @@ namespace MHServerEmu.Games.Missions
             if (!Verify.IsNotNull(mission)) return false;
 
             // This is used for SpawnLootForMissionContributors, we may want to use a set for this instead.
-            using var contributorsHandle = ListPool<Player>.Instance.Get(out List<Player> contributors);
+            using var contributorsHandle = ListPool<Player>.Get(out List<Player> contributors);
             mission.GetContributors(contributors);
 
             foreach (Player contributor in contributors)
@@ -2109,7 +2109,7 @@ namespace MHServerEmu.Games.Missions
             if (entityTracker == null) return;
             var missionRef = PrototypeDataRef;
 
-            using var destroyListHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> destroyList);
+            using var destroyListHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> destroyList);
 
             foreach (var entity in entityTracker.Iterate(missionRef, Dialog.EntityTrackingFlag.SpawnedByMission))
             {
@@ -2160,7 +2160,7 @@ namespace MHServerEmu.Games.Missions
             {
                 if (Prototype is OpenMissionPrototype openProto)
                 {
-                    using var sortedContributorsHandle = ListPool<(Player, float)>.Instance.Get(out List<(Player, float)> sortedContributors);
+                    using var sortedContributorsHandle = ListPool<(Player, float)>.Get(out List<(Player, float)> sortedContributors);
                     if (GetSortedContributors(sortedContributors))
                     {
                         int index = 0;
@@ -2175,7 +2175,7 @@ namespace MHServerEmu.Games.Missions
                 }
                 else
                 {
-                    using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
+                    using var participantsHandle = ListPool<Player>.Get(out List<Player> participants);
                     if (GetParticipants(participants))
                     {
                         int index = 0;

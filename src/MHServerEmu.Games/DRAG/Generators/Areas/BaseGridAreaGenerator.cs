@@ -516,7 +516,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
             if (success)
             {
-                using var listHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> list);
+                using var listHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> list);
                 foreach (SuperCellEntryPrototype superCellEntry in superCell.Entries)
                 {
                     if (superCellEntry == null) continue;
@@ -875,7 +875,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
         {
             if (CellContainer == null || roadGeneratorProto == null || roadGeneratorProto.Cells == null) return true;
             if (LogDebug) Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
-            using var roadPointsHandle = ListPool<Point2>.Instance.Get(out List<Point2> roadPoints);
+            using var roadPointsHandle = ListPool<Point2>.Get(out List<Point2> roadPoints);
 
             for (int x = 0; x < CellContainer.Width; ++x)
             {
@@ -949,9 +949,9 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 }
             }
 
-            using var setIndexesHandle = HashSetPool<int>.Instance.Get(out HashSet<int> setIndexes);
-            using var workingStackHandle = ListPool<int>.Instance.Get(out List<int> workingStack);
-            using var resultsHandle = ListPool<List<int>>.Instance.Get(out List<List<int>> results);
+            using var setIndexesHandle = HashSetPool<int>.Get(out HashSet<int> setIndexes);
+            using var workingStackHandle = ListPool<int>.Get(out List<int> workingStack);
+            using var resultsHandle = ListPool<List<int>>.Get(out List<List<int>> results);
 
             for (int i = 0; i < count; ++i) setIndexes.Add(i);
             Permutations(setIndexes, workingStack, results, count);
@@ -986,8 +986,8 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
             foreach (var result in results) result.Clear();
 
-            using var listRoadsHandle = ListPool<RoadInfo>.Instance.Get(roadGrid, out List<RoadInfo> listRoads);
-            using var buildGridHandle = ListPool<RoadInfo>.Instance.Get(roadGrid.Length, out List<RoadInfo> buildGrid);
+            using var listRoadsHandle = ListPool<RoadInfo>.Get(roadGrid, out List<RoadInfo> listRoads);
+            using var buildGridHandle = ListPool<RoadInfo>.Get(roadGrid.Length, out List<RoadInfo> buildGrid);
 
             for (int i = 0; i < workingStack.Count - 1; ++i)
             {
@@ -1056,7 +1056,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
             if (roadB == pointA || roadA == pointB) return true;
 
-            using var roadHandle = ListPool<Point2>.Instance.Get(out List<Point2> road);
+            using var roadHandle = ListPool<Point2>.Get(out List<Point2> road);
             DijkstraRoad(buildGrid, roadA, roadB, road);
 
             if (road.Count == 0)
@@ -1172,7 +1172,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
         private bool DijkstraRoad(List<RoadInfo> buildGrid, Point2 pointA, Point2 pointB, List<Point2> road)
         {
             Point2 invalidPoint = new(-1, -1);
-            using var visitedNodesHandle = ListPool<Point2>.Instance.Get(out List<Point2> visitedNodes);
+            using var visitedNodesHandle = ListPool<Point2>.Get(out List<Point2> visitedNodes);
 
             foreach (var roadInfo in buildGrid)
             {
@@ -1285,7 +1285,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
             if (workingStack.Count == count)
                 results.Add(new(workingStack));
 
-            using var indexesHandle = ListPool<int>.Instance.Get(setIndexes, out List<int> indexes);
+            using var indexesHandle = ListPool<int>.Get(setIndexes, out List<int> indexes);
             foreach (var index in indexes)
             {
                 workingStack.Add(index);

@@ -222,7 +222,7 @@ namespace MHServerEmu.Games.Entities
         {
             bool hasNegativeStatus = false;
 
-            using var negativeStatusListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> negativeStatusList);
+            using var negativeStatusListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> negativeStatusList);
 
             foreach (Condition condition in this)
             {
@@ -284,7 +284,7 @@ namespace MHServerEmu.Games.Entities
             int maxNumStacksToApply = stackingBehaviorProto.NumStacksToApply;
             int numStacksAvailable = stackingBehaviorProto.MaxNumStacks;
 
-            using var conditionsByRankListHandle = ListPool<(int, ulong)>.Instance.Get(out List<(int, ulong)> conditionsByRankList);
+            using var conditionsByRankListHandle = ListPool<(int, ulong)>.Get(out List<(int, ulong)> conditionsByRankList);
 
             foreach (Condition condition in _currentConditions.Values)
             {
@@ -476,7 +476,7 @@ namespace MHServerEmu.Games.Entities
                 // Notify interested clients if any
                 PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
 
-                using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
+                using var interestedClientListHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClientList);
                 if (networkManager.GetInterestedClients(interestedClientList, _owner))
                 {
                     NetMessageAddCondition addConditionMessage = ArchiveMessageBuilder.BuildAddConditionMessage(_owner, condition);
@@ -947,7 +947,7 @@ namespace MHServerEmu.Games.Entities
             // Notify interested clients if any
             PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
 
-            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClientList);
             if (networkManager.GetInterestedClients(interestedClientList, _owner))
             {
                 var deleteConditionMessage = NetMessageDeleteCondition.CreateBuilder()
@@ -1113,7 +1113,7 @@ namespace MHServerEmu.Games.Entities
             PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
 
             // Notify clients
-            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClientList);
             if (networkManager.GetInterestedClients(interestedClientList, _owner))
             {
                 NetMessageEnableCondition enableConditionMessage = NetMessageEnableCondition.CreateBuilder()

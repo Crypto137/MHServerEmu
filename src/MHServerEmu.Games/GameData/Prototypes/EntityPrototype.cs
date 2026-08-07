@@ -971,7 +971,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (SpawnSequence.IsNullOrEmpty())
                 return null;
 
-            using var entitiesHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> entities);
+            using var entitiesHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> entities);
 
             foreach (SpawnerSequenceEntryPrototype sequenceProto in SpawnSequence)
             {

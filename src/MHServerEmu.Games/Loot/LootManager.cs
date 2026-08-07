@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.Loot
                 inputSettings.EventType >= LootDropEventType.OnKilled &&
                 inputSettings.EventType <= LootDropEventType.OnKilledMiniBoss)
             {
-                using var missionLootTableListHandle = ListPool<MissionLootTable>.Instance.Get(out List<MissionLootTable> missionLootTableList);
+                using var missionLootTableListHandle = ListPool<MissionLootTable>.Get(out List<MissionLootTable> missionLootTableList);
 
                 if (MissionManager.GetMissionLootTablesForEnemy(inputSettings.SourceEntity, inputSettings.Player, missionLootTableList))
                 {
@@ -281,7 +281,7 @@ namespace MHServerEmu.Games.Loot
                 return true;
 
             // Use a list to process ItemSpec + item CurrencySpec loot together
-            using var itemListHandle = ListPool<Item>.Instance.Get(out List<Item> itemList);
+            using var itemListHandle = ListPool<Item>.Get(out List<Item> itemList);
 
             // Reusable property collection for applying extra properties
             using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();

@@ -926,7 +926,7 @@ namespace MHServerEmu.Games.Entities
             if (propertyId.Enum != PropertyEnum.Proc)
                 return;
 
-            using var overlappingEntitiesHandle = ListPool<ulong>.Instance.Get(out List<ulong> overlappingEntities);
+            using var overlappingEntitiesHandle = ListPool<ulong>.Get(out List<ulong> overlappingEntities);
             if (Physics.GetOverlappingEntities(overlappingEntities))
             {
                 KeyValuePair<PropertyId, PropertyValue> procProperty = new(propertyId, Properties[propertyId]);
@@ -1601,7 +1601,7 @@ namespace MHServerEmu.Games.Entities
 
             // Check for infinite loops
             bool success = true;
-            using var triggeringPowersHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> triggeringPowers); 
+            using var triggeringPowersHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> triggeringPowers); 
 
             PrototypeId parentTriggeringPowerRef = triggeringPower.Properties[PropertyEnum.TriggeringPowerRef, triggeringPowerProto.DataRef];
             while (parentTriggeringPowerRef != PrototypeId.Invalid)

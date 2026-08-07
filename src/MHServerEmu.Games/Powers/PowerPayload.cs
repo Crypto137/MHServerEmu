@@ -1785,7 +1785,7 @@ namespace MHServerEmu.Games.Powers
             if (conditionCollection == null)
                 return;
 
-            using var conditionCheckListHandle = ListPool<ulong>.Instance.Get(out List<ulong> conditionCheckList);
+            using var conditionCheckListHandle = ListPool<ulong>.Get(out List<ulong> conditionCheckList);
 
             foreach (Condition condition in conditionCollection.IterateConditions(true))
             {
@@ -1967,7 +1967,7 @@ namespace MHServerEmu.Games.Powers
             transferredDamageTotal.Clear();
 
             // Apply damage transfer from conditions
-            using var damageTransferConditionsHandle = ListPool<(ulong, Condition)>.Instance.Get(out List<(ulong, Condition)> damageTransferConditions);
+            using var damageTransferConditionsHandle = ListPool<(ulong, Condition)>.Get(out List<(ulong, Condition)> damageTransferConditions);
             
             // Applying damage transfer can cause a chain reaction that will modify conditions on the target,
             // so put damage transfer conditions into a temporary list for iteration.
@@ -2265,7 +2265,7 @@ namespace MHServerEmu.Games.Powers
 
         private void CalculateResultNegativeStatusRemoval(PowerResults results, WorldEntity target)
         {
-            using var negativeStatusConditionsToRemoveHandle = ListPool<ulong>.Instance.Get(out List<ulong> negativeStatusConditionsToRemove);
+            using var negativeStatusConditionsToRemoveHandle = ListPool<ulong>.Get(out List<ulong> negativeStatusConditionsToRemove);
             ConditionCollection conditionCollection = target.ConditionCollection;
 
             float negStatusClearChancePctAll = Properties[PropertyEnum.PowerClearsNegStatusChancePctAll];
@@ -2359,7 +2359,7 @@ namespace MHServerEmu.Games.Powers
                 {
                     bool canApply = true;
 
-                    using var negativeStatusListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> negativeStatusList);
+                    using var negativeStatusListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> negativeStatusList);
                     if (Condition.IsANegativeStatusEffect(conditionProperties, negativeStatusList))
                     {
                         if (CanApplyConditionToTarget(target, conditionProperties, negativeStatusList) == false)
@@ -2518,7 +2518,7 @@ namespace MHServerEmu.Games.Powers
         private void CalculateResultConditionProcProperties(PowerResults results, WorldEntity target, PropertyCollection conditionProperties)
         {
             // Store properties to set in a temporary dictionary to avoid modifying property collections during iteration
-            using var propertiesToSetHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> propertiesToSet);
+            using var propertiesToSetHandle = DictionaryPool<PropertyId, PropertyValue>.Get(out Dictionary<PropertyId, PropertyValue> propertiesToSet);
 
             // Triggering refs and ranks
             int rank = conditionProperties[PropertyEnum.PowerRank];
@@ -3075,7 +3075,7 @@ namespace MHServerEmu.Games.Powers
             PropertyCollection targetProperties = target.Properties;
 
             // Do not resist conditions without negative status effects
-            using var negativeStatusListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> negativeStatusList);
+            using var negativeStatusListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> negativeStatusList);
             if (Condition.IsANegativeStatusEffect(conditionProperties, negativeStatusList) == false)
                 return;
 
@@ -3267,8 +3267,8 @@ namespace MHServerEmu.Games.Powers
 
             if (!Verify.IsTrue(stackId.PrototypeRef != PrototypeId.Invalid)) return 0;
 
-            using var refreshListHandle = ListPool<ulong>.Instance.Get(out List<ulong> refreshList);
-            using var removeListHandle = ListPool<ulong>.Instance.Get(out List<ulong> removeList);
+            using var refreshListHandle = ListPool<ulong>.Get(out List<ulong> refreshList);
+            using var removeListHandle = ListPool<ulong>.Get(out List<ulong> removeList);
 
             int numStacksToApply = conditionCollection.GetStackApplicationData(stackId, stackingBehaviorProto,
                 Properties[PropertyEnum.PowerRank], out TimeSpan longestTimeRemaining, removeList, refreshList);

@@ -369,7 +369,7 @@ namespace MHServerEmu.PlayerManagement.Network
         {
             PartyOperationPayload request = partyOperationRequest.Request;
 
-            using var playersToNotifyHandle = HashSetPool<PlayerHandle>.Instance.Get(out HashSet<PlayerHandle> playersToNotify);
+            using var playersToNotifyHandle = HashSetPool<PlayerHandle>.Get(out HashSet<PlayerHandle> playersToNotify);
 
             GroupingOperationResult result = _playerManager.PartyManager.DoPartyOperation(ref request, playersToNotify);
 

@@ -519,7 +519,7 @@ namespace MHServerEmu.Games.Missions
                     var missionRef = Mission.PrototypeDataRef;
                     var objectiveId = namedProto.ObjectiveID;
 
-                    using var playerActivitiesHandle = DictionaryPool<ulong, PlayerActivity>.Instance.Get(out var playerActivities);
+                    using var playerActivitiesHandle = DictionaryPool<ulong, PlayerActivity>.Get(out var playerActivities);
                     if (Mission.GetPlayerActivities(playerActivities))
                     {
                         foreach (var activity in playerActivities.Values)
@@ -542,7 +542,7 @@ namespace MHServerEmu.Games.Missions
 
             if (mission.IsOpenMission)
             {
-                using var sortedContributorsHandle = ListPool<(Player, float)>.Instance.Get(out List<(Player, float)> sortedContributors);
+                using var sortedContributorsHandle = ListPool<(Player, float)>.Get(out List<(Player, float)> sortedContributors);
                 if (mission.GetSortedContributors(sortedContributors))
                 {
                     foreach ((Player player, _) in sortedContributors)
@@ -551,7 +551,7 @@ namespace MHServerEmu.Games.Missions
             }
             else
             {
-                using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
+                using var participantsHandle = ListPool<Player>.Get(out List<Player> participants);
                 if (mission.GetParticipants(participants))
                 {
                     foreach (Player player in participants)
@@ -684,7 +684,7 @@ namespace MHServerEmu.Games.Missions
                 var region = Region;
                 if (region == null) return;
 
-                using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
+                using var participantsHandle = ListPool<Player>.Get(out List<Player> participants);
                 if (Mission.GetParticipants(participants))
                 {
                     var missionRef = Mission.PrototypeDataRef;
@@ -806,7 +806,7 @@ namespace MHServerEmu.Games.Missions
             var missionProto = Mission.Prototype;
             if (missionProto == null || missionProto.HasClientInterest == false) return;
 
-            using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
+            using var participantsHandle = ListPool<Player>.Get(out List<Player> participants);
             if (Mission.GetParticipants(participants))
             {
                 foreach (var player in participants)

@@ -398,7 +398,7 @@ namespace MHServerEmu.Games
 
         private void SendServerFrameProfile()
         {
-            using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
+            using var interestedClientsHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClients);
 
             foreach (Player player in new PlayerIterator(this))
             {

@@ -213,7 +213,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (!Verify.IsTrue(RecipeInputs.HasValue())) return CraftingResult.CraftingFailed;
 
-            using var usedStackCountsHandle = DictionaryPool<ulong, int>.Instance.Get(out Dictionary<ulong, int> usedStackCounts);
+            using var usedStackCountsHandle = DictionaryPool<ulong, int>.Get(out Dictionary<ulong, int> usedStackCounts);
 
             for (int slot = 0; slot < RecipeInputs.Length; slot++)
             {

@@ -143,9 +143,9 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             if (_proto.BannerMsgPlayerDefeatLock != LocaleStringId.Blank)
             {
-                using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
+                using var interestedClientsHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClients);
                 GetInterestedClients(interestedClients, player);
-                using var intArgsHandle = ListPool<long>.Instance.Get(out List<long> intArgs);
+                using var intArgsHandle = ListPool<long>.Get(out List<long> intArgs);
                 intArgs.Add((long)respawnSeconds);
                 SendMetaGameBanner(interestedClients, _proto.BannerMsgPlayerDefeatLock, intArgs);
             }
@@ -230,7 +230,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             int count = 0;
             if (_attackers.Count == 0) return count;
 
-            using var entitiesHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> entities);
+            using var entitiesHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> entities);
 
             popObject.GetContainedEntities(entities);
             foreach (var entityRef in entities)
@@ -249,7 +249,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         private PvPTurretDataPrototype GetTurretData(PrototypeId prototypeDataRef)
         {
-            using var entitiesHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> entities);
+            using var entitiesHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> entities);
 
             foreach (var turretData in _proto.Turrets)
             {
@@ -310,7 +310,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             _turrets.Clear();
             var populationManager = Region.PopulationManager;
 
-            using var spawnedTurretsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> spawnedTurrets);
+            using var spawnedTurretsHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> spawnedTurrets);
             foreach (var turretData in _proto.Turrets)
             {
                 spawnedTurrets.Clear();
@@ -396,7 +396,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         {
             if (Game == null || Region == null) return;
 
-            using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
+            using var interestedClientsHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClients);
 
             GetInterestedClients(interestedClients);
             Game.ChatManager.SendChatFromMetaGame(_proto.ChatMessagePlayerDefeatedPlayer, interestedClients, attacker, defender);
@@ -422,7 +422,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             var attackerName = attacker.Prototype.DisplayName;
             if (attackerName == LocaleStringId.Blank) return;
 
-            using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
+            using var interestedClientsHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClients);
 
             GetInterestedClients(interestedClients);
             Game.ChatManager.SendChatFromMetaGame(_proto.ChatMessageNPDefeatedPlayer, interestedClients, defender, null, attackerName);
@@ -876,7 +876,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             if (_proto.BannerMsgPlayerDefeatUnlock != LocaleStringId.Blank)
             {
-                using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
+                using var interestedClientsHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClients);
                 GetInterestedClients(interestedClients, player);
                 SendMetaGameBanner(interestedClients, _proto.BannerMsgPlayerDefeatUnlock);
             }
@@ -903,9 +903,9 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             if (_respawnPlayers.TryGetValue(guid, out var respawnTime) == false) return;
             respawnTime -= Game.CurrentTime;
 
-            using var interestedClientsHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClients);
+            using var interestedClientsHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClients);
             GetInterestedClients(interestedClients, player);
-            using var intArgsHandle = ListPool<long>.Instance.Get(out List<long> intArgs);
+            using var intArgsHandle = ListPool<long>.Get(out List<long> intArgs);
             intArgs.Add((long)respawnTime.TotalSeconds);
             SendMetaGameBanner(interestedClients, banner, intArgs);
 
@@ -959,8 +959,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             var registry = Region.SpawnMarkerRegistry;
             var random = Game.Random;
 
-            using var spawnPositionsHandle = ListPool<Vector3>.Instance.Get(out List<Vector3> spawnPositions);
-            using var spawnedAttackersHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> spawnedAttackers);
+            using var spawnPositionsHandle = ListPool<Vector3>.Get(out List<Vector3> spawnPositions);
+            using var spawnedAttackersHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> spawnedAttackers);
             foreach (var attackerData in _proto.Attackers)
             {
                 if (attackerData.WaveSpawnPosition == PrototypeId.Invalid) continue;

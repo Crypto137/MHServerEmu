@@ -67,7 +67,7 @@ namespace MHServerEmu.Commands.Implementations
             var sb = new StringBuilder();
             sb.AppendLine($"Current Time: [{Clock.UtcNowTimestamp}] {Clock.UtcNowPrecise}");
 
-            using var leaderboardsHandle = ListPool<Leaderboard>.Instance.Get(out List<Leaderboard> leaderboards);
+            using var leaderboardsHandle = ListPool<Leaderboard>.Get(out List<Leaderboard> leaderboards);
             LeaderboardDatabase.Instance.GetLeaderboards(leaderboards);
 
             foreach (var leaderboard in leaderboards)
@@ -89,7 +89,7 @@ namespace MHServerEmu.Commands.Implementations
             var sb = new StringBuilder();
             sb.AppendLine($"Current Time: [{Clock.UtcNowTimestamp}] {Clock.UtcNowPrecise}");
 
-            using var leaderboardsHandle = ListPool<Leaderboard>.Instance.Get(out List<Leaderboard> leaderboards);
+            using var leaderboardsHandle = ListPool<Leaderboard>.Get(out List<Leaderboard> leaderboards);
             LeaderboardDatabase.Instance.GetLeaderboards(leaderboards);
 
             foreach (var leaderboard in leaderboards)
@@ -111,7 +111,7 @@ namespace MHServerEmu.Commands.Implementations
             var sb = new StringBuilder();
             sb.AppendLine($"Current Time: [{Clock.UtcNowTimestamp}] {Clock.UtcNowPrecise}");
 
-            using var leaderboardsHandle = ListPool<Leaderboard>.Instance.Get(out List<Leaderboard> leaderboards);
+            using var leaderboardsHandle = ListPool<Leaderboard>.Get(out List<Leaderboard> leaderboards);
             LeaderboardDatabase.Instance.GetLeaderboards(leaderboards);
 
             foreach (var leaderboard in leaderboards)

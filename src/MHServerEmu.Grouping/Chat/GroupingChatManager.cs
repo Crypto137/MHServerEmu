@@ -205,7 +205,7 @@ namespace MHServerEmu.Grouping.Chat
 
             roomId = chatRoom.Id;
 
-            using var playerFilterHandle = ListPool<ulong>.Instance.Get(out List<ulong> playerFilter);
+            using var playerFilterHandle = ListPool<ulong>.Get(out List<ulong> playerFilter);
             chatRoom.GetPlayers(playerFilter);
 
             SendMessageFiltered(message, playerFilter);

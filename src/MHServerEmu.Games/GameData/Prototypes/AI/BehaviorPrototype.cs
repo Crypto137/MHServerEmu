@@ -395,7 +395,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Cell entityCell = targetAgent.Cell;
             if (!Verify.IsNotNull(entityCell)) return false;
 
-            using var entitiesHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> entities);
+            using var entitiesHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> entities);
             entityRegion.GetEntitiesInVolume(entities, entityCell.RegionBounds, new(EntityRegionSPContextFlags.PrimaryPartition));
 
             Agent otherAgent = null;

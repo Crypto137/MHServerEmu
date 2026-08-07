@@ -156,7 +156,7 @@ namespace MHServerEmu.Games.Entities
 
         private void OnOutOfWorld()
         {
-            using var powerListHandle = ListPool<Power>.Instance.Get(out List<Power> powerList);
+            using var powerListHandle = ListPool<Power>.Get(out List<Power> powerList);
             GetMissilePowersWithActivationEvent(powerList, null, MissilePowerActivationEventType.OnOutOfWorld);
             ActivateMissilePowers(powerList, null, RegionLocation.Position);
             Kill();
@@ -175,7 +175,7 @@ namespace MHServerEmu.Games.Entities
             
             if (IsInWorld)
             {
-                using var powerListHandle = ListPool<Power>.Instance.Get(out List<Power> powerList);
+                using var powerListHandle = ListPool<Power>.Get(out List<Power> powerList);
                 GetMissilePowersWithActivationEvent(powerList, null, MissilePowerActivationEventType.OnLifespanExpired);
                 ActivateMissilePowers(powerList, null, RegionLocation.Position);
             }
@@ -356,7 +356,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             bool collideWithWhom = false;
-            using var collisionPowersHandle = ListPool<Power>.Instance.Get(out List<Power> collisionPowers);
+            using var collisionPowersHandle = ListPool<Power>.Get(out List<Power> collisionPowers);
             GetCollisionPowers(collisionPowers, collidedWith);
 
             if (collisionPowers.Count > 0 || missileAlwaysCollides)
@@ -766,7 +766,7 @@ namespace MHServerEmu.Games.Entities
             GravitatedMissileContextPrototype gravitatedContext = GravitatedContext;
             if (!Verify.IsNotNull(gravitatedContext)) return false;
 
-            using var powerListHandle = ListPool<Power>.Instance.Get(out List<Power> powerList);
+            using var powerListHandle = ListPool<Power>.Get(out List<Power> powerList);
             GetMissilePowersWithActivationEvent(powerList, null, MissilePowerActivationEventType.OnBounce);
             ActivateMissilePowers(powerList, null, position);
 

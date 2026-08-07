@@ -125,7 +125,7 @@ namespace MHServerEmu.Games.Entities
             CancelActions(eventType);
             if (ActionTable.TryGetValue(eventType, out ActionSet actionSet))
             {
-                using var actionsHandle = ListPool<EntitySelectorActionPrototype>.Instance.Get(out List<EntitySelectorActionPrototype> actions);
+                using var actionsHandle = ListPool<EntitySelectorActionPrototype>.Get(out List<EntitySelectorActionPrototype> actions);
                 actions.AddRange(actionSet);
 
                 foreach (var action in actions)
@@ -235,7 +235,7 @@ namespace MHServerEmu.Games.Entities
             EventScheduler scheduler = Game.Current.GameEventScheduler;
             if (!Verify.IsNotNull(scheduler)) return;
 
-            using var actionsHandle = ListPool<EntitySelectorActionPrototype>.Instance.Get(out List<EntitySelectorActionPrototype> actions);
+            using var actionsHandle = ListPool<EntitySelectorActionPrototype>.Get(out List<EntitySelectorActionPrototype> actions);
             actions.AddRange(_pendingActions.Keys);         
             
             foreach (var action in actions)

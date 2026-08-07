@@ -139,7 +139,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             // NOTE: We store contained entity ids in a list to be able to remove entries while we iterate.
             // The original implementation uses a custom iterator here that restarts after every removed item.
-            using var containedIdsHandle = ListPool<ulong>.Instance.Get(out List<ulong> containedIds);
+            using var containedIdsHandle = ListPool<ulong>.Get(out List<ulong> containedIds);
             foreach (InvEntry entry in _entities.Values)
                 containedIds.Add(entry.EntityId);
 
@@ -183,7 +183,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             TimeSpan expirationTime = TimeSpan.FromSeconds(inventoryProto.DestroyContainedAfterSecs);
 
             EntityManager entityManager = Game.EntityManager;
-            using var entitiesToDestroyHandle = ListPool<ulong>.Instance.Get(out List<ulong> entitiesToDestroy);
+            using var entitiesToDestroyHandle = ListPool<ulong>.Get(out List<ulong> entitiesToDestroy);
 
             foreach (var entry in this)
             {

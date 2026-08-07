@@ -10,7 +10,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public RegionReport()
         {
-            Regions = ListPool<Entry>.Instance.Get();
+            Regions = ListPool<Entry>.Get();
         }
 
         public void Initialize(WorldManager worldManager)
@@ -29,7 +29,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public void Dispose()
         {
-            ListPool<Entry>.Instance.Return(Regions);
+            ListPool<Entry>.Return(Regions);
         }
 
         public readonly struct Entry : IComparable<Entry>

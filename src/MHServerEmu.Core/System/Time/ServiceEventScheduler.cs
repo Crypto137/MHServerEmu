@@ -21,7 +21,7 @@ namespace MHServerEmu.Core.System.Time
 
             TimeSpan now = Clock.UnixTime;
 
-            using var eventsHandle = ListPool<ServiceEvent>.Instance.Get(out List<ServiceEvent> events);
+            using var eventsHandle = ListPool<ServiceEvent>.Get(out List<ServiceEvent> events);
             events.AddRange(_events.Values);
 
             foreach (ServiceEvent serviceEvent in events)

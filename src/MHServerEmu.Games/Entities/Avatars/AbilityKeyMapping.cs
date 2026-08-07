@@ -238,7 +238,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public void SlotDefaultAbilities(Avatar avatar)
         {
-            using var hotkeyDataListHandle = ListPool<HotkeyData>.Instance.Get(out List<HotkeyData> hotkeyDataList);
+            using var hotkeyDataListHandle = ListPool<HotkeyData>.Get(out List<HotkeyData> hotkeyDataList);
 
             if (GetDefaultAbilities(hotkeyDataList, avatar))
             {
@@ -349,7 +349,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             AvatarPrototype avatarProto = avatar.AvatarPrototype;
             if (!Verify.IsNotNull(avatarProto)) return false;
 
-            using var powerProgEntryListHandle = ListPool<PowerProgressionEntryPrototype>.Instance.Get(out List<PowerProgressionEntryPrototype> powerProgEntryList);
+            using var powerProgEntryListHandle = ListPool<PowerProgressionEntryPrototype>.Get(out List<PowerProgressionEntryPrototype> powerProgEntryList);
             if (avatarProto.GetPowersUnlockedAtLevel(powerProgEntryList, avatar.CharacterLevel, true, startingLevel))
             {
                 foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgEntryList)

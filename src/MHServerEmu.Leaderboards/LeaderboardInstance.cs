@@ -389,7 +389,7 @@ namespace MHServerEmu.Leaderboards
         /// <param name="forceUpdate">Forces entries that haven't changed to be saved.</param>
         public void SaveEntries(bool forceUpdate = false)
         {
-            using var dbEntriesHandle = ListPool<DBLeaderboardEntry>.Instance.Get(out List<DBLeaderboardEntry> dbEntries);
+            using var dbEntriesHandle = ListPool<DBLeaderboardEntry>.Get(out List<DBLeaderboardEntry> dbEntries);
 
             lock (_lock)
             {
@@ -484,7 +484,7 @@ namespace MHServerEmu.Leaderboards
                 if (Entries.Count == 0)
                     return true;
 
-                using var rewardsListHandle = ListPool<DBRewardEntry>.Instance.Get(out List<DBRewardEntry> rewardsList);
+                using var rewardsListHandle = ListPool<DBRewardEntry>.Get(out List<DBRewardEntry> rewardsList);
 
                 LeaderboardRewardEntryPrototype[] rewards = LeaderboardPrototype.Rewards;
                 if (rewards.HasValue())

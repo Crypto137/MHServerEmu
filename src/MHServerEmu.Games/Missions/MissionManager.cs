@@ -579,7 +579,7 @@ namespace MHServerEmu.Games.Missions
             if (Player == null || HasMissions == false) return;
 
             // initialize and clear old missions
-            using var oldMissionsHandle = ListPool<Mission>.Instance.Get(out List<Mission> oldMissions);
+            using var oldMissionsHandle = ListPool<Mission>.Get(out List<Mission> oldMissions);
             foreach (var mission in _missionDict.Values)
             {
                 if (mission == null) continue;
@@ -1453,7 +1453,7 @@ namespace MHServerEmu.Games.Missions
                 }
             }
 
-            using var legendaryMissionsHandle = ListPool<Mission>.Instance.Get(out List<Mission> legendaryMissions);
+            using var legendaryMissionsHandle = ListPool<Mission>.Get(out List<Mission> legendaryMissions);
             foreach (var mission in _missionDict.Values)
                 if (mission.IsLegendaryMission)
                     legendaryMissions.Add(mission);
@@ -1537,7 +1537,7 @@ namespace MHServerEmu.Games.Missions
 
         public void UpdateMissionEntities(Mission mission)
         {
-            using var participantsHandle = ListPool<Player>.Instance.Get(out List<Player> participants);
+            using var participantsHandle = ListPool<Player>.Get(out List<Player> participants);
             if (mission.GetParticipants(participants))
             {
                 foreach (var player in participants)

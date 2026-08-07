@@ -66,7 +66,7 @@ namespace MHServerEmu.Core.Extensions
             if (count == 0)
                 return 0f;
 
-            using var listHandle = ListPool<float>.Instance.Get(count, out List<float> list);
+            using var listHandle = ListPool<float>.Get(count, out List<float> list);
             foreach (float value in values)
                 list.Add(value);
 

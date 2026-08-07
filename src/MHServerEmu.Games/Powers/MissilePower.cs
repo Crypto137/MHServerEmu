@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Powers
             // missile on their own, including the player who used the power in the first place.
             _interestedPlayers.Clear();
 
-            using var interestedPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> interestedPlayerList);
+            using var interestedPlayerListHandle = ListPool<Player>.Get(out List<Player> interestedPlayerList);
             Game.NetworkManager.GetInterestedPlayers(interestedPlayerList, Owner, AOINetworkPolicyValues.AOIChannelProximity);
             foreach (Player player in interestedPlayerList)
                 _interestedPlayers.Add(player.Id);             
@@ -73,8 +73,8 @@ namespace MHServerEmu.Games.Powers
         protected override bool ApplyInternal(PowerApplication powerApplication)
         {
             // Remove interested players who became no longer interested between activation and application of this power
-            using var interestedPlayerSetHandle = HashSetPool<ulong>.Instance.Get(out HashSet<ulong> interestedPlayerSet);
-            using var interestedPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> interestedPlayerList);
+            using var interestedPlayerSetHandle = HashSetPool<ulong>.Get(out HashSet<ulong> interestedPlayerSet);
+            using var interestedPlayerListHandle = ListPool<Player>.Get(out List<Player> interestedPlayerList);
 
             Game.NetworkManager.GetInterestedPlayers(interestedPlayerList, Owner, AOINetworkPolicyValues.AOIChannelProximity);
 

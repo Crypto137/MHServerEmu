@@ -688,7 +688,7 @@ namespace MHServerEmu.Games.Entities
             if (vendorTypeProto.IsCrafter)
                 return true;
 
-            using var inventoryListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> inventoryList);
+            using var inventoryListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> inventoryList);
             vendorTypeProto.GetInventories(inventoryList);
 
             foreach (PrototypeId inventoryProtoRef in inventoryList)
@@ -730,8 +730,8 @@ namespace MHServerEmu.Games.Entities
             if (isInitializing && _initializedVendorTypeProtoRefs.Add(vendorTypeProtoRef) == false)
                 return true;
 
-            using var inventoryListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> inventoryList);
-            using var craftingIngredientSetHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> craftingIngredientSet);
+            using var inventoryListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> inventoryList);
+            using var craftingIngredientSetHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> craftingIngredientSet);
 
             // Early return if there are no inventories to roll
             if (vendorTypeProto.GetInventories(inventoryList) == false)

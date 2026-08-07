@@ -125,8 +125,8 @@ namespace MHServerEmu.Games.Regions.Maps
             bool regenNavi = false;
             bool update = false;
 
-            using var areasHandle = HashSetPool<Area>.Instance.Get(out HashSet<Area> areas);
-            using var cellsHandle = HashSetPool<Cell>.Instance.Get(out HashSet<Cell> cells);
+            using var areasHandle = HashSetPool<Area>.Get(out HashSet<Area> areas);
+            using var cellsHandle = HashSetPool<Cell>.Get(out HashSet<Cell> cells);
 
             if (position.HasValue)
             {
@@ -196,7 +196,7 @@ namespace MHServerEmu.Games.Regions.Maps
             }
 
             // Get entities and low res map from other members.
-            using var otherDiscoveredEntitiesHandle = HashSetPool<ulong>.Instance.Get(out HashSet<ulong> otherDiscoveredEntities);
+            using var otherDiscoveredEntitiesHandle = HashSetPool<ulong>.Get(out HashSet<ulong> otherDiscoveredEntities);
             bool lowResMapChanged = false;
 
             foreach (Player otherPlayer in otherPlayers)

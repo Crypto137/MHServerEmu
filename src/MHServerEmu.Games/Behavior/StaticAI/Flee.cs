@@ -148,7 +148,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (game == null) return false;
             var position = owner.RegionLocation.Position;
 
-            using var pathResultsHandle = ListPool<FleePath>.Instance.Get(out List<FleePath> pathResults);
+            using var pathResultsHandle = ListPool<FleePath>.Get(out List<FleePath> pathResults);
 
             Vector3? resultNorm = null;
             Vector3 resultPosition = Vector3.Zero;
@@ -234,7 +234,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                         potentialAllies.Add(worldEntity.Id);
             }
             
-            using var alliesHandle = ListPool<FleeEntityRank>.Instance.Get(out List<FleeEntityRank> allies);
+            using var alliesHandle = ListPool<FleeEntityRank>.Get(out List<FleeEntityRank> allies);
 
             var entityManager = game.EntityManager;
             foreach (var allyId in potentialAllies)

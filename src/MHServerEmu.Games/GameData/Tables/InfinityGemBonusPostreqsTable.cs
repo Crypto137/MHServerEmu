@@ -53,7 +53,7 @@ namespace MHServerEmu.Games.GameData.Tables
                 return true;
 
             // Track all nodes we have already checked in a set
-            using var checkedNodesHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> checkedNodes);
+            using var checkedNodesHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> checkedNodes);
             foreach (PrototypeId postreqRef in postreqs)
             {
                 checkedNodes.Add(infinityGemBonusRef);

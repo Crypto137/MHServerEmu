@@ -837,8 +837,8 @@ namespace MHServerEmu.Games.Regions
         {
             bool success = Areas.Count > 0;
 
-            using var areasHandle = ListPool<Area>.Instance.Get(out List<Area> areas);
-            using var areaRefsHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> areaRefs);
+            using var areasHandle = ListPool<Area>.Get(out List<Area> areas);
+            using var areaRefsHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> areaRefs);
 
             foreach (Area area in IterateAreas())
                 areas.Add(area);
@@ -1401,7 +1401,7 @@ namespace MHServerEmu.Games.Regions
             resultPosition.Z = point.Z;
             GRandom random = Game.Random;
 
-            using var entitiesInRadiusHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> entitiesInRadius);
+            using var entitiesInRadiusHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> entitiesInRadius);
             if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity) || posFlags.HasFlag(PositionCheckFlags.CanPathToEntities))
             {
                 entitiesInRadius.EnsureCapacity(256);
@@ -1427,7 +1427,7 @@ namespace MHServerEmu.Games.Regions
             bool foundBlockedEntity = false;
             Vector3 blockedPosition = Vector3.Zero;
 
-            using var influenceEntitiesHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> influenceEntities);
+            using var influenceEntitiesHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> influenceEntities);
 
             if (posFlags.HasFlag(PositionCheckFlags.CanPathToEntities))
             {
@@ -1654,7 +1654,7 @@ namespace MHServerEmu.Games.Regions
 
             IsFirstLoaded = true;
 
-            using var timerRefListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> timerRefList);
+            using var timerRefListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> timerRefList);
 
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.ScoringEventTimerStartTimeMS))
             {

@@ -590,7 +590,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private void PopulateMissionActionReferencedPowers()
         {
             bool hasPowers = false;
-            using var powersHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> powers);
+            using var powersHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> powers);
 
             hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnAvailableActions);
             hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnStartActions);
@@ -786,7 +786,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 if (regions.Count > 0)
                 {
-                    using var regionListHandle = ListPool<PrototypeId>.Instance.Get(regions, out List<PrototypeId> regionList);
+                    using var regionListHandle = ListPool<PrototypeId>.Get(regions, out List<PrototypeId> regionList);
                     foreach (PrototypeId regionRef in regionList)
                     {
                         RegionPrototype regionProto = regionRef.As<RegionPrototype>();
@@ -936,7 +936,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (_activeAreas.Count == 0)
             {
-                using var activeAreasHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> activeAreas);
+                using var activeAreasHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> activeAreas);
                 foreach (PrototypeId regionRef in _activeRegions)
                 {
                     activeAreas.Clear();

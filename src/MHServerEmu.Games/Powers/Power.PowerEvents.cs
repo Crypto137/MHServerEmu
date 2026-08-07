@@ -754,7 +754,7 @@ namespace MHServerEmu.Games.Powers
             int delta = (int)triggeredPowerEvent.GetEventParam(Properties, ultimateOwner);
             if (!Verify.IsTrue(delta != 0)) return;
 
-            using var powersToOperateOnListHandle = ListPool<Power>.Instance.Get(out List<Power> powersToOperateOnList);
+            using var powersToOperateOnListHandle = ListPool<Power>.Get(out List<Power> powersToOperateOnList);
             if (GetPowersToOperateOnForPowerEvent(ultimateOwner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 foreach (Power power in powersToOperateOnList)
@@ -897,12 +897,12 @@ namespace MHServerEmu.Games.Powers
 
             Avatar avatar = Owner as Avatar;
 
-            using var recipientPlayersHandle = HashSetPool<Player>.Instance.Get(out HashSet<Player> recipientPlayers);
-            using var tablesHandle = ListPool<(PrototypeId, LootActionType)>.Instance.Get(out List<(PrototypeId, LootActionType)> tables);
+            using var recipientPlayersHandle = HashSetPool<Player>.Get(out HashSet<Player> recipientPlayers);
+            using var tablesHandle = ListPool<(PrototypeId, LootActionType)>.Get(out List<(PrototypeId, LootActionType)> tables);
 
             if (lootTableContext.IncludeNearbyAvatars)
             {
-                using var nearbyPlayerListHandle = ListPool<Player>.Instance.Get(out List<Player> nearbyPlayerList);
+                using var nearbyPlayerListHandle = ListPool<Player>.Get(out List<Player> nearbyPlayerList);
 
                 bool requireCombatActive = Owner.WorldEntityPrototype.RequireCombatActiveForKillCredit;
                 ComputeNearbyPlayers(Owner.Region, Owner.RegionLocation.Position, 0, requireCombatActive, nearbyPlayerList);
@@ -1078,7 +1078,7 @@ namespace MHServerEmu.Games.Powers
             Power masterControlPower = null;
             TimeSpan maxTime = TimeSpan.Zero;
 
-            using var controlPowerEndListHandle = ListPool<Power>.Instance.Get(out List<Power> controlPowerEndList);
+            using var controlPowerEndListHandle = ListPool<Power>.Get(out List<Power> controlPowerEndList);
 
             foreach (Condition condition in conditionCollection)
             {
@@ -1158,7 +1158,7 @@ namespace MHServerEmu.Games.Powers
             if (settings.Flags.HasFlag(PowerActivationSettingsFlags.AutoActivate))
                 return;
 
-            using var powersToOperateOnListHandle = ListPool<Power>.Instance.Get(out List<Power> powersToOperateOnList);
+            using var powersToOperateOnListHandle = ListPool<Power>.Get(out List<Power> powersToOperateOnList);
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 TimeSpan cooldownDuration = TimeSpan.FromSeconds(triggeredPowerEvent.GetEventParam(Properties, Owner));
@@ -1176,7 +1176,7 @@ namespace MHServerEmu.Games.Powers
         {
             if (!Verify.IsNotNull(Owner)) return;
 
-            using var powersToOperateOnListHandle = ListPool<Power>.Instance.Get(out List<Power> powersToOperateOnList);
+            using var powersToOperateOnListHandle = ListPool<Power>.Get(out List<Power> powersToOperateOnList);
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 foreach (Power power in powersToOperateOnList)
@@ -1193,7 +1193,7 @@ namespace MHServerEmu.Games.Powers
         {
             if (!Verify.IsNotNull(Owner)) return;
             
-            using var powersToOperateOnListHandle = ListPool<Power>.Instance.Get(out List<Power> powersToOperateOnList);
+            using var powersToOperateOnListHandle = ListPool<Power>.Get(out List<Power> powersToOperateOnList);
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 TimeSpan offset = TimeSpan.FromSeconds(triggeredPowerEvent.GetEventParam(Properties, Owner));
@@ -1212,7 +1212,7 @@ namespace MHServerEmu.Games.Powers
         {
             if (!Verify.IsNotNull(Owner)) return;
 
-            using var powersToOperateOnListHandle = ListPool<Power>.Instance.Get(out List<Power> powersToOperateOnList);
+            using var powersToOperateOnListHandle = ListPool<Power>.Get(out List<Power> powersToOperateOnList);
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 float eventParam = triggeredPowerEvent.GetEventParam(Properties, Owner);
@@ -1321,7 +1321,7 @@ namespace MHServerEmu.Games.Powers
             BlueprintId donationBlueprint = dataDirectory.GetPrototypeBlueprintDataRef(GameDatabase.AdvancementGlobalsPrototype.PetTechDonationItemPrototype);
             RarityPrototype rarityThresholdProto = itemDonateContext.RarityThreshold;
 
-            using var vacuumedItemsHandle = ListPool<Item>.Instance.Get(out List<Item> vacuumedItems);
+            using var vacuumedItemsHandle = ListPool<Item>.Get(out List<Item> vacuumedItems);
             foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(vacuumVolume, new()))
             {
                 // Skip non-item world entities

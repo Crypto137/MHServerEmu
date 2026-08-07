@@ -128,7 +128,7 @@ namespace MHServerEmu.Games.Social
 
         public void SendChatFromGameSystem(LocaleStringId localeString, Player player)
         {
-            using var clientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> clientList);
+            using var clientListHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> clientList);
 
             clientList.Add(player.PlayerConnection);
             SendChatFromGameSystem(localeString, clientList);
@@ -148,7 +148,7 @@ namespace MHServerEmu.Games.Social
             if (circle == null)
                 return;
 
-            using var clientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> clientList);
+            using var clientListHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> clientList);
 
             EntityManager entityManager = Game.EntityManager;
             foreach (CommunityMember member in player.Community.IterateMembers(circle))
@@ -165,7 +165,7 @@ namespace MHServerEmu.Games.Social
 
         public void SendChatFromGameSystem(LocaleStringId localeString, Region region)
         {
-            using var clientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> clientList);
+            using var clientListHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> clientList);
 
             foreach (Player player in new PlayerIterator(region))
                 clientList.Add(player.PlayerConnection);

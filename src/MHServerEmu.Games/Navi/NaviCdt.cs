@@ -122,8 +122,8 @@ namespace MHServerEmu.Games.Navi
 
         public void RemoveCollinearEdges()
         {
-            using var checkedEdgesHandle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> checkedEdges);
-            using var collinearEdgesHandle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> collinearEdges);
+            using var checkedEdgesHandle = ListPool<NaviEdge>.Get(out List<NaviEdge> checkedEdges);
+            using var collinearEdgesHandle = ListPool<NaviEdge>.Get(out List<NaviEdge> collinearEdges);
             using NaviSerialCheck naviSerialCheck = new(this);
 
             foreach (var triangle in TriangleList)
@@ -365,7 +365,7 @@ namespace MHServerEmu.Games.Navi
                 }
             }
 
-            using var triStackHandle = StackPool<NaviTriangle>.Instance.Get(out PoolableStack<NaviTriangle> triStack);
+            using var triStackHandle = StackPool<NaviTriangle>.Get(out PoolableStack<NaviTriangle> triStack);
 
             using PoolSpan<NaviEdge> pointEdges = PoolSpan<NaviEdge>.Allocate(3);
             pointEdges[0] = new(point, p0, NaviEdgeFlags.None);
@@ -595,8 +595,8 @@ namespace MHServerEmu.Games.Navi
                 return;
             }
 
-            using var pseudoList0Handle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> pseudoList0);
-            using var pseudoList1Handle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> pseudoList1);
+            using var pseudoList0Handle = ListPool<NaviEdge>.Get(out List<NaviEdge> pseudoList0);
+            using var pseudoList1Handle = ListPool<NaviEdge>.Get(out List<NaviEdge> pseudoList1);
 
             NaviPoint sidePoint0, sidePoint1;
             NaviPoint point = p0;
@@ -619,7 +619,7 @@ namespace MHServerEmu.Games.Navi
             sidePoint1 = splitEdge.Points[side ? 1 : 0];
             pseudoList1.Insert(0, triangle.FindEdge(p0, sidePoint1));            
 
-            using var triStackHandle = StackPool<NaviTriangle>.Instance.Get(out PoolableStack<NaviTriangle> triStack);
+            using var triStackHandle = StackPool<NaviTriangle>.Get(out PoolableStack<NaviTriangle> triStack);
 
             while (triangle.Contains(p1) == false)
             {
@@ -709,10 +709,10 @@ namespace MHServerEmu.Games.Navi
 
                 // Split this into two lists, with the first one having everything up to indexC inclusive.
                 int countC = indexC + 1;
-                using var pseudoList0Handle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> pseudoList0);
+                using var pseudoList0Handle = ListPool<NaviEdge>.Get(out List<NaviEdge> pseudoList0);
                 pseudoList0.AddRange(pseudoList, 0, countC);
 
-                using var pseudoList1Handle = ListPool<NaviEdge>.Instance.Get(out List<NaviEdge> pseudoList1);
+                using var pseudoList1Handle = ListPool<NaviEdge>.Get(out List<NaviEdge> pseudoList1);
                 pseudoList1.AddRange(pseudoList, countC, pseudoList.Count - countC);
 
                 pseudoList.Clear();
@@ -792,7 +792,7 @@ namespace MHServerEmu.Games.Navi
             var p0 = edge.Points[0];
             var p1 = edge.Points[1];
 
-            using var edgeStackHandle = StackPool<NaviEdge>.Instance.Get(out PoolableStack<NaviEdge> edgeStack);
+            using var edgeStackHandle = StackPool<NaviEdge>.Get(out PoolableStack<NaviEdge> edgeStack);
             edge.SetFlag(NaviEdgeFlags.Delaunay);
             edgeStack.Push(edge);
 
@@ -853,9 +853,9 @@ namespace MHServerEmu.Games.Navi
         {
             NaviTriangleState triangleState = new(triangle);
 
-            using var listEarHandle = ListPool<NaviEar>.Instance.Get(out List<NaviEar> listEar);
+            using var listEarHandle = ListPool<NaviEar>.Get(out List<NaviEar> listEar);
 
-            using var queueEarListHandle = ListPool<NaviEar>.Instance.Get(512, out List<NaviEar> queueEarList);
+            using var queueEarListHandle = ListPool<NaviEar>.Get(512, out List<NaviEar> queueEarList);
             FixedPriorityQueue<NaviEar> queueEar = new(queueEarList);
 
             NaviTriangle it = triangle;

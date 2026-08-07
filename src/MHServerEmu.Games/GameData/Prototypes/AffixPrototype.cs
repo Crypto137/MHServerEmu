@@ -147,7 +147,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
-            using var categoryListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> categoryList);
+            using var categoryListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> categoryList);
             foreach (var affixCategoryTableEntry in GameDatabase.LootGlobalsPrototype.AffixCategoryTable)
             {
                 foreach (PrototypeId affixProtoRef in affixCategoryTableEntry.Affixes)

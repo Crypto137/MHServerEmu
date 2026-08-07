@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (!Verify.IsNotNull(region)) return;
 
                 const int MaxTargets = 32;
-                using var validTargetsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> validTargets);
+                using var validTargetsHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> validTargets);
 
                 Sphere volume = new(agent.RegionLocation.Position, SpecialPowerMaxRadius);
                 foreach (WorldEntity targetInSphere in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
@@ -3091,7 +3091,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (!Verify.IsNotNull(region)) return;
 
                 const int MaxTargets = 32;
-                using var validTargetsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> validTargets);
+                using var validTargetsHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> validTargets);
 
                 Sphere volume = new(agent.RegionLocation.Position, SpecialPowerMaxRadius);
                 foreach (WorldEntity targetInSphere in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))
@@ -3376,7 +3376,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (!Verify.IsNotNull(difficultyProto)) return;
 
                 Sphere volume = new(agent.RegionLocation.Position, difficultyProto.PlayerNearbyRange);
-                using var targetsHandle = ListPool<(float, WorldEntity)>.Instance.Get(out List<(float, WorldEntity)> targets);
+                using var targetsHandle = ListPool<(float, WorldEntity)>.Get(out List<(float, WorldEntity)> targets);
                 foreach (WorldEntity target in region.IterateAvatarsInVolume(volume))
                 {
                     if (target == null)
@@ -5232,7 +5232,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Region region = agent.Region;
                 if (!Verify.IsNotNull(region)) return;
 
-                using var spawnersToDestroyHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> spawnersToDestroy);
+                using var spawnersToDestroyHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> spawnersToDestroy);
 
                 Sphere volume = new(agent.RegionLocation.Position, SpawnerSearchRadius);
                 foreach (WorldEntity spawnerTarget in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.PrimaryPartition)))

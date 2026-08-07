@@ -162,7 +162,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
         private void TeleportPlayersToStart()
         {
-            using var playersHandle = ListPool<Player>.Instance.Get(out List<Player> players);
+            using var playersHandle = ListPool<Player>.Get(out List<Player> players);
             foreach (Player player in MetaGame.Players)
                 players.Add(player);
 

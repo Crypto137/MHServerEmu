@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.Regions.ObjectiveGraphs
                 success &= Serializer.Transfer(archive, ref numNodes);
 
                 // Node connection information is stored in temporary structs
-                using var connectionsHandle = ListPool<ObjectiveGraphConnection>.Instance.Get(out List<ObjectiveGraphConnection> connections);
+                using var connectionsHandle = ListPool<ObjectiveGraphConnection>.Get(out List<ObjectiveGraphConnection> connections);
                 for (int i = 0; i < _nodes.Count; i++)
                 {
                     ObjectiveGraphNode node = _nodes[i];

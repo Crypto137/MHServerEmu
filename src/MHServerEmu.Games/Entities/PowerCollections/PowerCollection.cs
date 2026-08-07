@@ -240,7 +240,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 record.Power?.OnOwnerExitedWorld();
 
             // Copy to a temporary list to be able to remove entries while iterating
-            using var recordsHandle = ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Instance.Get(out var records);
+            using var recordsHandle = ListPool<KeyValuePair<PrototypeId, PowerCollectionRecord>>.Get(out var records);
 
             // This needs to be done in a loop to remove all copies of powers with RefCount higher than 0.
             while (_powers.Count > 0)
@@ -502,7 +502,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             int assignedPowers = 0;
 
             // NOTE: We reuse the same list for all iterations
-            using var triggeredPowerRefListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> triggeredPowerRefList);
+            using var triggeredPowerRefListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> triggeredPowerRefList);
 
             foreach (PowerEventActionPrototype triggeredPowerEventProto in powerProto.ActionsTriggeredOnPowerEvent)
             {
@@ -696,7 +696,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 return true;
 
             // NOTE: We reuse the same list for all iterations
-            using var triggeredPowerRefListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> triggeredPowerRefList);
+            using var triggeredPowerRefListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> triggeredPowerRefList);
 
             foreach (PowerEventActionPrototype triggeredPowerEventProto in powerProto.ActionsTriggeredOnPowerEvent)
             {

@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             var manager = Game.EntityManager;
             if (manager == null) return;
 
-            using var toRemoveHandle = ListPool<ulong>.Instance.Get(out List<ulong> toRemove);
+            using var toRemoveHandle = ListPool<ulong>.Get(out List<ulong> toRemove);
 
             foreach (ulong id in _combatList)
             {

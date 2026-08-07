@@ -92,9 +92,9 @@ namespace MHServerEmu.Games.Entities
             resolver.SetContext(LootContext.Crafting, this);
 
             // Prepare crafting ingredients
-            using var ingredientsHandle = ListPool<Item>.Instance.Get(out List<Item> ingredients);
-            using var autoPopulatedIngredientsHandle = DictionaryPool<Item, int>.Instance.Get(out Dictionary<Item, int> autoPopulatedIngredients);
-            using var outputItemsHandle = ListPool<Item>.Instance.Get(out List<Item> outputItems);
+            using var ingredientsHandle = ListPool<Item>.Get(out List<Item> ingredients);
+            using var autoPopulatedIngredientsHandle = DictionaryPool<Item, int>.Get(out Dictionary<Item, int> autoPopulatedIngredients);
+            using var outputItemsHandle = ListPool<Item>.Get(out List<Item> outputItems);
 
             if (CraftPrepareIngredients(recipeProto, ingredientIds, resolver, ingredients, autoPopulatedIngredients) == false)
                 return CraftingResult.InsufficientIngredients;
@@ -291,7 +291,7 @@ namespace MHServerEmu.Games.Entities
 
             EntityManager entityManager = Game.EntityManager;
 
-            using var autoPopulatedIngredientCountsHandle = DictionaryPool<PrototypeId, int>.Instance.Get(out Dictionary<PrototypeId, int> autoPopulatedIngredientCounts);
+            using var autoPopulatedIngredientCountsHandle = DictionaryPool<PrototypeId, int>.Get(out Dictionary<PrototypeId, int> autoPopulatedIngredientCounts);
             
             for (int i = 0; i < ingredientIds.Count; i++)
             {
@@ -404,7 +404,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Post-process created items
-            using var clonedItemsHandle = HashSetPool<Item>.Instance.Get(out HashSet<Item> clonedItems);
+            using var clonedItemsHandle = HashSetPool<Item>.Get(out HashSet<Item> clonedItems);
 
             // Clone post-processing
             LootNodePrototype[] lootNodes = recipeProto.RecipeOutput.Choices;

@@ -214,7 +214,7 @@ namespace MHServerEmu.Games.Populations
         {
             if (fixedProto == null || fixedProto.Slots.IsNullOrEmpty()) return;
 
-            using var formationObjectsHandle = ListPool<ClusterObject>.Instance.Get(out List<ClusterObject> formationObjects);
+            using var formationObjectsHandle = ListPool<ClusterObject>.Get(out List<ClusterObject> formationObjects);
             if (GetFormationObjects(formationObjects))
             {
                 int num = formationObjects.Count;
@@ -255,7 +255,7 @@ namespace MHServerEmu.Games.Populations
         {
             if (arcProto == null || arcProto.ArcRadians <= 0) return;
 
-            using var formationObjectsHandle = ListPool<ClusterObject>.Instance.Get(out List<ClusterObject> formationObjects);
+            using var formationObjectsHandle = ListPool<ClusterObject>.Get(out List<ClusterObject> formationObjects);
             if (GetFormationObjects(formationObjects))
             {
                 int num = formationObjects.Count;
@@ -276,7 +276,7 @@ namespace MHServerEmu.Games.Populations
 
                 if (num > 2)
                 {
-                    using var oldObjectsHandle = ListPool<ClusterObject>.Instance.Get(formationObjects, out List<ClusterObject> oldObjects);
+                    using var oldObjectsHandle = ListPool<ClusterObject>.Get(formationObjects, out List<ClusterObject> oldObjects);
                     for (int i = 0; i < oldObjects.Count; i++)
                         formationObjects[GetAlternatingIndex(i, oldObjects.Count)] = oldObjects[i];
                 }
@@ -305,7 +305,7 @@ namespace MHServerEmu.Games.Populations
         private void DoLine(LineFormationTypePrototype lineProto)
         {
             if (lineProto == null) return;
-            using var formationObjectsHandle = ListPool<ClusterObject>.Instance.Get(out List<ClusterObject> formationObjects);
+            using var formationObjectsHandle = ListPool<ClusterObject>.Get(out List<ClusterObject> formationObjects);
             if (GetFormationObjects(formationObjects))
             {
                 int numRows = lineProto.Rows.HasValue() ? lineProto.Rows.Length : 1;
@@ -386,7 +386,7 @@ namespace MHServerEmu.Games.Populations
             const int MaxObjects = 4;
             float width = SubObjectRadiusMax * 2.0f;
 
-            using var formationObjectsHandle = ListPool<ClusterObject>.Instance.Get(out List<ClusterObject> formationObjects);
+            using var formationObjectsHandle = ListPool<ClusterObject>.Get(out List<ClusterObject> formationObjects);
             if (GetFormationObjects(formationObjects))
             {
                 int box = 0;
@@ -488,7 +488,7 @@ namespace MHServerEmu.Games.Populations
 
             var random = Region.Game.Random;
 
-            using var overridesHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> overrides);
+            using var overridesHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> overrides);
             GetMobAffixesFromProperties(overrides);
 
             var popcornRank = popGlobals.GetRankByEnum(Rank.Popcorn);
@@ -497,10 +497,10 @@ namespace MHServerEmu.Games.Populations
             if (overrides.Count == 0 && HasModifiableEntities() == false)
                 return;
 
-            using var exemptOverridesHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> exemptOverrides);
+            using var exemptOverridesHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> exemptOverrides);
             ShiftExemptFromOverrides(overrides, exemptOverrides);
 
-            using var ranksHandle = ListPool<RankPrototype>.Instance.Get(out List<RankPrototype> ranks);
+            using var ranksHandle = ListPool<RankPrototype>.Get(out List<RankPrototype> ranks);
             GetRanks(ranks);
 
             var rollRank = difficulty.RollRank(ranks, overrides.Count == 0);
@@ -513,10 +513,10 @@ namespace MHServerEmu.Games.Populations
             ranks.Clear();
             GetRanks(ranks);
 
-            using var affixesSetHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> affixesSet);
-            using var slotsHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> slots);
-            using var currentAffixesHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> currentAffixes);
-            using var excludeAffixesHandle = HashSetPool<PrototypeId>.Instance.Get(out HashSet<PrototypeId> excludeAffixes);
+            using var affixesSetHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> affixesSet);
+            using var slotsHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> slots);
+            using var currentAffixesHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> currentAffixes);
+            using var excludeAffixesHandle = HashSetPool<PrototypeId>.Get(out HashSet<PrototypeId> excludeAffixes);
 
             foreach (var rankProto in ranks)
             {
@@ -653,7 +653,7 @@ namespace MHServerEmu.Games.Populations
 
         private static void ShiftExemptFromOverrides(HashSet<PrototypeId> overrides, HashSet<PrototypeId> exemptOverrides)
         {
-            using var toRemoveHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> toRemove);
+            using var toRemoveHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> toRemove);
 
             foreach (var overrideRef in overrides)
             {
@@ -847,7 +847,7 @@ namespace MHServerEmu.Games.Populations
             var max = bound.Max;
             var center = bound.Center;
             float clusterSize = Math.Max(Radius, 32.0f);
-            using var pointsHandle = ListPool<Point2>.Instance.Get(out List<Point2> points);
+            using var pointsHandle = ListPool<Point2>.Get(out List<Point2> points);
 
             for (float x = min.X; x < max.X; x += clusterSize)
                 for (float y = min.Y; y < max.Y; y += clusterSize)

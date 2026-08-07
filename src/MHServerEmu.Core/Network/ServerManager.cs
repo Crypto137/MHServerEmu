@@ -246,7 +246,7 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public string GetServerStatusString()
         {
-            using var statusDictHandle = DictionaryPool<string, long>.Instance.Get(out Dictionary<string, long> statusDict);
+            using var statusDictHandle = DictionaryPool<string, long>.Get(out Dictionary<string, long> statusDict);
             GetServerStatus(statusDict);
 
             StringBuilder sb = new();

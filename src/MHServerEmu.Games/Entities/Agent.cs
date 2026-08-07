@@ -765,7 +765,7 @@ namespace MHServerEmu.Games.Entities
                 return;
 
             // Need to use a temporary list here because activating a power can add a condition that will assign a proc power
-            using var powerListHandle = ListPool<Power>.Instance.Get(out List<Power> powerList);
+            using var powerListHandle = ListPool<Power>.Get(out List<Power> powerList);
 
             foreach (var kvp in PowerCollection)
                 powerList.Add(kvp.Value.Power);
@@ -1230,7 +1230,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // This is a boost to multiple powers
-            using var powerInfoListHandle = ListPool<PowerProgressionInfo>.Instance.Get(out List<PowerProgressionInfo> powerInfoList);
+            using var powerInfoListHandle = ListPool<PowerProgressionInfo>.Get(out List<PowerProgressionInfo> powerInfoList);
             GetPowerProgressionInfos(powerInfoList);
 
             for (int i = 0; i < powerInfoList.Count; i++)
@@ -1294,7 +1294,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // This is a grant of multiple powers
-            using var powerInfoListHandle = ListPool<PowerProgressionInfo>.Instance.Get(out List<PowerProgressionInfo> powerInfoList);
+            using var powerInfoListHandle = ListPool<PowerProgressionInfo>.Get(out List<PowerProgressionInfo> powerInfoList);
             GetPowerProgressionInfos(powerInfoList);
 
             for (int i = 0; i < powerInfoList.Count; i++)
@@ -1426,7 +1426,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (!Verify.IsTrue(this is Avatar || IsTeamUpAgent)) return false;
 
-            using var powerInfoListHandle = ListPool<PowerProgressionInfo>.Instance.Get(out List<PowerProgressionInfo> powerInfoList);
+            using var powerInfoListHandle = ListPool<PowerProgressionInfo>.Get(out List<PowerProgressionInfo> powerInfoList);
             GetPowerProgressionInfos(powerInfoList);
 
             for (int i = 0; i < powerInfoList.Count; i++)
@@ -1468,7 +1468,7 @@ namespace MHServerEmu.Games.Entities
 #if GAME_VERSION_1_48
         public bool PowerPointAllocationClearTemporary(int powerSpecIndex)
         {
-            using var propsToRemoveHandle = ListPool<PropertyId>.Instance.Get(out List<PropertyId> propsToRemove);
+            using var propsToRemoveHandle = ListPool<PropertyId>.Get(out List<PropertyId> propsToRemove);
 
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerSpecPending, powerSpecIndex))
                 propsToRemove.Add(kvp.Key);
@@ -1489,7 +1489,7 @@ namespace MHServerEmu.Games.Entities
 
             Verify.IsTrue(PowerPointAllocationClearTemporary(powerSpecIndex) == false, $"[{this}] already had a pending allocation");
 
-            using var propsToAdjustHandle = DictionaryPool<PropertyId, PropertyValue>.Instance.Get(out Dictionary<PropertyId, PropertyValue> propsToAdjust);
+            using var propsToAdjustHandle = DictionaryPool<PropertyId, PropertyValue>.Get(out Dictionary<PropertyId, PropertyValue> propsToAdjust);
 
             long pointsSpent = 0;
 
@@ -1619,7 +1619,7 @@ namespace MHServerEmu.Games.Entities
             if (skipValidation == false && CanRespecPowers() == false)
                 return false;
 
-            using var removeListHandle = ListPool<PropertyId>.Instance.Get(out List<PropertyId> removeList);
+            using var removeListHandle = ListPool<PropertyId>.Get(out List<PropertyId> removeList);
 
 #if GAME_VERSION_1_48
             // Remove spent power points
@@ -1863,7 +1863,7 @@ namespace MHServerEmu.Games.Entities
 
         protected void SendLevelUpMessage()
         {
-            using var interestedClientListHandle = ListPool<PlayerConnection>.Instance.Get(out List<PlayerConnection> interestedClientList);
+            using var interestedClientListHandle = ListPool<PlayerConnection>.Get(out List<PlayerConnection> interestedClientList);
             PlayerConnectionManager networkManager = Game.NetworkManager;
             if (networkManager.GetInterestedClients(interestedClientList, this, AOINetworkPolicyValues.AOIChannelOwner | AOINetworkPolicyValues.AOIChannelProximity))
             {
@@ -2711,7 +2711,7 @@ namespace MHServerEmu.Games.Entities
             if (negativeStatusCondition.ConditionPrototype.Scope == ConditionScopeType.User)
                 return;
 
-            using var negativeStatusListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> negativeStatusList);
+            using var negativeStatusListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> negativeStatusList);
             if (!Verify.IsTrue(negativeStatusCondition.IsANegativeStatusEffect(negativeStatusList))) return;
 
             // Skip negative status conditions that only have movement / cast speed decreases and no other statuses
@@ -3078,7 +3078,7 @@ namespace MHServerEmu.Games.Entities
 
             SetSummonedAllianceOverride(avatar.Alliance);
 
-            using var boostListHandle = ListPool<PrototypeId>.Instance.Get(out List<PrototypeId> boostList);
+            using var boostListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> boostList);
 
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.EnemyBoost))
             {
@@ -3106,7 +3106,7 @@ namespace MHServerEmu.Games.Entities
 
         public void KillSummonedOnOwnerDeath()
         {
-            using var summonsHandle = ListPool<WorldEntity>.Instance.Get(out List<WorldEntity> summons);
+            using var summonsHandle = ListPool<WorldEntity>.Get(out List<WorldEntity> summons);
 
             foreach (var summoned in new SummonedEntityIterator(this))
             {
@@ -3259,10 +3259,10 @@ namespace MHServerEmu.Games.Entities
 
             if (action.Rewards.HasValue())
             {
-                using var playerListHandle = ListPool<Player>.Instance.Get(out List<Player> playerList);
+                using var playerListHandle = ListPool<Player>.Get(out List<Player> playerList);
                 Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, false, playerList);
 
-                using var tablesHandle = ListPool<(PrototypeId, LootActionType)>.Instance.Get(out List<(PrototypeId, LootActionType)> tables);
+                using var tablesHandle = ListPool<(PrototypeId, LootActionType)>.Get(out List<(PrototypeId, LootActionType)> tables);
                 foreach (var lootTableProtoRef in action.Rewards)
                 {
                     if (lootTableProtoRef == PrototypeId.Invalid)
