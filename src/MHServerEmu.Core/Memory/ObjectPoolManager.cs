@@ -17,12 +17,12 @@ namespace MHServerEmu.Core.Memory
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         [ThreadStatic]
-        private static Dictionary<Type, ObjectPool> _threadLocalPoolDict;
+        private static Dictionary<Type, OldObjectPool> _threadLocalPoolDict;
 
         [ThreadStatic]
         public static bool UseThreadLocalStorage;
 
-        private readonly Dictionary<Type, ObjectPool> _sharedPoolDict = new();
+        private readonly Dictionary<Type, OldObjectPool> _sharedPoolDict = new();
 
         public static ObjectPoolManager Instance { get; } = new();
 
@@ -36,14 +36,14 @@ namespace MHServerEmu.Core.Memory
             if (UseThreadLocalStorage)
             {
                 _threadLocalPoolDict ??= new();
-                ObjectPool pool = GetOrCreatePool<T>(_threadLocalPoolDict);
+                OldObjectPool pool = GetOrCreatePool<T>(_threadLocalPoolDict);
                 return pool.Get<T>();
             }
             else
             {
                 lock (_sharedPoolDict)
                 {
-                    ObjectPool pool = GetOrCreatePool<T>(_sharedPoolDict);
+                    OldObjectPool pool = GetOrCreatePool<T>(_sharedPoolDict);
                     return pool.Get<T>();
                 }
             }
@@ -57,27 +57,27 @@ namespace MHServerEmu.Core.Memory
             if (UseThreadLocalStorage)
             {
                 // Thread local dict should have already been initialized in a Get() call
-                ObjectPool pool = GetOrCreatePool<T>(_threadLocalPoolDict);
+                OldObjectPool pool = GetOrCreatePool<T>(_threadLocalPoolDict);
                 pool.Return(@object);
             }
             else
             {
                 lock (_sharedPoolDict)
                 {
-                    ObjectPool pool = GetOrCreatePool<T>(_sharedPoolDict);
+                    OldObjectPool pool = GetOrCreatePool<T>(_sharedPoolDict);
                     pool.Return(@object);
                 }
             }
         }
 
         /// <summary>
-        /// Create if needed and returns an <see cref="ObjectPool"/> for <typeparamref name="T"/>.
+        /// Create if needed and returns an <see cref="OldObjectPool"/> for <typeparamref name="T"/>.
         /// </summary>
-        private static ObjectPool GetOrCreatePool<T>(Dictionary<Type, ObjectPool> poolDict) where T: IPoolable, IDisposable, new()
+        private static OldObjectPool GetOrCreatePool<T>(Dictionary<Type, OldObjectPool> poolDict) where T: IPoolable, IDisposable, new()
         {
             Type type = typeof(T);
             
-            if (poolDict.TryGetValue(type, out ObjectPool pool) == false)
+            if (poolDict.TryGetValue(type, out OldObjectPool pool) == false)
             {
                 pool = new(UseThreadLocalStorage);
                 poolDict.Add(type, pool);

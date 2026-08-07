@@ -1,7 +1,7 @@
 ﻿namespace MHServerEmu.Core.Memory
 {
     /// <summary>
-    /// Interface for objects that can be stored in an <see cref="ObjectPool"/>.
+    /// Interface for objects that can be stored in an <see cref="OldObjectPool"/>.
     /// </summary>
     public interface IPoolable
     {

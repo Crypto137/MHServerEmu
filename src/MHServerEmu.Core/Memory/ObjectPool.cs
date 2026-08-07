@@ -2,59 +2,97 @@
 
 namespace MHServerEmu.Core.Memory
 {
-    /// <summary>
-    /// Stores instances of classes that implement both <see cref="IPoolable"/> and <see cref="IDisposable"/> for later reuse.
-    /// </summary>
-    public class ObjectPool
+    public abstract class ObjectPool<T> where T: class
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Stack<IPoolable> _objects = new();
-        private readonly int _threadId = -1;
+        private readonly List<T> _instances = new();
+#if DEBUG
+        private readonly HashSet<T> _activeInstances = new();
+#endif
+        private readonly int _threadId;
 
-        public int TotalCount { get; private set; }
-        public int AvailableCount { get => _objects.Count; }
+        private int _totalAllocatedCount = 0;
+        private T _lastReturnedInstance = null;
 
-        public ObjectPool(bool isThreadLocal)
+        public ObjectPool(int threadId)
         {
-            if (isThreadLocal)
-                _threadId = Environment.CurrentManagedThreadId;
+            _threadId = threadId;
         }
 
-        /// <summary>
-        /// Creates if needed and returns an instance of <typeparamref name="T"/>.
-        /// </summary>
-        public T Get<T>() where T: IPoolable, IDisposable, new()
+        public T Get()
         {
-            T @object;
+            T instance;
 
-            if (AvailableCount == 0)
+            if (_lastReturnedInstance != null)
             {
-                @object = new();
-
-                TotalCount++;
-                Logger.Trace($"Get<T>(): Created a new instance of {typeof(T).Name} (ThreadId={_threadId}, TotalCount={TotalCount})");
+                instance = _lastReturnedInstance;
+                _lastReturnedInstance = null;
+            }
+            else if (_instances.Count == 0)
+            {
+                instance = Allocate();
+                _totalAllocatedCount++;
+                Logger.Trace($"Get(): Created a new instance of {typeof(T)} (ThreadId={_threadId}, TotalCount={_totalAllocatedCount})");
             }
             else
             {
-                @object = (T)_objects.Pop();
-                @object.IsInPool = false;
+                int index = _instances.Count - 1;
+                instance = _instances[index];
+                _instances.RemoveAt(index);
             }
 
-            return @object;
+#if DEBUG
+            if (_activeInstances.Add(instance) == false)
+                throw new Exception($"Attempted to get an active instance of {typeof(T).Name} from the pool.");
+#endif
+
+            OnGet(instance);
+            return instance;
         }
 
-        /// <summary>
-        /// Returns an instance of <typeparamref name="T"/> to the pool for later reuse.
-        /// </summary>
-        public void Return<T>(T @object) where T: IPoolable, IDisposable, new()
+        public ObjectPoolHandle<T> Get(out T instance)
         {
-            if (!Verify.IsTrue(@object.IsInPool == false, LoggingLevel.Error, $"Attempted to return an instance of {typeof(T).Name} that is already in a pool!"))
-                return;
+            instance = Get();
+            return new(this, instance);
+        }
 
-            @object.ResetForPool();
-            @object.IsInPool = true;
-            _objects.Push(@object);
+        public void Return(T instance)
+        {
+#if DEBUG
+            if (_activeInstances.Remove(instance) == false)
+                throw new Exception($"Attempted to return an inactive instance of {typeof(T).Name} to the pool.");
+#endif
+
+            OnReturn(instance);
+
+            if (_lastReturnedInstance == null)
+                _lastReturnedInstance = instance;
+            else
+                _instances.Add(instance);
+        }
+
+        protected abstract T Allocate();
+
+        protected virtual void OnGet(T instance) { }
+
+        protected virtual void OnReturn(T instance) { }
+    }
+
+    public readonly struct ObjectPoolHandle<T> : IDisposable where T: class
+    {
+        private readonly ObjectPool<T> _pool;
+        private readonly T _instance;
+
+        public ObjectPoolHandle(ObjectPool<T> pool, T instance)
+        {
+            _pool = pool;
+            _instance = instance;
+        }
+
+        public void Dispose()
+        {
+            _pool.Return(_instance);
         }
     }
 }
