@@ -2,6 +2,12 @@
 
 namespace MHServerEmu.Core.Memory
 {
+    public enum ObjectPoolFlags
+    {
+        None            = 0,
+        ThreadLocal     = 1 << 0,
+    }
+
     public abstract class ObjectPool<T> where T: class
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -10,14 +16,16 @@ namespace MHServerEmu.Core.Memory
 #if DEBUG
         private readonly HashSet<T> _activeInstances = new();
 #endif
+        private readonly ObjectPoolFlags _flags;
         private readonly int _threadId;
 
         private int _totalAllocatedCount = 0;
         private T _lastReturnedInstance = null;
 
-        public ObjectPool(int threadId)
+        public ObjectPool(ObjectPoolFlags flags = ObjectPoolFlags.None)
         {
-            _threadId = threadId;
+            _flags = flags;
+            _threadId = _flags.HasFlag(ObjectPoolFlags.ThreadLocal) ? Environment.CurrentManagedThreadId : -1;
         }
 
         public T Get()

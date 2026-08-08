@@ -16,7 +16,7 @@ namespace MHServerEmu.Core.Memory
 
     public abstract class CollectionPool<TCollection, TValue> where TCollection: class, ICollection<TValue>, new()
     {
-        private static readonly CollectionPoolImpl _sharedPool = new(-1);
+        private static readonly CollectionPoolImpl _sharedPool = new(ObjectPoolFlags.None);
 
         [ThreadStatic]
         private static CollectionPoolImpl _threadLocalPool; 
@@ -25,7 +25,7 @@ namespace MHServerEmu.Core.Memory
         {
             if (CollectionPoolSettings.UseThreadLocalStorage)
             {
-                _threadLocalPool ??= new(Environment.CurrentManagedThreadId);
+                _threadLocalPool ??= new(ObjectPoolFlags.ThreadLocal);
                 return _threadLocalPool.Get();
             }
             else
@@ -39,7 +39,7 @@ namespace MHServerEmu.Core.Memory
         {
             if (CollectionPoolSettings.UseThreadLocalStorage)
             {
-                _threadLocalPool ??= new(Environment.CurrentManagedThreadId);
+                _threadLocalPool ??= new(ObjectPoolFlags.ThreadLocal);
                 return _threadLocalPool.Get(out collection);
             }
             else
@@ -64,7 +64,7 @@ namespace MHServerEmu.Core.Memory
 
         private sealed class CollectionPoolImpl : ObjectPool<TCollection>
         {
-            public CollectionPoolImpl(int threadId) : base(threadId) { }
+            public CollectionPoolImpl(ObjectPoolFlags flags) : base(flags) { }
 
             protected override TCollection Allocate()
             {
