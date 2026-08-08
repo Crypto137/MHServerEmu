@@ -148,7 +148,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             foreach (var player in players)
             {
-                using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
                 teleporter.Initialize(player, TeleportContextEnum.TeleportContext_MetaGame);
                 teleporter.TeleportToTarget(targetRef);
             }

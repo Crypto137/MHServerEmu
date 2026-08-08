@@ -298,7 +298,7 @@ namespace MHServerEmu.Games.Entities
 
             if (Prototype.EvalOnCreate.HasValue())
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.Game = Game;
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
 

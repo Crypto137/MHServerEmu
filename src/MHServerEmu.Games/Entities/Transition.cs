@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.Entities
             {
                 PrototypeId waypointHotspotRef = GameDatabase.GlobalsPrototype.WaypointHotspot;
 
-                using EntitySettings hotspotSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                using var hotspotSettingsHandle = EntitySettingsPool.Get(out EntitySettings hotspotSettings);
                 hotspotSettings.EntityRef = waypointHotspotRef;
                 hotspotSettings.RegionId = Region.Id;
                 hotspotSettings.Position = RegionLocation.Position;
@@ -234,7 +234,7 @@ namespace MHServerEmu.Games.Entities
             RegionPrototype destinationRegionProto = destinationRegionRef.As<RegionPrototype>();
             if (!Verify.IsNotNull(destinationRegionProto)) return false;
 
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Transition);
             teleporter.TransitionEntity = this;
 
@@ -307,7 +307,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool UseTransitionTower(Player player)
         {
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Transition);
             return teleporter.TeleportToTransition(_destinationList[0].EntityId);
         }
@@ -318,7 +318,7 @@ namespace MHServerEmu.Games.Entities
 
             TransitionDestination destination = _destinationList[0];
 
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Transition);
             teleporter.TransitionEntity = this;
 
@@ -327,7 +327,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool UseTransitionReturnToLastTown(Player player)
         {
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Transition);
             teleporter.TransitionEntity = this;
             return teleporter.TeleportToLastTown();

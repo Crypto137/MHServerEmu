@@ -2243,7 +2243,7 @@ namespace MHServerEmu.Games.Powers
                 return;
 
             // Calculate conditions properties (these will be shared by all stacks)
-            using PropertyCollection conditionProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var conditionPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection conditionProperties);
             Condition.GenerateConditionProperties(conditionProperties, conditionProto, Properties, owner ?? ultimateOwner, target, Game);
 
             // Calculate duration
@@ -2718,9 +2718,9 @@ namespace MHServerEmu.Games.Powers
                 return;
 
             // Check eval
-            EvalPrototype interruptChanceFormula = GameDatabase.CombatGlobalsPrototype.EvalInterruptChanceFormula; 
+            EvalPrototype interruptChanceFormula = GameDatabase.CombatGlobalsPrototype.EvalInterruptChanceFormula;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, target.Properties);
             evalContext.SetReadOnlyVar_ProtoRefVectorPtr(EvalContext.Var1, powerProto.Keywords);
@@ -2742,7 +2742,7 @@ namespace MHServerEmu.Games.Powers
             // Generate condition data
             TimeSpan duration = conditionProto.GetDuration(Properties, ultimateOwner);
 
-            using PropertyCollection conditionProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var conditionPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection conditionProperties);
             Condition.GenerateConditionProperties(conditionProperties, conditionProto, Properties, owner, target, Game);
 
             // Create, initialize, and add the condition
@@ -3382,7 +3382,7 @@ namespace MHServerEmu.Games.Powers
         /// </summary>
         private static long CalculateTargetHealthMaxForCombatLevel(WorldEntity target, int combatLevel)
         {
-            using PropertyCollection healthMaxProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var healthMaxPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection healthMaxProperties);
 
             // Copy all properties involved in calculating HealthMax from the target
             PropertyInfo healthMaxPropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.HealthMax);
@@ -3401,7 +3401,7 @@ namespace MHServerEmu.Games.Powers
                 healthBasePropertyInfo, SetPropertyFlags.None, true);
 
             // Calculate the eval
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, healthMaxProperties);
 
             return Eval.RunLong(healthMaxPropertyInfo.Eval, evalContext);

@@ -574,7 +574,7 @@ namespace MHServerEmu.Games.Powers.Conditions
             _durationMS = (long)duration.TotalMilliseconds;
 
             // Restore properties
-            using PropertyCollection initializeProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var initializePropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection initializeProperties);
 
             PropertyInfoTable infoTable = GameDatabase.PropertyInfoTable;
 
@@ -721,7 +721,7 @@ namespace MHServerEmu.Games.Powers.Conditions
             if (evals.HasValue() == false)
                 return;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
 
             foreach (EvalPrototype evalProto in evals)
@@ -895,7 +895,7 @@ namespace MHServerEmu.Games.Powers.Conditions
             // Run eval
             if (conditionProto.EvalOnCreate.HasValue())
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.Game = game;
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, conditionProperties);
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, sourceEntity?.Properties);

@@ -508,11 +508,11 @@ namespace MHServerEmu.Games.Achievements
             var lootManager = Owner.Game?.LootManager;
             if (lootManager == null) return;
             int seed = Owner.Game.Random.Next();
-            
-            using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+
+            using var settingsHandle = LootInputSettingsPool.Get(out LootInputSettings settings);
             settings.Initialize(LootContext.AchievementReward, Owner, Owner.CurrentAvatar, 1);
 
-            using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
+            using var resolverHandle = ItemResolverPool.Get(out ItemResolver resolver);
             resolver.Initialize(new(seed));
             resolver.SetContext(LootContext.AchievementReward, Owner);
 
@@ -520,7 +520,7 @@ namespace MHServerEmu.Games.Achievements
             if (reward.RollLootTable(settings.LootRollSettings, resolver) != LootRollResult.NoRoll)
             {
                 //Logger.Debug($"GiveAchievementReward [{info.Id}] {info.RewardPrototype}");
-                using LootResultSummary summary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+                using var summaryHandle = LootResultSummaryPool.Get(out LootResultSummary summary);
                 resolver.FillLootResultSummary(summary);
 
                 if (lootManager.GiveLootFromSummary(summary, Owner) == false)

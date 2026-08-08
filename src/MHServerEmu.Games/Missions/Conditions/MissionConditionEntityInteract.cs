@@ -74,7 +74,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (entityId != Entity.InvalidId)
                 message.SetEntityId(entityId);
 
-            using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            using var lootSummaryHandle = LootResultSummaryPool.Get(out LootResultSummary lootSummary);
 
             if (GetShowItems(player, lootSummary))
             {
@@ -238,15 +238,15 @@ namespace MHServerEmu.Games.Missions.Conditions
             {
                 var brain = GameDatabase.GetPrototype<BrainPrototype>(brainOverride);
                 if (brain is not ProceduralAIProfilePrototype profile) return;
-                using PropertyCollection collection = ObjectPoolManager.Instance.Get<PropertyCollection>();
-                collection[PropertyEnum.AIAssistedEntityID] = player.Id;
-                agent.InitAIOverride(profile, collection);
+                using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
+                properties[PropertyEnum.AIAssistedEntityID] = player.Id;
+                agent.InitAIOverride(profile, properties);
             }
             else
             {
-                var collection = controller.Blackboard.PropertyCollection;
-                collection[PropertyEnum.AIFullOverride] = brainOverride;
-                collection[PropertyEnum.AIAssistedEntityID] = player.Id;
+                var blackboardProps = controller.Blackboard.PropertyCollection;
+                blackboardProps[PropertyEnum.AIFullOverride] = brainOverride;
+                blackboardProps[PropertyEnum.AIAssistedEntityID] = player.Id;
             }
         }
 
@@ -255,7 +255,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             Avatar avatar = player.CurrentAvatar;
             if (avatar == null) return;
 
-            using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            using var lootSummaryHandle = LootResultSummaryPool.Get(out LootResultSummary lootSummary);
 
             if (GetGiveItems(player, lootSummary, false))
             {

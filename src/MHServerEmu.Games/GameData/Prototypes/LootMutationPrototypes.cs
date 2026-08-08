@@ -182,7 +182,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
-            using LootCloneRecord sourceRecord = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+            using var sourceRecordHandle = LootCloneRecordPool.Get(out LootCloneRecord sourceRecord);
 
             if (SourceIndex < 0 || resolver.InitializeCloneRecordFromSource(SourceIndex, sourceRecord) == false)
                 return MutationResults.Error;
@@ -219,7 +219,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
-            using LootCloneRecord sourceRecord = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+            using var sourceRecordHandle = LootCloneRecordPool.Get(out LootCloneRecord sourceRecord);
 
             if (SourceIndex < 0 || resolver.InitializeCloneRecordFromSource(SourceIndex, sourceRecord) == false)
                 return MutationResults.Error;
@@ -249,7 +249,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
-            using LootCloneRecord sourceRecord = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+            using var sourceRecordHandle = LootCloneRecordPool.Get(out LootCloneRecord sourceRecord);
 
             if (SourceIndex < 0 || resolver.InitializeCloneRecordFromSource(SourceIndex, sourceRecord) == false)
                 return MutationResults.Error;
@@ -363,7 +363,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (resolver.CheckItem(lootCloneRecord, RestrictionTestFlags.All, true) == false)
             {
-                using LootCloneRecord lootCloneRecordCopy = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+                using var lootCloneRecordCopyHandle = LootCloneRecordPool.Get(out LootCloneRecord lootCloneRecordCopy);
                 LootCloneRecord.Initialize(lootCloneRecordCopy, lootCloneRecord);
 
                 result = CreateItemForAvatar(resolver, lootCloneRecordCopy.RollFor, lootCloneRecordCopy, lootCloneRecord);
@@ -656,7 +656,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
-            using LootCloneRecord sourceRecord = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+            using var sourceRecordHandle = LootCloneRecordPool.Get(out LootCloneRecord sourceRecord);
 
             if (SourceIndex < 0 || resolver.InitializeCloneRecordFromSource(SourceIndex, sourceRecord) == false)
                 return MutationResults.Error;
@@ -686,7 +686,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
-            using LootCloneRecord sourceRecord = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+            using var sourceRecordHandle = LootCloneRecordPool.Get(out LootCloneRecord sourceRecord);
 
             if (SourceIndex < 0 || resolver.InitializeCloneRecordFromSource(SourceIndex, sourceRecord) == false)
                 return MutationResults.Error;
@@ -747,7 +747,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (Eval == null)
                 return;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, item?.Properties);
 
             Verify.IsTrue(Properties.Evals.Eval.RunBool(Eval, evalContext), $"The LootEvalPrototype Eval failed:\n: [{Eval.ExpressionString()}]");

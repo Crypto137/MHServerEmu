@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.MetaGames
             if (score.TryGetPlayerScore(player, _proto.AssistsEntry, out int assists)
                 && score.TryGetPlayerScore(player, _proto.KillsEntry, out int kills))
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.Game = MetaGame.Game;
                 evalContext.SetVar_Int(EvalContext.Var1, assists);
                 evalContext.SetVar_Int(EvalContext.Var2, kills);

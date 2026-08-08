@@ -104,7 +104,7 @@ namespace MHServerEmu.Games.Entities
                         if (condition.IsPersistToDB() == false)
                             continue;
 
-                        using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                        using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
                         ConditionStore conditionStore = new(properties);
                         success &= condition.SaveToConditionStore(ref conditionStore);
                         success &= conditionStore.Serialize(archive);
@@ -118,7 +118,7 @@ namespace MHServerEmu.Games.Entities
                 {
                     for (uint i = 0; i < numConditions; i++)
                     {
-                        using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                        using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
                         ConditionStore conditionStore = new(properties);
                         success &= conditionStore.Serialize(archive);
 

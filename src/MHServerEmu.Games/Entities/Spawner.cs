@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.Entities
             {
                 if (Region == null) return;
 
-                using EntitySettings hotspotSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                using var hotspotSettingsHandle = EntitySettingsPool.Get(out EntitySettings hotspotSettings);
                 hotspotSettings.EntityRef = hotspotRef;
                 hotspotSettings.RegionId = Region.Id;
                 hotspotSettings.Position = RegionLocation.Position;

@@ -258,7 +258,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             {
                 if (status == PlayerState.Fallback)
                 {
-                    using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                    using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
                     teleporter.Initialize(player, TeleportContextEnum.TeleportContext_MetaGame);
                     teleporter.TeleportToLastTown();
                 }
@@ -267,7 +267,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     var region = Region;
                     if (targetRef == PrototypeId.Invalid || region == null) return;
 
-                    using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                    using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
                     teleporter.Initialize(player, TeleportContextEnum.TeleportContext_MetaGame);
 
                     RegionPrototype regionProto;

@@ -56,7 +56,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             LootRollResult result = LootRollResult.NoRoll;
 
-            using LootRollSettings modifiedSettings = ObjectPoolManager.Instance.Get<LootRollSettings>();
+            using var modifiedSettingsHandle = LootRollSettingsPool.Get(out LootRollSettings modifiedSettings);
             modifiedSettings.Set(settings);
             modifiedSettings.ForceUsable = true;
 

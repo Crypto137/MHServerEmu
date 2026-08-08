@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Do a modified roll
             if (Modifiers.HasValue())
             {
-                using LootRollSettings modifiedSettings = ObjectPoolManager.Instance.Get<LootRollSettings>();
+                using var modifiedSettingsHandle = LootRollSettingsPool.Get(out LootRollSettings modifiedSettings);
                 modifiedSettings.Set(settings);
 
                 foreach (LootRollModifierPrototype modifier in Modifiers)
@@ -163,7 +163,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         currentPickerAvatarProto = resolvedAvatarProto;
                     }
 
-                    using DropFilterArguments pickFilterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+                    using var pickFilterArgsHanlde = DropFilterArgumentsPool.Get(out DropFilterArguments pickFilterArgs);
                     DropFilterArguments.Initialize(pickFilterArgs, null, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
                     pickFilterArgs.DropDistanceSq = settings.DropDistanceSq;
 
@@ -180,7 +180,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     pickedItemProto = itemProto;
                 }
 
-                using DropFilterArguments pushFilterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+                using var pushFilterArgsHanlde = DropFilterArgumentsPool.Get(out DropFilterArguments pushFilterArgs);
                 DropFilterArguments.Initialize(pushFilterArgs, pickedItemProto, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
                 pushFilterArgs.DropDistanceSq = settings.DropDistanceSq;
 

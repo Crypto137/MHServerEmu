@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.MetaGames
 
             if (PvPPrototype.EvalOnPlayerAdded != null)
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Entity, player.CurrentAvatar.Properties);
                 Eval.RunBool(PvPPrototype.EvalOnPlayerAdded, evalContext);
@@ -185,7 +185,7 @@ namespace MHServerEmu.Games.MetaGames
 
             if (targetRef != PrototypeId.Invalid)
             {
-                using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
                 teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Resurrect);
                 teleporter.TeleportToTarget(targetRef);
                 result = true;

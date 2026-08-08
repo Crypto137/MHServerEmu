@@ -125,7 +125,7 @@ namespace MHServerEmu.Games.Entities
 
                 if (missilesData.EvalPropertiesToApply != null)
                 {
-                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                     evalContext.Game = Game;
                     evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, _directApplyToMissileProperties);
                     evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);

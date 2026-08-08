@@ -444,7 +444,7 @@ namespace MHServerEmu.Games.Missions
                     var region = Region;
                     if (region != null)
                     {
-                        using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                        using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                         evalContext.Game = Game;
                         evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, region.Properties);
                         if (region.MetaGames.Count > 0)

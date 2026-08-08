@@ -337,11 +337,11 @@ namespace MHServerEmu.Games.MetaGames
 
             if (stateProto.EvalCanActivate != null)
             {
-                using EvalContextData contextData = ObjectPoolManager.Instance.Get<EvalContextData>();
-                contextData.Game = Game;
-                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, Region.Properties);
-                contextData.SetReadOnlyVar_EntityPtr(EvalContext.Default, this);
-                if (Eval.RunBool(stateProto.EvalCanActivate, contextData) == false) return false;
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
+                evalContext.Game = Game;
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, Region.Properties);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, this);
+                if (Eval.RunBool(stateProto.EvalCanActivate, evalContext) == false) return false;
             }
 
             return true;

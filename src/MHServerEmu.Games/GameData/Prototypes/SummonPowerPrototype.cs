@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (!Verify.IsNotNull(SummonMaxSimultaneous)) return 0;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
             return Eval.RunInt(SummonMaxSimultaneous, evalContext);
         }
@@ -151,7 +151,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (!Verify.IsNotNull(SummonMax)) return 0;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
             return Eval.RunInt(SummonMax, evalContext);
         }

@@ -388,8 +388,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (!Verify.IsNotNull(Range)) return 0f;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
-            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
+            using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
 
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties ?? properties);
@@ -399,8 +399,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public float GetProjectileSpeed(PropertyCollection powerProperties, PropertyCollection ownerProperties)
         {
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
-            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
+            using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
 
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties ?? properties);
@@ -412,7 +412,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (!Verify.IsNotNull(ChannelLoopTimeMS)) return TimeSpan.Zero;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties);
 
@@ -536,7 +536,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (!Verify.IsNotNull(CooldownTimeMS)) return TimeSpan.Zero;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties);
 
@@ -897,7 +897,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (EvalEventTriggerChance == null)
                 return 1f;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
             evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
@@ -912,7 +912,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (EvalEventParam == null)
                 return EventParam;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
             evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
@@ -1135,7 +1135,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Game game = owner.Game;
             if (!Verify.IsNotNull(game)) return TimeSpan.Zero;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.Game = game;
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, owner?.Properties);
 

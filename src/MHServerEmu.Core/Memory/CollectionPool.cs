@@ -19,7 +19,7 @@ namespace MHServerEmu.Core.Memory
         private static readonly CollectionPoolImpl _sharedPool = new(ObjectPoolFlags.None);
 
         [ThreadStatic]
-        private static CollectionPoolImpl _threadLocalPool; 
+        private static CollectionPoolImpl _threadLocalPool;
 
         public static TCollection Get()
         {

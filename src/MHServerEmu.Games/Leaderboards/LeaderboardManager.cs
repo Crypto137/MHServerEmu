@@ -298,7 +298,7 @@ namespace MHServerEmu.Games.Leaderboards
             ItemSpec itemSpec = Game.LootManager.CreateItemSpec(itemProtoRef, LootContext.LeaderboardReward, Owner);
             if (itemSpec == null) return false;
 
-            using EntitySettings entitySettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var entitySettingsHandle = EntitySettingsPool.Get(out EntitySettings entitySettings);
             entitySettings.EntityRef = itemProtoRef;
             entitySettings.ItemSpec = itemSpec;
 

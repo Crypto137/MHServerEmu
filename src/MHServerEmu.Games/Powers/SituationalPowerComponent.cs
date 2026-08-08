@@ -210,7 +210,7 @@ namespace MHServerEmu.Games.Powers
             // ChanceToTrigger eval
             if (!Verify.IsNotNull(_prototype.ChanceToTrigger)) return false;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Power.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, powerOwner.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);

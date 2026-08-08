@@ -91,7 +91,7 @@ namespace MHServerEmu.Core.Metrics
 
         public string GeneratePerformanceReport(MetricsReportFormat format)
         {
-            using PerformanceReport report = ObjectPoolManager.Instance.Get<PerformanceReport>();
+            using var reportHandle = PerformanceReportPool.Get(out PerformanceReport report);
 
             GetPerformanceReportData(report);
 

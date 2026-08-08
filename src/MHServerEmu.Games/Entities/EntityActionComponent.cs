@@ -101,16 +101,16 @@ namespace MHServerEmu.Games.Entities
             var brain = GameDatabase.GetPrototype<BrainPrototype>(brainRef);
             if (brain is not ProceduralAIProfilePrototype profile) return;
 
-            using PropertyCollection collection = ObjectPoolManager.Instance.Get<PropertyCollection>();
-            collection[PropertyEnum.AICustomThinkRateMS] = 1000;
+            using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
+            properties[PropertyEnum.AICustomThinkRateMS] = 1000;
             if (Verify.IsNotNull(selectorProto))
             {
-                collection[PropertyEnum.AIAggroRangeAlly] = selectorProto.DefaultAggroRangeAlly;
-                collection[PropertyEnum.AIAggroRangeHostile] = selectorProto.DefaultAggroRangeHostile;
-                collection[PropertyEnum.AIProximityRangeOverride] = selectorProto.DefaultProximityRangeHostile;
+                properties[PropertyEnum.AIAggroRangeAlly] = selectorProto.DefaultAggroRangeAlly;
+                properties[PropertyEnum.AIAggroRangeHostile] = selectorProto.DefaultAggroRangeHostile;
+                properties[PropertyEnum.AIProximityRangeOverride] = selectorProto.DefaultProximityRangeHostile;
             }
 
-            agent.InitAIOverride(profile, collection);
+            agent.InitAIOverride(profile, properties);
             agent.AIController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
 
             if (Owner.IsSimulated)

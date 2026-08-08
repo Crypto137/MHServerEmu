@@ -189,7 +189,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return LootRollResult.Failure;
             }
 
-            using DropFilterArguments filterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+            using var filterArgsHandle = DropFilterArgumentsPool.Get(out DropFilterArguments filterArgs);
             DropFilterArguments.Initialize(filterArgs, itemProto, rollFor, level, rarityProtoRef.Value, 0, EquipmentInvUISlot.Invalid, resolver.LootContext);
             filterArgs.DropDistanceSq = settings.DropDistanceSq;
 
@@ -237,7 +237,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            using LootCloneRecord lootCloneRecord = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+            using var lootCloneRecordHandle = LootCloneRecordPool.Get(out LootCloneRecord lootCloneRecord);
             if (resolver.InitializeCloneRecordFromSource(SourceIndex, lootCloneRecord) == false)
                 return LootRollResult.Failure;
 
@@ -381,7 +381,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 ItemPrototype itemProto = null;
 
-                using DropFilterArguments filterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+                using var filterArgsHandle = DropFilterArgumentsPool.Get(out DropFilterArguments filterArgs);
                 DropFilterArguments.Initialize(filterArgs, itemProto, rollFor, level, rarityProtoRef.Value, ItemRank, UISlot, resolver.LootContext);
 
                 if (LootUtilities.PickValidItem(resolver, picker, null, filterArgs, ref itemProto, RestrictionTestFlags.All, ref rarityProtoRef) == false)

@@ -11,15 +11,15 @@ namespace MHServerEmu.Games.Properties.Evals
         public bool ReadOnly;
     }
 
-    public sealed class EvalContextData : IPoolable, IDisposable
+    public sealed class EvalContextDataPool : GenericPool<EvalContextData> { }
+
+    public sealed class EvalContextData : IPoolable
     {
         public Game Game { get; set; }
         public EvalContextVar[] ContextVars { get; } = new EvalContextVar[(int)EvalContext.MaxVars];
 
         public PropertyCollection CallerStackProperties { get; set; }
         public PropertyCollection LocalStackProperties { get; set; }
-
-        public bool IsInPool { get; set; }
 
         public EvalContextData()    // Use pooling instead of calling this directly
         {
@@ -194,11 +194,6 @@ namespace MHServerEmu.Games.Properties.Evals
             ContextVars.AsSpan().Clear();
             CallerStackProperties = null;
             LocalStackProperties = null;
-        }
-
-        public void Dispose()
-        {
-            ObjectPoolManager.Instance.Return(this);
         }
     }
 }

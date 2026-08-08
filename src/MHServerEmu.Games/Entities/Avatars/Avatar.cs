@@ -563,7 +563,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                         Player player = GetOwnerOfType<Player>();
 
-                        using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                        using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
                         teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Resurrect);
                         return teleporter.TeleportToTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
                     }
@@ -831,7 +831,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             PrototypeId bodyslideTargetRef = Bodyslider.GetBodyslideTargetRef(player);
             if (!Verify.IsTrue(bodyslideTargetRef != PrototypeId.Invalid)) return false;
 
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Bodyslide);
             return teleporter.TeleportToTarget(bodyslideTargetRef);
         }
@@ -845,7 +845,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             Vector3 position = player.Properties[PropertyEnum.BodySliderRegionPos];
             player.RemoveBodysliderProperties();
 
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Bodyslide);
             return teleporter.TeleportToRegionLocation(regionId, position);
         }
@@ -855,7 +855,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player player = GetOwnerOfType<Player>();
             if (!Verify.IsNotNull(player)) return false;
 
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Power);
             return teleporter.TeleportToTarget(targetProtoRef);
         }
@@ -1861,7 +1861,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private int GetThrowability()
         {
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
             evalContext.SetReadOnlyVar_ProtoRefVectorPtr(EvalContext.Var1, Keywords);
 
@@ -2403,7 +2403,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 foreach (EvalPrototype evalProto in talentPowerProto.EvalCanEnable)
                 {
-                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                     evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, null);
                     evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Entity, this);
                     evalContext.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, ConditionCollection);
@@ -4037,7 +4037,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             EvalPrototype evalProto = primaryManaBehaviorProto.EvalOnEnduranceUpdate;
             if (CanGainOrRegenEndurance(manaType) && evalProto != null)
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
 
@@ -4870,7 +4870,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             ItemSpec itemSpec = Game.LootManager.CreateItemSpec(startingCostumeProtoRef, LootContext.CashShop, player);
 
-            using EntitySettings entitySettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var entitySettingsHandle = EntitySettingsPool.Get(out EntitySettings entitySettings);
             entitySettings.EntityRef = itemSpec.ItemProtoRef;
             entitySettings.ItemSpec = itemSpec;
 
@@ -5360,7 +5360,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             bool result = false;
 
-            using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            using var lootSummaryHandle = LootResultSummaryPool.Get(out LootResultSummary lootSummary);
 
             if (Mission.RollLootSummaryForPrototype(player, this, missionProto, missionProto.Rewards, (int)missionProto.Level, 1, lootSummary, true))
             {
@@ -5963,7 +5963,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player player = GetOwnerOfType<Player>();
             if (!Verify.IsNotNull(player)) return false;
 
-            using PropertyCollection avatarSynergyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var avatarSynergyPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection avatarSynergyProperties);
 
             // Ignoring avatar mode here
             foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel, (int)AvatarMode.Normal))
@@ -5993,7 +5993,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     if (evalSynergyProto.SynergyEval == null)
                         continue;
 
-                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                     evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, avatarSynergyProperties);
                     evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
 
@@ -6150,7 +6150,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             player.ResetMapDiscoveryForStoryWarp();
 
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             teleporter.DifficultyTierRef = GameDatabase.GlobalsPrototype.DifficultyTierDefault;
 #endif
@@ -6313,7 +6313,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 PrototypeId prestigeLootTableProtoRef = prestigeLevelProto.Reward;
                 if (prestigeLootTableProtoRef != PrototypeId.Invalid)
                 {
-                    using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    using var settingsHandle = LootInputSettingsPool.Get(out LootInputSettings settings);
                     settings.Initialize(LootContext.Initialization, player, null, 1);
 
                     using var tablesHandle = ListPool<(PrototypeId, LootActionType)>.Get(out List<(PrototypeId, LootActionType)> tables);

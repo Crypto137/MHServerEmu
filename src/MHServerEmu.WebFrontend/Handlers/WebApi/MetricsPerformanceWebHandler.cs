@@ -1,5 +1,4 @@
-﻿using MHServerEmu.Core.Memory;
-using MHServerEmu.Core.Metrics;
+﻿using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network.Web;
 
 namespace MHServerEmu.WebFrontend.Handlers.WebApi
@@ -8,7 +7,7 @@ namespace MHServerEmu.WebFrontend.Handlers.WebApi
     {
         protected override async Task Get(WebRequestContext context)
         {
-            using PerformanceReport report = ObjectPoolManager.Instance.Get<PerformanceReport>();
+            using var reportHandle = PerformanceReportPool.Get(out PerformanceReport report);
             MetricsManager.Instance.GetPerformanceReportData(report);
             await context.SendJsonAsync(report);
         }

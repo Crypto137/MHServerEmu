@@ -19,10 +19,12 @@ namespace MHServerEmu.Games.Regions
     // CommonMessages.proto - [ChangeRegionRequestHeader, NetStructRegionLocation, NetStructRegionOrigin, NetStructTransferParams, NetStructRegionTarget]
     // PlayerMgrToGameServer.proto - [GameAndRegionForPlayer]
 
+    public sealed class TeleporterPool : GenericPool<Teleporter> { }
+
     /// <summary>
     /// Provides API for initiating teleports from gameplay code.
     /// </summary>
-    public class Teleporter : IPoolable, IDisposable
+    public class Teleporter : IPoolable
     {
         public Player Player { get; private set; }
         public TeleportContextEnum Context { get; private set; }
@@ -48,8 +50,6 @@ namespace MHServerEmu.Games.Regions
         public PropertyCollection Properties { get; private set; }
         public PrototypeId DangerRoomScenarioRef { get; set; }
 
-        public bool IsInPool { get; set; }
-
         public Teleporter() { }     // Use pooling instead of this constructor
 
         public void ResetForPool()
@@ -70,17 +70,6 @@ namespace MHServerEmu.Games.Regions
             RequiredItemProtoRef = default;
             RequiredItemEntityId = default;
             AccessPortal = default;
-            Affixes = default;
-            PlayerDeaths = default;
-            DangerRoomScenarioItemDbGuid = default;
-            ItemRarity = default;
-            Properties = default;
-            DangerRoomScenarioRef = default;
-        }
-
-        public void Dispose()
-        {
-            ObjectPoolManager pool = ObjectPoolManager.Instance;
 
             if (Verify.IsNotNull(Affixes))
             {
@@ -88,13 +77,17 @@ namespace MHServerEmu.Games.Regions
                 Affixes = null;
             }
 
+            PlayerDeaths = default;
+            DangerRoomScenarioItemDbGuid = default;
+            ItemRarity = default;
+
             if (Verify.IsNotNull(Properties))
             {
-                pool.Return(Properties);
-                Properties = null;
+                PropertyCollectionPool.Return(Properties);
+                Properties = default;
             }
 
-            pool.Return(this);
+            DangerRoomScenarioRef = default;
         }
 
         public void Initialize(Player player, TeleportContextEnum context)
@@ -103,7 +96,7 @@ namespace MHServerEmu.Games.Regions
             Context = context;
 
             Affixes = ListPool<PrototypeId>.Get();
-            Properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            Properties = PropertyCollectionPool.Get();
         }
 
         public void SetAccessPortal(Transition accessPortalEntity)
@@ -352,7 +345,7 @@ namespace MHServerEmu.Games.Regions
 
         public static void DebugTeleportToTarget(Player player, PrototypeId targetProtoRef, PrototypeId difficultyTierRef = PrototypeId.Invalid)
         {
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Debug);
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             teleporter.DifficultyTierRef = difficultyTierRef;

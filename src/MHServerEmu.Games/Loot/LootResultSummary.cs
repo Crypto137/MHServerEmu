@@ -9,10 +9,12 @@ using MHServerEmu.Games.Loot.Specs;
 
 namespace MHServerEmu.Games.Loot
 {
+    public sealed class LootResultSummaryPool : GenericPool<LootResultSummary> { }
+
     /// <summary>
     /// A collection of data accumulated from various <see cref="Loot.LootResult"/> instances.
     /// </summary>
-    public class LootResultSummary : IPoolable, IDisposable
+    public class LootResultSummary : IPoolable
     {
         public LootType Types { get; private set; }
         public bool HasAnyResult { get => Types != LootType.None; }
@@ -36,8 +38,6 @@ namespace MHServerEmu.Games.Loot
         public List<int> VaporizedCredits { get; } = new();
 
         public int NumDrops { get => ItemSpecs.Count + AgentSpecs.Count + Credits.Count + Currencies.Count; }
-
-        public bool IsInPool { get; set; }
 
         public LootResultSummary() { }
 
@@ -337,11 +337,6 @@ namespace MHServerEmu.Games.Loot
 
             VaporizedItemSpecs.Clear();
             VaporizedCredits.Clear();
-        }
-
-        public void Dispose()
-        {
-            ObjectPoolManager.Instance.Return(this);
         }
     }
 }

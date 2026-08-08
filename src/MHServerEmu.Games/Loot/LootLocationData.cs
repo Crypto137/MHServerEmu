@@ -5,7 +5,9 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Loot
 {
-    public class LootLocationData : IPoolable, IDisposable
+    public sealed class LootLocationDataPool : GenericPool<LootLocationData> { }
+
+    public class LootLocationData : IPoolable
     {
         private const float DefaultBoundsRadius = 10f;
 
@@ -19,8 +21,6 @@ namespace MHServerEmu.Games.Loot
         public float MaxRadius { get; set; }
         public bool DropInPlace { get; set; }
         public Vector3 Offset { get; set; }
-
-        public bool IsInPool { get; set; }
 
         public void Initialize(Game game, Vector3 position, WorldEntity recipient = null)
         {
@@ -41,11 +41,6 @@ namespace MHServerEmu.Games.Loot
             MaxRadius = default;
             DropInPlace = default;
             Offset = default;
-        }
-
-        public void Dispose()
-        {
-            ObjectPoolManager.Instance.Return(this);
         }
     }
 }

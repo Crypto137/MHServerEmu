@@ -356,7 +356,7 @@ namespace MHServerEmu.Games.Regions
 
                             if (regionAffixProto.Eval != null)
                             {
-                                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                                 evalContext.Game = Game;
                                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
                                 Eval.RunBool(regionAffixProto.Eval, evalContext);
@@ -406,7 +406,7 @@ namespace MHServerEmu.Games.Regions
                         }
                     }
 
-                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                     evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
                     int affixTier = Eval.RunInt(affixTableProto.EvalTier, evalContext);
 
@@ -440,7 +440,7 @@ namespace MHServerEmu.Games.Regions
             {
                 EntityManager entityManager = Game.EntityManager;
 
-                using PropertyCollection metaCollection = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                using var metaCollectionHandle = PropertyCollectionPool.Get(out PropertyCollection metaCollection);
                 var entryProto = regionProto.GetRegionQueueStateEntry(settings.GameStateId);
                 if (entryProto != null && entryProto.State != PrototypeId.Invalid && entryProto.StateParent != PrototypeId.Invalid)
                 {
@@ -455,7 +455,7 @@ namespace MHServerEmu.Games.Regions
 
                 foreach (var metaGameRef in regionProto.MetaGames)
                 {
-                    using EntitySettings metaSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                    using var metaSettingsHandle = EntitySettingsPool.Get(out EntitySettings metaSettings);
                     metaSettings.RegionId = Id;
                     metaSettings.EntityRef = metaGameRef;
                     metaSettings.Properties = metaCollection;
@@ -1846,7 +1846,7 @@ namespace MHServerEmu.Games.Regions
         public void EvalRegionProperties(EvalPrototype evalProto, PropertyCollection properties)
         {
             if (evalProto == null) return;
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.Game = Game;
             evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, Properties);

@@ -1281,7 +1281,7 @@ namespace MHServerEmu.Games.Entities
             item.ChangeInventoryLocation(null);
 
             // Drop it
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
             settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;
             settings.SourceEntityId = avatar.Id;
             settings.SourcePosition = avatar.RegionLocation.Position;
@@ -1744,7 +1744,7 @@ namespace MHServerEmu.Games.Entities
             Inventory avatarLibrary = GetInventory(InventoryConvenienceLabel.AvatarLibrary);
             if (!Verify.IsNotNull(avatarLibrary)) return null;
 
-            using EntitySettings avatarSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var avatarSettingsHandle = EntitySettingsPool.Get(out EntitySettings avatarSettings);
             avatarSettings.EntityRef = avatarProtoRef;
             avatarSettings.InventoryLocation = new(Id, avatarLibrary.PrototypeDataRef);
 
@@ -1787,7 +1787,7 @@ namespace MHServerEmu.Games.Entities
             Inventory teamUpLibrary = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
             if (!Verify.IsNotNull(teamUpLibrary)) return false;
 
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
             settings.InventoryLocation = new(Id, teamUpLibrary.PrototypeDataRef);
             settings.EntityRef = teamUpRef;
 
@@ -1954,7 +1954,7 @@ namespace MHServerEmu.Games.Entities
             Logger.Trace($"EnableCurrentAvatar(): [{CurrentAvatar}] entering world in region [{region}]");
 
             // Disable initial visibility and schedule swap-in power if requested
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
             if (withSwapInPower)
             {
                 settings.OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden;
@@ -3571,7 +3571,7 @@ namespace MHServerEmu.Games.Entities
             var missionProto = GameDatabase.MissionGlobalsPrototype;
             if (currencyProto == null || missionProto?.LegendaryRerollCost == null) return;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.Game = Game;
             evalContext.SetVar_EntityPtr(EvalContext.Default, avatar);
             int rerollCost = Eval.RunInt(missionProto.LegendaryRerollCost, evalContext);
@@ -4280,7 +4280,7 @@ namespace MHServerEmu.Games.Entities
             bool rollover = false;
 
             // Check the rollover (daily at 10 AM UTC+0, same as shared quests)
-            using PropertyCollection rolloverProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var rolloverPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection rolloverProperties);
             rolloverProperties[PropertyEnum.LootCooldownRolloverWallTime, 0, (PropertyParam)Weekday.All] = 10f;
 
             TimeSpan currentTime = Clock.UnixTime;
@@ -4775,7 +4775,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Teleport
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
             teleporter.Initialize(this, TeleportContextEnum.TeleportContext_Party);
             return teleporter.TeleportToPlayer(targetPlayerDbId);
         }
@@ -4895,7 +4895,7 @@ namespace MHServerEmu.Games.Entities
         {
             _permaBuffProperties.Clear();
 
-            using PropertyCollection unlockedPermaBuffs = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var unlockedPermaBuffsHandle = PropertyCollectionPool.Get(out PropertyCollection unlockedPermaBuffs);
             unlockedPermaBuffs.CopyPropertyRange(Properties, PropertyEnum.PermaBuff);
 
             foreach (var kvp in unlockedPermaBuffs.IteratePropertyRange(PropertyEnum.PermaBuff))
@@ -4916,9 +4916,9 @@ namespace MHServerEmu.Games.Entities
             if (permaBuffProto.EvalAvatarProperties == null)
                 return true;
 
-            using PropertyCollection tempProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
-            
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var tempPropsHandle = PropertyCollectionPool.Get(out PropertyCollection tempProps);
+
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, tempProps);
             Eval.RunBool(permaBuffProto.EvalAvatarProperties, evalContext);
 

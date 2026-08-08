@@ -15,10 +15,12 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
 {
+    public sealed class ItemResolverPool : GenericPool<ItemResolver> { }
+
     /// <summary>
     /// A general-purpose implementation of <see cref="IItemResolver"/>.
     /// </summary>
-    public class ItemResolver : IItemResolver, IPoolable, IDisposable
+    public class ItemResolver : IItemResolver, IPoolable
     {
         private readonly int _itemLevelMin;
         private readonly int _itemLevelMax;
@@ -41,8 +43,6 @@ namespace MHServerEmu.Games.Loot
         public LootContext LootContextOverride { get; set; }
         public Player Player { get => _context.Player; }
         public Region Region { get => _context.Region; }
-
-        public bool IsInPool { get; set; }
 
         public ItemResolver()
         {
@@ -90,11 +90,6 @@ namespace MHServerEmu.Games.Loot
             Flags = default;
 
             LootContextOverride = default;
-        }
-
-        public void Dispose()
-        {
-            ObjectPoolManager.Instance.Return(this);
         }
 
         /// <summary>
@@ -333,7 +328,7 @@ namespace MHServerEmu.Games.Loot
 
         public PrototypeId ResolveRarity(HashSet<PrototypeId> rarityFilter, int level, ItemPrototype itemProto)
         {
-            using DropFilterArguments filterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+            using var filterArgsHandle = DropFilterArgumentsPool.Get(out DropFilterArguments filterArgs);
             DropFilterArguments.Initialize(filterArgs, LootContext);
 
             using var rarityEntryListHandle = ListPool<RarityEntry>.Get(out List<RarityEntry> rarityEntryList);
@@ -501,7 +496,7 @@ namespace MHServerEmu.Games.Loot
 
                             if (pendingItem.IsClone == false && isVaporized == false)
                             {
-                                using LootCloneRecord affixArgs = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+                                using var affixArgsHandle = LootCloneRecordPool.Get(out LootCloneRecord affixArgs);
                                 LootCloneRecord.Initialize(affixArgs, context, itemSpec, pendingItem.RollFor);
 
                                 MutationResults affixResult = LootUtilities.UpdateAffixes(this, affixArgs, AffixCountBehavior.Roll, itemSpec, settings);
@@ -512,7 +507,7 @@ namespace MHServerEmu.Games.Loot
                             // Apply mutations (if any)
                             if (pendingItem.Mutations.HasValue())
                             {
-                                using LootCloneRecord mutationArgs = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+                                using var mutationArgsHandle = LootCloneRecordPool.Get(out LootCloneRecord mutationArgs);
                                 LootCloneRecord.Initialize(mutationArgs, LootContext, itemSpec, pendingItem.RollFor);
 
                                 MutationResults mutationResult = MutationResults.None;
@@ -536,7 +531,7 @@ namespace MHServerEmu.Games.Loot
                             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
                             RestrictionTestFlags flagsToAdjust = RestrictionTestFlags.Level | RestrictionTestFlags.Rarity | RestrictionTestFlags.Output;
 
-                            using DropFilterArguments restrictionArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+                            using var restrictionArgsHandle = DropFilterArgumentsPool.Get(out DropFilterArguments restrictionArgs);
                             DropFilterArguments.Initialize(restrictionArgs, itemProto, itemSpec.EquippableBy, itemSpec.ItemLevel, itemSpec.RarityProtoRef, 0, EquipmentInvUISlot.Invalid, context);
 
                             itemProto.MakeRestrictionsDroppable(restrictionArgs, flagsToAdjust, out RestrictionTestFlags adjustResultFlags);

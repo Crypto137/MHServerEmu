@@ -15,10 +15,12 @@ using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Properties
 {
+    public sealed class PropertyCollectionPool : GenericPool<PropertyCollection> { }
+
     /// <summary>
     /// An aggregatable collection of key/value pairs of <see cref="PropertyId"/> and <see cref="PropertyValue"/>.
     /// </summary>
-    public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>, ISerialize, IPoolable, IDisposable
+    public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>, ISerialize, IPoolable
     {
         private readonly PropertyList _baseList = new();
         private readonly PropertyList _aggregateList = new();
@@ -148,8 +150,6 @@ namespace MHServerEmu.Games.Properties
         }
 
         #endregion
-
-        public bool IsInPool { get; set; }
 
         public PropertyCollection() { }
 
@@ -427,7 +427,7 @@ namespace MHServerEmu.Games.Properties
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
             if (info.HasDependentEvals)
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.Game = Game.Current;
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
 
@@ -729,11 +729,6 @@ namespace MHServerEmu.Games.Properties
             Clear();
         }
 
-        public virtual void Dispose()
-        {
-            ObjectPoolManager.Instance.Return(this);
-        }
-
         public virtual bool Serialize(Archive archive)
         {
             return SerializeWithDefault(archive, null);
@@ -897,7 +892,7 @@ namespace MHServerEmu.Games.Properties
             // First try running eval
             if (info.IsEvalProperty && info.IsEvalAlwaysCalculated)
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
                 evalContext.SetReadOnlyVar_PropertyId(EvalContext.Var1, id);
                 return EvalPropertyValue(info, evalContext);

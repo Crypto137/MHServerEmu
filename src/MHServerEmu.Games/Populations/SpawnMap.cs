@@ -530,7 +530,7 @@ namespace MHServerEmu.Games.Populations
             if (HeatReturnPerSecondEval != null)
             {
                 int playerCount = Area.PopulationArea.PlayerCount;
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.SetVar_Int(EvalContext.Var1, playerCount);
                 heatReturn = Eval.RunInt(HeatReturnPerSecondEval, evalContext);
             }

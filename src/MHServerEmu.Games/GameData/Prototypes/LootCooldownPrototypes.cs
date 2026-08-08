@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (RolloverTimeEntries.IsNullOrEmpty())
                 return false;
 
-            using PropertyCollection rolloverTimeProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var rolloverTimePropsHandle = PropertyCollectionPool.Get(out PropertyCollection rolloverTimeProps);
 
             for (int i = 0; i < RolloverTimeEntries.Length; i++)
             {
@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (!Verify.IsTrue(RolloverTimeEntries.HasValue())) return;
 
-            using PropertyCollection rolloverProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var rolloverPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection rolloverProperties);
 
             for (int i = 0; i < RolloverTimeEntries.Length; i++)
             {
@@ -237,7 +237,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (!Verify.IsTrue(RolloverTimeEntries.HasValue())) return;
 
-            using PropertyCollection rolloverProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var rolloverPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection rolloverProperties);
 
             for (int i = 0; i < RolloverTimeEntries.Length; i++)
             {

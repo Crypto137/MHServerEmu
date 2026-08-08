@@ -95,7 +95,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             if (_proto.EvalModeEnd != null)
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.Game = Game;
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, MetaGame.Properties);
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, region.Properties);
@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             if (applyState == false && _proto.EvalStateSelection != null)
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.Game = Game;
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, MetaGame.Properties);
                 _stateRef = Eval.RunPrototypeId(_proto.EvalStateSelection, evalContext);

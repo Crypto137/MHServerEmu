@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.Powers
 
             if (!Verify.IsNotNull(Owner)) return false;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.Game = Game;
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
@@ -549,7 +549,7 @@ namespace MHServerEmu.Games.Powers
             if (powerProto.TargetRestrictionEval == null)
                 return true;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.Game = target.Game;
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProto.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, target.Properties);

@@ -314,7 +314,7 @@ namespace MHServerEmu.Games.UI.Widgets
                     {
                         if (propertyProto.PropertyEval != null)
                         {
-                            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();                            
+                            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                             evalContext.Game = game;
                             evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, worldEntity.Properties);
 
@@ -341,7 +341,7 @@ namespace MHServerEmu.Games.UI.Widgets
 
                             if (propertyId == PropertyId.Invalid || propertyProto.PropertyIds.Contains(propertyId) || hasDescriptor)
                             {
-                                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, worldEntity.Properties);
 
                                 if (worldEntity is Agent agent && agent.AIController != null)

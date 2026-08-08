@@ -1,11 +1,12 @@
 ﻿using MHServerEmu.Core.Memory;
-using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Loot
 {
-    public class DropFilterArguments : IPoolable, IDisposable
+    public sealed class DropFilterArgumentsPool : GenericPool<DropFilterArguments> { }
+
+    public class DropFilterArguments : IPoolable
     {
         public LootContext LootContext { get; private set; }
 
@@ -16,8 +17,6 @@ namespace MHServerEmu.Games.Loot
         public int Rank { get; set; }
         public EquipmentInvUISlot Slot { get; set; }
         public float DropDistanceSq { get; set; }
-
-        public bool IsInPool { get; set; }
 
         public DropFilterArguments() { }    // Use pooling instead of calling this directly
 
@@ -91,11 +90,6 @@ namespace MHServerEmu.Games.Loot
             Slot = default;
 
             DropDistanceSq = default;
-        }
-
-        public virtual void Dispose()
-        {
-            ObjectPoolManager.Instance.Return(this);
         }
     }
 }

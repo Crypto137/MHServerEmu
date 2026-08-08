@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
                 if (_proto.EvalProperties != null)
                 {
-                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                     evalContext.Game = agent.Game;
                     evalContext.SetVar_EntityPtr(EvalContext.Default, agent);
                     evalContext.SetVar_PropertyCollectionPtr(EvalContext.Other, agent.Region.Properties);
@@ -80,8 +80,8 @@ namespace MHServerEmu.Games.Missions.Actions
             {
                 var brain = GameDatabase.GetPrototype<BrainPrototype>(brainOverride);
                 if (brain is not ProceduralAIProfilePrototype profile) return false;
-                using PropertyCollection collection = ObjectPoolManager.Instance.Get<PropertyCollection>();
-                agent.InitAIOverride(profile, collection);
+                using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
+                agent.InitAIOverride(profile, properties);
             }
             return true;
         }

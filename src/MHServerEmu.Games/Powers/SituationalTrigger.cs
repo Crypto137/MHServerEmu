@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.Powers
             WorldEntity powerOwner = power.Owner;
             if (!Verify.IsNotNull(powerOwner)) return false;
 
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
             settings.EntityRef = _proto.TriggerCollider;
             settings.RegionId = region.Id;
             settings.Position = powerOwner.RegionLocation.Position;

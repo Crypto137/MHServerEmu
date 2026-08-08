@@ -283,7 +283,7 @@ namespace MHServerEmu.Games.MetaGames
         {
             if (Prototype.EvalOnPlayerAdd == null || player == null) return 0;
 
-            using var evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.Game = player.Game;
             evalContext.SetVar_EntityPtr(EvalContext.Default, player);
             evalContext.SetVar_EntityPtr(EvalContext.Entity, player.CurrentAvatar);

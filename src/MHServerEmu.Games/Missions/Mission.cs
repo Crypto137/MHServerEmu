@@ -489,7 +489,7 @@ namespace MHServerEmu.Games.Missions
 
                 if (missionFlags.HasFlag(MissionUpdateFlags.Rewards))
                 {
-                    using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+                    using var lootSummaryHandle = LootResultSummaryPool.Get(out LootResultSummary lootSummary);
 
                     if (HasLootRewards(player, lootSummary))
                         message.SetRewards(lootSummary.ToProtobuf());
@@ -2193,7 +2193,7 @@ namespace MHServerEmu.Games.Missions
 
         public void RollSummaryAndAwardLootToPlayer(Player player, LootTablePrototype[] rewards, int seedOffset)
         {
-            using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            using var lootSummaryHandle = LootResultSummaryPool.Get(out LootResultSummary lootSummary);
             if (RollLootSummary(lootSummary, player, rewards, _lootSeed + seedOffset, false))
                 AwardLootToPlayerFromSummary(lootSummary, player);
         }
@@ -2239,13 +2239,13 @@ namespace MHServerEmu.Games.Missions
                 if (chestEntityProtoRef != PrototypeId.Invalid)
                 {
                     // Create a chest entity if there is one specified
-                    using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                    using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
                     settings.EntityRef = chestEntityProtoRef;
                     settings.Position = location.Position;
                     settings.RegionId = location.RegionId;
                     settings.Lifespan = TimeSpan.FromMinutes(10);
 
-                    using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                    using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
                     properties[PropertyEnum.MissionPrototype] = PrototypeDataRef;
                     properties[PropertyEnum.LootTablePrototype, (PropertyParam)LootDropEventType.OnInteractedWith] = rewardProtoRef;
                     properties[PropertyEnum.RestrictedToPlayerGuid] = player.DatabaseUniqueId;
@@ -2258,7 +2258,7 @@ namespace MHServerEmu.Games.Missions
                 else
                 {
                     // If there is no chest, spawn the loot as is
-                    using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    using var inputSettingsHandle = LootInputSettingsPool.Get(out LootInputSettings inputSettings);
                     inputSettings.Initialize(LootContext.Drop, player, avatar);
                     lootManager.SpawnLootFromTable(rewardProtoRef, inputSettings, 1);
                 }
@@ -2276,7 +2276,7 @@ namespace MHServerEmu.Games.Missions
             if (missionProto.DropLootOnGround || lootDropper != null)
             {
                 lootDropper ??= player.CurrentAvatar;
-                using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                using var inputSettingsHandle = LootInputSettingsPool.Get(out LootInputSettings inputSettings);
                 inputSettings.Initialize(LootContext.Drop, player, lootDropper);
                 lootManager.SpawnLootFromSummary(lootSummary, inputSettings);
             }
@@ -2346,13 +2346,13 @@ namespace MHServerEmu.Games.Missions
         public static bool RollLootSummaryForPrototype(Player player, Avatar avatar, MissionPrototype missionProto, LootTablePrototype[] rewards,
             int lootLevel, int lootSeed, LootResultSummary lootSummary, bool firstTime)
         {
-            using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
+            using var resolverHandle = ItemResolverPool.Get(out ItemResolver resolver);
             resolver.Initialize(new(lootSeed));
             resolver.SetContext(null, player);
 
             resolver.SetFlags(LootResolverFlags.FirstTime, firstTime);
 
-            using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+            using var settingsHandle = LootInputSettingsPool.Get(out LootInputSettings settings);
             settings.Initialize(LootContext.MissionReward, player, avatar, lootLevel);
             settings.LootRollSettings.DropChanceModifiers = LootDropChanceModifiers.PreviewOnly | LootDropChanceModifiers.IgnoreCooldown;
 
@@ -2373,14 +2373,14 @@ namespace MHServerEmu.Games.Missions
             Avatar avatar = player.CurrentAvatar;
             int lootLevel = GetLootLevel(avatar);
 
-            using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
+            using var resolverHandle = ItemResolverPool.Get(out ItemResolver resolver);
             resolver.Initialize(new(lootSeed));
             resolver.SetContext(this, player);
 
             bool firstTime = MissionManager.HasReceivedRewardsForMission(player, avatar, PrototypeDataRef) == false;
             resolver.SetFlags(LootResolverFlags.FirstTime, firstTime);
 
-            using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+            using var settingsHandle = LootInputSettingsPool.Get(out LootInputSettings settings);
             settings.Initialize(LootContext.MissionReward, player, avatar, lootLevel);
 
             if (previewOnly)
@@ -2417,7 +2417,7 @@ namespace MHServerEmu.Games.Missions
             if (entityId != Entity.InvalidId)
                 message.SetEntityId(entityId);
 
-            using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            using var lootSummaryHandle = LootResultSummaryPool.Get(out LootResultSummary lootSummary);
 
             if (RollLootSummaryForPrototype(player, missionProto, lootSeed, lootSummary))
                 message.SetShowItems(lootSummary.ToProtobuf());
@@ -2438,7 +2438,7 @@ namespace MHServerEmu.Games.Missions
             if (entityId != Entity.InvalidId)
                 message.SetEntityId(entityId);
 
-            using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            using var lootSummaryHandle = LootResultSummaryPool.Get(out LootResultSummary lootSummary);
             if (HasLootRewards(player, lootSummary))
                 message.SetShowItems(lootSummary.ToProtobuf());
 

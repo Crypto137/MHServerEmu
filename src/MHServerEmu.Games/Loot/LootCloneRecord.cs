@@ -6,6 +6,8 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Loot
 {
+    public sealed class LootCloneRecordPool : GenericPool<LootCloneRecord> { }
+
     public class LootCloneRecord : DropFilterArguments
     {
         // LootCloneRecord is effectively a fully mutable version of ItemSpec used for cloning and mutating
@@ -93,12 +95,6 @@ namespace MHServerEmu.Games.Loot
             StackCount = 1;
             RestrictionFlags = RestrictionTestFlags.All;
             EquippableBy = PrototypeId.Invalid;
-        }
-
-        public override void Dispose()
-        {
-            // Need to override Dispose so that loot clone records don't get pulled with regular drop filter args
-            ObjectPoolManager.Instance.Return(this);
         }
 
         public void SetAffixes(IReadOnlyList<AffixSpec> affixSpecs)

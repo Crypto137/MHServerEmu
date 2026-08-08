@@ -170,7 +170,7 @@ namespace MHServerEmu.Games.Entities.Items
             if (!Verify.IsNotNull(avatarProto)) return MutationResults.Error;
 
             // Run evals
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetVar_Int(EvalContext.Var1, itemSpec.ItemLevel);
 
             int powerUnlockLevelMin = Eval.RunInt(powerAffixProto.PowerUnlockLevelMin, evalContext);

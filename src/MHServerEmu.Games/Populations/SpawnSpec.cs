@@ -83,7 +83,7 @@ namespace MHServerEmu.Games.Populations
 
             Area area = cell.Area;
 
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
             settings.EntityRef = EntityRef;
             var entityProto = GameDatabase.GetPrototype<WorldEntityPrototype>(EntityRef);
             if (SnapToFloor != null)
@@ -99,7 +99,7 @@ namespace MHServerEmu.Games.Populations
                     position.Z += entityProto.Bounds.GetBoundHalfHeight();
             }
 
-            using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var settingsPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection settingsProperties);
             settings.Properties = settingsProperties;
             settingsProperties.FlattenCopyFrom(Properties, false);
             settingsProperties.RemovePropertyRange(PropertyEnum.EnemyBoost);
@@ -541,7 +541,7 @@ namespace MHServerEmu.Games.Populations
 
                     var positionOverride = _killPosition;
                     if (positionOverride == Vector3.Zero) positionOverride = Transform.Translation;
-                    using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    using var inputSettingsHandle = LootInputSettingsPool.Get(out LootInputSettings inputSettings);
                     inputSettings.Initialize(LootContext.Drop, killer, entity, positionOverride);
                     lootManager.SpawnLootFromTable(ObjectProto.OnDefeatLootTable, inputSettings, recipientId++);
                 }

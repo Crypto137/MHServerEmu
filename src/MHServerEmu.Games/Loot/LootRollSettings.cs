@@ -5,7 +5,9 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Loot
 {
-    public class LootRollSettings : IPoolable, IDisposable
+    public sealed class LootRollSettingsPool : GenericPool<LootRollSettings> { }
+
+    public class LootRollSettings : IPoolable
     {
         public int Depth { get; set; }
         public LootDropChanceModifiers DropChanceModifiers { get; set; }
@@ -43,8 +45,6 @@ namespace MHServerEmu.Games.Loot
         public Dictionary<AffixCategoryPrototype, short> AffixLimitByCategoryModifiers { get; } = new();
 #endif
         public PrototypeId MissionRef { get; set; }
-
-        public bool IsInPool { get; set; }
 
         public LootRollSettings() { }   // Use pooling instead of calling this directly
 
@@ -146,11 +146,6 @@ namespace MHServerEmu.Games.Loot
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             AffixLimitByCategoryModifiers.Clear();
 #endif
-        }
-
-        public void Dispose()
-        {
-            ObjectPoolManager.Instance.Return(this);
         }
 
         /// <summary>

@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Loot
         {
             pickedItemProto = null;
 
-            using DropFilterArguments currentArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+            using var currentArgsHandle = DropFilterArgumentsPool.Get(out DropFilterArguments currentArgs);
             DropFilterArguments.Initialize(currentArgs, filterArgs);    // Copy arguments to compare to what we started with
 
             while (pickedItemProto == null && (restrictionFlags.HasFlag(RestrictionTestFlags.Rarity) == false || currentArgs.Rarity != PrototypeId.Invalid))

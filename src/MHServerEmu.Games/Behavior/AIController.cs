@@ -706,7 +706,7 @@ namespace MHServerEmu.Games.Behavior
             var throwPowerProto = GameDatabase.GetPrototype<PowerPrototype>(throwPowerRef);
             if (throwPowerProto != null)
             {
-                using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
                 float range = throwPowerProto.GetRange(properties, Owner.Properties);
                 Vector3 targetPosition = Owner.RegionLocation.Position + (Owner.Forward * range);
                 AttemptActivatePower(throwPowerRef, Owner.Id, targetPosition);

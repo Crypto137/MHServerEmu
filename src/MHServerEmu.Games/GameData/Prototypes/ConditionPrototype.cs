@@ -263,8 +263,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Apply eval delta
             if (DurationMSEval != null)
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
-                using PropertyCollection dummyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
+                using var dummyPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection dummyProperties);
 
                 evalContext.Game = owner?.Game;
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
@@ -299,7 +299,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (ChanceToApplyCondition == null)
                 return 1f;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
             evalContext.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, conditionCollection);

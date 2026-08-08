@@ -1546,7 +1546,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             EntityManager entityMan = game.EntityManager;
             if (!Verify.IsNotNull(entityMan)) return;
 
-            using EntitySettings taserHotspotSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var taserHotspotSettingsHandle = EntitySettingsPool.Get(out EntitySettings taserHotspotSettings);
             Vector3 distance = trap.RegionLocation.Position - otherTrap.RegionLocation.Position;
             Vector3 center = distance * 0.5f;
             Vector3 delta = Vector3.Normalize2D(Vector3.AxisAngleRotate(center, Vector3.Up, MathHelper.ToRadians(90.0f)));
@@ -1555,7 +1555,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             taserHotspotSettings.Position = trap.RegionLocation.ProjectToFloor() - center;
             taserHotspotSettings.RegionId = trap.RegionLocation.RegionId;
 
-            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
             properties.FlattenCopyFrom(trap.Properties, false);
             taserHotspotSettings.Properties = properties;
 

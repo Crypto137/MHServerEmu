@@ -178,8 +178,8 @@ namespace MHServerEmu.Games.Properties
                     evalQueue.Enqueue(info.Id.Enum);
             }
 
-            using PropertyCollection dummyCollection = ObjectPoolManager.Instance.Get<PropertyCollection>();
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var dummyCollectionHandle = PropertyCollectionPool.Get(out PropertyCollection dummyCollection);
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, dummyCollection);
             evalContext.SetReadOnlyVar_PropertyId(EvalContext.Var1, PropertyId.Invalid);
 

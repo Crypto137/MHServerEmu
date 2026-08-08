@@ -930,7 +930,7 @@ namespace MHServerEmu.Games.Powers
             int recipientId = 1;
             foreach (Player recipient in recipientPlayers)
             {
-                using LootInputSettings lootSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                using var lootSettingsHandle = LootInputSettingsPool.Get(out LootInputSettings lootSettings);
                 lootSettings.Initialize(LootContext.Drop, recipient, Owner, level);
                 Game.LootManager.AwardLootFromTables(tables, lootSettings, recipientId++);
             }

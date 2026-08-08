@@ -458,7 +458,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (EvalExpirationTimeMS == null)
                 return TimeSpan.Zero;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_ProtoRef(EvalContext.Var1, rarityProtoRef);
 
             int expirationTimeMS = Eval.RunInt(EvalExpirationTimeMS, evalContext);
@@ -559,7 +559,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (LootDropRestrictions.IsNullOrEmpty())
                 return 0;
 
-            using DropFilterArguments args = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+            using var argsHandle = DropFilterArgumentsPool.Get(out DropFilterArguments args);
             DropFilterArguments.Initialize(args, lootContext);
 
             RestrictionTestFlags flags = RestrictionTestFlags.None;

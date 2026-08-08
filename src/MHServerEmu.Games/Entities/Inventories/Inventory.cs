@@ -704,7 +704,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             entity.OnSelfAddedToOtherInventory();
 
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
             settings.InventoryLocationPrevious = prevInvLoc;
 
             if (prevInvLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarLibrary

@@ -164,7 +164,7 @@ namespace MHServerEmu.Games.Entities.Items
             ItemPrototype itemProto = itemProtoRef.As<ItemPrototype>();
             if (!Verify.IsNotNull(itemProto)) return false;
 
-            using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            using var lootResultSummaryHandle = LootResultSummaryPool.Get(out LootResultSummary lootResultSummary);
             LootResult lootResult;
 
             if (itemProto.IsCurrency)
@@ -200,10 +200,10 @@ namespace MHServerEmu.Games.Entities.Items
 
         private bool DoItemActionReplaceSelfLootTable(LootTablePrototype lootTableProto, bool useAvatarLevel, Player player, Avatar avatar)
         {
-            using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+            using var inputSettingsHandle = LootInputSettingsPool.Get(out LootInputSettings inputSettings);
             inputSettings.Initialize(LootContext.MysteryChest, player, null, useAvatarLevel ? avatar.CharacterLevel : Properties[PropertyEnum.ItemLevel]);
 
-            using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
+            using var resolverHandle = ItemResolverPool.Get(out ItemResolver resolver);
             resolver.Initialize(Game.Random);
             resolver.SetContext(LootContext.MysteryChest, player);
 
@@ -214,7 +214,7 @@ namespace MHServerEmu.Games.Entities.Items
                 return false;
             }
 
-            using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            using var lootResultSummaryHandle = LootResultSummaryPool.Get(out LootResultSummary lootResultSummary);
             resolver.FillLootResultSummary(lootResultSummary);
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
@@ -340,7 +340,7 @@ namespace MHServerEmu.Games.Entities.Items
             // We need to keep track of everything we are doing so we can roll back if something goes wrong
             using var replacementItemListHandle = ListPool<(ulong, int)>.Get(out List<(ulong, int)> replacementItemList);
 
-            using PropertyCollection oldCurrencyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var oldCurrencyPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection oldCurrencyProperties);
             oldCurrencyProperties.CopyPropertyRange(player.Properties, PropertyEnum.Currency);
 
             EntityManager entityManager = Game.EntityManager;
@@ -348,7 +348,7 @@ namespace MHServerEmu.Games.Entities.Items
             foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
             {
                 // Create an item
-                using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
                 settings.EntityRef = itemSpec.ItemProtoRef;
                 settings.ItemSpec = itemSpec;
 
@@ -430,7 +430,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             }
 
-            using PropertyCollection replacementCurrencyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var replacementCurrencyPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection replacementCurrencyProperties);
 
             foreach (CurrencySpec currencySpec in lootResultSummary.Currencies)
             {
@@ -442,7 +442,7 @@ namespace MHServerEmu.Games.Entities.Items
 
                 currencySpec.ApplyCurrency(replacementCurrencyProperties);
 
-                using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
                 settings.EntityRef = currencySpec.AgentOrItemProtoRef;
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 settings.ItemSpec = new(currencySpec.AgentOrItemProtoRef, GameDatabase.LootGlobalsPrototype.RarityDefault, 1);

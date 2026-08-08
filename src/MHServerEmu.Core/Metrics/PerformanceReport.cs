@@ -8,7 +8,9 @@ using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Metrics
 {
-    public class PerformanceReport : IPoolable, IDisposable
+    public sealed class PerformanceReportPool : GenericPool<PerformanceReport> { }
+
+    public class PerformanceReport : IPoolable
     {
         private static uint _currentReportId = 0;
 
@@ -16,9 +18,6 @@ namespace MHServerEmu.Core.Metrics
         public ulong Id { get; private set; }
         public MemoryMetrics.Report Memory { get; private set; }
         public Dictionary<ulong, GamePerformanceMetrics.Report> Games { get; } = new();
-
-        [JsonIgnore]
-        public bool IsInPool { get; set; }
 
         public PerformanceReport() { }
 
@@ -59,11 +58,6 @@ namespace MHServerEmu.Core.Metrics
         {
             Memory = default;
             Games.Clear();
-        }
-
-        public void Dispose()
-        {
-            ObjectPoolManager.Instance.Return(this);
         }
 
         private string AsPlainText()

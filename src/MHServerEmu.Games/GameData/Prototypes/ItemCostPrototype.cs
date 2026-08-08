@@ -89,7 +89,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
             if (!Verify.IsNotNull(globalsProto?.ItemPriceMultiplierBuyFromVendor)) return price;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, item.Properties);
             float globalItemBuyPriceMultiplier = Eval.RunFloat(globalsProto.ItemPriceMultiplierBuyFromVendor, evalContext);
 
@@ -132,7 +132,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
             if (!Verify.IsNotNull(globalsProto?.ItemPriceMultiplierSellToVendor)) return price;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetVar_Int(EvalContext.Var1, itemLevel);
             float globalItemSellPriceMultiplier = Eval.RunFloat(globalsProto.ItemPriceMultiplierSellToVendor, evalContext);
 
@@ -151,7 +151,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int numAffixes = itemSpec.AffixSpecs.Count;
             int itemLevel = item != null ? item.Properties[PropertyEnum.ItemLevel] : itemSpec.ItemLevel;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
             evalContext.SetVar_Int(EvalContext.Var1, rarityTier);
             evalContext.SetVar_Int(EvalContext.Var2, numAffixes);
@@ -205,7 +205,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (avatar == null)
                 return 0;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, item.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, avatar.Properties);
@@ -258,7 +258,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (avatar == null)
                 return 0;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, item.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, avatar.Properties);
@@ -296,7 +296,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int rarityTier = rarityProto != null ? rarityProto.Tier : 0;
             int numAffixes = itemSpec.AffixSpecs.Count;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, item.Properties);
             evalContext.SetVar_Int(EvalContext.Var1, rarityTier);
@@ -370,7 +370,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     return liveTuneCost;
             }
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, item.Properties);
             evalContext.SetVar_Int(EvalContext.Var1, rarityTier);

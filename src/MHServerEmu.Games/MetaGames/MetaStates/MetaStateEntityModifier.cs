@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
             if (_proto.EntityFilter.Evaluate(entity, new()) && _proto.Eval != null)
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.Game = Game;
                 evalContext.SetVar_EntityPtr(EvalContext.Default, entity);
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, MetaGame.Properties);

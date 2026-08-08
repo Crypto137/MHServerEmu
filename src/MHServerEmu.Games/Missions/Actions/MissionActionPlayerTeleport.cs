@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Missions.Actions
                 bool hasTarget = _proto.TeleportRegionTarget != PrototypeId.Invalid;
                 foreach (Player player in players)
                 {
-                    using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                    using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
                     teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Mission);
 
                     if (hasTarget)

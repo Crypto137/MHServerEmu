@@ -686,7 +686,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (EvalSpawnProperties != null)
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.Game = region?.Game;
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, properties);
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, region.Properties);

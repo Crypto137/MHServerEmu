@@ -168,7 +168,7 @@ namespace MHServerEmu.Games.Entities.Persistence
                 if (!Verify.IsTrue(entityProtoRef != PrototypeId.Invalid, LoggingLevel.Error, $"Failed to retrieve entity proto ref for guid {dbEntity.EntityProtoGuid}"))
                     continue;
 
-                using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
                 settings.DbGuid = (ulong)dbEntity.DbGuid;
                 settings.InventoryLocation = new(containerEntityId, inventoryProtoRef, dbEntity.Slot);
                 settings.EntityRef = entityProtoRef;

@@ -556,7 +556,7 @@ namespace MHServerEmu.Games.Entities
 
             Orientation orientation = avatar.RegionLocation.Orientation;
 
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
 
             if (newOnServer)
             {
@@ -1708,7 +1708,7 @@ namespace MHServerEmu.Games.Entities
 
             EntityManager entityManager = Game.EntityManager;
 
-            using PropertyCollection procProperties = GetProcProperties(properties);
+            using var procPropertiesHandle = GetProcProperties(properties, out PropertyCollection procProperties);
             foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesAll))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId procPowerProtoRef);
@@ -1792,7 +1792,7 @@ namespace MHServerEmu.Games.Entities
             EvalPrototype evalNegStatusResistPctFormula = GameDatabase.CombatGlobalsPrototype?.EvalNegStatusResistPctFormula;
             if (!Verify.IsNotNull(evalNegStatusResistPctFormula)) return 0f;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, otherProperties);
             evalContext.SetVar_Int(EvalContext.Var1, ccResistScore);
@@ -2401,7 +2401,7 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld == false || tickData.TickDurationSeconds <= 0f)
                 return;
 
-            using PropertyCollection overTimeProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var overTimePropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection overTimeProperties);
             foreach (var kvp in tickData.PropertyList)
                 overTimeProperties[kvp.Key] = kvp.Value;
 
@@ -2890,7 +2890,7 @@ namespace MHServerEmu.Games.Entities
             float blockChance = Power.GetBlockChance(powerProto, attackerProperties, targetProperties, InvalidId);
             float dodgeChance = Power.GetDodgeChance(powerProto, attackerProperties, targetProperties, InvalidId);
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, targetProperties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, attackerProperties);
             evalContext.SetVar_Float(EvalContext.Var1, defenseRating);
@@ -3037,7 +3037,7 @@ namespace MHServerEmu.Games.Entities
             {
                 if (rank > 0)
                 {
-                    using PropertyCollection indexProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                    using var indexPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection indexProperties);
                     indexProperties[PropertyEnum.CharacterLevel] = CharacterLevel;
                     indexProperties[PropertyEnum.CombatLevel] = CombatLevel;
                     indexProperties.CopyProperty(Properties, PropertyEnum.ItemLevel);
@@ -3319,11 +3319,11 @@ namespace MHServerEmu.Games.Entities
             if (_playersWithClones != null && _playersWithClones.Contains(playerDbId))
                 return false;
 
-            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
             properties.FlattenCopyFrom(Properties, false);
             properties[PropertyEnum.RestrictedToPlayerGuid] = playerDbId;
 
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
             settings.EntityRef = PrototypeDataRef;
             settings.RegionId = _regionLocation.RegionId;
             settings.Position = _regionLocation.Position;
@@ -4079,7 +4079,7 @@ namespace MHServerEmu.Games.Entities
                 int recipientId = 1;
                 foreach (Player player in playerList)
                 {
-                    using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    using var inputSettingsHandle = LootInputSettingsPool.Get(out LootInputSettings inputSettings);
                     inputSettings.Initialize(LootContext.Drop, player, this);
                     inputSettings.EventType = eventType;
                     Game.LootManager.AwardLootFromTables(tables, inputSettings, recipientId++);
@@ -4149,7 +4149,7 @@ namespace MHServerEmu.Games.Entities
 
             foreach (Player player in playerList)
             {
-                using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                using var settingsHandle = LootInputSettingsPool.Get(out LootInputSettings settings);
                 settings.Initialize(LootContext.Drop, player, this);
                 player.AwardBonusItemFindPoints(bonusItemFindPoints, settings);
             }

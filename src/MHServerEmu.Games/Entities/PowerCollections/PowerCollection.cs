@@ -444,7 +444,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             if (!Verify.IsNotNull(retPower)) return null;
 
             // Assemble property values passed as arguments into a collection
-            using PropertyCollection initializeProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var initializePropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection initializeProperties);
 
             initializeProperties[PropertyEnum.PowerRank] = indexProps.PowerRank;
             initializeProperties[PropertyEnum.CharacterLevel] = indexProps.CharacterLevel;

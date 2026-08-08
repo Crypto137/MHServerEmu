@@ -202,7 +202,7 @@ namespace MHServerEmu.Games.Powers
                     WorldEntity owner = entityManager.GetEntity<WorldEntity>(powerApplication.UserEntityId);
                     WorldEntity target = entityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
 
-                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                     evalContext.Game = Game;
                     evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, prototype.Properties);
                     evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner?.Properties);
@@ -246,7 +246,7 @@ namespace MHServerEmu.Games.Powers
             MissilePrototype missilePrototype = missileContext.Entity;
             if (!Verify.IsNotNull(missilePrototype)) return false;
 
-            using EntitySettings creationSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var creationSettingsHandle = EntitySettingsPool.Get(out EntitySettings creationSettings);
             creationSettings.EntityRef = missileContext.Entity != null ? missileContext.Entity.DataRef : PrototypeId.Invalid;
             creationSettings.RegionId = region.Id;
             creationSettings.IgnoreNavi = missileContext.Ghost;
@@ -349,7 +349,7 @@ namespace MHServerEmu.Games.Powers
             creationSettings.VariationSeed = powerApplication.FXRandomSeed;
             creationSettings.LocomotorHeightOverride = Math.Max(missileContext.Radius, creationSettings.Position.Z - RegionLocation.ProjectToFloor(region, creationSettings.Position).Z);
 
-            using PropertyCollection extraProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var extraPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection extraProperties);
             SetExtraProperties(extraProperties, creationSettings, powerApplication, missileContext, contextIndex, missilePrototype);
 
             creationSettings.Properties = extraProperties;

@@ -733,7 +733,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (success && EvalAccessRestriction != null)
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 evalContext.SetReadOnlyVar_ProtoRef(EvalContext.Var1, difficultyProtoRef);
 #endif

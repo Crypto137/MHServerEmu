@@ -274,8 +274,8 @@ namespace MHServerEmu.Games.Missions
             var avatar = Player?.CurrentAvatar;
             if (avatar == null) return false;
             if (missionProto.EvalCanStart == null) return true;
-            
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.Game = Game;
             evalContext.SetVar_EntityPtr(EvalContext.Default, avatar);
             evalContext.SetVar_EntityPtr(EvalContext.Other, Player);

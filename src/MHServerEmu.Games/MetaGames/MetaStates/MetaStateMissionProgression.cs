@@ -186,7 +186,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 var startTarget = Region.GetStartTarget(player);
                 if (startTarget != PrototypeId.Invalid)
                 {
-                    using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                    using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
                     teleporter.Initialize(player, Gazillion.TeleportContextEnum.TeleportContext_Mission);
                     teleporter.TeleportToTarget(startTarget);
                 }

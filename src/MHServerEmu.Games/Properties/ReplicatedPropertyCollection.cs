@@ -57,12 +57,6 @@ namespace MHServerEmu.Games.Properties
             _interestPolicies = AOINetworkPolicyValues.AOIChannelNone;
         }
 
-        public override void Dispose()
-        {
-            // Need to override Dispose so that replicated collections don't get pulled with regular ones
-            ObjectPoolManager.Instance.Return(this);
-        }
-
         public override bool SerializeWithDefault(Archive archive, PropertyCollection defaultCollection)
         {
             bool success = true;

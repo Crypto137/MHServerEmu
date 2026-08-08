@@ -199,11 +199,11 @@ namespace MHServerEmu.Games.Regions
             var hotspotProto = GameDatabase.GetPrototype<WorldEntityPrototype>(hotspotRef);
             if (hotspotProto == null) return false;
 
-            using EntitySettings hotspotSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var hotspotSettingsHandle = EntitySettingsPool.Get(out EntitySettings hotspotSettings);
             hotspotSettings.EntityRef = hotspotRef;
             hotspotSettings.HotspotSkipCollide = true;
 
-            using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var settingsPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection settingsProperties);
             int level = region.RegionLevel;
             settingsProperties[PropertyEnum.CharacterLevel] = level;
             settingsProperties[PropertyEnum.CombatLevel] = level;
@@ -415,7 +415,7 @@ namespace MHServerEmu.Games.Regions
                 return;
             }
 
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
             settings.EntityRef = entityProto.DataRef;
 
             if (entityMarker.OverrideSnapToFloor)
@@ -432,7 +432,7 @@ namespace MHServerEmu.Games.Regions
             if (entityProto.Bounds != null)
                 entityPosition.Z += entityProto.Bounds.GetBoundHalfHeight();
 
-            using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var settingsPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection settingsProperties);
             settings.Properties = settingsProperties;
             int level = Area.GetCharacterLevel(entityProto); 
             settings.Properties[PropertyEnum.CharacterLevel] = level;

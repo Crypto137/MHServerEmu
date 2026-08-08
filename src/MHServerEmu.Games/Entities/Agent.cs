@@ -2217,10 +2217,10 @@ namespace MHServerEmu.Games.Entities
             if (behaviorProfile != null && behaviorProfile.Brain != PrototypeId.Invalid)
             {
                 AIController = new(Game, this);
-                using PropertyCollection collection = ObjectPoolManager.Instance.Get<PropertyCollection>();
-                collection[PropertyEnum.AIIgnoreNoTgtOverrideProfile] = Properties[PropertyEnum.AIIgnoreNoTgtOverrideProfile];
+                using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
+                properties[PropertyEnum.AIIgnoreNoTgtOverrideProfile] = Properties[PropertyEnum.AIIgnoreNoTgtOverrideProfile];
                 SpawnSpec spec = settings?.SpawnSpec ?? new SpawnSpec(Game);
-                return AIController.Initialize(behaviorProfile, spec, collection);
+                return AIController.Initialize(behaviorProfile, spec, properties);
             }
             return false;
         }
@@ -3224,7 +3224,7 @@ namespace MHServerEmu.Games.Entities
                     {
                         var brain = GameDatabase.GetPrototype<BrainPrototype>(brainRef);
                         if (brain is not ProceduralAIProfilePrototype profile) return false;
-                        using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                        using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
                         InitAIOverride(profile, properties);
                         if (AIController == null) return false;
                         AIController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
@@ -3274,7 +3274,7 @@ namespace MHServerEmu.Games.Entities
                 int recipientId = 1;
                 foreach (Player player in playerList)
                 {
-                    using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    using var inputSettingsHandle = LootInputSettingsPool.Get(out LootInputSettings inputSettings);
                     inputSettings.Initialize(LootContext.Drop, player, this, CharacterLevel);
                     Game.LootManager.AwardLootFromTables(tables, inputSettings, recipientId++);
                 }

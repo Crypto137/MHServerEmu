@@ -37,14 +37,14 @@ namespace MHServerEmu.Games.Entities
 
             var game = region.Game;
 
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
             settings.EntityRef = (PrototypeId)orbProto;
             settings.Position = position;
             settings.Orientation = new(3.14f, 0.0f, 0.0f);
             settings.RegionId = region.Id;
             settings.Lifespan = TimeSpan.FromSeconds(3);
 
-            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var propertiesHandle = PropertyCollectionPool.Get(out PropertyCollection properties);
             properties[PropertyEnum.AIStartsEnabled] = false;
             properties[PropertyEnum.NoEntityCollide] = true;
             settings.Properties = properties;
@@ -57,14 +57,14 @@ namespace MHServerEmu.Games.Entities
         {
             var region = avatar.Region;
 
-            using EntitySettings entitySettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using var entitySettingsHandle = EntitySettingsPool.Get(out EntitySettings entitySettings);
             entitySettings.EntityRef = agentProto.DataRef;
             entitySettings.Position = spawnPosition;
             entitySettings.Orientation = orientation;
             entitySettings.RegionId = region.Id;
             entitySettings.IsPopulation = true;
 
-            using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var settingsPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection settingsProperties);
             settingsProperties[PropertyEnum.DifficultyTier] = region.DifficultyTierRef;
             settingsProperties[PropertyEnum.Rank] = agentProto.Rank.DataRef;
             settingsProperties[PropertyEnum.CharacterLevel] = avatar.CharacterLevel;

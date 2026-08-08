@@ -104,7 +104,7 @@ namespace MHServerEmu.Games.Entities
             PrototypeId vendorTypeProtoRef = vendorXPCapInfoProto.Vendor;
 
             // Find out when the current rollover happened
-            using PropertyCollection rolloverProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            using var rolloverPropertiesHandle = PropertyCollectionPool.Get(out PropertyCollection rolloverProperties);
             rolloverProperties[PropertyEnum.LootCooldownRolloverWallTime, 0, (PropertyParam)vendorXPCapInfoProto.WallClockTimeDay] = vendorXPCapInfoProto.WallClockTime24Hr;
             LootUtilities.GetLastLootCooldownRolloverWallTime(rolloverProperties, Clock.UnixTime + TimeSpan.FromDays(7), out TimeSpan lastRolloverTime);
 
@@ -172,7 +172,7 @@ namespace MHServerEmu.Games.Entities
             if (isCloning)
             {
                 // Create a clone
-                using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
                 settings.EntityRef = item.PrototypeDataRef;
                 settings.ItemSpec = new(item.ItemSpec);
                 settings.InventoryLocation = new(Id, destinationInventory.PrototypeDataRef, destinationSlot);
@@ -649,7 +649,7 @@ namespace MHServerEmu.Games.Entities
             int tableLevel;
             if (vendorTypeProto.IsCrafter == false)
             {
-                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, avatar?.Properties);
                 evalContext.SetReadOnlyVar_ProtoRef(EvalContext.Var1, vendorTypeProtoRef);
@@ -802,7 +802,7 @@ namespace MHServerEmu.Games.Entities
                 if (lootTableProto != null)
                 {
                     // Initialize settings
-                    using LootRollSettings rollSettings = ObjectPoolManager.Instance.Get<LootRollSettings>();
+                    using var rollSettingsHandle = LootRollSettingsPool.Get(out LootRollSettings rollSettings);
                     rollSettings.Player = this;
                     rollSettings.UsableAvatar = ((PrototypeId)Properties[PropertyEnum.VendorRollAvatar, vendorTypeProtoRef]).As<AvatarPrototype>();
                     rollSettings.Level = Properties[PropertyEnum.VendorRollLevel, vendorTypeProtoRef];
@@ -815,7 +815,7 @@ namespace MHServerEmu.Games.Entities
                     }
 
                     // Initialize resolver and roll
-                    using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
+                    using var resolverHandle = ItemResolverPool.Get(out ItemResolver resolver);
                     resolver.Initialize(new(rollSeed));
                     resolver.SetContext(LootContext.Vendor, this);
 
@@ -825,7 +825,7 @@ namespace MHServerEmu.Games.Entities
                         continue;
 
                     // Create the rolled items
-                    using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+                    using var lootResultSummaryHandle = LootResultSummaryPool.Get(out LootResultSummary lootResultSummary);
                     resolver.FillLootResultSummary(lootResultSummary);
 
                     if (!Verify.IsTrue(lootResultSummary.Types == LootType.Item, $"Rolled non-item loot for loot table {lootTableProto}, vendor type {vendorTypeProto}"))
@@ -851,7 +851,7 @@ namespace MHServerEmu.Games.Entities
                         if (stashTokenProto != null && stashTokenProto.Inventory != PrototypeId.Invalid && IsInventoryUnlocked(stashTokenProto.Inventory))
                             continue;
 
-                        using EntitySettings entitySettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                        using var entitySettingsHandle = EntitySettingsPool.Get(out EntitySettings entitySettings);
                         entitySettings.EntityRef = itemSpec.ItemProtoRef;
                         entitySettings.ItemSpec = itemSpec;
 
@@ -896,7 +896,7 @@ namespace MHServerEmu.Games.Entities
                             if (vendorTypeProto.ContainsCraftingRecipeCategory(recipeProto.RecipeCategory) == false)
                                 continue;
 
-                            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                            using var settingsHandle = EntitySettingsPool.Get(out EntitySettings settings);
                             settings.EntityRef = recipe.PrototypeDataRef;
                             settings.ItemSpec = new(recipe.ItemSpec);
                             settings.InventoryLocation = new(Id, inventory.PrototypeDataRef);

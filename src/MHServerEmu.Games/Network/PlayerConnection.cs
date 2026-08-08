@@ -158,7 +158,7 @@ namespace MHServerEmu.Games.Network
             }
 
             // Create player entity
-            using (EntitySettings playerSettings = ObjectPoolManager.Instance.Get<EntitySettings>())
+            using (var playerSettingsHandle = EntitySettingsPool.Get(out EntitySettings playerSettings))
             {
                 playerSettings.DbGuid = (ulong)_dbAccount.Id;
                 playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
@@ -1287,7 +1287,7 @@ namespace MHServerEmu.Games.Network
             PrototypeId difficultyProtoRef = (PrototypeId)useWaypoint.DifficultyProtoId;
 #endif
 
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            using var teleporterHandle = TeleporterPool.Get(out Teleporter teleporter);
             teleporter.Initialize(Player, TeleportContextEnum.TeleportContext_Waypoint);
             teleporter.TransitionEntity = waypoint;
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53

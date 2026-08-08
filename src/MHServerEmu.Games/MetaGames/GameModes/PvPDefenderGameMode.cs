@@ -126,7 +126,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             var currentTime = Game.CurrentTime;
             var time = currentTime - _startTime;
 
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetVar_Int(EvalContext.Var1, (int)time.TotalSeconds);
             float respawnSeconds = Math.Max(1f, Eval.RunFloat(_proto.TimeToRespawn, evalContext));
             var timeToRespawn = TimeSpan.FromSeconds(respawnSeconds);
@@ -996,7 +996,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             var manager = Game.EntityManager;
 
             var time = Game.CurrentTime - _startTime;
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetVar_Int(EvalContext.Var1, (int)time.TotalSeconds);
             float vulnerability = Eval.RunFloat(_proto.DefenderVulnerabilityEval, evalContext);
 
@@ -1016,7 +1016,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             var manager = Game.EntityManager;
 
             var time = Game.CurrentTime - _startTime;
-            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
             evalContext.SetVar_Int(EvalContext.Var1, (int)time.TotalSeconds);
             float vulnerability = Eval.RunFloat(_proto.TurretVulnerabilityEval, evalContext);
             
