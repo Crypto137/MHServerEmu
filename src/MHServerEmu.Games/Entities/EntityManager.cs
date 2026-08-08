@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
@@ -40,6 +41,27 @@ namespace MHServerEmu.Games.Entities
     public readonly struct DestroyEntityEvent(Entity entity) : IGameEventData
     {
         public readonly Entity Entity = entity;
+    }
+
+    internal sealed class EntityDestroyListNodePool : ObjectPool<LinkedListNode<ulong>>
+    {
+        [ThreadStatic]
+        internal static EntityDestroyListNodePool Instance;
+
+        public EntityDestroyListNodePool() : base(ObjectPoolFlags.ThreadLocal) { }
+
+        protected override LinkedListNode<ulong> Allocate()
+        {
+            return new(0);
+        }
+
+#if DEBUG
+        protected override void OnReturn(LinkedListNode<ulong> instance)
+        {
+            if (instance.List != null)
+                throw new Exception("Attempted to return a destroy list node that is currently in a list.");
+        }
+#endif
     }
 
     public class EntityManager
@@ -534,7 +556,9 @@ namespace MHServerEmu.Games.Entities
 
         private static LinkedListNode<ulong> GetDestroyListNode(ulong entityId)
         {
-            return EntityDestroyListNodePool.Instance.Get(entityId);
+            LinkedListNode<ulong> node = EntityDestroyListNodePool.Instance.Get();
+            node.Value = entityId;
+            return node;
         }
 
         private static void ReturnDestroyListNode(LinkedListNode<ulong> destroyNode)

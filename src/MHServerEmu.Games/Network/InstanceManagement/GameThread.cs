@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             CollectionPoolSettings.UseThreadLocalStorage = true;
             GenericPoolSettings.UseThreadLocalStorage = true;
 
-            EntityDestroyListNodePool.Instance = new(Id);
+            EntityDestroyListNodePool.Instance = new();
 
             InitializeLiveTuning();
         }
