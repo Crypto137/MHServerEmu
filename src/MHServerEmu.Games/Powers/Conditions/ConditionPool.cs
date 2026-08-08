@@ -1,94 +1,27 @@
-﻿using System.Text;
-using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System.Time;
+﻿using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Games.Powers.Conditions
 {
-    public sealed class ConditionPool
+    public sealed class ConditionPool : ObjectPool<Condition>
     {
-        // Allocate conditions in chunks of 256 instances, which should more than enough for one player.
-        // Cap the maximum number of chunks at 128, which should be enough for how many players a single game can handle.
-        private const int ChunkSize = 256;
-        private const int MaxChunkCount = 128;
+        // TODO: transfer ownership of condition instances from PowerResults as soon as they're applied and remove IsInPool field
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        public ConditionPool() : base(ObjectPoolFlags.None) { }
 
-        private readonly Stack<Condition> _conditionStack = new();
-        private readonly HashSet<Condition> _activeConditions = new();  // Track all active conditions to prevent returning multiple times
-
-        private int _chunkCount = 0;
-        private int _allocatedCount = 0;
-
-        public ConditionPool() { }
-
-        public override string ToString()
+        protected override Condition Allocate()
         {
-            return $"chunks={_chunkCount}/{MaxChunkCount}, active={_activeConditions.Count}/{_allocatedCount}";
+            return new();
         }
 
-        public Condition Get()
+        protected override void OnGet(Condition instance)
         {
-            Condition condition;
-
-            if (_conditionStack.Count == 0)
-            {
-                if (Verify.IsTrue(AllocateChunk(), LoggingLevel.Error, $"Exceeded maximum pool capacity ({this})"))
-                    condition = _conditionStack.Pop();
-                else
-                    condition = new();
-            }
-            else
-            {
-                condition = _conditionStack.Pop();
-            }
-
-            condition.IsInPool = false;
-            _activeConditions.Add(condition);
-            return condition;
+            instance.IsInPool = false;
         }
 
-        public bool Return(Condition condition)
+        protected override void OnReturn(Condition instance)
         {
-            if (!Verify.IsTrue(_activeConditions.Remove(condition), LoggingLevel.Error, $"Condition [{condition}] is not an active condition tracked by this pool"))
-                return false;
-
-            if (_conditionStack.Count >= _allocatedCount)
-                return false;
-
-            condition.Clear();
-            condition.IsInPool = true;
-            _conditionStack.Push(condition);
-            return true;
-        }
-
-        public string GetConditionList()
-        {
-            StringBuilder sb = new();
-
-            sb.AppendLine("StartTime\tCondition\tIsInCollection");
-
-            foreach (Condition condition in _activeConditions.OrderBy(condition => condition.StartTime))
-                sb.AppendLine($"{Clock.GameTimeToDateTime(condition.StartTime):yyyy.MM.dd HH:mm:ss.fff}\t{condition}\t{condition.IsInCollection}");
-
-            return sb.ToString();
-        }
-
-        private bool AllocateChunk()
-        {
-            if (_chunkCount >= MaxChunkCount)
-                return false;
-
-            _chunkCount++;
-            _allocatedCount += ChunkSize;
-
-            _conditionStack.EnsureCapacity(_allocatedCount);
-            _activeConditions.EnsureCapacity(_allocatedCount);
-
-            for (int i = 0; i < ChunkSize; i++)
-                _conditionStack.Push(new() { IsInPool = true });
-
-            Logger.Trace($"AllocateChunk(): {this}");
-            return true;
+            instance.Clear();
+            instance.IsInPool = true;
         }
     }
 }

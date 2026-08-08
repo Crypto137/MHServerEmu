@@ -194,24 +194,6 @@ namespace MHServerEmu.Commands.Implementations
             throw new("Server crash invoked by a debug command.");
         }
 
-        [Command("getconditionlist")]
-        [CommandDescription("Gets a list of all conditions tracked by the ConditionPool in the current game.")]
-        [CommandUserLevel(AccountUserLevel.Moderator)]
-        [CommandInvokerType(CommandInvokerType.Client)]
-        public string GetConditionList(string[] @params, NetClient client)
-        {
-            PlayerConnection playerConnection = (PlayerConnection)client;
-            string filePath = $"Download/Conditions_{DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat)}.txt";
-
-            playerConnection.SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
-                .SetResponse($"Saved condition list for the current game to {filePath}")
-                .SetFilerelativepath(filePath)
-                .SetFilecontents(playerConnection.Game.ConditionPool.GetConditionList())
-                .Build());
-
-            return string.Empty;
-        }
-
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         [Command("difficulty")]
         [CommandDescription("Shows information about the current difficulty level.")]
