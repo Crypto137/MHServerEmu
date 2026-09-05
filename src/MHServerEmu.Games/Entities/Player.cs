@@ -2244,11 +2244,13 @@ namespace MHServerEmu.Games.Entities
 
         public AvatarUnlockType GetAvatarUnlockType(PrototypeId avatarRef)
         {
-            var avatarProto = GameDatabase.GetPrototype<AvatarPrototype>(avatarRef);
-            if (avatarProto == null) return AvatarUnlockType.None;
+            AvatarPrototype avatarProto = avatarRef.As<AvatarPrototype>();
+            if (!Verify.IsNotNull(avatarProto)) return AvatarUnlockType.None;
+
             AvatarUnlockType unlockType = (AvatarUnlockType)(int)Properties[PropertyEnum.AvatarUnlock, avatarRef];
             if (unlockType == AvatarUnlockType.None && avatarProto.IsStarterAvatar)
                 return AvatarUnlockType.Starter;
+
             return unlockType;
         }
 
@@ -4080,7 +4082,12 @@ namespace MHServerEmu.Games.Entities
                 // HACK: Unlock avatars here too
                 foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                 {
-                    if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
+                    if (avatarRef == (PrototypeId)6044485448390219466)  //zzzBrevikOLD.prototype
+                        continue;
+
+                    if (GetAvatarUnlockType(avatarRef) != AvatarUnlockType.Starter)
+                        continue;
+
                     UnlockAvatar(avatarRef, AvatarUnlockType.Default, false);
                 }
             }
@@ -4088,11 +4095,12 @@ namespace MHServerEmu.Games.Entities
             if (Game.GameOptions.TeamUpSystemEnabled && Game.CustomGameOptions.AutoUnlockTeamUps)
             {
                 // HACK: And team-ups as well
-                Inventory teamUpLibrary = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
-                if (teamUpLibrary.Count == 0)
+                foreach (PrototypeId teamUpRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                 {
-                    foreach (PrototypeId teamUpRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-                        UnlockTeamUpAgent(teamUpRef, false);
+                    if (IsTeamUpAgentUnlocked(teamUpRef))
+                        continue;
+
+                    UnlockTeamUpAgent(teamUpRef, false);
                 }
             }
 
