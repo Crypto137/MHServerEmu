@@ -137,6 +137,13 @@ namespace MHServerEmu
                 if (_state != State.Running)
                     break;
 
+                // Running the server in a non-interactive container without an stdin can spam the console with null inputs.
+                if (input == null)
+                {
+                    Thread.Sleep(1);
+                    continue;
+                }
+
                 CommandManager.Instance.TryParse(input);
             }
 
