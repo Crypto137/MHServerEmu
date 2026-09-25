@@ -60,6 +60,14 @@ namespace MHServerEmu.Games
         public const string Version = "0.0.0.0";
 #endif
 
+#if PLATFORM_TYPE_PS4
+        public const Platforms PlatformType = Platforms.PS4;
+#elif PLATFORM_TYPE_XBOXONE
+        public const Platforms PlatformType = Platforms.XboxOne;
+#else
+        public const Platforms PlatformType = Platforms.PC;
+#endif
+
         [ThreadStatic]
         internal static Game Current;
 

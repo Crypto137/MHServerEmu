@@ -4783,7 +4783,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (equippedCostumeRef != PrototypeId.Invalid)
                 return equippedCostumeRef;
 
-            return AvatarPrototype.GetStartingCostumeForPlatform(Platforms.PC);
+            return AvatarPrototype.GetStartingCostumeForPlatform(Game.PlatformType);
         }
 
         public AssetId GetCurrentCostumeAssetRef()
@@ -4800,7 +4800,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             AvatarPrototype avatarProto = AvatarPrototype;
             if (!Verify.IsNotNull(avatarProto)) return AssetId.Invalid;
-            return avatarProto.GetStartingCostumeAssetRef(Platforms.PC);
+            return avatarProto.GetStartingCostumeAssetRef(Game.PlatformType);
         }
 
         public bool ChangeCostume(PrototypeId costumeProtoRef, bool validate = false)
@@ -4846,8 +4846,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (!Verify.IsNotNull(player)) return false;
 
 #if GAME_VERSION_1_53
-            // V53_TODO: consoles?
-            PrototypeId costumeProtoRef = avatarProto.GetStartingCostumeForPlatform(Platforms.PC);
+            PrototypeId costumeProtoRef = avatarProto.GetStartingCostumeForPlatform(Game.PlatformType);
             player.UnlockCostume(costumeProtoRef);
             return player.HasCostumeUnlocked(costumeProtoRef);
 #else
@@ -4863,7 +4862,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             Inventory errorRecovery = player.GetInventory(InventoryConvenienceLabel.ErrorRecovery);
             if (!Verify.IsNotNull(errorRecovery)) return false;
 
-            PrototypeId startingCostumeProtoRef = avatarProto.GetStartingCostumeForPlatform(Platforms.PC);
+            PrototypeId startingCostumeProtoRef = avatarProto.GetStartingCostumeForPlatform(Game.PlatformType);
             if (startingCostumeProtoRef == PrototypeId.Invalid)
                 return true;
 

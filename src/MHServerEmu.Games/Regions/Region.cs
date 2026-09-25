@@ -960,7 +960,7 @@ namespace MHServerEmu.Games.Regions
             
             foreach (DifficultyTierGameplaySettingsPrototype settings in difficultyTierProto.PlatformSpecificGameplaySettings)
             {
-                if (settings.Platform.HasFlag(Platforms.PC))
+                if (settings.Platform.HasFlag(Game.PlatformType))
                 {
                     gameplaySettingsProto = settings;
                     break;

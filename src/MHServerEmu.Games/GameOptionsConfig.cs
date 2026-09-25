@@ -65,7 +65,7 @@ namespace MHServerEmu.Games
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 .SetIsDifficultySliderEnabled(IsDifficultySliderEnabled)
                 .SetOrbisTrophiesEnabled(OrbisTrophiesEnabled)
-                .SetPlatformType((int)Platforms.PC)
+                .SetPlatformType((int)Game.PlatformType)
 #endif
 #if GAME_VERSION_1_53
                 .SetMetaGamePanelV2Enabled(true)

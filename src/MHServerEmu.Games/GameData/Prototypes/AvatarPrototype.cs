@@ -100,8 +100,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // This is done in a separate AvatarPrototype.CostumeApprovedForUse() method rather than
             // CostumePrototype.ApprovedForUse() because the latter calls AvatarPrototype.ApprovedForUse().
 
-            // Add settings for PS4 and Xbox One here if we end up supporting console clients
-            PrototypeId startingCostumeId = GetStartingCostumeForPlatform(Platforms.PC);
+            PrototypeId startingCostumeId = GetStartingCostumeForPlatform(Game.PlatformType);
             return CostumeApprovedForUse(startingCostumeId);
         }
 

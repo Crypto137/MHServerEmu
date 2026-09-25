@@ -399,7 +399,7 @@ namespace MHServerEmu.Games.MTXStore
                 if (tokenProto == null)
                     return BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
 
-                CostumePrototype costumeProto = avatarProto.GetStartingCostumeForPlatform(Platforms.PC).As<CostumePrototype>();
+                CostumePrototype costumeProto = avatarProto.GetStartingCostumeForPlatform(Game.PlatformType).As<CostumePrototype>();
                 if (costumeProto == null)
                     return BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
 
