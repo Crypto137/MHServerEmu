@@ -109,11 +109,11 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
                 _cachedProtobuf = NetMessageConsoleCatalogItems.CreateBuilder()
                     .SetCatalogVersion(((long)Timestamp.TotalMicroseconds).ToString())
                     .AddRangeEntries(_entries.Values.Select(entry => entry.ToNetStruct()))
-                    .AddCategories(GetConsoleCatalogCategoryEntry("heroes"))
-                    .AddCategories(GetConsoleCatalogCategoryEntry("costumes"))
-                    .AddCategories(GetConsoleCatalogCategoryEntry("team-ups"))
-                    .AddCategories(GetConsoleCatalogCategoryEntry("consumables"))
-                    .AddCategories(GetConsoleCatalogCategoryEntry("bundles"))
+                    .AddCategories(GetConsoleCatalogCategoryEntry("heroes", 0))
+                    .AddCategories(GetConsoleCatalogCategoryEntry("costumes", 1))
+                    .AddCategories(GetConsoleCatalogCategoryEntry("team-ups", 2))
+                    .AddCategories(GetConsoleCatalogCategoryEntry("consumables", 3))
+                    .AddCategories(GetConsoleCatalogCategoryEntry("bundles", 4))
                     .Build();
 #else
                 _cachedProtobuf = NetMessageCatalogItems.CreateBuilder()
@@ -130,15 +130,17 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
         }
 
 #if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
-        private MHConsoleCatalogCategoryEntry GetConsoleCatalogCategoryEntry(string id)
+        private MHConsoleCatalogCategoryEntry GetConsoleCatalogCategoryEntry(string id, int ordinal)
         {
             return MHConsoleCatalogCategoryEntry.CreateBuilder()
                 .SetId(id)
                 .SetVisible(true)
-                .AddLocalizedEntries(MHLocalizedStringCollection.CreateBuilder().SetLanguageId("en_us"))
+                .AddLocalizedEntries(MHLocalizedStringCollection.CreateBuilder()
+                    .SetLanguageId("en_us")
+                    .AddTranslations(MHStringValue.CreateBuilder().SetKey("tid").SetText(id)))
                 .SetTid(string.Empty)
 #if GAME_VERSION_1_53
-                .SetOrdinal(0)
+                .SetOrdinal(ordinal)
 #endif
                 .Build();
         }

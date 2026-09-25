@@ -67,36 +67,12 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
                 .AddRangeGuidItems(GuidItems.Select(guidItem => guidItem.ToNetStruct()))
                 .SetItemPrice(MHConsoleItemPrice.CreateBuilder()
                     .SetPriceG(LocalizedEntries[0].ItemPrice))
-                .AddPresentations(MHConsolePresentationEntry.CreateBuilder()
-                    .SetType(string.Empty)
-                    .SetTypeOrder(0)
-                    .AddLocalizedEntries(MHLocalizedStringCollection.CreateBuilder()
-                        .SetLanguageId("en_us")))
+                .AddPresentations(GetConsolePresentation())
                 .SetSellableObject(SkuId.ToString());
 
-            switch (Type.Name)
-            {
-                case "Hero":
-                    entry.AddCategories("heroes");
-                    break;
-
-                case "Costume":
-                    entry.AddCategories("costumes");
-                    break;
-
-                case "TeamUp":
-                    entry.AddCategories("team-ups");
-                    break;
-
-                case "Boost":
-                case "Chest":
-                    entry.AddCategories("consumables");
-                    break;
-
-                case "Bundle":
-                    entry.AddCategories("bundles");
-                    break;
-            }
+            string category = GetConsoleCategory();
+            if (category != null)
+                entry.AddCategories(category);
 
             return entry.Build();
         }
@@ -113,6 +89,52 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
                 .SetType(Type.ToNetStruct())
                 .AddRangeTypeModifier(TypeModifiers.Select(typeModifier => typeModifier.ToNetStruct()))
                 .Build();
+        }
+#endif
+
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+        private MHConsolePresentationEntry GetConsolePresentation()
+        {
+            string presentationType = Type.Name switch
+            {
+                "Hero"      => "avatar",
+                "Costume"   => "costume",
+                "Bundle"    => "bundle",
+                _           => string.Empty,
+            };
+
+            string st = GuidItems[0].ItemPrototypeRuntimeIdForClient.GetNameFormatted();
+            string lt = LocalizedEntries[0].Title;
+            string d = LocalizedEntries[0].Description;
+            string icon = string.Empty; // png url
+            string img = string.Empty;  // png url
+
+            return MHConsolePresentationEntry.CreateBuilder()
+                .SetType(presentationType)
+                .SetTypeOrder(0)
+                .AddLocalizedEntries(MHLocalizedStringCollection.CreateBuilder()
+                    .SetLanguageId("en_us")
+                    .AddTranslations(MHStringValue.CreateBuilder().SetKey("st").SetText(st))
+                    .AddTranslations(MHStringValue.CreateBuilder().SetKey("lt").SetText(lt))
+                    .AddTranslations(MHStringValue.CreateBuilder().SetKey("d").SetText(d))
+                    .AddTranslations(MHStringValue.CreateBuilder().SetKey("icon").SetText(icon))
+                    .AddTranslations(MHStringValue.CreateBuilder().SetKey("img").SetText(img)))
+                .Build();
+        }
+#endif
+
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+        private string GetConsoleCategory()
+        {
+            return Type.Name switch
+            {
+                "Hero"              => "heroes",
+                "Costume"           => "costumes",
+                "TeamUp"            => "team-ups",
+                "Boost" or "Chest"  => "consumables",
+                "Bundle"            => "bundles",
+                _                   => null,
+            };
         }
 #endif
     }
