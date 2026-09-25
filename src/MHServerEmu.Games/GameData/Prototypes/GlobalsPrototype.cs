@@ -412,7 +412,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AdvancementGlobalsPrototype : Prototype
     {
-#if !GAME_VERSION_1_53 || !PLATFORM_TYPE_PC
+#if !GAME_VERSION_1_53 || (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
         public CurveId LevelingCurve { get; protected set; }
 #endif
         public CurveId DeathPenaltyCost { get; protected set; }
@@ -420,7 +420,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_48
         public CurveId PowerPointsGrantedAtLevel { get; protected set; }
 #endif
-#if !GAME_VERSION_1_53 || !PLATFORM_TYPE_PC
+#if !GAME_VERSION_1_53 || (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
         public CurveId VendorLevelingCurve { get; protected set; }
 #endif
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
@@ -433,13 +433,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int PowerBoostMax { get; protected set; }
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public PrestigeLevelPrototype[] PrestigeLevels { get; protected set; }
-#if !GAME_VERSION_1_53 || !PLATFORM_TYPE_PC
+#if !GAME_VERSION_1_53 || (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
         public CurveId ItemAffixLevelingCurve { get; protected set; }
         public CurveId ExperienceBonusAvatarSynergy { get; protected set; }
         public float ExperienceBonusAvatarSynergyMax { get; protected set; }
 #endif
         public int OriginalMaxLevel { get; protected set; }
-#if !GAME_VERSION_1_53 || !PLATFORM_TYPE_PC
+#if !GAME_VERSION_1_53 || (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
         public CurveId ExperienceBonusLevel60Synergy { get; protected set; }
 #endif
         public int TeamUpPowersPerTier { get; protected set; }
@@ -455,7 +455,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PetTechAffixInfoPrototype[] PetTechAffixInfo { get; protected set; }
         public PrototypeId PetTechDonationItemPrototype { get; protected set; }
         public int AvatarPowerSpecsMax { get; protected set; }
-#if !GAME_VERSION_1_53 || !PLATFORM_TYPE_PC
+#if !GAME_VERSION_1_53 || (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
         public CurveId PctXPFromPrestigeLevelCurve { get; protected set; }
 #endif
         public int StarterAvatarLevelCap { get; protected set; }

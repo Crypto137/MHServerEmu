@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
             TypeModifiers = [new("Giftable", 1)];
         }
 
-#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
         public MarvelHeroesConsoleCatalogEntry ToNetStruct()
         {
             var entry = MarvelHeroesConsoleCatalogEntry.CreateBuilder()
@@ -92,7 +92,7 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
         }
 #endif
 
-#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
         private MHConsolePresentationEntry GetConsolePresentation()
         {
             string presentationType = Type.Name switch
@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
         }
 #endif
 
-#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
         private string GetConsoleCategory()
         {
             return Type.Name switch

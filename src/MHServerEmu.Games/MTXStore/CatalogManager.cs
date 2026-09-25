@@ -60,7 +60,7 @@ namespace MHServerEmu.Games.MTXStore
 
                 Logger.Info($"Loaded {_catalog.Count} store catalog entries");
 
-#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
                 // Generate dummy entries for all starting costumes because on consoles hero/costume selection is integrated with the store.
                 List<CatalogEntry> startingCostumeEntries = new();
                 long currentSkuId = _catalog.HighestSkuId;
@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.MTXStore
 
         public bool OnBuyItemFromCatalog(Player player, NetMessageBuyItemFromCatalog buyItemFromCatalog)
         {
-#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
             if (!Verify.IsTrue(buyItemFromCatalog.HasSo, $"No sellable object received from player [{player}]"))
                 return false;
 

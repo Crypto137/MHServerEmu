@@ -18,8 +18,8 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
 
         // Dumped timestamp: 1508422929 544000 (Thu Oct 19 2017 14:22:09 GMT+0000)
         public TimeSpan Timestamp { get; private set; }
-        
-#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
         public long HighestSkuId { get; private set; }
 #endif
 
@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
 
                 _entries[skuId] = entry;
 
-#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
                 HighestSkuId = Math.Max(skuId, HighestSkuId);
 #endif
             }
@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
         {
             if (_cachedProtobuf == null)
             {
-#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
                 _cachedProtobuf = NetMessageConsoleCatalogItems.CreateBuilder()
                     .SetCatalogVersion(((long)Timestamp.TotalMicroseconds).ToString())
                     .AddRangeEntries(_entries.Values.Select(entry => entry.ToNetStruct()))
@@ -137,7 +137,7 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
             return _cachedProtobuf;
         }
 
-#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
         private MHConsoleCatalogCategoryEntry GetConsoleCatalogCategoryEntry(string id, int ordinal)
         {
             return MHConsoleCatalogCategoryEntry.CreateBuilder()
