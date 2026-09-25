@@ -4188,8 +4188,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
 
-#if GAME_VERSION_1_53
-            // V53_TODO: LevelingDataConsole
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
             Curve pctXPFromPrestigeLevelCurve = advancementProto.LevelingDataPC.PctXPFromPrestigeLevelCurve.AsCurve();
 #else
             Curve pctXPFromPrestigeLevelCurve = advancementProto.PctXPFromPrestigeLevelCurve.AsCurve();
@@ -6050,8 +6049,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Get requirements from advancement globals
             AdvancementGlobalsPrototype advancementGlobals = GameDatabase.AdvancementGlobalsPrototype;
-#if GAME_VERSION_1_53
-            // V53_TODO: LevelingDataConsole
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
             Curve normalBonusCurve = advancementGlobals.LevelingDataPC.ExperienceBonusAvatarSynergy.AsCurve();
             Curve cappedBonusMaxCurve = advancementGlobals.LevelingDataPC.ExperienceBonusLevel60Synergy.AsCurve();
 #else
@@ -6079,8 +6077,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             experienceBonus += cappedBonusMaxCurve.GetAt(numLevelCappedAvatars);
-#if GAME_VERSION_1_53
-            // V53_TODO: LevelingDataConsole
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
             experienceBonus = Math.Min(experienceBonus, advancementGlobals.LevelingDataPC.ExperienceBonusAvatarSynergyMax);
 #else
             experienceBonus = Math.Min(experienceBonus, advancementGlobals.ExperienceBonusAvatarSynergyMax);

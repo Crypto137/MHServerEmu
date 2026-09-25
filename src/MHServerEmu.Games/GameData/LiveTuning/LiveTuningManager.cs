@@ -380,7 +380,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         }
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         public static float GetLiveDifficultyTuningTuningVar(TuningPrototype tuningProto, DifficultyTuningTuningVar tuningVarEnum)
         {
             Game game = Game.Current;

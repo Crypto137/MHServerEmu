@@ -400,6 +400,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_53
         public LocaleStringId DescriptorConsole { get; protected set; }
         public AssetId WidgetMovieClipOverrideConsole { get; protected set; }
+#if !PLATFORM_TYPE_PC
+        public PrototypeId IconDescription { get; protected set; }
+#endif
 #endif
     }
 
@@ -411,6 +414,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public AssetId IconCompleteHiRes { get; protected set; }
         public AssetId IconIncompleteHiRes { get; protected set; }
+#endif
+#if GAME_VERSION_1_53 && !PLATFORM_TYPE_PC
+        public PrototypeId IconCompleteDescription { get; protected set; }
+        public PrototypeId IconIncompleteDescription { get; protected set; }
 #endif
     }
 
@@ -429,6 +436,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #endif
 #if GAME_VERSION_1_53
         public PrototypeId DescriptorConsole { get; protected set; }
+#if !PLATFORM_TYPE_PC
+        public PrototypeId IconDescription { get; protected set; }
+        public PrototypeId IconDeadDescription { get; protected set; }
+#endif
 #endif
     }
 
@@ -447,6 +458,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #endif
 #if GAME_VERSION_1_53
         public LocaleStringId DescriptorConsole { get; protected set; }
+#if !PLATFORM_TYPE_PC
+        public PrototypeId IconDescription { get; protected set; }
+#endif
 #endif
     }
 
@@ -481,6 +495,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #endif
 #if GAME_VERSION_1_53
         public PrototypeId DescriptorConsole { get; protected set; }
+#if !PLATFORM_TYPE_PC
+        public PrototypeId IconDescription { get; protected set; }
+#endif
 #endif
     }
 
@@ -562,7 +579,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool AutoAcknowledge { get; protected set; }
         public PrototypeId Title { get; protected set; }
         public PrototypeId Description { get; protected set; }
+#if PLATFORM_TYPE_PC
         public PrototypeId PlayingAvatar { get; protected set; }
+#endif
 #endif
     }
 
@@ -869,14 +888,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
     public class LFGObjectivePrototype : Prototype
     {
         public LocaleStringId DisplayName { get; protected set; }
     }
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
     public class MetaKeyPrototype : Prototype
     {
         public LocaleStringId Description { get; protected set; }
@@ -884,7 +903,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
     public class MetaKeyListPrototype : Prototype
     {
         public PrototypeId[] Keys { get; protected set; }

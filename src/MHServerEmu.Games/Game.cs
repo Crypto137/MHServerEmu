@@ -51,7 +51,11 @@ namespace MHServerEmu.Games
 #elif GAME_VERSION_1_52
         public const string Version = "1.52.0.1700";
 #elif GAME_VERSION_1_53
+#if PLATFORM_TYPE_PC
         public const string Version = "1.53.0.203";
+#else
+        public const string Version = "1.4.0.26";
+#endif
 #else
         public const string Version = "0.0.0.0";
 #endif

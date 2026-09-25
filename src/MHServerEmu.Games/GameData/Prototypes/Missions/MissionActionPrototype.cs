@@ -780,7 +780,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
     public class MissionActionAvatarResurrectPrototype : MissionActionPrototype
     {
         public DistributionType ApplyTo { get; protected set; }
@@ -794,7 +794,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
     public class MissionActionShowMetaKeyListPrototype : MissionActionPrototype
     {
         public PrototypeId MetaKeyList { get; protected set; }
@@ -809,7 +809,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
     public class MissionActionHideMetaKeyListPrototype : MissionActionPrototype
     {
         public DistributionType SendTo { get; protected set; }

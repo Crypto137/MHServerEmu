@@ -1209,9 +1209,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_52
         public PrototypeId FulfillmentDuplicateItem { get; protected set; }
 #elif GAME_VERSION_1_53
+#if PLATFORM_TYPE_PC
         public PrototypeId FulfillmentDuplicateItemConsole { get; protected set; }
         public CostumeSpecialEffectEntryPrototype[] CostumeSpecialEffects { get; protected set; }
         public PrototypeId FulfillmentDuplicateItemPC { get; protected set; }
+#else
+        public PrototypeId FulfillmentDuplicateItem { get; protected set; }
+        public CostumeSpecialEffectEntryPrototype[] CostumeSpecialEffects { get; protected set; }
+#endif
 #endif
 
         //---
@@ -1224,14 +1229,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             AvatarPrototype avatar = GameDatabase.GetPrototype<AvatarPrototype>(UsableBy);
             if (!Verify.IsNotNull(avatar)) return false;
 
-#if GAME_VERSION_1_53
-            // V53_TODO: FulfillmentDuplicateItemConsole
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
             ItemPrototype itemProto = GameDatabase.GetPrototype<ItemPrototype>(FulfillmentDuplicateItemPC);
-            if (!Verify.IsTrue(itemProto != null && itemProto != this)) return false;
-
-            return avatar.ApprovedForUse() && itemProto.ApprovedForUse();
-#elif GAME_VERSION_1_52
+#else
             ItemPrototype itemProto = GameDatabase.GetPrototype<ItemPrototype>(FulfillmentDuplicateItem);
+#endif
             if (!Verify.IsTrue(itemProto != null && itemProto != this)) return false;
 
             return avatar.ApprovedForUse() && itemProto.ApprovedForUse();

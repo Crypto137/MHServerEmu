@@ -714,7 +714,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
     public class LootRollSwapAffixesPrototype : LootRollModifierPrototype
     {
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]

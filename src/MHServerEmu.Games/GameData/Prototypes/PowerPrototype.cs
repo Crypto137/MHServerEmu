@@ -172,8 +172,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #endif
 #if GAME_VERSION_1_53
         public LocaleStringId CostumePowerDescription { get; protected set; }
+#if PLATFORM_TYPE_PC
         public PrototypeId[] AltPowerUIs { get; protected set; }
         public bool DisableChargeGainWithNoCooldown { get; protected set; }
+#endif
 #endif
 
         //---
@@ -1309,7 +1311,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId StacksWithOtherPower { get; protected set; }
     }
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
     public class AltPowerUIPrototype : Prototype
     {
         public PrototypeId Power { get; protected set; }

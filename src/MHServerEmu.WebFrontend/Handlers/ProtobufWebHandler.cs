@@ -12,6 +12,12 @@ namespace MHServerEmu.WebFrontend.Handlers
 {
     public class ProtobufWebHandler : WebHandler
     {
+#if PLATFORM_TYPE_PS4
+        private const string GameClientUserAgent = "User-Agent: Secret Identity Studios Http Client libhttp/13.52 (PlayStation 4)";
+#else
+        private const string GameClientUserAgent = "Secret Identity Studios Http Client";
+#endif
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly TimeLeakyBucketCollection<string> _loginRateLimiter;
@@ -24,7 +30,8 @@ namespace MHServerEmu.WebFrontend.Handlers
 
         protected override async Task Post(WebRequestContext context)
         {
-            if (context.IsGameClientRequest == false)
+            string userAgent = context.UserAgent;
+            if (string.Equals(userAgent, GameClientUserAgent, StringComparison.InvariantCulture) == false)
             {
                 context.StatusCode = (int)HttpStatusCode.Forbidden;
                 return;
@@ -38,9 +45,17 @@ namespace MHServerEmu.WebFrontend.Handlers
                     await OnLoginDataPB(context, loginDataPB);
                     break;
 
+                case LoginDataConsole loginDataConsole:
+                    await OnLoginDataConsole(context, loginDataConsole);
+                    break;
+
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case PrecacheHeaders precacheHeaders:
                     await OnPrecacheHeaders(context, precacheHeaders);
+                    break;
+
+                case NewsRequest newsRequest:
+                    await OnNewsRequest(context, newsRequest);
                     break;
 #endif
 
@@ -87,6 +102,33 @@ namespace MHServerEmu.WebFrontend.Handlers
             await context.SendAsync(authTicket);
         }
 
+        private async Task OnLoginDataConsole(WebRequestContext context, LoginDataConsole loginDataConsole)
+        {
+#if PLATFORM_TYPE_PC
+            Logger.Warn("LoginDataConsole is not allowed on PC server builds");
+            context.StatusCode = (int)HttpStatusCode.BadRequest;
+#else
+            Logger.Debug($"OnLoginDataConsole():\n{loginDataConsole}");
+
+            // TODO: Use a custom PSN implementation to send email+password in the token field
+            LoginDataPB.Builder loginDataPB = LoginDataPB.CreateBuilder()
+                .SetEmailAddress("test1@test.com")
+                .SetPassword("123");
+
+            if (loginDataConsole.HasVersion)
+                loginDataPB.SetVersion(loginDataConsole.Version);
+
+            if (loginDataConsole.HasNoPersistenceThisSession)
+                loginDataPB.SetNoPersistenceThisSession(loginDataConsole.NoPersistenceThisSession);
+
+            // Currently unused fields:
+            // 1.52+: serviceEntitlements, titleid
+            // 1.53+: envid, consoletype, errorinfolog
+
+            await OnLoginDataPB(context, loginDataPB.Build());
+#endif
+        }
+
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private static async Task OnPrecacheHeaders(WebRequestContext context, PrecacheHeaders precacheHeaders)
         {
@@ -94,6 +136,16 @@ namespace MHServerEmu.WebFrontend.Handlers
             Logger.Trace("Received PrecacheHeaders message");
 #endif
             await context.SendAsync(PrecacheHeadersMessageResponse.DefaultInstance);
+        }
+#endif
+
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+        private static async Task OnNewsRequest(WebRequestContext context, NewsRequest newsRequest)
+        {
+#if DEBUG
+            Logger.Trace("Received NewsRequest message");
+#endif
+            await context.SendAsync(NewsMessageResponse.DefaultInstance);
         }
 #endif
     }

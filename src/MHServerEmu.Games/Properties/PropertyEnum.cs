@@ -223,7 +223,7 @@
         ContextTracking,
         ControlledAgentRespawnTime,
         ControlledAgentHasSummonDur,
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         CostumeClosetConvertResult,
 #endif
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
@@ -370,7 +370,7 @@
         DamageVariance,
         DangerRoomScenarioItemDbGuid,
         DeathLimitOverride,
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         DeathsRemaining,
 #endif
         DEBUGFakePartyMember,
@@ -520,7 +520,7 @@
         Health,
         HealthAddBonus,
         HealthBase,
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         PatchNotes,
         PatchNotesCount,
 #endif
@@ -583,7 +583,7 @@
         InvalidBounceTarget,
         InventoryAddTime,
         InventoryStackCount,
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         InventoryStackCountNoMax,
 #endif
         InventoryStackSizeMax,
@@ -1118,7 +1118,7 @@
         VendorXP,
         VendorXPCapCounter,
         VendorXPCapRollOverTime,
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         VersionUnifyFortuneCardAwards,
         VersionConvertPCRelics,
 #endif

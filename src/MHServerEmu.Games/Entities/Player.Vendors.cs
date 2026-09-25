@@ -550,8 +550,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (!Verify.IsNotNull(vendorTypeProto)) return null;
 
-#if GAME_VERSION_1_53
-            // V53_TODO: VendorLevelingCurveConsole
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
             CurveId vendorLevelingCurveId = vendorTypeProto.VendorLevelingCurvePC;
 #else
             CurveId vendorLevelingCurveId = vendorTypeProto.VendorLevelingCurve;

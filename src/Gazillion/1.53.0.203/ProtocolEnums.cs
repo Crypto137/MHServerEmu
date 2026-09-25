@@ -179,7 +179,9 @@ namespace Gazillion
         NetMessageVendorRequestDonateItemTo,
         NetMessageVendorRequestDonateItemsTo,
         NetMessageVendorRequestRefresh,
+#if PLATFORM_TYPE_PC
         LFGCommandClient,
+#endif
         NetMessageTryModifyCommunityMemberCircle,
         NetMessagePullCommunityStatus,
         NetMessageGuildMessageToPlayerManager,
@@ -454,7 +456,9 @@ namespace Gazillion
         NetMessageSetExtraText,
         NetMessageBannerMessage,
         NetMessageHUDTutorial,
+#if PLATFORM_TYPE_PC
         NetMessageMetaKeyList,
+#endif
         NetMessageWaypointNotification,
         NetMessageRegionAvatarSwapUpdate,
         NetMessageRegionRestrictedRosterUpdate,
@@ -589,8 +593,10 @@ namespace Gazillion
         PartyMemberInfoClientUpdate,
         NetMessagePlayerLookupByNameServerResponse,
         NetMessageSuggestedPlayerForParty,
+#if PLATFORM_TYPE_PC
         NetMessageShowDeathDialogForAvatar,
         LFGCommandResponseClient,
+#endif
     }
 
     public enum GazillionCommonMessage : uint

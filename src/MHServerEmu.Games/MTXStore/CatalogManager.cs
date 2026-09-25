@@ -357,8 +357,11 @@ namespace MHServerEmu.Games.MTXStore
                 return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
             }
 
-            // V53_TODO: consoles?
+#if PLATFORM_TYPE_PC
             PrototypeId duplicateItemProtoRef = costumeProto.FulfillmentDuplicateItemPC;
+#else
+            PrototypeId duplicateItemProtoRef = costumeProto.FulfillmentDuplicateItem;
+#endif
             if (!Verify.IsTrue(duplicateItemProtoRef != PrototypeId.Invalid)) return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
 
             ItemPrototype duplicateItemProto = duplicateItemProtoRef.As<ItemPrototype>();

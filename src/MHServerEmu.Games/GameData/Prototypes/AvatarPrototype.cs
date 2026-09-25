@@ -68,10 +68,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId PresenceStatusKeyXboxOne { get; protected set; }
         public SlotUnlockPrototype[] AbilitySlotUnlockProgression { get; protected set; }
         public bool OmegaPrestigeEnabled { get; protected set; }
+#if PLATFORM_TYPE_PC
         public AssetId SocialIconPathConsole { get; protected set; }
         public AssetId SynergyIconPath { get; protected set; }
         public AssetId SynergyIconPathConsole { get; protected set; }
         public AvatarPowerGroupUIPrototype[] PowerGroupUIs { get; protected set; }
+#endif
 #endif
 
         //---
@@ -580,7 +582,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
     public class AvatarPowerGroupUIPrototype : Prototype
     {
         public AssetId IconPath { get; protected set; }

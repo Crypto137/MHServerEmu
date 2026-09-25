@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MetaGameWidget { get; protected set; }
         public bool AllowMissionTrackerSorting { get; protected set; }
         public LocaleStringId InterstitialTextOverride { get; protected set; }
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         public bool DisplayInRaidUIConsole { get; protected set; }
 #endif
     }
@@ -328,7 +328,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] ApplyStates { get; protected set; }
         public PrototypeId[] RemoveStates { get; protected set; }
         public AssetId[] RemoveGroups { get; protected set; }
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         public PrototypeId AvatarOnKilledInfoOverrideNoLife { get; protected set; }
 #endif
 
