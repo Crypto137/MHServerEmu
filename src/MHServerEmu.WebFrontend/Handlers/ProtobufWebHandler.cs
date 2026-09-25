@@ -12,11 +12,7 @@ namespace MHServerEmu.WebFrontend.Handlers
 {
     public class ProtobufWebHandler : WebHandler
     {
-#if PLATFORM_TYPE_PS4
-        private const string GameClientUserAgent = "User-Agent: Secret Identity Studios Http Client libhttp/13.52 (PlayStation 4)";
-#else
         private const string GameClientUserAgent = "Secret Identity Studios Http Client";
-#endif
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -30,13 +26,16 @@ namespace MHServerEmu.WebFrontend.Handlers
 
         protected override async Task Post(WebRequestContext context)
         {
+            // Check user agent only on PC for now because console user agents appear to include firmware specific metadata (e.g. 13.52 for firmware version in the example below)
+            // User-Agent: Secret Identity Studios Http Client libhttp/13.52 (PlayStation 4)
+#if PLATFORM_TYPE_PC
             string userAgent = context.UserAgent;
             if (string.Equals(userAgent, GameClientUserAgent, StringComparison.InvariantCulture) == false)
             {
                 context.StatusCode = (int)HttpStatusCode.Forbidden;
                 return;
             }
-
+#endif
             IMessage message = context.ReadProtobuf<FrontendProtocolMessage>();
 
             switch (message)
