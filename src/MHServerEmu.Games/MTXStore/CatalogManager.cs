@@ -89,10 +89,19 @@ namespace MHServerEmu.Games.MTXStore
 
         public bool OnBuyItemFromCatalog(Player player, NetMessageBuyItemFromCatalog buyItemFromCatalog)
         {
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+            if (!Verify.IsTrue(buyItemFromCatalog.HasSo, $"No sellable object received from player [{player}]"))
+                return false;
+
+            if (!Verify.IsTrue(long.TryParse(buyItemFromCatalog.So, out long skuId)))
+                return false;
+#else
             if (!Verify.IsTrue(buyItemFromCatalog.HasSkuId, $"No SkuId received from player [{player}]"))
                 return false;
 
             long skuId = buyItemFromCatalog.SkuId;
+#endif
+
             long clientPrice = buyItemFromCatalog.ItemUnitPrice;
 
             // In normal non-gift purchases the buyer is the recipient
