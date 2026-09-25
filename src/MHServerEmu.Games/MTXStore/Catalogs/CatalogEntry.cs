@@ -59,6 +59,48 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
             TypeModifiers = new CatalogEntryTypeModifier[] { new("Giftable", 1) };
         }
 
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+        public MarvelHeroesConsoleCatalogEntry ToNetStruct()
+        {
+            var entry = MarvelHeroesConsoleCatalogEntry.CreateBuilder()
+                .SetDeliverableObject(SkuId.ToString())
+                .AddRangeGuidItems(GuidItems.Select(guidItem => guidItem.ToNetStruct()))
+                .SetItemPrice(MHConsoleItemPrice.CreateBuilder()
+                    .SetPriceG(LocalizedEntries[0].ItemPrice))
+                .AddPresentations(MHConsolePresentationEntry.CreateBuilder()
+                    .SetType(string.Empty)
+                    .SetTypeOrder(0)
+                    .AddLocalizedEntries(MHLocalizedStringCollection.CreateBuilder()
+                        .SetLanguageId("en_us")))
+                .SetSellableObject(SkuId.ToString());
+
+            switch (Type.Name)
+            {
+                case "Hero":
+                    entry.AddCategories("heroes");
+                    break;
+
+                case "Costume":
+                    entry.AddCategories("costumes");
+                    break;
+
+                case "TeamUp":
+                    entry.AddCategories("team-ups");
+                    break;
+
+                case "Boost":
+                case "Chest":
+                    entry.AddCategories("consumables");
+                    break;
+
+                case "Bundle":
+                    entry.AddCategories("bundles");
+                    break;
+            }
+
+            return entry.Build();
+        }
+#else
         public MarvelHeroesCatalogEntry ToNetStruct()
         {
             return MarvelHeroesCatalogEntry.CreateBuilder()
@@ -72,5 +114,6 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
                 .AddRangeTypeModifier(TypeModifiers.Select(typeModifier => typeModifier.ToNetStruct()))
                 .Build();
         }
+#endif
     }
 }
