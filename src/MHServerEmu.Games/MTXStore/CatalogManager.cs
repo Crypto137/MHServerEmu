@@ -59,6 +59,22 @@ namespace MHServerEmu.Games.MTXStore
                 }
 
                 Logger.Info($"Loaded {_catalog.Count} store catalog entries");
+
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+                // Generate dummy entries for all starting costumes because on consoles hero/costume selection is integrated with the store.
+                List<CatalogEntry> startingCostumeEntries = new();
+                long currentSkuId = _catalog.HighestSkuId;
+
+                foreach (PrototypeId avatarProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+                    PrototypeId costumeProtoRef = avatarProto.GetStartingCostumeForPlatform(Game.PlatformType);
+                    CatalogEntry entry = new(++currentSkuId, costumeProtoRef, 0);
+                    startingCostumeEntries.Add(entry);
+                }
+
+                _catalog.AddEntries(startingCostumeEntries.ToArray());
+#endif
             }
         }
 

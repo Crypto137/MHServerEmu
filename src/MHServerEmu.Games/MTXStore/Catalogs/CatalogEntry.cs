@@ -47,16 +47,16 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
         /// <param name="skuId">Catalog entry SKU id.</param>
         /// <param name="prototypeId">Costume prototype id.</param>
         /// <param name="text">Text to use for title and description.</param>
-        public CatalogEntry(long skuId, PrototypeId prototypeId, string text, long price)
+        public CatalogEntry(long skuId, PrototypeId prototypeId, long price)
         {
             SkuId = skuId;
-            GuidItems = new CatalogGuidEntry[] { new(0, prototypeId, 1) };
+            GuidItems = [new(0, prototypeId, 1)];
             AdditionalGuidItems = Array.Empty<CatalogGuidEntry>();
-            LocalizedEntries = new LocalizedCatalogEntry[] { new("en_us", text, text, "", price) };
+            LocalizedEntries = [new("en_us", prototypeId.GetName(), prototypeId.GetName(), "", price)];
             InfoUrls = Array.Empty<LocalizedCatalogEntryUrlOrData>();
             ContentData = Array.Empty<LocalizedCatalogEntryUrlOrData>();
             Type = new("Costume", 1);
-            TypeModifiers = new CatalogEntryTypeModifier[] { new("Giftable", 1) };
+            TypeModifiers = [new("Giftable", 1)];
         }
 
 #if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC

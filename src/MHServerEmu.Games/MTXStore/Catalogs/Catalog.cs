@@ -19,6 +19,10 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
         // Dumped timestamp: 1508422929 544000 (Thu Oct 19 2017 14:22:09 GMT+0000)
         public TimeSpan Timestamp { get; private set; }
         
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+        public long HighestSkuId { get; private set; }
+#endif
+
         public int Count { get => _entries.Count; }
 
         public Catalog() { }
@@ -89,6 +93,10 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
                     Logger.Trace($"Overriding SKU {skuId}");
 
                 _entries[skuId] = entry;
+
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+                HighestSkuId = Math.Max(skuId, HighestSkuId);
+#endif
             }
 
             FlagDirty();
