@@ -161,9 +161,13 @@ namespace MHServerEmu.Games.Entities
         public Avatar CurrentAvatar { get; private set; }
         public HUDTutorialPrototype CurrentHUDTutorial { get; private set; }
 
-        // Console stuff - not implemented
+#if PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE
+        public bool IsConsolePlayer { get => true; }
+        public bool IsConsoleUI { get => true; }
+#else
         public bool IsConsolePlayer { get => false; }
         public bool IsConsoleUI { get => false; }
+#endif
         public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
 
         public Avatar PrimaryAvatar { get => CurrentAvatar; } // Fix for PC
