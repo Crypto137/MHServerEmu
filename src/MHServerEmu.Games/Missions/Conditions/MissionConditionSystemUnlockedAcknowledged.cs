@@ -10,6 +10,13 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             // V53_TODO
         }
+
+        public override bool OnReset()
+        {
+            // just skip this for now
+            SetCompleted();
+            return true;
+        }
     }
 }
 #endif
