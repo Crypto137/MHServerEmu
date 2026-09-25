@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <Platforms>x64</Platforms>
-    <Configurations>Debug;Release;Debug 1.48;Release 1.48;Debug 1.53;Release 1.53</Configurations>
+    <Configurations>Debug;Release;Debug 1.48;Release 1.48;Debug 1.53;Release 1.53;Debug PS4;Release PS4</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -26,27 +26,35 @@
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <DefineConstants>$(DefineConstants);GAME_VERSION_1_52</DefineConstants>
+    <DefineConstants>$(DefineConstants);GAME_VERSION_1_52;PLATFORM_TYPE_PC</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DefineConstants>$(DefineConstants);GAME_VERSION_1_52</DefineConstants>
+    <DefineConstants>$(DefineConstants);GAME_VERSION_1_52;PLATFORM_TYPE_PC</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.48|x64'">
-    <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_48</DefineConstants>
+    <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_48;PLATFORM_TYPE_PC</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.48|x64'">
-    <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_48</DefineConstants>
+    <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_48;PLATFORM_TYPE_PC</DefineConstants>
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.53|x64'">
-    <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_53</DefineConstants>
+    <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_53;PLATFORM_TYPE_PC</DefineConstants>
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.53|x64'">
-    <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_53</DefineConstants>
+    <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_53;PLATFORM_TYPE_PC</DefineConstants>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug PS4|x64'">
+    <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_53;PLATFORM_TYPE_PS4</DefineConstants>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release PS4|x64'">
+    <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_53;PLATFORM_TYPE_PS4</DefineConstants>
   </PropertyGroup>
 	
   <ItemGroup>
