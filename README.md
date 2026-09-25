@@ -10,6 +10,8 @@ The following versions of the game client are supported:
 
 - **1.53.0.203** (Test Center) - Preliminary Support
 
+- **1.4.0.26** (PS4) - Preliminary Support
+
 We post development progress reports on our [blog](https://crypto137.github.io/MHServerEmu/). You can find additional information on various topics in the [documentation](./docs/Index.md). If you would like to discuss this project and/or help with its development, feel free to join our [Discord](https://discord.gg/hjR8Bj52t3).
 
 ## Download

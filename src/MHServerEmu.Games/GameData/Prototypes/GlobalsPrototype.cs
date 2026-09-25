@@ -321,10 +321,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int EmoteSpamCooldownMS { get; protected set; }
         public int EmoteSpamNumUsages { get; protected set; }
         public PrototypeId UIDefaultEmoteInventory { get; protected set; }
+#if PLATFORM_TYPE_PC
         public PrototypeId PatchNotesItem { get; protected set; }
         public int LFGSimultaneousCharacters { get; protected set; }
         public PrototypeId DifficultyTuningPrototype { get; protected set; }
         public PrototypeId OmegaPrestigeVersionReward { get; protected set; }
+#endif
 #endif
 
         //---
@@ -410,7 +412,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AdvancementGlobalsPrototype : Prototype
     {
-#if !GAME_VERSION_1_53
+#if !GAME_VERSION_1_53 || !PLATFORM_TYPE_PC
         public CurveId LevelingCurve { get; protected set; }
 #endif
         public CurveId DeathPenaltyCost { get; protected set; }
@@ -418,7 +420,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_48
         public CurveId PowerPointsGrantedAtLevel { get; protected set; }
 #endif
-#if !GAME_VERSION_1_53
+#if !GAME_VERSION_1_53 || !PLATFORM_TYPE_PC
         public CurveId VendorLevelingCurve { get; protected set; }
 #endif
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
@@ -431,13 +433,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int PowerBoostMax { get; protected set; }
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public PrestigeLevelPrototype[] PrestigeLevels { get; protected set; }
-#if !GAME_VERSION_1_53
+#if !GAME_VERSION_1_53 || !PLATFORM_TYPE_PC
         public CurveId ItemAffixLevelingCurve { get; protected set; }
         public CurveId ExperienceBonusAvatarSynergy { get; protected set; }
         public float ExperienceBonusAvatarSynergyMax { get; protected set; }
 #endif
         public int OriginalMaxLevel { get; protected set; }
-#if !GAME_VERSION_1_53
+#if !GAME_VERSION_1_53 || !PLATFORM_TYPE_PC
         public CurveId ExperienceBonusLevel60Synergy { get; protected set; }
 #endif
         public int TeamUpPowersPerTier { get; protected set; }
@@ -453,7 +455,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PetTechAffixInfoPrototype[] PetTechAffixInfo { get; protected set; }
         public PrototypeId PetTechDonationItemPrototype { get; protected set; }
         public int AvatarPowerSpecsMax { get; protected set; }
-#if !GAME_VERSION_1_53
+#if !GAME_VERSION_1_53 || !PLATFORM_TYPE_PC
         public CurveId PctXPFromPrestigeLevelCurve { get; protected set; }
 #endif
         public int StarterAvatarLevelCap { get; protected set; }
@@ -478,10 +480,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId PctXPFromOmegaPrestigeLevelCurve { get; protected set; }
         [PrototypeField(PrototypeFieldType.VectorPrototypeRefPtr)]
         public OmegaPrestigeLevelPrototype[] OmegaPrestigeLevels { get; protected set; }
+#if PLATFORM_TYPE_PC
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public LevelingDataPrototype LevelingDataConsole { get; protected set; }
         [PrototypeField(PrototypeFieldType.PrototypeRefPtr)]
         public LevelingDataPrototype LevelingDataPC { get; protected set; }
+#endif
 #endif
 
         // ---
@@ -623,7 +627,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private Curve GetAvatarLevelingCurve()
         {
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
             return CurveDirectory.Instance.GetCurve(LevelingDataPC.LevelingCurve);
 #else
             return CurveDirectory.Instance.GetCurve(LevelingCurve);
@@ -643,7 +647,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #endif
     }
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
     public class LevelingDataPrototype : Prototype
     {
         public CurveId LevelingCurve { get; protected set; }
@@ -1027,7 +1031,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public TokenPrototype[] Tokens { get; protected set; }
         public PrototypeId[] DefaultEmoteItems { get; protected set; }
         public int GamepadHoldTimeDestroyDonateMS { get; protected set; }
+#if PLATFORM_TYPE_PC
         public PrototypeId GamepadIconBuyAction { get; protected set; }
+#endif
 #endif
 
         //---
@@ -1606,7 +1612,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public int RespawnLockoutMS { get; protected set; }
 #endif
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         public bool IncreaseDeathCountOnSelfRevive { get; protected set; }
         public bool UseDeathTimer { get; protected set; }
 #endif

@@ -1762,7 +1762,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
     public class ProfLavaWaveRaidControllerPrototype : ProcProfileSpikeDanceControllerPrototype
     {
         //---

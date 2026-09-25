@@ -22,8 +22,6 @@ namespace MHServerEmu.Core.Network.Web
         public string XForwardedFor { get => _httpRequest.Headers["X-Forwarded-For"]; }
         public string Authorization { get => _httpRequest.Headers["Authorization"]; }
 
-        public bool IsGameClientRequest { get => UserAgent.Equals("Secret Identity Studios Http Client", StringComparison.InvariantCulture); }
-
         public int StatusCode { get => _httpResponse.StatusCode; set => _httpResponse.StatusCode = value; }
 
         public WebRequestContext(HttpListenerContext httpContext)

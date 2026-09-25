@@ -89,10 +89,19 @@ namespace MHServerEmu.Games.MTXStore
 
         public bool OnBuyItemFromCatalog(Player player, NetMessageBuyItemFromCatalog buyItemFromCatalog)
         {
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+            if (!Verify.IsTrue(buyItemFromCatalog.HasSo, $"No sellable object received from player [{player}]"))
+                return false;
+
+            if (!Verify.IsTrue(long.TryParse(buyItemFromCatalog.So, out long skuId)))
+                return false;
+#else
             if (!Verify.IsTrue(buyItemFromCatalog.HasSkuId, $"No SkuId received from player [{player}]"))
                 return false;
 
             long skuId = buyItemFromCatalog.SkuId;
+#endif
+
             long clientPrice = buyItemFromCatalog.ItemUnitPrice;
 
             // In normal non-gift purchases the buyer is the recipient
@@ -357,8 +366,11 @@ namespace MHServerEmu.Games.MTXStore
                 return BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
             }
 
-            // V53_TODO: consoles?
+#if PLATFORM_TYPE_PC
             PrototypeId duplicateItemProtoRef = costumeProto.FulfillmentDuplicateItemPC;
+#else
+            PrototypeId duplicateItemProtoRef = costumeProto.FulfillmentDuplicateItem;
+#endif
             if (!Verify.IsTrue(duplicateItemProtoRef != PrototypeId.Invalid)) return BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
 
             ItemPrototype duplicateItemProto = duplicateItemProtoRef.As<ItemPrototype>();
@@ -396,7 +408,7 @@ namespace MHServerEmu.Games.MTXStore
                 if (tokenProto == null)
                     return BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
 
-                CostumePrototype costumeProto = avatarProto.GetStartingCostumeForPlatform(Platforms.PC).As<CostumePrototype>();
+                CostumePrototype costumeProto = avatarProto.GetStartingCostumeForPlatform(Game.PlatformType).As<CostumePrototype>();
                 if (costumeProto == null)
                     return BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
 

@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private List<TuningVarArray> _perMetricsFrequencyTuningVars;
 #endif
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         private List<TuningVarArray> _perDifficultyTuningTuningVars;
 #endif
 
@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             InitPerMetricsFrequencyTuningVars();
 #endif
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
             InitDifficultyTuningTuningVars();
 #endif
         }
@@ -81,7 +81,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             foreach (TuningVarArray tuningVarArray in _perMetricsFrequencyTuningVars)   tuningVarArray.Clear();
 #endif
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
             foreach (TuningVarArray tuningVarArray in _perDifficultyTuningTuningVars)   tuningVarArray.Clear();
 #endif
 
@@ -133,7 +133,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                 _perMetricsFrequencyTuningVars[i].Copy(other._perMetricsFrequencyTuningVars[i]);
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
             for (int i = 0; i < _perDifficultyTuningTuningVars.Count; i++)
                 _perDifficultyTuningTuningVars[i].Copy(other._perDifficultyTuningTuningVars[i]);
 #endif
@@ -194,7 +194,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             else if (prototype is MetricsFrequencyPrototype)
                 UpdateLiveMetricsFrequencyTuningVar(tuningVarProtoRef, (MetricsFrequencyTuningVar)tuningVarEnum, tuningVarValue);
 #endif
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
             else if (prototype is TuningPrototype)
                 UpdateLiveDifficultyTuningTuningVar(tuningVarProtoRef, (DifficultyTuningTuningVar)tuningVarEnum, tuningVarValue);
 #endif
@@ -410,7 +410,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (prototype is MetricsFrequencyPrototype) return ((MetricsFrequencyTuningVar)tuningVarEnum).ToString();
 #endif
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
             if (prototype is TuningPrototype) return ((DifficultyTuningTuningVar)tuningVarEnum).ToString();
 #endif
 
@@ -554,7 +554,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         }
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         public float GetLiveDifficultyTuningTuningVar(TuningPrototype tuningProto, DifficultyTuningTuningVar tuningVarEnum)
         {
             if (!Verify.IsTrue(tuningVarEnum >= 0 && tuningVarEnum < DifficultyTuningTuningVar.eDTTV_NumDifficultyTuningTuningVars)) return DefaultTuningVarValue;
@@ -715,7 +715,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         }
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         public static BlueprintId GetDifficultyTuningBlueprintDataRef()
         {
             GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
@@ -853,7 +853,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         }
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         private void InitDifficultyTuningTuningVars()
         {
             BlueprintId difficultyTuningBlueprintRef = GetDifficultyTuningBlueprintDataRef();
@@ -1040,7 +1040,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         }
 #endif
 
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         private void UpdateLiveDifficultyTuningTuningVar(PrototypeId difficultyTuningProtoRef, DifficultyTuningTuningVar tuningVarEnum, float tuningVarValue)
         {
             if (!Verify.IsTrue(tuningVarEnum >= 0 && tuningVarEnum < DifficultyTuningTuningVar.eDTTV_NumDifficultyTuningTuningVars)) return;

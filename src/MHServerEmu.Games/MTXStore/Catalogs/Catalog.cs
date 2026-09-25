@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
@@ -13,7 +14,7 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
         private readonly Dictionary<long, CatalogEntry> _entries = new();
         private readonly LocalizedCatalogUrls _urls = new();    // Make this a collection if we ever implement locales other than en_us
 
-        private NetMessageCatalogItems _cachedProtobuf;
+        private IMessage _cachedProtobuf;
 
         // Dumped timestamp: 1508422929 544000 (Thu Oct 19 2017 14:22:09 GMT+0000)
         public TimeSpan Timestamp { get; private set; }
@@ -100,10 +101,21 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
             FlagDirty();
         }
 
-        public NetMessageCatalogItems ToProtobuf()
+        public IMessage ToProtobuf()
         {
             if (_cachedProtobuf == null)
             {
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+                _cachedProtobuf = NetMessageConsoleCatalogItems.CreateBuilder()
+                    .SetCatalogVersion(((long)Timestamp.TotalMicroseconds).ToString())
+                    .AddRangeEntries(_entries.Values.Select(entry => entry.ToNetStruct()))
+                    .AddCategories(GetConsoleCatalogCategoryEntry("heroes", 0))
+                    .AddCategories(GetConsoleCatalogCategoryEntry("costumes", 1))
+                    .AddCategories(GetConsoleCatalogCategoryEntry("team-ups", 2))
+                    .AddCategories(GetConsoleCatalogCategoryEntry("consumables", 3))
+                    .AddCategories(GetConsoleCatalogCategoryEntry("bundles", 4))
+                    .Build();
+#else
                 _cachedProtobuf = NetMessageCatalogItems.CreateBuilder()
                     .SetTimestampSeconds((long)Timestamp.TotalSeconds)
                     .SetTimestampMicroseconds(Timestamp.Milliseconds * 1000)
@@ -111,10 +123,28 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
                     .AddUrls(_urls.ToNetStruct())
                     .SetClientmustdownloadimages(true)
                     .Build();
+#endif
             }
 
             return _cachedProtobuf;
         }
+
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && !PLATFORM_TYPE_PC
+        private MHConsoleCatalogCategoryEntry GetConsoleCatalogCategoryEntry(string id, int ordinal)
+        {
+            return MHConsoleCatalogCategoryEntry.CreateBuilder()
+                .SetId(id)
+                .SetVisible(true)
+                .AddLocalizedEntries(MHLocalizedStringCollection.CreateBuilder()
+                    .SetLanguageId("en_us")
+                    .AddTranslations(MHStringValue.CreateBuilder().SetKey("tid").SetText(id)))
+                .SetTid(string.Empty)
+#if GAME_VERSION_1_53
+                .SetOrdinal(ordinal)
+#endif
+                .Build();
+        }
+#endif
 
         private void FlagDirty()
         {

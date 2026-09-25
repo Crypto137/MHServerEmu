@@ -41,6 +41,7 @@ namespace MHServerEmu.Core.Serialization
         _1_48_0_1618 = 380454,
         _1_48_0_1712 = 391562,
         _1_52_0_1700 = 479899,
+        _1_4_0_26    = 485962,
         _1_53_0_203  = 493640,
 
 #if GAME_VERSION_1_48
@@ -48,7 +49,11 @@ namespace MHServerEmu.Core.Serialization
 #elif GAME_VERSION_1_52
         Current = _1_52_0_1700,
 #elif GAME_VERSION_1_53
+#if PLATFORM_TYPE_PS4
+        Current = _1_4_0_26,
+#else
         Current = _1_53_0_203,
+#endif
 #else
         Current = Invalid,
 #endif

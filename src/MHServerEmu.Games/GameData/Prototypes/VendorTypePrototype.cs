@@ -37,7 +37,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool AllowActionSell { get; protected set; }
         public LocaleStringId VendorFlavorText { get; protected set; }
         public bool IsRaidVendor { get; protected set; }
-#if GAME_VERSION_1_53
+#if GAME_VERSION_1_53 && PLATFORM_TYPE_PC
         public CurveId VendorLevelingCurvePC { get; protected set; }
         public CurveId VendorLevelingCurveConsole { get; protected set; }
 #else
