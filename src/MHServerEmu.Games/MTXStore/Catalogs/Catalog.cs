@@ -50,9 +50,9 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
             return entry;
         }
 
-        public void AddEntries(CatalogEntry[] newEntries)
+        public void AddEntries(IReadOnlyList<CatalogEntry> newEntries)
         {
-            if (newEntries.IsNullOrEmpty())
+            if (newEntries == null || newEntries.Count == 0)
                 return;
 
             // HACK: Rewrite bundle URLs if needed
@@ -62,8 +62,9 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
             {
                 const string GazillionCdnUrl = "marvelheroes.com";
 
-                foreach (CatalogEntry entry in newEntries)
+                for (int i = 0; i < newEntries.Count; i++)
                 {
+                    CatalogEntry entry = newEntries[i];
                     if (entry.InfoUrls.HasValue())
                     {
                         foreach (LocalizedCatalogEntryUrlOrData infoUrl in entry.InfoUrls)
@@ -84,14 +85,15 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
                 }
             }
 
-            // Overwrite entries with the same skuId
-            foreach (CatalogEntry entry in newEntries)
+            for (int i = 0; i < newEntries.Count; i++)
             {
+                CatalogEntry entry = newEntries[i];
                 long skuId = entry.SkuId;
 
                 if (_entries.ContainsKey(skuId))
                     Logger.Trace($"Overriding SKU {skuId}");
 
+                // Replace entries with the same skuId
                 _entries[skuId] = entry;
 
 #if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)

@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.MTXStore
                     startingCostumeEntries.Add(entry);
                 }
 
-                _catalog.AddEntries(startingCostumeEntries.ToArray());
+                _catalog.AddEntries(startingCostumeEntries);
 #endif
             }
         }
