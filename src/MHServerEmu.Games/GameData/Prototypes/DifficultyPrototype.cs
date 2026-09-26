@@ -316,7 +316,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
         public LocalizedEvalConditionEntryPrototype[] UnlockEvals { get; protected set; }
 #endif
-#elif GAME_VERSION_1_52                  
+#elif GAME_VERSION_1_52
         public int DEPTier { get; protected set; }
         public DifficultyTier Tier { get; protected set; }
         public float BonusExperiencePct { get; protected set; }
@@ -335,6 +335,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
 #endif
 
         //---
+
+#if GAME_VERSION_1_53
+        public override bool ApprovedForUse()
+        {
+#if PLATFORM_TYPE_PS4
+            return GameDatabase.DesignStateOk(DesignStatePS4);
+#elif PLATFORM_TYPE_XBOXONE
+            return GameDatabase.DesignStateOk(DesignStateXboxOne);
+#else
+            return GameDatabase.DesignStateOk(DesignState);
+#endif
+        }
+#endif
 
         public static bool InRange(PrototypeId value, PrototypeId min, PrototypeId max)
         {

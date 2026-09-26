@@ -464,8 +464,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool ApprovedForUse()
         {
-            // TODO: console support                   
+#if PLATFORM_TYPE_PS4
+            return GameDatabase.DesignStateOk(DesignStatePS4);
+#elif PLATFORM_TYPE_XBOXONE
+            return GameDatabase.DesignStateOk(DesignStateXboxOne);
+#else
             return GameDatabase.DesignStateOk(DesignState);
+#endif
         }
 
         public bool IsLiveTuningEnabled()

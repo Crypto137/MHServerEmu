@@ -369,8 +369,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool ApprovedForUse()
         {
-            // Add settings for using DesignStatePS4 or DesignStateXboxOne here if we end up supporting console clients
+#if PLATFORM_TYPE_PS4
+            return GameDatabase.DesignStateOk(DesignStatePS4);
+#elif PLATFORM_TYPE_XBOXONE
+            return GameDatabase.DesignStateOk(DesignStateXboxOne);
+#else
             return GameDatabase.DesignStateOk(DesignState);
+#endif
         }
 
         public virtual bool IsLiveTuningEnabled()

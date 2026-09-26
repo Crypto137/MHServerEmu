@@ -1349,6 +1349,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
         public LocaleStringId UnlockRequirementDisplayName { get; protected set; }
+
+        //---
+
+        public override bool ApprovedForUse()
+        {
+#if PLATFORM_TYPE_PS4
+            return GameDatabase.DesignStateOk(DesignStatePS4);
+#elif PLATFORM_TYPE_XBOXONE
+            return GameDatabase.DesignStateOk(DesignStateXboxOne);
+#else
+            return GameDatabase.DesignStateOk(DesignState);
+#endif
+        }
     }
 #endif
 
