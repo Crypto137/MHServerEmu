@@ -50,13 +50,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual bool CanApplyState()
         {
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
-#if PLATFORM_TYPE_PS4
+    #if PLATFORM_TYPE_PS4
             return GameDatabase.DesignStateOk(DesignStatePS4);
-#elif PLATFORM_TYPE_XBOXONE
+    #elif PLATFORM_TYPE_XBOXONE
             return GameDatabase.DesignStateOk(DesignStateXboxOne);
-#else
+    #else
             return GameDatabase.DesignStateOk(DesignState);
-#endif
+    #endif
 #else
             return GameDatabase.DesignStateOk(DesignState);
 #endif
