@@ -52,12 +52,28 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
             SkuId = skuId;
             GuidItems = [new(0, prototypeId, 1)];
             AdditionalGuidItems = Array.Empty<CatalogGuidEntry>();
-            LocalizedEntries = [new("en_us", prototypeId.GetName(), prototypeId.GetName(), "", price)];
+            LocalizedEntries = [new("en_us", prototypeId.GetNameFormatted(), prototypeId.GetNameFormatted(), "", price)];
             InfoUrls = Array.Empty<LocalizedCatalogEntryUrlOrData>();
             ContentData = Array.Empty<LocalizedCatalogEntryUrlOrData>();
             Type = new("Costume", 1);
             TypeModifiers = [new("Giftable", 1)];
         }
+
+#if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
+        public bool IsVisible()
+        {
+            foreach (CatalogEntryTypeModifier typeModifier in TypeModifiers)
+            {
+                if (typeModifier.Name == "NoDisplay")
+                    return false;
+
+                if (typeModifier.Name == "NoDisplayStore")
+                    return false;
+            }
+
+            return true;
+        }
+#endif
 
 #if (GAME_VERSION_1_52 || GAME_VERSION_1_53) && (PLATFORM_TYPE_PS4 || PLATFORM_TYPE_XBOXONE)
         public MarvelHeroesConsoleCatalogEntry ToNetStruct()
@@ -69,6 +85,12 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
                     .SetPriceG(LocalizedEntries[0].ItemPrice))
                 .AddPresentations(GetConsolePresentation())
                 .SetSellableObject(SkuId.ToString());
+
+            /* disabling this for now because it causes verify spam with PC catalog data
+            WorldEntityPrototype worldEntityProto = GuidItems[0].ItemPrototypeRuntimeIdForClient.As<WorldEntityPrototype>();
+            if (worldEntityProto != null)
+                entry.SetModelGuid((long)worldEntityProto.DataRefRecord.PrototypeGuid);
+            */
 
             string category = GetConsoleCategory();
             if (category != null)
@@ -103,7 +125,7 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
                 _           => string.Empty,
             };
 
-            string st = GuidItems[0].ItemPrototypeRuntimeIdForClient.GetNameFormatted();
+            string st = LocalizedEntries[0].Title;
             string lt = LocalizedEntries[0].Title;
             string d = LocalizedEntries[0].Description;
             string icon = string.Empty; // png url
@@ -128,12 +150,14 @@ namespace MHServerEmu.Games.MTXStore.Catalogs
         {
             return Type.Name switch
             {
-                "Hero"              => "heroes",
-                "Costume"           => "costumes",
-                "TeamUp"            => "team-ups",
-                "Boost" or "Chest"  => "consumables",
-                "Bundle"            => "bundles",
-                _                   => null,
+                "Hero"      => "heroes",
+                "TeamUp"    => "team-ups",
+                "Costume"   => "costumes",
+                "Bundle"    => "bundles",
+                "Boost"     => "consumables",
+                "Chest"     => "chance-packs",
+                "Service"   => "upgrades",
+                _           => null,
             };
         }
 #endif
