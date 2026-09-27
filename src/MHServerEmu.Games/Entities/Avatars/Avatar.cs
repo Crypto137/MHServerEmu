@@ -4831,7 +4831,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             owner.Properties[PropertyEnum.AvatarLibraryCostume, 0, PrototypeDataRef] = costumeProtoRef;
 
 #if GAME_VERSION_1_53
-            UpdatePowerProgressionPowers(false);
+            if (IsInWorld)
+                UpdatePowerProgressionPowers(false);
 #endif
 
             return true;

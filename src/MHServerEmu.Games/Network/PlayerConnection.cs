@@ -714,6 +714,9 @@ namespace MHServerEmu.Games.Network
                 // case ClientToGameServerMessage.NetMessageBillingRoutedClientMessage:     OnBillingRoutedClientMessage(message); break;
                 // case ClientToGameServerMessage.NetMessagePlayerLookupByNameClientRequest:OnPlayerLookupByNameClientRequest(message); break;
                 case ClientToGameServerMessage.NetMessageCostumeChange:                     OnCostumeChange(message); break;
+#if GAME_VERSION_1_53
+                case ClientToGameServerMessage.NetMessageInactiveAvatarCostumeChange:       OnInactiveAvatarCostumeChange(message); break;
+#endif
                 // case ClientToGameServerMessage.NetMessageLookForParty:                   OnLookForParty(message); break;
 #endif
 
@@ -2615,6 +2618,27 @@ namespace MHServerEmu.Games.Network
             if (!Verify.IsNotNull(avatar)) return;
 
             avatar.ChangeCostume((PrototypeId)costumeChange.CostumePrototypeId, true);
+        }
+#endif
+
+#if GAME_VERSION_1_53
+        private void OnInactiveAvatarCostumeChange(in MailboxMessage message)
+        {
+            var inactiveAvatarCostumeChange = message.As<NetMessageInactiveAvatarCostumeChange>();
+            if (!Verify.IsNotNull(inactiveAvatarCostumeChange)) return;
+
+            // This is used on consoles for the integrated hero+costume selection in the roster.
+
+            PrototypeId avatarProtoRef = (PrototypeId)inactiveAvatarCostumeChange.AvatarPrototypeId;
+            AvatarMode avatarMode = (AvatarMode)inactiveAvatarCostumeChange.AvatarModeEnum;
+            PrototypeId costumeProtoRef = (PrototypeId)inactiveAvatarCostumeChange.CostumePrototypeId;
+
+            Avatar avatar = Player.GetAvatar(avatarProtoRef, avatarMode);
+            if (!Verify.IsNotNull(avatar)) return;
+
+            Verify.IsTrue(avatar != Player.CurrentAvatar);
+
+            avatar.ChangeCostume(costumeProtoRef, true);
         }
 #endif
 
