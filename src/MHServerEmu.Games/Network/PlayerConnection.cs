@@ -636,6 +636,9 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageVendorRequestBuyItemFrom:          OnVendorRequestBuyItemFrom(message); break;
                 case ClientToGameServerMessage.NetMessageVendorRequestSellItemTo:           OnVendorRequestSellItemTo(message); break;
                 case ClientToGameServerMessage.NetMessageVendorRequestDonateItemTo:         OnVendorRequestDonateItemTo(message); break;
+#if GAME_VERSION_1_53
+                case ClientToGameServerMessage.NetMessageVendorRequestDonateItemsTo:        OnVendorRequestDonateItemsTo(message); break;
+#endif
                 case ClientToGameServerMessage.NetMessageVendorRequestRefresh:              OnVendorRequestRefresh(message); break;
                 case ClientToGameServerMessage.NetMessageTryModifyCommunityMemberCircle:    OnTryModifyCommunityMemberCircle(message); break;
                 case ClientToGameServerMessage.NetMessagePullCommunityStatus:               OnPullCommunityStatus(message); break;
@@ -1811,6 +1814,33 @@ namespace MHServerEmu.Games.Network
 #endif
             Player.DonateItemToVendor(avatarIndex, vendorRequestDonateItemTo.ItemId, vendorRequestDonateItemTo.VendorId);
         }
+
+#if GAME_VERSION_1_53
+        private void OnVendorRequestDonateItemsTo(in MailboxMessage message)
+        {
+            var vendorRequestDonateItemsTo = message.As<NetMessageVendorRequestDonateItemsTo>();
+            if (!Verify.IsNotNull(vendorRequestDonateItemsTo)) return;
+
+            // This is used on consoles for the "Donate All" option.
+
+            int avatarIndex = vendorRequestDonateItemsTo.AvatarIndex;
+            ulong vendorId = vendorRequestDonateItemsTo.VendorId;
+
+            for (int i = 0; i < vendorRequestDonateItemsTo.ItemIdsCount; i++)
+            {
+                ulong itemId = vendorRequestDonateItemsTo.ItemIdsList[i];
+
+                Item item = Game.EntityManager.GetEntity<Item>(itemId);
+                if (item == null)   // Multiple request may arrive due to lag
+                    continue;
+
+                if (!Verify.IsTrue(item.GetOwnerOfType<Player>() == Player, $"Player [{this}] is attempting to donate item [{item}] that does not belong to them!"))
+                    return;
+
+                Player.DonateItemToVendor(avatarIndex, itemId, vendorId);
+            }
+        }
+#endif
 
         private void OnVendorRequestRefresh(in MailboxMessage message)
         {
