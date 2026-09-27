@@ -646,7 +646,9 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAkEvent:                           OnAkEvent(message); break;
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;
-#if !GAME_VERSION_1_53
+#if GAME_VERSION_1_53
+                case ClientToGameServerMessage.NetMessageTryMoveItemsToInventory:           OnTryMoveItemsToInventory(message); break;
+#else
                 case ClientToGameServerMessage.NetMessageTryMoveInventoryContentsToGeneral: OnTryMoveInventoryContentsToGeneral(message); break;
 #endif
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;
@@ -1936,7 +1938,43 @@ namespace MHServerEmu.Games.Network
                 Player.ShowHUDTutorial(null);
         }
 
-#if !GAME_VERSION_1_53
+#if GAME_VERSION_1_53
+        private void OnTryMoveItemsToInventory(in MailboxMessage message)
+        {
+            var tryMoveItemsToInventory = message.As<NetMessageTryMoveItemsToInventory>();
+            if (!Verify.IsNotNull(tryMoveItemsToInventory)) return;
+
+            PrototypeId destInventoryProtoRef = (PrototypeId)tryMoveItemsToInventory.DestInventoryPrototype;
+
+            Inventory destInventory = Player.GetInventoryByRef(destInventoryProtoRef);
+            if (!Verify.IsNotNull(destInventory)) return;
+
+            EntityManager entityManager = Game.EntityManager;
+            for (int i = 0; i < tryMoveItemsToInventory.ItemIdsCount; i++)
+            {
+                ulong itemId = tryMoveItemsToInventory.ItemIdsList[i];
+                Item item = entityManager.GetEntity<Item>(itemId);
+                if (item == null)
+                    continue;
+
+                if (!Verify.IsTrue(item.GetOwnerOfType<Player>() == Player, $"Player [{Player}] is attempting to bulk move item [{item}] that belongs to another player"))
+                    return;
+
+                uint freeSlot = destInventory.GetFreeSlot(item, true);
+
+                // we are full
+                if (freeSlot == Inventory.InvalidSlot)
+                {
+                    Player.SendInventoryFullMessage(item.Id, destInventory.PrototypeDataRef);
+                    return;
+                }
+
+                InventoryResult result = item.ChangeInventoryLocation(destInventory, freeSlot);
+                if (!Verify.IsTrue(result == InventoryResult.Success, $"Failed to change inventory location ({result})"))
+                    return;
+            }
+        }
+#else
         private void OnTryMoveInventoryContentsToGeneral(in MailboxMessage message)
         {
             var tryMoveInventoryContentsToGeneral = message.As<NetMessageTryMoveInventoryContentsToGeneral>();
