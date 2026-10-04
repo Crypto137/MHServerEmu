@@ -695,6 +695,8 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageUISystemLockState:                 OnUISystemLockState(message); break;
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 case ClientToGameServerMessage.NetMessageEnableTalentPower:                 OnEnableTalentPower(message); break;
+#else
+                case ClientToGameServerMessage.NetMessageEnableSpecializationPower:         OnEnableSpecializationPower(message); break;
 #endif
                 case ClientToGameServerMessage.NetMessageStashInventoryViewed:              OnStashInventoryViewed(message); break;
                 case ClientToGameServerMessage.NetMessageStashCurrentlyOpen:                OnStashCurrentlyOpen(message); break;
@@ -2516,7 +2518,6 @@ namespace MHServerEmu.Games.Network
         }
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
-        // V48_FIXME (Specialization power)
         private void OnEnableTalentPower(in MailboxMessage message)
         {
             var enableTalentPower = message.As<NetMessageEnableTalentPower>();
@@ -2536,6 +2537,27 @@ namespace MHServerEmu.Games.Network
                 return;
 
             avatar.EnableTalentPower(talentPowerRef, specIndex, enable);
+        }
+#else
+        private void OnEnableSpecializationPower(in MailboxMessage message)
+        {
+            var enableSpecializationPower = message.As<NetMessageEnableSpecializationPower>();
+            if (!Verify.IsNotNull(enableSpecializationPower)) return;
+
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(enableSpecializationPower.AvatarId);
+            if (!Verify.IsNotNull(avatar)) return;
+
+            if (!Verify.IsTrue(avatar.GetOwnerOfType<Player>() == Player, $"Player [{Player}] is attempting to enable specialization power for avatar [{avatar}] that belongs to another player"))
+                return;
+
+            PrototypeId specializationPowerRef = (PrototypeId)enableSpecializationPower.PrototypeId;
+            int specIndex = (int)enableSpecializationPower.Spec;
+            bool enable = enableSpecializationPower.Enable;
+
+            if (!Verify.IsTrue(avatar.CanToggleSpecializationPower(specializationPowerRef, specIndex, false, enable) == CanToggleSpecializationPowerResult.Success))
+                return;
+
+            avatar.EnableSpecializationPower(specializationPowerRef, specIndex, enable);
         }
 #endif
 

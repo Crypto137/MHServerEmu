@@ -56,14 +56,24 @@ namespace MHServerEmu.Games.Entities.Avatars
         GenericError
     }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
     public enum CanToggleTalentResult
     {
         Success,
         InCombat,
         RestrictiveCondition,
         LevelRequirement,
-        GenericError
+        GenericError,
     }
+#else
+    public enum CanToggleSpecializationPowerResult
+    {
+        Success,
+        InCombat,
+        RestrictiveCondition,
+        GenericError,
+    }
+#endif
 
     public enum CanSetInfinityRankResult
     {
