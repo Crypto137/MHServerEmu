@@ -1277,7 +1277,6 @@ namespace MHServerEmu.Games.Powers
             if (!Verify.IsTrue(stolenPowerRef != PrototypeId.Invalid)) return;
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
-            // V48_FIXME
             BannerMessagePrototype bannerMessageProto;
 
             if (avatar.IsStolenPowerAvailable(stealablePowerInfoProto.Power) == false)
@@ -1293,6 +1292,26 @@ namespace MHServerEmu.Games.Powers
             if (!Verify.IsNotNull(bannerMessageProto)) return;
 
             player.SendBannerMessage(bannerMessageProto);
+#else
+            PrototypeId currentStolenPowerRef = avatar.GetMappedPowerFromOriginalPower(PrototypeDataRef);
+            if (currentStolenPowerRef != PrototypeId.Invalid)
+            {
+                player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageStealablePowerOccupied);
+                return;
+            }
+
+            PrototypeId originalPowerRef = avatar.GetOriginalPowerFromMappedPower(stolenPowerRef);
+            if (originalPowerRef != PrototypeId.Invalid)
+            {
+                player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageStolenPowerDuplicate);
+                return;
+            }
+
+            if (avatar.CanAssignStolenPower(stolenPowerRef, PrototypeId.Invalid) == false)
+                return;
+
+            if (avatar.MapPower(PrototypeDataRef, stolenPowerRef) == false)
+                player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageStolenPowerGenericFailed);
 #endif
         }
 

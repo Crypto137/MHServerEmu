@@ -2655,7 +2655,6 @@ namespace MHServerEmu.Games.Entities.Avatars
         }
 #endif
 
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool CanAssignStolenPower(PrototypeId stolenPowerRefToAssign, PrototypeId currentStolenPowerRef)
         {
             if (!Verify.IsTrue(stolenPowerRefToAssign != PrototypeId.Invalid)) return false;
@@ -2722,7 +2721,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             return true;
         }
-#endif
 
         public bool CanStealPowers()
         {
