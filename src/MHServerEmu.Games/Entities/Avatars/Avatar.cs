@@ -2240,9 +2240,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (CanStealPowers() == false)
                 UnassignAllMappedPowers();
 
-            // "Unequip" powers for the spec we are disabling
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (IsInWorld)
                 UnequipPowersForCurrentSpec();
+#endif
 
             // Change spec
             Properties[PropertyEnum.PowerSpecIndexActive] = newSpecIndex;
@@ -2263,9 +2264,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             SelectAbilityKeyMapping(0, false);
 #endif
 
-            // "Equip" powers for the spec we enabled
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (IsInWorld)
                 EquipPowersForCurrentSpec();
+#endif
 
             return false;
         }
@@ -3231,6 +3233,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             };
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool HasPowerEquipped(PrototypeId powerProtoRef)
         {
             AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
@@ -3239,7 +3242,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             return keyMapping.ContainsAbilityInActiveSlot(powerProtoRef);
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool HasControlPowerEquipped()
         {
             AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
@@ -3254,6 +3259,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             return false;
         }
+#endif
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public bool SlotAbility(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation, bool sendToClient)
@@ -3271,7 +3277,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 #endif
             if (!Verify.IsNotNull(keyMapping)) return false;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             bool wasEquipped = HasPowerEquipped(abilityProtoRef);
+#endif
 
             // Unslot the currently slotted ability if it's something else to trigger unequip
             PrototypeId slottedAbilityProtoRef = keyMapping.GetAbilityInAbilitySlot(slot);
@@ -3289,12 +3297,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Set
             keyMapping.SetAbilityInAbilitySlot(abilityProtoRef, slot);
 
-            // Trigger equip
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (wasEquipped == false)
             {
                 Power power = GetPower(abilityProtoRef);
                 power?.OnEquipped();
             }
+#endif
 
             // Notify the client if needed
             if (sendToClient)
@@ -3339,12 +3348,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Remove by assigning invalid id
             keyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slot);
 
-            // Trigger unequip
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (HasPowerEquipped(abilityProtoRef) == false)
             {
                 Power power = GetPower(abilityProtoRef);
                 power?.OnUnequipped();
             }
+#endif
 
             // Notify the client if needed
             if (sendToClient)
@@ -3502,6 +3512,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void UnequipPowersForCurrentSpec()
         {
             AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
@@ -3513,7 +3524,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                 power?.OnUnequipped();
             }
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private void EquipPowersForCurrentSpec()
         {
             AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
@@ -3525,6 +3538,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 power?.OnEquipped();
             }
         }
+#endif
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
         private AbilityKeyMapping GetOrCreateAbilityKeyMapping(int powerSpecIndex, PrototypeId transformModeProtoRef)
@@ -5722,7 +5736,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void SummonControlledAgentWithDuration()
         {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
             if (HasControlPowerEquipped() == false) return;
+#endif
 
             var scheduler = Game.GameEventScheduler;
             if (scheduler == null) return;

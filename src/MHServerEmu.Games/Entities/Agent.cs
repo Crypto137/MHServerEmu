@@ -3009,6 +3009,7 @@ namespace MHServerEmu.Games.Entities
                 var avatar = Game.EntityManager.GetEntityByDbGuid<Avatar>(masterGuid);
                 if (avatar == null) return;
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 if (avatar.HasControlPowerEquipped())
                 {
                     SetAsPersistent(avatar, false);
@@ -3018,6 +3019,9 @@ namespace MHServerEmu.Games.Entities
                     KillSummonedOnOwnerDeath();
                     ExitWorld();
                 }
+#else
+                SetAsPersistent(avatar, false);
+#endif
             }
             else
             {

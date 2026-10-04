@@ -246,6 +246,7 @@ namespace MHServerEmu.Games.Powers
             Owner?.Properties.RemoveProperty(new(PropertyEnum.PowerActivationCount, PrototypeDataRef));
         }
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public void OnEquipped()
         {
             if (IsNormalPower() == false || Owner == null) return;
@@ -260,7 +261,9 @@ namespace MHServerEmu.Games.Powers
                     avatar.SummonControlledAgentWithDuration();
             }
         }
+#endif
 
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
         public void OnUnequipped()
         {
             if (IsNormalPower() == false || Owner == null) return;
@@ -275,6 +278,7 @@ namespace MHServerEmu.Games.Powers
                 }
             }
         }
+#endif
 
         public void OnOwnerEnteredWorld()
         {
