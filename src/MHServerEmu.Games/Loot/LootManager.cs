@@ -515,6 +515,7 @@ namespace MHServerEmu.Games.Loot
             AvatarPrototype avatarProto = player?.CurrentAvatar?.AvatarPrototype;
 
             using var filterArgsHandle = DropFilterArgumentsPool.Get(out DropFilterArguments filterArgs);
+            DropFilterArguments.Initialize(filterArgs, lootContext);
             filterArgs.ItemProto = itemProto;
             filterArgs.Level = level;
             filterArgs.RollFor = _resolver.ResolveAvatarPrototype(avatarProto, true, 1f).DataRef;
