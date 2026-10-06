@@ -2012,28 +2012,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         protected override int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int powerSpecIndexActive, bool includePending = false)
         {
             // Check avatar-specific overrides
-#if GAME_VERSION_1_52 || GAME_VERSION_1_53
-            if (powerInfo.IsInPowerProgression)
-            {
-#if GAME_VERSION_1_53
-                if (powerInfo.PassesCostumeRequirement(GetCurrentCostumePrototypeRef()) == false)
-                    return PowerProgressionInfo.RankLocked;
-
-                if (powerInfo.IsOmegaTrait() && (IsOmegaPrestigeEnabled() == false || OmegaPrestigeLevel <= 0))
-                    return PowerProgressionInfo.RankLocked;
-#endif
-
-                // Talents
-                if (powerInfo.IsTalent)
-                {
-                    if (powerInfo.GetRequiredLevel() > CharacterLevel)
-                        return PowerProgressionInfo.RankLocked;
-
-                    return IsTalentPowerEnabledForSpec(powerInfo.PowerRef, powerSpecIndexActive) ? 1 : 0;
-                }
-            }
-            else
-#endif
+            if (powerInfo.IsInPowerProgression == false)
             {
                 // Mapped powers
                 PrototypeId originalPowerProtoRef = GetOriginalPowerFromMappedPower(powerInfo.PowerRef);
@@ -2048,6 +2027,26 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (transformModeProto != null && transformModeProto.UseRankOfPower != PrototypeId.Invalid)
                     return GetPowerRank(transformModeProto.UseRankOfPower);
             }
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
+            else
+            {
+    #if GAME_VERSION_1_53
+                if (powerInfo.PassesCostumeRequirement(GetCurrentCostumePrototypeRef()) == false)
+                    return PowerProgressionInfo.RankLocked;
+
+                if (powerInfo.IsOmegaTrait() && (IsOmegaPrestigeEnabled() == false || OmegaPrestigeLevel <= 0))
+                    return PowerProgressionInfo.RankLocked;
+    #endif
+                // 1.48 doesn't seem to be doing anything specialization power specific in Avatar::CalcPowerRankBase()
+                if (powerInfo.IsTalent)
+                {
+                    if (powerInfo.GetRequiredLevel() > CharacterLevel)
+                        return PowerProgressionInfo.RankLocked;
+
+                    return IsTalentPowerEnabledForSpec(powerInfo.PowerRef, powerSpecIndexActive) ? 1 : 0;
+                }
+            }
+#endif
 
             // Fall back to base implementation if we didn't find any avatar-specific overrides 
             return base.ComputePowerRankBase(ref powerInfo, powerSpecIndexActive);
