@@ -2153,6 +2153,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
             // Case 2 - Talent
+            // 1.48 doesn't have anything for specialization powers specifically here.
             var talentEntryPair = powerOwnerTable.GetTalentEntryPair(avatarProto.DataRef, progressionInfoPower);
             var talentGroupPair = powerOwnerTable.GetTalentGroupPair(avatarProto.DataRef, progressionInfoPower);
             if (talentEntryPair.Item1 != null && talentGroupPair.Item1 != null)
@@ -2160,8 +2161,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                 powerInfo.InitForAvatar(talentEntryPair.Item1, talentGroupPair.Item1, talentEntryPair.Item2, talentGroupPair.Item2);
                 return powerInfo.IsValid;
             }
-#else
-            // V48_TODO?: Do we need to do anything for specialization powers here?
 #endif
 
             // Case 3 - Non-Progression Power
@@ -2227,12 +2226,17 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return false;
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
-            // Unassign talents
-            using var talentPowerListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> talentPowerList);
-            GetTalentPowersForSpec(currentSpecIndex, talentPowerList);
+            using var talentPowersHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> talentPowers);
+            GetTalentPowersForSpec(currentSpecIndex, talentPowers);
 
-            foreach (PrototypeId talentPowerRef in talentPowerList)
+            foreach (PrototypeId talentPowerRef in talentPowers)
                 UnassignTalentPower(talentPowerRef, currentSpecIndex, true);
+#else
+            using var specializationPowersHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> specializationPowers);
+            GetSpecializationPowersForSpec(currentSpecIndex, specializationPowers);
+
+            foreach (PrototypeId specializationPowerRef in specializationPowers)
+                UnassignSpecializationPower(specializationPowerRef, currentSpecIndex, true);
 #endif
 
             // Clear mapped powers
@@ -2280,27 +2284,29 @@ namespace MHServerEmu.Games.Entities.Avatars
             ScheduleEntityEvent(_unassignMappedPowersForRespec, TimeSpan.FromMilliseconds(500));
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
-            // Unassign talents
-            using var talentPowerListHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> talentPowerList);
-            GetTalentPowersForSpec(specIndex, talentPowerList);
+            using var talentPowersHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> talentPowers);
+            GetTalentPowersForSpec(specIndex, talentPowers);
 
-            foreach (PrototypeId talentPowerRef in talentPowerList)
+            foreach (PrototypeId talentPowerRef in talentPowers)
                 UnassignTalentPower(talentPowerRef, specIndex);
 
-            if (talentPowerList.Count > 0)
+            if (talentPowers.Count > 0)
             {
                 // Set the new respec
                 if (powerProtoRef == PrototypeId.Invalid)
                     powerProtoRef = GameDatabase.GlobalsPrototype.PowerPrototype;
 
                 Properties[PropertyEnum.PowersRespecResult, specIndex, (int)reason, powerProtoRef] = true;
-
-                // Early return (V48_TODO: this probably shouldn't happen for pre-BUE?)
                 return true;
             }
+#else
+            using var specializationPowersHandle = ListPool<PrototypeId>.Get(out List<PrototypeId> specializationPowers);
+            GetSpecializationPowersForSpec(specIndex, specializationPowers);
+
+            foreach (PrototypeId specializationPowerRef in specializationPowers)
+                UnassignSpecializationPower(specializationPowerRef, specIndex);
 #endif
 
-            // Fall back to base implementation if no talents were unassigned
             if (base.RespecPowerSpec(specIndex, reason, skipValidation, powerProtoRef) == false)
                 return false;
 
