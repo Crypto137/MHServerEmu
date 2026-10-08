@@ -13,6 +13,7 @@ using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.PatchManager;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Powers.Conditions;
@@ -1232,8 +1233,21 @@ namespace MHServerEmu.Games.Entities
 
         protected bool AddInventory(PrototypeId invProtoRef, PrototypeId? lootTableRef = PrototypeId.Invalid)
         {
-            // lootTableRef seems to be unused
-            return InventoryCollection.CreateAndAddInventory(invProtoRef);
+            if (InventoryCollection.CreateAndAddInventory(invProtoRef) == false)
+                return false;
+
+            if (lootTableRef != null && lootTableRef.Value != PrototypeId.Invalid)
+            {
+                Player player = GetSelfOrOwnerOfType<Player>();
+                if (Verify.IsNotNull(player))
+                {
+                    using var lootInputSettingsHandle = LootInputSettingsPool.Get(out LootInputSettings lootInputSettings);
+                    lootInputSettings.Initialize(LootContext.Initialization, player, null, CharacterLevel);
+                    Game.LootManager.GiveLootFromTable(lootTableRef.Value, lootInputSettings, invProtoRef);
+                }
+            }
+
+            return true;
         }
 
         #endregion

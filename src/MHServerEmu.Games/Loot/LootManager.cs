@@ -52,19 +52,21 @@ namespace MHServerEmu.Games.Loot
             using var lootResultSummaryHandle = LootResultSummaryPool.Get(out LootResultSummary lootResultSummary);
             RollLootTable(lootTableProtoRef, inputSettings, lootResultSummary);
 
-            if (lootResultSummary.HasAnyResult == false) return;
+            if (lootResultSummary.HasAnyResult == false)
+                return;
 
             SpawnLootFromSummary(lootResultSummary, inputSettings, recipientId);
         }
 
-        public void GiveLootFromTable(PrototypeId lootTableProtoRef, LootInputSettings inputSettings)
+        public void GiveLootFromTable(PrototypeId lootTableProtoRef, LootInputSettings inputSettings, PrototypeId inventoryProtoRef = PrototypeId.Invalid)
         {
             using var lootResultSummaryHandle = LootResultSummaryPool.Get(out LootResultSummary lootResultSummary);
             RollLootTable(lootTableProtoRef, inputSettings, lootResultSummary);
 
-            if (lootResultSummary.HasAnyResult == false) return;
+            if (lootResultSummary.HasAnyResult == false)
+                return;
 
-            GiveLootFromSummary(lootResultSummary, inputSettings.Player);
+            GiveLootFromSummary(lootResultSummary, inputSettings.Player, inventoryProtoRef);
         }
 
         public void AwardLootFromTables(List<(PrototypeId, LootActionType)> tables, LootInputSettings inputSettings, int recipientId)

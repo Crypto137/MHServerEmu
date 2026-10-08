@@ -162,11 +162,14 @@ namespace MHServerEmu.Games.Network
             {
                 playerSettings.DbGuid = (ulong)_dbAccount.Id;
                 playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
-                playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
+                playerSettings.OptionFlags = EntitySettingsOptionFlags.None;
                 playerSettings.PlayerConnection = this;
                 playerSettings.PlayerName = _dbAccount.PlayerName;
                 playerSettings.ArchiveSerializeType = ArchiveSerializeType.Database;
                 playerSettings.ArchiveData = _dbAccount.Player.ArchiveData;
+
+                if (playerSettings.ArchiveData.IsNullOrEmpty())
+                    playerSettings.OptionFlags |= EntitySettingsOptionFlags.PopulateInventories;
 
                 Player = entityManager.CreateEntity(playerSettings) as Player;
             }

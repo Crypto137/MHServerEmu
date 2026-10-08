@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.Entities
         SuspendDBOpsWhileCreating   = 1 << 3,   // Sets DisableDBOps status during entity creation
         Flag4                       = 1 << 4,
         IsNewOnServer               = 1 << 5,
-        PopulateInventories         = 1 << 6,   // Initialize inventory instances on creation
+        PopulateInventories         = 1 << 6,   // Fill created inventories using the initialization loot table
         Flag7                       = 1 << 7,
         ClientOnly                  = 1 << 8,   // Entity is client-only
         LogInventoryErrors          = 1 << 9,

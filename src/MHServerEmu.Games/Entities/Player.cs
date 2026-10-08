@@ -156,7 +156,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsSwitchingAvatar { get; private set; }
 
         public PlayerConnection PlayerConnection { get; private set; }
-        public AreaOfInterest AOI { get => PlayerConnection.AOI; }
+        public AreaOfInterest AOI { get => PlayerConnection?.AOI; }
 
         public Avatar CurrentAvatar { get; private set; }
         public HUDTutorialPrototype CurrentHUDTutorial { get; private set; }
@@ -631,8 +631,7 @@ namespace MHServerEmu.Games.Entities
 
         public Region GetRegion()
         {
-            // This shouldn't need any null checks, at least for now
-            return AOI.Region;
+            return AOI?.Region;
         }
 
 #if GAME_VERSION_1_52 || GAME_VERSION_1_53
@@ -1758,6 +1757,9 @@ namespace MHServerEmu.Games.Entities
             avatar.InitializeLevel(1);
             avatar.ResetResources(false);
             avatar.GiveStartingCostume();
+
+            // This is where we would potentially make use of AvatarPrototype.StartingLootTable,
+            // but it appears to use dummy tables for all heroes in all versions of the game.
 
             return avatar;
         }
