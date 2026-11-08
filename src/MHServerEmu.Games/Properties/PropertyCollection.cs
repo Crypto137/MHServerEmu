@@ -1,5 +1,5 @@
 ﻿using System.Collections;
-using MHServerEmu.Core.Collections;
+using System.Runtime.CompilerServices;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;

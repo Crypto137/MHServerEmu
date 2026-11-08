@@ -1,5 +1,5 @@
-﻿using System.Text;
-using MHServerEmu.Core.Collections;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions

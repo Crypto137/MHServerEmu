@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using System.Runtime.CompilerServices;
 using MHServerEmu.Core.Collisions;
 
 namespace MHServerEmu.Games.SpatialPartitions

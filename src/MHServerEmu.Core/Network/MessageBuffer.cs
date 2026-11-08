@@ -35,7 +35,7 @@ namespace MHServerEmu.Core.Network
                     throw new Exception($"Message length {_length} exceeded the max allowed length of {MaxSize}.");
 
                 _buffer = BufferPool.Rent(_length);
-                stream.Read(_buffer, 0, _length);
+                _ = stream.Read(_buffer, 0, _length);
             }
             catch (Exception e)
             {
