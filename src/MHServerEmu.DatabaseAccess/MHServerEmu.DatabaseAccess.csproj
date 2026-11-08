@@ -4,7 +4,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <Platforms>x64</Platforms>
     <Configurations>Debug;Release;Debug 1.48;Release 1.48;Debug 1.53;Release 1.53;Debug PS4;Release PS4</Configurations>
   </PropertyGroup>
 
@@ -14,35 +13,35 @@
     <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <DefineConstants>$(DefineConstants);GAME_VERSION_1_52;PLATFORM_TYPE_PC</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <DefineConstants>$(DefineConstants);GAME_VERSION_1_52;PLATFORM_TYPE_PC</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.48|x64'">
+  <PropertyGroup Condition="'$(Configuration)'=='Debug 1.48'">
     <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_48;PLATFORM_TYPE_PC</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.48|x64'">
+  <PropertyGroup Condition="'$(Configuration)'=='Release 1.48'">
     <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_48;PLATFORM_TYPE_PC</DefineConstants>
   </PropertyGroup>
 	
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.53|x64'">
+  <PropertyGroup Condition="'$(Configuration)'=='Debug 1.53'">
     <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_53;PLATFORM_TYPE_PC</DefineConstants>
   </PropertyGroup>
 	
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.53|x64'">
+  <PropertyGroup Condition="'$(Configuration))'=='Release 1.53'">
     <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_53;PLATFORM_TYPE_PC</DefineConstants>
   </PropertyGroup>
 	
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug PS4|x64'">
+  <PropertyGroup Condition="'$(Configuration)'=='Debug PS4'">
     <DefineConstants>$(DefineConstants);DEBUG;GAME_VERSION_1_53;PLATFORM_TYPE_PS4</DefineConstants>
   </PropertyGroup>
 	
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release PS4|x64'">
+  <PropertyGroup Condition="'$(Configuration)'=='Release PS4'">
     <DefineConstants>$(DefineConstants);RELEASE;GAME_VERSION_1_53;PLATFORM_TYPE_PS4</DefineConstants>
   </PropertyGroup>
 
@@ -69,32 +68,14 @@
     <EmbeddedResource Include="SQLite\Scripts\Migrations\5.sql" />
     <EmbeddedResource Include="SQLite\Scripts\Migrations\6.sql" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.89" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+  </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\MHServerEmu.Core\MHServerEmu.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Dapper">
-      <HintPath>..\..\dep\Dapper\Dapper.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Data.SQLite">
-      <HintPath>..\..\dep\System.Data.SQLite\System.Data.SQLite.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-    <Content Include="Interop\win-x64\SQLite.Interop.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <TargetPath>SQLite.Interop.dll</TargetPath>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-    <Content Include="Interop\linux-x64\SQLite.Interop.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <TargetPath>SQLite.Interop.dll</TargetPath>
-    </Content>
   </ItemGroup>
 
 </Project>
