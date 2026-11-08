@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using System.Runtime.CompilerServices;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;

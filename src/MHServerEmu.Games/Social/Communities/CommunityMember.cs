@@ -1,7 +1,7 @@
 ﻿using System.Collections;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Gazillion;
-using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;

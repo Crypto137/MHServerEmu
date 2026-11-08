@@ -1,4 +1,4 @@
-name: Nightly Release (Linux x64)
+name: Nightly Release (Windows 1.52)
 
 on:
   schedule:
@@ -7,14 +7,14 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
     - name: Restore dependencies
       run: dotnet restore MHServerEmu.sln
     - name: Build
@@ -22,12 +22,12 @@ jobs:
     - name: Run tests
       run: dotnet test MHServerEmu.sln --no-restore --no-build --configuration Release
     - name: Get current date
-      run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+      run: echo "DATE=$(date +'%Y%m%d')" >> $env:GITHUB_ENV
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: MHServerEmu-nightly-${{ env.DATE }}-Release-linux-x64
+        name: MHServerEmu-nightly-${{ env.DATE }}-Release-windows-v52
         path: |
-          ./src/MHServerEmu/bin/x64/Release/net8.0
-          !./src/MHServerEmu/bin/x64/Release/net8.0/*.pdb
-          !./src/MHServerEmu/bin/x64/Release/net8.0/*.xml
+          ./src/MHServerEmu/bin/Release/net10.0
+          !./src/MHServerEmu/bin/Release/net10.0/*.pdb
+          !./src/MHServerEmu/bin/Release/net10.0/*.xml

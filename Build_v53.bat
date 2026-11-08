@@ -1,6 +1,6 @@
 @echo off
 
-set BUILD_DIR=.\src\MHServerEmu\bin\x64\Release 1.53\net8.0
+set BUILD_DIR=.\src\MHServerEmu\bin\Release 1.53\net10.0
 set OUTPUT_DIR=.\build\v53
 
 echo ==================

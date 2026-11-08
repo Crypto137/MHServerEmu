@@ -83,7 +83,7 @@ namespace MHServerEmu.Core.Network.Web
 
             try
             {
-                await _httpRequest.InputStream.ReadAsync(buffer.AsMemory(0, length));
+                _ = await _httpRequest.InputStream.ReadAsync(buffer.AsMemory(0, length));
                 return Encoding.UTF8.GetString(buffer, 0, length);
             }
             finally

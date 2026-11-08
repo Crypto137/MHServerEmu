@@ -18,13 +18,12 @@ We post development progress reports on our [blog](https://crypto137.github.io/M
 
 We provide two kinds of builds: stable and nightly.
 
-|                      | Stable         | Nightly               |
-| -------------------- | -------------- | --------------------- |
-| **Update Frequency** | Quarterly      | Daily                 |
-| **Features**         | Fewer          | More                  |
-| **Stability**        | High           | Medium                |
-| **Platforms**        | Windows        | Windows / Linux       |
-| **Configuration**    | Pre-Configured | Just the Server Files |
+|                   | Stable         | Nightly               |
+| ----------------- | -------------- | --------------------- |
+| **Features**      | Fewer          | More                  |
+| **Stability**     | High           | Medium                |
+| **Platforms**     | Windows        | Windows / Linux       |
+| **Configuration** | Pre-Configured | Just the Server Files |
 
 If you are setting the server up for the first time and/or unsure which one to use, we recommend you to start with a stable build. See [Initial Setup](./docs/Setup/InitialSetup.md) for information on how to set the server up.
 
@@ -36,7 +35,25 @@ You can always upgrade from stable to nightly simply by downloading the latest n
 
 ### Nightly
 
-[![Nightly Release (Windows x64)](https://github.com/Crypto137/MHServerEmu/actions/workflows/nightly-release-windows-x64.yml/badge.svg)](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-windows-x64/master?preview) [![Nightly Release (Linux x64)](https://github.com/Crypto137/MHServerEmu/actions/workflows/nightly-release-linux-x64.yml/badge.svg)](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-linux-x64/master?preview)
+#### Windows
+[![Nightly Release (Windows 1.52)](https://github.com/Crypto137/MHServerEmu/actions/workflows/nightly-release-windows-v52.yml/badge.svg)](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-windows-v52/master?preview)
+
+[![Nightly Release (Windows 1.48)](https://github.com/Crypto137/MHServerEmu/actions/workflows/nightly-release-windows-v48.yml/badge.svg)](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-windows-v48/master?preview)
+
+[![Nightly Release (Windows 1.53)](https://github.com/Crypto137/MHServerEmu/actions/workflows/nightly-release-windows-v53.yml/badge.svg)](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-windows-v53/master?preview)
+
+[![Nightly Release (Windows PS4)](https://github.com/Crypto137/MHServerEmu/actions/workflows/nightly-release-windows-ps4.yml/badge.svg)](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-windows-ps4/master?preview)
+
+#### Linux
+Please note that Linux nightly builds come bundled with the x64 version of the .NET runtime. If you are running it on a different architecture or already have the .NET runtime installed via your distribution's packet manager, you should probably build the server from source code.
+
+[![Nightly Release (Linux 1.52) (Self-Contained x64)](https://github.com/Crypto137/MHServerEmu/actions/workflows/nightly-release-linux-v52-self-contained-x64.yml/badge.svg)](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-linux-v52-self-contained-x64/master?preview)
+
+[![Nightly Release (Linux 1.48) (Self-Contained x64)](https://github.com/Crypto137/MHServerEmu/actions/workflows/nightly-release-linux-v48-self-contained-x64.yml/badge.svg)](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-linux-v48-self-contained-x64/master?preview)
+
+[![Nightly Release (Linux 1.53) (Self-Contained x64)](https://github.com/Crypto137/MHServerEmu/actions/workflows/nightly-release-linux-v53-self-contained-x64.yml/badge.svg)](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-linux-v53-self-contained-x64/master?preview)
+
+[![Nightly Release (Linux PS4) (Self-Contained x64)](https://github.com/Crypto137/MHServerEmu/actions/workflows/nightly-release-linux-ps4-self-contained-x64.yml/badge.svg)](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-linux-ps4-self-contained-x64/master?preview)
 
 ## FAQ
 
@@ -54,7 +71,7 @@ Download the latest stable or nightly build and overwrite your existing files. N
 
 **Are you going to support other versions of the game, like the ones from before the Biggest Update Ever (BUE) came out?**
 
-Preliminary support for game versions 1.48 (pre-BUE) and 1.53 (final test center version) is available if you build the source code using respective build configuration. Nightly builds will be provided at a later date. Support for these versions is still very early, and you will likely encounter game breaking bugs. For now, you should keep using 1.52 for normal play.
+Preliminary support for game versions 1.48 (pre-BUE) and 1.53 (final test center version) is available. Support for these versions is still early, and you are likely to encounter game breaking bugs. We recommend you to use 1.52 if you do not have a preference for a specific version of the game.
 
 Some early work has also been done to support version 1.10 from mid 2013. You can find the code for it in the [MHServerEmu2013](https://github.com/Crypto137/MHServerEmu2013) repository.
 
