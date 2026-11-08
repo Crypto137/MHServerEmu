@@ -1,0 +1,29 @@
+name: Nightly Release (Linux 1.48) (Self-Contained x64)
+
+on:
+  schedule:
+    - cron: '15 7 * * *'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+    - name: Publish Self-Contained
+      run: dotnet publish MHServerEmu.sln --configuration "Release 1.48" --runtime linux-x64 --self-contained
+    - name: Get current date
+      run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: MHServerEmu-nightly-${{ env.DATE }}-Release-linux-v48-self-contained-x64
+        path: |
+          ./src/MHServerEmu/bin/Release 1.48/net10.0/linux-x64/publish
+          !./src/MHServerEmu/bin/Release 1.48/net10.0/linux-x64/publish/*.pdb
+          !./src/MHServerEmu/bin/Release 1.48/net10.0/linux-x64/publish/*.xml

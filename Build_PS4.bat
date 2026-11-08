@@ -1,6 +1,6 @@
 @echo off
 
-set BUILD_DIR=.\src\MHServerEmu\bin\x64\Release PS4\net8.0
+set BUILD_DIR=.\src\MHServerEmu\bin\Release PS4\net10.0
 set OUTPUT_DIR=.\build\PS4
 
 echo ==================
