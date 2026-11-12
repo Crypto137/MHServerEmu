@@ -78,21 +78,15 @@ namespace MHServerEmu.Games.Properties
         /// </remarks>
         public PropertyValue(Vector3 vector)
         {
-            ulong x = (ulong)vector.X & 0x1FFFFF;
-            if (vector.X < 0)
-                x |= 0x10000;
-            x <<= 42;
+            ulong bits = 0;
 
-            ulong y = (ulong)vector.Y & 0x1FFFFF;
-            if (vector.Y < 0)
-                y |= 0x10000;
-            y <<= 21;
+            // NOTE: As of .NET 9, we now need to cast float to a signed integer to avoid things getting messed up.
+            // See here for more: https://learn.microsoft.com/en-us/dotnet/core/compatibility/jit/9.0/fp-to-integer
+            bits |= (ulong)((long)vector.X & 0x1FFFFF) << 42;
+            bits |= (ulong)((long)vector.Y & 0x1FFFFF) << 21;
+            bits |= (ulong)((long)vector.Z & 0x1FFFFF);
 
-            ulong z = (ulong)vector.Z & 0x1FFFFF;
-            if (vector.Z < 0)
-                x |= 0x10000;
-
-            RawLong = (long)(x | y | z);
+            RawLong = (long)bits;
         }
 
         // Conversion to supported types
@@ -151,15 +145,15 @@ namespace MHServerEmu.Games.Properties
 
             int x = (int)((raw >> 42) & 0x1FFFFF);
             if ((x & 0x10000) != 0)
-                x = (int)((raw >> 42) | 0xFFE00000);
+                x |= unchecked((int)0xFFE00000);
 
             int y = (int)((raw >> 21) & 0x1FFFFF);
             if ((y & 0x10000) != 0)
-                y = (int)((raw >> 21) | 0xFFE00000);
+                y |= unchecked((int)0xFFE00000);
 
             int z = (int)(raw & 0x1FFFFF);
             if ((z & 0x10000) != 0)
-                z = (int)(raw | 0xFFE00000);
+                z |= unchecked((int)0xFFE00000);
 
             return new Vector3(x, y, z);
         }
