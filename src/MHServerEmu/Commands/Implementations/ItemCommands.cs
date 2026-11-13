@@ -24,7 +24,7 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("drop")]
         [CommandDescription("Creates and drops the specified item from the current avatar.")]
-        [CommandUsage("item drop [pattern] [count]")]
+        [CommandUsage("item drop [pattern] [level] [count]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
@@ -33,7 +33,12 @@ namespace MHServerEmu.Commands.Implementations
             PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client);
             if (itemProtoRef == PrototypeId.Invalid) return string.Empty;
 
-            if (@params.Length == 1 || int.TryParse(@params[1], out int count) == false)
+            if (@params.Length < 2 || int.TryParse(@params[1], out int level) == false)
+                level = 1;
+
+            level = Math.Clamp(level, 1, 75);
+
+            if (@params.Length < 3 || int.TryParse(@params[2], out int count) == false)
                 count = 1;
 
             PlayerConnection playerConnection = (PlayerConnection)client;
@@ -44,7 +49,7 @@ namespace MHServerEmu.Commands.Implementations
             
             for (int i = 0; i < count; i++)
             {
-                lootManager.SpawnItem(itemProtoRef, LootContext.Drop, player, avatar);
+                lootManager.SpawnItem(itemProtoRef, LootContext.Drop, player, avatar, level);
                 Logger.Debug($"DropItem(): {itemProtoRef.GetName()} from {avatar}");
             }
 
@@ -53,7 +58,7 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("give")]
         [CommandDescription("Creates and gives the specified item to the current player.")]
-        [CommandUsage("item give [pattern] [count]")]
+        [CommandUsage("item give [pattern] [level] [count]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
@@ -62,7 +67,12 @@ namespace MHServerEmu.Commands.Implementations
             PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client);
             if (itemProtoRef == PrototypeId.Invalid) return string.Empty;
 
-            if (@params.Length == 1 || int.TryParse(@params[1], out int count) == false)
+            if (@params.Length < 2 || int.TryParse(@params[1], out int level) == false)
+                level = 1;
+
+            level = Math.Clamp(level, 1, 75);
+
+            if (@params.Length < 3 || int.TryParse(@params[2], out int count) == false)
                 count = 1;
 
             PlayerConnection playerConnection = (PlayerConnection)client;
@@ -71,7 +81,7 @@ namespace MHServerEmu.Commands.Implementations
             LootManager lootGenerator = playerConnection.Game.LootManager;
 
             for (int i = 0; i < count; i++)
-                lootGenerator.GiveItem(itemProtoRef, LootContext.CashShop, player);
+                lootGenerator.GiveItem(itemProtoRef, LootContext.CashShop, player, level);
             Logger.Debug($"GiveItem(): {itemProtoRef.GetName()}[{count}] to {player}");
 
             return string.Empty;

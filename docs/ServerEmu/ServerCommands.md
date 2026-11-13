@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2026.08.28 11:37:55 UTC` using server version `1.0.2`.
+This list was automatically generated on `2026.11.13 08:10:17 UTC` using server version `1.0.3`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -105,15 +105,15 @@ Commands for managing region instances.
 ## Item
 Commands for managing items.
 
-| Command                      | Description                                                                | User Level | Invoker Type  |
-| ---------------------------- | -------------------------------------------------------------------------- | ---------- | ------------  |
-| !item cleardeliverybox       | Destroys all items contained in the delivery box inventory.                | Any        | Client        |
-| !item creditchest            | Converts credits to a sellable chest item.                                 | Any        | Client        |
-| !item destroyindestructible  | Destroys indestructible items contained in the player's general inventory. | Any        | Client        |
-| !item drop [pattern] [count] | Creates and drops the specified item from the current avatar.              | Admin      | Client        |
-| !item give [pattern] [count] | Creates and gives the specified item to the current player.                | Admin      | Client        |
-| !item roll [pattern]         | Rolls the specified loot table.                                            | Admin      | Client        |
-| !item rollall                | Rolls all loot tables.                                                     | Admin      | Client        |
+| Command                              | Description                                                                | User Level | Invoker Type  |
+| ------------------------------------ | -------------------------------------------------------------------------- | ---------- | ------------  |
+| !item cleardeliverybox               | Destroys all items contained in the delivery box inventory.                | Any        | Client        |
+| !item creditchest                    | Converts credits to a sellable chest item.                                 | Any        | Client        |
+| !item destroyindestructible          | Destroys indestructible items contained in the player's general inventory. | Any        | Client        |
+| !item drop [pattern] [level] [count] | Creates and drops the specified item from the current avatar.              | Admin      | Client        |
+| !item give [pattern] [level] [count] | Creates and gives the specified item to the current player.                | Admin      | Client        |
+| !item roll [pattern]                 | Rolls the specified loot table.                                            | Admin      | Client        |
+| !item rollall                        | Rolls all loot tables.                                                     | Admin      | Client        |
 
 ## Leaderboards
 Commands related to the leaderboard system

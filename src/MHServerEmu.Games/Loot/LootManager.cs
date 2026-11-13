@@ -461,9 +461,9 @@ namespace MHServerEmu.Games.Loot
             return true;
         }
 
-        public bool SpawnItem(PrototypeId itemProtoRef, LootContext lootContext, Player player, WorldEntity sourceEntity)
+        public bool SpawnItem(PrototypeId itemProtoRef, LootContext lootContext, Player player, WorldEntity sourceEntity, int level = 1)
         {
-            ItemSpec itemSpec = CreateItemSpec(itemProtoRef, lootContext, player);
+            ItemSpec itemSpec = CreateItemSpec(itemProtoRef, lootContext, player, level);
             if (!Verify.IsNotNull(itemSpec, $"Failed to create an ItemSpec! itemProto=[{itemProtoRef.GetName()}], lootContext=[{lootContext}], player=[{player}]"))
                 return false;
 
@@ -480,9 +480,9 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Creates and gives a new item to the provided <see cref="Player"/>.
         /// </summary>
-        public bool GiveItem(PrototypeId itemProtoRef, LootContext lootContext, Player player)
+        public bool GiveItem(PrototypeId itemProtoRef, LootContext lootContext, Player player, int level = 1)
         {
-            ItemSpec itemSpec = CreateItemSpec(itemProtoRef, lootContext, player);
+            ItemSpec itemSpec = CreateItemSpec(itemProtoRef, lootContext, player, level);
             if (!Verify.IsNotNull(itemSpec, $"Failed to create an ItemSpec! itemProto=[{itemProtoRef.GetName()}], lootContext=[{lootContext}], player=[{player}]"))
                 return false;
 
