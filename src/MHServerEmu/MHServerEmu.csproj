@@ -19,10 +19,6 @@
   <PropertyGroup>
     <TieredCompilationQuickJit>false</TieredCompilationQuickJit>
   </PropertyGroup>
-
-  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-    <DefineConstants>$(DefineConstants);OS_WINDOWS</DefineConstants>
-  </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <DefineConstants>$(DefineConstants);GAME_VERSION_1_52;PLATFORM_TYPE_PC</DefineConstants>

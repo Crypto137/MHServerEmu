@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using MHServerEmu.Commands;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
@@ -24,7 +25,6 @@ using MHServerEmu.WebFrontend;
 
 namespace MHServerEmu
 {
-#if OS_WINDOWS
     // Default precision for thread sleep timing on Windows is 1000/64=15.625 ms.
     // This is not precise enough for our needs, so we request higher resolution timing.
     // According to MS docs, this should be per-process as of Windows 10 2004.
@@ -33,13 +33,14 @@ namespace MHServerEmu
     // https://randomascii.wordpress.com/2020/10/04/windows-timer-resolution-the-great-rule-change/
     internal static class WinMM
     {
+        [SupportedOSPlatform("windows")]
         [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
         public static extern int TimeBeginPeriod(int uPeriod);
 
+        [SupportedOSPlatform("windows")]
         [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
         public static extern int TimeEndPeriod(int uPeriod);
     }
-#endif
 
     public class ServerApp
     {
@@ -73,9 +74,8 @@ namespace MHServerEmu
                 throw new InvalidOperationException();
             _state = State.Running;
 
-#if OS_WINDOWS
-            WinMM.TimeBeginPeriod(1);
-#endif
+            if (OperatingSystem.IsWindows())
+                _ = WinMM.TimeBeginPeriod(1);
 
             StartupTime = DateTime.Now;
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
@@ -147,10 +147,9 @@ namespace MHServerEmu
                 CommandManager.Instance.TryParse(input);
             }
 
-#if OS_WINDOWS
             // Technically this isn't really needed, but MS docs say we should call it.
-            WinMM.TimeEndPeriod(1);
-#endif
+            if (OperatingSystem.IsWindows())
+                _ = WinMM.TimeEndPeriod(1);
         }
 
         /// <summary>
