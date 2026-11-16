@@ -18,8 +18,13 @@ namespace MHServerEmu.Games.Missions.Actions
             using var playersHandle = ListPool<Player>.Get(out List<Player> players);
             if (GetDistributors(_proto.SendTo, players))
             {
+#if GAME_VERSION_1_52 || GAME_VERSION_1_53
                 foreach (Player player in players)
                     player.SendOpenUIPanel(_proto.PanelName);
+#else
+                foreach (Player player in players)
+                    player.SendOpenUIPanel(_proto.PanelName, _proto.TabIndex);
+#endif
             }
         }
     }

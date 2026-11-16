@@ -3886,14 +3886,19 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message);
         }
 
-        public bool SendOpenUIPanel(AssetId panelNameId)
+        public bool SendOpenUIPanel(AssetId panelNameId, int tabIndex = 0)
         {
             if (!Verify.IsTrue(panelNameId != AssetId.Invalid)) return false;
 
             string panelName = GameDatabase.GetAssetName(panelNameId);
             if (!Verify.IsTrue(panelName != "Unknown")) return false;
 
-            NetMessageOpenUIPanel message = NetMessageOpenUIPanel.CreateBuilder().SetPanelName(panelName).Build();
+            NetMessageOpenUIPanel message = NetMessageOpenUIPanel.CreateBuilder()
+                .SetPanelName(panelName)
+#if !(GAME_VERSION_1_52 || GAME_VERSION_1_53)
+                .SetTabIndex((uint)tabIndex)
+#endif
+                .Build();
             SendMessage(message);
 
             return true;
