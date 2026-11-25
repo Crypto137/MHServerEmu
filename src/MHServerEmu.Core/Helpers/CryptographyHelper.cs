@@ -59,12 +59,19 @@ namespace MHServerEmu.Core.Helpers
         {
             using (Aes aesAlgorithm = Aes.Create())
             {
-                aesAlgorithm.Key = key;
-                aesAlgorithm.IV = iv;
-                ICryptoTransform decryptor = aesAlgorithm.CreateDecryptor();
+                // The IV comes from the client, and the Aes.IV setter throws if it is null or not exactly one block long.
+                if (iv == null || iv.Length != aesAlgorithm.BlockSize / 8)
+                {
+                    decryptedToken = null;
+                    return false;
+                }
 
                 try
                 {
+                    aesAlgorithm.Key = key;
+                    aesAlgorithm.IV = iv;
+
+                    using (ICryptoTransform decryptor = aesAlgorithm.CreateDecryptor())
                     using (MemoryStream memoryStream = new(encryptedToken))
                     using (CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read))
                     using (MemoryStream decryptionBuffer = new())
