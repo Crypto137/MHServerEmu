@@ -29,56 +29,49 @@ namespace MHServerEmu.Core.Helpers
 
         public static byte[] GenerateAesKey(int size = 256)
         {
-            using (Aes aesAlgorithm = Aes.Create())
-            {
-                aesAlgorithm.KeySize = size;
-                aesAlgorithm.GenerateKey();
-                return aesAlgorithm.Key;
-            }
+            using Aes aesAlgorithm = Aes.Create();
+            aesAlgorithm.KeySize = size;
+            aesAlgorithm.GenerateKey();
+            return aesAlgorithm.Key;
         }
 
         public static byte[] EncryptToken(byte[] tokenToEncrypt, byte[] key, out byte[] iv)
         {
-            using (Aes aesAlgorithm = Aes.Create())
-            {
-                aesAlgorithm.Key = key;
-                aesAlgorithm.GenerateIV();
-                iv = aesAlgorithm.IV;
-                ICryptoTransform encryptor = aesAlgorithm.CreateEncryptor();
+            using Aes aesAlgorithm = Aes.Create();
+            aesAlgorithm.Key = key;
+            aesAlgorithm.GenerateIV();
+            iv = aesAlgorithm.IV;
+            ICryptoTransform encryptor = aesAlgorithm.CreateEncryptor();
 
-                using (MemoryStream memoryStream = new())
-                using (CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write))
-                {
-                    cryptoStream.Write(tokenToEncrypt, 0, tokenToEncrypt.Length);
-                    return memoryStream.ToArray();
-                }
-            }
+            using MemoryStream memoryStream = new();
+            using CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write);
+
+            cryptoStream.Write(tokenToEncrypt, 0, tokenToEncrypt.Length);
+            cryptoStream.Flush();
+            return memoryStream.ToArray();
         }
 
         public static bool TryDecryptToken(byte[] encryptedToken, byte[] key, byte[] iv, out byte[] decryptedToken)
         {
-            using (Aes aesAlgorithm = Aes.Create())
+            try
             {
+                using Aes aesAlgorithm = Aes.Create();
                 aesAlgorithm.Key = key;
                 aesAlgorithm.IV = iv;
                 ICryptoTransform decryptor = aesAlgorithm.CreateDecryptor();
 
-                try
-                {
-                    using (MemoryStream memoryStream = new(encryptedToken))
-                    using (CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read))
-                    using (MemoryStream decryptionBuffer = new())
-                    {
-                        cryptoStream.CopyTo(decryptionBuffer);
-                        decryptedToken = decryptionBuffer.ToArray();
-                        return true;
-                    }
-                }
-                catch
-                {
-                    decryptedToken = null;
-                    return false;
-                }
+                using MemoryStream memoryStream = new(encryptedToken);
+                using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
+                using MemoryStream decryptionBuffer = new();
+
+                cryptoStream.CopyTo(decryptionBuffer);
+                decryptedToken = decryptionBuffer.ToArray();
+                return true;
+            }
+            catch
+            {
+                decryptedToken = null;
+                return false;
             }
         }
 
