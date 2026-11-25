@@ -1158,8 +1158,8 @@ namespace MHServerEmu.Games.Entities
             if (!Verify.IsTrue(itemOwner == null || itemOwner == this, $"Player [{this}] is attempting to move item [{item}] owned by another player [{itemOwner}]"))
                 return false;
 
-            Player containerOwner = container.GetOwnerOfType<Player>();
-            if (!Verify.IsTrue(containerOwner == null || containerOwner == this, $"Player [{this}] is attempting to move item [{item}] to container [{container}] owned by another player [{containerOwner}]"))
+            Player containerOwner = container.GetSelfOrOwnerOfType<Player>();
+            if (!Verify.IsTrue(containerOwner == this, $"Player [{this}] is attempting to move item [{item}] to container [{container}] owned by another player [{containerOwner}]"))
                 return false;
 
             if (!Verify.IsTrue(itemOwner == this || containerOwner == this, $"Player [{this}] is attempting to move item [{item}] to container [{container}], and neither of them is owned by this player"))
