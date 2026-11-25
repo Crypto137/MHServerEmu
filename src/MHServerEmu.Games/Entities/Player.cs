@@ -1158,8 +1158,10 @@ namespace MHServerEmu.Games.Entities
             if (!Verify.IsTrue(itemOwner == null || itemOwner == this, $"Player [{this}] is attempting to move item [{item}] owned by another player [{itemOwner}]"))
                 return false;
 
+            // GetOwnerOfType() starts from the container's owner, so it returns null when the container is a player entity
+            // itself. Check the container directly to prevent moving items into (and swapping items out of) another player's inventories.
             Player containerOwner = container.GetOwnerOfType<Player>();
-            if (!Verify.IsTrue(containerOwner == null || containerOwner == this, $"Player [{this}] is attempting to move item [{item}] to container [{container}] owned by another player [{containerOwner}]"))
+            if (!Verify.IsTrue(container == this || containerOwner == this, $"Player [{this}] is attempting to move item [{item}] to container [{container}] owned by another player [{containerOwner}]"))
                 return false;
 
             if (!Verify.IsTrue(itemOwner == this || containerOwner == this, $"Player [{this}] is attempting to move item [{item}] to container [{container}], and neither of them is owned by this player"))
