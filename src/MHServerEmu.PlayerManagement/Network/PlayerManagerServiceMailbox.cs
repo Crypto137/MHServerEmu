@@ -438,7 +438,19 @@ namespace MHServerEmu.PlayerManagement.Network
             IFrontendClient client = sessionVerificationRequest.Client;
             ClientCredentials clientCredentials = sessionVerificationRequest.ClientCredentials;
 
-            if (_playerManager.SessionManager.VerifyClientCredentials(client, clientCredentials) == false)
+            bool success;
+
+            try
+            {
+                success = _playerManager.SessionManager.VerifyClientCredentials(client, clientCredentials);
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, $"Exception when verifying client credentials\n{clientCredentials}");
+                success = false;
+            }
+
+            if (success == false)
             {
                 Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client [{client}]");
                 client.Disconnect();
