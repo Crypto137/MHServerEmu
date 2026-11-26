@@ -320,6 +320,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
                 if (pathNodeCount > 0)
                 {
+                    if (!Verify.IsTrue(pathNodeCount <= NaviPath.MaxPathNodes)) return false;
+
                     Vector3 previousVertex = Vector3.Zero;
                     for (uint i = 0; i < pathNodeCount; i++)
                     {

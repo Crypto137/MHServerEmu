@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Navi
 {
     public class NaviPath
     {
-        private const int MaxPathNodes = 256;
+        public const int MaxPathNodes = 256;
 
         public bool IsValid { get =>  _pathNodes.Count > 0 ; }
 
