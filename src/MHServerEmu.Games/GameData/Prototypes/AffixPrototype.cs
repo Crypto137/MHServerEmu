@@ -799,6 +799,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId DisplayName { get; protected set; }
         public EquipmentSetEntryPrototype[] Entries { get; protected set; }
         public CurveId SetLevelToEntryIndex { get; protected set; }
+
+        //---
+
+        public EquipmentSetEntryPrototype GetSetEntry(int entryIndex)
+        {
+            if (!Verify.IsTrue(Entries.HasValue())) return null;
+            if (!Verify.IsTrue(entryIndex >= 0 && entryIndex < Entries.Length)) return null;
+            return Entries[entryIndex];
+        }
+
+        public int GetSetEntryIndexFromSetLevel(int setLevel)
+        {
+            if (setLevel <= 0)
+                return -1;
+
+            if (!Verify.IsTrue(Entries.HasValue())) return 0;
+
+            Curve setLevelToEntryIndex = SetLevelToEntryIndex.AsCurve();
+            if (!Verify.IsNotNull(setLevelToEntryIndex)) return 0;
+
+            Verify.IsTrue(setLevelToEntryIndex.GetIntAt(setLevel, out int entryIndex),
+                $"Unable to compute EntryIndex from SetLevel for EquipmentSet. setLevel: {setLevel} EquipmentSet: {this}");
+
+            if (!Verify.IsTrue(entryIndex >= 0, $"Calculated entryIndex must be greater than 0. The value will be clamped. EntryIndex: {entryIndex} setLevel: {setLevel} EquipmentSet: {this}"))
+                return 0;
+
+            entryIndex = Math.Min(entryIndex, Entries.Length - 1);
+            return entryIndex;
+        }
     }
 #endif
 }

@@ -3362,6 +3362,20 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Equipment Sets
+
+#if GAME_VERSION_1_53
+        public int GetEquipmentSetLevel(PrototypeId equipmentSetRef)
+        {
+            int level = Properties[PropertyEnum.EquipmentSetLevel, equipmentSetRef];
+            if (level > 0)
+                level += Properties[PropertyEnum.EquipmentSetLevelBonus, equipmentSetRef];
+            return level;
+        }
+#endif
+
+        #endregion
+
         #region Event Handlers
 
         public override void OnChangePlayerAOI(Player player, InterestTrackOperation operation, AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies, AOINetworkPolicyValues archiveInterestPolicies = AOINetworkPolicyValues.AOIChannelNone)

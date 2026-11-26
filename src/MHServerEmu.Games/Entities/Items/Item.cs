@@ -1734,34 +1734,9 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
-        private bool OnBuiltInPropertySet(PropertySetEntryPrototype setProto)
+        private void OnBuiltInPropertySet(PropertySetEntryPrototype setProto)
         {
-            PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(setProto.Prop.Enum);
-            PropertyDataType propDataType = propertyInfo.DataType;
-
-            if (!Verify.IsTrue(propDataType == PropertyDataType.Real || propDataType == PropertyDataType.Integer || propDataType == PropertyDataType.Asset,
-                $"The following Item has a built-in set PropertyEntry with a property that is not an int/float/asset prop, which doesn't work!\nItem: [{this}]\nProperty: [{propertyInfo.PropertyName}]"))
-                return false;
-
-            using var evalContextHandle = EvalContextDataPool.Get(out EvalContextData evalContext);
-            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
-
-            switch (propDataType)
-            {
-                case PropertyDataType.Real:
-                    Properties[setProto.Prop] = setProto.Value != null ? Eval.RunFloat(setProto.Value, evalContext) : 0f;
-                    break;
-
-                case PropertyDataType.Integer:
-                    Properties[setProto.Prop] = setProto.Value != null ? Eval.RunInt(setProto.Value, evalContext) : 0;
-                    break;
-
-                case PropertyDataType.Asset:
-                    Properties[setProto.Prop] = setProto.Value != null ? Eval.RunAssetId(setProto.Value, evalContext) : AssetId.Invalid;
-                    break;
-            }
-
-            return true;
+            Properties[setProto.Prop] = setProto.GetValue(this);
         }
 
         private bool OnAffixAdded(GRandom random, AffixPrototype affixProto, PrototypeId scopeProtoRef, PrototypeId avatarProtoRef, int levelRequirement)

@@ -96,6 +96,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         private ulong _ultimatePrestigeLevel = 0;
 #endif
 
+#if GAME_VERSION_1_53
+        private Dictionary<PrototypeId, EquipmentSet> _equipmentSets;
+#endif
+
         public uint AvatarWorldInstanceId { get; private set; } = 0;
         public string PlayerName { get => _playerName.Get(); }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
@@ -1281,6 +1285,40 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Check the power's CanTriggerEval
             return power.CheckCanTriggerEval();
         }
+
+#if GAME_VERSION_1_53
+        protected override void InitializeProcEffectPowers()
+        {
+            base.InitializeProcEffectPowers();
+
+            if (_equipmentSets != null)
+            {
+                foreach (var kvp in _equipmentSets)
+                {
+                    int maxEntryIndex = kvp.Value.MaxEntryIndex;
+                    List<PropertyCollection> perEntryProps = kvp.Value.PerEntryProperties;
+
+                    if (!Verify.IsNotNull(perEntryProps))
+                        continue;
+
+                    if (maxEntryIndex < 0)
+                        continue;
+
+                    for (int i = 0; i <= maxEntryIndex; i++)
+                    {
+                        if (!Verify.IsTrue(i < perEntryProps.Count))
+                            continue;
+
+                        PropertyCollection props = perEntryProps[i];
+                        if (!Verify.IsNotNull(props))
+                            continue;
+
+                        UpdateProcEffectPowers(props, true);
+                    }
+                }
+            }
+        }
+#endif
 
         public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, int randomSeed, bool notifyOwner)
         {
@@ -4924,6 +4962,86 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
+        #region Equipment Sets
+
+#if GAME_VERSION_1_53
+        private void UpdateEquipmentSet(PrototypeId equipmentSetRef)
+        {
+            EquipmentSetPrototype equipmentSetProto = equipmentSetRef.As<EquipmentSetPrototype>();
+            if (!Verify.IsNotNull(equipmentSetProto)) return;
+
+            int setLevel = GetEquipmentSetLevel(equipmentSetRef);
+            int setEntryIndex = equipmentSetProto.GetSetEntryIndexFromSetLevel(setLevel);
+
+            // lazy init heap allocated collections to avoid unnecessary GC pressure
+            _equipmentSets ??= new();
+            ref EquipmentSet set = ref _equipmentSets.GetValueRefOrAddDefault(equipmentSetRef, out bool added);
+            if (added)
+            {
+                set.MaxEntryIndex = -1;
+                set.PerEntryProperties = new();
+            }
+
+            if (set.MaxEntryIndex == setEntryIndex)
+                return;
+
+            if (setEntryIndex > set.MaxEntryIndex)
+            {
+                // Equip
+                for (int curIndex = set.MaxEntryIndex + 1; curIndex <= setEntryIndex; curIndex++)
+                {
+                    PropertyCollection setEntryProps = null;
+                    if (set.PerEntryProperties.Count > curIndex)
+                    {
+                        setEntryProps = set.PerEntryProperties[curIndex];
+                        if (!Verify.IsNotNull(setEntryProps))
+                            continue;
+                    }
+                    else
+                    {
+                        setEntryProps = new();
+                        set.PerEntryProperties.Add(setEntryProps);
+
+                        EquipmentSetEntryPrototype setEntry = equipmentSetProto.GetSetEntry(curIndex);
+                        if (!Verify.IsTrue(setEntry != null && setEntry.Properties.HasValue(), $"Unable to get EquipmentSetEntry for Equipment Set Level! entryIndex: {curIndex} Set: {equipmentSetRef.GetName()} Avatar: {this}"))
+                            continue;
+
+                        foreach (var setPropertyEntryProto in setEntry.Properties)
+                        {
+                            if (!Verify.IsNotNull(setPropertyEntryProto))
+                                continue;
+
+                            setEntryProps[setPropertyEntryProto.Prop] = setPropertyEntryProto.GetValue(null);
+                        }
+                    }
+
+                    Properties.AddChildCollection(setEntryProps);
+                    UpdateProcEffectPowers(setEntryProps, true);
+                }
+            }
+            else if (setEntryIndex < set.MaxEntryIndex)
+            {
+                // Unequip
+                for (int curIndex = set.MaxEntryIndex; curIndex > setEntryIndex; curIndex--)
+                {
+                    if (!Verify.IsTrue(set.PerEntryProperties.Count > curIndex))
+                        continue;
+
+                    PropertyCollection setEntryProps = set.PerEntryProperties[curIndex];
+                    if (!Verify.IsNotNull(setEntryProps))
+                        continue;
+
+                    setEntryProps.RemoveFromParent(Properties);
+                    UpdateProcEffectPowers(setEntryProps, false);
+                }
+            }
+
+            set.MaxEntryIndex = setEntryIndex;
+        }
+#endif
+
+        #endregion
+
         #region Costumes
 
         public override AssetId GetEntityWorldAsset()
@@ -7403,6 +7521,25 @@ namespace MHServerEmu.Games.Entities.Avatars
                         }
                     }
                     break;
+#endif
+
+#if GAME_VERSION_1_53
+                case PropertyEnum.EquipmentSetLevel:
+                {
+                    Property.FromParam(id, 0, out PrototypeId equipmentSetRef);
+                    UpdateEquipmentSet(equipmentSetRef);
+                    break;
+                }
+#endif
+
+#if GAME_VERSION_1_53
+                case PropertyEnum.EquipmentSetLevelBonus:
+                {
+                    Property.FromParam(id, 0, out PrototypeId equipmentSetRef);
+                    if (Properties[PropertyEnum.EquipmentSetLevel, equipmentSetRef] > 0)
+                        UpdateEquipmentSet(equipmentSetRef);
+                    break;
+                }
 #endif
             }
         }
