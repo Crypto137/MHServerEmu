@@ -2662,12 +2662,15 @@ namespace MHServerEmu.Games.Network
             var achievementMissionTrackerFilterChange = message.As<NetMessageAchievementMissionTrackerFilterChange>();
             if (!Verify.IsNotNull(achievementMissionTrackerFilterChange)) return;
 
-            int achievementId = (int)achievementMissionTrackerFilterChange.AchievementId;
+            uint achievementId = achievementMissionTrackerFilterChange.AchievementId;
             bool isFiltered = achievementMissionTrackerFilterChange.IsFiltered;
 
             if (!Verify.IsTrue(achievementId != 0)) return;
 
-            Player.Properties[PropertyEnum.MissionTrackerAchievements, achievementId] = isFiltered;
+            AchievementInfo info = AchievementDatabase.Instance.GetAchievementInfoById(achievementId);
+            if (!Verify.IsNotNull(info)) return;
+
+            Player.Properties[PropertyEnum.MissionTrackerAchievements, (int)achievementId] = isFiltered;
         }
 #endif
 
