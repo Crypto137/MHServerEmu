@@ -83,11 +83,12 @@ namespace MHServerEmu.Games.MTXStore
         public bool OnGetCatalog(Player player, NetMessageGetCatalog getCatalog)
         {
             // Send the catalog only if the client is out of date.
-            TimeSpan clientTimestamp = TimeSpan.FromMicroseconds(getCatalog.TimestampSeconds * 1000000 + getCatalog.TimestampMicroseconds);
+            // Do not convert the client timestamp to TimeSpan because the input may be malicious and cause an overflow.
+            long clientTimestamp = getCatalog.TimestampSeconds * 1000000 + getCatalog.TimestampMicroseconds;
 
             lock (_catalog)
             {
-                if (clientTimestamp != _catalog.Timestamp)
+                if (clientTimestamp != _catalog.Timestamp.Ticks / 10)
                     player.SendMessage(_catalog.ToProtobuf());
             }
 
