@@ -318,10 +318,11 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 uint pathNodeCount = 0;
                 success &= Serializer.Transfer(archive, ref pathNodeCount);
 
+                if (!Verify.IsTrue(pathNodeCount <= NaviPath.MaxPathNodes)) return false;
+                if (!Verify.IsTrue(pathGoalNodeIndex <= pathNodeCount)) return false;
+
                 if (pathNodeCount > 0)
                 {
-                    if (!Verify.IsTrue(pathNodeCount <= NaviPath.MaxPathNodes)) return false;
-
                     Vector3 previousVertex = Vector3.Zero;
                     for (uint i = 0; i < pathNodeCount; i++)
                     {
