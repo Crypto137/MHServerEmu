@@ -2486,7 +2486,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return CanToggleTalentResult.InCombat;
 
             int specIndexUnlocked = GetPowerSpecIndexUnlocked();
-            if (!Verify.IsTrue(specIndexUnlocked >= specIndex)) return CanToggleTalentResult.GenericError;
+            if (!Verify.IsTrue(specIndex >= 0 && specIndex <= specIndexUnlocked)) return CanToggleTalentResult.GenericError;
 
             GetPowerProgressionInfo(talentPowerRef, out PowerProgressionInfo talentPowerInfo);
 
@@ -2526,7 +2526,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return CanToggleSpecializationPowerResult.InCombat;
 
             int specIndexUnlocked = GetPowerSpecIndexUnlocked();
-            if (!Verify.IsTrue(specIndexUnlocked >= specIndex)) return CanToggleSpecializationPowerResult.GenericError;
+            if (!Verify.IsTrue(specIndex >= 0 && specIndex <= specIndexUnlocked)) return CanToggleSpecializationPowerResult.GenericError;
 
             GetPowerProgressionInfo(specializationPowerRef, out PowerProgressionInfo specializationPowerInfo);
 
