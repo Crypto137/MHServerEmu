@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Core.System.Time
+﻿using MHServerEmu.Core.Extensions;
+
+namespace MHServerEmu.Core.System.Time
 {
     /// <summary>
     /// Represents game time that advances in fixed steps (quantums).
@@ -37,8 +39,11 @@
             _quantumGameTime += _quantumSize * numTimeQuantums;
         }
 
-        // Output to string as microseconds because in the client this class is microsecond-based.
-        public override string ToString() => (_quantumGameTime.Ticks / 10).ToString();
+        public override string ToString()
+        {
+            // Output to string as microseconds because in the client this class is microsecond-based.
+            return _quantumGameTime.TotalMicrosecondsInt().ToString();
+        }
 
         public static explicit operator TimeSpan(FixedQuantumGameTime fixedQuantumGameTime) => fixedQuantumGameTime._quantumGameTime;
     }

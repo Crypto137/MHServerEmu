@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.Achievements
             using var builderHandle = ProtobufBuilderPool<NetMessageAchievementStateUpdate.Types.AchievementState.Builder>.Get(out var builder);
             return builder.SetId(id)
                 .SetCount(progress.Count)
-                .SetCompleteddate((ulong)(progress.CompletedDate.Ticks / 10))   // microseconds
+                .SetCompleteddate((ulong)progress.CompletedDate.TotalMicrosecondsInt())
                 .Build();
         }
 

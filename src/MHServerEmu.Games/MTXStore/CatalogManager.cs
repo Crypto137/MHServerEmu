@@ -88,7 +88,7 @@ namespace MHServerEmu.Games.MTXStore
 
             lock (_catalog)
             {
-                if (clientTimestamp != _catalog.Timestamp.Ticks / 10)
+                if (clientTimestamp != _catalog.Timestamp.TotalMicrosecondsInt())
                     player.SendMessage(_catalog.ToProtobuf());
             }
 

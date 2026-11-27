@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
@@ -202,8 +203,8 @@ namespace MHServerEmu.Games.Network
             // Send time sync straight away for the client to be able to initialize its EventScheduler (needed for loading screens).
             // This will also make the client start sending pings, so it needs to be done after we assign game id.
             SendMessageImmediate(playerConnection, NetMessageInitialTimeSync.CreateBuilder()
-                .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
-                .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
+                .SetGameTimeServerSent(Clock.GameTime.TotalMicrosecondsInt())
+                .SetDateTimeServerSent(Clock.UnixTime.TotalMicrosecondsInt())
                 .Build());
 
             // Initializing a player connection loads player data and sends the achievement database if needed

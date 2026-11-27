@@ -192,7 +192,7 @@ namespace MHServerEmu.Games.Common
 
             if (archive.IsPacking)
             {
-                long microseconds = ioData.Ticks / 10;
+                long microseconds = ioData.TotalMicrosecondsInt();
                 success &= Transfer(archive, ref microseconds);
             }
             else
