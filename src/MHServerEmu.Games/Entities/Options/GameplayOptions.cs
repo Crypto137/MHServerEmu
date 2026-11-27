@@ -136,15 +136,23 @@ namespace MHServerEmu.Games.Entities.Options
 #endif
 
             // Chat channel filters
-            foreach (var filter in netStruct.ChatChannelFiltersMapList)
-                _chatChannelFilters.Add((PrototypeId)filter.ChannelProtoId, filter.IsSubscribed);
+            int numChannelFilters = netStruct.ChatChannelFiltersMapCount;
+            for (int i = 0; i < numChannelFilters; i++)
+            {
+                NetStructChatChannelFilterState filter = netStruct.ChatChannelFiltersMapList[i];
+                PrototypeId channelProtoRef = (PrototypeId)filter.ChannelProtoId;
+                if (!Verify.IsNotNull(channelProtoRef.As<ChatChannelPrototype>()))
+                    continue;
+
+                _chatChannelFilters[channelProtoRef] = filter.IsSubscribed;
+            }
 
             // Chat tab channels
-            int numChannels = netStruct.ChatTabChannelsArrayCount;
-            if (!Verify.IsTrue(numChannels <= NumChatTabs))
-                numChannels = NumChatTabs;
+            int numTabChannels = netStruct.ChatTabChannelsArrayCount;
+            if (!Verify.IsTrue(numTabChannels <= NumChatTabs))
+                numTabChannels = NumChatTabs;
 
-            for (int i = 0; i < numChannels; i++)
+            for (int i = 0; i < numTabChannels; i++)
                 _chatTabChannels[i] = (PrototypeId)netStruct.ChatTabChannelsArrayList[i].ChannelProtoId;
 
             // Vaporize thresholds
