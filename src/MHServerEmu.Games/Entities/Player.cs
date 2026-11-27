@@ -1825,6 +1825,7 @@ namespace MHServerEmu.Games.Entities
             if (!Verify.IsTrue(avatarProtoRef != currentAvatar.PrototypeDataRef)) return false;
 
             Avatar avatarToSwitchTo = GetAvatar(avatarProtoRef);
+            if (!Verify.IsNotNull(avatarToSwitchTo)) return false;
 
             SwitchToAvatarFailedReason failReason = SwitchToAvatarFailedReason.eSAFR_Unknown;
             CanSwitchAvatarResult canSwitch = CanSwitchToAvatar(currentAvatar, avatarToSwitchTo, ignoreGameplayRestrictions);
